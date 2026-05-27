@@ -3,6 +3,8 @@ import express from "express";
 import type { ServerConfig } from "./config.js";
 import { createEventLog } from "./eventLog.js";
 import { createRoomStore } from "./rooms.js";
+import { runWorkspaceCommand } from "./runner.js";
+import { createTaskStore } from "./tasks.js";
 import {
   listWorkspaceTree,
   readWorkspaceFile,
@@ -13,10 +15,12 @@ export function createApp(config: ServerConfig) {
   const app = express();
   const events = createEventLog();
   const rooms = createRoomStore(events);
+  const tasks = createTaskStore(events);
   const defaultRoom = rooms.createRoom(config.workspaceRoot);
 
   app.locals.events = events;
   app.locals.rooms = rooms;
+  app.locals.tasks = tasks;
   app.locals.defaultRoom = defaultRoom;
 
   app.use(cors());
@@ -63,6 +67,50 @@ export function createApp(config: ServerConfig) {
 
   app.get("/api/events", (_req, res) => {
     res.json({ events: events.list() });
+  });
+
+  app.post("/api/tasks", (req, res, next) => {
+    try {
+      const task = tasks.createTask(req.body);
+      res.json({ task });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/tasks", (req, res) => {
+    const roomId =
+      typeof req.query.roomId === "string" ? req.query.roomId : undefined;
+    res.json({ tasks: tasks.listTasks(roomId) });
+  });
+
+  app.post("/api/tasks/:taskId/run", async (req, res, next) => {
+    try {
+      const task = tasks.getTask(req.params.taskId);
+      const { command, initiatorId } = req.body as {
+        command?: string;
+        initiatorId?: string;
+      };
+      if (!task || !command || !initiatorId) {
+        res
+          .status(400)
+          .json({ error: "task, command, and initiatorId are required" });
+        return;
+      }
+      const run = await runWorkspaceCommand({
+        workspaceRoot: config.workspaceRoot,
+        command,
+        whitelist: task.commandWhitelist,
+        events,
+        roomId: task.roomId,
+        taskId: task.id,
+        initiatorId,
+        timeoutMs: 30_000
+      });
+      res.json({ run });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.get("/api/workspace/tree", async (_req, res, next) => {

@@ -82,3 +82,26 @@ export type ServerMessage =
       type: "event";
       event: EventRecord;
     };
+
+export interface TaskRecord {
+  id: string;
+  roomId: string;
+  title: string;
+  description: string;
+  creatorId: string;
+  assigneeId: string;
+  editablePaths: string[];
+  commandWhitelist: string[];
+  acceptanceTarget?: string;
+  status: "open" | "running" | "completed" | "blocked";
+}
+
+export interface RunRecord {
+  id: string;
+  roomId: string;
+  taskId: string;
+  initiatorId: string;
+  command: string;
+  exitCode: number | null;
+  output: string;
+}
