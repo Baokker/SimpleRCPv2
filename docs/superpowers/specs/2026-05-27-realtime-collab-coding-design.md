@@ -305,3 +305,7 @@ The implementation plan should decide exact packages and file layout, but the li
 - node-pty or child-process based runner for local command execution.
 
 The final choice should favor a small, inspectable prototype over production framework complexity.
+
+## Implementation Plan
+
+The first vertical MVP implementation plan is documented in `docs/superpowers/plans/2026-05-27-realtime-collab-coding-mvp.md`.
