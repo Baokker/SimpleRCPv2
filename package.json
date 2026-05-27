@@ -1,0 +1,20 @@
+{
+  "name": "simple-rcp-v2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @simplercp/server --filter @simplercp/client dev",
+    "dev:server": "pnpm --filter @simplercp/server dev",
+    "dev:client": "pnpm --filter @simplercp/client dev",
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @simplercp/server test",
+    "test:e2e": "playwright test --config tests/playwright.config.ts",
+    "test:collab": "playwright test --config tests/playwright.config.ts tests/e2e/collaboration.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
