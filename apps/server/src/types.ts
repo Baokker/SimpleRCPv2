@@ -35,7 +35,7 @@ export interface EventRecord {
   memberId?: string;
   taskId?: string;
   timestamp: string;
-  payload?: Record<string, unknown>;
+  payload?: object;
 }
 
 export type ClientMessage =

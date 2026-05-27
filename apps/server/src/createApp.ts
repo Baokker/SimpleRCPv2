@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { runAgentTask } from "./agents/runtime.js";
 import type { ServerConfig } from "./config.js";
 import { createEventLog } from "./eventLog.js";
 import { createRoomStore } from "./rooms.js";
@@ -82,6 +83,26 @@ export function createApp(config: ServerConfig) {
     const roomId =
       typeof req.query.roomId === "string" ? req.query.roomId : undefined;
     res.json({ tasks: tasks.listTasks(roomId) });
+  });
+
+  app.post("/api/tasks/:taskId/agent/mock/run", async (req, res, next) => {
+    try {
+      const { agentId } = req.body as { agentId?: string };
+      if (!agentId) {
+        res.status(400).json({ error: "agentId is required" });
+        return;
+      }
+      const report = await runAgentTask("mock", {
+        workspaceRoot: config.workspaceRoot,
+        events,
+        tasks,
+        taskId: req.params.taskId,
+        agentId
+      });
+      res.json({ report });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.post("/api/tasks/:taskId/run", async (req, res, next) => {

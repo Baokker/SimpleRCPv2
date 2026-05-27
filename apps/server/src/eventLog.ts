@@ -6,7 +6,7 @@ export interface EventInput {
   roomId?: string;
   memberId?: string;
   taskId?: string;
-  payload?: Record<string, unknown>;
+  payload?: object;
 }
 
 export function createEventLog() {
