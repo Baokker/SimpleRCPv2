@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
 import type { ServerConfig } from "./config.js";
+import { createEventLog } from "./eventLog.js";
+import { createRoomStore } from "./rooms.js";
 import {
   listWorkspaceTree,
   readWorkspaceFile,
@@ -9,14 +11,58 @@ import {
 
 export function createApp(config: ServerConfig) {
   const app = express();
+  const events = createEventLog();
+  const rooms = createRoomStore(events);
+  const defaultRoom = rooms.createRoom(config.workspaceRoot);
+
+  app.locals.events = events;
+  app.locals.rooms = rooms;
+  app.locals.defaultRoom = defaultRoom;
+
   app.use(cors());
   app.use(express.json({ limit: "5mb" }));
 
   app.get("/api/health", (_req, res) => {
     res.json({
       ok: true,
-      workspaceRoot: config.workspaceRoot
+      workspaceRoot: config.workspaceRoot,
+      roomId: defaultRoom.id
     });
+  });
+
+  app.get("/api/rooms/:roomId", (req, res, next) => {
+    try {
+      const room = rooms.getRoom(req.params.roomId);
+      if (!room) {
+        res.status(404).json({ error: "Room not found" });
+        return;
+      }
+      res.json({ room });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/rooms/:roomId/members", (req, res, next) => {
+    try {
+      const { name, kind } = req.body as {
+        name?: string;
+        kind?: "human" | "agent";
+      };
+      if (!name) {
+        res.status(400).json({ error: "name is required" });
+        return;
+      }
+      res.json({
+        member: rooms.joinRoom(req.params.roomId, name, kind ?? "human")
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/events", (_req, res) => {
+    res.json({ events: events.list() });
   });
 
   app.get("/api/workspace/tree", async (_req, res, next) => {
