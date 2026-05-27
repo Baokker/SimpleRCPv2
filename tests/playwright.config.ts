@@ -1,13 +1,11 @@
 import { defineConfig } from "@playwright/test";
+import os from "node:os";
 import path from "node:path";
 
-const workspaceRoot =
-  process.env.SIMPLERCP_E2E_WORKSPACE ??
-  path.resolve("tests/fixtures/sample-workspace");
+const workspaceRoot = path.join(os.tmpdir(), "simplercp-e2e-workspace");
 
 export default defineConfig({
   testDir: "./e2e",
-  globalSetup: "./e2e/globalSetup.ts",
   timeout: 60_000,
   expect: {
     timeout: 10_000
@@ -18,7 +16,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `SIMPLERCP_WORKSPACE=${workspaceRoot} SIMPLERCP_COMMANDS="npm test" pnpm --filter @simplercp/server dev`,
+      command: `node e2e/prepareWorkspace.mjs && SIMPLERCP_WORKSPACE=${workspaceRoot} SIMPLERCP_COMMANDS="npm test" pnpm --filter @simplercp/server dev`,
       url: "http://127.0.0.1:4000/api/health",
       reuseExistingServer: false,
       timeout: 30_000
