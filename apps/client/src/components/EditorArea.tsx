@@ -5,6 +5,12 @@ export interface OpenFile {
   content: string;
 }
 
+declare global {
+  interface Window {
+    __simplercpEditors?: Record<string, { setValue(value: string): void }>;
+  }
+}
+
 export function EditorArea({
   openFiles,
   activePath,
@@ -43,6 +49,10 @@ export function EditorArea({
               fontSize: 14,
               wordWrap: "on",
               scrollBeyondLastLine: false
+            }}
+            onMount={(editor) => {
+              window.__simplercpEditors ??= {};
+              window.__simplercpEditors[activeFile.path] = editor;
             }}
             onChange={(value) => onChangeFile(activeFile.path, value ?? "")}
           />

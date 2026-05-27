@@ -20,6 +20,10 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
   await userA.getByTestId("file-src/hello.ts").click();
   await expect(userA.getByTestId("editor-tabs")).toContainText("src/hello.ts");
   await expect(userB.getByTestId("member-list")).toContainText("src/hello.ts");
+  await userB.getByTestId("file-src/hello.ts").click();
+
+  await replaceMonacoText(userA, 'export const hello = "collab";');
+  await expect(userB.getByTestId("editor-frame")).toContainText("collab");
 
   await userA.getByTestId("create-agent-task").click();
   await expect(userA.getByTestId("task-list")).toContainText(
@@ -53,3 +57,36 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
   await contextA.close();
   await contextB.close();
 });
+
+async function replaceMonacoText(
+  page: import("@playwright/test").Page,
+  text: string
+) {
+  await page.waitForFunction(
+    () =>
+      Boolean(
+        (
+          window as typeof window & {
+            __simplercpEditors?: Record<
+              string,
+              { setValue(value: string): void }
+            >;
+          }
+        ).__simplercpEditors?.["src/hello.ts"]
+      ),
+    undefined,
+    { timeout: 10_000 }
+  );
+  await page.evaluate((nextText) => {
+    const editors = (
+      window as typeof window & {
+        __simplercpEditors?: Record<string, { setValue(value: string): void }>;
+      }
+    ).__simplercpEditors;
+    const editor = editors?.["src/hello.ts"];
+    if (!editor) {
+      throw new Error("Monaco editor is not ready");
+    }
+    editor.setValue(nextText);
+  }, text);
+}
