@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createTask,
   getEvents,
@@ -30,6 +30,7 @@ export function App() {
   const [chatText, setChatText] = useState("");
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [socket, setSocket] = useState<ClientSocket | null>(null);
+  const bootStartedRef = useRef(false);
 
   const displayName = useMemo(
     () =>
@@ -39,6 +40,8 @@ export function App() {
   );
 
   useEffect(() => {
+    if (bootStartedRef.current) return;
+    bootStartedRef.current = true;
     let mounted = true;
     async function boot() {
       const health = await getHealth();
@@ -106,19 +109,15 @@ export function App() {
 
   async function refreshTasksAndEvents() {
     if (!roomId) return;
-    const [taskRecords, eventRecords] = await Promise.all([
+    const [room, taskRecords, eventRecords] = await Promise.all([
+      getRoom(roomId),
       getTasks(roomId),
       getEvents()
     ]);
+    setMembers(room.members);
     setTasks(taskRecords);
     setEvents(eventRecords);
-    const commandLines = eventRecords
-      .filter((event) => event.type === "command_output")
-      .map((event) => {
-        const payload = event.payload as { output?: unknown } | undefined;
-        return String(payload?.output ?? "");
-      });
-    setTerminalLines(commandLines);
+    setTerminalLines(terminalLinesFromEvents(eventRecords));
   }
 
   async function openFile(path: string) {
@@ -188,8 +187,22 @@ export function App() {
       setOpenFiles((files) =>
         files.map((file) => (file.path === activePath ? { ...file, content } : file))
       );
-    }
   }
+}
+
+function terminalLinesFromEvents(events: EventRecord[]) {
+  return events.flatMap((event) => {
+    if (event.type === "command_output") {
+      const payload = event.payload as { output?: unknown } | undefined;
+      return [String(payload?.output ?? "")];
+    }
+    if (event.type === "agent_reported") {
+      const payload = event.payload as { summary?: unknown } | undefined;
+      return [String(payload?.summary ?? "")];
+    }
+    return [];
+  });
+}
 
   return (
     <main className="app-shell">
