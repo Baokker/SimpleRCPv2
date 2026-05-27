@@ -55,3 +55,24 @@ export type ServerMessage =
       memberId: string;
       text: string;
     };
+
+export interface TaskRecord {
+  id: string;
+  roomId: string;
+  title: string;
+  description: string;
+  creatorId: string;
+  assigneeId: string;
+  editablePaths: string[];
+  commandWhitelist: string[];
+  acceptanceTarget?: string;
+  status: "open" | "running" | "completed" | "blocked";
+}
+
+export interface AgentReport {
+  taskId: string;
+  agentId: string;
+  summary: string;
+  commands: string[];
+  risks: string[];
+}

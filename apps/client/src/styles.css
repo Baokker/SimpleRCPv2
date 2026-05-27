@@ -229,3 +229,37 @@ textarea {
   color: #9fb2d0;
   font-size: 12px;
 }
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  border: 1px solid #2b3240;
+  border-radius: 6px;
+  padding: 8px;
+  background: #101722;
+}
+
+.task-list small {
+  grid-column: 1 / 2;
+  color: #91a0b7;
+}
+
+.task-list button,
+.collab-panel section > button {
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #3d8b74;
+  color: white;
+  cursor: pointer;
+}

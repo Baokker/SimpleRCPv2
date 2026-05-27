@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  createTask,
   getEvents,
   getHealth,
   getRoom,
+  getTasks,
   getWorkspaceTree,
   joinRoom,
   readWorkspaceFile,
+  runMockAgent,
   writeWorkspaceFile
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
@@ -13,7 +16,7 @@ import { EditorArea, type OpenFile } from "./components/EditorArea";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
 import { connectRoomSocket, type ClientSocket } from "./socket";
-import type { EventRecord, RoomMember, WorkspaceNode } from "./types";
+import type { EventRecord, RoomMember, TaskRecord, WorkspaceNode } from "./types";
 
 export function App() {
   const [roomId, setRoomId] = useState("");
@@ -23,8 +26,9 @@ export function App() {
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activePath, setActivePath] = useState<string>();
   const [events, setEvents] = useState<EventRecord[]>([]);
+  const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [chatText, setChatText] = useState("");
-  const [terminalLines] = useState<string[]>([]);
+  const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [socket, setSocket] = useState<ClientSocket | null>(null);
 
   const displayName = useMemo(
@@ -39,10 +43,11 @@ export function App() {
     async function boot() {
       const health = await getHealth();
       const joined = await joinRoom(health.roomId, displayName);
-      const [room, workspaceTree, eventRecords] = await Promise.all([
+      const [room, workspaceTree, eventRecords, taskRecords] = await Promise.all([
         getRoom(health.roomId),
         getWorkspaceTree(),
-        getEvents()
+        getEvents(),
+        getTasks(health.roomId)
       ]);
 
       if (!mounted) return;
@@ -51,6 +56,7 @@ export function App() {
       setMembers(room.members);
       setTree(workspaceTree);
       setEvents(eventRecords);
+      setTasks(taskRecords);
 
       const connected = connectRoomSocket({
         roomId: health.roomId,
@@ -86,8 +92,33 @@ export function App() {
     return () => socket?.close();
   }, [socket]);
 
+  useEffect(() => {
+    if (!roomId) return;
+    const timer = window.setInterval(() => {
+      void refreshTasksAndEvents();
+    }, 1500);
+    return () => window.clearInterval(timer);
+  }, [roomId]);
+
   async function refreshEvents() {
     setEvents(await getEvents());
+  }
+
+  async function refreshTasksAndEvents() {
+    if (!roomId) return;
+    const [taskRecords, eventRecords] = await Promise.all([
+      getTasks(roomId),
+      getEvents()
+    ]);
+    setTasks(taskRecords);
+    setEvents(eventRecords);
+    const commandLines = eventRecords
+      .filter((event) => event.type === "command_output")
+      .map((event) => {
+        const payload = event.payload as { output?: unknown } | undefined;
+        return String(payload?.output ?? "");
+      });
+    setTerminalLines(commandLines);
   }
 
   async function openFile(path: string) {
@@ -122,6 +153,44 @@ export function App() {
     await refreshEvents();
   }
 
+  async function createMockAgentTask() {
+    if (!member || !roomId) return;
+    const agentName = "MockAgent";
+    const agentMember =
+      members.find((candidate) => candidate.name === agentName) ??
+      (await joinRoom(roomId, agentName, "agent"));
+
+    await createTask({
+      roomId,
+      title: "MockAgent update greeting",
+      description: "Update src/hello.ts and run npm test.",
+      creatorId: member.id,
+      assigneeId: agentMember.id,
+      editablePaths: ["src/**"],
+      commandWhitelist: ["npm test"],
+      acceptanceTarget: "npm test passes"
+    });
+    const room = await getRoom(roomId);
+    setMembers(room.members);
+    await refreshTasksAndEvents();
+  }
+
+  async function runMockAgentForTask(taskId: string) {
+    const task = tasks.find((candidate) => candidate.id === taskId);
+    if (!task) return;
+    const report = await runMockAgent(taskId, task.assigneeId);
+    setTerminalLines((lines) => [...lines, report.summary]);
+    await refreshTasksAndEvents();
+    const workspaceTree = await getWorkspaceTree();
+    setTree(workspaceTree);
+    if (activePath) {
+      const content = await readWorkspaceFile(activePath);
+      setOpenFiles((files) =>
+        files.map((file) => (file.path === activePath ? { ...file, content } : file))
+      );
+    }
+  }
+
   return (
     <main className="app-shell">
       <aside className="workspace-pane">
@@ -143,9 +212,12 @@ export function App() {
         <CollaborationPanel
           members={members}
           events={events}
+          tasks={tasks}
           chatText={chatText}
           onChatTextChange={setChatText}
           onSendChat={sendChat}
+          onCreateMockAgentTask={createMockAgentTask}
+          onRunMockAgent={runMockAgentForTask}
         />
       </aside>
       <section className="terminal-pane">

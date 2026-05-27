@@ -1,7 +1,9 @@
 import type {
+  AgentReport,
   EventRecord,
   RoomMember,
   RoomState,
+  TaskRecord,
   WorkspaceNode
 } from "./types";
 
@@ -59,6 +61,46 @@ export async function writeWorkspaceFile(path: string, content: string) {
 export async function getEvents(): Promise<EventRecord[]> {
   const response = await request<{ events: EventRecord[] }>("/api/events");
   return response.events;
+}
+
+export async function createTask(input: {
+  roomId: string;
+  title: string;
+  description: string;
+  creatorId: string;
+  assigneeId: string;
+  editablePaths: string[];
+  commandWhitelist: string[];
+  acceptanceTarget?: string;
+}): Promise<TaskRecord> {
+  const response = await request<{ task: TaskRecord }>("/api/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  return response.task;
+}
+
+export async function getTasks(roomId: string): Promise<TaskRecord[]> {
+  const response = await request<{ tasks: TaskRecord[] }>(
+    `/api/tasks?roomId=${encodeURIComponent(roomId)}`
+  );
+  return response.tasks;
+}
+
+export async function runMockAgent(
+  taskId: string,
+  agentId: string
+): Promise<AgentReport> {
+  const response = await request<{ report: AgentReport }>(
+    `/api/tasks/${taskId}/agent/mock/run`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agentId })
+    }
+  );
+  return response.report;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

@@ -1,17 +1,23 @@
-import type { EventRecord, RoomMember } from "../types";
+import type { EventRecord, RoomMember, TaskRecord } from "../types";
 
 export function CollaborationPanel({
   members,
   events,
+  tasks,
   chatText,
   onChatTextChange,
-  onSendChat
+  onSendChat,
+  onCreateMockAgentTask,
+  onRunMockAgent
 }: {
   members: RoomMember[];
   events: EventRecord[];
+  tasks: TaskRecord[];
   chatText: string;
   onChatTextChange(value: string): void;
   onSendChat(): void;
+  onCreateMockAgentTask(): void;
+  onRunMockAgent(taskId: string): void;
 }) {
   return (
     <div className="panel collab-panel">
@@ -22,7 +28,29 @@ export function CollaborationPanel({
           {members.map((member) => (
             <li key={member.id}>
               <span>{member.name}</span>
-              <small>{member.currentFile ?? "Browsing"}</small>
+              <small>
+                {member.kind} · {member.currentFile ?? "Browsing"}
+              </small>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <h2>Agent Task</h2>
+        <button onClick={onCreateMockAgentTask} data-testid="create-agent-task">
+          Create MockAgent Task
+        </button>
+        <ul className="task-list" data-testid="task-list">
+          {tasks.map((task) => (
+            <li key={task.id}>
+              <strong>{task.title}</strong>
+              <small>{task.status}</small>
+              <button
+                onClick={() => onRunMockAgent(task.id)}
+                data-testid={`run-agent-${task.id}`}
+              >
+                Run MockAgent
+              </button>
             </li>
           ))}
         </ul>
@@ -30,7 +58,7 @@ export function CollaborationPanel({
       <section>
         <h2>Activity</h2>
         <ol className="event-list" data-testid="event-list">
-          {events.slice(-12).map((event) => (
+          {events.slice(-20).map((event) => (
             <li key={event.id}>{event.type}</li>
           ))}
         </ol>
