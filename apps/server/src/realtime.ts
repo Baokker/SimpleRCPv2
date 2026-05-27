@@ -4,6 +4,11 @@ import type { EventLog } from "./eventLog.js";
 import type { RoomStore } from "./rooms.js";
 import type { ClientMessage, ServerMessage } from "./types.js";
 
+interface SocketIdentity {
+  roomId: string;
+  memberId: string;
+}
+
 export interface RealtimeContext {
   events: EventLog;
   rooms: RoomStore;
@@ -16,6 +21,16 @@ export function handleRealtimeMessage({
 }: RealtimeContext & { message: ClientMessage }): {
   broadcast: ServerMessage;
 } {
+  if (message.type === "ready") {
+    return {
+      broadcast: {
+        type: "presence",
+        roomId: message.roomId,
+        members: rooms.getRoom(message.roomId)?.members ?? []
+      }
+    };
+  }
+
   if (message.type === "open_file") {
     rooms.updatePresence(message.roomId, message.memberId, {
       currentFile: message.path
@@ -76,13 +91,35 @@ export function attachRealtimeServer(
 ) {
   const wss = new WebSocketServer({ server, path: "/ws" });
   const sockets = new Set<WebSocket>();
+  const identities = new Map<WebSocket, SocketIdentity>();
 
   wss.on("connection", (socket) => {
     sockets.add(socket);
-    socket.on("close", () => sockets.delete(socket));
+    socket.on("close", () => {
+      sockets.delete(socket);
+      const identity = identities.get(socket);
+      identities.delete(socket);
+      if (!identity) return;
+      try {
+        context.rooms.markOffline(identity.roomId, identity.memberId);
+        context.rooms.cleanupStaleMembers(identity.roomId);
+        broadcastToAll(sockets, {
+          type: "presence",
+          roomId: identity.roomId,
+          members: context.rooms.getRoom(identity.roomId)?.members ?? []
+        });
+      } catch {
+        // The room may have been removed during shutdown.
+      }
+    });
     socket.on("message", (data) => {
       try {
         const parsed = JSON.parse(data.toString()) as ClientMessage;
+        identities.set(socket, {
+          roomId: parsed.roomId,
+          memberId: parsed.memberId
+        });
+        context.rooms.markOnline(parsed.roomId, parsed.memberId);
         const { broadcast } = handleRealtimeMessage({
           ...context,
           message: parsed

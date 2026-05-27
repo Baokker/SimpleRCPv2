@@ -3,6 +3,7 @@ import type {
   EventRecord,
   RoomMember,
   RoomState,
+  RunRecord,
   TaskRecord,
   WorkspaceNode
 } from "./types";
@@ -23,17 +24,24 @@ export async function getRoom(roomId: string): Promise<RoomState> {
 export async function joinRoom(
   roomId: string,
   name: string,
-  kind: "human" | "agent" = "human"
+  kind: "human" | "agent" = "human",
+  clientId: string,
+  provider?: string
 ): Promise<RoomMember> {
   const response = await request<{ member: RoomMember }>(
     `/api/rooms/${roomId}/members`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, kind })
+      body: JSON.stringify({ name, kind, clientId, provider })
     }
   );
   return response.member;
+}
+
+export async function getAllowedCommands(): Promise<string[]> {
+  const response = await request<{ commands: string[] }>("/api/config/commands");
+  return response.commands;
 }
 
 export async function getWorkspaceTree(): Promise<WorkspaceNode[]> {
@@ -56,6 +64,46 @@ export async function writeWorkspaceFile(path: string, content: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path, content })
   });
+}
+
+export async function createWorkspaceFile(path: string, content = "") {
+  const response = await request<{ tree: WorkspaceNode[] }>("/api/workspace/file", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, content })
+  });
+  return response.tree;
+}
+
+export async function createWorkspaceDirectory(path: string) {
+  const response = await request<{ tree: WorkspaceNode[] }>(
+    "/api/workspace/directory",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path })
+    }
+  );
+  return response.tree;
+}
+
+export async function renameWorkspacePath(fromPath: string, toPath: string) {
+  const response = await request<{ tree: WorkspaceNode[] }>("/api/workspace/path", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fromPath, toPath })
+  });
+  return response.tree;
+}
+
+export async function deleteWorkspacePath(path: string) {
+  const response = await request<{ tree: WorkspaceNode[] }>(
+    `/api/workspace/path?path=${encodeURIComponent(path)}`,
+    {
+      method: "DELETE"
+    }
+  );
+  return response.tree;
 }
 
 export async function getEvents(): Promise<EventRecord[]> {
@@ -101,6 +149,33 @@ export async function runMockAgent(
     }
   );
   return response.report;
+}
+
+export async function runConfiguredAgent(
+  taskId: string,
+  agentId: string
+): Promise<AgentReport> {
+  const response = await request<{ report: AgentReport }>(
+    `/api/tasks/${taskId}/agent/run`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agentId })
+    }
+  );
+  return response.report;
+}
+
+export async function runQuickCommand(
+  command: string,
+  initiatorId: string
+): Promise<RunRecord> {
+  const response = await request<{ run: RunRecord }>("/api/runner/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command, initiatorId })
+  });
+  return response.run;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

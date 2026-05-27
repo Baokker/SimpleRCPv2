@@ -15,9 +15,13 @@ export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 
 export interface RoomMember {
   id: string;
+  clientId: string;
   name: string;
   kind: "human" | "agent";
+  online: boolean;
+  lastSeenAt: string;
   currentFile?: string;
+  provider?: string;
 }
 
 export interface RoomState {
@@ -54,6 +58,10 @@ export type ServerMessage =
       roomId: string;
       memberId: string;
       text: string;
+    }
+  | {
+      type: "workspace_tree_changed";
+      roomId: string;
     };
 
 export interface TaskRecord {
@@ -75,4 +83,14 @@ export interface AgentReport {
   summary: string;
   commands: string[];
   risks: string[];
+}
+
+export interface RunRecord {
+  id: string;
+  roomId: string;
+  taskId?: string;
+  initiatorId: string;
+  command: string;
+  exitCode: number | null;
+  output: string;
 }

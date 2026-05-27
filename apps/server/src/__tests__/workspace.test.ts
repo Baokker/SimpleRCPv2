@@ -3,8 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  createWorkspaceDirectory,
+  createWorkspaceFile,
+  deleteWorkspacePath,
   listWorkspaceTree,
   readWorkspaceFile,
+  renameWorkspacePath,
   resolveWorkspacePath,
   writeWorkspaceFile
 } from "../workspace.js";
@@ -73,6 +77,57 @@ describe("workspace service", () => {
 
     await expect(readWorkspaceFile(root, "src/hello.ts")).resolves.toBe(
       "export const hello = 'team';\n"
+    );
+  });
+
+  it("creates files and directories under the root", async () => {
+    await createWorkspaceFile(root, "src/new.ts", "export const value = 1;\n");
+    await createWorkspaceDirectory(root, "src/features");
+
+    await expect(readWorkspaceFile(root, "src/new.ts")).resolves.toContain(
+      "value"
+    );
+    const featuresStat = await fs.stat(path.join(root, "src", "features"));
+    expect(featuresStat.isDirectory()).toBe(true);
+  });
+
+  it("renames files and directories without overwriting existing paths", async () => {
+    await createWorkspaceDirectory(root, "src/features");
+    await renameWorkspacePath(root, "src/hello.ts", "src/greeting.ts");
+    await renameWorkspacePath(root, "src/features", "src/modules");
+
+    await expect(readWorkspaceFile(root, "src/greeting.ts")).resolves.toContain(
+      "world"
+    );
+    const modulesStat = await fs.stat(path.join(root, "src", "modules"));
+    expect(modulesStat.isDirectory()).toBe(true);
+    await expect(
+      renameWorkspacePath(root, "src/greeting.ts", "README.md")
+    ).rejects.toThrow("Target path already exists");
+  });
+
+  it("deletes files and directories but not the workspace root", async () => {
+    await createWorkspaceDirectory(root, "src/features");
+    await createWorkspaceFile(root, "src/features/example.ts", "");
+    await deleteWorkspacePath(root, "src/features");
+
+    await expect(
+      fs.stat(path.join(root, "src", "features"))
+    ).rejects.toThrow();
+    await expect(deleteWorkspacePath(root, "")).rejects.toThrow(
+      "Cannot delete workspace root"
+    );
+  });
+
+  it("rejects mutation path traversal", async () => {
+    await expect(
+      createWorkspaceFile(root, "../escape.ts", "")
+    ).rejects.toThrow("Path escapes workspace root");
+    await expect(
+      renameWorkspacePath(root, "src/hello.ts", "../escape.ts")
+    ).rejects.toThrow("Path escapes workspace root");
+    await expect(deleteWorkspacePath(root, "../escape.ts")).rejects.toThrow(
+      "Path escapes workspace root"
     );
   });
 });

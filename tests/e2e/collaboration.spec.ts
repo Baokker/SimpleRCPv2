@@ -12,6 +12,9 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
   await openAs(userA, "Ada");
   await openAs(userB, "Linus");
 
+  await userA.reload();
+  await userA.getByTestId("status-bar").waitFor();
+  await expect(userA.getByTestId("member-list").getByText("Ada")).toHaveCount(1);
   await expect(userA.getByTestId("member-list")).toContainText("Ada");
   await expect(userA.getByTestId("member-list")).toContainText("Linus");
   await expect(userB.getByTestId("workspace-tree")).toContainText("src");
@@ -25,16 +28,70 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
   await replaceMonacoText(userA, 'export const hello = "collab";');
   await expect(userB.getByTestId("editor-frame")).toContainText("collab");
 
+  await acceptPrompt(userA, userA.getByTestId("new-file").click(), "src/new-feature.ts");
+  await expect(userA.getByTestId("workspace-tree")).toContainText("new-feature.ts");
+  await expect(userB.getByTestId("workspace-tree")).toContainText("new-feature.ts");
+
+  await acceptPrompt(
+    userA,
+    userA.getByTestId("rename-src/new-feature.ts").click(),
+    "src/renamed-feature.ts"
+  );
+  await expect(userA.getByTestId("workspace-tree")).toContainText(
+    "renamed-feature.ts"
+  );
+
+  await acceptDialog(userA, userA.getByTestId("delete-src/renamed-feature.ts").click());
+  await expect(userA.getByTestId("workspace-tree")).not.toContainText(
+    "renamed-feature.ts"
+  );
+  await expect(userB.getByTestId("workspace-tree")).not.toContainText(
+    "renamed-feature.ts"
+  );
+
+  await acceptPrompt(userA, userA.getByTestId("new-folder").click(), "src/generated");
+  await expect(userA.getByTestId("workspace-tree")).toContainText("generated");
+  await expect(userB.getByTestId("workspace-tree")).toContainText("generated");
+
+  await acceptPrompt(
+    userA,
+    userA.getByTestId("rename-src/generated").click(),
+    "src/generated-renamed"
+  );
+  await expect(userA.getByTestId("workspace-tree")).toContainText(
+    "generated-renamed"
+  );
+
+  await acceptDialog(
+    userA,
+    userA.getByTestId("delete-src/generated-renamed").click()
+  );
+  await expect(userA.getByTestId("workspace-tree")).not.toContainText(
+    "generated-renamed"
+  );
+  await expect(userB.getByTestId("workspace-tree")).not.toContainText(
+    "generated-renamed"
+  );
+
+  await expect(userA.getByTestId("chat-composer")).toBeVisible();
+  await expect(userA.getByTestId("activity-feed")).toBeVisible();
+
+  await expect(userA.getByTestId("command-select")).toHaveValue("npm test");
+  await userA.getByTestId("run-command").click();
+  await expect(userA.getByTestId("terminal-output")).toContainText(
+    "sample-workspace-test-ok"
+  );
+
   await userA.getByTestId("create-agent-task").click();
   await expect(userA.getByTestId("task-list")).toContainText(
     "MockAgent update greeting"
   );
-  await userA.getByRole("button", { name: "Run MockAgent" }).click();
+  await userA.getByRole("button", { name: "Run Mock" }).click();
 
   await expect(userA.getByTestId("terminal-output")).toContainText(
     "MockAgent updated src/hello.ts"
   );
-  await expect(userA.getByTestId("event-list")).toContainText(
+  await expect(userA.getByTestId("activity-feed")).toContainText(
     "agent_reported"
   );
 
@@ -43,7 +100,12 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
     expect.arrayContaining([
       "room_created",
       "member_joined",
+      "member_rejoined",
       "file_opened",
+      "workspace_file_created",
+      "workspace_directory_created",
+      "workspace_path_renamed",
+      "workspace_path_deleted",
       "task_created",
       "agent_plan",
       "agent_edited_file",
@@ -89,4 +151,25 @@ async function replaceMonacoText(
     }
     editor.setValue(nextText);
   }, text);
+}
+
+async function acceptPrompt(
+  page: import("@playwright/test").Page,
+  trigger: Promise<unknown>,
+  value: string
+) {
+  const dialogPromise = page.waitForEvent("dialog");
+  const dialog = await dialogPromise;
+  await dialog.accept(value);
+  await trigger;
+}
+
+async function acceptDialog(
+  page: import("@playwright/test").Page,
+  trigger: Promise<unknown>
+) {
+  const dialogPromise = page.waitForEvent("dialog");
+  const dialog = await dialogPromise;
+  await dialog.accept();
+  await trigger;
 }

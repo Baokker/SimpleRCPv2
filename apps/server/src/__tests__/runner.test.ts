@@ -45,6 +45,25 @@ describe("runner", () => {
     expect(eventTypes.at(-1)).toBe("command_completed");
   });
 
+  it("runs quick whitelisted commands without a task id", async () => {
+    const events = createEventLog();
+    const result = await runWorkspaceCommand({
+      workspaceRoot: root,
+      command: "npm test",
+      whitelist: ["npm test"],
+      events,
+      roomId: "room-1",
+      initiatorId: "human-1",
+      timeoutMs: 10_000
+    });
+
+    expect(result.taskId).toBeUndefined();
+    expect(result.exitCode).toBe(0);
+    expect(events.list().map((event) => event.type)).toContain(
+      "command_completed"
+    );
+  });
+
   it("rejects commands outside the whitelist", async () => {
     const events = createEventLog();
     await expect(

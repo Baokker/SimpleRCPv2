@@ -46,7 +46,7 @@ export function EditorArea({
             theme="vs-dark"
             options={{
               minimap: { enabled: false },
-              fontSize: 14,
+              fontSize: 13,
               wordWrap: "on",
               scrollBeyondLastLine: false
             }}

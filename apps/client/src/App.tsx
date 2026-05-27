@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  createWorkspaceDirectory,
+  createWorkspaceFile,
   createTask,
+  deleteWorkspacePath,
+  getAllowedCommands,
   getEvents,
   getHealth,
   getRoom,
@@ -8,7 +12,10 @@ import {
   getWorkspaceTree,
   joinRoom,
   readWorkspaceFile,
+  renameWorkspacePath,
+  runConfiguredAgent,
   runMockAgent,
+  runQuickCommand,
   writeWorkspaceFile
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
@@ -29,6 +36,11 @@ export function App() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [chatText, setChatText] = useState("");
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [allowedCommands, setAllowedCommands] = useState<string[]>([]);
+  const [selectedCommand, setSelectedCommand] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [commandRunning, setCommandRunning] = useState(false);
+  const [connectionState, setConnectionState] = useState("Connecting");
   const [socket, setSocket] = useState<ClientSocket | null>(null);
   const bootStartedRef = useRef(false);
 
@@ -45,26 +57,38 @@ export function App() {
     let mounted = true;
     async function boot() {
       const health = await getHealth();
-      const joined = await joinRoom(health.roomId, displayName);
-      const [room, workspaceTree, eventRecords, taskRecords] = await Promise.all([
+      const clientId = getClientId();
+      const joined = await joinRoom(health.roomId, displayName, "human", clientId);
+      const [
+        room,
+        workspaceTree,
+        eventRecords,
+        taskRecords,
+        commands
+      ] = await Promise.all([
         getRoom(health.roomId),
         getWorkspaceTree(),
         getEvents(),
-        getTasks(health.roomId)
+        getTasks(health.roomId),
+        getAllowedCommands()
       ]);
 
       if (!mounted) return;
       setRoomId(health.roomId);
       setMember(joined);
       setMembers(room.members);
+      setWorkspaceName(room.workspaceName);
       setTree(workspaceTree);
       setEvents(eventRecords);
       setTasks(taskRecords);
+      setAllowedCommands(commands);
+      setSelectedCommand(commands[0] ?? "");
 
       const connected = connectRoomSocket({
         roomId: health.roomId,
         memberId: joined.id,
         onMessage(message) {
+          setConnectionState("Connected");
           if (message.type === "presence") {
             setMembers(message.members);
           }
@@ -80,8 +104,12 @@ export function App() {
           if (message.type === "chat_message") {
             void refreshEvents();
           }
+          if (message.type === "workspace_tree_changed") {
+            void refreshWorkspace();
+          }
         }
       });
+      connected.sendReady();
       setSocket(connected);
     }
 
@@ -109,15 +137,31 @@ export function App() {
 
   async function refreshTasksAndEvents() {
     if (!roomId) return;
-    const [room, taskRecords, eventRecords] = await Promise.all([
+    const [room, taskRecords, eventRecords, workspaceTree] = await Promise.all([
       getRoom(roomId),
       getTasks(roomId),
-      getEvents()
+      getEvents(),
+      getWorkspaceTree()
     ]);
     setMembers(room.members);
     setTasks(taskRecords);
     setEvents(eventRecords);
+    setTree(workspaceTree);
     setTerminalLines(terminalLinesFromEvents(eventRecords));
+  }
+
+  async function refreshWorkspace() {
+    setTree(await getWorkspaceTree());
+    if (activePath) {
+      try {
+        const content = await readWorkspaceFile(activePath);
+        setOpenFiles((files) =>
+          files.map((file) => (file.path === activePath ? { ...file, content } : file))
+        );
+      } catch {
+        closePath(activePath);
+      }
+    }
   }
 
   async function openFile(path: string) {
@@ -157,7 +201,7 @@ export function App() {
     const agentName = "MockAgent";
     const agentMember =
       members.find((candidate) => candidate.name === agentName) ??
-      (await joinRoom(roomId, agentName, "agent"));
+      (await joinRoom(roomId, agentName, "agent", "agent:mock", "mock"));
 
     await createTask({
       roomId,
@@ -187,22 +231,81 @@ export function App() {
       setOpenFiles((files) =>
         files.map((file) => (file.path === activePath ? { ...file, content } : file))
       );
+    }
   }
-}
 
-function terminalLinesFromEvents(events: EventRecord[]) {
-  return events.flatMap((event) => {
-    if (event.type === "command_output") {
-      const payload = event.payload as { output?: unknown } | undefined;
-      return [String(payload?.output ?? "")];
+  async function runConfiguredAgentForTask(taskId: string) {
+    const task = tasks.find((candidate) => candidate.id === taskId);
+    if (!task) return;
+    const report = await runConfiguredAgent(taskId, task.assigneeId);
+    setTerminalLines((lines) => [...lines, report.summary]);
+    await refreshTasksAndEvents();
+    await refreshWorkspace();
+  }
+
+  async function createFileFromPrompt() {
+    const path = window.prompt("New file path");
+    if (!path) return;
+    const nextTree = await createWorkspaceFile(path, "");
+    setTree(nextTree);
+    await openFile(path);
+    await refreshEvents();
+  }
+
+  async function createFolderFromPrompt() {
+    const path = window.prompt("New folder path");
+    if (!path) return;
+    setTree(await createWorkspaceDirectory(path));
+    await refreshEvents();
+  }
+
+  async function renamePathFromPrompt(path: string) {
+    const toPath = window.prompt("Rename path", path);
+    if (!toPath || toPath === path) return;
+    setTree(await renameWorkspacePath(path, toPath));
+    setOpenFiles((files) =>
+      files.map((file) =>
+        file.path === path ? { ...file, path: toPath } : file
+      )
+    );
+    if (activePath === path) {
+      setActivePath(toPath);
     }
-    if (event.type === "agent_reported") {
-      const payload = event.payload as { summary?: unknown } | undefined;
-      return [String(payload?.summary ?? "")];
+    await refreshEvents();
+  }
+
+  async function deletePathWithConfirm(path: string) {
+    if (!window.confirm(`Delete ${path}?`)) return;
+    setTree(await deleteWorkspacePath(path));
+    closePath(path);
+    await refreshEvents();
+  }
+
+  async function runSelectedCommand() {
+    if (!member || !selectedCommand) return;
+    setCommandRunning(true);
+    try {
+      const run = await runQuickCommand(selectedCommand, member.id);
+      setTerminalLines((lines) => [
+        ...lines,
+        `$ ${selectedCommand}`,
+        run.output.trimEnd(),
+        `exit ${run.exitCode}`
+      ]);
+      await refreshTasksAndEvents();
+    } finally {
+      setCommandRunning(false);
     }
-    return [];
-  });
-}
+  }
+
+  function closePath(path: string) {
+    setOpenFiles((files) =>
+      files.filter((file) => file.path !== path && !file.path.startsWith(`${path}/`))
+    );
+    if (activePath === path || activePath?.startsWith(`${path}/`)) {
+      setActivePath(undefined);
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -210,7 +313,12 @@ function terminalLinesFromEvents(events: EventRecord[]) {
         <WorkspaceExplorer
           tree={tree}
           activePath={activePath}
+          workspaceName={workspaceName}
           onOpenFile={openFile}
+          onCreateFile={createFileFromPrompt}
+          onCreateFolder={createFolderFromPrompt}
+          onRenamePath={renamePathFromPrompt}
+          onDeletePath={deletePathWithConfirm}
         />
       </aside>
       <section className="editor-pane">
@@ -231,14 +339,47 @@ function terminalLinesFromEvents(events: EventRecord[]) {
           onSendChat={sendChat}
           onCreateMockAgentTask={createMockAgentTask}
           onRunMockAgent={runMockAgentForTask}
+          onRunConfiguredAgent={runConfiguredAgentForTask}
         />
       </aside>
       <section className="terminal-pane">
-        <TerminalPanel lines={terminalLines} />
+        <TerminalPanel
+          lines={terminalLines}
+          commands={allowedCommands}
+          selectedCommand={selectedCommand}
+          running={commandRunning}
+          onSelectedCommandChange={setSelectedCommand}
+          onRunCommand={runSelectedCommand}
+        />
       </section>
-      <div className="room-badge" data-testid="room-badge">
-        Room {roomId} · {member?.name ?? "Joining"}
+      <div className="status-bar" data-testid="status-bar">
+        <span>{connectionState}</span>
+        <span>Room {roomId || "..."}</span>
+        <span>{member?.name ?? "Joining"}</span>
+        <span>{workspaceName || "Workspace"}</span>
       </div>
     </main>
   );
+}
+
+function terminalLinesFromEvents(events: EventRecord[]) {
+  return events.flatMap((event) => {
+    if (event.type === "command_output") {
+      const payload = event.payload as { output?: unknown } | undefined;
+      return [String(payload?.output ?? "")];
+    }
+    if (event.type === "agent_reported") {
+      const payload = event.payload as { summary?: unknown } | undefined;
+      return [String(payload?.summary ?? "")];
+    }
+    return [];
+  });
+}
+
+function getClientId() {
+  const existing = window.sessionStorage.getItem("simplercp.clientId");
+  if (existing) return existing;
+  const next = window.crypto.randomUUID();
+  window.sessionStorage.setItem("simplercp.clientId", next);
+  return next;
 }

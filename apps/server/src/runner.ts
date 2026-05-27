@@ -9,7 +9,7 @@ export interface RunWorkspaceCommandInput {
   whitelist: string[];
   events: EventLog;
   roomId: string;
-  taskId: string;
+  taskId?: string;
   initiatorId: string;
   timeoutMs: number;
 }

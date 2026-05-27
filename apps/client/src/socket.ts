@@ -4,6 +4,7 @@ export interface ClientSocket {
   sendOpenFile(path: string): void;
   sendFileChange(path: string, content: string): void;
   sendChat(text: string): void;
+  sendReady(): void;
   close(): void;
 }
 
@@ -42,6 +43,9 @@ export function connectRoomSocket({
     },
     sendChat(text) {
       send({ type: "chat_message", text });
+    },
+    sendReady() {
+      send({ type: "ready" });
     },
     close() {
       socket.close();

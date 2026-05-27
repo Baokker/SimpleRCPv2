@@ -17,9 +17,13 @@ export type MemberKind = "human" | "agent";
 
 export interface RoomMember {
   id: string;
+  clientId: string;
   name: string;
   kind: MemberKind;
+  online: boolean;
+  lastSeenAt: string;
   currentFile?: string;
+  provider?: string;
 }
 
 export interface RoomState {
@@ -39,6 +43,11 @@ export interface EventRecord {
 }
 
 export type ClientMessage =
+  | {
+      type: "ready";
+      roomId: string;
+      memberId: string;
+    }
   | {
       type: "open_file";
       roomId: string;
@@ -81,6 +90,10 @@ export type ServerMessage =
   | {
       type: "event";
       event: EventRecord;
+    }
+  | {
+      type: "workspace_tree_changed";
+      roomId: string;
     };
 
 export interface TaskRecord {
@@ -99,7 +112,7 @@ export interface TaskRecord {
 export interface RunRecord {
   id: string;
   roomId: string;
-  taskId: string;
+  taskId?: string;
   initiatorId: string;
   command: string;
   exitCode: number | null;

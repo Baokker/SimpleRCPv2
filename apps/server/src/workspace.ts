@@ -73,3 +73,68 @@ export async function writeWorkspaceFile(
   await fs.mkdir(path.dirname(absolutePath), { recursive: true });
   await fs.writeFile(absolutePath, content, "utf8");
 }
+
+export async function createWorkspaceFile(
+  root: string,
+  relativePath: string,
+  content = ""
+) {
+  const absolutePath = resolveWorkspacePath(root, relativePath);
+  if (await pathExists(absolutePath)) {
+    throw new Error("Target path already exists");
+  }
+  await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+  await fs.writeFile(absolutePath, content, { encoding: "utf8", flag: "wx" });
+}
+
+export async function createWorkspaceDirectory(
+  root: string,
+  relativePath: string
+) {
+  const absolutePath = resolveWorkspacePath(root, relativePath);
+  if (await pathExists(absolutePath)) {
+    throw new Error("Target path already exists");
+  }
+  await fs.mkdir(absolutePath, { recursive: true });
+}
+
+export async function renameWorkspacePath(
+  root: string,
+  fromPath: string,
+  toPath: string
+) {
+  const absoluteFrom = resolveWorkspacePath(root, fromPath);
+  const absoluteTo = resolveWorkspacePath(root, toPath);
+  if (isWorkspaceRoot(root, fromPath)) {
+    throw new Error("Cannot rename workspace root");
+  }
+  if (await pathExists(absoluteTo)) {
+    throw new Error("Target path already exists");
+  }
+  await fs.mkdir(path.dirname(absoluteTo), { recursive: true });
+  await fs.rename(absoluteFrom, absoluteTo);
+}
+
+export async function deleteWorkspacePath(root: string, relativePath: string) {
+  const absolutePath = resolveWorkspacePath(root, relativePath);
+  if (isWorkspaceRoot(root, relativePath)) {
+    throw new Error("Cannot delete workspace root");
+  }
+  await fs.rm(absolutePath, { recursive: true, force: false });
+}
+
+export async function pathExists(absolutePath: string) {
+  try {
+    await fs.stat(absolutePath);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+function isWorkspaceRoot(root: string, relativePath: string) {
+  return path.resolve(root) === resolveWorkspacePath(root, relativePath);
+}

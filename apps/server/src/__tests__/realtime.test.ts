@@ -8,7 +8,11 @@ describe("realtime message handling", () => {
     const events = createEventLog();
     const rooms = createRoomStore(events);
     const room = rooms.createRoom("workspace");
-    const member = rooms.joinRoom(room.id, "Ada", "human");
+    const member = rooms.joinRoom(room.id, {
+      name: "Ada",
+      kind: "human",
+      clientId: "client-a"
+    });
 
     const result = handleRealtimeMessage({
       events,
@@ -33,7 +37,11 @@ describe("realtime message handling", () => {
     const events = createEventLog();
     const rooms = createRoomStore(events);
     const room = rooms.createRoom("workspace");
-    const member = rooms.joinRoom(room.id, "Ada", "human");
+    const member = rooms.joinRoom(room.id, {
+      name: "Ada",
+      kind: "human",
+      clientId: "client-a"
+    });
 
     const result = handleRealtimeMessage({
       events,

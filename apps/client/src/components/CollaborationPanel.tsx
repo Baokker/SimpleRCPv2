@@ -8,7 +8,8 @@ export function CollaborationPanel({
   onChatTextChange,
   onSendChat,
   onCreateMockAgentTask,
-  onRunMockAgent
+  onRunMockAgent,
+  onRunConfiguredAgent
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -18,16 +19,20 @@ export function CollaborationPanel({
   onSendChat(): void;
   onCreateMockAgentTask(): void;
   onRunMockAgent(taskId: string): void;
+  onRunConfiguredAgent(taskId: string): void;
 }) {
   return (
     <div className="panel collab-panel">
-      <div className="panel-header">Collaboration</div>
-      <section>
+      <div className="panel-header">Agents</div>
+      <section className="collab-section members-section">
         <h2>Members</h2>
         <ul className="member-list" data-testid="member-list">
           {members.map((member) => (
             <li key={member.id}>
-              <span>{member.name}</span>
+              <span>
+                <i className={member.online ? "status-dot online" : "status-dot"} />
+                {member.name}
+              </span>
               <small>
                 {member.kind} · {member.currentFile ?? "Browsing"}
               </small>
@@ -35,8 +40,8 @@ export function CollaborationPanel({
           ))}
         </ul>
       </section>
-      <section>
-        <h2>Agent Task</h2>
+      <section className="collab-section agent-section">
+        <h2>Agent</h2>
         <button onClick={onCreateMockAgentTask} data-testid="create-agent-task">
           Create MockAgent Task
         </button>
@@ -45,25 +50,36 @@ export function CollaborationPanel({
             <li key={task.id}>
               <strong>{task.title}</strong>
               <small>{task.status}</small>
-              <button
-                onClick={() => onRunMockAgent(task.id)}
-                data-testid={`run-agent-${task.id}`}
-              >
-                Run MockAgent
-              </button>
+              <div className="task-actions">
+                <button
+                  onClick={() => onRunMockAgent(task.id)}
+                  data-testid={`run-agent-${task.id}`}
+                >
+                  Run Mock
+                </button>
+                <button
+                  onClick={() => onRunConfiguredAgent(task.id)}
+                  data-testid={`run-configured-agent-${task.id}`}
+                >
+                  Run Provider
+                </button>
+              </div>
             </li>
           ))}
         </ul>
       </section>
-      <section>
+      <section className="collab-section activity-section">
         <h2>Activity</h2>
-        <ol className="event-list" data-testid="event-list">
+        <ol
+          className="event-list"
+          data-testid="activity-feed"
+        >
           {events.slice(-20).map((event) => (
             <li key={event.id}>{event.type}</li>
           ))}
         </ol>
       </section>
-      <section className="chat-box">
+      <section className="chat-box" data-testid="chat-composer">
         <h2>Chat</h2>
         <textarea
           value={chatText}
