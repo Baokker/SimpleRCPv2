@@ -37,3 +37,48 @@ export interface EventRecord {
   timestamp: string;
   payload?: Record<string, unknown>;
 }
+
+export type ClientMessage =
+  | {
+      type: "open_file";
+      roomId: string;
+      memberId: string;
+      path: string;
+    }
+  | {
+      type: "file_change";
+      roomId: string;
+      memberId: string;
+      path: string;
+      content: string;
+    }
+  | {
+      type: "chat_message";
+      roomId: string;
+      memberId: string;
+      text: string;
+    };
+
+export type ServerMessage =
+  | {
+      type: "presence";
+      roomId: string;
+      members: RoomMember[];
+    }
+  | {
+      type: "file_change";
+      roomId: string;
+      memberId: string;
+      path: string;
+      content: string;
+    }
+  | {
+      type: "chat_message";
+      roomId: string;
+      memberId: string;
+      text: string;
+    }
+  | {
+      type: "event";
+      event: EventRecord;
+    };
