@@ -219,18 +219,49 @@ input {
 }
 
 .tab {
-  border: 0;
   border-right: 1px solid #2b3240;
-  padding: 0 12px;
   background: #181f2d;
   color: #b9c5d8;
-  cursor: pointer;
   font-size: 12px;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .tab.active {
   background: #222b3c;
   color: #ffffff;
+}
+
+.tab-select,
+.tab-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tab-select {
+  padding: 0 6px 0 12px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  display: grid;
+  width: 28px;
+  padding: 0;
+  place-items: center;
+  opacity: 0.65;
+}
+
+.tab-close:hover,
+.tab-close:focus-visible {
+  opacity: 1;
+  background: #343e52;
 }
 
 .editor-frame {

@@ -1,4 +1,5 @@
 import Editor from "@monaco-editor/react";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type * as Monaco from "monaco-editor";
 import type {
@@ -23,6 +24,7 @@ export function EditorArea({
   activePath,
   remoteCursors,
   onSelectFile,
+  onCloseFile,
   onChangeFile,
   onCursorChange
 }: {
@@ -30,6 +32,7 @@ export function EditorArea({
   activePath?: string;
   remoteCursors: RemoteCursor[];
   onSelectFile(path: string): void;
+  onCloseFile(path: string): void;
   onChangeFile(path: string, content: string): void;
   onCursorChange(
     path: string,
@@ -61,13 +64,27 @@ export function EditorArea({
     <div className="editor-area">
       <div className="tabs" data-testid="editor-tabs">
         {openFiles.map((file) => (
-          <button
+          <div
             key={file.path}
             className={file.path === activePath ? "tab active" : "tab"}
-            onClick={() => onSelectFile(file.path)}
           >
-            {file.path}
-          </button>
+            <button
+              className="tab-select"
+              onClick={() => onSelectFile(file.path)}
+              title={file.path}
+            >
+              {file.path}
+            </button>
+            <button
+              className="tab-close"
+              aria-label={`Close ${file.path}`}
+              title="Close"
+              onClick={() => onCloseFile(file.path)}
+              data-testid={`close-tab-${file.path}`}
+            >
+              <X size={13} />
+            </button>
+          </div>
         ))}
       </div>
       <div className="editor-frame" data-testid="editor-frame">
@@ -82,9 +99,12 @@ export function EditorArea({
               minimap: { enabled: false },
               fontSize: 13,
               wordWrap: "on",
-              scrollBeyondLastLine: false
+              scrollBeyondLastLine: false,
+              quickSuggestions: true,
+              suggestOnTriggerCharacters: true
             }}
             onMount={(editor, monaco) => {
+              registerPythonCompletions(monaco);
               editorRef.current = editor;
               monacoRef.current = monaco;
               decorationIdsRef.current = [];
@@ -165,8 +185,94 @@ function languageForPath(path: string) {
   if (path.endsWith(".ts") || path.endsWith(".tsx")) return "typescript";
   if (path.endsWith(".js") || path.endsWith(".jsx")) return "javascript";
   if (path.endsWith(".java")) return "java";
+  if (path.endsWith(".py")) return "python";
   if (path.endsWith(".xml")) return "xml";
   if (path.endsWith(".json")) return "json";
   if (path.endsWith(".md")) return "markdown";
   return "plaintext";
+}
+
+let pythonCompletionsRegistered = false;
+
+function registerPythonCompletions(monaco: typeof Monaco) {
+  if (pythonCompletionsRegistered) return;
+  pythonCompletionsRegistered = true;
+
+  const keywords = [
+    "and",
+    "as",
+    "assert",
+    "async",
+    "await",
+    "break",
+    "class",
+    "continue",
+    "def",
+    "del",
+    "elif",
+    "else",
+    "except",
+    "False",
+    "finally",
+    "for",
+    "from",
+    "global",
+    "if",
+    "import",
+    "in",
+    "is",
+    "lambda",
+    "None",
+    "nonlocal",
+    "not",
+    "or",
+    "pass",
+    "raise",
+    "return",
+    "True",
+    "try",
+    "while",
+    "with",
+    "yield"
+  ];
+  const snippets = [
+    { label: "def", insertText: "def ${1:name}(${2}):\n\t${0:pass}" },
+    { label: "class", insertText: "class ${1:Name}:\n\t${0:pass}" },
+    { label: "if", insertText: "if ${1:condition}:\n\t${0:pass}" },
+    { label: "for", insertText: "for ${1:item} in ${2:items}:\n\t${0:pass}" },
+    {
+      label: "try",
+      insertText:
+        "try:\n\t${1:pass}\nexcept ${2:Exception} as ${3:error}:\n\t${0:raise}"
+    }
+  ];
+
+  monaco.languages.registerCompletionItemProvider("python", {
+    provideCompletionItems(model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn
+      };
+      return {
+        suggestions: [
+          ...keywords.map((keyword) => ({
+            label: keyword,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: keyword,
+            range
+          })),
+          ...snippets.map((snippet) => ({
+            ...snippet,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range
+          }))
+        ]
+      };
+    }
+  });
 }

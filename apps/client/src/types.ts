@@ -13,6 +13,11 @@ export interface WorkspaceDirectoryNode {
 
 export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 
+export type WorkspaceFileLoadResult =
+  | { status: "text"; path: string; size: number; content: string }
+  | { status: "binary"; path: string; size: number }
+  | { status: "large"; path: string; size: number };
+
 export interface RoomMember {
   id: string;
   userId: string;

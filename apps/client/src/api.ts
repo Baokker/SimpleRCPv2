@@ -5,6 +5,7 @@ import type {
   RoomState,
   RunRecord,
   RuntimeConfig,
+  WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
 
@@ -58,11 +59,13 @@ export async function getWorkspaceTree(): Promise<WorkspaceNode[]> {
   return response.tree;
 }
 
-export async function readWorkspaceFile(path: string): Promise<string> {
-  const response = await request<{ content: string }>(
-    `/api/workspace/file?path=${encodeURIComponent(path)}`
-  );
-  return response.content;
+export async function readWorkspaceFile(
+  path: string,
+  force = false
+): Promise<WorkspaceFileLoadResult> {
+  const query = new URLSearchParams({ path });
+  if (force) query.set("force", "true");
+  return request(`/api/workspace/file?${query.toString()}`);
 }
 
 export async function writeWorkspaceFile(path: string, content: string) {

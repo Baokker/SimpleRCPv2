@@ -164,10 +164,8 @@ export function createApp(config: ServerConfig) {
   app.get("/api/workspace/file", async (req, res, next) => {
     try {
       const filePath = String(req.query.path ?? "");
-      res.json({
-        path: filePath,
-        content: await readWorkspaceFile(config.workspaceRoot, filePath)
-      });
+      const force = req.query.force === "true";
+      res.json(await readWorkspaceFile(config.workspaceRoot, filePath, force));
     } catch (error) {
       next(error);
     }

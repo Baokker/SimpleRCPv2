@@ -227,8 +227,25 @@ export function App() {
 
   async function openFile(path: string) {
     if (!openFiles.some((file) => file.path === path)) {
-      const content = await readWorkspaceFile(path);
-      setOpenFiles((files) => [...files, { path, content }]);
+      let result = await readWorkspaceFile(path);
+      if (result.status === "binary") {
+        window.alert(
+          `${path} is a binary file (${formatBytes(result.size)}) and cannot be opened in the text editor.`
+        );
+        return;
+      }
+      if (result.status === "large") {
+        const shouldLoad = window.confirm(
+          `${path} is ${formatBytes(result.size)}. Large files may slow down collaboration. Open it anyway?`
+        );
+        if (!shouldLoad) return;
+        result = await readWorkspaceFile(path, true);
+      }
+      if (result.status !== "text") return;
+      setOpenFiles((files) => [
+        ...files,
+        { path, content: result.content }
+      ]);
     }
     setActivePath(path);
     socketRef.current?.sendOpenFile(path);
@@ -333,6 +350,19 @@ export function App() {
     }
   }
 
+  function closeFile(path: string) {
+    const index = openFiles.findIndex((file) => file.path === path);
+    if (index < 0) return;
+    const remaining = openFiles.filter((file) => file.path !== path);
+    setOpenFiles(remaining);
+
+    if (activePath === path) {
+      const next = remaining[Math.min(index, remaining.length - 1)];
+      setActivePath(next?.path);
+      if (next) socketRef.current?.sendOpenFile(next.path);
+    }
+  }
+
   return (
     <main className="app-shell">
       <aside className="workspace-pane">
@@ -353,6 +383,7 @@ export function App() {
           activePath={activePath}
           remoteCursors={remoteCursors}
           onSelectFile={selectFile}
+          onCloseFile={closeFile}
           onChangeFile={changeFile}
           onCursorChange={changeCursor}
         />
@@ -413,4 +444,10 @@ function getConnectionId() {
   const next = window.crypto.randomUUID();
   window.sessionStorage.setItem("simplercp.connectionId", next);
   return next;
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
 }

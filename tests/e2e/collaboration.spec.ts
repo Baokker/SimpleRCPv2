@@ -26,8 +26,48 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   );
   await ada.getByTestId("dir-src").click();
   await linus.getByTestId("dir-src").click();
+
+  await expect(ada.getByTestId("dir-target")).toBeVisible();
+  await ada.getByTestId("dir-target").click();
+  await ada.getByTestId("dir-target/classes").click();
+  await handleNextDialog(ada, "alert", "binary file", "accept", () =>
+    ada.getByTestId("file-target/classes/Main.class").click()
+  );
+  await expect(
+    ada.getByTestId("close-tab-target/classes/Main.class")
+  ).toHaveCount(0);
+
+  await ada.getByTestId("dir-target/generated").click();
+  await handleNextDialog(
+    ada,
+    "confirm",
+    "Large files may slow down collaboration",
+    "dismiss",
+    () => ada.getByTestId("file-target/generated/large.js").click()
+  );
+  await expect(
+    ada.getByTestId("close-tab-target/generated/large.js")
+  ).toHaveCount(0);
+  await handleNextDialog(ada, "confirm", "Large files", "accept", () =>
+    ada.getByTestId("file-target/generated/large.js").click()
+  );
+  await expect(
+    ada.getByTestId("close-tab-target/generated/large.js")
+  ).toBeVisible();
+  await ada.getByTestId("close-tab-target/generated/large.js").click();
+
   await ada.getByTestId("file-src/hello.ts").click();
   await linus.getByTestId("file-src/hello.ts").click();
+
+  await ada.getByTestId("file-src/sample.py").click();
+  await triggerPythonSuggestions(ada, "src/sample.py", "de");
+  await expect(ada.locator(".suggest-widget")).toBeVisible();
+  await expect(ada.locator(".suggest-widget")).toContainText("def");
+  await ada.keyboard.press("Escape");
+
+  await ada.getByTestId("close-tab-src/sample.py").click();
+  await expect(ada.getByTestId("close-tab-src/sample.py")).toHaveCount(0);
+  await expect(ada.getByTestId("close-tab-src/hello.ts")).toBeVisible();
 
   await setMonacoSelection(ada, "src/hello.ts", {
     startLineNumber: 1,
@@ -207,4 +247,61 @@ async function expectRemoteCursor(
     },
     { filePath: path, name: displayName }
   );
+}
+
+async function triggerPythonSuggestions(
+  page: import("@playwright/test").Page,
+  path: string,
+  text: string
+) {
+  await page.waitForFunction(
+    (filePath) =>
+      Boolean(
+        (
+          window as typeof window & {
+            __simplercpEditors?: Record<string, unknown>;
+          }
+        ).__simplercpEditors?.[filePath]
+      ),
+    path
+  );
+  await page.evaluate(
+    ({ filePath, value }) => {
+      const editor = (
+        window as typeof window & {
+          __simplercpEditors?: Record<
+            string,
+            {
+              setValue(value: string): void;
+              setPosition(position: { lineNumber: number; column: number }): void;
+              trigger(source: string, handlerId: string, payload: object): void;
+              focus(): void;
+            }
+          >;
+        }
+      ).__simplercpEditors?.[filePath];
+      if (!editor) throw new Error("Monaco editor is not ready");
+      editor.setValue(value);
+      editor.setPosition({ lineNumber: 1, column: value.length + 1 });
+      editor.focus();
+      editor.trigger("e2e", "editor.action.triggerSuggest", {});
+    },
+    { filePath: path, value: text }
+  );
+}
+
+async function handleNextDialog(
+  page: import("@playwright/test").Page,
+  type: "alert" | "confirm",
+  message: string,
+  action: "accept" | "dismiss",
+  trigger: () => Promise<unknown>
+) {
+  const dialogHandled = (async () => {
+    const dialog = await page.waitForEvent("dialog");
+    expect(dialog.type()).toBe(type);
+    expect(dialog.message()).toContain(message);
+    await dialog[action]();
+  })();
+  await Promise.all([trigger(), dialogHandled]);
 }

@@ -64,7 +64,7 @@ describe("workspace service", () => {
     ]);
   });
 
-  it("hides common IDE, build, and binary noise from the tree", async () => {
+  it("lists hidden, build, and binary entries from disk", async () => {
     await fs.writeFile(path.join(root, ".DS_Store"), "");
     await fs.mkdir(path.join(root, ".idea"), { recursive: true });
     await fs.writeFile(path.join(root, ".idea", "workspace.xml"), "<project />");
@@ -75,16 +75,19 @@ describe("workspace service", () => {
     const tree = await listWorkspaceTree(root);
     const serialized = JSON.stringify(tree);
 
-    expect(serialized).not.toContain(".DS_Store");
-    expect(serialized).not.toContain(".idea");
-    expect(serialized).not.toContain("target");
-    expect(serialized).not.toContain("Generated.class");
+    expect(serialized).toContain(".DS_Store");
+    expect(serialized).toContain(".idea");
+    expect(serialized).toContain("target");
+    expect(serialized).toContain("Generated.class");
   });
 
   it("reads and writes files under the root", async () => {
-    await expect(readWorkspaceFile(root, "src/hello.ts")).resolves.toBe(
-      "export const hello = 'world';\n"
-    );
+    await expect(readWorkspaceFile(root, "src/hello.ts")).resolves.toEqual({
+      status: "text",
+      path: "src/hello.ts",
+      size: 30,
+      content: "export const hello = 'world';\n"
+    });
 
     await writeWorkspaceFile(
       root,
@@ -92,18 +95,45 @@ describe("workspace service", () => {
       "export const hello = 'team';\n"
     );
 
-    await expect(readWorkspaceFile(root, "src/hello.ts")).resolves.toBe(
-      "export const hello = 'team';\n"
-    );
+    await expect(readWorkspaceFile(root, "src/hello.ts")).resolves.toMatchObject({
+      status: "text",
+      content: "export const hello = 'team';\n"
+    });
+  });
+
+  it("classifies binary files without loading them as text", async () => {
+    await fs.writeFile(path.join(root, "image.bin"), Buffer.from([1, 0, 2, 3]));
+
+    await expect(readWorkspaceFile(root, "image.bin")).resolves.toEqual({
+      status: "binary",
+      path: "image.bin",
+      size: 4
+    });
+  });
+
+  it("requires force before loading large text files", async () => {
+    const content = "a".repeat(1024 * 1024 + 1);
+    await fs.writeFile(path.join(root, "large.js"), content);
+
+    await expect(readWorkspaceFile(root, "large.js")).resolves.toEqual({
+      status: "large",
+      path: "large.js",
+      size: content.length
+    });
+    await expect(readWorkspaceFile(root, "large.js", true)).resolves.toMatchObject({
+      status: "text",
+      content
+    });
   });
 
   it("creates files and directories under the root", async () => {
     await createWorkspaceFile(root, "src/new.ts", "export const value = 1;\n");
     await createWorkspaceDirectory(root, "src/features");
 
-    await expect(readWorkspaceFile(root, "src/new.ts")).resolves.toContain(
-      "value"
-    );
+    await expect(readWorkspaceFile(root, "src/new.ts")).resolves.toMatchObject({
+      status: "text",
+      content: expect.stringContaining("value")
+    });
     const featuresStat = await fs.stat(path.join(root, "src", "features"));
     expect(featuresStat.isDirectory()).toBe(true);
   });
@@ -113,9 +143,10 @@ describe("workspace service", () => {
     await renameWorkspacePath(root, "src/hello.ts", "src/greeting.ts");
     await renameWorkspacePath(root, "src/features", "src/modules");
 
-    await expect(readWorkspaceFile(root, "src/greeting.ts")).resolves.toContain(
-      "world"
-    );
+    await expect(readWorkspaceFile(root, "src/greeting.ts")).resolves.toMatchObject({
+      status: "text",
+      content: expect.stringContaining("world")
+    });
     const modulesStat = await fs.stat(path.join(root, "src", "modules"));
     expect(modulesStat.isDirectory()).toBe(true);
     await expect(

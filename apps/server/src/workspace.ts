@@ -1,25 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { WorkspaceNode } from "./types.js";
+import type { WorkspaceFileLoadResult, WorkspaceNode } from "./types.js";
 
-const IGNORED_NAMES = new Set([
-  ".DS_Store",
-  ".git",
-  ".idea",
-  "coverage",
-  "dist",
-  "node_modules",
-  "target"
-]);
-const IGNORED_EXTENSIONS = new Set([
-  ".class",
-  ".dll",
-  ".dylib",
-  ".exe",
-  ".jar",
-  ".o",
-  ".pyc",
-  ".so"
+export const LARGE_FILE_BYTES = 1024 * 1024;
+const BINARY_SAMPLE_BYTES = 8 * 1024;
+const BINARY_EXTENSIONS = new Set([
+  ".class", ".dll", ".dylib", ".exe", ".gif", ".ico", ".jar", ".jpeg",
+  ".jpg", ".o", ".pdf", ".png", ".pyc", ".so", ".webp", ".zip"
 ]);
 
 export function resolveWorkspacePath(root: string, relativePath: string) {
@@ -46,7 +33,6 @@ async function listDirectory(
   const entries = await fs.readdir(absoluteDir, { withFileTypes: true });
   const nodes = await Promise.all(
     entries
-      .filter((entry) => !isIgnoredEntry(entry.name))
       .sort((a, b) => {
         if (a.isDirectory() !== b.isDirectory()) {
           return a.isDirectory() ? 1 : -1;
@@ -78,12 +64,38 @@ async function listDirectory(
   return nodes;
 }
 
-function isIgnoredEntry(name: string) {
-  return IGNORED_NAMES.has(name) || IGNORED_EXTENSIONS.has(path.extname(name));
-}
+export async function readWorkspaceFile(
+  root: string,
+  relativePath: string,
+  force = false
+): Promise<WorkspaceFileLoadResult> {
+  const absolutePath = resolveWorkspacePath(root, relativePath);
+  const file = await fs.open(absolutePath, "r");
 
-export async function readWorkspaceFile(root: string, relativePath: string) {
-  return fs.readFile(resolveWorkspacePath(root, relativePath), "utf8");
+  try {
+    const stat = await file.stat();
+    const sample = Buffer.alloc(Math.min(stat.size, BINARY_SAMPLE_BYTES));
+    await file.read(sample, 0, sample.length, 0);
+
+    if (
+      BINARY_EXTENSIONS.has(path.extname(relativePath).toLowerCase()) ||
+      sample.includes(0)
+    ) {
+      return { status: "binary", path: relativePath, size: stat.size };
+    }
+    if (stat.size > LARGE_FILE_BYTES && !force) {
+      return { status: "large", path: relativePath, size: stat.size };
+    }
+
+    return {
+      status: "text",
+      path: relativePath,
+      size: stat.size,
+      content: await fs.readFile(absolutePath, "utf8")
+    };
+  } finally {
+    await file.close();
+  }
 }
 
 export async function writeWorkspaceFile(
