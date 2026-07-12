@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { openAs } from "./helpers";
+
+const workspaceRoot = path.join(os.tmpdir(), "simplercp-e2e-workspace");
 
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({
   browser
@@ -58,6 +62,18 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await ada.getByTestId("file-src/hello.ts").click();
   await linus.getByTestId("file-src/hello.ts").click();
+
+  await replaceMonacoText(ada, "src/hello.ts", "middle");
+  await expectMonacoValue(linus, "src/hello.ts", "middle");
+  await Promise.all([
+    insertMonacoText(ada, "src/hello.ts", "start", "Ada "),
+    insertMonacoText(linus, "src/hello.ts", "end", " Linus")
+  ]);
+  await expectMonacoValue(ada, "src/hello.ts", "Ada middle Linus");
+  await expectMonacoValue(linus, "src/hello.ts", "Ada middle Linus");
+  await expect
+    .poll(() => fs.readFile(path.join(workspaceRoot, "src/hello.ts"), "utf8"))
+    .toBe("Ada middle Linus");
 
   await ada.getByTestId("file-src/sample.py").click();
   await triggerPythonSuggestions(ada, "src/sample.py", "de");
@@ -147,17 +163,7 @@ async function replaceMonacoText(
   path: string,
   text: string
 ) {
-  await page.waitForFunction(
-    (filePath) =>
-      Boolean(
-        (
-          window as typeof window & {
-            __simplercpEditors?: Record<string, { setValue(value: string): void }>;
-          }
-        ).__simplercpEditors?.[filePath]
-      ),
-    path
-  );
+  await waitForCollaborativeEditor(page, path);
   await page.evaluate(
     ({ filePath, nextText }) => {
       const editor = (
@@ -182,17 +188,7 @@ async function setMonacoSelection(
     endColumn: number;
   }
 ) {
-  await page.waitForFunction(
-    (filePath) =>
-      Boolean(
-        (
-          window as typeof window & {
-            __simplercpEditors?: Record<string, unknown>;
-          }
-        ).__simplercpEditors?.[filePath]
-      ),
-    path
-  );
+  await waitForCollaborativeEditor(page, path);
   await page.evaluate(
     ({ filePath, nextSelection }) => {
       const editor = (
@@ -208,6 +204,83 @@ async function setMonacoSelection(
       editor.setSelection(nextSelection);
     },
     { filePath: path, nextSelection: selection }
+  );
+}
+
+async function insertMonacoText(
+  page: import("@playwright/test").Page,
+  path: string,
+  position: "start" | "end",
+  text: string
+) {
+  await waitForCollaborativeEditor(page, path);
+  await page.evaluate(
+    ({ filePath, insertionPosition, insertedText }) => {
+      const editor = (
+        window as typeof window & {
+          __simplercpEditors?: Record<
+            string,
+            {
+              getModel(): {
+                getFullModelRange(): {
+                  endLineNumber: number;
+                  endColumn: number;
+                };
+                applyEdits(
+                  edits: Array<{
+                    range: {
+                      startLineNumber: number;
+                      startColumn: number;
+                      endLineNumber: number;
+                      endColumn: number;
+                    };
+                    text: string;
+                  }>
+                ): void;
+              } | null;
+            }
+          >;
+        }
+      ).__simplercpEditors?.[filePath];
+      const model = editor?.getModel();
+      if (!editor || !model) throw new Error("Monaco editor is not ready");
+      const end = model.getFullModelRange();
+      const lineNumber = insertionPosition === "start" ? 1 : end.endLineNumber;
+      const column = insertionPosition === "start" ? 1 : end.endColumn;
+      model.applyEdits([
+        {
+          range: {
+            startLineNumber: lineNumber,
+            startColumn: column,
+            endLineNumber: lineNumber,
+            endColumn: column
+          },
+          text: insertedText
+        }
+      ]);
+    },
+    { filePath: path, insertionPosition: position, insertedText: text }
+  );
+}
+
+async function expectMonacoValue(
+  page: import("@playwright/test").Page,
+  path: string,
+  expected: string
+) {
+  await page.waitForFunction(
+    ({ filePath, value }) => {
+      const editor = (
+        window as typeof window & {
+          __simplercpEditors?: Record<
+            string,
+            { getValue(): string }
+          >;
+        }
+      ).__simplercpEditors?.[filePath];
+      return editor?.getValue() === value;
+    },
+    { filePath: path, value: expected }
   );
 }
 
@@ -254,17 +327,7 @@ async function triggerPythonSuggestions(
   path: string,
   text: string
 ) {
-  await page.waitForFunction(
-    (filePath) =>
-      Boolean(
-        (
-          window as typeof window & {
-            __simplercpEditors?: Record<string, unknown>;
-          }
-        ).__simplercpEditors?.[filePath]
-      ),
-    path
-  );
+  await waitForCollaborativeEditor(page, path);
   await page.evaluate(
     ({ filePath, value }) => {
       const editor = (
@@ -304,4 +367,23 @@ async function handleNextDialog(
     await dialog[action]();
   })();
   await Promise.all([trigger(), dialogHandled]);
+}
+
+async function waitForCollaborativeEditor(
+  page: import("@playwright/test").Page,
+  path: string
+) {
+  await page.waitForFunction(
+    (filePath) => {
+      const state = window as typeof window & {
+        __simplercpEditors?: Record<string, unknown>;
+        __simplercpYjsSynced?: Record<string, boolean>;
+      };
+      return Boolean(
+        state.__simplercpEditors?.[filePath] &&
+          state.__simplercpYjsSynced?.[filePath]
+      );
+    },
+    path
+  );
 }

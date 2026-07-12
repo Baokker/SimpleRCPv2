@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { createChatStore } from "./chat.js";
+import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import type { ServerConfig } from "./config.js";
 import { createEventLog } from "./eventLog.js";
 import { createRoomStore } from "./rooms.js";
@@ -20,11 +21,15 @@ export function createApp(config: ServerConfig) {
   const events = createEventLog();
   const rooms = createRoomStore(events);
   const chat = createChatStore(events);
+  const documents = createCollaborativeDocumentStore({
+    workspaceRoot: config.workspaceRoot
+  });
   const defaultRoom = rooms.createRoom(config.workspaceRoot);
 
   app.locals.events = events;
   app.locals.rooms = rooms;
   app.locals.chat = chat;
+  app.locals.documents = documents;
   app.locals.defaultRoom = defaultRoom;
 
   app.use(cors());
@@ -246,6 +251,7 @@ export function createApp(config: ServerConfig) {
         res.status(400).json({ error: "fromPath and toPath are required" });
         return;
       }
+      await documents.retirePath(fromPath);
       await renameWorkspacePath(config.workspaceRoot, fromPath, toPath);
       events.append({
         type: "workspace_path_renamed",
@@ -267,6 +273,7 @@ export function createApp(config: ServerConfig) {
         res.status(400).json({ error: "path is required" });
         return;
       }
+      await documents.retirePath(workspacePath);
       await deleteWorkspacePath(config.workspaceRoot, workspacePath);
       events.append({
         type: "workspace_path_deleted",

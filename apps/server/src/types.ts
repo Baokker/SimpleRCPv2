@@ -90,12 +90,11 @@ export type ClientMessage =
       path: string;
     }
   | {
-      type: "file_change";
+      type: "file_edited";
       roomId: string;
       memberId: string;
       connectionId?: string;
       path: string;
-      content: string;
     }
   | {
       type: "cursor_change";
@@ -119,13 +118,6 @@ export type ServerMessage =
       type: "presence";
       roomId: string;
       members: RoomMember[];
-    }
-  | {
-      type: "file_change";
-      roomId: string;
-      memberId: string;
-      path: string;
-      content: string;
     }
   | {
       type: "cursor_change";

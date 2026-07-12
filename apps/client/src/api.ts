@@ -68,14 +68,6 @@ export async function readWorkspaceFile(
   return request(`/api/workspace/file?${query.toString()}`);
 }
 
-export async function writeWorkspaceFile(path: string, content: string) {
-  await request("/api/workspace/file", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path, content })
-  });
-}
-
 export async function createWorkspaceFile(
   path: string,
   initiatorId: string,

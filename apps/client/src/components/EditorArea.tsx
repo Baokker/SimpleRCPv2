@@ -2,6 +2,9 @@ import Editor from "@monaco-editor/react";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type * as Monaco from "monaco-editor";
+import type { MonacoBinding } from "y-monaco";
+import { WebsocketProvider } from "y-websocket";
+import * as Y from "yjs";
 import type {
   CursorPosition,
   EditorSelection,
@@ -16,24 +19,27 @@ export interface OpenFile {
 declare global {
   interface Window {
     __simplercpEditors?: Record<string, Monaco.editor.IStandaloneCodeEditor>;
+    __simplercpYjsSynced?: Record<string, boolean>;
   }
 }
 
 export function EditorArea({
   openFiles,
   activePath,
+  roomId,
   remoteCursors,
   onSelectFile,
   onCloseFile,
-  onChangeFile,
+  onLocalEdit,
   onCursorChange
 }: {
   openFiles: OpenFile[];
   activePath?: string;
+  roomId: string;
   remoteCursors: RemoteCursor[];
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
-  onChangeFile(path: string, content: string): void;
+  onLocalEdit(path: string): void;
   onCursorChange(
     path: string,
     position: CursorPosition,
@@ -89,22 +95,12 @@ export function EditorArea({
       </div>
       <div className="editor-frame" data-testid="editor-frame">
         {activeFile ? (
-          <Editor
+          <CollaborativeEditor
             key={activeFile.path}
-            path={activeFile.path}
-            value={activeFile.content}
-            language={languageForPath(activeFile.path)}
-            theme="vs-dark"
-            options={{
-              minimap: { enabled: false },
-              fontSize: 13,
-              wordWrap: "on",
-              scrollBeyondLastLine: false,
-              quickSuggestions: true,
-              suggestOnTriggerCharacters: true
-            }}
+            file={activeFile}
+            roomId={roomId}
+            onLocalEdit={onLocalEdit}
             onMount={(editor, monaco) => {
-              registerPythonCompletions(monaco);
               editorRef.current = editor;
               monacoRef.current = monaco;
               decorationIdsRef.current = [];
@@ -119,7 +115,6 @@ export function EditorArea({
                 );
               });
             }}
-            onChange={(value) => onChangeFile(activeFile.path, value ?? "")}
           />
         ) : (
           <div className="empty-state">Open a file to start collaborating.</div>
@@ -127,6 +122,117 @@ export function EditorArea({
       </div>
     </div>
   );
+}
+
+function CollaborativeEditor({
+  file,
+  roomId,
+  onLocalEdit,
+  onMount
+}: {
+  file: OpenFile;
+  roomId: string;
+  onLocalEdit(path: string): void;
+  onMount(
+    editor: Monaco.editor.IStandaloneCodeEditor,
+    monaco: typeof Monaco
+  ): void;
+}) {
+  const collaborationRef = useRef<{
+    binding?: MonacoBinding;
+    document: Y.Doc;
+    provider: WebsocketProvider;
+    text: Y.Text;
+    observer: (event: Y.YTextEvent, transaction: Y.Transaction) => void;
+  }>();
+
+  useEffect(() => () => destroyCollaboration(), []);
+
+  function destroyCollaboration() {
+    const collaboration = collaborationRef.current;
+    if (!collaboration) return;
+    collaboration.binding?.destroy();
+    collaboration.text.unobserve(collaboration.observer);
+    collaboration.provider.destroy();
+    collaboration.document.destroy();
+    collaborationRef.current = undefined;
+    if (window.__simplercpYjsSynced) {
+      delete window.__simplercpYjsSynced[file.path];
+    }
+  }
+
+  return (
+    <Editor
+      path={file.path}
+      defaultValue={file.content}
+      language={languageForPath(file.path)}
+      theme="vs-dark"
+      options={{
+        minimap: { enabled: false },
+        fontSize: 13,
+        wordWrap: "on",
+        scrollBeyondLastLine: false,
+        quickSuggestions: true,
+        suggestOnTriggerCharacters: true,
+        readOnly: true
+      }}
+      onMount={(editor, monaco) => {
+        registerPythonCompletions(monaco);
+        onMount(editor, monaco);
+
+        const document = new Y.Doc();
+        const text = document.getText("content");
+        let binding: MonacoBinding | undefined;
+        let bindingStarting = false;
+        const bindingModule = import("y-monaco");
+        const observer = (
+          _event: Y.YTextEvent,
+          transaction: Y.Transaction
+        ) => {
+          if (transaction.local && transaction.origin === binding) {
+            onLocalEdit(file.path);
+          }
+        };
+        text.observe(observer);
+
+        const provider = new WebsocketProvider(
+          collaborativeServerUrl(),
+          encodeURIComponent(`${roomId}:${file.path}`),
+          document,
+          { disableBc: true }
+        );
+        collaborationRef.current = {
+          document,
+          provider,
+          text,
+          observer
+        };
+
+        const bindWhenSynced = async (synced: boolean) => {
+          if (!synced || binding || bindingStarting) return;
+          bindingStarting = true;
+          const { MonacoBinding } = await bindingModule;
+          if (!collaborationRef.current) return;
+          const model = editor.getModel();
+          if (!model) return;
+          binding = new MonacoBinding(text, model, new Set([editor]));
+          if (collaborationRef.current) {
+            collaborationRef.current.binding = binding;
+          }
+          editor.updateOptions({ readOnly: false });
+          window.__simplercpYjsSynced ??= {};
+          window.__simplercpYjsSynced[file.path] = true;
+        };
+        provider.on("sync", (synced) => void bindWhenSynced(synced));
+        if (provider.synced) void bindWhenSynced(true);
+      }}
+    />
+  );
+}
+
+function collaborativeServerUrl() {
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${window.location.host}/yjs`;
 }
 
 function createCursorDecorations(

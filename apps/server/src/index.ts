@@ -9,7 +9,8 @@ const server = http.createServer(app);
 
 attachRealtimeServer(server, {
   events: app.locals.events,
-  rooms: app.locals.rooms
+  rooms: app.locals.rooms,
+  documents: app.locals.documents
 });
 
 server.listen(config.port, "127.0.0.1", () => {

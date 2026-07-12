@@ -6,7 +6,7 @@ import type {
 
 export interface ClientSocket {
   sendOpenFile(path: string): void;
-  sendFileChange(path: string, content: string): void;
+  sendFileEdited(path: string): void;
   sendCursorChange(
     path: string,
     position: CursorPosition,
@@ -49,8 +49,8 @@ export function connectRoomSocket({
     sendOpenFile(path) {
       send({ type: "open_file", path });
     },
-    sendFileChange(path, content) {
-      send({ type: "file_change", path, content });
+    sendFileEdited(path) {
+      send({ type: "file_edited", path });
     },
     sendCursorChange(path, position, selection) {
       send({ type: "cursor_change", path, position, selection });

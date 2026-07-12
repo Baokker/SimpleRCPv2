@@ -14,6 +14,10 @@ export default defineConfig({
       "/ws": {
         target: apiOrigin.replace(/^http/, "ws"),
         ws: true
+      },
+      "/yjs": {
+        target: apiOrigin.replace(/^http/, "ws"),
+        ws: true
       }
     }
   }

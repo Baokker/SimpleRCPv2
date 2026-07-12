@@ -34,7 +34,7 @@ describe("realtime message handling", () => {
     expect(events.list().map((event) => event.type)).toContain("file_opened");
   });
 
-  it("records file change events", () => {
+  it("records file edit activity without broadcasting file content", () => {
     const events = createEventLog();
     const rooms = createRoomStore(events);
     const room = rooms.createRoom("workspace");
@@ -48,19 +48,20 @@ describe("realtime message handling", () => {
       events,
       rooms,
       message: {
-        type: "file_change",
+        type: "file_edited",
         roomId: room.id,
         memberId: member.id,
         connectionId: "tab-a",
-        path: "src/hello.ts",
-        content: "updated"
+        path: "src/hello.ts"
       }
     });
 
     expect(result.broadcast).toMatchObject({
-      type: "file_change",
-      path: "src/hello.ts",
-      content: "updated"
+      type: "event",
+      event: {
+        type: "file_changed",
+        payload: { path: "src/hello.ts" }
+      }
     });
     expect(events.list().map((event) => event.type)).toContain("file_changed");
   });

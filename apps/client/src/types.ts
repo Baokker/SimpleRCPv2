@@ -90,13 +90,6 @@ export type ServerMessage =
       members: RoomMember[];
     }
   | {
-      type: "file_change";
-      roomId: string;
-      memberId: string;
-      path: string;
-      content: string;
-    }
-  | {
       type: "cursor_change";
       roomId: string;
       memberId: string;

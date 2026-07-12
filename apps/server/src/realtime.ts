@@ -1,5 +1,7 @@
 import type http from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
+import { setPersistence, setupWSConnection } from "y-websocket/bin/utils";
+import type { CollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import type { EventLog } from "./eventLog.js";
 import type { RoomStore } from "./rooms.js";
 import type { ClientMessage, ServerMessage } from "./types.js";
@@ -13,6 +15,7 @@ interface SocketIdentity {
 export interface RealtimeContext {
   events: EventLog;
   rooms: RoomStore;
+  documents?: CollaborativeDocumentStore;
 }
 
 export function handleRealtimeMessage({
@@ -52,8 +55,8 @@ export function handleRealtimeMessage({
     };
   }
 
-  if (message.type === "file_change") {
-    events.append({
+  if (message.type === "file_edited") {
+    const event = events.append({
       type: "file_changed",
       roomId: message.roomId,
       memberId: message.memberId,
@@ -61,11 +64,8 @@ export function handleRealtimeMessage({
     });
     return {
       broadcast: {
-        type: "file_change",
-        roomId: message.roomId,
-        memberId: message.memberId,
-        path: message.path,
-        content: message.content
+        type: "event",
+        event
       }
     };
   }
@@ -95,11 +95,45 @@ export function handleRealtimeMessage({
 
 export function attachRealtimeServer(
   server: http.Server,
-  context: RealtimeContext
+  context: RealtimeContext & { documents: CollaborativeDocumentStore }
 ) {
-  const wss = new WebSocketServer({ server, path: "/ws" });
+  const wss = new WebSocketServer({ noServer: true });
+  const documentWss = new WebSocketServer({ noServer: true });
+  const documents = context.documents;
   const sockets = new Set<WebSocket>();
   const identities = new Map<WebSocket, SocketIdentity>();
+
+  setPersistence({
+    provider: null,
+    bindState() {},
+    async writeState(name, document) {
+      await documents.flushDocument(name, document);
+      documents.release(name);
+    }
+  });
+
+  server.on("upgrade", (request, socket, head) => {
+    const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+    if (pathname === "/ws") {
+      wss.handleUpgrade(request, socket, head, (webSocket) => {
+        wss.emit("connection", webSocket, request);
+      });
+      return;
+    }
+    if (pathname.startsWith("/yjs/")) {
+      const name = decodeURIComponent(pathname.slice("/yjs/".length));
+      void documents
+        .prepareDocument(name)
+        .then(() => {
+          documentWss.handleUpgrade(request, socket, head, (webSocket) => {
+            setupWSConnection(webSocket, request, { docName: name });
+          });
+        })
+        .catch(() => socket.destroy());
+      return;
+    }
+    socket.destroy();
+  });
 
   wss.on("connection", (socket) => {
     sockets.add(socket);
@@ -164,7 +198,7 @@ export function attachRealtimeServer(
     });
   });
 
-  return wss;
+  return { presence: wss, documents: documentWss };
 }
 
 function broadcastToAll(sockets: Set<WebSocket>, message: ServerMessage) {

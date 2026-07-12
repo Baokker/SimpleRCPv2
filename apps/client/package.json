@@ -14,7 +14,10 @@
     "lucide-react": "^0.468.0",
     "monaco-editor": "^0.49.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "y-monaco": "^0.1.6",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.31"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

@@ -14,8 +14,7 @@ import {
   renameWorkspacePath,
   runQuickCommand,
   sendChatMessage,
-  sendConnectionOffline,
-  writeWorkspaceFile
+  sendConnectionOffline
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
@@ -62,6 +61,7 @@ export function App() {
     null
   );
   const bootStartedRef = useRef(false);
+  const editTimersRef = useRef(new Map<string, number>());
 
   const displayName = useMemo(
     () =>
@@ -142,15 +142,6 @@ export function App() {
               )
             );
           }
-          if (message.type === "file_change" && message.memberId !== joined.id) {
-            setOpenFiles((files) =>
-              files.map((file) =>
-                file.path === message.path
-                  ? { ...file, content: message.content }
-                  : file
-              )
-            );
-          }
           if (message.type === "cursor_change" && message.memberId !== joined.id) {
             const collaborator = membersRef.current.find(
               (candidate) => candidate.id === message.memberId
@@ -184,6 +175,10 @@ export function App() {
         sendConnectionOffline(connection.roomId, connection.connectionId);
       }
       socketRef.current?.close();
+      for (const timer of editTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      editTimersRef.current.clear();
     };
   }, [displayName]);
 
@@ -257,12 +252,16 @@ export function App() {
     socketRef.current?.sendOpenFile(path);
   }
 
-  async function changeFile(path: string, content: string) {
-    setOpenFiles((files) =>
-      files.map((file) => (file.path === path ? { ...file, content } : file))
+  function reportFileEdit(path: string) {
+    const existing = editTimersRef.current.get(path);
+    if (existing) window.clearTimeout(existing);
+    editTimersRef.current.set(
+      path,
+      window.setTimeout(() => {
+        editTimersRef.current.delete(path);
+        socketRef.current?.sendFileEdited(path);
+      }, 400)
     );
-    socketRef.current?.sendFileChange(path, content);
-    await writeWorkspaceFile(path, content);
   }
 
   function changeCursor(
@@ -381,10 +380,11 @@ export function App() {
         <EditorArea
           openFiles={openFiles}
           activePath={activePath}
+          roomId={roomId}
           remoteCursors={remoteCursors}
           onSelectFile={selectFile}
           onCloseFile={closeFile}
-          onChangeFile={changeFile}
+          onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
         />
       </section>
