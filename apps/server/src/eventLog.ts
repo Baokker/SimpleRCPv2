@@ -5,7 +5,6 @@ export interface EventInput {
   type: string;
   roomId?: string;
   memberId?: string;
-  taskId?: string;
   payload?: object;
 }
 

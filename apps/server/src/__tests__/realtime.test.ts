@@ -10,7 +10,6 @@ describe("realtime message handling", () => {
     const room = rooms.createRoom("workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      kind: "human",
       userId: "user-ada",
       connectionId: "tab-a"
     });
@@ -41,7 +40,6 @@ describe("realtime message handling", () => {
     const room = rooms.createRoom("workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      kind: "human",
       userId: "user-ada",
       connectionId: "tab-a"
     });
@@ -65,5 +63,51 @@ describe("realtime message handling", () => {
       content: "updated"
     });
     expect(events.list().map((event) => event.type)).toContain("file_changed");
+  });
+
+  it("broadcasts cursor and selection updates without adding activity noise", () => {
+    const events = createEventLog();
+    const rooms = createRoomStore(events);
+    const room = rooms.createRoom("workspace");
+    const member = rooms.joinRoom(room.id, {
+      name: "Ada",
+      userId: "user-ada",
+      connectionId: "tab-a"
+    });
+    const eventCountBeforeCursorMove = events.list().length;
+
+    const result = handleRealtimeMessage({
+      events,
+      rooms,
+      message: {
+        type: "cursor_change",
+        roomId: room.id,
+        memberId: member.id,
+        connectionId: "tab-a",
+        path: "src/hello.ts",
+        position: { lineNumber: 3, column: 8 },
+        selection: {
+          startLineNumber: 2,
+          startColumn: 1,
+          endLineNumber: 3,
+          endColumn: 8
+        }
+      }
+    });
+
+    expect(result.broadcast).toEqual({
+      type: "cursor_change",
+      roomId: room.id,
+      memberId: member.id,
+      path: "src/hello.ts",
+      position: { lineNumber: 3, column: 8 },
+      selection: {
+        startLineNumber: 2,
+        startColumn: 1,
+        endLineNumber: 3,
+        endColumn: 8
+      }
+    });
+    expect(events.list()).toHaveLength(eventCountBeforeCursorMove);
   });
 });

@@ -32,8 +32,7 @@ describe("runner", () => {
       whitelist: ["npm test"],
       events,
       roomId: "room-1",
-      taskId: "task-1",
-      initiatorId: "agent-1",
+      initiatorId: "human-1",
       timeoutMs: 10_000
     });
 
@@ -45,7 +44,7 @@ describe("runner", () => {
     expect(eventTypes.at(-1)).toBe("command_completed");
   });
 
-  it("runs quick whitelisted commands without a task id", async () => {
+  it("runs quick whitelisted commands", async () => {
     const events = createEventLog();
     const result = await runWorkspaceCommand({
       workspaceRoot: root,
@@ -57,7 +56,6 @@ describe("runner", () => {
       timeoutMs: 10_000
     });
 
-    expect(result.taskId).toBeUndefined();
     expect(result.exitCode).toBe(0);
     expect(events.list().map((event) => event.type)).toContain(
       "command_completed"
@@ -73,8 +71,7 @@ describe("runner", () => {
         whitelist: ["npm test"],
         events,
         roomId: "room-1",
-        taskId: "task-1",
-        initiatorId: "agent-1",
+        initiatorId: "human-1",
         timeoutMs: 10_000
       })
     ).rejects.toThrow("Command is not authorized");

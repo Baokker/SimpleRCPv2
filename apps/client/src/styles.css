@@ -113,9 +113,7 @@ input {
 
 .icon-actions,
 .tree-actions,
-.terminal-controls,
-.task-actions,
-.scenario-controls {
+.terminal-controls {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -132,18 +130,17 @@ input {
   cursor: pointer;
 }
 
-.tree-directory summary {
-  display: flex;
+.icon-actions button,
+.tree-actions button,
+.tree-entry,
+.collab-tabs button {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  cursor: pointer;
-  color: #c6d1e3;
-  padding: 4px 4px;
+  justify-content: center;
 }
 
 .tree-children {
-  padding-left: 10px;
+  padding-left: 14px;
 }
 
 .tree-row {
@@ -153,23 +150,57 @@ input {
   border-radius: 4px;
 }
 
-.tree-file {
+.tree-entry {
   width: 100%;
+  min-width: 0;
   border: 0;
   border-radius: 4px;
-  padding: 4px 6px;
+  justify-content: flex-start;
+  gap: 5px;
+  padding: 4px;
   background: transparent;
-  color: #e5ecf6;
+  color: #cbd5e4;
   text-align: left;
   cursor: pointer;
+}
+
+.tree-entry span:last-child {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.tree-entry svg {
+  flex: 0 0 auto;
+  color: #8091aa;
+}
+
+.directory-row .tree-entry svg:nth-child(2) {
+  color: #d5aa55;
+}
+
+.file-entry svg {
+  color: #7da7d9;
+}
+
+.tree-indent {
+  width: 14px;
+  flex: 0 0 14px;
+}
+
+.tree-actions {
+  padding-right: 2px;
+  opacity: 0;
+}
+
+.tree-row:hover .tree-actions,
+.tree-row:focus-within .tree-actions {
+  opacity: 1;
+}
+
 .tree-row:hover,
-.tree-row.active,
-.tree-file:hover {
+.tree-row.active {
   background: #263148;
 }
 
@@ -236,6 +267,7 @@ input {
   min-width: max-content;
   border: 0;
   border-bottom: 2px solid transparent;
+  gap: 5px;
   padding: 7px 8px;
   background: transparent;
   color: #91a0b7;
@@ -272,31 +304,31 @@ input {
   overflow: hidden;
 }
 
-.members-section {
-  gap: 12px;
-  overflow: auto;
-}
-
 .chat-section {
   min-height: 0;
   gap: 8px;
 }
 
-.agent-runs-section,
-.timeline-section {
-  min-height: 110px;
-  gap: 8px;
+.team-section {
+  gap: 14px;
+  overflow: auto;
 }
 
-.agent-section {
-  overflow: auto;
+.team-block {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.activity-block {
+  display: flex;
+  flex: 1 0 180px;
+  min-height: 180px;
+  flex-direction: column;
 }
 
 .member-list,
 .event-list,
-.chat-transcript,
-.agent-run-list,
-.timeline-list {
+.chat-transcript {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -325,8 +357,6 @@ input {
 }
 
 .member-list em,
-.agent-run-list em,
-.timeline-list em,
 .command-mode {
   flex: 0 0 auto;
   border: 1px solid #3b465c;
@@ -348,21 +378,49 @@ input {
   background: #30c48d;
 }
 
-.member-list small,
-.event-list li {
+.member-list small {
   color: #91a0b7;
 }
 
 .event-list,
-.chat-transcript,
-.agent-run-list,
-.timeline-list {
+.chat-transcript {
   flex: 1;
   overflow: auto;
 }
 
 .event-list li {
-  padding: 4px 0;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 7px;
+  padding: 7px 0;
+  border-bottom: 1px solid #242d3d;
+  color: #91a0b7;
+}
+
+.event-list li > svg {
+  margin-top: 2px;
+  color: #7f91ac;
+}
+
+.event-list li > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.event-list strong {
+  color: #cbd5e4;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.event-list time,
+.empty-panel-state {
+  color: #718097;
+  font-size: 10px;
+  font-weight: 400;
 }
 
 .chat-transcript {
@@ -372,29 +430,13 @@ input {
   min-height: 0;
 }
 
-.agent-hint {
-  flex: 0 0 auto;
-  border: 1px solid #2d384b;
-  border-radius: 5px;
-  padding: 5px 7px;
-  background: #101722;
-  color: #9fb2d0;
-  font-size: 11px;
-}
-
 .chat-message {
   border-left: 2px solid #44516b;
   padding: 6px 8px;
   background: #111722;
 }
 
-.chat-message.agent {
-  border-left-color: #3d8b74;
-}
-
-.chat-message span,
-.agent-run-list span,
-.timeline-list span {
+.chat-message span {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -406,8 +448,7 @@ input {
   font-size: 11px;
 }
 
-.chat-message p,
-.timeline-list p {
+.chat-message p {
   margin: 4px 0 0;
   color: #cdd8ea;
   line-height: 1.35;
@@ -436,10 +477,7 @@ input {
 }
 
 .chat-box button,
-.task-list button,
-.collab-panel section > button,
-.terminal-controls button,
-.scenario-controls button {
+.terminal-controls button {
   margin-top: 8px;
   border: 0;
   border-radius: 5px;
@@ -460,8 +498,7 @@ input {
 }
 
 .terminal-controls select,
-.terminal-controls input,
-.scenario-controls select {
+.terminal-controls input {
   min-width: 0;
   max-width: 100%;
   border: 1px solid #344057;
@@ -477,12 +514,6 @@ input {
   max-width: min(520px, 100%);
 }
 
-.scenario-controls select {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.scenario-controls button,
 .terminal-controls button {
   margin-top: 0;
 }
@@ -497,68 +528,34 @@ input {
   font-size: 12px;
 }
 
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  overflow: auto;
+.remote-cursor {
+  border-left: 2px solid currentColor;
 }
 
-.agent-run-list,
-.timeline-list {
-  display: flex;
-  min-height: 0;
-  flex-direction: column;
-  gap: 6px;
+.remote-cursor-label {
+  border-radius: 2px;
+  padding: 1px 4px;
+  color: #0d1118;
+  font-size: 10px;
+  font-weight: 700;
 }
 
-.agent-run-list li,
-.timeline-list li {
-  border: 1px solid #2a3446;
-  border-radius: 5px;
-  padding: 7px;
-  background: #101722;
+.remote-selection {
+  border-radius: 2px;
 }
 
-.agent-run-list small,
-.muted-row {
-  color: #91a0b7;
-}
-
-.timeline-list li.completed {
-  border-left: 3px solid #3d8b74;
-}
-
-.timeline-list li.running {
-  border-left: 3px solid #d79b30;
-}
-
-.timeline-list li.failed {
-  border-left: 3px solid #e25555;
-}
-
-.task-list li {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-  border: 1px solid #2b3240;
-  border-radius: 5px;
-  padding: 8px;
-  background: #101722;
-}
-
-.task-list small {
-  grid-column: 1 / 2;
-  color: #91a0b7;
-}
-
-.task-list button,
-.collab-panel section > button {
-  background: #3d8b74;
-}
+.remote-cursor.remote-color-0 { color: #5ad1a6; }
+.remote-cursor.remote-color-1 { color: #6ca8ff; }
+.remote-cursor.remote-color-2 { color: #e5b85c; }
+.remote-cursor.remote-color-3 { color: #e9829d; }
+.remote-cursor-label.remote-color-0 { background: #5ad1a6; }
+.remote-cursor-label.remote-color-1 { background: #6ca8ff; }
+.remote-cursor-label.remote-color-2 { background: #e5b85c; }
+.remote-cursor-label.remote-color-3 { background: #e9829d; }
+.remote-selection.remote-color-0 { background: rgb(90 209 166 / 24%); }
+.remote-selection.remote-color-1 { background: rgb(108 168 255 / 24%); }
+.remote-selection.remote-color-2 { background: rgb(229 184 92 / 24%); }
+.remote-selection.remote-color-3 { background: rgb(233 130 157 / 24%); }
 
 @media (max-width: 900px) {
   .app-shell {

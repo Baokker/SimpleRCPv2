@@ -1,8 +1,17 @@
-import type { ServerMessage } from "./types";
+import type {
+  CursorPosition,
+  EditorSelection,
+  ServerMessage
+} from "./types";
 
 export interface ClientSocket {
   sendOpenFile(path: string): void;
   sendFileChange(path: string, content: string): void;
+  sendCursorChange(
+    path: string,
+    position: CursorPosition,
+    selection: EditorSelection
+  ): void;
   sendChat(text: string): void;
   sendReady(): void;
   close(): void;
@@ -42,6 +51,9 @@ export function connectRoomSocket({
     },
     sendFileChange(path, content) {
       send({ type: "file_change", path, content });
+    },
+    sendCursorChange(path, position, selection) {
+      send({ type: "cursor_change", path, position, selection });
     },
     sendChat(text) {
       send({ type: "chat_message", text });

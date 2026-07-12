@@ -4,9 +4,7 @@ import { loadConfig } from "./config.js";
 import { attachRealtimeServer } from "./realtime.js";
 
 const config = loadConfig();
-const app = createApp(config, {
-  agentFetch: createFakeAgentFetch(process.env.AGENT_FAKE_RESPONSE)
-});
+const app = createApp(config);
 const server = http.createServer(app);
 
 attachRealtimeServer(server, {
@@ -20,20 +18,3 @@ server.listen(config.port, "127.0.0.1", () => {
   );
   console.log(`Workspace root: ${config.workspaceRoot}`);
 });
-
-function createFakeAgentFetch(responseContent: string | undefined) {
-  if (!responseContent) return undefined;
-  return async () =>
-    new Response(
-      JSON.stringify({
-        choices: [
-          {
-            message: {
-              content: responseContent
-            }
-          }
-        ]
-      }),
-      { status: 200 }
-    );
-}

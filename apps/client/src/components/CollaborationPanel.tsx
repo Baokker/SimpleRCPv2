@@ -1,107 +1,120 @@
-import { useState } from "react";
+import {
+  Activity,
+  FileCode2,
+  FilePenLine,
+  FilePlus2,
+  FolderPlus,
+  LogIn,
+  LogOut,
+  MessageSquareText,
+  Pencil,
+  SquareTerminal,
+  Trash2,
+  Users
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import type {
-  AgentRun,
   ChatMessage,
   EventRecord,
-  RoomMember,
-  RuntimeConfig,
-  ScenarioSummary,
-  TaskRecord,
-  TimelineItem
+  RemoteCursor,
+  RoomMember
 } from "../types";
 
-type CollaborationTab = "chat" | "team" | "runs" | "timeline" | "tasks";
+type CollaborationTab = "chat" | "team";
+type ActivityKind =
+  | "join"
+  | "leave"
+  | "chat"
+  | "open"
+  | "edit"
+  | "command"
+  | "create"
+  | "rename"
+  | "delete"
+  | "general";
 
-const tabs: Array<{ id: CollaborationTab; label: string }> = [
-  { id: "chat", label: "Chat" },
-  { id: "team", label: "Team" },
-  { id: "runs", label: "Runs" },
-  { id: "timeline", label: "Timeline" },
-  { id: "tasks", label: "Tasks" }
-];
+interface ActivityItem {
+  id: string;
+  kind: ActivityKind;
+  text: string;
+  timestamp: string;
+}
 
 export function CollaborationPanel({
   members,
   events,
-  tasks,
   chatMessages,
-  agentRuns,
-  timeline,
-  scenarios,
-  selectedScenario,
+  remoteCursors,
   chatText,
-  runtimeConfig,
   onChatTextChange,
-  onSendChat,
-  onSelectedScenarioChange,
-  onRunScenario,
-  onCreateMockAgentTask,
-  onRunMockAgent,
-  onRunConfiguredAgent
+  onSendChat
 }: {
   members: RoomMember[];
   events: EventRecord[];
-  tasks: TaskRecord[];
   chatMessages: ChatMessage[];
-  agentRuns: AgentRun[];
-  timeline: TimelineItem[];
-  scenarios: ScenarioSummary[];
-  selectedScenario: string;
+  remoteCursors: RemoteCursor[];
   chatText: string;
-  runtimeConfig: RuntimeConfig;
   onChatTextChange(value: string): void;
   onSendChat(): void;
-  onSelectedScenarioChange(value: string): void;
-  onRunScenario(): void;
-  onCreateMockAgentTask(): void;
-  onRunMockAgent(taskId: string): void;
-  onRunConfiguredAgent(taskId: string): void;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
-  const mentionHint = runtimeConfig.agentMentionAliases[0] ?? runtimeConfig.agentName;
-  const configuredLabel = runtimeConfig.agentConfigured
-    ? `${runtimeConfig.agentName} ready`
-    : `${runtimeConfig.agentName} needs API key`;
+  const activityItems = useMemo(
+    () =>
+      events
+        .flatMap((event) => {
+          const item = formatActivity(event, members);
+          return item ? [item] : [];
+        })
+        .slice(-30)
+        .reverse(),
+    [events, members]
+  );
 
   return (
     <div className="panel collab-panel">
       <div className="panel-header">Collaboration</div>
       <nav className="collab-tabs" aria-label="Collaboration sections">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={activeTab === tab.id ? "active" : ""}
-            onClick={() => setActiveTab(tab.id)}
-            data-testid={`collab-tab-${tab.id}`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        <button
+          className={activeTab === "chat" ? "active" : ""}
+          onClick={() => setActiveTab("chat")}
+          data-testid="collab-tab-chat"
+        >
+          <MessageSquareText size={14} />
+          Chat
+        </button>
+        <button
+          className={activeTab === "team" ? "active" : ""}
+          onClick={() => setActiveTab("team")}
+          data-testid="collab-tab-team"
+        >
+          <Users size={14} />
+          Team
+        </button>
       </nav>
 
       <div className="collab-tab-body">
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
-            <h2>Chat</h2>
-            <div className="agent-hint" data-testid="agent-mention-hint">
-              @{mentionHint} · {configuredLabel}
-            </div>
             <ol className="chat-transcript" data-testid="chat-transcript">
-              {chatMessages.map((message) => (
-                <li key={message.id} className={`chat-message ${message.authorKind}`}>
-                  <span>
-                    <strong>{message.authorName}</strong>
-                    <time>{formatTime(message.timestamp)}</time>
-                  </span>
-                  <p>{message.text}</p>
-                </li>
-              ))}
+              {chatMessages.length === 0 ? (
+                <li className="empty-panel-state">No messages yet.</li>
+              ) : (
+                chatMessages.map((message) => (
+                  <li key={message.id} className="chat-message">
+                    <span>
+                      <strong>{message.authorName}</strong>
+                      <time>{formatTime(message.timestamp)}</time>
+                    </span>
+                    <p>{message.text}</p>
+                  </li>
+                ))
+              )}
             </ol>
             <div className="chat-box" data-testid="chat-composer">
               <textarea
                 value={chatText}
                 onChange={(event) => onChatTextChange(event.target.value)}
-                placeholder={`@${mentionHint} help with this task`}
+                placeholder="Message collaborators"
                 data-testid="chat-input"
               />
               <button onClick={onSendChat} data-testid="send-chat">
@@ -112,129 +125,154 @@ export function CollaborationPanel({
         ) : null}
 
         {activeTab === "team" ? (
-          <section className="collab-section members-section">
-            <h2>People</h2>
-            <ul className="member-list" data-testid="member-list">
-              {members.map((member) => (
-                <li key={member.id}>
-                  <span>
-                    <i className={member.online ? "status-dot online" : "status-dot"} />
-                    <strong>{member.displayName ?? member.name}</strong>
-                    {member.connectionCount > 1 ? (
-                      <em>{member.connectionCount} tabs</em>
-                    ) : null}
-                  </span>
-                  <small>
-                    {member.kind} · {member.currentFile ?? "Browsing"}
-                  </small>
-                </li>
-              ))}
-            </ul>
-            <h2>Activity</h2>
-            <ol className="event-list" data-testid="activity-feed">
-              {events.slice(-12).map((event) => (
-                <li key={event.id}>{event.type}</li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
-
-        {activeTab === "runs" ? (
-          <section className="collab-section agent-runs-section">
-            <h2>Agent Runs</h2>
-            <ul className="agent-run-list" data-testid="agent-runs">
-              {agentRuns.length === 0 ? (
-                <li className="muted-row">No agent runs yet.</li>
-              ) : (
-                agentRuns.map((run) => (
-                  <li key={run.id}>
-                    <span>
-                      <strong>{run.agentName}</strong>
-                      <em>{run.status.replace("_", " ")}</em>
-                    </span>
-                    <small>{run.lastAction ?? run.summary ?? "Queued"}</small>
-                  </li>
-                ))
-              )}
-            </ul>
-          </section>
-        ) : null}
-
-        {activeTab === "timeline" ? (
-          <section className="collab-section timeline-section">
-            <h2>Scenario</h2>
-            <div className="scenario-controls">
-              <select
-                value={selectedScenario}
-                onChange={(event) => onSelectedScenarioChange(event.target.value)}
-                data-testid="scenario-select"
-              >
-                {scenarios.map((scenario) => (
-                  <option key={scenario.id} value={scenario.id}>
-                    {scenario.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={onRunScenario}
-                disabled={!selectedScenario}
-                data-testid="run-scenario"
-              >
-                Run
-              </button>
+          <section className="collab-section team-section">
+            <div className="team-block">
+              <h2>People</h2>
+              <ul className="member-list" data-testid="member-list">
+                {members.map((member) => {
+                  const cursor = remoteCursors.find(
+                    (candidate) => candidate.memberId === member.id
+                  );
+                  return (
+                    <li key={member.id}>
+                      <span>
+                        <i className={member.online ? "status-dot online" : "status-dot"} />
+                        <strong>{member.displayName}</strong>
+                        {member.connectionCount > 1 ? (
+                          <em>{member.connectionCount} tabs</em>
+                        ) : null}
+                      </span>
+                      <small>
+                        {cursor
+                          ? `${cursor.path} · Ln ${cursor.position.lineNumber}, Col ${cursor.position.column}`
+                          : member.currentFile ?? (member.online ? "Browsing" : "Offline")}
+                      </small>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-            <h2>Timeline</h2>
-            <ol className="timeline-list" data-testid="timeline-list">
-              {timeline.length === 0 ? (
-                <li className="muted-row">No replayable activity yet.</li>
-              ) : (
-                timeline.map((item) => (
-                  <li key={item.id} className={item.status}>
-                    <span>
-                      <strong>{item.actorName}</strong>
-                      <em>{item.type}</em>
-                    </span>
-                    <p>{item.label}</p>
-                  </li>
-                ))
-              )}
-            </ol>
-          </section>
-        ) : null}
 
-        {activeTab === "tasks" ? (
-          <section className="collab-section agent-section">
-            <h2>Tasks</h2>
-            <button onClick={onCreateMockAgentTask} data-testid="create-agent-task">
-              Create MockAgent Task
-            </button>
-            <ul className="task-list" data-testid="task-list">
-              {tasks.map((task) => (
-                <li key={task.id}>
-                  <strong>{task.title}</strong>
-                  <small>{task.status}</small>
-                  <div className="task-actions">
-                    <button
-                      onClick={() => onRunMockAgent(task.id)}
-                      data-testid={`run-agent-${task.id}`}
-                    >
-                      Run Mock
-                    </button>
-                    <button
-                      onClick={() => onRunConfiguredAgent(task.id)}
-                      data-testid={`run-configured-agent-${task.id}`}
-                    >
-                      Run Provider
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="team-block activity-block">
+              <h2>Activity</h2>
+              <ol className="event-list" data-testid="activity-feed">
+                {activityItems.length === 0 ? (
+                  <li className="empty-panel-state">No activity yet.</li>
+                ) : (
+                  activityItems.map((item) => (
+                    <li key={item.id}>
+                      <ActivityIcon kind={item.kind} />
+                      <span>
+                        <strong>{item.text}</strong>
+                        <time>{formatTime(item.timestamp)}</time>
+                      </span>
+                    </li>
+                  ))
+                )}
+              </ol>
+            </div>
           </section>
         ) : null}
       </div>
     </div>
   );
+}
+
+function formatActivity(
+  event: EventRecord,
+  members: RoomMember[]
+): ActivityItem | null {
+  const payload = event.payload ?? {};
+  const actor =
+    members.find((member) => member.id === event.memberId)?.displayName ??
+    stringValue(payload.name) ??
+    "A collaborator";
+
+  switch (event.type) {
+    case "room_created":
+      return item(event, "general", `Session opened for ${stringValue(payload.workspaceName) ?? "workspace"}`);
+    case "member_joined":
+      return item(event, "join", `${stringValue(payload.name) ?? actor} joined the session`);
+    case "member_rejoined":
+      return item(
+        event,
+        "join",
+        numberValue(payload.connectionCount) > 1
+          ? `${stringValue(payload.name) ?? actor} opened another tab`
+          : `${stringValue(payload.name) ?? actor} rejoined the session`
+      );
+    case "member_online":
+      return item(event, "join", `${actor} came online`);
+    case "member_offline":
+      return item(event, "leave", `${actor} left the session`);
+    case "file_opened":
+      return item(event, "open", `${actor} opened ${stringValue(payload.path) ?? "a file"}`);
+    case "file_changed":
+      return item(event, "edit", `${actor} edited ${stringValue(payload.path) ?? "a file"}`);
+    case "chat_message_created":
+      return item(
+        event,
+        "chat",
+        `${stringValue(payload.authorName) ?? actor}: ${truncate(stringValue(payload.text) ?? "sent a message")}`
+      );
+    case "command_started":
+      return item(event, "command", `${actor} ran ${stringValue(payload.command) ?? "a command"}`);
+    case "command_completed":
+      return item(
+        event,
+        "command",
+        `${actor}'s command finished with exit ${numberValue(payload.exitCode)}`
+      );
+    case "workspace_file_created":
+      return item(event, "create", `${actor} created ${stringValue(payload.path) ?? "a file"}`);
+    case "workspace_directory_created":
+      return item(event, "create", `${actor} created folder ${stringValue(payload.path) ?? ""}`.trim());
+    case "workspace_path_renamed":
+      return item(
+        event,
+        "rename",
+        `${actor} renamed ${stringValue(payload.fromPath) ?? "a path"} to ${stringValue(payload.toPath) ?? "a new path"}`
+      );
+    case "workspace_path_deleted":
+      return item(event, "delete", `${actor} deleted ${stringValue(payload.path) ?? "a path"}`);
+    default:
+      return null;
+  }
+}
+
+function item(
+  event: EventRecord,
+  kind: ActivityKind,
+  text: string
+): ActivityItem {
+  return { id: event.id, kind, text, timestamp: event.timestamp };
+}
+
+function ActivityIcon({ kind }: { kind: ActivityKind }) {
+  const props = { size: 14, "aria-hidden": true };
+  if (kind === "join") return <LogIn {...props} />;
+  if (kind === "leave") return <LogOut {...props} />;
+  if (kind === "chat") return <MessageSquareText {...props} />;
+  if (kind === "open") return <FileCode2 {...props} />;
+  if (kind === "edit") return <FilePenLine {...props} />;
+  if (kind === "command") return <SquareTerminal {...props} />;
+  if (kind === "create") return <FilePlus2 {...props} />;
+  if (kind === "rename") return <Pencil {...props} />;
+  if (kind === "delete") return <Trash2 {...props} />;
+  if (kind === "general") return <Activity {...props} />;
+  return <FolderPlus {...props} />;
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : undefined;
+}
+
+function numberValue(value: unknown) {
+  return typeof value === "number" ? value : 0;
+}
+
+function truncate(value: string) {
+  return value.length > 90 ? `${value.slice(0, 87)}...` : value;
 }
 
 function formatTime(timestamp: string) {

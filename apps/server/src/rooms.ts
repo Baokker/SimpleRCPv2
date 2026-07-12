@@ -1,15 +1,12 @@
 import path from "node:path";
 import { nanoid } from "nanoid";
 import type { EventLog } from "./eventLog.js";
-import type { MemberKind, RoomConnection, RoomMember, RoomState } from "./types.js";
+import type { RoomConnection, RoomMember, RoomState } from "./types.js";
 
 export interface JoinRoomInput {
   name: string;
-  kind: MemberKind;
-  clientId?: string;
   userId?: string;
   connectionId?: string;
-  provider?: string;
 }
 
 export function createRoomStore(events: EventLog) {
@@ -45,10 +42,7 @@ export function createRoomStore(events: EventLog) {
       const existing = findExistingMember(room.members, normalized);
       if (existing) {
         existing.name = normalized.name;
-        existing.kind = normalized.kind;
         existing.userId = normalized.userId;
-        existing.clientId = normalized.clientId;
-        existing.provider = normalized.provider;
         upsertConnection(room, {
           id: normalized.connectionId,
           userId: existing.userId,
@@ -64,10 +58,9 @@ export function createRoomStore(events: EventLog) {
           memberId: existing.id,
           payload: {
             name: existing.name,
-            kind: existing.kind,
             userId: existing.userId,
             connectionId: normalized.connectionId,
-            provider: existing.provider
+            connectionCount: existing.connectionCount
           }
         });
         return existing;
@@ -77,10 +70,7 @@ export function createRoomStore(events: EventLog) {
         id: nanoid(10),
         name: normalized.name,
         displayName: normalized.name,
-        kind: normalized.kind,
         userId: normalized.userId,
-        clientId: normalized.clientId,
-        provider: normalized.provider,
         online: true,
         lastSeenAt: now,
         connectionCount: 1
@@ -100,24 +90,25 @@ export function createRoomStore(events: EventLog) {
         memberId: member.id,
         payload: {
           name: member.name,
-          kind: member.kind,
           userId: member.userId,
-          connectionId: normalized.connectionId,
-          provider: member.provider
+          connectionId: normalized.connectionId
         }
       });
       return member;
     },
     markOnline(roomId: string, memberId: string, now = new Date()) {
       const member = findMember(rooms, roomId, memberId);
+      const wasOnline = member.online;
       member.online = true;
       member.lastSeenAt = now.toISOString();
-      events.append({
-        type: "member_online",
-        roomId,
-        memberId,
-        payload: { lastSeenAt: member.lastSeenAt }
-      });
+      if (!wasOnline) {
+        events.append({
+          type: "member_online",
+          roomId,
+          memberId,
+          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }
+        });
+      }
       return member;
     },
     markConnectionOnline(roomId: string, connectionId: string, now = new Date()) {
@@ -128,33 +119,43 @@ export function createRoomStore(events: EventLog) {
       if (!connection) {
         throw new Error("Connection not found");
       }
-      connection.online = true;
-      connection.lastSeenAt = now.toISOString();
       const member = room.members.find(
         (candidate) => candidate.userId === connection.userId
       );
       if (!member) {
         throw new Error("Member not found");
       }
+      const wasOnline = member.online;
+      connection.online = true;
+      connection.lastSeenAt = now.toISOString();
       syncMemberFromConnections(room, member, now.toISOString());
-      events.append({
-        type: "member_online",
-        roomId,
-        memberId: member.id,
-        payload: { connectionId, lastSeenAt: member.lastSeenAt }
-      });
+      if (!wasOnline && member.online) {
+        events.append({
+          type: "member_online",
+          roomId,
+          memberId: member.id,
+          payload: {
+            name: member.displayName,
+            connectionId,
+            lastSeenAt: member.lastSeenAt
+          }
+        });
+      }
       return member;
     },
     markOffline(roomId: string, memberId: string, now = new Date()) {
       const member = findMember(rooms, roomId, memberId);
+      const wasOnline = member.online;
       member.online = false;
       member.lastSeenAt = now.toISOString();
-      events.append({
-        type: "member_offline",
-        roomId,
-        memberId,
-        payload: { lastSeenAt: member.lastSeenAt }
-      });
+      if (wasOnline) {
+        events.append({
+          type: "member_offline",
+          roomId,
+          memberId,
+          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }
+        });
+      }
       return member;
     },
     markConnectionOffline(roomId: string, connectionId: string, now = new Date()) {
@@ -165,21 +166,28 @@ export function createRoomStore(events: EventLog) {
       if (!connection) {
         throw new Error("Connection not found");
       }
-      connection.online = false;
-      connection.lastSeenAt = now.toISOString();
       const member = room.members.find(
         (candidate) => candidate.userId === connection.userId
       );
       if (!member) {
         throw new Error("Member not found");
       }
+      const wasOnline = member.online;
+      connection.online = false;
+      connection.lastSeenAt = now.toISOString();
       syncMemberFromConnections(room, member, now.toISOString());
-      events.append({
-        type: "member_offline",
-        roomId,
-        memberId: member.id,
-        payload: { connectionId, lastSeenAt: member.lastSeenAt }
-      });
+      if (wasOnline && !member.online) {
+        events.append({
+          type: "member_offline",
+          roomId,
+          memberId: member.id,
+          payload: {
+            name: member.displayName,
+            connectionId,
+            lastSeenAt: member.lastSeenAt
+          }
+        });
+      }
       return member;
     },
     cleanupStaleMembers(roomId: string, now = new Date(), ttlMs = 120_000) {
@@ -194,7 +202,7 @@ export function createRoomStore(events: EventLog) {
         syncMemberFromConnections(room, member, member.lastSeenAt);
       }
       room.members = room.members.filter((member) => {
-        if (member.online || member.kind === "agent") return true;
+        if (member.online) return true;
         return now.getTime() - new Date(member.lastSeenAt).getTime() <= ttlMs;
       });
 
@@ -231,12 +239,6 @@ export function createRoomStore(events: EventLog) {
         }
       }
       member.currentFile = patch.currentFile;
-      events.append({
-        type: "presence_updated",
-        roomId,
-        memberId,
-        payload: { currentFile: patch.currentFile }
-      });
       return member;
     },
     listRooms() {
@@ -247,33 +249,21 @@ export function createRoomStore(events: EventLog) {
 
 export type RoomStore = ReturnType<typeof createRoomStore>;
 
-type NormalizedJoinInput = Required<Pick<JoinRoomInput, "name" | "kind">> & {
-  clientId: string;
+type NormalizedJoinInput = Required<Pick<JoinRoomInput, "name">> & {
   userId: string;
   connectionId: string;
-  provider?: string;
 };
 
 function normalizeJoinInput(input: JoinRoomInput): NormalizedJoinInput {
-  const clientId =
-    input.clientId ?? input.connectionId ?? input.userId ?? `${input.kind}:${input.name}`;
+  const userId = input.userId ?? input.connectionId ?? `human:${input.name}`;
   return {
     name: input.name,
-    kind: input.kind,
-    clientId,
-    userId: input.userId ?? clientId,
-    connectionId: input.connectionId ?? clientId,
-    provider: input.provider
+    userId,
+    connectionId: input.connectionId ?? userId
   };
 }
 
 function findExistingMember(members: RoomMember[], input: NormalizedJoinInput) {
-  if (input.kind === "agent" && input.provider) {
-    return members.find(
-      (member) => member.kind === "agent" && member.provider === input.provider
-    );
-  }
-
   return members.find((member) => member.userId === input.userId);
 }
 

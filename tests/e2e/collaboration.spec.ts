@@ -1,185 +1,210 @@
 import { expect, test } from "@playwright/test";
-import { fetchEvents, openAs } from "./helpers";
+import fs from "node:fs/promises";
+import { openAs } from "./helpers";
 
-test("human collaborators and mock agent complete a vertical collaboration flow", async ({
+test("human collaborators share code, cursors, chat, activity, and terminal", async ({
   browser
 }) => {
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
-  const userA = await contextA.newPage();
-  const userB = await contextB.newPage();
+  const ada = await contextA.newPage();
+  const linus = await contextB.newPage();
 
-  await openAs(userA, "Ada");
-  await openAs(userB, "Linus");
+  await openAs(ada, "Ada");
+  await openAs(linus, "Linus");
 
-  await userA.reload();
-  await userA.getByTestId("status-bar").waitFor();
-  await userA.getByTestId("collab-tab-team").click();
-  await expect(userA.getByTestId("member-list").getByText("Ada")).toHaveCount(1);
-  await expect(userA.getByTestId("member-list")).toContainText("Ada");
-  await expect(userA.getByTestId("member-list")).toContainText("Linus");
-  await userA.getByTestId("dir-src").click();
-  await userB.getByTestId("dir-src").click();
-  await expect(userB.getByTestId("workspace-tree")).toContainText("hello.ts");
-
-  await userA.getByTestId("file-src/hello.ts").click();
-  await expect(userA.getByTestId("editor-tabs")).toContainText("src/hello.ts");
-  await userB.getByTestId("collab-tab-team").click();
-  await expect(userB.getByTestId("member-list")).toContainText("src/hello.ts");
-  await userB.getByTestId("file-src/hello.ts").click();
-
-  await replaceMonacoText(userA, 'export const hello = "collab";');
-  await expect(userB.getByTestId("editor-frame")).toContainText("collab");
-
-  await acceptPrompt(userA, userA.getByTestId("new-file").click(), "src/new-feature.ts");
-  await expect(userA.getByTestId("workspace-tree")).toContainText("new-feature.ts");
-  await expect(userB.getByTestId("workspace-tree")).toContainText("new-feature.ts");
-
-  await acceptPrompt(
-    userA,
-    userA.getByTestId("rename-src/new-feature.ts").click(),
-    "src/renamed-feature.ts"
-  );
-  await expect(userA.getByTestId("workspace-tree")).toContainText(
-    "renamed-feature.ts"
+  await ada.getByTestId("collab-tab-team").click();
+  await expect(ada.getByTestId("member-list")).toContainText("Ada");
+  await expect(ada.getByTestId("member-list")).toContainText("Linus");
+  await expect(ada.getByTestId("activity-feed")).toContainText(
+    "Linus joined the session"
   );
 
-  await acceptDialog(userA, userA.getByTestId("delete-src/renamed-feature.ts").click());
-  await expect(userA.getByTestId("workspace-tree")).not.toContainText(
-    "renamed-feature.ts"
+  await expect(ada.getByTestId("dir-src")).toHaveAttribute(
+    "aria-expanded",
+    "false"
   );
-  await expect(userB.getByTestId("workspace-tree")).not.toContainText(
-    "renamed-feature.ts"
+  await ada.getByTestId("dir-src").click();
+  await linus.getByTestId("dir-src").click();
+  await ada.getByTestId("file-src/hello.ts").click();
+  await linus.getByTestId("file-src/hello.ts").click();
+
+  await setMonacoSelection(ada, "src/hello.ts", {
+    startLineNumber: 1,
+    startColumn: 1,
+    endLineNumber: 1,
+    endColumn: 13
+  });
+  await expectRemoteCursor(linus, "src/hello.ts", "Ada");
+
+  await replaceMonacoText(ada, "src/hello.ts", 'export const hello = "collab";');
+  await expect(linus.getByTestId("editor-frame")).toContainText("collab");
+
+  await ada.getByTestId("collab-tab-chat").click();
+  await ada.getByTestId("chat-input").fill("Linus, I updated the greeting.");
+  await ada.getByTestId("send-chat").click();
+  await expect(linus.getByTestId("chat-transcript")).toContainText(
+    "Linus, I updated the greeting."
   );
 
-  await acceptPrompt(userA, userA.getByTestId("new-folder").click(), "src/generated");
-  await expect(userA.getByTestId("workspace-tree")).toContainText("generated");
-  await expect(userB.getByTestId("workspace-tree")).toContainText("generated");
-
-  await acceptPrompt(
-    userA,
-    userA.getByTestId("rename-src/generated").click(),
-    "src/generated-renamed"
-  );
-  await expect(userA.getByTestId("workspace-tree")).toContainText(
-    "generated-renamed"
-  );
-
-  await acceptDialog(
-    userA,
-    userA.getByTestId("delete-src/generated-renamed").click()
-  );
-  await expect(userA.getByTestId("workspace-tree")).not.toContainText(
-    "generated-renamed"
-  );
-  await expect(userB.getByTestId("workspace-tree")).not.toContainText(
-    "generated-renamed"
-  );
-
-  await userA.getByTestId("collab-tab-chat").click();
-  await expect(userA.getByTestId("chat-composer")).toBeVisible();
-  await userA.getByTestId("collab-tab-team").click();
-  await expect(userA.getByTestId("activity-feed")).toBeVisible();
-
-  await expect(userA.getByTestId("command-mode")).toContainText(
-    "unrestricted"
-  );
-  await userA.getByTestId("command-input").fill("npm test");
-  await userA.getByTestId("run-command").click();
-  await expect(userA.getByTestId("terminal-output")).toContainText(
+  await expect(ada.getByTestId("command-mode")).toContainText("unrestricted");
+  await ada.getByTestId("command-input").fill("npm test");
+  await ada.getByTestId("run-command").click();
+  await expect(ada.getByTestId("terminal-output")).toContainText(
     "sample-workspace-test-ok"
   );
 
-  await userA.getByTestId("collab-tab-tasks").click();
-  await userA.getByTestId("create-agent-task").click();
-  await expect(userA.getByTestId("task-list")).toContainText(
-    "MockAgent update greeting"
+  await ada.getByTestId("collab-tab-team").click();
+  await expect(ada.getByTestId("activity-feed")).toContainText(
+    "Ada opened src/hello.ts"
   );
-  await userA.getByTestId("task-list").locator("button", { hasText: "Run Mock" }).last().click();
+  await expect(ada.getByTestId("activity-feed")).toContainText(
+    "Ada edited src/hello.ts"
+  );
+  await expect(ada.getByTestId("activity-feed")).toContainText(
+    "Ada: Linus, I updated the greeting."
+  );
+  await expect(ada.getByTestId("activity-feed")).toContainText(
+    "Ada ran npm test"
+  );
 
-  await expect(userA.getByTestId("terminal-output")).toContainText(
-    "MockAgent updated src/hello.ts"
-  );
-  await userA.getByTestId("collab-tab-team").click();
-  await expect(userA.getByTestId("activity-feed")).toContainText(
-    "agent_reported"
-  );
+  await fs.mkdir("artifacts", { recursive: true });
+  await ada.screenshot({
+    path: "artifacts/collaboration-core.png",
+    fullPage: true
+  });
 
-  const { events } = await fetchEvents(userA);
-  expect(events.map((event) => event.type)).toEqual(
-    expect.arrayContaining([
-      "room_created",
-      "member_joined",
-      "member_rejoined",
-      "file_opened",
-      "workspace_file_created",
-      "workspace_directory_created",
-      "workspace_path_renamed",
-      "workspace_path_deleted",
-      "task_created",
-      "agent_plan",
-      "agent_edited_file",
-      "command_started",
-      "command_completed",
-      "agent_reported",
-      "task_completed"
-    ])
+  await ada.setViewportSize({ width: 860, height: 900 });
+  const terminalBox = await ada.locator(".terminal-pane").boundingBox();
+  const collaborationBox = await ada.locator(".collab-pane").boundingBox();
+  expect(terminalBox).not.toBeNull();
+  expect(collaborationBox).not.toBeNull();
+  expect((terminalBox?.y ?? 0) + (terminalBox?.height ?? 0)).toBeLessThanOrEqual(
+    collaborationBox?.y ?? 0
+  );
+  const peopleBox = await ada.getByTestId("member-list").boundingBox();
+  const activityHeadingBox = await ada.locator(".activity-block h2").boundingBox();
+  expect(peopleBox).not.toBeNull();
+  expect(activityHeadingBox).not.toBeNull();
+  expect((peopleBox?.y ?? 0) + (peopleBox?.height ?? 0)).toBeLessThanOrEqual(
+    activityHeadingBox?.y ?? 0
+  );
+  await ada.screenshot({
+    path: "artifacts/collaboration-core-narrow.png",
+    fullPage: true
+  });
+
+  await contextB.close();
+  await expect(ada.getByTestId("activity-feed")).toContainText(
+    "Linus left the session"
   );
 
   await contextA.close();
-  await contextB.close();
 });
 
 async function replaceMonacoText(
   page: import("@playwright/test").Page,
+  path: string,
   text: string
 ) {
   await page.waitForFunction(
-    () =>
+    (filePath) =>
       Boolean(
         (
           window as typeof window & {
-            __simplercpEditors?: Record<
-              string,
-              { setValue(value: string): void }
-            >;
+            __simplercpEditors?: Record<string, { setValue(value: string): void }>;
           }
-        ).__simplercpEditors?.["src/hello.ts"]
+        ).__simplercpEditors?.[filePath]
       ),
-    undefined,
-    { timeout: 10_000 }
+    path
   );
-  await page.evaluate((nextText) => {
-    const editors = (
-      window as typeof window & {
-        __simplercpEditors?: Record<string, { setValue(value: string): void }>;
-      }
-    ).__simplercpEditors;
-    const editor = editors?.["src/hello.ts"];
-    if (!editor) {
-      throw new Error("Monaco editor is not ready");
-    }
-    editor.setValue(nextText);
-  }, text);
+  await page.evaluate(
+    ({ filePath, nextText }) => {
+      const editor = (
+        window as typeof window & {
+          __simplercpEditors?: Record<string, { setValue(value: string): void }>;
+        }
+      ).__simplercpEditors?.[filePath];
+      if (!editor) throw new Error("Monaco editor is not ready");
+      editor.setValue(nextText);
+    },
+    { filePath: path, nextText: text }
+  );
 }
 
-async function acceptPrompt(
+async function setMonacoSelection(
   page: import("@playwright/test").Page,
-  trigger: Promise<unknown>,
-  value: string
+  path: string,
+  selection: {
+    startLineNumber: number;
+    startColumn: number;
+    endLineNumber: number;
+    endColumn: number;
+  }
 ) {
-  const dialogPromise = page.waitForEvent("dialog");
-  const dialog = await dialogPromise;
-  await dialog.accept(value);
-  await trigger;
+  await page.waitForFunction(
+    (filePath) =>
+      Boolean(
+        (
+          window as typeof window & {
+            __simplercpEditors?: Record<string, unknown>;
+          }
+        ).__simplercpEditors?.[filePath]
+      ),
+    path
+  );
+  await page.evaluate(
+    ({ filePath, nextSelection }) => {
+      const editor = (
+        window as typeof window & {
+          __simplercpEditors?: Record<
+            string,
+            { setSelection(selection: typeof nextSelection): void; focus(): void }
+          >;
+        }
+      ).__simplercpEditors?.[filePath];
+      if (!editor) throw new Error("Monaco editor is not ready");
+      editor.focus();
+      editor.setSelection(nextSelection);
+    },
+    { filePath: path, nextSelection: selection }
+  );
 }
 
-async function acceptDialog(
+async function expectRemoteCursor(
   page: import("@playwright/test").Page,
-  trigger: Promise<unknown>
+  path: string,
+  displayName: string
 ) {
-  const dialogPromise = page.waitForEvent("dialog");
-  const dialog = await dialogPromise;
-  await dialog.accept();
-  await trigger;
+  await page.waitForFunction(
+    ({ filePath, name }) => {
+      const editor = (
+        window as typeof window & {
+          __simplercpEditors?: Record<
+            string,
+            {
+              getModel(): {
+                getAllDecorations(): Array<{
+                  options: {
+                    after?: { content?: string };
+                    className?: string;
+                  };
+                }>;
+              } | null;
+            }
+          >;
+        }
+      ).__simplercpEditors?.[filePath];
+      const decorations = editor?.getModel()?.getAllDecorations() ?? [];
+      return (
+        decorations.some(
+          (decoration) => decoration.options.after?.content === ` ${name}`
+        ) &&
+        decorations.some((decoration) =>
+          decoration.options.className?.includes("remote-selection")
+        )
+      );
+    },
+    { filePath: path, name: displayName }
+  );
 }

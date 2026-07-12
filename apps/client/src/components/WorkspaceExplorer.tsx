@@ -1,3 +1,14 @@
+import {
+  ChevronDown,
+  ChevronRight,
+  FileCode2,
+  FilePlus2,
+  FolderClosed,
+  FolderOpen,
+  FolderPlus,
+  Pencil,
+  Trash2
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { WorkspaceNode } from "../types";
 
@@ -33,7 +44,7 @@ export function WorkspaceExplorer({
             onClick={onCreateFile}
             data-testid="new-file"
           >
-            +
+            <FilePlus2 size={15} />
           </button>
           <button
             aria-label="New folder"
@@ -41,7 +52,7 @@ export function WorkspaceExplorer({
             onClick={onCreateFolder}
             data-testid="new-folder"
           >
-            /
+            <FolderPlus size={15} />
           </button>
         </div>
       </div>
@@ -81,51 +92,58 @@ function TreeNode({
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (shouldRevealActivePath) {
-      setIsOpen(true);
-    }
+    if (shouldRevealActivePath) setIsOpen(true);
   }, [shouldRevealActivePath]);
 
   if (node.type === "directory") {
     return (
-      <details
-        open={isOpen}
-        className="tree-directory"
-        onToggle={(event) => setIsOpen(event.currentTarget.open)}
-      >
-        <summary data-testid={`dir-${node.path}`}>
-          <span>{node.name}</span>
+      <div className="tree-directory">
+        <div className="tree-row directory-row">
+          <button
+            className="tree-entry"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen((value) => !value)}
+            data-testid={`dir-${node.path}`}
+          >
+            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {isOpen ? <FolderOpen size={15} /> : <FolderClosed size={15} />}
+            <span>{node.name}</span>
+          </button>
           <TreeActions
             path={node.path}
             onRenamePath={onRenamePath}
             onDeletePath={onDeletePath}
           />
-        </summary>
-        <div className="tree-children">
-          {node.children.map((child) => (
-            <TreeNode
-              key={child.path}
-              node={child}
-              activePath={activePath}
-              activeAncestors={activeAncestors}
-              onOpenFile={onOpenFile}
-              onRenamePath={onRenamePath}
-              onDeletePath={onDeletePath}
-            />
-          ))}
         </div>
-      </details>
+        {isOpen ? (
+          <div className="tree-children">
+            {node.children.map((child) => (
+              <TreeNode
+                key={child.path}
+                node={child}
+                activePath={activePath}
+                activeAncestors={activeAncestors}
+                onOpenFile={onOpenFile}
+                onRenamePath={onRenamePath}
+                onDeletePath={onDeletePath}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
     );
   }
 
   return (
     <div className={node.path === activePath ? "tree-row active" : "tree-row"}>
       <button
-        className="tree-file"
+        className="tree-entry file-entry"
         onClick={() => onOpenFile(node.path)}
         data-testid={`file-${node.path}`}
       >
-        {node.name}
+        <span className="tree-indent" />
+        <FileCode2 size={15} />
+        <span>{node.name}</span>
       </button>
       <TreeActions
         path={node.path}
@@ -160,26 +178,18 @@ function TreeActions({
       <button
         aria-label={`Rename ${path}`}
         title="Rename"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          onRenamePath(path);
-        }}
+        onClick={() => onRenamePath(path)}
         data-testid={`rename-${path}`}
       >
-        r
+        <Pencil size={13} />
       </button>
       <button
         aria-label={`Delete ${path}`}
         title="Delete"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          onDeletePath(path);
-        }}
+        onClick={() => onDeletePath(path)}
         data-testid={`delete-${path}`}
       >
-        x
+        <Trash2 size={13} />
       </button>
     </span>
   );

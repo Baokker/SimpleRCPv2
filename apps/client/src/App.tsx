@@ -1,28 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  getAgentRuns,
   createWorkspaceDirectory,
   createWorkspaceFile,
-  createTask,
   deleteWorkspacePath,
   getChatMessages,
   getEvents,
   getHealth,
   getRoom,
   getRuntimeConfig,
-  getScenarios,
-  getTasks,
-  getTimeline,
   getWorkspaceTree,
   joinRoom,
   readWorkspaceFile,
   renameWorkspacePath,
-  runScenario,
-  runConfiguredAgent,
-  runMockAgent,
   runQuickCommand,
-  sendConnectionOffline,
   sendChatMessage,
+  sendConnectionOffline,
   writeWorkspaceFile
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
@@ -31,14 +23,13 @@ import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
 import { connectRoomSocket, type ClientSocket } from "./socket";
 import type {
-  AgentRun,
   ChatMessage,
+  CursorPosition,
+  EditorSelection,
   EventRecord,
+  RemoteCursor,
   RoomMember,
   RuntimeConfig,
-  ScenarioSummary,
-  TaskRecord,
-  TimelineItem,
   WorkspaceNode
 } from "./types";
 
@@ -50,19 +41,13 @@ export function App() {
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activePath, setActivePath] = useState<string>();
   const [events, setEvents] = useState<EventRecord[]>([]);
-  const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
-  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
-  const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
-  const [selectedScenario, setSelectedScenario] = useState("");
+  const [remoteCursorMap, setRemoteCursorMap] = useState<
+    Record<string, RemoteCursor>
+  >({});
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig>({
     commandMode: "restricted",
-    commands: [],
-    agentProvider: "mock",
-    agentConfigured: true,
-    agentName: "MockAgent",
-    agentMentionAliases: ["MockAgent"]
+    commands: []
   });
   const [chatText, setChatText] = useState("");
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
@@ -71,7 +56,8 @@ export function App() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [commandRunning, setCommandRunning] = useState(false);
   const [connectionState, setConnectionState] = useState("Connecting");
-  const [socket, setSocket] = useState<ClientSocket | null>(null);
+  const socketRef = useRef<ClientSocket | null>(null);
+  const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
     null
   );
@@ -83,11 +69,16 @@ export function App() {
       `User-${Math.floor(Math.random() * 1000)}`,
     []
   );
+  const remoteCursors = useMemo(
+    () => Object.values(remoteCursorMap),
+    [remoteCursorMap]
+  );
 
   useEffect(() => {
     if (bootStartedRef.current) return;
     bootStartedRef.current = true;
     let mounted = true;
+
     async function boot() {
       const health = await getHealth();
       const userId = getUserId(displayName);
@@ -95,47 +86,28 @@ export function App() {
       const joined = await joinRoom(
         health.roomId,
         displayName,
-        "human",
-        connectionId,
         userId,
         connectionId
       );
-      const [
-        room,
-        workspaceTree,
-        eventRecords,
-        taskRecords,
-        runtime,
-        messages,
-        runs,
-        timelineItems,
-        scenarioRecords
-      ] = await Promise.all([
-        getRoom(health.roomId),
-        getWorkspaceTree(),
-        getEvents(),
-        getTasks(health.roomId),
-        getRuntimeConfig(),
-        getChatMessages(health.roomId),
-        getAgentRuns(health.roomId),
-        getTimeline(health.roomId),
-        getScenarios()
-      ]);
+      const [room, workspaceTree, eventRecords, runtime, messages] =
+        await Promise.all([
+          getRoom(health.roomId),
+          getWorkspaceTree(),
+          getEvents(),
+          getRuntimeConfig(),
+          getChatMessages(health.roomId)
+        ]);
 
       if (!mounted) return;
+      membersRef.current = room.members;
       setRoomId(health.roomId);
       setMember(joined);
       setMembers(room.members);
       setWorkspaceName(room.workspaceName);
       setTree(workspaceTree);
       setEvents(eventRecords);
-      setTasks(taskRecords);
       setRuntimeConfig(runtime);
       setChatMessages(messages);
-      setAgentRuns(runs);
-      setTimeline(timelineItems);
-      setScenarios(scenarioRecords);
-      setSelectedScenario(scenarioRecords[0]?.id ?? "");
       setSelectedCommand(runtime.commands[0] ?? "");
       setCommandText(runtime.commands[0] ?? "");
 
@@ -146,7 +118,29 @@ export function App() {
         onMessage(message) {
           setConnectionState("Connected");
           if (message.type === "presence") {
+            membersRef.current = message.members;
             setMembers(message.members);
+            const onlineIds = new Set(
+              message.members
+                .filter((candidate) => candidate.online)
+                .map((candidate) => candidate.id)
+            );
+            setRemoteCursorMap((cursors) =>
+              Object.fromEntries(
+                Object.entries(cursors)
+                  .filter(([memberId]) => onlineIds.has(memberId))
+                  .map(([memberId, cursor]) => [
+                    memberId,
+                    {
+                      ...cursor,
+                      displayName:
+                        message.members.find(
+                          (candidate) => candidate.id === memberId
+                        )?.displayName ?? cursor.displayName
+                    }
+                  ])
+              )
+            );
           }
           if (message.type === "file_change" && message.memberId !== joined.id) {
             setOpenFiles((files) =>
@@ -157,17 +151,29 @@ export function App() {
               )
             );
           }
-          if (message.type === "chat_message") {
-            void refreshCollaboration();
+          if (message.type === "cursor_change" && message.memberId !== joined.id) {
+            const collaborator = membersRef.current.find(
+              (candidate) => candidate.id === message.memberId
+            );
+            setRemoteCursorMap((cursors) => ({
+              ...cursors,
+              [message.memberId]: {
+                memberId: message.memberId,
+                displayName: collaborator?.displayName ?? "Collaborator",
+                path: message.path,
+                position: message.position,
+                selection: message.selection
+              }
+            }));
           }
-          if (message.type === "workspace_tree_changed") {
-            void refreshWorkspace();
+          if (message.type === "chat_message") {
+            void refreshSharedState(health.roomId);
           }
         }
       });
       connectionRef.current = { roomId: health.roomId, connectionId };
+      socketRef.current = connected;
       connected.sendReady();
-      setSocket(connected);
     }
 
     void boot();
@@ -177,18 +183,9 @@ export function App() {
       if (connection) {
         sendConnectionOffline(connection.roomId, connection.connectionId);
       }
+      socketRef.current?.close();
     };
   }, [displayName]);
-
-  useEffect(() => {
-    return () => {
-      const connection = connectionRef.current;
-      if (connection) {
-        sendConnectionOffline(connection.roomId, connection.connectionId);
-      }
-      socket?.close();
-    };
-  }, [socket]);
 
   useEffect(() => {
     function markOffline() {
@@ -204,190 +201,104 @@ export function App() {
   useEffect(() => {
     if (!roomId) return;
     const timer = window.setInterval(() => {
-      void refreshTasksAndEvents();
+      void refreshSharedState(roomId);
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
+
+  async function refreshSharedState(targetRoomId: string) {
+    const [room, eventRecords, workspaceTree, messages] = await Promise.all([
+      getRoom(targetRoomId),
+      getEvents(),
+      getWorkspaceTree(),
+      getChatMessages(targetRoomId)
+    ]);
+    membersRef.current = room.members;
+    setMembers(room.members);
+    setEvents(eventRecords);
+    setTree(workspaceTree);
+    setChatMessages(messages);
+    setTerminalLines(terminalLinesFromEvents(eventRecords));
+  }
 
   async function refreshEvents() {
     setEvents(await getEvents());
   }
 
-  async function refreshTasksAndEvents() {
-    await refreshCollaboration();
-  }
-
-  async function refreshCollaboration() {
-    if (!roomId) return;
-    const [
-      room,
-      taskRecords,
-      eventRecords,
-      workspaceTree,
-      messages,
-      runs,
-      timelineItems
-    ] = await Promise.all([
-      getRoom(roomId),
-      getTasks(roomId),
-      getEvents(),
-      getWorkspaceTree(),
-      getChatMessages(roomId),
-      getAgentRuns(roomId),
-      getTimeline(roomId)
-    ]);
-    setMembers(room.members);
-    setTasks(taskRecords);
-    setEvents(eventRecords);
-    setTree(workspaceTree);
-    setChatMessages(messages);
-    setAgentRuns(runs);
-    setTimeline(timelineItems);
-    setTerminalLines(terminalLinesFromEvents(eventRecords));
-  }
-
-  async function refreshWorkspace() {
-    setTree(await getWorkspaceTree());
-    if (activePath) {
-      try {
-        const content = await readWorkspaceFile(activePath);
-        setOpenFiles((files) =>
-          files.map((file) => (file.path === activePath ? { ...file, content } : file))
-        );
-      } catch {
-        closePath(activePath);
-      }
-    }
-  }
-
   async function openFile(path: string) {
-    const existing = openFiles.find((file) => file.path === path);
-    if (!existing) {
+    if (!openFiles.some((file) => file.path === path)) {
       const content = await readWorkspaceFile(path);
       setOpenFiles((files) => [...files, { path, content }]);
     }
     setActivePath(path);
-    socket?.sendOpenFile(path);
+    socketRef.current?.sendOpenFile(path);
     await refreshEvents();
   }
 
   function selectFile(path: string) {
     setActivePath(path);
-    socket?.sendOpenFile(path);
+    socketRef.current?.sendOpenFile(path);
   }
 
   async function changeFile(path: string, content: string) {
     setOpenFiles((files) =>
       files.map((file) => (file.path === path ? { ...file, content } : file))
     );
-    socket?.sendFileChange(path, content);
+    socketRef.current?.sendFileChange(path, content);
     await writeWorkspaceFile(path, content);
+  }
+
+  function changeCursor(
+    path: string,
+    position: CursorPosition,
+    selection: EditorSelection
+  ) {
+    socketRef.current?.sendCursorChange(path, position, selection);
   }
 
   async function sendChat() {
     const text = chatText.trim();
     if (!text || !member || !roomId) return;
-    const authorName = member.displayName ?? member.name;
     await sendChatMessage(roomId, {
       authorId: member.id,
-      authorName,
-      authorKind: member.kind,
+      authorName: member.displayName,
       text
     });
-    socket?.sendChat(text);
+    socketRef.current?.sendChat(text);
     setChatText("");
-    await refreshCollaboration();
-  }
-
-  async function createMockAgentTask() {
-    if (!member || !roomId) return;
-    const agentName = "MockAgent";
-    const agentMember =
-      members.find((candidate) => candidate.name === agentName) ??
-      (await joinRoom(
-        roomId,
-        agentName,
-        "agent",
-        "agent:mock",
-        "agent:mock",
-        "agent:mock",
-        "mock"
-      ));
-
-    await createTask({
-      roomId,
-      title: "MockAgent update greeting",
-      description: "Update src/hello.ts and run npm test.",
-      creatorId: member.id,
-      assigneeId: agentMember.id,
-      editablePaths: ["src/**"],
-      commandWhitelist: ["npm test"],
-      acceptanceTarget: "npm test passes"
-    });
-    const room = await getRoom(roomId);
-    setMembers(room.members);
-    await refreshTasksAndEvents();
-  }
-
-  async function runMockAgentForTask(taskId: string) {
-    const task = tasks.find((candidate) => candidate.id === taskId);
-    if (!task) return;
-    const report = await runMockAgent(taskId, task.assigneeId);
-    setTerminalLines((lines) => [...lines, report.summary]);
-    await refreshTasksAndEvents();
-    const workspaceTree = await getWorkspaceTree();
-    setTree(workspaceTree);
-    if (activePath) {
-      const content = await readWorkspaceFile(activePath);
-      setOpenFiles((files) =>
-        files.map((file) => (file.path === activePath ? { ...file, content } : file))
-      );
-    }
-  }
-
-  async function runConfiguredAgentForTask(taskId: string) {
-    const task = tasks.find((candidate) => candidate.id === taskId);
-    if (!task) return;
-    const report = await runConfiguredAgent(taskId, task.assigneeId);
-    setTerminalLines((lines) => [...lines, report.summary]);
-    await refreshTasksAndEvents();
-    await refreshWorkspace();
+    await refreshSharedState(roomId);
   }
 
   async function createFileFromPrompt() {
     const path = window.prompt("New file path");
-    if (!path) return;
-    const nextTree = await createWorkspaceFile(path, "");
-    setTree(nextTree);
+    if (!path || !member) return;
+    setTree(await createWorkspaceFile(path, member.id));
     await openFile(path);
-    await refreshEvents();
   }
 
   async function createFolderFromPrompt() {
     const path = window.prompt("New folder path");
-    if (!path) return;
-    setTree(await createWorkspaceDirectory(path));
+    if (!path || !member) return;
+    setTree(await createWorkspaceDirectory(path, member.id));
     await refreshEvents();
   }
 
   async function renamePathFromPrompt(path: string) {
     const toPath = window.prompt("Rename path", path);
-    if (!toPath || toPath === path) return;
-    setTree(await renameWorkspacePath(path, toPath));
+    if (!toPath || toPath === path || !member) return;
+    setTree(await renameWorkspacePath(path, toPath, member.id));
     setOpenFiles((files) =>
       files.map((file) =>
         file.path === path ? { ...file, path: toPath } : file
       )
     );
-    if (activePath === path) {
-      setActivePath(toPath);
-    }
+    if (activePath === path) setActivePath(toPath);
     await refreshEvents();
   }
 
   async function deletePathWithConfirm(path: string) {
-    if (!window.confirm(`Delete ${path}?`)) return;
-    setTree(await deleteWorkspacePath(path));
+    if (!window.confirm(`Delete ${path}?`) || !member) return;
+    setTree(await deleteWorkspacePath(path, member.id));
     closePath(path);
     await refreshEvents();
   }
@@ -397,7 +308,7 @@ export function App() {
       runtimeConfig.commandMode === "unrestricted"
         ? commandText.trim()
         : selectedCommand;
-    if (!member || !command) return;
+    if (!member || !command || !roomId) return;
     setCommandRunning(true);
     try {
       const run = await runQuickCommand(command, member.id);
@@ -407,20 +318,10 @@ export function App() {
         run.output.trimEnd(),
         `exit ${run.exitCode}`
       ]);
-      await refreshTasksAndEvents();
+      await refreshSharedState(roomId);
     } finally {
       setCommandRunning(false);
     }
-  }
-
-  async function runSelectedScenario() {
-    if (!selectedScenario) return;
-    const result = await runScenario(selectedScenario);
-    setTimeline(result.timeline);
-    setChatMessages(result.messages);
-    setAgentRuns(result.runs);
-    await refreshTasksAndEvents();
-    await refreshWorkspace();
   }
 
   function closePath(path: string) {
@@ -450,29 +351,21 @@ export function App() {
         <EditorArea
           openFiles={openFiles}
           activePath={activePath}
+          remoteCursors={remoteCursors}
           onSelectFile={selectFile}
           onChangeFile={changeFile}
+          onCursorChange={changeCursor}
         />
       </section>
       <aside className="collab-pane">
         <CollaborationPanel
           members={members}
           events={events}
-          tasks={tasks}
           chatMessages={chatMessages}
-          agentRuns={agentRuns}
-          timeline={timeline}
-          scenarios={scenarios}
-          selectedScenario={selectedScenario}
+          remoteCursors={remoteCursors}
           chatText={chatText}
-          runtimeConfig={runtimeConfig}
           onChatTextChange={setChatText}
           onSendChat={sendChat}
-          onSelectedScenarioChange={setSelectedScenario}
-          onRunScenario={runSelectedScenario}
-          onCreateMockAgentTask={createMockAgentTask}
-          onRunMockAgent={runMockAgentForTask}
-          onRunConfiguredAgent={runConfiguredAgentForTask}
         />
       </aside>
       <section className="terminal-pane">
@@ -490,7 +383,7 @@ export function App() {
       <div className="status-bar" data-testid="status-bar">
         <span>{connectionState}</span>
         <span>Room {roomId || "..."}</span>
-        <span>{member?.displayName ?? member?.name ?? "Joining"}</span>
+        <span>{member?.displayName ?? "Joining"}</span>
         <span>{workspaceName || "Workspace"}</span>
       </div>
     </main>
@@ -499,15 +392,9 @@ export function App() {
 
 function terminalLinesFromEvents(events: EventRecord[]) {
   return events.flatMap((event) => {
-    if (event.type === "command_output") {
-      const payload = event.payload as { output?: unknown } | undefined;
-      return [String(payload?.output ?? "")];
-    }
-    if (event.type === "agent_reported") {
-      const payload = event.payload as { summary?: unknown } | undefined;
-      return [String(payload?.summary ?? "")];
-    }
-    return [];
+    if (event.type !== "command_output") return [];
+    const payload = event.payload as { output?: unknown } | undefined;
+    return [String(payload?.output ?? "")];
   });
 }
 

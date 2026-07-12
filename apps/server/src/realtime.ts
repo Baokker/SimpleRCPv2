@@ -70,12 +70,18 @@ export function handleRealtimeMessage({
     };
   }
 
-  events.append({
-    type: "chat_message",
-    roomId: message.roomId,
-    memberId: message.memberId,
-    payload: { text: message.text }
-  });
+  if (message.type === "cursor_change") {
+    return {
+      broadcast: {
+        type: "cursor_change",
+        roomId: message.roomId,
+        memberId: message.memberId,
+        path: message.path,
+        position: message.position,
+        selection: message.selection
+      }
+    };
+  }
 
   return {
     broadcast: {

@@ -13,20 +13,15 @@ export interface WorkspaceDirectoryNode {
 
 export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 
-export type MemberKind = "human" | "agent";
-
 export interface RoomMember {
   id: string;
   userId: string;
-  clientId?: string;
   name: string;
   displayName: string;
-  kind: MemberKind;
   online: boolean;
   lastSeenAt: string;
   connectionCount: number;
   currentFile?: string;
-  provider?: string;
 }
 
 export interface RoomState {
@@ -50,7 +45,6 @@ export interface EventRecord {
   type: string;
   roomId?: string;
   memberId?: string;
-  taskId?: string;
   timestamp: string;
   payload?: object;
 }
@@ -60,67 +54,20 @@ export interface ChatMessage {
   roomId: string;
   authorId: string;
   authorName: string;
-  authorKind: MemberKind;
   text: string;
-  mentions: string[];
   timestamp: string;
-  taskId?: string;
-  runId?: string;
 }
 
-export type AgentRunStatus =
-  | "queued"
-  | "thinking"
-  | "editing"
-  | "running_command"
-  | "reporting"
-  | "completed"
-  | "failed"
-  | "blocked";
-
-export interface AgentRun {
-  id: string;
-  roomId: string;
-  agentId: string;
-  agentName: string;
-  status: AgentRunStatus;
-  startedAt: string;
-  triggerMessageId?: string;
-  taskId?: string;
-  endedAt?: string;
-  summary?: string;
-  error?: string;
-  lastAction?: string;
+export interface CursorPosition {
+  lineNumber: number;
+  column: number;
 }
 
-export type TimelineItemType =
-  | "join"
-  | "chat"
-  | "agent"
-  | "edit"
-  | "command"
-  | "result";
-
-export type TimelineItemStatus =
-  | "queued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "blocked";
-
-export interface TimelineItem {
-  id: string;
-  roomId: string;
-  actorName: string;
-  actorKind: MemberKind;
-  type: TimelineItemType;
-  label: string;
-  status: TimelineItemStatus;
-  timestamp: string;
-  detail?: string;
-  eventId?: string;
-  taskId?: string;
-  runId?: string;
+export interface EditorSelection {
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
 }
 
 export type ClientMessage =
@@ -146,6 +93,15 @@ export type ClientMessage =
       content: string;
     }
   | {
+      type: "cursor_change";
+      roomId: string;
+      memberId: string;
+      connectionId?: string;
+      path: string;
+      position: CursorPosition;
+      selection: EditorSelection;
+    }
+  | {
       type: "chat_message";
       roomId: string;
       memberId: string;
@@ -167,6 +123,14 @@ export type ServerMessage =
       content: string;
     }
   | {
+      type: "cursor_change";
+      roomId: string;
+      memberId: string;
+      path: string;
+      position: CursorPosition;
+      selection: EditorSelection;
+    }
+  | {
       type: "chat_message";
       roomId: string;
       memberId: string;
@@ -176,28 +140,11 @@ export type ServerMessage =
       type: "event";
       event: EventRecord;
     }
-  | {
-      type: "workspace_tree_changed";
-      roomId: string;
-    };
-
-export interface TaskRecord {
-  id: string;
-  roomId: string;
-  title: string;
-  description: string;
-  creatorId: string;
-  assigneeId: string;
-  editablePaths: string[];
-  commandWhitelist: string[];
-  acceptanceTarget?: string;
-  status: "open" | "running" | "completed" | "blocked";
-}
+  ;
 
 export interface RunRecord {
   id: string;
   roomId: string;
-  taskId?: string;
   initiatorId: string;
   command: string;
   exitCode: number | null;

@@ -16,15 +16,12 @@ export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 export interface RoomMember {
   id: string;
   userId: string;
-  clientId?: string;
   name: string;
   displayName: string;
-  kind: "human" | "agent";
   online: boolean;
   lastSeenAt: string;
   connectionCount: number;
   currentFile?: string;
-  provider?: string;
 }
 
 export interface RoomState {
@@ -48,9 +45,37 @@ export interface EventRecord {
   type: string;
   roomId?: string;
   memberId?: string;
-  taskId?: string;
   timestamp: string;
   payload?: Record<string, unknown>;
+}
+
+export interface ChatMessage {
+  id: string;
+  roomId: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface CursorPosition {
+  lineNumber: number;
+  column: number;
+}
+
+export interface EditorSelection {
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
+}
+
+export interface RemoteCursor {
+  memberId: string;
+  displayName: string;
+  path: string;
+  position: CursorPosition;
+  selection: EditorSelection;
 }
 
 export type ServerMessage =
@@ -67,109 +92,32 @@ export type ServerMessage =
       content: string;
     }
   | {
+      type: "cursor_change";
+      roomId: string;
+      memberId: string;
+      path: string;
+      position: CursorPosition;
+      selection: EditorSelection;
+    }
+  | {
       type: "chat_message";
       roomId: string;
       memberId: string;
       text: string;
     }
   | {
-      type: "workspace_tree_changed";
-      roomId: string;
+      type: "event";
+      event: EventRecord;
     };
-
-export interface TaskRecord {
-  id: string;
-  roomId: string;
-  title: string;
-  description: string;
-  creatorId: string;
-  assigneeId: string;
-  editablePaths: string[];
-  commandWhitelist: string[];
-  acceptanceTarget?: string;
-  status: "open" | "running" | "completed" | "blocked";
-}
-
-export interface ChatMessage {
-  id: string;
-  roomId: string;
-  authorId: string;
-  authorName: string;
-  authorKind: "human" | "agent";
-  text: string;
-  mentions: string[];
-  timestamp: string;
-  taskId?: string;
-  runId?: string;
-}
-
-export type AgentRunStatus =
-  | "queued"
-  | "thinking"
-  | "editing"
-  | "running_command"
-  | "reporting"
-  | "completed"
-  | "failed"
-  | "blocked";
-
-export interface AgentRun {
-  id: string;
-  roomId: string;
-  agentId: string;
-  agentName: string;
-  status: AgentRunStatus;
-  startedAt: string;
-  triggerMessageId?: string;
-  taskId?: string;
-  endedAt?: string;
-  summary?: string;
-  error?: string;
-  lastAction?: string;
-}
-
-export interface TimelineItem {
-  id: string;
-  roomId: string;
-  actorName: string;
-  actorKind: "human" | "agent";
-  type: "join" | "chat" | "agent" | "edit" | "command" | "result";
-  label: string;
-  status: "queued" | "running" | "completed" | "failed" | "blocked";
-  timestamp: string;
-  detail?: string;
-  eventId?: string;
-  taskId?: string;
-  runId?: string;
-}
-
-export interface ScenarioSummary {
-  id: string;
-  name: string;
-  description: string;
-}
 
 export interface RuntimeConfig {
   commandMode: "restricted" | "unrestricted";
   commands: string[];
-  agentProvider: "mock" | "openai-compatible";
-  agentConfigured: boolean;
-  agentName: string;
-  agentMentionAliases: string[];
-}
-
-export interface AgentReport {
-  taskId: string;
-  agentId: string;
-  summary: string;
-  commands: string[];
-  risks: string[];
 }
 
 export interface RunRecord {
   id: string;
   roomId: string;
-  taskId?: string;
   initiatorId: string;
   command: string;
   exitCode: number | null;

@@ -1,15 +1,10 @@
 import type {
-  AgentRun,
-  AgentReport,
   ChatMessage,
   EventRecord,
   RoomMember,
   RoomState,
   RunRecord,
   RuntimeConfig,
-  ScenarioSummary,
-  TaskRecord,
-  TimelineItem,
   WorkspaceNode
 } from "./types";
 
@@ -29,18 +24,15 @@ export async function getRoom(roomId: string): Promise<RoomState> {
 export async function joinRoom(
   roomId: string,
   name: string,
-  kind: "human" | "agent" = "human",
-  clientId: string,
-  userId?: string,
-  connectionId?: string,
-  provider?: string
+  userId: string,
+  connectionId: string
 ): Promise<RoomMember> {
   const response = await request<{ member: RoomMember }>(
     `/api/rooms/${roomId}/members`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, kind, clientId, userId, connectionId, provider })
+      body: JSON.stringify({ name, userId, connectionId })
     }
   );
   return response.member;
@@ -57,11 +49,6 @@ export function sendConnectionOffline(roomId: string, connectionId: string) {
     return;
   }
   void fetch(path, { method: "POST", keepalive: true });
-}
-
-export async function getAllowedCommands(): Promise<string[]> {
-  const response = await request<{ commands: string[] }>("/api/config/commands");
-  return response.commands;
 }
 
 export async function getWorkspaceTree(): Promise<WorkspaceNode[]> {
@@ -86,42 +73,51 @@ export async function writeWorkspaceFile(path: string, content: string) {
   });
 }
 
-export async function createWorkspaceFile(path: string, content = "") {
+export async function createWorkspaceFile(
+  path: string,
+  initiatorId: string,
+  content = ""
+) {
   const response = await request<{ tree: WorkspaceNode[] }>("/api/workspace/file", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path, content })
+    body: JSON.stringify({ path, content, initiatorId })
   });
   return response.tree;
 }
 
-export async function createWorkspaceDirectory(path: string) {
+export async function createWorkspaceDirectory(
+  path: string,
+  initiatorId: string
+) {
   const response = await request<{ tree: WorkspaceNode[] }>(
     "/api/workspace/directory",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path })
+      body: JSON.stringify({ path, initiatorId })
     }
   );
   return response.tree;
 }
 
-export async function renameWorkspacePath(fromPath: string, toPath: string) {
+export async function renameWorkspacePath(
+  fromPath: string,
+  toPath: string,
+  initiatorId: string
+) {
   const response = await request<{ tree: WorkspaceNode[] }>("/api/workspace/path", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fromPath, toPath })
+    body: JSON.stringify({ fromPath, toPath, initiatorId })
   });
   return response.tree;
 }
 
-export async function deleteWorkspacePath(path: string) {
+export async function deleteWorkspacePath(path: string, initiatorId: string) {
   const response = await request<{ tree: WorkspaceNode[] }>(
-    `/api/workspace/path?path=${encodeURIComponent(path)}`,
-    {
-      method: "DELETE"
-    }
+    `/api/workspace/path?path=${encodeURIComponent(path)}&initiatorId=${encodeURIComponent(initiatorId)}`,
+    { method: "DELETE" }
   );
   return response.tree;
 }
@@ -140,103 +136,13 @@ export async function getChatMessages(roomId: string): Promise<ChatMessage[]> {
 
 export async function sendChatMessage(
   roomId: string,
-  input: {
-    authorId: string;
-    authorName: string;
-    authorKind: "human" | "agent";
-    text: string;
-  }
-): Promise<{ message: ChatMessage; agentRun?: AgentRun }> {
+  input: { authorId: string; authorName: string; text: string }
+): Promise<{ message: ChatMessage }> {
   return request(`/api/rooms/${roomId}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input)
   });
-}
-
-export async function getAgentRuns(roomId: string): Promise<AgentRun[]> {
-  const response = await request<{ runs: AgentRun[] }>(
-    `/api/rooms/${roomId}/agent-runs`
-  );
-  return response.runs;
-}
-
-export async function getTimeline(roomId: string): Promise<TimelineItem[]> {
-  const response = await request<{ timeline: TimelineItem[] }>(
-    `/api/rooms/${roomId}/timeline`
-  );
-  return response.timeline;
-}
-
-export async function getScenarios(): Promise<ScenarioSummary[]> {
-  const response = await request<{ scenarios: ScenarioSummary[] }>(
-    "/api/scenarios"
-  );
-  return response.scenarios;
-}
-
-export async function runScenario(scenarioId: string): Promise<{
-  result: AgentRun;
-  timeline: TimelineItem[];
-  messages: ChatMessage[];
-  runs: AgentRun[];
-}> {
-  return request(`/api/scenarios/${scenarioId}/run`, { method: "POST" });
-}
-
-export async function createTask(input: {
-  roomId: string;
-  title: string;
-  description: string;
-  creatorId: string;
-  assigneeId: string;
-  editablePaths: string[];
-  commandWhitelist: string[];
-  acceptanceTarget?: string;
-}): Promise<TaskRecord> {
-  const response = await request<{ task: TaskRecord }>("/api/tasks", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
-  });
-  return response.task;
-}
-
-export async function getTasks(roomId: string): Promise<TaskRecord[]> {
-  const response = await request<{ tasks: TaskRecord[] }>(
-    `/api/tasks?roomId=${encodeURIComponent(roomId)}`
-  );
-  return response.tasks;
-}
-
-export async function runMockAgent(
-  taskId: string,
-  agentId: string
-): Promise<AgentReport> {
-  const response = await request<{ report: AgentReport }>(
-    `/api/tasks/${taskId}/agent/mock/run`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agentId })
-    }
-  );
-  return response.report;
-}
-
-export async function runConfiguredAgent(
-  taskId: string,
-  agentId: string
-): Promise<AgentReport> {
-  const response = await request<{ report: AgentReport }>(
-    `/api/tasks/${taskId}/agent/run`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agentId })
-    }
-  );
-  return response.report;
 }
 
 export async function runQuickCommand(

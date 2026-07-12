@@ -11,7 +11,6 @@ export interface RunWorkspaceCommandInput {
   commandMode?: CommandMode;
   events: EventLog;
   roomId: string;
-  taskId?: string;
   initiatorId: string;
   timeoutMs: number;
 }
@@ -23,7 +22,6 @@ export async function runWorkspaceCommand({
   commandMode = "restricted",
   events,
   roomId,
-  taskId,
   initiatorId,
   timeoutMs
 }: RunWorkspaceCommandInput): Promise<RunRecord> {
@@ -31,7 +29,6 @@ export async function runWorkspaceCommand({
     events.append({
       type: "approval_requested",
       roomId,
-      taskId,
       memberId: initiatorId,
       payload: { reason: "command_not_authorized", command }
     });
@@ -41,7 +38,6 @@ export async function runWorkspaceCommand({
   const run: RunRecord = {
     id: nanoid(10),
     roomId,
-    taskId,
     initiatorId,
     command,
     exitCode: null,
@@ -51,7 +47,6 @@ export async function runWorkspaceCommand({
   events.append({
     type: "command_started",
     roomId,
-    taskId,
     memberId: initiatorId,
     payload: { runId: run.id, command }
   });
@@ -90,7 +85,6 @@ export async function runWorkspaceCommand({
       events.append({
         type: "command_completed",
         roomId,
-        taskId,
         memberId: initiatorId,
         payload: {
           runId: run.id,
@@ -108,7 +102,6 @@ export async function runWorkspaceCommand({
       events.append({
         type: "command_output",
         roomId,
-        taskId,
         memberId: initiatorId,
         payload: {
           runId: run.id,
