@@ -15,11 +15,14 @@ export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 
 export interface RoomMember {
   id: string;
-  clientId: string;
+  userId: string;
+  clientId?: string;
   name: string;
+  displayName: string;
   kind: "human" | "agent";
   online: boolean;
   lastSeenAt: string;
+  connectionCount: number;
   currentFile?: string;
   provider?: string;
 }
@@ -28,6 +31,16 @@ export interface RoomState {
   id: string;
   workspaceName: string;
   members: RoomMember[];
+  connections: RoomConnection[];
+}
+
+export interface RoomConnection {
+  id: string;
+  userId: string;
+  roomId: string;
+  currentFile?: string;
+  online: boolean;
+  lastSeenAt: string;
 }
 
 export interface EventRecord {
@@ -75,6 +88,74 @@ export interface TaskRecord {
   commandWhitelist: string[];
   acceptanceTarget?: string;
   status: "open" | "running" | "completed" | "blocked";
+}
+
+export interface ChatMessage {
+  id: string;
+  roomId: string;
+  authorId: string;
+  authorName: string;
+  authorKind: "human" | "agent";
+  text: string;
+  mentions: string[];
+  timestamp: string;
+  taskId?: string;
+  runId?: string;
+}
+
+export type AgentRunStatus =
+  | "queued"
+  | "thinking"
+  | "editing"
+  | "running_command"
+  | "reporting"
+  | "completed"
+  | "failed"
+  | "blocked";
+
+export interface AgentRun {
+  id: string;
+  roomId: string;
+  agentId: string;
+  agentName: string;
+  status: AgentRunStatus;
+  startedAt: string;
+  triggerMessageId?: string;
+  taskId?: string;
+  endedAt?: string;
+  summary?: string;
+  error?: string;
+  lastAction?: string;
+}
+
+export interface TimelineItem {
+  id: string;
+  roomId: string;
+  actorName: string;
+  actorKind: "human" | "agent";
+  type: "join" | "chat" | "agent" | "edit" | "command" | "result";
+  label: string;
+  status: "queued" | "running" | "completed" | "failed" | "blocked";
+  timestamp: string;
+  detail?: string;
+  eventId?: string;
+  taskId?: string;
+  runId?: string;
+}
+
+export interface ScenarioSummary {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface RuntimeConfig {
+  commandMode: "restricted" | "unrestricted";
+  commands: string[];
+  agentProvider: "mock" | "openai-compatible";
+  agentConfigured: boolean;
+  agentName: string;
+  agentMentionAliases: string[];
 }
 
 export interface AgentReport {

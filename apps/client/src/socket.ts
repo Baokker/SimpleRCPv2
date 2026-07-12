@@ -11,10 +11,12 @@ export interface ClientSocket {
 export function connectRoomSocket({
   roomId,
   memberId,
+  connectionId,
   onMessage
 }: {
   roomId: string;
   memberId: string;
+  connectionId?: string;
   onMessage(message: ServerMessage): void;
 }): ClientSocket {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -24,7 +26,7 @@ export function connectRoomSocket({
   });
 
   function send(message: Record<string, unknown>) {
-    const payload = JSON.stringify({ roomId, memberId, ...message });
+    const payload = JSON.stringify({ roomId, memberId, connectionId, ...message });
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(payload);
     } else {

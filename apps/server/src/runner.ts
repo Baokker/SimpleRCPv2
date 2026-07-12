@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { nanoid } from "nanoid";
+import type { CommandMode } from "./config.js";
 import type { EventLog } from "./eventLog.js";
 import type { RunRecord } from "./types.js";
 
@@ -7,6 +8,7 @@ export interface RunWorkspaceCommandInput {
   workspaceRoot: string;
   command: string;
   whitelist: string[];
+  commandMode?: CommandMode;
   events: EventLog;
   roomId: string;
   taskId?: string;
@@ -18,13 +20,14 @@ export async function runWorkspaceCommand({
   workspaceRoot,
   command,
   whitelist,
+  commandMode = "restricted",
   events,
   roomId,
   taskId,
   initiatorId,
   timeoutMs
 }: RunWorkspaceCommandInput): Promise<RunRecord> {
-  if (!whitelist.includes(command)) {
+  if (commandMode === "restricted" && !whitelist.includes(command)) {
     events.append({
       type: "approval_requested",
       roomId,

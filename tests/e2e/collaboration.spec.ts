@@ -14,14 +14,17 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
 
   await userA.reload();
   await userA.getByTestId("status-bar").waitFor();
+  await userA.getByTestId("collab-tab-team").click();
   await expect(userA.getByTestId("member-list").getByText("Ada")).toHaveCount(1);
   await expect(userA.getByTestId("member-list")).toContainText("Ada");
   await expect(userA.getByTestId("member-list")).toContainText("Linus");
-  await expect(userB.getByTestId("workspace-tree")).toContainText("src");
+  await userA.getByTestId("dir-src").click();
+  await userB.getByTestId("dir-src").click();
   await expect(userB.getByTestId("workspace-tree")).toContainText("hello.ts");
 
   await userA.getByTestId("file-src/hello.ts").click();
   await expect(userA.getByTestId("editor-tabs")).toContainText("src/hello.ts");
+  await userB.getByTestId("collab-tab-team").click();
   await expect(userB.getByTestId("member-list")).toContainText("src/hello.ts");
   await userB.getByTestId("file-src/hello.ts").click();
 
@@ -73,24 +76,31 @@ test("human collaborators and mock agent complete a vertical collaboration flow"
     "generated-renamed"
   );
 
+  await userA.getByTestId("collab-tab-chat").click();
   await expect(userA.getByTestId("chat-composer")).toBeVisible();
+  await userA.getByTestId("collab-tab-team").click();
   await expect(userA.getByTestId("activity-feed")).toBeVisible();
 
-  await expect(userA.getByTestId("command-select")).toHaveValue("npm test");
+  await expect(userA.getByTestId("command-mode")).toContainText(
+    "unrestricted"
+  );
+  await userA.getByTestId("command-input").fill("npm test");
   await userA.getByTestId("run-command").click();
   await expect(userA.getByTestId("terminal-output")).toContainText(
     "sample-workspace-test-ok"
   );
 
+  await userA.getByTestId("collab-tab-tasks").click();
   await userA.getByTestId("create-agent-task").click();
   await expect(userA.getByTestId("task-list")).toContainText(
     "MockAgent update greeting"
   );
-  await userA.getByRole("button", { name: "Run Mock" }).click();
+  await userA.getByTestId("task-list").locator("button", { hasText: "Run Mock" }).last().click();
 
   await expect(userA.getByTestId("terminal-output")).toContainText(
     "MockAgent updated src/hello.ts"
   );
+  await userA.getByTestId("collab-tab-team").click();
   await expect(userA.getByTestId("activity-feed")).toContainText(
     "agent_reported"
   );

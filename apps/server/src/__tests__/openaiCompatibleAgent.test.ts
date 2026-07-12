@@ -82,7 +82,10 @@ describe("OpenAI-compatible agent", () => {
         provider: "openai-compatible",
         baseUrl: "https://api.deepseek.com",
         apiKey: "test-key",
-        model: "deepseek-v4-flash"
+        model: "deepseek-v4-flash",
+        name: "DeepSeek",
+        mentionAliases: ["DeepSeek"],
+        editablePaths: ["src/**"]
       },
       fakeFetch
     );
@@ -168,7 +171,10 @@ describe("OpenAI-compatible agent", () => {
         provider: "openai-compatible",
         baseUrl: "https://api.deepseek.com",
         apiKey: "test-key",
-        model: "deepseek-v4-flash"
+        model: "deepseek-v4-flash",
+        name: "DeepSeek",
+        mentionAliases: ["DeepSeek"],
+        editablePaths: ["src/**"]
       },
       fakeFetch
     );
@@ -183,6 +189,97 @@ describe("OpenAI-compatible agent", () => {
         "agent_edited_file",
         "command_completed",
         "agent_reported"
+      ])
+    );
+  });
+
+  it("records invalid provider actions without crashing the run", async () => {
+    const events = createEventLog();
+    const tasks = createTaskStore(events);
+    const task = tasks.createTask({
+      roomId: "room-1",
+      title: "Update greeting",
+      description: "Make a safe edit and run tests.",
+      creatorId: "human-1",
+      assigneeId: "agent-1",
+      editablePaths: ["src/**"],
+      commandWhitelist: ["npm test"],
+      acceptanceTarget: "Tests pass"
+    });
+    const fakeFetch = async () =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  actions: [
+                    {
+                      type: "edit_file",
+                      content: "export const hello = 'missing-path';\n"
+                    },
+                    {
+                      type: "run_command"
+                    },
+                    {
+                      type: "final_report",
+                      summary: "I tried to update the project.",
+                      commands: [],
+                      risks: []
+                    }
+                  ]
+                })
+              }
+            }
+          ]
+        }),
+        { status: 200 }
+      );
+
+    const report = await runOpenAICompatibleAgentTask(
+      {
+        workspaceRoot: root,
+        events,
+        tasks,
+        taskId: task.id,
+        agentId: "agent-1"
+      },
+      {
+        provider: "openai-compatible",
+        baseUrl: "https://api.deepseek.com",
+        apiKey: "test-key",
+        model: "deepseek-v4-flash",
+        name: "DeepSeek",
+        mentionAliases: ["DeepSeek"],
+        editablePaths: ["src/**"]
+      },
+      fakeFetch
+    );
+
+    await expect(fs.readFile(path.join(root, "src", "hello.ts"), "utf8")).resolves.toBe(
+      "export const hello = 'world';\n"
+    );
+    expect(report.summary).toBe("I tried to update the project.");
+    expect(report.risks).toEqual(
+      expect.arrayContaining([
+        "Skipped edit_file action because path must be a non-empty string.",
+        "Skipped run_command action because command must be a non-empty string."
+      ])
+    );
+    expect(events.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "agent_error",
+          payload: {
+            message: "Skipped edit_file action because path must be a non-empty string."
+          }
+        }),
+        expect.objectContaining({
+          type: "agent_error",
+          payload: {
+            message: "Skipped run_command action because command must be a non-empty string."
+          }
+        })
       ])
     );
   });

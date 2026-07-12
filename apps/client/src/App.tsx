@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  getAgentRuns,
   createWorkspaceDirectory,
   createWorkspaceFile,
   createTask,
   deleteWorkspacePath,
-  getAllowedCommands,
+  getChatMessages,
   getEvents,
   getHealth,
   getRoom,
+  getRuntimeConfig,
+  getScenarios,
   getTasks,
+  getTimeline,
   getWorkspaceTree,
   joinRoom,
   readWorkspaceFile,
   renameWorkspacePath,
+  runScenario,
   runConfiguredAgent,
   runMockAgent,
   runQuickCommand,
+  sendConnectionOffline,
+  sendChatMessage,
   writeWorkspaceFile
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
@@ -23,7 +30,17 @@ import { EditorArea, type OpenFile } from "./components/EditorArea";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
 import { connectRoomSocket, type ClientSocket } from "./socket";
-import type { EventRecord, RoomMember, TaskRecord, WorkspaceNode } from "./types";
+import type {
+  AgentRun,
+  ChatMessage,
+  EventRecord,
+  RoomMember,
+  RuntimeConfig,
+  ScenarioSummary,
+  TaskRecord,
+  TimelineItem,
+  WorkspaceNode
+} from "./types";
 
 export function App() {
   const [roomId, setRoomId] = useState("");
@@ -34,14 +51,30 @@ export function App() {
   const [activePath, setActivePath] = useState<string>();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
+  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  const [selectedScenario, setSelectedScenario] = useState("");
+  const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig>({
+    commandMode: "restricted",
+    commands: [],
+    agentProvider: "mock",
+    agentConfigured: true,
+    agentName: "MockAgent",
+    agentMentionAliases: ["MockAgent"]
+  });
   const [chatText, setChatText] = useState("");
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
-  const [allowedCommands, setAllowedCommands] = useState<string[]>([]);
   const [selectedCommand, setSelectedCommand] = useState("");
+  const [commandText, setCommandText] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [commandRunning, setCommandRunning] = useState(false);
   const [connectionState, setConnectionState] = useState("Connecting");
   const [socket, setSocket] = useState<ClientSocket | null>(null);
+  const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
+    null
+  );
   const bootStartedRef = useRef(false);
 
   const displayName = useMemo(
@@ -57,20 +90,36 @@ export function App() {
     let mounted = true;
     async function boot() {
       const health = await getHealth();
-      const clientId = getClientId();
-      const joined = await joinRoom(health.roomId, displayName, "human", clientId);
+      const userId = getUserId(displayName);
+      const connectionId = getConnectionId();
+      const joined = await joinRoom(
+        health.roomId,
+        displayName,
+        "human",
+        connectionId,
+        userId,
+        connectionId
+      );
       const [
         room,
         workspaceTree,
         eventRecords,
         taskRecords,
-        commands
+        runtime,
+        messages,
+        runs,
+        timelineItems,
+        scenarioRecords
       ] = await Promise.all([
         getRoom(health.roomId),
         getWorkspaceTree(),
         getEvents(),
         getTasks(health.roomId),
-        getAllowedCommands()
+        getRuntimeConfig(),
+        getChatMessages(health.roomId),
+        getAgentRuns(health.roomId),
+        getTimeline(health.roomId),
+        getScenarios()
       ]);
 
       if (!mounted) return;
@@ -81,12 +130,19 @@ export function App() {
       setTree(workspaceTree);
       setEvents(eventRecords);
       setTasks(taskRecords);
-      setAllowedCommands(commands);
-      setSelectedCommand(commands[0] ?? "");
+      setRuntimeConfig(runtime);
+      setChatMessages(messages);
+      setAgentRuns(runs);
+      setTimeline(timelineItems);
+      setScenarios(scenarioRecords);
+      setSelectedScenario(scenarioRecords[0]?.id ?? "");
+      setSelectedCommand(runtime.commands[0] ?? "");
+      setCommandText(runtime.commands[0] ?? "");
 
       const connected = connectRoomSocket({
         roomId: health.roomId,
         memberId: joined.id,
+        connectionId,
         onMessage(message) {
           setConnectionState("Connected");
           if (message.type === "presence") {
@@ -102,13 +158,14 @@ export function App() {
             );
           }
           if (message.type === "chat_message") {
-            void refreshEvents();
+            void refreshCollaboration();
           }
           if (message.type === "workspace_tree_changed") {
             void refreshWorkspace();
           }
         }
       });
+      connectionRef.current = { roomId: health.roomId, connectionId };
       connected.sendReady();
       setSocket(connected);
     }
@@ -116,12 +173,33 @@ export function App() {
     void boot();
     return () => {
       mounted = false;
+      const connection = connectionRef.current;
+      if (connection) {
+        sendConnectionOffline(connection.roomId, connection.connectionId);
+      }
     };
   }, [displayName]);
 
   useEffect(() => {
-    return () => socket?.close();
+    return () => {
+      const connection = connectionRef.current;
+      if (connection) {
+        sendConnectionOffline(connection.roomId, connection.connectionId);
+      }
+      socket?.close();
+    };
   }, [socket]);
+
+  useEffect(() => {
+    function markOffline() {
+      const connection = connectionRef.current;
+      if (connection) {
+        sendConnectionOffline(connection.roomId, connection.connectionId);
+      }
+    }
+    window.addEventListener("pagehide", markOffline);
+    return () => window.removeEventListener("pagehide", markOffline);
+  }, []);
 
   useEffect(() => {
     if (!roomId) return;
@@ -136,17 +214,35 @@ export function App() {
   }
 
   async function refreshTasksAndEvents() {
+    await refreshCollaboration();
+  }
+
+  async function refreshCollaboration() {
     if (!roomId) return;
-    const [room, taskRecords, eventRecords, workspaceTree] = await Promise.all([
+    const [
+      room,
+      taskRecords,
+      eventRecords,
+      workspaceTree,
+      messages,
+      runs,
+      timelineItems
+    ] = await Promise.all([
       getRoom(roomId),
       getTasks(roomId),
       getEvents(),
-      getWorkspaceTree()
+      getWorkspaceTree(),
+      getChatMessages(roomId),
+      getAgentRuns(roomId),
+      getTimeline(roomId)
     ]);
     setMembers(room.members);
     setTasks(taskRecords);
     setEvents(eventRecords);
     setTree(workspaceTree);
+    setChatMessages(messages);
+    setAgentRuns(runs);
+    setTimeline(timelineItems);
     setTerminalLines(terminalLinesFromEvents(eventRecords));
   }
 
@@ -190,10 +286,17 @@ export function App() {
 
   async function sendChat() {
     const text = chatText.trim();
-    if (!text) return;
+    if (!text || !member || !roomId) return;
+    const authorName = member.displayName ?? member.name;
+    await sendChatMessage(roomId, {
+      authorId: member.id,
+      authorName,
+      authorKind: member.kind,
+      text
+    });
     socket?.sendChat(text);
     setChatText("");
-    await refreshEvents();
+    await refreshCollaboration();
   }
 
   async function createMockAgentTask() {
@@ -201,7 +304,15 @@ export function App() {
     const agentName = "MockAgent";
     const agentMember =
       members.find((candidate) => candidate.name === agentName) ??
-      (await joinRoom(roomId, agentName, "agent", "agent:mock", "mock"));
+      (await joinRoom(
+        roomId,
+        agentName,
+        "agent",
+        "agent:mock",
+        "agent:mock",
+        "agent:mock",
+        "mock"
+      ));
 
     await createTask({
       roomId,
@@ -282,13 +393,17 @@ export function App() {
   }
 
   async function runSelectedCommand() {
-    if (!member || !selectedCommand) return;
+    const command =
+      runtimeConfig.commandMode === "unrestricted"
+        ? commandText.trim()
+        : selectedCommand;
+    if (!member || !command) return;
     setCommandRunning(true);
     try {
-      const run = await runQuickCommand(selectedCommand, member.id);
+      const run = await runQuickCommand(command, member.id);
       setTerminalLines((lines) => [
         ...lines,
-        `$ ${selectedCommand}`,
+        `$ ${command}`,
         run.output.trimEnd(),
         `exit ${run.exitCode}`
       ]);
@@ -296,6 +411,16 @@ export function App() {
     } finally {
       setCommandRunning(false);
     }
+  }
+
+  async function runSelectedScenario() {
+    if (!selectedScenario) return;
+    const result = await runScenario(selectedScenario);
+    setTimeline(result.timeline);
+    setChatMessages(result.messages);
+    setAgentRuns(result.runs);
+    await refreshTasksAndEvents();
+    await refreshWorkspace();
   }
 
   function closePath(path: string) {
@@ -334,9 +459,17 @@ export function App() {
           members={members}
           events={events}
           tasks={tasks}
+          chatMessages={chatMessages}
+          agentRuns={agentRuns}
+          timeline={timeline}
+          scenarios={scenarios}
+          selectedScenario={selectedScenario}
           chatText={chatText}
+          runtimeConfig={runtimeConfig}
           onChatTextChange={setChatText}
           onSendChat={sendChat}
+          onSelectedScenarioChange={setSelectedScenario}
+          onRunScenario={runSelectedScenario}
           onCreateMockAgentTask={createMockAgentTask}
           onRunMockAgent={runMockAgentForTask}
           onRunConfiguredAgent={runConfiguredAgentForTask}
@@ -345,17 +478,19 @@ export function App() {
       <section className="terminal-pane">
         <TerminalPanel
           lines={terminalLines}
-          commands={allowedCommands}
+          runtimeConfig={runtimeConfig}
           selectedCommand={selectedCommand}
+          commandText={commandText}
           running={commandRunning}
           onSelectedCommandChange={setSelectedCommand}
+          onCommandTextChange={setCommandText}
           onRunCommand={runSelectedCommand}
         />
       </section>
       <div className="status-bar" data-testid="status-bar">
         <span>{connectionState}</span>
         <span>Room {roomId || "..."}</span>
-        <span>{member?.name ?? "Joining"}</span>
+        <span>{member?.displayName ?? member?.name ?? "Joining"}</span>
         <span>{workspaceName || "Workspace"}</span>
       </div>
     </main>
@@ -376,10 +511,19 @@ function terminalLinesFromEvents(events: EventRecord[]) {
   });
 }
 
-function getClientId() {
-  const existing = window.sessionStorage.getItem("simplercp.clientId");
+function getUserId(displayName: string) {
+  const key = `simplercp.userId.${displayName.toLowerCase()}`;
+  const existing = window.localStorage.getItem(key);
   if (existing) return existing;
   const next = window.crypto.randomUUID();
-  window.sessionStorage.setItem("simplercp.clientId", next);
+  window.localStorage.setItem(key, next);
+  return next;
+}
+
+function getConnectionId() {
+  const existing = window.sessionStorage.getItem("simplercp.connectionId");
+  if (existing) return existing;
+  const next = window.crypto.randomUUID();
+  window.sessionStorage.setItem("simplercp.connectionId", next);
   return next;
 }

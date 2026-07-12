@@ -14,11 +14,15 @@ describe("server config", () => {
       port: 4500,
       workspaceRoot: path.resolve("tests/fixtures/sample-workspace"),
       commandWhitelist: ["npm test", "pnpm test"],
+      commandMode: "restricted",
       agent: {
         provider: "mock",
         baseUrl: "https://api.deepseek.com",
         apiKey: undefined,
-        model: "deepseek-v4-flash"
+        model: "deepseek-v4-flash",
+        name: "MockAgent",
+        mentionAliases: ["MockAgent"],
+        editablePaths: ["src/**", "tests/**", "package.json", "README.md"]
       }
     });
   });
@@ -36,7 +40,10 @@ describe("server config", () => {
       provider: "openai-compatible",
       baseUrl: "https://api.deepseek.com",
       apiKey: "test-key",
-      model: "deepseek-v4-pro"
+      model: "deepseek-v4-pro",
+      name: "DeepSeek",
+      mentionAliases: ["DeepSeek"],
+      editablePaths: ["src/**", "tests/**", "package.json", "README.md"]
     });
   });
 
@@ -51,7 +58,45 @@ describe("server config", () => {
       provider: "openai-compatible",
       baseUrl: "https://api.deepseek.com",
       apiKey: "deepseek-test-key",
-      model: "deepseek-v4-flash"
+      model: "deepseek-v4-flash",
+      name: "DeepSeek",
+      mentionAliases: ["DeepSeek"],
+      editablePaths: ["src/**", "tests/**", "package.json", "README.md"]
     });
+  });
+
+  it("loads configured agent mention aliases and editable paths", () => {
+    const config = loadConfig({
+      SIMPLERCP_WORKSPACE: ".",
+      AGENT_PROVIDER: "openai-compatible",
+      AGENT_BASE_URL: "https://open.bigmodel.cn/api/paas/v4",
+      AGENT_API_KEY: "test-key",
+      AGENT_MODEL: "glm-4.5",
+      AGENT_NAME: "GLM",
+      AGENT_MENTION_ALIASES: "GLM,Zhipu",
+      AGENT_EDITABLE_PATHS: "src/**,docs/**"
+    });
+
+    expect(config.agent).toMatchObject({
+      provider: "openai-compatible",
+      name: "GLM",
+      mentionAliases: ["GLM", "Zhipu"],
+      editablePaths: ["src/**", "docs/**"]
+    });
+  });
+
+  it("loads restricted command mode by default", () => {
+    const config = loadConfig({ SIMPLERCP_WORKSPACE: "." });
+
+    expect(config.commandMode).toBe("restricted");
+  });
+
+  it("loads unrestricted command mode when explicitly configured", () => {
+    const config = loadConfig({
+      SIMPLERCP_WORKSPACE: ".",
+      SIMPLERCP_COMMAND_MODE: "unrestricted"
+    });
+
+    expect(config.commandMode).toBe("unrestricted");
   });
 });

@@ -1,10 +1,15 @@
 import type {
+  AgentRun,
   AgentReport,
+  ChatMessage,
   EventRecord,
   RoomMember,
   RoomState,
   RunRecord,
+  RuntimeConfig,
+  ScenarioSummary,
   TaskRecord,
+  TimelineItem,
   WorkspaceNode
 } from "./types";
 
@@ -26,6 +31,8 @@ export async function joinRoom(
   name: string,
   kind: "human" | "agent" = "human",
   clientId: string,
+  userId?: string,
+  connectionId?: string,
   provider?: string
 ): Promise<RoomMember> {
   const response = await request<{ member: RoomMember }>(
@@ -33,10 +40,23 @@ export async function joinRoom(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, kind, clientId, provider })
+      body: JSON.stringify({ name, kind, clientId, userId, connectionId, provider })
     }
   );
   return response.member;
+}
+
+export async function getRuntimeConfig(): Promise<RuntimeConfig> {
+  return request("/api/config/runtime");
+}
+
+export function sendConnectionOffline(roomId: string, connectionId: string) {
+  const path = `/api/rooms/${roomId}/connections/${connectionId}/offline`;
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(path, new Blob([], { type: "application/json" }));
+    return;
+  }
+  void fetch(path, { method: "POST", keepalive: true });
 }
 
 export async function getAllowedCommands(): Promise<string[]> {
@@ -109,6 +129,59 @@ export async function deleteWorkspacePath(path: string) {
 export async function getEvents(): Promise<EventRecord[]> {
   const response = await request<{ events: EventRecord[] }>("/api/events");
   return response.events;
+}
+
+export async function getChatMessages(roomId: string): Promise<ChatMessage[]> {
+  const response = await request<{ messages: ChatMessage[] }>(
+    `/api/rooms/${roomId}/chat`
+  );
+  return response.messages;
+}
+
+export async function sendChatMessage(
+  roomId: string,
+  input: {
+    authorId: string;
+    authorName: string;
+    authorKind: "human" | "agent";
+    text: string;
+  }
+): Promise<{ message: ChatMessage; agentRun?: AgentRun }> {
+  return request(`/api/rooms/${roomId}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+export async function getAgentRuns(roomId: string): Promise<AgentRun[]> {
+  const response = await request<{ runs: AgentRun[] }>(
+    `/api/rooms/${roomId}/agent-runs`
+  );
+  return response.runs;
+}
+
+export async function getTimeline(roomId: string): Promise<TimelineItem[]> {
+  const response = await request<{ timeline: TimelineItem[] }>(
+    `/api/rooms/${roomId}/timeline`
+  );
+  return response.timeline;
+}
+
+export async function getScenarios(): Promise<ScenarioSummary[]> {
+  const response = await request<{ scenarios: ScenarioSummary[] }>(
+    "/api/scenarios"
+  );
+  return response.scenarios;
+}
+
+export async function runScenario(scenarioId: string): Promise<{
+  result: AgentRun;
+  timeline: TimelineItem[];
+  messages: ChatMessage[];
+  runs: AgentRun[];
+}> {
+  return request(`/api/scenarios/${scenarioId}/run`, { method: "POST" });
 }
 
 export async function createTask(input: {

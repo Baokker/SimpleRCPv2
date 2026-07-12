@@ -8,7 +8,8 @@ export type AgentProviderName = "mock" | "openai-compatible";
 export async function runAgentTask(
   provider: AgentProviderName,
   input: AgentTaskInput,
-  config?: AgentConfig
+  config?: AgentConfig,
+  fetchImpl?: typeof fetch
 ): Promise<AgentReport> {
   if (provider === "mock") {
     return runMockAgentTask(input);
@@ -17,7 +18,7 @@ export async function runAgentTask(
     if (!config) {
       throw new Error("Agent config is required");
     }
-    return runOpenAICompatibleAgentTask(input, config);
+    return runOpenAICompatibleAgentTask(input, config, fetchImpl ?? fetch);
   }
 
   throw new Error("Unsupported agent provider");

@@ -14,14 +14,15 @@ body {
 
 button,
 textarea,
-select {
+select,
+input {
   font: inherit;
 }
 
 .app-shell {
   display: grid;
-  grid-template-columns: 260px minmax(360px, 1fr) 360px;
-  grid-template-rows: minmax(0, 1fr) 190px 24px;
+  grid-template-columns: 252px minmax(360px, 1fr) 380px;
+  grid-template-rows: minmax(0, 1fr) 188px 24px;
   height: 100vh;
   overflow: hidden;
 }
@@ -113,7 +114,8 @@ select {
 .icon-actions,
 .tree-actions,
 .terminal-controls,
-.task-actions {
+.task-actions,
+.scenario-controls {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -218,6 +220,41 @@ select {
   gap: 0;
 }
 
+.collab-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid #2b3240;
+  padding: 5px 6px 0;
+  background: #101722;
+}
+
+.collab-tabs button {
+  flex: 1 1 0;
+  min-width: max-content;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 7px 8px;
+  background: transparent;
+  color: #91a0b7;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.collab-tabs button.active {
+  border-bottom-color: #5a8dff;
+  color: #ffffff;
+}
+
+.collab-tab-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .collab-panel h2 {
   margin: 0 0 8px;
   font-size: 11px;
@@ -226,31 +263,40 @@ select {
 }
 
 .collab-section {
-  flex: 0 0 auto;
+  display: flex;
+  flex: 1;
+  height: 100%;
   min-height: 0;
-  padding: 10px;
-  border-bottom: 1px solid #242d3d;
+  flex-direction: column;
+  padding: 9px 10px;
+  overflow: hidden;
 }
 
 .members-section {
-  max-height: 170px;
+  gap: 12px;
   overflow: auto;
+}
+
+.chat-section {
+  min-height: 0;
+  gap: 8px;
+}
+
+.agent-runs-section,
+.timeline-section {
+  min-height: 110px;
+  gap: 8px;
 }
 
 .agent-section {
-  max-height: 220px;
   overflow: auto;
 }
 
-.activity-section {
-  flex: 1 1 auto;
-  display: flex;
-  min-height: 90px;
-  flex-direction: column;
-}
-
 .member-list,
-.event-list {
+.event-list,
+.chat-transcript,
+.agent-run-list,
+.timeline-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -268,6 +314,27 @@ select {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+}
+
+.member-list strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-list em,
+.agent-run-list em,
+.timeline-list em,
+.command-mode {
+  flex: 0 0 auto;
+  border: 1px solid #3b465c;
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: #c9d5e8;
+  font-size: 11px;
+  font-style: normal;
 }
 
 .status-dot {
@@ -286,7 +353,10 @@ select {
   color: #91a0b7;
 }
 
-.event-list {
+.event-list,
+.chat-transcript,
+.agent-run-list,
+.timeline-list {
   flex: 1;
   overflow: auto;
 }
@@ -295,16 +365,69 @@ select {
   padding: 4px 0;
 }
 
+.chat-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 0;
+}
+
+.agent-hint {
+  flex: 0 0 auto;
+  border: 1px solid #2d384b;
+  border-radius: 5px;
+  padding: 5px 7px;
+  background: #101722;
+  color: #9fb2d0;
+  font-size: 11px;
+}
+
+.chat-message {
+  border-left: 2px solid #44516b;
+  padding: 6px 8px;
+  background: #111722;
+}
+
+.chat-message.agent {
+  border-left-color: #3d8b74;
+}
+
+.chat-message span,
+.agent-run-list span,
+.timeline-list span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat-message time {
+  color: #75849c;
+  font-size: 11px;
+}
+
+.chat-message p,
+.timeline-list p {
+  margin: 4px 0 0;
+  color: #cdd8ea;
+  line-height: 1.35;
+}
+
 .chat-box {
   flex: 0 0 auto;
+  min-height: 0;
   border-bottom: 0;
-  background: #121824;
+  border-top: 1px solid #242d3d;
+  padding-top: 8px;
+  background: #141924;
 }
 
 .chat-box textarea {
   width: 100%;
-  min-height: 68px;
-  resize: vertical;
+  height: 58px;
+  min-height: 58px;
+  max-height: 58px;
+  resize: none;
   border: 1px solid #344057;
   border-radius: 5px;
   padding: 8px;
@@ -315,7 +438,8 @@ select {
 .chat-box button,
 .task-list button,
 .collab-panel section > button,
-.terminal-controls button {
+.terminal-controls button,
+.scenario-controls button {
   margin-top: 8px;
   border: 0;
   border-radius: 5px;
@@ -329,13 +453,38 @@ select {
   padding-right: 8px;
 }
 
-.terminal-controls select {
-  max-width: 220px;
+.terminal-controls {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.terminal-controls select,
+.terminal-controls input,
+.scenario-controls select {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid #344057;
   border-radius: 4px;
   padding: 4px 6px;
   background: #101722;
   color: #edf1f7;
+}
+
+.terminal-controls input {
+  flex: 1 1 240px;
+  width: auto;
+  max-width: min(520px, 100%);
+}
+
+.scenario-controls select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.scenario-controls button,
+.terminal-controls button {
+  margin-top: 0;
 }
 
 .terminal-panel pre {
@@ -355,6 +504,40 @@ select {
   margin: 10px 0 0;
   padding: 0;
   list-style: none;
+  overflow: auto;
+}
+
+.agent-run-list,
+.timeline-list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agent-run-list li,
+.timeline-list li {
+  border: 1px solid #2a3446;
+  border-radius: 5px;
+  padding: 7px;
+  background: #101722;
+}
+
+.agent-run-list small,
+.muted-row {
+  color: #91a0b7;
+}
+
+.timeline-list li.completed {
+  border-left: 3px solid #3d8b74;
+}
+
+.timeline-list li.running {
+  border-left: 3px solid #d79b30;
+}
+
+.timeline-list li.failed {
+  border-left: 3px solid #e25555;
 }
 
 .task-list li {

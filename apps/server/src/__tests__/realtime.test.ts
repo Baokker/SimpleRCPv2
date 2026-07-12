@@ -11,7 +11,8 @@ describe("realtime message handling", () => {
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
       kind: "human",
-      clientId: "client-a"
+      userId: "user-ada",
+      connectionId: "tab-a"
     });
 
     const result = handleRealtimeMessage({
@@ -21,6 +22,7 @@ describe("realtime message handling", () => {
         type: "open_file",
         roomId: room.id,
         memberId: member.id,
+        connectionId: "tab-a",
         path: "src/hello.ts"
       }
     });
@@ -40,7 +42,8 @@ describe("realtime message handling", () => {
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
       kind: "human",
-      clientId: "client-a"
+      userId: "user-ada",
+      connectionId: "tab-a"
     });
 
     const result = handleRealtimeMessage({
@@ -50,6 +53,7 @@ describe("realtime message handling", () => {
         type: "file_change",
         roomId: room.id,
         memberId: member.id,
+        connectionId: "tab-a",
         path: "src/hello.ts",
         content: "updated"
       }

@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import type { WorkspaceNode } from "../types";
 
 export function WorkspaceExplorer({
@@ -19,6 +20,8 @@ export function WorkspaceExplorer({
   onRenamePath(path: string): void;
   onDeletePath(path: string): void;
 }) {
+  const activeAncestors = useMemo(() => getAncestorPaths(activePath), [activePath]);
+
   return (
     <div className="panel">
       <div className="panel-header explorer-header">
@@ -48,6 +51,7 @@ export function WorkspaceExplorer({
             key={node.path}
             node={node}
             activePath={activePath}
+            activeAncestors={activeAncestors}
             onOpenFile={onOpenFile}
             onRenamePath={onRenamePath}
             onDeletePath={onDeletePath}
@@ -61,20 +65,35 @@ export function WorkspaceExplorer({
 function TreeNode({
   node,
   activePath,
+  activeAncestors,
   onOpenFile,
   onRenamePath,
   onDeletePath
 }: {
   node: WorkspaceNode;
   activePath?: string;
+  activeAncestors: Set<string>;
   onOpenFile(path: string): void;
   onRenamePath(path: string): void;
   onDeletePath(path: string): void;
 }) {
+  const shouldRevealActivePath = activeAncestors.has(node.path);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (shouldRevealActivePath) {
+      setIsOpen(true);
+    }
+  }, [shouldRevealActivePath]);
+
   if (node.type === "directory") {
     return (
-      <details open className="tree-directory">
-        <summary>
+      <details
+        open={isOpen}
+        className="tree-directory"
+        onToggle={(event) => setIsOpen(event.currentTarget.open)}
+      >
+        <summary data-testid={`dir-${node.path}`}>
           <span>{node.name}</span>
           <TreeActions
             path={node.path}
@@ -88,6 +107,7 @@ function TreeNode({
               key={child.path}
               node={child}
               activePath={activePath}
+              activeAncestors={activeAncestors}
               onOpenFile={onOpenFile}
               onRenamePath={onRenamePath}
               onDeletePath={onDeletePath}
@@ -114,6 +134,16 @@ function TreeNode({
       />
     </div>
   );
+}
+
+function getAncestorPaths(path: string | undefined) {
+  const ancestors = new Set<string>();
+  if (!path) return ancestors;
+  const parts = path.split("/");
+  for (let index = 1; index < parts.length; index += 1) {
+    ancestors.add(parts.slice(0, index).join("/"));
+  }
+  return ancestors;
 }
 
 function TreeActions({

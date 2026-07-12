@@ -7,6 +7,7 @@ import type { ClientMessage, ServerMessage } from "./types.js";
 interface SocketIdentity {
   roomId: string;
   memberId: string;
+  connectionId?: string;
 }
 
 export interface RealtimeContext {
@@ -33,7 +34,8 @@ export function handleRealtimeMessage({
 
   if (message.type === "open_file") {
     rooms.updatePresence(message.roomId, message.memberId, {
-      currentFile: message.path
+      currentFile: message.path,
+      connectionId: message.connectionId
     });
     events.append({
       type: "file_opened",
@@ -101,7 +103,14 @@ export function attachRealtimeServer(
       identities.delete(socket);
       if (!identity) return;
       try {
-        context.rooms.markOffline(identity.roomId, identity.memberId);
+        if (identity.connectionId) {
+          context.rooms.markConnectionOffline(
+            identity.roomId,
+            identity.connectionId
+          );
+        } else {
+          context.rooms.markOffline(identity.roomId, identity.memberId);
+        }
         context.rooms.cleanupStaleMembers(identity.roomId);
         broadcastToAll(sockets, {
           type: "presence",
@@ -117,9 +126,14 @@ export function attachRealtimeServer(
         const parsed = JSON.parse(data.toString()) as ClientMessage;
         identities.set(socket, {
           roomId: parsed.roomId,
-          memberId: parsed.memberId
+          memberId: parsed.memberId,
+          connectionId: parsed.connectionId
         });
-        context.rooms.markOnline(parsed.roomId, parsed.memberId);
+        if (parsed.connectionId) {
+          context.rooms.markConnectionOnline(parsed.roomId, parsed.connectionId);
+        } else {
+          context.rooms.markOnline(parsed.roomId, parsed.memberId);
+        }
         const { broadcast } = handleRealtimeMessage({
           ...context,
           message: parsed

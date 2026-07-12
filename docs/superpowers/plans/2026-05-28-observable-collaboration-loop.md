@@ -592,11 +592,11 @@ If Playwright config cannot easily run two server modes in one file, create a se
 At the end of the scenario E2E, write:
 
 ```ts
-await page.screenshot({ path: "test-results/observable-final.png", fullPage: true });
+await page.screenshot({ path: "artifacts/observable-final.png", fullPage: true });
 const timeline = await page.evaluate(async () => (await fetch("/api/rooms/<roomId>/timeline")).json());
 ```
 
-Use the actual room id from health/config in the test. Save timeline JSON to `test-results/observable-timeline.json`.
+Use the actual room id from health/config in the test. Save timeline JSON to `artifacts/observable-timeline.json`.
 
 - [ ] **Step 4: Update README**
 

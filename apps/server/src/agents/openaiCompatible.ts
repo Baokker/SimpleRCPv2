@@ -12,7 +12,7 @@ interface ChatCompletionResponse {
 }
 
 interface AgentActionEnvelope {
-  actions?: AgentAction[];
+  actions?: unknown[];
 }
 
 export async function runOpenAICompatibleAgentTask(
@@ -86,13 +86,34 @@ export async function runOpenAICompatibleAgentTask(
     throw error;
   }
 
-  const actions = (envelope.actions ?? []).slice(0, 6);
+  const actions = Array.isArray(envelope.actions) ? envelope.actions.slice(0, 6) : [];
   let report: AgentReport | undefined;
   const commands: string[] = [];
   const risks: string[] = [];
 
   for (const action of actions) {
+    if (!isActionObject(action)) {
+      recordInvalidAction(
+        input,
+        task.roomId,
+        task.id,
+        "Skipped provider action because it must be an object.",
+        risks
+      );
+      continue;
+    }
+
     if (action.type === "message") {
+      if (!isNonEmptyString(action.text)) {
+        recordInvalidAction(
+          input,
+          task.roomId,
+          task.id,
+          "Skipped message action because text must be a non-empty string.",
+          risks
+        );
+        continue;
+      }
       input.events.append({
         type: "agent_message",
         roomId: task.roomId,
@@ -104,6 +125,26 @@ export async function runOpenAICompatibleAgentTask(
     }
 
     if (action.type === "edit_file") {
+      if (!isNonEmptyString(action.path)) {
+        recordInvalidAction(
+          input,
+          task.roomId,
+          task.id,
+          "Skipped edit_file action because path must be a non-empty string.",
+          risks
+        );
+        continue;
+      }
+      if (typeof action.content !== "string") {
+        recordInvalidAction(
+          input,
+          task.roomId,
+          task.id,
+          "Skipped edit_file action because content must be a string.",
+          risks
+        );
+        continue;
+      }
       if (!input.tasks.canEdit(task.id, action.path)) {
         input.events.append({
           type: "approval_requested",
@@ -127,6 +168,16 @@ export async function runOpenAICompatibleAgentTask(
     }
 
     if (action.type === "run_command") {
+      if (!isNonEmptyString(action.command)) {
+        recordInvalidAction(
+          input,
+          task.roomId,
+          task.id,
+          "Skipped run_command action because command must be a non-empty string.",
+          risks
+        );
+        continue;
+      }
       if (!input.tasks.canRunCommand(task.id, action.command)) {
         input.events.append({
           type: "approval_requested",
@@ -155,14 +206,33 @@ export async function runOpenAICompatibleAgentTask(
     }
 
     if (action.type === "final_report") {
+      if (!isNonEmptyString(action.summary)) {
+        recordInvalidAction(
+          input,
+          task.roomId,
+          task.id,
+          "Skipped final_report action because summary must be a non-empty string.",
+          risks
+        );
+        continue;
+      }
       report = {
         taskId: task.id,
         agentId: input.agentId,
         summary: action.summary,
-        commands: action.commands ?? commands,
-        risks: action.risks ?? risks
+        commands: Array.isArray(action.commands) ? action.commands : commands,
+        risks: [...risks, ...(Array.isArray(action.risks) ? action.risks : [])]
       };
+      continue;
     }
+
+    recordInvalidAction(
+      input,
+      task.roomId,
+      task.id,
+      `Skipped unsupported provider action type: ${String(action.type)}.`,
+      risks
+    );
   }
 
   report ??= {
@@ -187,4 +257,29 @@ export async function runOpenAICompatibleAgentTask(
 
 function trimTrailingSlash(value: string) {
   return value.endsWith("/") ? value.slice(0, -1) : value;
+}
+
+function isActionObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function recordInvalidAction(
+  input: AgentTaskInput,
+  roomId: string,
+  taskId: string,
+  message: string,
+  risks: string[]
+) {
+  risks.push(message);
+  input.events.append({
+    type: "agent_error",
+    roomId,
+    taskId,
+    memberId: input.agentId,
+    payload: { message }
+  });
 }

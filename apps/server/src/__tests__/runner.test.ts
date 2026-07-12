@@ -79,4 +79,39 @@ describe("runner", () => {
       })
     ).rejects.toThrow("Command is not authorized");
   });
+
+  it("keeps ad hoc commands blocked in restricted mode", async () => {
+    const events = createEventLog();
+
+    await expect(
+      runWorkspaceCommand({
+        workspaceRoot: root,
+        command: "node -e \"console.log('adhoc-ok')\"",
+        whitelist: ["npm test"],
+        commandMode: "restricted",
+        events,
+        roomId: "room-1",
+        initiatorId: "human-1",
+        timeoutMs: 10_000
+      })
+    ).rejects.toThrow("Command is not authorized");
+  });
+
+  it("allows ad hoc commands in unrestricted mode", async () => {
+    const events = createEventLog();
+
+    const result = await runWorkspaceCommand({
+      workspaceRoot: root,
+      command: "node -e \"console.log('adhoc-ok')\"",
+      whitelist: ["npm test"],
+      commandMode: "unrestricted",
+      events,
+      roomId: "room-1",
+      initiatorId: "human-1",
+      timeoutMs: 10_000
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("adhoc-ok");
+  });
 });

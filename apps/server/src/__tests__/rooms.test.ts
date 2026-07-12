@@ -25,7 +25,8 @@ describe("room store", () => {
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
       kind: "human",
-      clientId: "client-a"
+      userId: "user-ada",
+      connectionId: "tab-a"
     });
 
     rooms.updatePresence(room.id, member.id, { currentFile: "src/hello.ts" });
@@ -33,8 +34,10 @@ describe("room store", () => {
     expect(rooms.getRoom(room.id)?.members[0]).toMatchObject({
       id: member.id,
       name: "Ada",
+      displayName: "Ada",
       kind: "human",
-      clientId: "client-a",
+      userId: "user-ada",
+      connectionCount: 1,
       online: true,
       currentFile: "src/hello.ts"
     });
@@ -53,12 +56,14 @@ describe("room store", () => {
     const first = rooms.joinRoom(room.id, {
       name: "Ada",
       kind: "human",
-      clientId: "client-a"
+      userId: "user-ada",
+      connectionId: "tab-a"
     });
     const second = rooms.joinRoom(room.id, {
       name: "Ada Lovelace",
       kind: "human",
-      clientId: "client-a"
+      userId: "user-ada",
+      connectionId: "tab-a"
     });
 
     expect(second.id).toBe(first.id);
@@ -66,7 +71,8 @@ describe("room store", () => {
     expect(second).toMatchObject({
       name: "Ada Lovelace",
       kind: "human",
-      clientId: "client-a",
+      userId: "user-ada",
+      connectionCount: 1,
       online: true
     });
     expect(events.list().map((event) => event.type)).toEqual([
@@ -84,13 +90,15 @@ describe("room store", () => {
     const first = rooms.joinRoom(room.id, {
       name: "MockAgent",
       kind: "agent",
-      clientId: "agent-mock",
+      userId: "agent-mock",
+      connectionId: "agent-mock-connection",
       provider: "mock"
     });
     const second = rooms.joinRoom(room.id, {
       name: "MockAgent",
       kind: "agent",
-      clientId: "agent-mock-2",
+      userId: "agent-mock-2",
+      connectionId: "agent-mock-connection-2",
       provider: "mock"
     });
 
@@ -105,10 +113,15 @@ describe("room store", () => {
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
       kind: "human",
-      clientId: "client-a"
+      userId: "user-ada",
+      connectionId: "tab-a"
     });
 
-    rooms.markOffline(room.id, member.id, new Date("2026-05-27T00:00:00Z"));
+    rooms.markConnectionOffline(
+      room.id,
+      "tab-a",
+      new Date("2026-05-27T00:00:00Z")
+    );
     expect(rooms.getRoom(room.id)?.members[0]).toMatchObject({
       online: false,
       lastSeenAt: "2026-05-27T00:00:00.000Z"
@@ -124,5 +137,109 @@ describe("room store", () => {
     expect(events.list().map((event) => event.type)).toContain(
       "member_removed"
     );
+  });
+
+  it("groups multiple connections under one person", () => {
+    const events = createEventLog();
+    const rooms = createRoomStore(events);
+    const room = rooms.createRoom("sample-workspace");
+
+    rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-bob",
+      connectionId: "tab-1"
+    });
+    rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-bob",
+      connectionId: "tab-2"
+    });
+
+    expect(rooms.getRoom(room.id)?.members).toMatchObject([
+      {
+        name: "bob",
+        displayName: "bob",
+        userId: "user-bob",
+        connectionCount: 2,
+        online: true
+      }
+    ]);
+  });
+
+  it("disambiguates different users with the same display name", () => {
+    const events = createEventLog();
+    const rooms = createRoomStore(events);
+    const room = rooms.createRoom("sample-workspace");
+
+    rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-a",
+      connectionId: "tab-a"
+    });
+    rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-b",
+      connectionId: "tab-b"
+    });
+
+    expect(
+      rooms.getRoom(room.id)?.members.map((member) => member.displayName)
+    ).toEqual(["bob", "bob #2"]);
+  });
+
+  it("marks one connection offline without duplicating the person row", () => {
+    const events = createEventLog();
+    const rooms = createRoomStore(events);
+    const room = rooms.createRoom("sample-workspace");
+    const bob = rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-bob",
+      connectionId: "tab-1"
+    });
+    rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-bob",
+      connectionId: "tab-2"
+    });
+
+    rooms.markConnectionOffline(
+      room.id,
+      "tab-1",
+      new Date("2026-05-28T00:00:00Z")
+    );
+
+    expect(rooms.getRoom(room.id)?.members).toMatchObject([
+      {
+        id: bob.id,
+        connectionCount: 1,
+        online: true
+      }
+    ]);
+  });
+
+  it("ignores duplicate close notifications for an already offline connection", () => {
+    const events = createEventLog();
+    const rooms = createRoomStore(events);
+    const room = rooms.createRoom("sample-workspace");
+    rooms.joinRoom(room.id, {
+      name: "bob",
+      kind: "human",
+      userId: "user-bob",
+      connectionId: "tab-1"
+    });
+
+    rooms.markConnectionOffline(room.id, "tab-1");
+
+    expect(() => rooms.markConnectionOffline(room.id, "tab-1")).not.toThrow();
+    expect(rooms.getRoom(room.id)?.members[0]).toMatchObject({
+      connectionCount: 0,
+      online: false
+    });
   });
 });

@@ -2,7 +2,25 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { WorkspaceNode } from "./types.js";
 
-const IGNORED_NAMES = new Set([".git", "node_modules", "dist", "coverage"]);
+const IGNORED_NAMES = new Set([
+  ".DS_Store",
+  ".git",
+  ".idea",
+  "coverage",
+  "dist",
+  "node_modules",
+  "target"
+]);
+const IGNORED_EXTENSIONS = new Set([
+  ".class",
+  ".dll",
+  ".dylib",
+  ".exe",
+  ".jar",
+  ".o",
+  ".pyc",
+  ".so"
+]);
 
 export function resolveWorkspacePath(root: string, relativePath: string) {
   const absoluteRoot = path.resolve(root);
@@ -28,7 +46,7 @@ async function listDirectory(
   const entries = await fs.readdir(absoluteDir, { withFileTypes: true });
   const nodes = await Promise.all(
     entries
-      .filter((entry) => !IGNORED_NAMES.has(entry.name))
+      .filter((entry) => !isIgnoredEntry(entry.name))
       .sort((a, b) => {
         if (a.isDirectory() !== b.isDirectory()) {
           return a.isDirectory() ? 1 : -1;
@@ -58,6 +76,10 @@ async function listDirectory(
   );
 
   return nodes;
+}
+
+function isIgnoredEntry(name: string) {
+  return IGNORED_NAMES.has(name) || IGNORED_EXTENSIONS.has(path.extname(name));
 }
 
 export async function readWorkspaceFile(root: string, relativePath: string) {

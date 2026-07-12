@@ -64,6 +64,23 @@ describe("workspace service", () => {
     ]);
   });
 
+  it("hides common IDE, build, and binary noise from the tree", async () => {
+    await fs.writeFile(path.join(root, ".DS_Store"), "");
+    await fs.mkdir(path.join(root, ".idea"), { recursive: true });
+    await fs.writeFile(path.join(root, ".idea", "workspace.xml"), "<project />");
+    await fs.mkdir(path.join(root, "target", "classes"), { recursive: true });
+    await fs.writeFile(path.join(root, "target", "classes", "Main.class"), "");
+    await fs.writeFile(path.join(root, "src", "Generated.class"), "");
+
+    const tree = await listWorkspaceTree(root);
+    const serialized = JSON.stringify(tree);
+
+    expect(serialized).not.toContain(".DS_Store");
+    expect(serialized).not.toContain(".idea");
+    expect(serialized).not.toContain("target");
+    expect(serialized).not.toContain("Generated.class");
+  });
+
   it("reads and writes files under the root", async () => {
     await expect(readWorkspaceFile(root, "src/hello.ts")).resolves.toBe(
       "export const hello = 'world';\n"
