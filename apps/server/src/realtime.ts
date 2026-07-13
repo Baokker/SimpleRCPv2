@@ -1,7 +1,7 @@
 import type http from "node:http";
 import { createRequire } from "node:module";
 import type * as Encoding from "lib0/encoding";
-import { WebSocketServer, type WebSocket } from "ws";
+import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import type * as SyncProtocol from "y-protocols/sync";
 import {
   getYDoc,
@@ -15,6 +15,7 @@ import {
 import type { EventLog } from "./eventLog.js";
 import type { RoomStore } from "./rooms.js";
 import type { SessionControl } from "./sessionControl.js";
+import type { SharedTerminal } from "./sharedTerminal.js";
 import type { ClientMessage, ServerMessage } from "./types.js";
 
 const require = createRequire(import.meta.url);
@@ -114,15 +115,50 @@ export function attachRealtimeServer(
   context: RealtimeContext & {
     documents: CollaborativeDocumentStore;
     sessionControl: SessionControl;
+    terminal: SharedTerminal;
   }
 ) {
   const wss = new WebSocketServer({ noServer: true });
   const documentWss = new WebSocketServer({ noServer: true });
+  const terminalWss = new WebSocketServer({ noServer: true });
   const documents = context.documents;
   const sockets = new Set<WebSocket>();
   const identities = new Map<WebSocket, SocketIdentity>();
   const documentMembers = new Map<WebSocket, string>();
   let guestCanEditFiles = context.sessionControl.getSettings().guestCanEditFiles;
+
+  context.terminal.onData((data) => {
+    const payload = JSON.stringify({ type: "terminal_output", data });
+    for (const socket of terminalWss.clients) {
+      if (socket.readyState === socket.OPEN) socket.send(payload);
+    }
+  });
+
+  function setupTerminalConnection(socket: WebSocket, memberId: string) {
+    socket.send(
+      JSON.stringify({
+        type: "terminal_snapshot",
+        data: context.terminal.getScrollback()
+      })
+    );
+    socket.on("message", (raw: RawData) => {
+      try {
+        handleTerminalMessage(
+          socket,
+          JSON.parse(raw.toString()) as TerminalClientMessage,
+          memberId,
+          context
+        );
+      } catch {
+        socket.send(
+          JSON.stringify({
+            type: "terminal_error",
+            message: "Invalid terminal message"
+          })
+        );
+      }
+    });
+  }
 
   setPersistence({
     provider: null,
@@ -165,6 +201,21 @@ export function attachRealtimeServer(
           });
         })
         .catch(() => socket.destroy());
+      return;
+    }
+    if (pathname === "/terminal") {
+      const memberId = requestUrl.searchParams.get("memberId") ?? "";
+      const member = context.rooms
+        .listRooms()
+        .flatMap((room) => room.members)
+        .find((candidate) => candidate.id === memberId);
+      if (!member) {
+        socket.destroy();
+        return;
+      }
+      terminalWss.handleUpgrade(request, socket, head, (webSocket) => {
+        setupTerminalConnection(webSocket, memberId);
+      });
       return;
     }
     socket.destroy();
@@ -253,10 +304,57 @@ export function attachRealtimeServer(
   return {
     presence: wss,
     documents: documentWss,
+    terminal: terminalWss,
     broadcastWorkspaceChanged(path: string) {
       broadcastToAll(sockets, { type: "workspace_changed", path });
     }
   };
+}
+
+type TerminalClientMessage =
+  | { type: "input"; data: string }
+  | { type: "resize"; cols: number; rows: number }
+  | { type: "restart" };
+
+function handleTerminalMessage(
+  socket: WebSocket,
+  message: TerminalClientMessage,
+  memberId: string,
+  context: RealtimeContext & {
+    documents: CollaborativeDocumentStore;
+    sessionControl: SessionControl;
+    terminal: SharedTerminal;
+  }
+) {
+  const member = context.rooms
+    .listRooms()
+    .flatMap((room) => room.members)
+    .find((candidate) => candidate.id === memberId);
+  if (!member) return;
+  const settings = context.sessionControl.getSettings();
+
+  if (message.type === "resize") {
+    context.terminal.resize(message.cols, message.rows);
+    return;
+  }
+  if (message.type === "restart") {
+    if (member.role === "host") context.terminal.restart();
+    return;
+  }
+  const canInput =
+    settings.terminalEnabled &&
+    settings.commandMode === "unrestricted" &&
+    (member.role === "host" || settings.guestCanRunCommands);
+  if (!canInput || message.data.length > 10_000) {
+    socket.send(
+      JSON.stringify({
+        type: "terminal_error",
+        message: "Terminal input is not permitted"
+      })
+    );
+    return;
+  }
+  context.terminal.write(message.data);
 }
 
 function makeConnectionReadOnly(socket: WebSocket, documentName: string) {

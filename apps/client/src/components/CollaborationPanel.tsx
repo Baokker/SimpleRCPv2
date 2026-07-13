@@ -3,6 +3,8 @@ import {
   FileCode2,
   FilePenLine,
   FilePlus2,
+  Eye,
+  EyeOff,
   FolderPlus,
   LogIn,
   LogOut,
@@ -55,7 +57,9 @@ export function CollaborationPanel({
   settings,
   workspaceRoot,
   roomId,
-  onSettingsChange
+  onSettingsChange,
+  followingMemberId,
+  onFollowMember
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -69,6 +73,8 @@ export function CollaborationPanel({
   workspaceRoot: string;
   roomId: string;
   onSettingsChange(settings: SessionSettings): Promise<void>;
+  followingMemberId?: string;
+  onFollowMember(memberId: string): void;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const activityItems = useMemo(
@@ -150,24 +156,51 @@ export function CollaborationPanel({
             <div className="team-block">
               <h2>People</h2>
               <ul className="member-list" data-testid="member-list">
-                {members.map((member) => {
+                {members.map((candidate) => {
                   const cursor = remoteCursors.find(
-                    (candidate) => candidate.memberId === member.id
+                    (remoteCursor) => remoteCursor.memberId === candidate.id
                   );
                   return (
-                    <li key={member.id}>
+                    <li key={candidate.id}>
                       <span>
-                        <i className={member.online ? "status-dot online" : "status-dot"} />
-                        <strong>{member.displayName}</strong>
-                        {member.role === "host" ? <em>Host</em> : null}
-                        {member.connectionCount > 1 ? (
-                          <em>{member.connectionCount} tabs</em>
+                        <i className={candidate.online ? "status-dot online" : "status-dot"} />
+                        <strong>{candidate.displayName}</strong>
+                        {candidate.role === "host" ? <em>Host</em> : null}
+                        {candidate.connectionCount > 1 ? (
+                          <em>{candidate.connectionCount} tabs</em>
+                        ) : null}
+                        {candidate.id !== member?.id ? (
+                          <button
+                            className={
+                              followingMemberId === candidate.id
+                                ? "member-follow active"
+                                : "member-follow"
+                            }
+                            aria-label={
+                              followingMemberId === candidate.id
+                                ? `Stop following ${candidate.displayName}`
+                                : `Follow ${candidate.displayName}`
+                            }
+                            title={
+                              followingMemberId === candidate.id
+                                ? "Stop following"
+                                : "Follow collaborator"
+                            }
+                            onClick={() => onFollowMember(candidate.id)}
+                            data-testid={`follow-member-${candidate.displayName}`}
+                          >
+                            {followingMemberId === candidate.id ? (
+                              <EyeOff size={13} />
+                            ) : (
+                              <Eye size={13} />
+                            )}
+                          </button>
                         ) : null}
                       </span>
                       <small>
                         {cursor
                           ? `${cursor.path} · Ln ${cursor.position.lineNumber}, Col ${cursor.position.column}`
-                          : member.currentFile ?? (member.online ? "Browsing" : "Offline")}
+                          : candidate.currentFile ?? (candidate.online ? "Browsing" : "Offline")}
                       </small>
                     </li>
                   );

@@ -57,13 +57,13 @@ export function App() {
     guestCanRunCommands: true
   });
   const [chatText, setChatText] = useState("");
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [selectedCommand, setSelectedCommand] = useState("");
   const [commandText, setCommandText] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceRoot, setWorkspaceRoot] = useState("");
   const [commandRunning, setCommandRunning] = useState(false);
   const [connectionState, setConnectionState] = useState("Connecting");
+  const [followingMemberId, setFollowingMemberId] = useState<string>();
   const socketRef = useRef<ClientSocket | null>(null);
   const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
@@ -232,6 +232,27 @@ export function App() {
     }
   }, [selectedCommand, sessionSettings.commands]);
 
+  useEffect(() => {
+    if (!followingMemberId) return;
+    const cursor = remoteCursorMap[followingMemberId];
+    const collaborator = members.find(
+      (candidate) => candidate.id === followingMemberId
+    );
+    const path = cursor?.path ?? collaborator?.currentFile;
+    if (!path) return;
+    if (path !== activePath) {
+      void openFile(path);
+      return;
+    }
+    if (cursor) {
+      window.requestAnimationFrame(() => {
+        window.__simplercpEditors?.[path]?.revealPositionInCenter(
+          cursor.position
+        );
+      });
+    }
+  }, [activePath, followingMemberId, members, remoteCursorMap]);
+
   async function refreshSharedState(targetRoomId: string) {
     const [room, eventRecords, messages] = await Promise.all([
       getRoom(targetRoomId),
@@ -242,7 +263,6 @@ export function App() {
     setMembers(room.members);
     setEvents(eventRecords);
     setChatMessages(messages);
-    setTerminalLines(terminalLinesFromEvents(eventRecords));
   }
 
   async function refreshEvents() {
@@ -405,13 +425,7 @@ export function App() {
     if (!member || !command || !roomId) return;
     setCommandRunning(true);
     try {
-      const run = await runQuickCommand(command, member.id);
-      setTerminalLines((lines) => [
-        ...lines,
-        `$ ${command}`,
-        run.output.trimEnd(),
-        `exit ${run.exitCode}`
-      ]);
+      await runQuickCommand(command, member.id);
       await refreshSharedState(roomId);
     } finally {
       setCommandRunning(false);
@@ -426,6 +440,12 @@ export function App() {
       hostSessionRef.current
     );
     setSessionSettings(response.settings);
+  }
+
+  function followMember(memberId: string) {
+    setFollowingMemberId((current) =>
+      current === memberId ? undefined : memberId
+    );
   }
 
   function closePath(path: string) {
@@ -498,16 +518,19 @@ export function App() {
           workspaceRoot={workspaceRoot}
           roomId={roomId}
           onSettingsChange={changeSessionSettings}
+          followingMemberId={followingMemberId}
+          onFollowMember={followMember}
         />
       </aside>
       <section className="terminal-pane">
         <TerminalPanel
-          lines={terminalLines}
           runtimeConfig={sessionSettings}
           canRun={
             sessionSettings.terminalEnabled &&
             (member?.role === "host" || sessionSettings.guestCanRunCommands)
           }
+          memberId={member?.id ?? ""}
+          isHost={member?.role === "host"}
           selectedCommand={selectedCommand}
           commandText={commandText}
           running={commandRunning}
@@ -521,17 +544,14 @@ export function App() {
         <span>Room {roomId || "..."}</span>
         <span>{member?.displayName ?? "Joining"}</span>
         <span>{workspaceName || "Workspace"}</span>
+        {followingMemberId ? (
+          <span>
+            Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
+          </span>
+        ) : null}
       </div>
     </main>
   );
-}
-
-function terminalLinesFromEvents(events: EventRecord[]) {
-  return events.flatMap((event) => {
-    if (event.type !== "command_output") return [];
-    const payload = event.payload as { output?: unknown } | undefined;
-    return [String(payload?.output ?? "")];
-  });
 }
 
 function getUserId(displayName: string) {

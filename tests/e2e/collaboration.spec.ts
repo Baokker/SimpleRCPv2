@@ -38,6 +38,14 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await ada.getByTestId("dir-src").click();
   await linus.getByTestId("dir-src").click();
 
+  await ada.getByTestId("collab-tab-team").click();
+  await ada.getByTestId("follow-member-Linus").click();
+  await linus.getByTestId("file-src/sample.py").click();
+  await expect(ada.locator(".tab.active")).toContainText("src/sample.py");
+  await ada.getByTestId("follow-member-Linus").click();
+  await linus.getByTestId("file-src/hello.ts").click();
+  await expect(ada.locator(".tab.active")).toContainText("src/sample.py");
+
   await fs.mkdir(path.join(workspaceRoot, "watcher-output"));
   await fs.writeFile(
     path.join(workspaceRoot, "watcher-output", "result.txt"),
@@ -167,6 +175,16 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   );
 
   await expect(ada.getByTestId("command-mode")).toContainText("unrestricted");
+  await ada.getByTestId("terminal-output").click();
+  await ada.keyboard.type("printf 'shared-pty-ok\\n'");
+  await ada.keyboard.press("Enter");
+  await expect(ada.getByTestId("terminal-output")).toContainText(
+    "shared-pty-ok"
+  );
+  await expect(linus.getByTestId("terminal-output")).toContainText(
+    "shared-pty-ok"
+  );
+
   await ada.getByTestId("command-input").fill("npm test");
   await ada.getByTestId("run-command").click();
   await expect(ada.getByTestId("terminal-output")).toContainText(

@@ -1,9 +1,16 @@
+import { RotateCcw } from "lucide-react";
+import { useRef } from "react";
 import type { RuntimeConfig } from "../types";
+import {
+  SharedTerminal,
+  type SharedTerminalHandle
+} from "./SharedTerminal";
 
 export function TerminalPanel({
-  lines,
   runtimeConfig,
   canRun,
+  memberId,
+  isHost,
   selectedCommand,
   commandText,
   running,
@@ -11,9 +18,10 @@ export function TerminalPanel({
   onCommandTextChange,
   onRunCommand
 }: {
-  lines: string[];
   runtimeConfig: RuntimeConfig;
   canRun: boolean;
+  memberId: string;
+  isHost: boolean;
   selectedCommand: string;
   commandText: string;
   running: boolean;
@@ -22,6 +30,7 @@ export function TerminalPanel({
   onRunCommand(): void;
 }) {
   const isUnrestricted = runtimeConfig.commandMode === "unrestricted";
+  const terminalRef = useRef<SharedTerminalHandle>(null);
 
   return (
     <div className="panel terminal-panel">
@@ -66,11 +75,29 @@ export function TerminalPanel({
           >
             {running ? "Running" : "Run"}
           </button>
+          {isHost ? (
+            <button
+              className="terminal-restart"
+              onClick={() => terminalRef.current?.restart()}
+              disabled={!runtimeConfig.terminalEnabled}
+              title="Restart shared terminal"
+              aria-label="Restart shared terminal"
+              data-testid="terminal-restart"
+            >
+              <RotateCcw size={14} />
+            </button>
+          ) : null}
         </div>
       </div>
-      <pre data-testid="terminal-output">
-        {lines.length > 0 ? lines.join("\n") : "No command output yet."}
-      </pre>
+      <div className="shared-terminal">
+        <SharedTerminal
+          ref={terminalRef}
+          memberId={memberId}
+          canInput={
+            runtimeConfig.terminalEnabled && isUnrestricted && canRun
+          }
+        />
+      </div>
     </div>
   );
 }

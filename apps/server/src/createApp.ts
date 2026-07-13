@@ -220,6 +220,7 @@ export function createApp(config: ServerConfig) {
         res.status(403).json({ error: "Command execution is not permitted" });
         return;
       }
+      app.locals.sharedTerminal?.writeSystem(`\r\n$ ${command}\r\n`);
       const run = await runWorkspaceCommand({
         workspaceRoot: config.workspaceRoot,
         command,
@@ -228,8 +229,12 @@ export function createApp(config: ServerConfig) {
         events,
         roomId: defaultRoom.id,
         initiatorId,
-        timeoutMs: settings.commandTimeoutMs
+        timeoutMs: settings.commandTimeoutMs,
+        onOutput: (output) => app.locals.sharedTerminal?.writeSystem(output)
       });
+      app.locals.sharedTerminal?.writeSystem(
+        `\r\n[command exited with code ${run.exitCode}]\r\n`
+      );
       res.json({ run });
     } catch (error) {
       next(error);

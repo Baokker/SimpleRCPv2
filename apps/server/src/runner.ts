@@ -13,6 +13,7 @@ export interface RunWorkspaceCommandInput {
   roomId: string;
   initiatorId: string;
   timeoutMs: number;
+  onOutput?: (output: string) => void;
 }
 
 export async function runWorkspaceCommand({
@@ -23,7 +24,8 @@ export async function runWorkspaceCommand({
   events,
   roomId,
   initiatorId,
-  timeoutMs
+  timeoutMs,
+  onOutput
 }: RunWorkspaceCommandInput): Promise<RunRecord> {
   if (commandMode === "restricted" && !whitelist.includes(command)) {
     events.append({
@@ -99,6 +101,7 @@ export async function runWorkspaceCommand({
 
     function appendOutput(output: string) {
       run.output += output;
+      onOutput?.(output);
       events.append({
         type: "command_output",
         roomId,
