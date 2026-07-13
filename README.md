@@ -45,18 +45,19 @@ SimpleRCPv2/
 安装依赖：
 
 ```bash
-cd /Users/baokker/Documents/SimpleRCPv2
+git clone https://github.com/Baokker/SimpleRCPv2.git
+cd SimpleRCPv2
 pnpm install
 ```
 
-## 启动 DemoProject
+以下命令均默认在项目根目录执行。
 
-以 `/Users/baokker/Work/DemoProject` 作为协作项目，并允许本机 Terminal 执行任意命令：
+## 启动本地项目
+
+将 `SIMPLERCP_WORKSPACE` 设置为要协作的本地项目绝对路径，并允许本机 Terminal 执行任意命令：
 
 ```bash
-cd /Users/baokker/Documents/SimpleRCPv2
-
-SIMPLERCP_WORKSPACE="/Users/baokker/Work/DemoProject" \
+SIMPLERCP_WORKSPACE="/path/to/your/project" \
 SIMPLERCP_COMMAND_MODE="unrestricted" \
 pnpm run dev
 ```
@@ -89,9 +90,7 @@ Host 应通过 `Host URL` 第一次进入。页面会把启动 token 换成当�
 默认模式是 `restricted`。可以配置允许执行的命令：
 
 ```bash
-cd /Users/baokker/Documents/SimpleRCPv2
-
-SIMPLERCP_WORKSPACE="/Users/baokker/Work/DemoProject" \
+SIMPLERCP_WORKSPACE="/path/to/your/project" \
 SIMPLERCP_COMMAND_MODE="restricted" \
 SIMPLERCP_COMMANDS="mvn test,mvn package" \
 pnpm run dev
@@ -175,9 +174,6 @@ Playwright 测试会验证：
 共享 Terminal 使用 `node-pty`。如果安装后启动时报 `posix_spawnp failed`，在 macOS 上可强制从源码重建：
 
 ```bash
-cd /Users/baokker/Documents/SimpleRCPv2
-
-PATH=/Users/baokker/.nvm/versions/node/v22.19.0/bin:$PATH \
 npm_config_build_from_source=true \
 pnpm --filter @simplercp/server rebuild node-pty
 ```
