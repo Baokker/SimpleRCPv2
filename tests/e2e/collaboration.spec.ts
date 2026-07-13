@@ -28,8 +28,18 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
     "aria-expanded",
     "false"
   );
+  await expect(ada.getByTestId("file-src/hello.ts")).toHaveCount(0);
   await ada.getByTestId("dir-src").click();
   await linus.getByTestId("dir-src").click();
+
+  await fs.mkdir(path.join(workspaceRoot, "watcher-output"));
+  await fs.writeFile(
+    path.join(workspaceRoot, "watcher-output", "result.txt"),
+    "created outside the browser"
+  );
+  await expect(ada.getByTestId("dir-watcher-output")).toBeVisible();
+  await ada.getByTestId("dir-watcher-output").click();
+  await expect(ada.getByTestId("file-watcher-output/result.txt")).toBeVisible();
 
   await expect(ada.getByTestId("dir-target")).toBeVisible();
   await ada.getByTestId("dir-target").click();
@@ -74,6 +84,12 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect
     .poll(() => fs.readFile(path.join(workspaceRoot, "src/hello.ts"), "utf8"))
     .toBe("Ada middle Linus");
+  await fs.writeFile(
+    path.join(workspaceRoot, "src/hello.ts"),
+    "external watcher update"
+  );
+  await expectMonacoValue(ada, "src/hello.ts", "external watcher update");
+  await expectMonacoValue(linus, "src/hello.ts", "external watcher update");
 
   await ada.getByTestId("file-src/sample.py").click();
   await triggerPythonSuggestions(ada, "src/sample.py", "de");
@@ -84,6 +100,22 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await ada.getByTestId("close-tab-src/sample.py").click();
   await expect(ada.getByTestId("close-tab-src/sample.py")).toHaveCount(0);
   await expect(ada.getByTestId("close-tab-src/hello.ts")).toBeVisible();
+
+  await handlePrompt(ada, "src/browser-created.ts", () =>
+    ada.getByTestId("new-file").click()
+  );
+  await expect(ada.getByTestId("file-src/browser-created.ts")).toBeVisible();
+  await handlePrompt(ada, "src/browser-renamed.ts", () =>
+    ada.getByTestId("rename-src/browser-created.ts").click()
+  );
+  await expect(ada.getByTestId("file-src/browser-renamed.ts")).toBeVisible();
+  await expect(ada.getByTestId("close-tab-src/browser-renamed.ts")).toBeVisible();
+  await handleNextDialog(ada, "confirm", "Delete", "accept", () =>
+    ada.getByTestId("delete-src/browser-renamed.ts").click()
+  );
+  await expect(ada.getByTestId("file-src/browser-renamed.ts")).toHaveCount(0);
+  await expect(ada.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
+  await ada.getByTestId("file-src/hello.ts").click();
 
   await setMonacoSelection(ada, "src/hello.ts", {
     startLineNumber: 1,
@@ -386,4 +418,17 @@ async function waitForCollaborativeEditor(
     },
     path
   );
+}
+
+async function handlePrompt(
+  page: import("@playwright/test").Page,
+  value: string,
+  trigger: () => Promise<unknown>
+) {
+  const dialogHandled = (async () => {
+    const dialog = await page.waitForEvent("dialog");
+    expect(dialog.type()).toBe("prompt");
+    await dialog.accept(value);
+  })();
+  await Promise.all([trigger(), dialogHandled]);
 }

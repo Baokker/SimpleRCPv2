@@ -198,7 +198,13 @@ export function attachRealtimeServer(
     });
   });
 
-  return { presence: wss, documents: documentWss };
+  return {
+    presence: wss,
+    documents: documentWss,
+    broadcastWorkspaceChanged(path: string) {
+      broadcastToAll(sockets, { type: "workspace_changed", path });
+    }
+  };
 }
 
 function broadcastToAll(sockets: Set<WebSocket>, message: ServerMessage) {

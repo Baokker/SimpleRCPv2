@@ -58,4 +58,14 @@ describe("collaborative document store", () => {
       fs.stat(path.join(root, "src", "hello.ts"))
     ).rejects.toThrow();
   });
+
+  it("reloads an active Yjs document after an external disk change", async () => {
+    const store = createCollaborativeDocumentStore({ workspaceRoot: root });
+    const document = await store.getDocument("room-three", "src/hello.ts");
+
+    await fs.writeFile(path.join(root, "src", "hello.ts"), "external change");
+    await store.reloadPath("src/hello.ts");
+
+    expect(document.getText("content").toString()).toBe("external change");
+  });
 });

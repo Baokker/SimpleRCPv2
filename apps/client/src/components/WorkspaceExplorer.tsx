@@ -17,6 +17,7 @@ export function WorkspaceExplorer({
   activePath,
   workspaceName,
   onOpenFile,
+  onExpandDirectory,
   onCreateFile,
   onCreateFolder,
   onRenamePath,
@@ -26,6 +27,7 @@ export function WorkspaceExplorer({
   activePath?: string;
   workspaceName: string;
   onOpenFile(path: string): void;
+  onExpandDirectory(path: string): void;
   onCreateFile(): void;
   onCreateFolder(): void;
   onRenamePath(path: string): void;
@@ -64,6 +66,7 @@ export function WorkspaceExplorer({
             activePath={activePath}
             activeAncestors={activeAncestors}
             onOpenFile={onOpenFile}
+            onExpandDirectory={onExpandDirectory}
             onRenamePath={onRenamePath}
             onDeletePath={onDeletePath}
           />
@@ -78,6 +81,7 @@ function TreeNode({
   activePath,
   activeAncestors,
   onOpenFile,
+  onExpandDirectory,
   onRenamePath,
   onDeletePath
 }: {
@@ -85,6 +89,7 @@ function TreeNode({
   activePath?: string;
   activeAncestors: Set<string>;
   onOpenFile(path: string): void;
+  onExpandDirectory(path: string): void;
   onRenamePath(path: string): void;
   onDeletePath(path: string): void;
 }) {
@@ -102,7 +107,12 @@ function TreeNode({
           <button
             className="tree-entry"
             aria-expanded={isOpen}
-            onClick={() => setIsOpen((value) => !value)}
+            onClick={() => {
+              if (!isOpen && node.children === undefined) {
+                onExpandDirectory(node.path);
+              }
+              setIsOpen((value) => !value);
+            }}
             data-testid={`dir-${node.path}`}
           >
             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -117,13 +127,14 @@ function TreeNode({
         </div>
         {isOpen ? (
           <div className="tree-children">
-            {node.children.map((child) => (
+            {(node.children ?? []).map((child) => (
               <TreeNode
                 key={child.path}
                 node={child}
                 activePath={activePath}
                 activeAncestors={activeAncestors}
                 onOpenFile={onOpenFile}
+                onExpandDirectory={onExpandDirectory}
                 onRenamePath={onRenamePath}
                 onDeletePath={onDeletePath}
               />

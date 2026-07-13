@@ -59,6 +59,15 @@ export async function getWorkspaceTree(): Promise<WorkspaceNode[]> {
   return response.tree;
 }
 
+export async function getWorkspaceDirectory(
+  path: string
+): Promise<WorkspaceNode[]> {
+  const response = await request<{ tree: WorkspaceNode[] }>(
+    `/api/workspace/directory?path=${encodeURIComponent(path)}`
+  );
+  return response.tree;
+}
+
 export async function readWorkspaceFile(
   path: string,
   force = false

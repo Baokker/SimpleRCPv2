@@ -22,10 +22,10 @@ export function resolveWorkspacePath(root: string, relativePath: string) {
 }
 
 export async function listWorkspaceTree(root: string): Promise<WorkspaceNode[]> {
-  return listDirectory(root, "");
+  return listWorkspaceDirectory(root, "");
 }
 
-async function listDirectory(
+export async function listWorkspaceDirectory(
   root: string,
   relativeDir: string
 ): Promise<WorkspaceNode[]> {
@@ -48,8 +48,7 @@ async function listDirectory(
           return {
             name: entry.name,
             path: childRelativePath,
-            type: "directory",
-            children: await listDirectory(root, childRelativePath)
+            type: "directory"
           };
         }
 

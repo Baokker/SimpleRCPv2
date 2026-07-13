@@ -11,6 +11,7 @@ import {
   createWorkspaceFile,
   deleteWorkspacePath,
   listWorkspaceTree,
+  listWorkspaceDirectory,
   readWorkspaceFile,
   renameWorkspacePath,
   writeWorkspaceFile
@@ -161,6 +162,20 @@ export function createApp(config: ServerConfig) {
   app.get("/api/workspace/tree", async (_req, res, next) => {
     try {
       res.json({ tree: await listWorkspaceTree(config.workspaceRoot) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/workspace/directory", async (req, res, next) => {
+    try {
+      const directoryPath = String(req.query.path ?? "");
+      res.json({
+        tree: await listWorkspaceDirectory(
+          config.workspaceRoot,
+          directoryPath
+        )
+      });
     } catch (error) {
       next(error);
     }

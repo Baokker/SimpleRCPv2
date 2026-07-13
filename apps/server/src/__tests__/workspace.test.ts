@@ -6,6 +6,7 @@ import {
   createWorkspaceDirectory,
   createWorkspaceFile,
   deleteWorkspacePath,
+  listWorkspaceDirectory,
   listWorkspaceTree,
   readWorkspaceFile,
   renameWorkspacePath,
@@ -42,7 +43,7 @@ describe("workspace service", () => {
     );
   });
 
-  it("lists nested files and directories", async () => {
+  it("lists one directory level at a time", async () => {
     await expect(listWorkspaceTree(root)).resolves.toEqual([
       {
         name: "README.md",
@@ -52,14 +53,14 @@ describe("workspace service", () => {
       {
         name: "src",
         path: "src",
-        type: "directory",
-        children: [
-          {
-            name: "hello.ts",
-            path: "src/hello.ts",
-            type: "file"
-          }
-        ]
+        type: "directory"
+      }
+    ]);
+    await expect(listWorkspaceDirectory(root, "src")).resolves.toEqual([
+      {
+        name: "hello.ts",
+        path: "src/hello.ts",
+        type: "file"
       }
     ]);
   });
@@ -74,11 +75,16 @@ describe("workspace service", () => {
 
     const tree = await listWorkspaceTree(root);
     const serialized = JSON.stringify(tree);
+    const srcEntries = JSON.stringify(await listWorkspaceDirectory(root, "src"));
+    const targetEntries = JSON.stringify(
+      await listWorkspaceDirectory(root, "target/classes")
+    );
 
     expect(serialized).toContain(".DS_Store");
     expect(serialized).toContain(".idea");
     expect(serialized).toContain("target");
-    expect(serialized).toContain("Generated.class");
+    expect(srcEntries).toContain("Generated.class");
+    expect(targetEntries).toContain("Main.class");
   });
 
   it("reads and writes files under the root", async () => {

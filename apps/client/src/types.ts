@@ -8,7 +8,7 @@ export interface WorkspaceDirectoryNode {
   name: string;
   path: string;
   type: "directory";
-  children: WorkspaceNode[];
+  children?: WorkspaceNode[];
 }
 
 export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
@@ -106,6 +106,10 @@ export type ServerMessage =
   | {
       type: "event";
       event: EventRecord;
+    }
+  | {
+      type: "workspace_changed";
+      path: string;
     };
 
 export interface RuntimeConfig {

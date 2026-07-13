@@ -114,6 +114,41 @@ export function createCollaborativeDocumentStore({
     );
   }
 
+  async function reloadPath(filePath: string) {
+    const matches = [...initialized.entries()].filter(
+      ([name]) => parseDocumentName(name).filePath === filePath
+    );
+    if (matches.length === 0) return;
+
+    const result = await readWorkspaceFile(workspaceRoot, filePath, true);
+    if (result.status !== "text") return;
+
+    await Promise.all(
+      matches.map(async ([, loading]) => {
+        const document = await loading;
+        const text = document.getText("content");
+        if (text.toString() === result.content) return;
+        document.transact(() => {
+          text.delete(0, text.length);
+          text.insert(0, result.content);
+        }, "filesystem");
+      })
+    );
+  }
+
+  function dropPath(filePath: string) {
+    for (const name of initialized.keys()) {
+      const activePath = parseDocumentName(name).filePath;
+      if (activePath !== filePath && !activePath.startsWith(`${filePath}/`)) {
+        continue;
+      }
+      retired.add(name);
+      const timer = persistTimers.get(name);
+      if (timer) clearTimeout(timer);
+      persistTimers.delete(name);
+    }
+  }
+
   function release(name: string) {
     const timer = persistTimers.get(name);
     if (timer) clearTimeout(timer);
@@ -127,6 +162,8 @@ export function createCollaborativeDocumentStore({
     flush,
     flushDocument,
     retirePath,
+    reloadPath,
+    dropPath,
     release
   };
 }

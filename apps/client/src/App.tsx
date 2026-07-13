@@ -8,6 +8,7 @@ import {
   getHealth,
   getRoom,
   getRuntimeConfig,
+  getWorkspaceDirectory,
   getWorkspaceTree,
   joinRoom,
   readWorkspaceFile,
@@ -62,6 +63,8 @@ export function App() {
   );
   const bootStartedRef = useRef(false);
   const editTimersRef = useRef(new Map<string, number>());
+  const loadedDirectoriesRef = useRef(new Set<string>());
+  const workspaceRefreshTimerRef = useRef<number>();
 
   const displayName = useMemo(
     () =>
@@ -160,6 +163,9 @@ export function App() {
           if (message.type === "chat_message") {
             void refreshSharedState(health.roomId);
           }
+          if (message.type === "workspace_changed") {
+            scheduleWorkspaceRefresh();
+          }
         }
       });
       connectionRef.current = { roomId: health.roomId, connectionId };
@@ -179,6 +185,9 @@ export function App() {
         window.clearTimeout(timer);
       }
       editTimersRef.current.clear();
+      if (workspaceRefreshTimerRef.current) {
+        window.clearTimeout(workspaceRefreshTimerRef.current);
+      }
     };
   }, [displayName]);
 
@@ -202,22 +211,45 @@ export function App() {
   }, [roomId]);
 
   async function refreshSharedState(targetRoomId: string) {
-    const [room, eventRecords, workspaceTree, messages] = await Promise.all([
+    const [room, eventRecords, messages] = await Promise.all([
       getRoom(targetRoomId),
       getEvents(),
-      getWorkspaceTree(),
       getChatMessages(targetRoomId)
     ]);
     membersRef.current = room.members;
     setMembers(room.members);
     setEvents(eventRecords);
-    setTree(workspaceTree);
     setChatMessages(messages);
     setTerminalLines(terminalLinesFromEvents(eventRecords));
   }
 
   async function refreshEvents() {
     setEvents(await getEvents());
+  }
+
+  async function loadDirectory(path: string) {
+    loadedDirectoriesRef.current.add(path);
+    const children = await getWorkspaceDirectory(path);
+    setTree((nodes) => setDirectoryChildren(nodes, path, children));
+  }
+
+  async function refreshWorkspaceTree() {
+    const paths = ["", ...loadedDirectoriesRef.current];
+    const entries = await Promise.all(
+      paths.map(async (path) => [path, await getWorkspaceDirectory(path)] as const)
+    );
+    const directories = new Map(entries);
+    setTree(composeWorkspaceTree(directories.get("") ?? [], directories));
+  }
+
+  function scheduleWorkspaceRefresh() {
+    if (workspaceRefreshTimerRef.current) {
+      window.clearTimeout(workspaceRefreshTimerRef.current);
+    }
+    workspaceRefreshTimerRef.current = window.setTimeout(() => {
+      workspaceRefreshTimerRef.current = undefined;
+      void refreshWorkspaceTree();
+    }, 150);
   }
 
   async function openFile(path: string) {
@@ -288,34 +320,58 @@ export function App() {
   async function createFileFromPrompt() {
     const path = window.prompt("New file path");
     if (!path || !member) return;
-    setTree(await createWorkspaceFile(path, member.id));
+    await createWorkspaceFile(path, member.id);
+    addAncestorDirectories(loadedDirectoriesRef.current, path);
+    await refreshWorkspaceTree();
     await openFile(path);
   }
 
   async function createFolderFromPrompt() {
     const path = window.prompt("New folder path");
     if (!path || !member) return;
-    setTree(await createWorkspaceDirectory(path, member.id));
+    await createWorkspaceDirectory(path, member.id);
+    addAncestorDirectories(loadedDirectoriesRef.current, path);
+    await refreshWorkspaceTree();
     await refreshEvents();
   }
 
   async function renamePathFromPrompt(path: string) {
     const toPath = window.prompt("Rename path", path);
     if (!toPath || toPath === path || !member) return;
-    setTree(await renameWorkspacePath(path, toPath, member.id));
+    await renameWorkspacePath(path, toPath, member.id);
+    loadedDirectoriesRef.current = remapLoadedDirectories(
+      loadedDirectoriesRef.current,
+      path,
+      toPath
+    );
+    addAncestorDirectories(loadedDirectoriesRef.current, toPath);
     setOpenFiles((files) =>
       files.map((file) =>
-        file.path === path ? { ...file, path: toPath } : file
+        file.path === path || file.path.startsWith(`${path}/`)
+          ? { ...file, path: `${toPath}${file.path.slice(path.length)}` }
+          : file
       )
     );
-    if (activePath === path) setActivePath(toPath);
+    if (activePath === path || activePath?.startsWith(`${path}/`)) {
+      const nextPath = `${toPath}${activePath.slice(path.length)}`;
+      setActivePath(nextPath);
+      socketRef.current?.sendOpenFile(nextPath);
+    }
+    await refreshWorkspaceTree();
     await refreshEvents();
   }
 
   async function deletePathWithConfirm(path: string) {
     if (!window.confirm(`Delete ${path}?`) || !member) return;
-    setTree(await deleteWorkspacePath(path, member.id));
+    await deleteWorkspacePath(path, member.id);
+    loadedDirectoriesRef.current = new Set(
+      [...loadedDirectoriesRef.current].filter(
+        (directory) =>
+          directory !== path && !directory.startsWith(`${path}/`)
+      )
+    );
     closePath(path);
+    await refreshWorkspaceTree();
     await refreshEvents();
   }
 
@@ -370,6 +426,7 @@ export function App() {
           activePath={activePath}
           workspaceName={workspaceName}
           onOpenFile={openFile}
+          onExpandDirectory={loadDirectory}
           onCreateFile={createFileFromPrompt}
           onCreateFolder={createFolderFromPrompt}
           onRenamePath={renamePathFromPrompt}
@@ -450,4 +507,55 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+function setDirectoryChildren(
+  nodes: WorkspaceNode[],
+  path: string,
+  children: WorkspaceNode[]
+): WorkspaceNode[] {
+  if (!path) return children;
+  return nodes.map((node) => {
+    if (node.type !== "directory") return node;
+    if (node.path === path) return { ...node, children };
+    if (!node.children) return node;
+    return {
+      ...node,
+      children: setDirectoryChildren(node.children, path, children)
+    };
+  });
+}
+
+function composeWorkspaceTree(
+  nodes: WorkspaceNode[],
+  directories: Map<string, WorkspaceNode[]>
+): WorkspaceNode[] {
+  return nodes.map((node) => {
+    if (node.type !== "directory") return node;
+    const children = directories.get(node.path);
+    return children
+      ? { ...node, children: composeWorkspaceTree(children, directories) }
+      : node;
+  });
+}
+
+function addAncestorDirectories(directories: Set<string>, path: string) {
+  const parts = path.split("/");
+  for (let index = 1; index < parts.length; index += 1) {
+    directories.add(parts.slice(0, index).join("/"));
+  }
+}
+
+function remapLoadedDirectories(
+  directories: Set<string>,
+  fromPath: string,
+  toPath: string
+) {
+  return new Set(
+    [...directories].map((directory) =>
+      directory === fromPath || directory.startsWith(`${fromPath}/`)
+        ? `${toPath}${directory.slice(fromPath.length)}`
+        : directory
+    )
+  );
 }
