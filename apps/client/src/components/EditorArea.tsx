@@ -27,6 +27,8 @@ export function EditorArea({
   openFiles,
   activePath,
   roomId,
+  memberId,
+  canEdit,
   remoteCursors,
   onSelectFile,
   onCloseFile,
@@ -36,6 +38,8 @@ export function EditorArea({
   openFiles: OpenFile[];
   activePath?: string;
   roomId: string;
+  memberId: string;
+  canEdit: boolean;
   remoteCursors: RemoteCursor[];
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
@@ -96,9 +100,11 @@ export function EditorArea({
       <div className="editor-frame" data-testid="editor-frame">
         {activeFile ? (
           <CollaborativeEditor
-            key={activeFile.path}
+            key={`${activeFile.path}:${canEdit}`}
             file={activeFile}
             roomId={roomId}
+            memberId={memberId}
+            canEdit={canEdit}
             onLocalEdit={onLocalEdit}
             onMount={(editor, monaco) => {
               editorRef.current = editor;
@@ -127,11 +133,15 @@ export function EditorArea({
 function CollaborativeEditor({
   file,
   roomId,
+  memberId,
+  canEdit,
   onLocalEdit,
   onMount
 }: {
   file: OpenFile;
   roomId: string;
+  memberId: string;
+  canEdit: boolean;
   onLocalEdit(path: string): void;
   onMount(
     editor: Monaco.editor.IStandaloneCodeEditor,
@@ -199,7 +209,10 @@ function CollaborativeEditor({
           collaborativeServerUrl(),
           encodeURIComponent(`${roomId}:${file.path}`),
           document,
-          { disableBc: true }
+          {
+            disableBc: true,
+            params: { memberId }
+          }
         );
         collaborationRef.current = {
           document,
@@ -219,7 +232,7 @@ function CollaborativeEditor({
           if (collaborationRef.current) {
             collaborationRef.current.binding = binding;
           }
-          editor.updateOptions({ readOnly: false });
+          editor.updateOptions({ readOnly: !canEdit });
           window.__simplercpYjsSynced ??= {};
           window.__simplercpYjsSynced[file.path] = true;
         };

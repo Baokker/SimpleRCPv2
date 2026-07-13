@@ -7,6 +7,7 @@ export interface JoinRoomInput {
   name: string;
   userId?: string;
   connectionId?: string;
+  role?: "host" | "guest";
 }
 
 export function createRoomStore(events: EventLog) {
@@ -43,6 +44,7 @@ export function createRoomStore(events: EventLog) {
       if (existing) {
         existing.name = normalized.name;
         existing.userId = normalized.userId;
+        if (normalized.role === "host") existing.role = "host";
         upsertConnection(room, {
           id: normalized.connectionId,
           userId: existing.userId,
@@ -73,7 +75,8 @@ export function createRoomStore(events: EventLog) {
         userId: normalized.userId,
         online: true,
         lastSeenAt: now,
-        connectionCount: 1
+        connectionCount: 1,
+        role: normalized.role
       };
       room.members.push(member);
       upsertConnection(room, {
@@ -241,6 +244,11 @@ export function createRoomStore(events: EventLog) {
       member.currentFile = patch.currentFile;
       return member;
     },
+    getMember(roomId: string, memberId: string) {
+      return rooms
+        .get(roomId)
+        ?.members.find((member) => member.id === memberId);
+    },
     listRooms() {
       return [...rooms.values()];
     }
@@ -252,12 +260,14 @@ export type RoomStore = ReturnType<typeof createRoomStore>;
 type NormalizedJoinInput = Required<Pick<JoinRoomInput, "name">> & {
   userId: string;
   connectionId: string;
+  role: "host" | "guest";
 };
 
 function normalizeJoinInput(input: JoinRoomInput): NormalizedJoinInput {
   const userId = input.userId ?? input.connectionId ?? `human:${input.name}`;
   return {
     name: input.name,
+    role: input.role ?? "guest",
     userId,
     connectionId: input.connectionId ?? userId
   };

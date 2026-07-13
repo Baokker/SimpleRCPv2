@@ -1,10 +1,25 @@
 import type http from "node:http";
+import { createRequire } from "node:module";
+import type * as Encoding from "lib0/encoding";
 import { WebSocketServer, type WebSocket } from "ws";
-import { setPersistence, setupWSConnection } from "y-websocket/bin/utils";
-import type { CollaborativeDocumentStore } from "./collaborativeDocuments.js";
+import type * as SyncProtocol from "y-protocols/sync";
+import {
+  getYDoc,
+  setPersistence,
+  setupWSConnection
+} from "y-websocket/bin/utils";
+import {
+  parseDocumentName,
+  type CollaborativeDocumentStore
+} from "./collaborativeDocuments.js";
 import type { EventLog } from "./eventLog.js";
 import type { RoomStore } from "./rooms.js";
+import type { SessionControl } from "./sessionControl.js";
 import type { ClientMessage, ServerMessage } from "./types.js";
+
+const require = createRequire(import.meta.url);
+const encoding = require("lib0/encoding") as typeof Encoding;
+const syncProtocol = require("y-protocols/sync") as typeof SyncProtocol;
 
 interface SocketIdentity {
   roomId: string;
@@ -16,6 +31,7 @@ export interface RealtimeContext {
   events: EventLog;
   rooms: RoomStore;
   documents?: CollaborativeDocumentStore;
+  sessionControl?: SessionControl;
 }
 
 export function handleRealtimeMessage({
@@ -95,13 +111,18 @@ export function handleRealtimeMessage({
 
 export function attachRealtimeServer(
   server: http.Server,
-  context: RealtimeContext & { documents: CollaborativeDocumentStore }
+  context: RealtimeContext & {
+    documents: CollaborativeDocumentStore;
+    sessionControl: SessionControl;
+  }
 ) {
   const wss = new WebSocketServer({ noServer: true });
   const documentWss = new WebSocketServer({ noServer: true });
   const documents = context.documents;
   const sockets = new Set<WebSocket>();
   const identities = new Map<WebSocket, SocketIdentity>();
+  const documentMembers = new Map<WebSocket, string>();
+  let guestCanEditFiles = context.sessionControl.getSettings().guestCanEditFiles;
 
   setPersistence({
     provider: null,
@@ -113,7 +134,8 @@ export function attachRealtimeServer(
   });
 
   server.on("upgrade", (request, socket, head) => {
-    const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+    const requestUrl = new URL(request.url ?? "/", "http://localhost");
+    const pathname = requestUrl.pathname;
     if (pathname === "/ws") {
       wss.handleUpgrade(request, socket, head, (webSocket) => {
         wss.emit("connection", webSocket, request);
@@ -122,17 +144,47 @@ export function attachRealtimeServer(
     }
     if (pathname.startsWith("/yjs/")) {
       const name = decodeURIComponent(pathname.slice("/yjs/".length));
+      const memberId = requestUrl.searchParams.get("memberId") ?? "";
+      const { roomId } = parseDocumentName(name);
+      const member = context.rooms.getMember(roomId, memberId);
+      if (!member) {
+        socket.destroy();
+        return;
+      }
       void documents
         .prepareDocument(name)
         .then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
+            documentMembers.set(webSocket, memberId);
+            webSocket.on("close", () => documentMembers.delete(webSocket));
+            const canEdit =
+              member.role === "host" ||
+              context.sessionControl.getSettings().guestCanEditFiles;
             setupWSConnection(webSocket, request, { docName: name });
+            if (!canEdit) makeConnectionReadOnly(webSocket, name);
           });
         })
         .catch(() => socket.destroy());
       return;
     }
     socket.destroy();
+  });
+
+  context.sessionControl.onSettingsChanged((settings) => {
+    broadcastToAll(sockets, {
+      type: "session_settings_changed",
+      settings
+    });
+    if (settings.guestCanEditFiles !== guestCanEditFiles) {
+      guestCanEditFiles = settings.guestCanEditFiles;
+      for (const [socket, memberId] of documentMembers) {
+        const member = context.rooms
+          .listRooms()
+          .flatMap((room) => room.members)
+          .find((candidate) => candidate.id === memberId);
+        if (member?.role === "guest") socket.close();
+      }
+    }
   });
 
   wss.on("connection", (socket) => {
@@ -205,6 +257,14 @@ export function attachRealtimeServer(
       broadcastToAll(sockets, { type: "workspace_changed", path });
     }
   };
+}
+
+function makeConnectionReadOnly(socket: WebSocket, documentName: string) {
+  socket.removeAllListeners("message");
+  const encoder = encoding.createEncoder();
+  encoding.writeVarUint(encoder, 0);
+  syncProtocol.writeSyncStep2(encoder, getYDoc(documentName));
+  socket.send(encoding.toUint8Array(encoder));
 }
 
 function broadcastToAll(sockets: Set<WebSocket>, message: ServerMessage) {

@@ -5,6 +5,7 @@ export interface ServerConfig {
   workspaceRoot: string;
   commandWhitelist: string[];
   commandMode: CommandMode;
+  hostAccessToken?: string;
 }
 
 export type CommandMode = "restricted" | "unrestricted";
@@ -24,6 +25,9 @@ export function loadConfig(env = process.env): ServerConfig {
     commandMode:
       env.SIMPLERCP_COMMAND_MODE === "unrestricted"
         ? "unrestricted"
-        : "restricted"
+        : "restricted",
+    ...(env.SIMPLERCP_HOST_TOKEN
+      ? { hostAccessToken: env.SIMPLERCP_HOST_TOKEN }
+      : {})
   };
 }

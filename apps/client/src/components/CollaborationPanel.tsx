@@ -8,6 +8,7 @@ import {
   LogOut,
   MessageSquareText,
   Pencil,
+  Settings2,
   SquareTerminal,
   Trash2,
   Users
@@ -17,10 +18,12 @@ import type {
   ChatMessage,
   EventRecord,
   RemoteCursor,
-  RoomMember
+  RoomMember,
+  SessionSettings
 } from "../types";
+import { SessionPanel } from "./SessionPanel";
 
-type CollaborationTab = "chat" | "team";
+type CollaborationTab = "chat" | "team" | "session";
 type ActivityKind =
   | "join"
   | "leave"
@@ -47,7 +50,12 @@ export function CollaborationPanel({
   remoteCursors,
   chatText,
   onChatTextChange,
-  onSendChat
+  onSendChat,
+  member,
+  settings,
+  workspaceRoot,
+  roomId,
+  onSettingsChange
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -56,6 +64,11 @@ export function CollaborationPanel({
   chatText: string;
   onChatTextChange(value: string): void;
   onSendChat(): void;
+  member: RoomMember | null;
+  settings: SessionSettings;
+  workspaceRoot: string;
+  roomId: string;
+  onSettingsChange(settings: SessionSettings): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const activityItems = useMemo(
@@ -81,6 +94,14 @@ export function CollaborationPanel({
         >
           <MessageSquareText size={14} />
           Chat
+        </button>
+        <button
+          className={activeTab === "session" ? "active" : ""}
+          onClick={() => setActiveTab("session")}
+          data-testid="collab-tab-session"
+        >
+          <Settings2 size={14} />
+          Session
         </button>
         <button
           className={activeTab === "team" ? "active" : ""}
@@ -138,6 +159,7 @@ export function CollaborationPanel({
                       <span>
                         <i className={member.online ? "status-dot online" : "status-dot"} />
                         <strong>{member.displayName}</strong>
+                        {member.role === "host" ? <em>Host</em> : null}
                         {member.connectionCount > 1 ? (
                           <em>{member.connectionCount} tabs</em>
                         ) : null}
@@ -172,6 +194,16 @@ export function CollaborationPanel({
               </ol>
             </div>
           </section>
+        ) : null}
+
+        {activeTab === "session" ? (
+          <SessionPanel
+            member={member}
+            settings={settings}
+            workspaceRoot={workspaceRoot}
+            roomId={roomId}
+            onSettingsChange={onSettingsChange}
+          />
         ) : null}
       </div>
     </div>
@@ -223,6 +255,8 @@ function formatActivity(
         "command",
         `${actor}'s command finished with exit ${numberValue(payload.exitCode)}`
       );
+    case "session_settings_updated":
+      return item(event, "general", `${actor} updated session settings`);
     case "workspace_file_created":
       return item(event, "create", `${actor} created ${stringValue(payload.path) ?? "a file"}`);
     case "workspace_directory_created":

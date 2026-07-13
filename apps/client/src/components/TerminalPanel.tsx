@@ -3,6 +3,7 @@ import type { RuntimeConfig } from "../types";
 export function TerminalPanel({
   lines,
   runtimeConfig,
+  canRun,
   selectedCommand,
   commandText,
   running,
@@ -12,6 +13,7 @@ export function TerminalPanel({
 }: {
   lines: string[];
   runtimeConfig: RuntimeConfig;
+  canRun: boolean;
   selectedCommand: string;
   commandText: string;
   running: boolean;
@@ -27,11 +29,14 @@ export function TerminalPanel({
         <span>Terminal</span>
         <div className="terminal-controls">
           <span className="command-mode" data-testid="command-mode">
-            {runtimeConfig.commandMode}
+            {runtimeConfig.terminalEnabled
+              ? runtimeConfig.commandMode
+              : "disabled"}
           </span>
           {isUnrestricted ? (
             <input
               value={commandText}
+              disabled={!canRun || running}
               onChange={(event) => onCommandTextChange(event.target.value)}
               placeholder={'node -e "console.log(\'ok\')"'}
               data-testid="command-input"
@@ -39,6 +44,7 @@ export function TerminalPanel({
           ) : (
             <select
               value={selectedCommand}
+              disabled={!canRun || running}
               onChange={(event) => onSelectedCommandChange(event.target.value)}
               data-testid="command-select"
             >
@@ -53,6 +59,7 @@ export function TerminalPanel({
             onClick={onRunCommand}
             disabled={
               running ||
+              !canRun ||
               (isUnrestricted ? commandText.trim().length === 0 : runtimeConfig.commands.length === 0)
             }
             data-testid="run-command"

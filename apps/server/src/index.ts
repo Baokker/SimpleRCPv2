@@ -11,7 +11,8 @@ const server = http.createServer(app);
 const realtime = attachRealtimeServer(server, {
   events: app.locals.events,
   rooms: app.locals.rooms,
-  documents: app.locals.documents
+  documents: app.locals.documents,
+  sessionControl: app.locals.sessionControl
 });
 
 watchWorkspace(config.workspaceRoot, async (change) => {
@@ -31,4 +32,8 @@ server.listen(config.port, "127.0.0.1", () => {
     `SimpleRCPv2 server listening on http://127.0.0.1:${config.port}`
   );
   console.log(`Workspace root: ${config.workspaceRoot}`);
+  console.log(
+    `Host URL: http://127.0.0.1:5173/?hostToken=${app.locals.hostAccessToken}`
+  );
+  console.log("Guest URL: http://127.0.0.1:5173/");
 });

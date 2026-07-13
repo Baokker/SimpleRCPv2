@@ -345,6 +345,126 @@ input {
   overflow: auto;
 }
 
+.session-section {
+  height: 100%;
+  overflow: auto;
+  padding: 10px;
+}
+
+.session-group {
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0 12px;
+  border: 0;
+  border-bottom: 1px solid #283244;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.session-group:first-child {
+  padding-top: 0;
+}
+
+.session-group legend,
+.session-group h2 {
+  margin: 0;
+  padding: 0;
+  color: #9fb2d0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.session-facts {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.session-facts div,
+.session-toggle,
+.session-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-facts dt,
+.session-toggle span,
+.session-field span {
+  color: #9aa9bd;
+  font-size: 11px;
+}
+
+.session-facts dd {
+  min-width: 0;
+  max-width: 220px;
+  margin: 0;
+  overflow: hidden;
+  color: #d6deea;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-field {
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.session-field.compact {
+  grid-template-columns: minmax(0, 1fr) 92px;
+  align-items: center;
+}
+
+.session-field select,
+.session-field input,
+.session-field textarea {
+  width: 100%;
+  border: 1px solid #344057;
+  border-radius: 4px;
+  padding: 6px 7px;
+  background: #101722;
+  color: #e1e7f0;
+}
+
+.session-field textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.session-toggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: #5a8dff;
+}
+
+.session-group:disabled {
+  opacity: 0.72;
+}
+
+.session-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #5a8dff;
+  border-radius: 4px;
+  padding: 7px 10px;
+  background: #3269d8;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.session-error {
+  margin: 8px 0 0;
+  color: #ff9b9b;
+  font-size: 11px;
+}
+
 .team-block {
   flex: 0 0 auto;
   min-height: 0;

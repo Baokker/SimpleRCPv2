@@ -16,6 +16,7 @@ export function WorkspaceExplorer({
   tree,
   activePath,
   workspaceName,
+  canManageFiles,
   onOpenFile,
   onExpandDirectory,
   onCreateFile,
@@ -26,6 +27,7 @@ export function WorkspaceExplorer({
   tree: WorkspaceNode[];
   activePath?: string;
   workspaceName: string;
+  canManageFiles: boolean;
   onOpenFile(path: string): void;
   onExpandDirectory(path: string): void;
   onCreateFile(): void;
@@ -39,7 +41,7 @@ export function WorkspaceExplorer({
     <div className="panel">
       <div className="panel-header explorer-header">
         <span title={workspaceName}>{workspaceName || "Workspace"}</span>
-        <div className="icon-actions">
+        {canManageFiles ? <div className="icon-actions">
           <button
             aria-label="New file"
             title="New file"
@@ -56,7 +58,7 @@ export function WorkspaceExplorer({
           >
             <FolderPlus size={15} />
           </button>
-        </div>
+        </div> : null}
       </div>
       <div className="tree" data-testid="workspace-tree">
         {tree.map((node) => (
@@ -65,6 +67,7 @@ export function WorkspaceExplorer({
             node={node}
             activePath={activePath}
             activeAncestors={activeAncestors}
+            canManageFiles={canManageFiles}
             onOpenFile={onOpenFile}
             onExpandDirectory={onExpandDirectory}
             onRenamePath={onRenamePath}
@@ -80,6 +83,7 @@ function TreeNode({
   node,
   activePath,
   activeAncestors,
+  canManageFiles,
   onOpenFile,
   onExpandDirectory,
   onRenamePath,
@@ -88,6 +92,7 @@ function TreeNode({
   node: WorkspaceNode;
   activePath?: string;
   activeAncestors: Set<string>;
+  canManageFiles: boolean;
   onOpenFile(path: string): void;
   onExpandDirectory(path: string): void;
   onRenamePath(path: string): void;
@@ -119,11 +124,11 @@ function TreeNode({
             {isOpen ? <FolderOpen size={15} /> : <FolderClosed size={15} />}
             <span>{node.name}</span>
           </button>
-          <TreeActions
+          {canManageFiles ? <TreeActions
             path={node.path}
             onRenamePath={onRenamePath}
             onDeletePath={onDeletePath}
-          />
+          /> : null}
         </div>
         {isOpen ? (
           <div className="tree-children">
@@ -133,6 +138,7 @@ function TreeNode({
                 node={child}
                 activePath={activePath}
                 activeAncestors={activeAncestors}
+                canManageFiles={canManageFiles}
                 onOpenFile={onOpenFile}
                 onExpandDirectory={onExpandDirectory}
                 onRenamePath={onRenamePath}
@@ -156,11 +162,11 @@ function TreeNode({
         <FileCode2 size={15} />
         <span>{node.name}</span>
       </button>
-      <TreeActions
+      {canManageFiles ? <TreeActions
         path={node.path}
         onRenamePath={onRenamePath}
         onDeletePath={onDeletePath}
-      />
+      /> : null}
     </div>
   );
 }

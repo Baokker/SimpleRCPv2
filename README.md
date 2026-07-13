@@ -19,6 +19,7 @@ SimpleRCPv2 是一个本地运行的实时协同编程原型，当前阶段专�
 - 在编辑器中显示其他协作者的光标、选区和姓名。
 - 右侧 Chat 支持多人聊天。
 - Team 页面显示在线成员、当前文件、光标行列和自然语言 Activity。
+- Session 页面显示 Host、Room 和 workspace 信息；Host 可以在网页中调整 Terminal 与 Guest 权限，Guest 只能查看。
 - 底部 Terminal 支持白名单命令或本机 unrestricted 模式。
 - 同一个用户打开多个标签页时聚合为一个成员，并显示标签页数量。
 
@@ -72,6 +73,15 @@ http://127.0.0.1:5173/?name=Ada
 
 `unrestricted` 会直接在 `SIMPLERCP_WORKSPACE` 下执行网页 Terminal 输入的 shell 命令，只适合本机可信项目。
 
+后端启动日志还会输出两个地址：
+
+```text
+Host URL:  http://127.0.0.1:5173/?hostToken=...
+Guest URL: http://127.0.0.1:5173/
+```
+
+Host 应通过 `Host URL` 第一次进入。页面会把启动 token 换成当前浏览器会话并从地址栏移除。普通协作者使用 Guest URL，再通过 `?name=名字` 设置显示名称。
+
 ## 白名单命令模式
 
 默认模式是 `restricted`。可以配置允许执行的命令：
@@ -90,6 +100,7 @@ pnpm run dev
 - `SIMPLERCP_WORKSPACE`：要打开的本地项目目录。
 - `SIMPLERCP_COMMAND_MODE`：`restricted` 或 `unrestricted`。
 - `SIMPLERCP_COMMANDS`：restricted 模式下的命令白名单，使用英文逗号分隔。
+- `SIMPLERCP_HOST_TOKEN`：可选的固定 Host 启动 token；不设置时服务端会随机生成并打印 Host URL。
 - `PORT`：后端端口，默认 `4000`。
 
 ## 使用方式
@@ -101,6 +112,7 @@ pnpm run dev
 5. 在右侧 Chat 页面发送消息，所有协作者会看到同一份聊天记录。
 6. 在 Team 页面查看成员状态和 Activity，例如谁加入、离开、打开或编辑了文件、发送了什么消息、运行了什么命令。
 7. 在底部 Terminal 运行项目测试或构建命令。
+8. Host 在右侧 Session 页面控制 Terminal 开关、命令模式、命令列表、超时，以及 Guest 的编辑、文件管理和命令权限。
 
 ## 测试和构建
 
@@ -134,6 +146,9 @@ Playwright 测试会验证：
 - 完整显示构建目录，并保护二进制文件和大文本文件的加载。
 - 折叠目录按需加载，外部创建的文件无需刷新页面即可显示。
 - 外部改写已打开文件后，两位协作者会自动看到新内容。
+- Host/Guest 身份识别和 Session 设置实时同步。
+- Guest 权限关闭后，网页操作和直接 API 调用都会被拒绝。
+- 只读 Guest 仍能接收 Yjs 更新，但其本地注入不能修改 Host 或磁盘内容。
 - Python 基础代码候选与可关闭编辑器标签页。
 - 窄窗口下 Terminal 与 Collaboration 不重叠。
 
@@ -142,7 +157,7 @@ Playwright 测试会验证：
 - Room、Chat 和 Activity 暂存在服务内存中，服务重启后会清空。
 - Yjs 文档状态当前只保存在服务进程内，服务重启后会从磁盘重新初始化，不保留独立的 CRDT 更新历史。
 - 文件系统 watcher 当前观察整个 workspace；包含海量频繁变化构建产物的项目仍可能产生较多文件事件。
-- 当前只有一个默认 room，不支持会话创建和权限管理。
+- 当前只有一个默认 room；已经支持 Host/Guest 权限，但还不支持创建多个会话、Host 转让或踢出成员。
 - Terminal 尚未做容器或沙箱隔离。
 - Agent 和 ACP 接入不属于当前版本范围。
 

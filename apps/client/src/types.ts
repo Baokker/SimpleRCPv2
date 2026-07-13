@@ -13,6 +13,16 @@ export interface WorkspaceDirectoryNode {
 
 export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 
+export interface SessionSettings {
+  terminalEnabled: boolean;
+  commandMode: "restricted" | "unrestricted";
+  commands: string[];
+  commandTimeoutMs: number;
+  guestCanEditFiles: boolean;
+  guestCanManageFiles: boolean;
+  guestCanRunCommands: boolean;
+}
+
 export type WorkspaceFileLoadResult =
   | { status: "text"; path: string; size: number; content: string }
   | { status: "binary"; path: string; size: number }
@@ -26,6 +36,7 @@ export interface RoomMember {
   online: boolean;
   lastSeenAt: string;
   connectionCount: number;
+  role: "host" | "guest";
   currentFile?: string;
 }
 
@@ -110,12 +121,13 @@ export type ServerMessage =
   | {
       type: "workspace_changed";
       path: string;
+    }
+  | {
+      type: "session_settings_changed";
+      settings: SessionSettings;
     };
 
-export interface RuntimeConfig {
-  commandMode: "restricted" | "unrestricted";
-  commands: string[];
-}
+export type RuntimeConfig = SessionSettings;
 
 export interface RunRecord {
   id: string;

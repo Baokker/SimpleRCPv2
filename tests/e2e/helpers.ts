@@ -1,7 +1,9 @@
 import type { Page } from "@playwright/test";
 
-export async function openAs(page: Page, name: string) {
-  await page.goto(`/?name=${encodeURIComponent(name)}`);
+export async function openAs(page: Page, name: string, hostToken?: string) {
+  const params = new URLSearchParams({ name });
+  if (hostToken) params.set("hostToken", hostToken);
+  await page.goto(`/?${params.toString()}`);
   await page.getByTestId("status-bar").waitFor();
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  claimHost,
   createWorkspaceDirectory,
   createWorkspaceFile,
   deleteWorkspacePath,
@@ -7,7 +8,7 @@ import {
   getEvents,
   getHealth,
   getRoom,
-  getRuntimeConfig,
+  getSessionSettings,
   getWorkspaceDirectory,
   getWorkspaceTree,
   joinRoom,
@@ -15,7 +16,8 @@ import {
   renameWorkspacePath,
   runQuickCommand,
   sendChatMessage,
-  sendConnectionOffline
+  sendConnectionOffline,
+  updateSessionSettings
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
@@ -29,7 +31,7 @@ import type {
   EventRecord,
   RemoteCursor,
   RoomMember,
-  RuntimeConfig,
+  SessionSettings,
   WorkspaceNode
 } from "./types";
 
@@ -45,15 +47,21 @@ export function App() {
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
-  const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig>({
+  const [sessionSettings, setSessionSettings] = useState<SessionSettings>({
+    terminalEnabled: true,
     commandMode: "restricted",
-    commands: []
+    commands: [],
+    commandTimeoutMs: 30_000,
+    guestCanEditFiles: true,
+    guestCanManageFiles: true,
+    guestCanRunCommands: true
   });
   const [chatText, setChatText] = useState("");
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [selectedCommand, setSelectedCommand] = useState("");
   const [commandText, setCommandText] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
+  const [workspaceRoot, setWorkspaceRoot] = useState("");
   const [commandRunning, setCommandRunning] = useState(false);
   const [connectionState, setConnectionState] = useState("Connecting");
   const socketRef = useRef<ClientSocket | null>(null);
@@ -65,6 +73,7 @@ export function App() {
   const editTimersRef = useRef(new Map<string, number>());
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
+  const hostSessionRef = useRef<string>();
 
   const displayName = useMemo(
     () =>
@@ -83,6 +92,8 @@ export function App() {
     let mounted = true;
 
     async function boot() {
+      const hostSession = await resolveHostSession();
+      hostSessionRef.current = hostSession;
       const health = await getHealth();
       const userId = getUserId(displayName);
       const connectionId = getConnectionId();
@@ -90,14 +101,15 @@ export function App() {
         health.roomId,
         displayName,
         userId,
-        connectionId
+        connectionId,
+        hostSession
       );
-      const [room, workspaceTree, eventRecords, runtime, messages] =
+      const [room, workspaceTree, eventRecords, sessionInfo, messages] =
         await Promise.all([
           getRoom(health.roomId),
           getWorkspaceTree(),
           getEvents(),
-          getRuntimeConfig(),
+          getSessionSettings(),
           getChatMessages(health.roomId)
         ]);
 
@@ -109,10 +121,11 @@ export function App() {
       setWorkspaceName(room.workspaceName);
       setTree(workspaceTree);
       setEvents(eventRecords);
-      setRuntimeConfig(runtime);
+      setSessionSettings(sessionInfo.settings);
+      setWorkspaceRoot(sessionInfo.workspaceRoot);
       setChatMessages(messages);
-      setSelectedCommand(runtime.commands[0] ?? "");
-      setCommandText(runtime.commands[0] ?? "");
+      setSelectedCommand(sessionInfo.settings.commands[0] ?? "");
+      setCommandText(sessionInfo.settings.commands[0] ?? "");
 
       const connected = connectRoomSocket({
         roomId: health.roomId,
@@ -166,6 +179,9 @@ export function App() {
           if (message.type === "workspace_changed") {
             scheduleWorkspaceRefresh();
           }
+          if (message.type === "session_settings_changed") {
+            setSessionSettings(message.settings);
+          }
         }
       });
       connectionRef.current = { roomId: health.roomId, connectionId };
@@ -209,6 +225,12 @@ export function App() {
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
+
+  useEffect(() => {
+    if (!sessionSettings.commands.includes(selectedCommand)) {
+      setSelectedCommand(sessionSettings.commands[0] ?? "");
+    }
+  }, [selectedCommand, sessionSettings.commands]);
 
   async function refreshSharedState(targetRoomId: string) {
     const [room, eventRecords, messages] = await Promise.all([
@@ -377,7 +399,7 @@ export function App() {
 
   async function runSelectedCommand() {
     const command =
-      runtimeConfig.commandMode === "unrestricted"
+      sessionSettings.commandMode === "unrestricted"
         ? commandText.trim()
         : selectedCommand;
     if (!member || !command || !roomId) return;
@@ -394,6 +416,16 @@ export function App() {
     } finally {
       setCommandRunning(false);
     }
+  }
+
+  async function changeSessionSettings(settings: SessionSettings) {
+    if (!member || member.role !== "host" || !hostSessionRef.current) return;
+    const response = await updateSessionSettings(
+      settings,
+      member.id,
+      hostSessionRef.current
+    );
+    setSessionSettings(response.settings);
   }
 
   function closePath(path: string) {
@@ -425,6 +457,9 @@ export function App() {
           tree={tree}
           activePath={activePath}
           workspaceName={workspaceName}
+          canManageFiles={
+            member?.role === "host" || sessionSettings.guestCanManageFiles
+          }
           onOpenFile={openFile}
           onExpandDirectory={loadDirectory}
           onCreateFile={createFileFromPrompt}
@@ -438,6 +473,10 @@ export function App() {
           openFiles={openFiles}
           activePath={activePath}
           roomId={roomId}
+          memberId={member?.id ?? ""}
+          canEdit={
+            member?.role === "host" || sessionSettings.guestCanEditFiles
+          }
           remoteCursors={remoteCursors}
           onSelectFile={selectFile}
           onCloseFile={closeFile}
@@ -454,12 +493,21 @@ export function App() {
           chatText={chatText}
           onChatTextChange={setChatText}
           onSendChat={sendChat}
+          member={member}
+          settings={sessionSettings}
+          workspaceRoot={workspaceRoot}
+          roomId={roomId}
+          onSettingsChange={changeSessionSettings}
         />
       </aside>
       <section className="terminal-pane">
         <TerminalPanel
           lines={terminalLines}
-          runtimeConfig={runtimeConfig}
+          runtimeConfig={sessionSettings}
+          canRun={
+            sessionSettings.terminalEnabled &&
+            (member?.role === "host" || sessionSettings.guestCanRunCommands)
+          }
           selectedCommand={selectedCommand}
           commandText={commandText}
           running={commandRunning}
@@ -501,6 +549,32 @@ function getConnectionId() {
   const next = window.crypto.randomUUID();
   window.sessionStorage.setItem("simplercp.connectionId", next);
   return next;
+}
+
+async function resolveHostSession() {
+  const storageKey = "simplercp.hostSession";
+  const params = new URLSearchParams(window.location.search);
+  const accessToken = params.get("hostToken");
+  if (!accessToken) {
+    return window.sessionStorage.getItem(storageKey) ?? undefined;
+  }
+
+  params.delete("hostToken");
+  const query = params.toString();
+  window.history.replaceState(
+    {},
+    "",
+    `${window.location.pathname}${query ? `?${query}` : ""}`
+  );
+  try {
+    const { sessionToken } = await claimHost(accessToken);
+    window.sessionStorage.setItem(storageKey, sessionToken);
+    return sessionToken;
+  } catch {
+    window.sessionStorage.removeItem(storageKey);
+    window.alert("This Host link is invalid or has expired.");
+    return undefined;
+  }
 }
 
 function formatBytes(bytes: number) {

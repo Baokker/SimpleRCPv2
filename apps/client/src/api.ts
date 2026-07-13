@@ -5,6 +5,7 @@ import type {
   RoomState,
   RunRecord,
   RuntimeConfig,
+  SessionSettings,
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
@@ -26,17 +27,52 @@ export async function joinRoom(
   roomId: string,
   name: string,
   userId: string,
-  connectionId: string
+  connectionId: string,
+  hostSession?: string
 ): Promise<RoomMember> {
   const response = await request<{ member: RoomMember }>(
     `/api/rooms/${roomId}/members`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...hostSessionHeaders(hostSession)
+      },
       body: JSON.stringify({ name, userId, connectionId })
     }
   );
   return response.member;
+}
+
+export async function claimHost(accessToken: string) {
+  return request<{ sessionToken: string }>("/api/session/host", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accessToken })
+  });
+}
+
+export async function getSessionSettings(): Promise<{
+  settings: SessionSettings;
+  workspaceRoot: string;
+  roomId: string;
+}> {
+  return request("/api/session/settings");
+}
+
+export async function updateSessionSettings(
+  settings: SessionSettings,
+  initiatorId: string,
+  hostSession: string
+) {
+  return request<{ settings: SessionSettings }>("/api/session/settings", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...hostSessionHeaders(hostSession)
+    },
+    body: JSON.stringify({ ...settings, initiatorId })
+  });
 }
 
 export async function getRuntimeConfig(): Promise<RuntimeConfig> {
@@ -167,4 +203,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(await response.text());
   }
   return response.json() as Promise<T>;
+}
+
+function hostSessionHeaders(
+  hostSession: string | undefined
+): Record<string, string> {
+  return hostSession
+    ? { "X-SimpleRCP-Host-Session": hostSession }
+    : {};
 }

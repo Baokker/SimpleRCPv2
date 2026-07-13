@@ -7,6 +7,11 @@ import { createEventLog } from "./eventLog.js";
 import { createRoomStore } from "./rooms.js";
 import { runWorkspaceCommand } from "./runner.js";
 import {
+  createHostAccessToken,
+  createSessionControl
+} from "./sessionControl.js";
+import type { SessionSettings } from "./types.js";
+import {
   createWorkspaceDirectory,
   createWorkspaceFile,
   deleteWorkspacePath,
@@ -25,12 +30,27 @@ export function createApp(config: ServerConfig) {
   const documents = createCollaborativeDocumentStore({
     workspaceRoot: config.workspaceRoot
   });
+  const hostAccessToken = config.hostAccessToken ?? createHostAccessToken();
+  const sessionControl = createSessionControl({
+    hostAccessToken,
+    initialSettings: {
+      terminalEnabled: true,
+      commandMode: config.commandMode,
+      commands: config.commandWhitelist,
+      commandTimeoutMs: 30_000,
+      guestCanEditFiles: true,
+      guestCanManageFiles: true,
+      guestCanRunCommands: true
+    }
+  });
   const defaultRoom = rooms.createRoom(config.workspaceRoot);
 
   app.locals.events = events;
   app.locals.rooms = rooms;
   app.locals.chat = chat;
   app.locals.documents = documents;
+  app.locals.sessionControl = sessionControl;
+  app.locals.hostAccessToken = hostAccessToken;
   app.locals.defaultRoom = defaultRoom;
 
   app.use(cors());
@@ -53,6 +73,54 @@ export function createApp(config: ServerConfig) {
     res.json({ room });
   });
 
+  app.post("/api/session/host", (req, res) => {
+    const accessToken = String(req.body?.accessToken ?? "");
+    if (!accessToken) {
+      res.status(400).json({ error: "accessToken is required" });
+      return;
+    }
+    try {
+      res.json({ sessionToken: sessionControl.claimHost(accessToken) });
+    } catch (error) {
+      res.status(403).json({
+        error: error instanceof Error ? error.message : "Host claim failed"
+      });
+    }
+  });
+
+  app.get("/api/session/settings", (_req, res) => {
+    res.json({
+      settings: sessionControl.getSettings(),
+      workspaceRoot: config.workspaceRoot,
+      roomId: defaultRoom.id
+    });
+  });
+
+  app.put("/api/session/settings", (req, res) => {
+    const hostSession = getHostSession(req);
+    if (!sessionControl.isHostSession(hostSession)) {
+      res.status(403).json({ error: "Host authorization required" });
+      return;
+    }
+    try {
+      const { initiatorId, ...patch } = req.body as Partial<SessionSettings> & {
+        initiatorId?: string;
+      };
+      const settings = sessionControl.updateSettings(hostSession, patch);
+      events.append({
+        type: "session_settings_updated",
+        roomId: defaultRoom.id,
+        memberId: initiatorId,
+        payload: { settings }
+      });
+      res.json({ settings });
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Invalid settings"
+      });
+    }
+  });
+
   app.post("/api/rooms/:roomId/members", (req, res, next) => {
     try {
       const { name, userId, connectionId } = req.body as {
@@ -68,7 +136,10 @@ export function createApp(config: ServerConfig) {
         member: rooms.joinRoom(req.params.roomId, {
           name,
           userId,
-          connectionId
+          connectionId,
+          role: sessionControl.isHostSession(getHostSession(req))
+            ? "host"
+            : "guest"
         })
       });
     } catch (error) {
@@ -123,14 +194,11 @@ export function createApp(config: ServerConfig) {
   });
 
   app.get("/api/config/commands", (_req, res) => {
-    res.json({ commands: config.commandWhitelist });
+    res.json({ commands: sessionControl.getSettings().commands });
   });
 
   app.get("/api/config/runtime", (_req, res) => {
-    res.json({
-      commandMode: config.commandMode,
-      commands: config.commandWhitelist
-    });
+    res.json(sessionControl.getSettings());
   });
 
   app.post("/api/runner/run", async (req, res, next) => {
@@ -143,15 +211,24 @@ export function createApp(config: ServerConfig) {
         res.status(400).json({ error: "command and initiatorId are required" });
         return;
       }
+      const settings = sessionControl.getSettings();
+      if (!settings.terminalEnabled) {
+        res.status(403).json({ error: "Terminal is disabled" });
+        return;
+      }
+      if (!memberCan(rooms, defaultRoom.id, initiatorId, settings.guestCanRunCommands)) {
+        res.status(403).json({ error: "Command execution is not permitted" });
+        return;
+      }
       const run = await runWorkspaceCommand({
         workspaceRoot: config.workspaceRoot,
         command,
-        whitelist: config.commandWhitelist,
-        commandMode: config.commandMode,
+        whitelist: settings.commands,
+        commandMode: settings.commandMode,
         events,
         roomId: defaultRoom.id,
         initiatorId,
-        timeoutMs: 30_000
+        timeoutMs: settings.commandTimeoutMs
       });
       res.json({ run });
     } catch (error) {
@@ -193,12 +270,17 @@ export function createApp(config: ServerConfig) {
 
   app.put("/api/workspace/file", async (req, res, next) => {
     try {
-      const { path, content } = req.body as {
+      const { path, content, initiatorId } = req.body as {
         path?: string;
         content?: string;
+        initiatorId?: string;
       };
-      if (!path || typeof content !== "string") {
-        res.status(400).json({ error: "path and content are required" });
+      if (!path || typeof content !== "string" || !initiatorId) {
+        res.status(400).json({ error: "path, content, and initiatorId are required" });
+        return;
+      }
+      if (!memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanEditFiles)) {
+        res.status(403).json({ error: "File editing is not permitted" });
         return;
       }
       await writeWorkspaceFile(config.workspaceRoot, path, content);
@@ -217,6 +299,10 @@ export function createApp(config: ServerConfig) {
       };
       if (!path) {
         res.status(400).json({ error: "path is required" });
+        return;
+      }
+      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
+        res.status(403).json({ error: "File management is not permitted" });
         return;
       }
       await createWorkspaceFile(config.workspaceRoot, path, content ?? "");
@@ -240,6 +326,10 @@ export function createApp(config: ServerConfig) {
       };
       if (!path) {
         res.status(400).json({ error: "path is required" });
+        return;
+      }
+      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
+        res.status(403).json({ error: "File management is not permitted" });
         return;
       }
       await createWorkspaceDirectory(config.workspaceRoot, path);
@@ -266,6 +356,10 @@ export function createApp(config: ServerConfig) {
         res.status(400).json({ error: "fromPath and toPath are required" });
         return;
       }
+      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
+        res.status(403).json({ error: "File management is not permitted" });
+        return;
+      }
       await documents.retirePath(fromPath);
       await renameWorkspacePath(config.workspaceRoot, fromPath, toPath);
       events.append({
@@ -286,6 +380,10 @@ export function createApp(config: ServerConfig) {
       const initiatorId = String(req.query.initiatorId ?? "") || undefined;
       if (!workspacePath) {
         res.status(400).json({ error: "path is required" });
+        return;
+      }
+      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
+        res.status(403).json({ error: "File management is not permitted" });
         return;
       }
       await documents.retirePath(workspacePath);
@@ -314,4 +412,18 @@ export function createApp(config: ServerConfig) {
   );
 
   return app;
+}
+
+function getHostSession(req: express.Request) {
+  return req.header("x-simplercp-host-session");
+}
+
+function memberCan(
+  rooms: ReturnType<typeof createRoomStore>,
+  roomId: string,
+  memberId: string,
+  guestAllowed: boolean
+) {
+  const member = rooms.getMember(roomId, memberId);
+  return Boolean(member && (member.role === "host" || guestAllowed));
 }
