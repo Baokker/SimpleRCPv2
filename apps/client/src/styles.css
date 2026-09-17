@@ -268,6 +268,34 @@ input {
   min-height: 0;
 }
 
+.collaborative-editor {
+  position: relative;
+  height: 100%;
+}
+
+.editor-collaboration-status {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #141924;
+  color: #aab8ca;
+  font-size: 12px;
+}
+
+.editor-collaboration-status svg {
+  animation: editor-status-spin 1s linear infinite;
+}
+
+@keyframes editor-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .empty-state {
   display: flex;
   height: 100%;

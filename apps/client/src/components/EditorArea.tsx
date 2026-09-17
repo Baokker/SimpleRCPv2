@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import { X } from "lucide-react";
+import { LoaderCircle, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type * as Monaco from "monaco-editor";
 import type { MonacoBinding } from "y-monaco";
@@ -148,6 +148,9 @@ function CollaborativeEditor({
     monaco: typeof Monaco
   ): void;
 }) {
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "ready"
+  >("connecting");
   const collaborationRef = useRef<{
     binding?: MonacoBinding;
     document: Y.Doc;
@@ -172,74 +175,95 @@ function CollaborativeEditor({
   }
 
   return (
-    <Editor
-      path={file.path}
-      defaultValue={file.content}
-      language={languageForPath(file.path)}
-      theme="vs-dark"
-      options={{
-        minimap: { enabled: false },
-        fontSize: 13,
-        wordWrap: "on",
-        scrollBeyondLastLine: false,
-        quickSuggestions: true,
-        suggestOnTriggerCharacters: true,
-        readOnly: true
-      }}
-      onMount={(editor, monaco) => {
-        registerPythonCompletions(monaco);
-        onMount(editor, monaco);
+    <div
+      className="collaborative-editor"
+      data-collaboration-status={connectionStatus}
+      aria-busy={connectionStatus === "connecting"}
+    >
+      <Editor
+        path={file.path}
+        defaultValue={file.content}
+        language={languageForPath(file.path)}
+        theme="vs-dark"
+        options={{
+          minimap: { enabled: false },
+          fontSize: 13,
+          wordWrap: "on",
+          scrollBeyondLastLine: false,
+          quickSuggestions: true,
+          suggestOnTriggerCharacters: true,
+          readOnly: true,
+          domReadOnly: true
+        }}
+        onMount={(editor, monaco) => {
+          registerPythonCompletions(monaco);
+          onMount(editor, monaco);
 
-        const document = new Y.Doc();
-        const text = document.getText("content");
-        let binding: MonacoBinding | undefined;
-        let bindingStarting = false;
-        const bindingModule = import("y-monaco");
-        const observer = (
-          _event: Y.YTextEvent,
-          transaction: Y.Transaction
-        ) => {
-          if (transaction.local && transaction.origin === binding) {
-            onLocalEdit(file.path);
-          }
-        };
-        text.observe(observer);
+          const document = new Y.Doc();
+          const text = document.getText("content");
+          let binding: MonacoBinding | undefined;
+          let bindingStarting = false;
+          const bindingModule = import("y-monaco");
+          const observer = (
+            _event: Y.YTextEvent,
+            transaction: Y.Transaction
+          ) => {
+            if (transaction.local && transaction.origin === binding) {
+              onLocalEdit(file.path);
+            }
+          };
+          text.observe(observer);
 
-        const provider = new WebsocketProvider(
-          collaborativeServerUrl(),
-          encodeURIComponent(`${roomId}:${file.path}`),
-          document,
-          {
-            disableBc: true,
-            params: { memberId }
-          }
-        );
-        collaborationRef.current = {
-          document,
-          provider,
-          text,
-          observer
-        };
+          const provider = new WebsocketProvider(
+            collaborativeServerUrl(),
+            encodeURIComponent(`${roomId}:${file.path}`),
+            document,
+            {
+              disableBc: true,
+              params: { memberId }
+            }
+          );
+          collaborationRef.current = {
+            document,
+            provider,
+            text,
+            observer
+          };
 
-        const bindWhenSynced = async (synced: boolean) => {
-          if (!synced || binding || bindingStarting) return;
-          bindingStarting = true;
-          const { MonacoBinding } = await bindingModule;
-          if (!collaborationRef.current) return;
-          const model = editor.getModel();
-          if (!model) return;
-          binding = new MonacoBinding(text, model, new Set([editor]));
-          if (collaborationRef.current) {
-            collaborationRef.current.binding = binding;
-          }
-          editor.updateOptions({ readOnly: !canEdit });
-          window.__simplercpYjsSynced ??= {};
-          window.__simplercpYjsSynced[file.path] = true;
-        };
-        provider.on("sync", (synced) => void bindWhenSynced(synced));
-        if (provider.synced) void bindWhenSynced(true);
-      }}
-    />
+          const bindWhenSynced = async (synced: boolean) => {
+            if (!synced || binding || bindingStarting) return;
+            bindingStarting = true;
+            const { MonacoBinding } = await bindingModule;
+            if (!collaborationRef.current) return;
+            const model = editor.getModel();
+            if (!model) return;
+            binding = new MonacoBinding(text, model, new Set([editor]));
+            if (collaborationRef.current) {
+              collaborationRef.current.binding = binding;
+            }
+            editor.updateOptions({
+              readOnly: !canEdit,
+              domReadOnly: !canEdit
+            });
+            window.__simplercpYjsSynced ??= {};
+            window.__simplercpYjsSynced[file.path] = true;
+            setConnectionStatus("ready");
+          };
+          provider.on("sync", (synced) => void bindWhenSynced(synced));
+          if (provider.synced) void bindWhenSynced(true);
+        }}
+      />
+      {connectionStatus === "connecting" ? (
+        <div
+          className="editor-collaboration-status"
+          role="status"
+          data-testid="editor-collaboration-status"
+        >
+          <LoaderCircle size={16} aria-hidden="true" />
+          Connecting collaboration
+        </div>
+      ) : null}
+    </div>
   );
 }
 

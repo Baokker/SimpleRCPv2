@@ -87,6 +87,24 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await ada.getByTestId("file-src/hello.ts").click();
   await linus.getByTestId("file-src/hello.ts").click();
 
+  await waitForCollaborativeEditor(ada, "src/hello.ts");
+  await expect
+    .poll(() =>
+      ada.evaluate((filePath) => {
+        const editor = (
+          window as typeof window & {
+            __simplercpEditors?: Record<
+              string,
+              { getRawOptions(): { readOnly?: boolean } }
+            >;
+          }
+        ).__simplercpEditors?.[filePath];
+        return editor?.getRawOptions().readOnly;
+      }, "src/hello.ts")
+    )
+    .toBe(false);
+  await expect(ada.getByTestId("editor-collaboration-status")).toHaveCount(0);
+
   await replaceMonacoText(ada, "src/hello.ts", "middle");
   await expectMonacoValue(linus, "src/hello.ts", "middle");
   await Promise.all([
