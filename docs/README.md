@@ -1,19 +1,28 @@
-# 项目文档
+# SimpleRCPv2 文档
 
-## 当前文档
+当前有效的产品与开发文件集中在 `product` 目录。调研材料按照调研日期归档，开发时以产品文件为准。
 
-1. [当前实现盘点](./01-current-state.md)：现有协作架构、功能和已知限制。
-2. [开源 Agent 与 trace 调研](./04-agent-runtime-research.md)：面向服务端 CLI 接入的 Agent 候选、trace 能力和推荐结果。
-3. [OpenCode 与 DeepSeek Harness 比较](./06-opencode-deepseek-harness-comparison.md)：多人 Agent、Session、并发写入和 runtime 选择。
-4. [运行系统基线需求](./05-baseline-product-requirements.md)：项目入口、同步协作、成员 Agent、服务端 API Key、trace、开发范围和测试方案。
-5. [文档同步设计](./07-document-sync-design.md)：磁盘与 Yjs 的双向同步、现有缺陷分析、业界方案对照和最小实现。
-6. [基线实施计划](./08-implementation-plan.md)：可交接的分阶段执行计划、删除清单和需求修订记录。
+## 当前产品文件
 
-## 背景材料
+- [基线需求](./product/2026-09-17-baseline.md)：产品范围、用户流程、系统边界、Agent 规则与验收条件。
+- [开发计划](./product/2026-09-17-development-plan.md)：代码修改顺序、模块职责、同步修复与测试范围。
+- [已知问题](./product/known-issues.md)：基线接受的问题、触发条件、当前提示方式与完整处理方向。
+- [改进路线](./product/improvement-roadmap.md)：基线完成后的并行 Agent、合并、恢复、隔离和分析能力。
 
-- [ACP Agent 接入方案](./02-acp-agent-proposal.md)
-- [ACP Agent 选型调研](./03-acp-agent-options-research.md)
+## 调研归档
 
-开发范围以运行系统基线需求为准，同步部分以文档同步设计为准，执行顺序以基线实施计划为准。文档状态为讨论稿时只调整方案，确认后进入代码开发。
+### 2026-08-09
 
-需求文档与实施计划存在差异时以需求文档为准，并把差异登记到实施计划第 9 节。
+- [ACP Agent 调研](./research/2026-08-09/acp-agent.md)：ACP 接入、Proposal、Agent 候选与保留结论。
+
+### 2026-09-17
+
+- [Agent runtime 调研](./research/2026-09-17/agent-runtime.md)：OpenCode、DeepSeek Harness、session、trace 与并发模型。
+- [文档同步调研](./research/2026-09-17/document-sync.md)：磁盘、Yjs、终端与 Agent 共同修改文件时的同步规则。
+- [Agent 并行执行调研](./research/2026-09-17/parallel-agent.md)：OpenCode 多 session、独立工作目录和并行合并路线。
+
+## 阅读顺序
+
+开发人员依次阅读基线需求、开发计划和已知问题。需要了解某项决定的来源时，再进入对应日期的调研目录。
+
+文档合并前的完整材料保存在提交 `167e3e0`。

@@ -4,6 +4,9 @@ coverage/
 playwright-report/
 test-results/
 artifacts/
+.test-workspaces/
 .env
 .DS_Store
 .superpowers/
+.claude/logs/
+docs/.claude/
