@@ -1,28 +1,15 @@
 import type http from "node:http";
-import { createRequire } from "node:module";
-import type * as Encoding from "lib0/encoding";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
-import type * as SyncProtocol from "y-protocols/sync";
-import {
-  getYDoc,
-  setPersistence,
-  setupWSConnection
-} from "y-websocket/bin/utils";
-import {
-  parseDocumentName,
-  type CollaborativeDocumentStore
-} from "./collaborativeDocuments.js";
+import { setPersistence, setupWSConnection } from "y-websocket/bin/utils";
+import { parseDocumentName } from "./collaborativeDocuments.js";
 import type { EventLog } from "./eventLog.js";
+import type { ProjectRuntime } from "./projectRuntime.js";
+import type { ProjectRuntimeManager } from "./projectRuntimeManager.js";
 import type { RoomStore } from "./rooms.js";
-import type { SessionControl } from "./sessionControl.js";
-import type { SharedTerminal } from "./sharedTerminal.js";
 import type { ClientMessage, ServerMessage } from "./types.js";
 
-const require = createRequire(import.meta.url);
-const encoding = require("lib0/encoding") as typeof Encoding;
-const syncProtocol = require("y-protocols/sync") as typeof SyncProtocol;
-
 interface SocketIdentity {
+  projectId: string;
   roomId: string;
   memberId: string;
   connectionId?: string;
@@ -31,8 +18,6 @@ interface SocketIdentity {
 export interface RealtimeContext {
   events: EventLog;
   rooms: RoomStore;
-  documents?: CollaborativeDocumentStore;
-  sessionControl?: SessionControl;
 }
 
 export function handleRealtimeMessage({
@@ -79,12 +64,7 @@ export function handleRealtimeMessage({
       memberId: message.memberId,
       payload: { path: message.path }
     });
-    return {
-      broadcast: {
-        type: "event",
-        event
-      }
-    };
+    return { broadcast: { type: "event", event } };
   }
 
   if (message.type === "cursor_change") {
@@ -112,58 +92,48 @@ export function handleRealtimeMessage({
 
 export function attachRealtimeServer(
   server: http.Server,
-  context: RealtimeContext & {
-    documents: CollaborativeDocumentStore;
-    sessionControl: SessionControl;
-    terminal: SharedTerminal;
-  }
+  runtimeManager: ProjectRuntimeManager
 ) {
-  const wss = new WebSocketServer({ noServer: true });
+  const presenceWss = new WebSocketServer({ noServer: true });
   const documentWss = new WebSocketServer({ noServer: true });
   const terminalWss = new WebSocketServer({ noServer: true });
-  const documents = context.documents;
-  const sockets = new Set<WebSocket>();
+  const projectSockets = new Map<string, Set<WebSocket>>();
+  const terminalProjects = new Map<WebSocket, string>();
   const identities = new Map<WebSocket, SocketIdentity>();
-  const documentMembers = new Map<WebSocket, string>();
-  let guestCanEditFiles = context.sessionControl.getSettings().guestCanEditFiles;
+  const runtimeSubscriptions = new Map<string, Array<() => void>>();
 
-  context.terminal.onData((data) => {
-    const payload = JSON.stringify({ type: "terminal_output", data });
-    for (const socket of terminalWss.clients) {
-      if (socket.readyState === socket.OPEN) socket.send(payload);
-    }
-  });
-
-  function setupTerminalConnection(socket: WebSocket, memberId: string) {
-    socket.send(
-      JSON.stringify({
-        type: "terminal_snapshot",
-        data: context.terminal.getScrollback()
-      })
-    );
-    socket.on("message", (raw: RawData) => {
-      try {
-        handleTerminalMessage(
-          socket,
-          JSON.parse(raw.toString()) as TerminalClientMessage,
-          memberId,
-          context
-        );
-      } catch {
-        socket.send(
-          JSON.stringify({
-            type: "terminal_error",
-            message: "Invalid terminal message"
-          })
-        );
+  function ensureRuntimeSubscriptions(runtime: ProjectRuntime) {
+    if (runtimeSubscriptions.has(runtime.project.id)) return;
+    const removeWorkspaceListener = runtime.onWorkspaceChanged((path) => {
+      broadcastToProject(projectSockets, runtime.project.id, {
+        type: "workspace_changed",
+        path
+      });
+    });
+    const removeTerminalListener = runtime.onTerminalData((data) => {
+      const payload = JSON.stringify({ type: "terminal_output", data });
+      for (const socket of terminalWss.clients) {
+        if (
+          terminalProjects.get(socket) === runtime.project.id &&
+          socket.readyState === socket.OPEN
+        ) {
+          socket.send(payload);
+        }
       }
     });
+    runtimeSubscriptions.set(runtime.project.id, [
+      removeWorkspaceListener,
+      removeTerminalListener
+    ]);
   }
 
   setPersistence({
     provider: null,
     bindState() {},
     async writeState(name, document) {
+      const { projectId } = parseDocumentName(name);
+      if (!projectId) throw new Error("Project document is missing projectId");
+      const documents = runtimeManager.get(projectId).documents;
       await documents.flushDocument(name, document);
       documents.release(name);
     }
@@ -172,116 +142,119 @@ export function attachRealtimeServer(
   server.on("upgrade", (request, socket, head) => {
     const requestUrl = new URL(request.url ?? "/", "http://localhost");
     const pathname = requestUrl.pathname;
+
     if (pathname === "/ws") {
-      wss.handleUpgrade(request, socket, head, (webSocket) => {
-        wss.emit("connection", webSocket, request);
+      const projectId = requestUrl.searchParams.get("projectId") ?? "";
+      const runtime = getRuntime(runtimeManager, projectId, socket);
+      if (!runtime) return;
+      ensureRuntimeSubscriptions(runtime);
+      if (!projectSockets.has(projectId)) {
+        projectSockets.set(projectId, new Set());
+      }
+      presenceWss.handleUpgrade(request, socket, head, (webSocket) => {
+        projectSockets.get(projectId)?.add(webSocket);
+        presenceWss.emit("connection", webSocket, request, projectId);
       });
       return;
     }
+
     if (pathname.startsWith("/yjs/")) {
-      const name = decodeURIComponent(pathname.slice("/yjs/".length));
-      const memberId = requestUrl.searchParams.get("memberId") ?? "";
-      const { roomId } = parseDocumentName(name);
-      const member = context.rooms.getMember(roomId, memberId);
-      if (!member) {
+      const segments = pathname.slice("/yjs/".length).split("/");
+      if (segments.length !== 2) {
         socket.destroy();
         return;
       }
-      void documents
-        .prepareDocument(name)
+      const projectId = decodeURIComponent(segments[0] ?? "");
+      const documentPart = decodeURIComponent(segments[1] ?? "");
+      const runtime = getRuntime(runtimeManager, projectId, socket);
+      if (!runtime) return;
+      ensureRuntimeSubscriptions(runtime);
+      const documentName = `${projectId}|${documentPart}`;
+      const memberId = requestUrl.searchParams.get("memberId") ?? "";
+      const { roomId } = parseDocumentName(documentName);
+      if (!runtime.rooms.getMember(roomId, memberId)) {
+        socket.destroy();
+        return;
+      }
+      void runtime.documents
+        .prepareDocument(documentName)
         .then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
-            documentMembers.set(webSocket, memberId);
-            webSocket.on("close", () => documentMembers.delete(webSocket));
-            const canEdit =
-              member.role === "host" ||
-              context.sessionControl.getSettings().guestCanEditFiles;
-            setupWSConnection(webSocket, request, { docName: name });
-            if (!canEdit) makeConnectionReadOnly(webSocket, name);
+            setupWSConnection(webSocket, request, { docName: documentName });
           });
         })
         .catch(() => socket.destroy());
       return;
     }
+
     if (pathname === "/terminal") {
+      const projectId = requestUrl.searchParams.get("projectId") ?? "";
+      const runtime = getRuntime(runtimeManager, projectId, socket);
+      if (!runtime) return;
+      ensureRuntimeSubscriptions(runtime);
       const memberId = requestUrl.searchParams.get("memberId") ?? "";
-      const member = context.rooms
-        .listRooms()
-        .flatMap((room) => room.members)
-        .find((candidate) => candidate.id === memberId);
-      if (!member) {
+      if (!runtime.rooms.getMember(runtime.room.id, memberId)) {
         socket.destroy();
         return;
       }
       terminalWss.handleUpgrade(request, socket, head, (webSocket) => {
-        setupTerminalConnection(webSocket, memberId);
+        terminalProjects.set(webSocket, projectId);
+        webSocket.on("close", () => terminalProjects.delete(webSocket));
+        setupTerminalConnection(webSocket, memberId, runtime);
       });
       return;
     }
+
     socket.destroy();
   });
 
-  context.sessionControl.onSettingsChanged((settings) => {
-    broadcastToAll(sockets, {
-      type: "session_settings_changed",
-      settings
-    });
-    if (settings.guestCanEditFiles !== guestCanEditFiles) {
-      guestCanEditFiles = settings.guestCanEditFiles;
-      for (const [socket, memberId] of documentMembers) {
-        const member = context.rooms
-          .listRooms()
-          .flatMap((room) => room.members)
-          .find((candidate) => candidate.id === memberId);
-        if (member?.role === "guest") socket.close();
-      }
-    }
-  });
-
-  wss.on("connection", (socket) => {
-    sockets.add(socket);
+  presenceWss.on(
+    "connection",
+    (socket: WebSocket, _request: http.IncomingMessage, projectId: string) => {
     socket.on("close", () => {
-      sockets.delete(socket);
+      projectSockets.get(projectId)?.delete(socket);
       const identity = identities.get(socket);
       identities.delete(socket);
       if (!identity) return;
-      try {
-        if (identity.connectionId) {
-          context.rooms.markConnectionOffline(
-            identity.roomId,
-            identity.connectionId
-          );
-        } else {
-          context.rooms.markOffline(identity.roomId, identity.memberId);
-        }
-        context.rooms.cleanupStaleMembers(identity.roomId);
-        broadcastToAll(sockets, {
-          type: "presence",
-          roomId: identity.roomId,
-          members: context.rooms.getRoom(identity.roomId)?.members ?? []
-        });
-      } catch {
-        // The room may have been removed during shutdown.
+      const runtime = runtimeManager.find(identity.projectId);
+      if (!runtime) return;
+      if (identity.connectionId) {
+        runtime.rooms.markConnectionOffline(
+          identity.roomId,
+          identity.connectionId
+        );
+      } else {
+        runtime.rooms.markOffline(identity.roomId, identity.memberId);
       }
+      runtime.rooms.cleanupStaleMembers(identity.roomId);
+      broadcastToProject(projectSockets, projectId, {
+        type: "presence",
+        roomId: identity.roomId,
+        members: runtime.rooms.getRoom(identity.roomId)?.members ?? []
+      });
     });
-    socket.on("message", (data) => {
+
+    socket.on("message", (data: RawData) => {
+      const runtime = runtimeManager.get(projectId);
       try {
         const parsed = JSON.parse(data.toString()) as ClientMessage;
         identities.set(socket, {
+          projectId,
           roomId: parsed.roomId,
           memberId: parsed.memberId,
           connectionId: parsed.connectionId
         });
         if (parsed.connectionId) {
-          context.rooms.markConnectionOnline(parsed.roomId, parsed.connectionId);
+          runtime.rooms.markConnectionOnline(parsed.roomId, parsed.connectionId);
         } else {
-          context.rooms.markOnline(parsed.roomId, parsed.memberId);
+          runtime.rooms.markOnline(parsed.roomId, parsed.memberId);
         }
         const { broadcast } = handleRealtimeMessage({
-          ...context,
+          events: runtime.events,
+          rooms: runtime.rooms,
           message: parsed
         });
-        broadcastToAll(sockets, broadcast);
+        broadcastToProject(projectSockets, projectId, broadcast);
       } catch (error) {
         socket.send(
           JSON.stringify({
@@ -299,14 +272,18 @@ export function attachRealtimeServer(
         );
       }
     });
-  });
+    }
+  );
 
   return {
-    presence: wss,
+    presence: presenceWss,
     documents: documentWss,
     terminal: terminalWss,
-    broadcastWorkspaceChanged(path: string) {
-      broadcastToAll(sockets, { type: "workspace_changed", path });
+    dispose() {
+      for (const removers of runtimeSubscriptions.values()) {
+        for (const remove of removers) remove();
+      }
+      runtimeSubscriptions.clear();
     }
   };
 }
@@ -316,60 +293,89 @@ type TerminalClientMessage =
   | { type: "resize"; cols: number; rows: number }
   | { type: "restart" };
 
+function setupTerminalConnection(
+  socket: WebSocket,
+  memberId: string,
+  runtime: ProjectRuntime
+) {
+  socket.send(
+    JSON.stringify({
+      type: "terminal_snapshot",
+      data: runtime.terminal.getScrollback()
+    })
+  );
+  socket.on("message", (raw: RawData) => {
+    try {
+      handleTerminalMessage(
+        socket,
+        JSON.parse(raw.toString()) as TerminalClientMessage,
+        memberId,
+        runtime
+      );
+    } catch {
+      socket.send(
+        JSON.stringify({
+          type: "terminal_error",
+          message: "Invalid terminal message"
+        })
+      );
+    }
+  });
+}
+
 function handleTerminalMessage(
   socket: WebSocket,
   message: TerminalClientMessage,
   memberId: string,
-  context: RealtimeContext & {
-    documents: CollaborativeDocumentStore;
-    sessionControl: SessionControl;
-    terminal: SharedTerminal;
-  }
+  runtime: ProjectRuntime
 ) {
-  const member = context.rooms
-    .listRooms()
-    .flatMap((room) => room.members)
-    .find((candidate) => candidate.id === memberId);
-  if (!member) return;
-  const settings = context.sessionControl.getSettings();
-
+  if (!runtime.rooms.getMember(runtime.room.id, memberId)) return;
   if (message.type === "resize") {
-    context.terminal.resize(message.cols, message.rows);
+    runtime.terminal.resize(message.cols, message.rows);
     return;
   }
   if (message.type === "restart") {
-    if (member.role === "host") context.terminal.restart();
+    runtime.terminal.restart();
     return;
   }
-  const canInput =
-    settings.terminalEnabled &&
-    settings.commandMode === "unrestricted" &&
-    (member.role === "host" || settings.guestCanRunCommands);
-  if (!canInput || message.data.length > 10_000) {
+  if (message.data.length > 10_000) {
     socket.send(
       JSON.stringify({
         type: "terminal_error",
-        message: "Terminal input is not permitted"
+        message: "Terminal input exceeds the 10000 character limit"
       })
     );
     return;
   }
-  context.terminal.write(message.data);
+  runtime.terminal.write(message.data);
 }
 
-function makeConnectionReadOnly(socket: WebSocket, documentName: string) {
-  socket.removeAllListeners("message");
-  const encoder = encoding.createEncoder();
-  encoding.writeVarUint(encoder, 0);
-  syncProtocol.writeSyncStep2(encoder, getYDoc(documentName));
-  socket.send(encoding.toUint8Array(encoder));
+function getRuntime(
+  runtimeManager: ProjectRuntimeManager,
+  projectId: string,
+  socket: { destroy(): void }
+) {
+  if (!projectId) {
+    socket.destroy();
+    return undefined;
+  }
+  const project = runtimeManager.find(projectId);
+  if (project) return project;
+  try {
+    return runtimeManager.get(projectId);
+  } catch {
+    socket.destroy();
+    return undefined;
+  }
 }
 
-function broadcastToAll(sockets: Set<WebSocket>, message: ServerMessage) {
+function broadcastToProject(
+  projectSockets: Map<string, Set<WebSocket>>,
+  projectId: string,
+  message: ServerMessage
+) {
   const payload = JSON.stringify(message);
-  for (const socket of sockets) {
-    if (socket.readyState === socket.OPEN) {
-      socket.send(payload);
-    }
+  for (const socket of projectSockets.get(projectId) ?? []) {
+    if (socket.readyState === socket.OPEN) socket.send(payload);
   }
 }

@@ -19,7 +19,7 @@ test("record a reviewable collaboration session", async ({ browser }) => {
   const ada = await hostContext.newPage();
   const linus = await guestContext.newPage();
 
-  await openAs(ada, "Ada", "e2e-host-secret");
+  await openAs(ada, "Ada");
   await openAs(linus, "Linus");
   await pause(ada);
 

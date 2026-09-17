@@ -40,13 +40,14 @@ describe("chat", () => {
   });
 
   it("treats @ names as ordinary human chat text", async () => {
-    const app = createApp({
+    const app = await createApp({
       port: 0,
-      workspaceRoot: root,
-      commandWhitelist: ["npm test"],
-      commandMode: "restricted"
+      host: "127.0.0.1",
+      publicOrigin: "http://127.0.0.1:5173",
+      dataDir: `${root}-data`,
+      demoProjectRoot: root
     });
-    const roomId = app.locals.defaultRoom.id as string;
+    app.locals.runtimeManager.get("demo");
     const server = http.createServer(app);
     await new Promise<void>((resolve) => server.listen(0, resolve));
     const address = server.address();
@@ -56,7 +57,7 @@ describe("chat", () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/rooms/${roomId}/chat`,
+        `http://127.0.0.1:${address.port}/api/projects/demo/chat`,
         {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -75,6 +76,8 @@ describe("chat", () => {
       expect(body.message.text).toBe("@Ada please review pom.xml");
       expect(Object.keys(body)).toEqual(["message"]);
     } finally {
+      await app.locals.runtimeManager.dispose();
+      await fs.rm(`${root}-data`, { recursive: true, force: true });
       await new Promise<void>((resolve, reject) => {
         server.close((error) => (error ? reject(error) : resolve()));
       });

@@ -1,33 +1,41 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const defaultRepositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
 export interface ServerConfig {
   port: number;
-  workspaceRoot: string;
-  commandWhitelist: string[];
-  commandMode: CommandMode;
-  hostAccessToken?: string;
+  host: string;
+  publicOrigin: string;
+  dataDir: string;
+  demoProjectRoot: string;
 }
 
-export type CommandMode = "restricted" | "unrestricted";
+export function loadConfig(
+  env: NodeJS.ProcessEnv = process.env,
+  repositoryRoot = defaultRepositoryRoot
+): ServerConfig {
+  const port = Number(env.PORT ?? 4000);
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error("PORT must be an integer between 1 and 65535");
+  }
 
-export function loadConfig(env = process.env): ServerConfig {
-  const workspaceRoot = path.resolve(
-    env.SIMPLERCP_WORKSPACE ?? process.cwd()
-  );
+  const configuredDataDir = env.SIMPLERCP_DATA_DIR;
+  if (configuredDataDir && !path.isAbsolute(configuredDataDir)) {
+    throw new Error("SIMPLERCP_DATA_DIR must be an absolute path");
+  }
+
+  const publicOrigin = env.SIMPLERCP_PUBLIC_URL ?? "http://127.0.0.1:5173";
+  const publicUrl = new URL(publicOrigin);
+  if (!["http:", "https:"].includes(publicUrl.protocol)) {
+    throw new Error("SIMPLERCP_PUBLIC_URL must use http or https");
+  }
 
   return {
-    port: Number(env.PORT ?? 4000),
-    workspaceRoot,
-    commandWhitelist: (env.SIMPLERCP_COMMANDS ?? "npm test,npm run build")
-      .split(",")
-      .map((command) => command.trim())
-      .filter(Boolean),
-    commandMode:
-      env.SIMPLERCP_COMMAND_MODE === "unrestricted"
-        ? "unrestricted"
-        : "restricted",
-    ...(env.SIMPLERCP_HOST_TOKEN
-      ? { hostAccessToken: env.SIMPLERCP_HOST_TOKEN }
-      : {})
+    port,
+    host: env.SIMPLERCP_HOST ?? "127.0.0.1",
+    publicOrigin: publicUrl.origin,
+    dataDir: configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"),
+    demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace")
   };
 }

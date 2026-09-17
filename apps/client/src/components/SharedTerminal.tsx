@@ -11,11 +11,12 @@ export interface SharedTerminalHandle {
 export const SharedTerminal = forwardRef<
   SharedTerminalHandle,
   {
+    projectId: string;
     memberId: string;
     canInput: boolean;
     theme: ThemeMode;
   }
->(function SharedTerminal({ memberId, canInput, theme }, ref) {
+>(function SharedTerminal({ projectId, memberId, canInput, theme }, ref) {
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket>();
   const terminalRef = useRef<Terminal>();
@@ -64,7 +65,7 @@ export const SharedTerminal = forwardRef<
 
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(
-      `${protocol}://${window.location.host}/terminal?memberId=${encodeURIComponent(memberId)}`
+      `${protocol}://${window.location.host}/terminal?projectId=${encodeURIComponent(projectId)}&memberId=${encodeURIComponent(memberId)}`
     );
     socketRef.current = socket;
 
@@ -125,7 +126,7 @@ export const SharedTerminal = forwardRef<
       socketRef.current = undefined;
       terminalRef.current = undefined;
     };
-  }, [memberId]);
+  }, [memberId, projectId]);
 
   return (
     <div

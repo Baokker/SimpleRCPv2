@@ -31,7 +31,7 @@
 
 实现要求：
 
-- `SIMPLERCP_DATA_DIR` 未设置时使用服务启动目录下的 `.simplercp-data/`，设置时只接受绝对路径。
+- `SIMPLERCP_DATA_DIR` 未设置时使用 SimpleRCPv2 仓库根目录下的 `.simplercp-data/`，设置时只接受绝对路径。
 - 数据目录保存项目代码、项目注册记录、Agent run、trace、设置和密钥；生产部署可以把整个目录挂载到持久化磁盘。
 - 新建项目、ZIP 导入和已有目录导入统一写入 `projects/<projectId>/workspace/`；已有目录导入完成以后使用服务端副本。
 - `ProjectRegistry` 保存已有项目、空白项目和最近打开时间。
@@ -54,6 +54,8 @@
 验收测试：所有成员拥有相同能力；聊天发送一次只产生一条记录；断线期间的聊天在重连后补齐；终端输入输出正常。
 
 ## 4. 完成项目首页、主题与 ZIP 导入
+
+状态：项目首页、主题、已有目录导入和 ZIP 导入已经完成；ZIP 限制测试仍可继续增加覆盖范围。
 
 新增 `ProjectHome.tsx`、`ImportProject.tsx`、`JoinProject.tsx`、`WorkspacePage.tsx`、`projectApi.ts`、`useProjectSocket.ts` 和服务端 `archiveImport.ts`。
 

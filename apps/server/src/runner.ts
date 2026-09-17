@@ -1,14 +1,11 @@
 import { spawn } from "node:child_process";
 import { nanoid } from "nanoid";
-import type { CommandMode } from "./config.js";
 import type { EventLog } from "./eventLog.js";
 import type { RunRecord } from "./types.js";
 
 export interface RunWorkspaceCommandInput {
   workspaceRoot: string;
   command: string;
-  whitelist: string[];
-  commandMode?: CommandMode;
   events: EventLog;
   roomId: string;
   initiatorId: string;
@@ -19,24 +16,12 @@ export interface RunWorkspaceCommandInput {
 export async function runWorkspaceCommand({
   workspaceRoot,
   command,
-  whitelist,
-  commandMode = "restricted",
   events,
   roomId,
   initiatorId,
   timeoutMs,
   onOutput
 }: RunWorkspaceCommandInput): Promise<RunRecord> {
-  if (commandMode === "restricted" && !whitelist.includes(command)) {
-    events.append({
-      type: "approval_requested",
-      roomId,
-      memberId: initiatorId,
-      payload: { reason: "command_not_authorized", command }
-    });
-    throw new Error("Command is not authorized");
-  }
-
   const run: RunRecord = {
     id: nanoid(10),
     roomId,

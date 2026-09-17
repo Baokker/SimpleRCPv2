@@ -5,11 +5,13 @@ import { readWorkspaceFile, writeWorkspaceFile } from "./workspace.js";
 
 export interface CollaborativeDocumentStoreOptions {
   workspaceRoot: string;
+  projectId?: string;
   persistDelayMs?: number;
 }
 
 export function createCollaborativeDocumentStore({
   workspaceRoot,
+  projectId,
   persistDelayMs = 300
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
@@ -18,7 +20,7 @@ export function createCollaborativeDocumentStore({
   const retired = new Set<string>();
 
   async function getDocument(roomId: string, filePath: string) {
-    return prepareDocument(documentName(roomId, filePath));
+    return prepareDocument(documentName(roomId, filePath, projectId));
   }
 
   async function prepareDocument(name: string) {
@@ -78,7 +80,7 @@ export function createCollaborativeDocumentStore({
   }
 
   async function flush(roomId: string, filePath: string) {
-    const name = documentName(roomId, filePath);
+    const name = documentName(roomId, filePath, projectId);
     const document = await prepareDocument(name);
     const timer = persistTimers.get(name);
     if (timer) {
@@ -190,17 +192,22 @@ export type CollaborativeDocumentStore = ReturnType<
   typeof createCollaborativeDocumentStore
 >;
 
-export function documentName(roomId: string, filePath: string) {
-  return `${roomId}:${filePath}`;
+export function documentName(roomId: string, filePath: string, projectId?: string) {
+  const name = `${roomId}:${filePath}`;
+  return projectId ? `${projectId}|${name}` : name;
 }
 
 export function parseDocumentName(name: string) {
-  const separator = name.indexOf(":");
-  if (separator <= 0 || separator === name.length - 1) {
+  const namespaceSeparator = name.indexOf("|");
+  const projectId = namespaceSeparator >= 0 ? name.slice(0, namespaceSeparator) : undefined;
+  const documentPart = namespaceSeparator >= 0 ? name.slice(namespaceSeparator + 1) : name;
+  const separator = documentPart.indexOf(":");
+  if (separator <= 0 || separator === documentPart.length - 1) {
     throw new Error("Invalid collaborative document name");
   }
   return {
-    roomId: name.slice(0, separator),
-    filePath: name.slice(separator + 1)
+    projectId,
+    roomId: documentPart.slice(0, separator),
+    filePath: documentPart.slice(separator + 1)
   };
 }

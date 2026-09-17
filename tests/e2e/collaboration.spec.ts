@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { openAs } from "./helpers";
 
 const workspaceRoot = fileURLToPath(
-  new URL("../../.test-workspaces/e2e-workspace/", import.meta.url)
+  new URL("../../.test-workspaces/e2e-data/projects/demo/workspace/", import.meta.url)
 );
 
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({
@@ -16,14 +16,12 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   const ada = await contextA.newPage();
   const linus = await contextB.newPage();
 
-  await openAs(ada, "Ada", "e2e-host-secret");
+  await openAs(ada, "Ada");
   await openAs(linus, "Linus");
 
   await fs.mkdir("artifacts", { recursive: true });
-  await ada.getByTestId("collab-tab-session").click();
-  await expect(ada.getByTestId("session-panel")).toContainText("Host");
-  await linus.getByTestId("collab-tab-session").click();
-  await expect(linus.getByTestId("session-panel")).toContainText("Guest");
+  await ada.getByTestId("collab-tab-project").click();
+  await expect(ada.getByTestId("project-panel")).toContainText("Collaborator");
 
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("member-list")).toContainText("Ada");
@@ -110,30 +108,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expectMonacoValue(ada, "src/hello.ts", "external watcher update");
   await expectMonacoValue(linus, "src/hello.ts", "external watcher update");
 
-  await ada.getByTestId("collab-tab-session").click();
-  await ada.getByTestId("setting-guest-edit").uncheck();
-  await ada.getByTestId("setting-guest-manage").uncheck();
-  await ada.getByTestId("setting-guest-run").uncheck();
-  await ada.getByTestId("save-session-settings").click();
-  await expect(linus.getByTestId("setting-guest-edit")).not.toBeChecked();
-  await expect(linus.getByTestId("new-file")).toHaveCount(0);
-  await expect(linus.getByTestId("run-command")).toBeDisabled();
-  await expectGuestActionsForbidden(linus);
-
-  await replaceMonacoText(ada, "src/hello.ts", "host-only update");
-  await expectMonacoValue(linus, "src/hello.ts", "host-only update");
-  await typeInMonaco(linus, "src/hello.ts", "blocked");
-  await expectMonacoValue(linus, "src/hello.ts", "host-only update");
-  await insertMonacoText(linus, "src/hello.ts", "end", " malicious");
-  await expectMonacoValue(ada, "src/hello.ts", "host-only update");
-  await expect
-    .poll(() => fs.readFile(path.join(workspaceRoot, "src/hello.ts"), "utf8"))
-    .toBe("host-only update");
-  await linus.reload();
-  await linus.getByTestId("dir-src").click();
-  await linus.getByTestId("file-src/hello.ts").click();
-  await expectMonacoValue(linus, "src/hello.ts", "host-only update");
-
   await expect(ada.getByTestId("close-tab-src/hello.ts")).toBeVisible();
 
   await handlePrompt(ada, "src/browser-created.ts", () =>
@@ -171,7 +145,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
     "Linus, I updated the greeting."
   );
 
-  await expect(ada.getByTestId("command-mode")).toContainText("unrestricted");
   await ada.getByTestId("terminal-output").click();
   await ada.keyboard.type("printf 'shared-pty-ok\\n'");
   await ada.keyboard.press("Enter");
@@ -202,11 +175,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
     "Ada ran npm test"
   );
 
-  await ada.getByTestId("collab-tab-session").click();
-  await ada.screenshot({
-    path: "artifacts/session-settings.png",
-    fullPage: true
-  });
   await ada.getByTestId("collab-tab-team").click();
 
   await ada.screenshot({
@@ -368,41 +336,6 @@ async function expectMonacoValue(
   );
 }
 
-async function typeInMonaco(
-  page: import("@playwright/test").Page,
-  path: string,
-  text: string
-) {
-  await waitForCollaborativeEditor(page, path);
-  await page.evaluate((filePath) => {
-    const editor = (
-      window as typeof window & {
-        __simplercpEditors?: Record<
-          string,
-          {
-            getModel(): {
-              getFullModelRange(): {
-                endLineNumber: number;
-                endColumn: number;
-              };
-            } | null;
-            setPosition(position: { lineNumber: number; column: number }): void;
-            focus(): void;
-          }
-        >;
-      }
-    ).__simplercpEditors?.[filePath];
-    const end = editor?.getModel()?.getFullModelRange();
-    if (!editor || !end) throw new Error("Monaco editor is not ready");
-    editor.setPosition({
-      lineNumber: end.endLineNumber,
-      column: end.endColumn
-    });
-    editor.focus();
-  }, path);
-  await page.keyboard.type(text);
-}
-
 async function expectRemoteCursor(
   page: import("@playwright/test").Page,
   path: string,
@@ -487,41 +420,4 @@ async function handlePrompt(
     await dialog.accept(value);
   })();
   await Promise.all([trigger(), dialogHandled]);
-}
-
-async function expectGuestActionsForbidden(
-  page: import("@playwright/test").Page
-) {
-  const statuses = await page.evaluate(async () => {
-    const health = (await fetch("/api/health").then((response) =>
-      response.json()
-    )) as { roomId: string };
-    const room = (await fetch(`/api/rooms/${health.roomId}`).then((response) =>
-      response.json()
-    )) as {
-      room: { members: Array<{ id: string; displayName: string }> };
-    };
-    const member = room.room.members.find(
-      (candidate) => candidate.displayName === "Linus"
-    );
-    if (!member) throw new Error("Guest member was not found");
-    const fileResponse = await fetch("/api/workspace/file", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: "src/forbidden.ts",
-        initiatorId: member.id
-      })
-    });
-    const commandResponse = await fetch("/api/runner/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ command: "npm test", initiatorId: member.id })
-    });
-    return {
-      file: fileResponse.status,
-      command: commandResponse.status
-    };
-  });
-  expect(statuses).toEqual({ file: 403, command: 403 });
 }

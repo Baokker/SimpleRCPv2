@@ -18,18 +18,22 @@ export interface ClientSocket {
 }
 
 export function connectRoomSocket({
+  projectId,
   roomId,
   memberId,
   connectionId,
   onMessage
 }: {
+  projectId: string;
   roomId: string;
   memberId: string;
   connectionId?: string;
   onMessage(message: ServerMessage): void;
 }): ClientSocket {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  const socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
+  const socket = new WebSocket(
+    `${protocol}://${window.location.host}/ws?projectId=${encodeURIComponent(projectId)}`
+  );
   socket.addEventListener("message", (event) => {
     onMessage(JSON.parse(event.data) as ServerMessage);
   });

@@ -20,12 +20,10 @@ import type {
   ChatMessage,
   EventRecord,
   RemoteCursor,
-  RoomMember,
-  SessionSettings
+  RoomMember
 } from "../types";
-import { SessionPanel } from "./SessionPanel";
 
-type CollaborationTab = "chat" | "team" | "session";
+type CollaborationTab = "chat" | "team" | "project";
 type ActivityKind =
   | "join"
   | "leave"
@@ -54,10 +52,8 @@ export function CollaborationPanel({
   onChatTextChange,
   onSendChat,
   member,
-  settings,
   workspaceRoot,
   roomId,
-  onSettingsChange,
   followingMemberId,
   onFollowMember
 }: {
@@ -69,10 +65,8 @@ export function CollaborationPanel({
   onChatTextChange(value: string): void;
   onSendChat(): void;
   member: RoomMember | null;
-  settings: SessionSettings;
   workspaceRoot: string;
   roomId: string;
-  onSettingsChange(settings: SessionSettings): Promise<void>;
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
 }) {
@@ -102,12 +96,12 @@ export function CollaborationPanel({
           Chat
         </button>
         <button
-          className={activeTab === "session" ? "active" : ""}
-          onClick={() => setActiveTab("session")}
-          data-testid="collab-tab-session"
+          className={activeTab === "project" ? "active" : ""}
+          onClick={() => setActiveTab("project")}
+          data-testid="collab-tab-project"
         >
           <Settings2 size={14} />
-          Session
+          Project
         </button>
         <button
           className={activeTab === "team" ? "active" : ""}
@@ -165,7 +159,7 @@ export function CollaborationPanel({
                       <span>
                         <i className={candidate.online ? "status-dot online" : "status-dot"} />
                         <strong>{candidate.displayName}</strong>
-                        {candidate.role === "host" ? <em>Host</em> : null}
+                        {candidate.profileRole ? <em>{candidate.profileRole}</em> : null}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>
                         ) : null}
@@ -229,14 +223,15 @@ export function CollaborationPanel({
           </section>
         ) : null}
 
-        {activeTab === "session" ? (
-          <SessionPanel
-            member={member}
-            settings={settings}
-            workspaceRoot={workspaceRoot}
-            roomId={roomId}
-            onSettingsChange={onSettingsChange}
-          />
+        {activeTab === "project" ? (
+          <section className="collab-section project-details" data-testid="project-panel">
+            <h2>Project</h2>
+            <dl className="session-facts">
+              <div><dt>Room</dt><dd>{roomId}</dd></div>
+              <div><dt>Workspace</dt><dd title={workspaceRoot}>{workspaceRoot}</dd></div>
+              <div><dt>Your role</dt><dd>{member?.profileRole || "Collaborator"}</dd></div>
+            </dl>
+          </section>
         ) : null}
       </div>
     </div>

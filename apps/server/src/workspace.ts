@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { WorkspaceFileLoadResult, WorkspaceNode } from "./types.js";
+import { isIgnoredPath } from "./workspacePolicy.js";
 
 export const LARGE_FILE_BYTES = 1024 * 1024;
 const BINARY_SAMPLE_BYTES = 8 * 1024;
@@ -10,6 +11,9 @@ const BINARY_EXTENSIONS = new Set([
 ]);
 
 export function resolveWorkspacePath(root: string, relativePath: string) {
+  if (isIgnoredPath(relativePath)) {
+    throw new Error("Path is excluded from browser access");
+  }
   const absoluteRoot = path.resolve(root);
   const candidate = path.resolve(absoluteRoot, relativePath);
   const relative = path.relative(absoluteRoot, candidate);
@@ -33,6 +37,12 @@ export async function listWorkspaceDirectory(
   const entries = await fs.readdir(absoluteDir, { withFileTypes: true });
   const nodes = await Promise.all(
     entries
+      .filter((entry) => {
+        const childRelativePath = relativeDir
+          ? path.posix.join(relativeDir, entry.name)
+          : entry.name;
+        return !isIgnoredPath(childRelativePath);
+      })
       .sort((a, b) => {
         if (a.isDirectory() !== b.isDirectory()) {
           return a.isDirectory() ? 1 : -1;

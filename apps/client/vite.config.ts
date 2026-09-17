@@ -3,11 +3,12 @@ import { defineConfig } from "vite";
 
 const apiOrigin = process.env.VITE_SIMPLERCP_API_ORIGIN ?? "http://127.0.0.1:4000";
 const devPort = Number(process.env.VITE_SIMPLERCP_CLIENT_PORT ?? 5173);
+const devHost = process.env.VITE_SIMPLERCP_CLIENT_HOST ?? "127.0.0.1";
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: "127.0.0.1",
+    host: devHost,
     port: devPort,
     proxy: {
       "/api": apiOrigin,

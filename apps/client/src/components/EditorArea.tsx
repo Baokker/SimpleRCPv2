@@ -27,6 +27,7 @@ declare global {
 export function EditorArea({
   openFiles,
   activePath,
+  projectId,
   roomId,
   memberId,
   canEdit,
@@ -39,6 +40,7 @@ export function EditorArea({
 }: {
   openFiles: OpenFile[];
   activePath?: string;
+  projectId: string;
   roomId: string;
   memberId: string;
   canEdit: boolean;
@@ -105,6 +107,7 @@ export function EditorArea({
           <CollaborativeEditor
             key={`${activeFile.path}:${canEdit}`}
             file={activeFile}
+            projectId={projectId}
             roomId={roomId}
             memberId={memberId}
             canEdit={canEdit}
@@ -136,6 +139,7 @@ export function EditorArea({
 
 function CollaborativeEditor({
   file,
+  projectId,
   roomId,
   memberId,
   canEdit,
@@ -144,6 +148,7 @@ function CollaborativeEditor({
   onMount
 }: {
   file: OpenFile;
+  projectId: string;
   roomId: string;
   memberId: string;
   canEdit: boolean;
@@ -220,7 +225,7 @@ function CollaborativeEditor({
           text.observe(observer);
 
           const provider = new WebsocketProvider(
-            collaborativeServerUrl(),
+            collaborativeServerUrl(projectId),
             encodeURIComponent(`${roomId}:${file.path}`),
             document,
             {
@@ -272,9 +277,9 @@ function CollaborativeEditor({
   );
 }
 
-function collaborativeServerUrl() {
+function collaborativeServerUrl(projectId: string) {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  return `${protocol}://${window.location.host}/yjs`;
+  return `${protocol}://${window.location.host}/yjs/${encodeURIComponent(projectId)}`;
 }
 
 function createCursorDecorations(

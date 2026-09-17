@@ -1,27 +1,25 @@
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  claimHost,
   createWorkspaceDirectory,
   createWorkspaceFile,
   deleteWorkspacePath,
   getChatMessages,
   getEvents,
-  getHealth,
+  getProject,
   getRoom,
-  getSessionSettings,
   getWorkspaceDirectory,
-  getWorkspaceTree,
   joinRoom,
   readWorkspaceFile,
   renameWorkspacePath,
   runQuickCommand,
   sendChatMessage,
-  sendConnectionOffline,
-  updateSessionSettings
+  sendConnectionOffline
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
+import { JoinProject, type ProjectIdentity } from "./components/JoinProject";
+import { ProjectHome } from "./components/ProjectHome";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
 import { connectRoomSocket, type ClientSocket } from "./socket";
@@ -37,13 +35,92 @@ import type {
   EventRecord,
   RemoteCursor,
   RoomMember,
-  SessionSettings,
+  ProjectRecord,
   WorkspaceNode
 } from "./types";
 
 export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   const [theme, setTheme] = useState(initialTheme);
+  const projectMatch = window.location.pathname.match(/^\/projects\/([^/]+)\/?$/);
+
+  function toggleTheme() {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    setTheme(nextTheme);
+  }
+
+  if (!projectMatch) {
+    return <ProjectHome theme={theme} onToggleTheme={toggleTheme} />;
+  }
+
+  return (
+    <ProjectRoute
+      projectId={decodeURIComponent(projectMatch[1] ?? "")}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+    />
+  );
+}
+
+function ProjectRoute({
+  projectId,
+  theme,
+  onToggleTheme
+}: {
+  projectId: string;
+  theme: ThemeMode;
+  onToggleTheme(): void;
+}) {
+  const [project, setProject] = useState<ProjectRecord>();
   const [roomId, setRoomId] = useState("");
+  const params = new URLSearchParams(window.location.search);
+  const queryName = params.get("name")?.trim();
+  const [identity, setIdentity] = useState<ProjectIdentity | undefined>(
+    queryName
+      ? { displayName: queryName, role: params.get("role")?.trim() ?? "" }
+      : undefined
+  );
+
+  useEffect(() => {
+    void getProject(projectId).then((result) => {
+      setProject(result.project);
+      setRoomId(result.roomId);
+    });
+  }, [projectId]);
+
+  if (!project || !roomId) {
+    return <main className="route-loading">Loading project</main>;
+  }
+  if (!identity) {
+    return <JoinProject projectName={project.name} onJoin={setIdentity} />;
+  }
+  return (
+    <WorkspacePage
+      project={project}
+      roomId={roomId}
+      identity={identity}
+      theme={theme}
+      onToggleTheme={onToggleTheme}
+    />
+  );
+}
+
+function WorkspacePage({
+  project,
+  roomId,
+  identity,
+  theme,
+  onToggleTheme
+}: {
+  project: ProjectRecord;
+  roomId: string;
+  identity: ProjectIdentity;
+  theme: ThemeMode;
+  onToggleTheme(): void;
+}) {
+  const projectId = project.id;
+  const displayName = identity.displayName;
   const [member, setMember] = useState<RoomMember | null>(null);
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [tree, setTree] = useState<WorkspaceNode[]>([]);
@@ -54,20 +131,8 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
-  const [sessionSettings, setSessionSettings] = useState<SessionSettings>({
-    terminalEnabled: true,
-    commandMode: "restricted",
-    commands: [],
-    commandTimeoutMs: 30_000,
-    guestCanEditFiles: true,
-    guestCanManageFiles: true,
-    guestCanRunCommands: true
-  });
   const [chatText, setChatText] = useState("");
-  const [selectedCommand, setSelectedCommand] = useState("");
   const [commandText, setCommandText] = useState("");
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [workspaceRoot, setWorkspaceRoot] = useState("");
   const [commandRunning, setCommandRunning] = useState(false);
   const [connectionState, setConnectionState] = useState("Connecting");
   const [followingMemberId, setFollowingMemberId] = useState<string>();
@@ -80,14 +145,6 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   const editTimersRef = useRef(new Map<string, number>());
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
-  const hostSessionRef = useRef<string>();
-
-  const displayName = useMemo(
-    () =>
-      new URLSearchParams(window.location.search).get("name") ??
-      `User-${Math.floor(Math.random() * 1000)}`,
-    []
-  );
   const remoteCursors = useMemo(
     () => Object.values(remoteCursorMap),
     [remoteCursorMap]
@@ -99,43 +156,34 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
     let mounted = true;
 
     async function boot() {
-      const hostSession = await resolveHostSession();
-      hostSessionRef.current = hostSession;
-      const health = await getHealth();
       const userId = getUserId(displayName);
       const connectionId = getConnectionId();
       const joined = await joinRoom(
-        health.roomId,
+        projectId,
         displayName,
+        identity.role,
         userId,
-        connectionId,
-        hostSession
+        connectionId
       );
-      const [room, workspaceTree, eventRecords, sessionInfo, messages] =
+      const [room, workspaceTree, eventRecords, messages] =
         await Promise.all([
-          getRoom(health.roomId),
-          getWorkspaceTree(),
-          getEvents(),
-          getSessionSettings(),
-          getChatMessages(health.roomId)
+          getRoom(projectId),
+          getWorkspaceDirectory(projectId, ""),
+          getEvents(projectId),
+          getChatMessages(projectId)
         ]);
 
       if (!mounted) return;
       membersRef.current = room.members;
-      setRoomId(health.roomId);
       setMember(joined);
       setMembers(room.members);
-      setWorkspaceName(room.workspaceName);
       setTree(workspaceTree);
       setEvents(eventRecords);
-      setSessionSettings(sessionInfo.settings);
-      setWorkspaceRoot(sessionInfo.workspaceRoot);
       setChatMessages(messages);
-      setSelectedCommand(sessionInfo.settings.commands[0] ?? "");
-      setCommandText(sessionInfo.settings.commands[0] ?? "");
 
       const connected = connectRoomSocket({
-        roomId: health.roomId,
+        projectId,
+        roomId,
         memberId: joined.id,
         connectionId,
         onMessage(message) {
@@ -181,17 +229,14 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
             }));
           }
           if (message.type === "chat_message") {
-            void refreshSharedState(health.roomId);
+            void refreshSharedState();
           }
           if (message.type === "workspace_changed") {
             scheduleWorkspaceRefresh();
           }
-          if (message.type === "session_settings_changed") {
-            setSessionSettings(message.settings);
-          }
         }
       });
-      connectionRef.current = { roomId: health.roomId, connectionId };
+      connectionRef.current = { roomId, connectionId };
       socketRef.current = connected;
       connected.sendReady();
     }
@@ -201,7 +246,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
       mounted = false;
       const connection = connectionRef.current;
       if (connection) {
-        sendConnectionOffline(connection.roomId, connection.connectionId);
+        sendConnectionOffline(projectId, connection.connectionId);
       }
       socketRef.current?.close();
       for (const timer of editTimersRef.current.values()) {
@@ -212,32 +257,26 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
         window.clearTimeout(workspaceRefreshTimerRef.current);
       }
     };
-  }, [displayName]);
+  }, [displayName, identity.role, projectId, roomId]);
 
   useEffect(() => {
     function markOffline() {
       const connection = connectionRef.current;
       if (connection) {
-        sendConnectionOffline(connection.roomId, connection.connectionId);
+        sendConnectionOffline(projectId, connection.connectionId);
       }
     }
     window.addEventListener("pagehide", markOffline);
     return () => window.removeEventListener("pagehide", markOffline);
-  }, []);
+  }, [projectId]);
 
   useEffect(() => {
     if (!roomId) return;
     const timer = window.setInterval(() => {
-      void refreshSharedState(roomId);
+      void refreshSharedState();
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
-
-  useEffect(() => {
-    if (!sessionSettings.commands.includes(selectedCommand)) {
-      setSelectedCommand(sessionSettings.commands[0] ?? "");
-    }
-  }, [selectedCommand, sessionSettings.commands]);
 
   useEffect(() => {
     if (!followingMemberId) return;
@@ -260,11 +299,11 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
     }
   }, [activePath, followingMemberId, members, remoteCursorMap]);
 
-  async function refreshSharedState(targetRoomId: string) {
+  async function refreshSharedState() {
     const [room, eventRecords, messages] = await Promise.all([
-      getRoom(targetRoomId),
-      getEvents(),
-      getChatMessages(targetRoomId)
+      getRoom(projectId),
+      getEvents(projectId),
+      getChatMessages(projectId)
     ]);
     membersRef.current = room.members;
     setMembers(room.members);
@@ -273,19 +312,19 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   }
 
   async function refreshEvents() {
-    setEvents(await getEvents());
+    setEvents(await getEvents(projectId));
   }
 
   async function loadDirectory(path: string) {
     loadedDirectoriesRef.current.add(path);
-    const children = await getWorkspaceDirectory(path);
+    const children = await getWorkspaceDirectory(projectId, path);
     setTree((nodes) => setDirectoryChildren(nodes, path, children));
   }
 
   async function refreshWorkspaceTree() {
     const paths = ["", ...loadedDirectoriesRef.current];
     const entries = await Promise.all(
-      paths.map(async (path) => [path, await getWorkspaceDirectory(path)] as const)
+      paths.map(async (path) => [path, await getWorkspaceDirectory(projectId, path)] as const)
     );
     const directories = new Map(entries);
     setTree(composeWorkspaceTree(directories.get("") ?? [], directories));
@@ -303,7 +342,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
 
   async function openFile(path: string) {
     if (!openFiles.some((file) => file.path === path)) {
-      let result = await readWorkspaceFile(path);
+      let result = await readWorkspaceFile(projectId, path);
       if (result.status === "binary") {
         window.alert(
           `${path} is a binary file (${formatBytes(result.size)}) and cannot be opened in the text editor.`
@@ -315,7 +354,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
           `${path} is ${formatBytes(result.size)}. Large files may slow down collaboration. Open it anyway?`
         );
         if (!shouldLoad) return;
-        result = await readWorkspaceFile(path, true);
+        result = await readWorkspaceFile(projectId, path, true);
       }
       if (result.status !== "text") return;
       setOpenFiles((files) => [
@@ -356,20 +395,20 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   async function sendChat() {
     const text = chatText.trim();
     if (!text || !member || !roomId) return;
-    await sendChatMessage(roomId, {
+    await sendChatMessage(projectId, {
       authorId: member.id,
       authorName: member.displayName,
       text
     });
     socketRef.current?.sendChat(text);
     setChatText("");
-    await refreshSharedState(roomId);
+    await refreshSharedState();
   }
 
   async function createFileFromPrompt() {
     const path = window.prompt("New file path");
     if (!path || !member) return;
-    await createWorkspaceFile(path, member.id);
+    await createWorkspaceFile(projectId, path, member.id);
     addAncestorDirectories(loadedDirectoriesRef.current, path);
     await refreshWorkspaceTree();
     await openFile(path);
@@ -378,7 +417,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   async function createFolderFromPrompt() {
     const path = window.prompt("New folder path");
     if (!path || !member) return;
-    await createWorkspaceDirectory(path, member.id);
+    await createWorkspaceDirectory(projectId, path, member.id);
     addAncestorDirectories(loadedDirectoriesRef.current, path);
     await refreshWorkspaceTree();
     await refreshEvents();
@@ -387,7 +426,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   async function renamePathFromPrompt(path: string) {
     const toPath = window.prompt("Rename path", path);
     if (!toPath || toPath === path || !member) return;
-    await renameWorkspacePath(path, toPath, member.id);
+    await renameWorkspacePath(projectId, path, toPath, member.id);
     loadedDirectoriesRef.current = remapLoadedDirectories(
       loadedDirectoriesRef.current,
       path,
@@ -412,7 +451,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
 
   async function deletePathWithConfirm(path: string) {
     if (!window.confirm(`Delete ${path}?`) || !member) return;
-    await deleteWorkspacePath(path, member.id);
+    await deleteWorkspacePath(projectId, path, member.id);
     loadedDirectoriesRef.current = new Set(
       [...loadedDirectoriesRef.current].filter(
         (directory) =>
@@ -425,28 +464,15 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   }
 
   async function runSelectedCommand() {
-    const command =
-      sessionSettings.commandMode === "unrestricted"
-        ? commandText.trim()
-        : selectedCommand;
+    const command = commandText.trim();
     if (!member || !command || !roomId) return;
     setCommandRunning(true);
     try {
-      await runQuickCommand(command, member.id);
-      await refreshSharedState(roomId);
+      await runQuickCommand(projectId, command, member.id);
+      await refreshSharedState();
     } finally {
       setCommandRunning(false);
     }
-  }
-
-  async function changeSessionSettings(settings: SessionSettings) {
-    if (!member || member.role !== "host" || !hostSessionRef.current) return;
-    const response = await updateSessionSettings(
-      settings,
-      member.id,
-      hostSessionRef.current
-    );
-    setSessionSettings(response.settings);
   }
 
   function followMember(memberId: string) {
@@ -477,23 +503,14 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
     }
   }
 
-  function toggleTheme() {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    applyTheme(nextTheme);
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setTheme(nextTheme);
-  }
-
   return (
     <main className="app-shell">
       <aside className="workspace-pane">
         <WorkspaceExplorer
           tree={tree}
           activePath={activePath}
-          workspaceName={workspaceName}
-          canManageFiles={
-            member?.role === "host" || sessionSettings.guestCanManageFiles
-          }
+          workspaceName={project.name}
+          canManageFiles={Boolean(member)}
           onOpenFile={openFile}
           onExpandDirectory={loadDirectory}
           onCreateFile={createFileFromPrompt}
@@ -506,11 +523,10 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
         <EditorArea
           openFiles={openFiles}
           activePath={activePath}
+          projectId={projectId}
           roomId={roomId}
           memberId={member?.id ?? ""}
-          canEdit={
-            member?.role === "host" || sessionSettings.guestCanEditFiles
-          }
+          canEdit={Boolean(member)}
           theme={theme}
           remoteCursors={remoteCursors}
           onSelectFile={selectFile}
@@ -529,28 +545,20 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
           onChatTextChange={setChatText}
           onSendChat={sendChat}
           member={member}
-          settings={sessionSettings}
-          workspaceRoot={workspaceRoot}
+          workspaceRoot={project.workspacePath}
           roomId={roomId}
-          onSettingsChange={changeSessionSettings}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
         />
       </aside>
       <section className="terminal-pane">
         <TerminalPanel
-          runtimeConfig={sessionSettings}
+          projectId={projectId}
           theme={theme}
-          canRun={
-            sessionSettings.terminalEnabled &&
-            (member?.role === "host" || sessionSettings.guestCanRunCommands)
-          }
+          canRun={Boolean(member)}
           memberId={member?.id ?? ""}
-          isHost={member?.role === "host"}
-          selectedCommand={selectedCommand}
           commandText={commandText}
           running={commandRunning}
-          onSelectedCommandChange={setSelectedCommand}
           onCommandTextChange={setCommandText}
           onRunCommand={runSelectedCommand}
         />
@@ -559,7 +567,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
         <span>{connectionState}</span>
         <span>Room {roomId || "..."}</span>
         <span>{member?.displayName ?? "Joining"}</span>
-        <span>{workspaceName || "Workspace"}</span>
+        <span>{project.name}</span>
         {followingMemberId ? (
           <span>
             Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
@@ -568,7 +576,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
         <button
           className="theme-toggle"
           type="button"
-          onClick={toggleTheme}
+          onClick={onToggleTheme}
           aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           data-testid="theme-toggle"
@@ -595,32 +603,6 @@ function getConnectionId() {
   const next = window.crypto.randomUUID();
   window.sessionStorage.setItem("simplercp.connectionId", next);
   return next;
-}
-
-async function resolveHostSession() {
-  const storageKey = "simplercp.hostSession";
-  const params = new URLSearchParams(window.location.search);
-  const accessToken = params.get("hostToken");
-  if (!accessToken) {
-    return window.sessionStorage.getItem(storageKey) ?? undefined;
-  }
-
-  params.delete("hostToken");
-  const query = params.toString();
-  window.history.replaceState(
-    {},
-    "",
-    `${window.location.pathname}${query ? `?${query}` : ""}`
-  );
-  try {
-    const { sessionToken } = await claimHost(accessToken);
-    window.sessionStorage.setItem(storageKey, sessionToken);
-    return sessionToken;
-  } catch {
-    window.sessionStorage.removeItem(storageKey);
-    window.alert("This Host link is invalid or has expired.");
-    return undefined;
-  }
 }
 
 function formatBytes(bytes: number) {

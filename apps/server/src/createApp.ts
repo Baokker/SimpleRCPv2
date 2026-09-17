@@ -1,130 +1,110 @@
 import cors from "cors";
 import express from "express";
-import { createChatStore } from "./chat.js";
-import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import type { ServerConfig } from "./config.js";
-import { createEventLog } from "./eventLog.js";
-import { createRoomStore } from "./rooms.js";
+import { createProjectRuntimeManager } from "./projectRuntimeManager.js";
+import { createProjectRegistry } from "./projects.js";
 import { runWorkspaceCommand } from "./runner.js";
-import {
-  createHostAccessToken,
-  createSessionControl
-} from "./sessionControl.js";
-import type { SessionSettings } from "./types.js";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
   deleteWorkspacePath,
-  listWorkspaceTree,
   listWorkspaceDirectory,
   readWorkspaceFile,
   renameWorkspacePath,
   writeWorkspaceFile
 } from "./workspace.js";
 
-export function createApp(config: ServerConfig) {
+export async function createApp(config: ServerConfig) {
+  const registry = await createProjectRegistry({
+    dataDir: config.dataDir,
+    demoProjectRoot: config.demoProjectRoot
+  });
+  const runtimeManager = createProjectRuntimeManager(registry);
   const app = express();
-  const events = createEventLog();
-  const rooms = createRoomStore(events);
-  const chat = createChatStore(events);
-  const documents = createCollaborativeDocumentStore({
-    workspaceRoot: config.workspaceRoot
-  });
-  const hostAccessToken = config.hostAccessToken ?? createHostAccessToken();
-  const sessionControl = createSessionControl({
-    hostAccessToken,
-    initialSettings: {
-      terminalEnabled: true,
-      commandMode: config.commandMode,
-      commands: config.commandWhitelist,
-      commandTimeoutMs: 30_000,
-      guestCanEditFiles: true,
-      guestCanManageFiles: true,
-      guestCanRunCommands: true
-    }
-  });
-  const defaultRoom = rooms.createRoom(config.workspaceRoot);
 
-  app.locals.events = events;
-  app.locals.rooms = rooms;
-  app.locals.chat = chat;
-  app.locals.documents = documents;
-  app.locals.sessionControl = sessionControl;
-  app.locals.hostAccessToken = hostAccessToken;
-  app.locals.defaultRoom = defaultRoom;
-
+  app.locals.registry = registry;
+  app.locals.runtimeManager = runtimeManager;
   app.use(cors());
   app.use(express.json({ limit: "5mb" }));
 
   app.get("/api/health", (_req, res) => {
     res.json({
       ok: true,
-      workspaceRoot: config.workspaceRoot,
-      roomId: defaultRoom.id
+      dataDir: config.dataDir,
+      publicOrigin: config.publicOrigin
     });
   });
 
-  app.get("/api/rooms/:roomId", (req, res) => {
-    const room = rooms.getRoom(req.params.roomId);
-    if (!room) {
-      res.status(404).json({ error: "Room not found" });
-      return;
-    }
-    res.json({ room });
+  app.get("/api/projects", (_req, res) => {
+    res.json({ projects: registry.listProjects() });
   });
 
-  app.post("/api/session/host", (req, res) => {
-    const accessToken = String(req.body?.accessToken ?? "");
-    if (!accessToken) {
-      res.status(400).json({ error: "accessToken is required" });
-      return;
-    }
+  app.post("/api/projects", async (req, res, next) => {
     try {
-      res.json({ sessionToken: sessionControl.claimHost(accessToken) });
+      const project = await registry.createBlankProject(String(req.body?.name ?? ""));
+      res.status(201).json({ project });
     } catch (error) {
-      res.status(403).json({
-        error: error instanceof Error ? error.message : "Host claim failed"
-      });
+      next(error);
     }
   });
 
-  app.get("/api/session/settings", (_req, res) => {
-    res.json({
-      settings: sessionControl.getSettings(),
-      workspaceRoot: config.workspaceRoot,
-      roomId: defaultRoom.id
-    });
-  });
-
-  app.put("/api/session/settings", (req, res) => {
-    const hostSession = getHostSession(req);
-    if (!sessionControl.isHostSession(hostSession)) {
-      res.status(403).json({ error: "Host authorization required" });
-      return;
-    }
+  app.post("/api/projects/import", async (req, res, next) => {
     try {
-      const { initiatorId, ...patch } = req.body as Partial<SessionSettings> & {
-        initiatorId?: string;
-      };
-      const settings = sessionControl.updateSettings(hostSession, patch);
-      events.append({
-        type: "session_settings_updated",
-        roomId: defaultRoom.id,
-        memberId: initiatorId,
-        payload: { settings }
-      });
-      res.json({ settings });
+      const project = await registry.importDirectory(
+        String(req.body?.name ?? ""),
+        String(req.body?.path ?? "")
+      );
+      res.status(201).json({ project });
     } catch (error) {
-      res.status(400).json({
-        error: error instanceof Error ? error.message : "Invalid settings"
-      });
+      next(error);
     }
   });
 
-  app.post("/api/rooms/:roomId/members", (req, res, next) => {
+  app.post(
+    "/api/projects/import-zip",
+    express.raw({ type: "application/zip", limit: "200mb" }),
+    async (req, res, next) => {
+      try {
+        if (!Buffer.isBuffer(req.body)) {
+          res.status(400).json({ error: "A ZIP archive is required" });
+          return;
+        }
+        const result = await registry.importZip(
+          String(req.query.name ?? ""),
+          req.body
+        );
+        res.status(201).json(result);
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get("/api/projects/:projectId", async (req, res, next) => {
     try {
-      const { name, userId, connectionId } = req.body as {
+      const project = await registry.markOpened(req.params.projectId);
+      const runtime = runtimeManager.get(project.id);
+      res.json({ project, roomId: runtime.room.id });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:projectId/room", (req, res, next) => {
+    try {
+      const runtime = runtimeManager.get(req.params.projectId);
+      res.json({ room: runtime.room });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/members", (req, res, next) => {
+    try {
+      const runtime = runtimeManager.get(req.params.projectId);
+      const { name, role, userId, connectionId } = req.body as {
         name?: string;
+        role?: string;
         userId?: string;
         connectionId?: string;
       };
@@ -133,13 +113,11 @@ export function createApp(config: ServerConfig) {
         return;
       }
       res.json({
-        member: rooms.joinRoom(req.params.roomId, {
+        member: runtime.rooms.joinRoom(runtime.room.id, {
           name,
           userId,
           connectionId,
-          role: sessionControl.isHostSession(getHostSession(req))
-            ? "host"
-            : "guest"
+          profileRole: role?.trim() || undefined
         })
       });
     } catch (error) {
@@ -148,11 +126,15 @@ export function createApp(config: ServerConfig) {
   });
 
   app.post(
-    "/api/rooms/:roomId/connections/:connectionId/offline",
+    "/api/projects/:projectId/connections/:connectionId/offline",
     (req, res, next) => {
       try {
-        rooms.markConnectionOffline(req.params.roomId, req.params.connectionId);
-        rooms.cleanupStaleMembers(req.params.roomId);
+        const runtime = runtimeManager.get(req.params.projectId);
+        runtime.rooms.markConnectionOffline(
+          runtime.room.id,
+          req.params.connectionId
+        );
+        runtime.rooms.cleanupStaleMembers(runtime.room.id);
         res.json({ ok: true });
       } catch (error) {
         next(error);
@@ -160,16 +142,28 @@ export function createApp(config: ServerConfig) {
     }
   );
 
-  app.get("/api/events", (_req, res) => {
-    res.json({ events: events.list() });
-  });
-
-  app.get("/api/rooms/:roomId/chat", (req, res) => {
-    res.json({ messages: chat.listMessages(req.params.roomId) });
-  });
-
-  app.post("/api/rooms/:roomId/chat", (req, res, next) => {
+  app.get("/api/projects/:projectId/events", (req, res, next) => {
     try {
+      res.json({
+        events: runtimeManager.get(req.params.projectId).events.list()
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:projectId/chat", (req, res, next) => {
+    try {
+      const runtime = runtimeManager.get(req.params.projectId);
+      res.json({ messages: runtime.chat.listMessages(runtime.room.id) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/chat", (req, res, next) => {
+    try {
+      const runtime = runtimeManager.get(req.params.projectId);
       const { authorId, authorName, text } = req.body as {
         authorId?: string;
         authorName?: string;
@@ -181,8 +175,8 @@ export function createApp(config: ServerConfig) {
         });
         return;
       }
-      const message = chat.createMessage({
-        roomId: req.params.roomId,
+      const message = runtime.chat.createMessage({
+        roomId: runtime.room.id,
         authorId,
         authorName,
         text
@@ -193,16 +187,9 @@ export function createApp(config: ServerConfig) {
     }
   });
 
-  app.get("/api/config/commands", (_req, res) => {
-    res.json({ commands: sessionControl.getSettings().commands });
-  });
-
-  app.get("/api/config/runtime", (_req, res) => {
-    res.json(sessionControl.getSettings());
-  });
-
-  app.post("/api/runner/run", async (req, res, next) => {
+  app.post("/api/projects/:projectId/runner/run", async (req, res, next) => {
     try {
+      const runtime = runtimeManager.get(req.params.projectId);
       const { command, initiatorId } = req.body as {
         command?: string;
         initiatorId?: string;
@@ -211,28 +198,22 @@ export function createApp(config: ServerConfig) {
         res.status(400).json({ error: "command and initiatorId are required" });
         return;
       }
-      const settings = sessionControl.getSettings();
-      if (!settings.terminalEnabled) {
-        res.status(403).json({ error: "Terminal is disabled" });
+      if (!runtime.rooms.getMember(runtime.room.id, initiatorId)) {
+        res.status(403).json({ error: "Project membership is required" });
         return;
       }
-      if (!memberCan(rooms, defaultRoom.id, initiatorId, settings.guestCanRunCommands)) {
-        res.status(403).json({ error: "Command execution is not permitted" });
-        return;
-      }
-      app.locals.sharedTerminal?.writeSystem(`\r\n$ ${command}\r\n`);
+      await runtime.documents.awaitIdle();
+      runtime.terminal.writeSystem(`\r\n$ ${command}\r\n`);
       const run = await runWorkspaceCommand({
-        workspaceRoot: config.workspaceRoot,
+        workspaceRoot: runtime.project.workspacePath,
         command,
-        whitelist: settings.commands,
-        commandMode: settings.commandMode,
-        events,
-        roomId: defaultRoom.id,
+        events: runtime.events,
+        roomId: runtime.room.id,
         initiatorId,
-        timeoutMs: settings.commandTimeoutMs,
-        onOutput: (output) => app.locals.sharedTerminal?.writeSystem(output)
+        timeoutMs: 30_000,
+        onOutput: (output) => runtime.terminal.writeSystem(output)
       });
-      app.locals.sharedTerminal?.writeSystem(
+      runtime.terminal.writeSystem(
         `\r\n[command exited with code ${run.exitCode}]\r\n`
       );
       res.json({ run });
@@ -241,20 +222,13 @@ export function createApp(config: ServerConfig) {
     }
   });
 
-  app.get("/api/workspace/tree", async (_req, res, next) => {
+  app.get("/api/projects/:projectId/workspace/directory", async (req, res, next) => {
     try {
-      res.json({ tree: await listWorkspaceTree(config.workspaceRoot) });
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.get("/api/workspace/directory", async (req, res, next) => {
-    try {
+      const runtime = runtimeManager.get(req.params.projectId);
       const directoryPath = String(req.query.path ?? "");
       res.json({
         tree: await listWorkspaceDirectory(
-          config.workspaceRoot,
+          runtime.project.workspacePath,
           directoryPath
         )
       });
@@ -263,143 +237,150 @@ export function createApp(config: ServerConfig) {
     }
   });
 
-  app.get("/api/workspace/file", async (req, res, next) => {
+  app.get("/api/projects/:projectId/workspace/file", async (req, res, next) => {
     try {
+      const runtime = runtimeManager.get(req.params.projectId);
       const filePath = String(req.query.path ?? "");
       const force = req.query.force === "true";
-      res.json(await readWorkspaceFile(config.workspaceRoot, filePath, force));
+      res.json(
+        await readWorkspaceFile(runtime.project.workspacePath, filePath, force)
+      );
     } catch (error) {
       next(error);
     }
   });
 
-  app.put("/api/workspace/file", async (req, res, next) => {
+  app.put("/api/projects/:projectId/workspace/file", async (req, res, next) => {
     try {
-      const { path, content, initiatorId } = req.body as {
+      const runtime = runtimeManager.get(req.params.projectId);
+      const { path: filePath, content, initiatorId } = req.body as {
         path?: string;
         content?: string;
         initiatorId?: string;
       };
-      if (!path || typeof content !== "string" || !initiatorId) {
+      if (!filePath || typeof content !== "string" || !initiatorId) {
         res.status(400).json({ error: "path, content, and initiatorId are required" });
         return;
       }
-      if (!memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanEditFiles)) {
-        res.status(403).json({ error: "File editing is not permitted" });
-        return;
-      }
-      await writeWorkspaceFile(config.workspaceRoot, path, content);
+      requireMember(runtime, initiatorId);
+      await writeWorkspaceFile(runtime.project.workspacePath, filePath, content);
       res.json({ ok: true });
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/workspace/file", async (req, res, next) => {
+  app.post("/api/projects/:projectId/workspace/file", async (req, res, next) => {
     try {
-      const { path, content, initiatorId } = req.body as {
+      const runtime = runtimeManager.get(req.params.projectId);
+      const { path: filePath, content, initiatorId } = req.body as {
         path?: string;
         content?: string;
         initiatorId?: string;
       };
-      if (!path) {
-        res.status(400).json({ error: "path is required" });
+      if (!filePath || !initiatorId) {
+        res.status(400).json({ error: "path and initiatorId are required" });
         return;
       }
-      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
-        res.status(403).json({ error: "File management is not permitted" });
-        return;
-      }
-      await createWorkspaceFile(config.workspaceRoot, path, content ?? "");
-      events.append({
+      requireMember(runtime, initiatorId);
+      await createWorkspaceFile(
+        runtime.project.workspacePath,
+        filePath,
+        content ?? ""
+      );
+      runtime.events.append({
         type: "workspace_file_created",
-        roomId: defaultRoom.id,
+        roomId: runtime.room.id,
         memberId: initiatorId,
-        payload: { path }
+        payload: { path: filePath }
       });
-      res.json({ tree: await listWorkspaceTree(config.workspaceRoot) });
+      res.json({
+        tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
+      });
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/workspace/directory", async (req, res, next) => {
+  app.post("/api/projects/:projectId/workspace/directory", async (req, res, next) => {
     try {
-      const { path, initiatorId } = req.body as {
+      const runtime = runtimeManager.get(req.params.projectId);
+      const { path: directoryPath, initiatorId } = req.body as {
         path?: string;
         initiatorId?: string;
       };
-      if (!path) {
-        res.status(400).json({ error: "path is required" });
+      if (!directoryPath || !initiatorId) {
+        res.status(400).json({ error: "path and initiatorId are required" });
         return;
       }
-      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
-        res.status(403).json({ error: "File management is not permitted" });
-        return;
-      }
-      await createWorkspaceDirectory(config.workspaceRoot, path);
-      events.append({
+      requireMember(runtime, initiatorId);
+      await createWorkspaceDirectory(runtime.project.workspacePath, directoryPath);
+      runtime.events.append({
         type: "workspace_directory_created",
-        roomId: defaultRoom.id,
+        roomId: runtime.room.id,
         memberId: initiatorId,
-        payload: { path }
+        payload: { path: directoryPath }
       });
-      res.json({ tree: await listWorkspaceTree(config.workspaceRoot) });
+      res.json({
+        tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
+      });
     } catch (error) {
       next(error);
     }
   });
 
-  app.patch("/api/workspace/path", async (req, res, next) => {
+  app.patch("/api/projects/:projectId/workspace/path", async (req, res, next) => {
     try {
+      const runtime = runtimeManager.get(req.params.projectId);
       const { fromPath, toPath, initiatorId } = req.body as {
         fromPath?: string;
         toPath?: string;
         initiatorId?: string;
       };
-      if (!fromPath || !toPath) {
-        res.status(400).json({ error: "fromPath and toPath are required" });
+      if (!fromPath || !toPath || !initiatorId) {
+        res.status(400).json({
+          error: "fromPath, toPath, and initiatorId are required"
+        });
         return;
       }
-      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
-        res.status(403).json({ error: "File management is not permitted" });
-        return;
-      }
-      await documents.retirePath(fromPath);
-      await renameWorkspacePath(config.workspaceRoot, fromPath, toPath);
-      events.append({
+      requireMember(runtime, initiatorId);
+      await runtime.documents.retirePath(fromPath);
+      await renameWorkspacePath(runtime.project.workspacePath, fromPath, toPath);
+      runtime.events.append({
         type: "workspace_path_renamed",
-        roomId: defaultRoom.id,
+        roomId: runtime.room.id,
         memberId: initiatorId,
         payload: { fromPath, toPath }
       });
-      res.json({ tree: await listWorkspaceTree(config.workspaceRoot) });
+      res.json({
+        tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
+      });
     } catch (error) {
       next(error);
     }
   });
 
-  app.delete("/api/workspace/path", async (req, res, next) => {
+  app.delete("/api/projects/:projectId/workspace/path", async (req, res, next) => {
     try {
+      const runtime = runtimeManager.get(req.params.projectId);
       const workspacePath = String(req.query.path ?? "");
-      const initiatorId = String(req.query.initiatorId ?? "") || undefined;
-      if (!workspacePath) {
-        res.status(400).json({ error: "path is required" });
+      const initiatorId = String(req.query.initiatorId ?? "");
+      if (!workspacePath || !initiatorId) {
+        res.status(400).json({ error: "path and initiatorId are required" });
         return;
       }
-      if (!initiatorId || !memberCan(rooms, defaultRoom.id, initiatorId, sessionControl.getSettings().guestCanManageFiles)) {
-        res.status(403).json({ error: "File management is not permitted" });
-        return;
-      }
-      await documents.retirePath(workspacePath);
-      await deleteWorkspacePath(config.workspaceRoot, workspacePath);
-      events.append({
+      requireMember(runtime, initiatorId);
+      await runtime.documents.retirePath(workspacePath);
+      await deleteWorkspacePath(runtime.project.workspacePath, workspacePath);
+      runtime.events.append({
         type: "workspace_path_deleted",
-        roomId: defaultRoom.id,
+        roomId: runtime.room.id,
         memberId: initiatorId,
         payload: { path: workspacePath }
       });
-      res.json({ tree: await listWorkspaceTree(config.workspaceRoot) });
+      res.json({
+        tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
+      });
     } catch (error) {
       next(error);
     }
@@ -412,23 +393,19 @@ export function createApp(config: ServerConfig) {
       res: express.Response,
       _next: express.NextFunction
     ) => {
-      res.status(400).json({ error: error.message });
+      const status = error.message === "Project not found" ? 404 : 400;
+      res.status(status).json({ error: error.message });
     }
   );
 
   return app;
 }
 
-function getHostSession(req: express.Request) {
-  return req.header("x-simplercp-host-session");
-}
-
-function memberCan(
-  rooms: ReturnType<typeof createRoomStore>,
-  roomId: string,
-  memberId: string,
-  guestAllowed: boolean
+function requireMember(
+  runtime: ReturnType<ReturnType<typeof createProjectRuntimeManager>["get"]>,
+  memberId: string
 ) {
-  const member = rooms.getMember(roomId, memberId);
-  return Boolean(member && (member.role === "host" || guestAllowed));
+  if (!runtime.rooms.getMember(runtime.room.id, memberId)) {
+    throw new Error("Project membership is required");
+  }
 }

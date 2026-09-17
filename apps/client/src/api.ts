@@ -1,137 +1,135 @@
 import type {
   ChatMessage,
   EventRecord,
+  ProjectRecord,
   RoomMember,
   RoomState,
   RunRecord,
-  RuntimeConfig,
-  SessionSettings,
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
 
-export async function getHealth(): Promise<{
-  ok: true;
-  workspaceRoot: string;
-  roomId: string;
-}> {
-  return request("/api/health");
+export async function getProjects() {
+  const response = await request<{ projects: ProjectRecord[] }>("/api/projects");
+  return response.projects;
 }
 
-export async function getRoom(roomId: string): Promise<RoomState> {
-  const response = await request<{ room: RoomState }>(`/api/rooms/${roomId}`);
+export async function createProject(name: string) {
+  return request<{ project: ProjectRecord }>("/api/projects", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+}
+
+export async function importExistingProject(name: string, path: string) {
+  return request<{ project: ProjectRecord }>("/api/projects/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, path })
+  });
+}
+
+export async function importZipProject(name: string, archive: File) {
+  return request<{ project: ProjectRecord; filteredEntries: number }>(
+    `/api/projects/import-zip?name=${encodeURIComponent(name)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/zip" },
+      body: archive
+    }
+  );
+}
+
+export async function getProject(projectId: string) {
+  return request<{ project: ProjectRecord; roomId: string }>(
+    `/api/projects/${encodeURIComponent(projectId)}`
+  );
+}
+
+export async function getRoom(projectId: string): Promise<RoomState> {
+  const response = await request<{ room: RoomState }>(
+    `${projectPath(projectId)}/room`
+  );
   return response.room;
 }
 
 export async function joinRoom(
-  roomId: string,
+  projectId: string,
   name: string,
+  role: string,
   userId: string,
-  connectionId: string,
-  hostSession?: string
+  connectionId: string
 ): Promise<RoomMember> {
   const response = await request<{ member: RoomMember }>(
-    `/api/rooms/${roomId}/members`,
+    `${projectPath(projectId)}/members`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...hostSessionHeaders(hostSession)
-      },
-      body: JSON.stringify({ name, userId, connectionId })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, role, userId, connectionId })
     }
   );
   return response.member;
 }
 
-export async function claimHost(accessToken: string) {
-  return request<{ sessionToken: string }>("/api/session/host", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ accessToken })
-  });
-}
-
-export async function getSessionSettings(): Promise<{
-  settings: SessionSettings;
-  workspaceRoot: string;
-  roomId: string;
-}> {
-  return request("/api/session/settings");
-}
-
-export async function updateSessionSettings(
-  settings: SessionSettings,
-  initiatorId: string,
-  hostSession: string
+export function sendConnectionOffline(
+  projectId: string,
+  connectionId: string
 ) {
-  return request<{ settings: SessionSettings }>("/api/session/settings", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...hostSessionHeaders(hostSession)
-    },
-    body: JSON.stringify({ ...settings, initiatorId })
-  });
-}
-
-export async function getRuntimeConfig(): Promise<RuntimeConfig> {
-  return request("/api/config/runtime");
-}
-
-export function sendConnectionOffline(roomId: string, connectionId: string) {
-  const path = `/api/rooms/${roomId}/connections/${connectionId}/offline`;
+  const endpoint = `${projectPath(projectId)}/connections/${encodeURIComponent(connectionId)}/offline`;
   if (navigator.sendBeacon) {
-    navigator.sendBeacon(path, new Blob([], { type: "application/json" }));
+    navigator.sendBeacon(endpoint, new Blob([], { type: "application/json" }));
     return;
   }
-  void fetch(path, { method: "POST", keepalive: true });
-}
-
-export async function getWorkspaceTree(): Promise<WorkspaceNode[]> {
-  const response = await request<{ tree: WorkspaceNode[] }>(
-    "/api/workspace/tree"
-  );
-  return response.tree;
+  void fetch(endpoint, { method: "POST", keepalive: true });
 }
 
 export async function getWorkspaceDirectory(
+  projectId: string,
   path: string
 ): Promise<WorkspaceNode[]> {
   const response = await request<{ tree: WorkspaceNode[] }>(
-    `/api/workspace/directory?path=${encodeURIComponent(path)}`
+    `${projectPath(projectId)}/workspace/directory?path=${encodeURIComponent(path)}`
   );
   return response.tree;
 }
 
 export async function readWorkspaceFile(
+  projectId: string,
   path: string,
   force = false
 ): Promise<WorkspaceFileLoadResult> {
   const query = new URLSearchParams({ path });
   if (force) query.set("force", "true");
-  return request(`/api/workspace/file?${query.toString()}`);
+  return request(
+    `${projectPath(projectId)}/workspace/file?${query.toString()}`
+  );
 }
 
 export async function createWorkspaceFile(
+  projectId: string,
   path: string,
   initiatorId: string,
   content = ""
 ) {
-  const response = await request<{ tree: WorkspaceNode[] }>("/api/workspace/file", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path, content, initiatorId })
-  });
+  const response = await request<{ tree: WorkspaceNode[] }>(
+    `${projectPath(projectId)}/workspace/file`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path, content, initiatorId })
+    }
+  );
   return response.tree;
 }
 
 export async function createWorkspaceDirectory(
+  projectId: string,
   path: string,
   initiatorId: string
 ) {
   const response = await request<{ tree: WorkspaceNode[] }>(
-    "/api/workspace/directory",
+    `${projectPath(projectId)}/workspace/directory`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -142,43 +140,54 @@ export async function createWorkspaceDirectory(
 }
 
 export async function renameWorkspacePath(
+  projectId: string,
   fromPath: string,
   toPath: string,
   initiatorId: string
 ) {
-  const response = await request<{ tree: WorkspaceNode[] }>("/api/workspace/path", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fromPath, toPath, initiatorId })
-  });
-  return response.tree;
-}
-
-export async function deleteWorkspacePath(path: string, initiatorId: string) {
   const response = await request<{ tree: WorkspaceNode[] }>(
-    `/api/workspace/path?path=${encodeURIComponent(path)}&initiatorId=${encodeURIComponent(initiatorId)}`,
-    { method: "DELETE" }
+    `${projectPath(projectId)}/workspace/path`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fromPath, toPath, initiatorId })
+    }
   );
   return response.tree;
 }
 
-export async function getEvents(): Promise<EventRecord[]> {
-  const response = await request<{ events: EventRecord[] }>("/api/events");
+export async function deleteWorkspacePath(
+  projectId: string,
+  path: string,
+  initiatorId: string
+) {
+  return request<{ tree: WorkspaceNode[] }>(
+    `${projectPath(projectId)}/workspace/path?path=${encodeURIComponent(path)}&initiatorId=${encodeURIComponent(initiatorId)}`,
+    { method: "DELETE" }
+  );
+}
+
+export async function getEvents(projectId: string): Promise<EventRecord[]> {
+  const response = await request<{ events: EventRecord[] }>(
+    `${projectPath(projectId)}/events`
+  );
   return response.events;
 }
 
-export async function getChatMessages(roomId: string): Promise<ChatMessage[]> {
+export async function getChatMessages(
+  projectId: string
+): Promise<ChatMessage[]> {
   const response = await request<{ messages: ChatMessage[] }>(
-    `/api/rooms/${roomId}/chat`
+    `${projectPath(projectId)}/chat`
   );
   return response.messages;
 }
 
 export async function sendChatMessage(
-  roomId: string,
+  projectId: string,
   input: { authorId: string; authorName: string; text: string }
-): Promise<{ message: ChatMessage }> {
-  return request(`/api/rooms/${roomId}/chat`, {
+) {
+  return request<{ message: ChatMessage }>(`${projectPath(projectId)}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input)
@@ -186,29 +195,30 @@ export async function sendChatMessage(
 }
 
 export async function runQuickCommand(
+  projectId: string,
   command: string,
   initiatorId: string
 ): Promise<RunRecord> {
-  const response = await request<{ run: RunRecord }>("/api/runner/run", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ command, initiatorId })
-  });
+  const response = await request<{ run: RunRecord }>(
+    `${projectPath(projectId)}/runner/run`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command, initiatorId })
+    }
+  );
   return response.run;
+}
+
+function projectPath(projectId: string) {
+  return `/api/projects/${encodeURIComponent(projectId)}`;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init);
   if (!response.ok) {
-    throw new Error(await response.text());
+    const body = await response.json() as { error?: string };
+    throw new Error(body.error ?? `Request failed with status ${response.status}`);
   }
   return response.json() as Promise<T>;
-}
-
-function hostSessionHeaders(
-  hostSession: string | undefined
-): Record<string, string> {
-  return hostSession
-    ? { "X-SimpleRCP-Host-Session": hostSession }
-    : {};
 }

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { watch } from "chokidar";
+import { isIgnoredPath } from "./workspacePolicy.js";
 
 export type WorkspaceChangeType =
   | "add"
@@ -16,6 +17,10 @@ export function watchWorkspace(
   }) => void | Promise<void>
 ) {
   const watcher = watch(workspaceRoot, {
+    ignored: (candidatePath) => {
+      const relativePath = path.relative(workspaceRoot, candidatePath);
+      return Boolean(relativePath && isIgnoredPath(relativePath));
+    },
     ignoreInitial: true,
     awaitWriteFinish: {
       stabilityThreshold: 100,

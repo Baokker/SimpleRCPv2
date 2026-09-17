@@ -65,7 +65,7 @@ describe("workspace service", () => {
     ]);
   });
 
-  it("lists hidden, build, and binary entries from disk", async () => {
+  it("filters browser-excluded entries while keeping build output", async () => {
     await fs.writeFile(path.join(root, ".DS_Store"), "");
     await fs.mkdir(path.join(root, ".idea"), { recursive: true });
     await fs.writeFile(path.join(root, ".idea", "workspace.xml"), "<project />");
@@ -80,7 +80,7 @@ describe("workspace service", () => {
       await listWorkspaceDirectory(root, "target/classes")
     );
 
-    expect(serialized).toContain(".DS_Store");
+    expect(serialized).not.toContain(".DS_Store");
     expect(serialized).toContain(".idea");
     expect(serialized).toContain("target");
     expect(srcEntries).toContain("Generated.class");
