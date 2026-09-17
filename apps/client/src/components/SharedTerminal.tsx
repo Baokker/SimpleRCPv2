@@ -2,6 +2,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import type { ThemeMode } from "../theme";
 
 export interface SharedTerminalHandle {
   restart(): void;
@@ -12,8 +13,9 @@ export const SharedTerminal = forwardRef<
   {
     memberId: string;
     canInput: boolean;
+    theme: ThemeMode;
   }
->(function SharedTerminal({ memberId, canInput }, ref) {
+>(function SharedTerminal({ memberId, canInput, theme }, ref) {
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket>();
   const terminalRef = useRef<Terminal>();
@@ -25,6 +27,12 @@ export const SharedTerminal = forwardRef<
       terminalRef.current.options.disableStdin = !canInput;
     }
   }, [canInput]);
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.options.theme = terminalTheme(theme);
+    }
+  }, [theme]);
 
   useImperativeHandle(ref, () => ({
     restart() {
@@ -47,12 +55,7 @@ export const SharedTerminal = forwardRef<
       lineHeight: 1.15,
       screenReaderMode: true,
       scrollback: 5_000,
-      theme: {
-        background: "#0b0f15",
-        foreground: "#c9d5e8",
-        cursor: "#8fb2ff",
-        selectionBackground: "#334a70"
-      }
+      theme: terminalTheme(theme)
     });
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
@@ -132,3 +135,19 @@ export const SharedTerminal = forwardRef<
     />
   );
 });
+
+function terminalTheme(theme: ThemeMode) {
+  return theme === "dark"
+    ? {
+        background: "#0b0f15",
+        foreground: "#c9d5e8",
+        cursor: "#8fb2ff",
+        selectionBackground: "#334a70"
+      }
+    : {
+        background: "#f8fafc",
+        foreground: "#1e293b",
+        cursor: "#2563eb",
+        selectionBackground: "#bfdbfe"
+      };
+}

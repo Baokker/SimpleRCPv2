@@ -10,6 +10,7 @@ import type {
   EditorSelection,
   RemoteCursor
 } from "../types";
+import type { ThemeMode } from "../theme";
 
 export interface OpenFile {
   path: string;
@@ -29,6 +30,7 @@ export function EditorArea({
   roomId,
   memberId,
   canEdit,
+  theme,
   remoteCursors,
   onSelectFile,
   onCloseFile,
@@ -40,6 +42,7 @@ export function EditorArea({
   roomId: string;
   memberId: string;
   canEdit: boolean;
+  theme: ThemeMode;
   remoteCursors: RemoteCursor[];
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
@@ -105,6 +108,7 @@ export function EditorArea({
             roomId={roomId}
             memberId={memberId}
             canEdit={canEdit}
+            theme={theme}
             onLocalEdit={onLocalEdit}
             onMount={(editor, monaco) => {
               editorRef.current = editor;
@@ -135,6 +139,7 @@ function CollaborativeEditor({
   roomId,
   memberId,
   canEdit,
+  theme,
   onLocalEdit,
   onMount
 }: {
@@ -142,6 +147,7 @@ function CollaborativeEditor({
   roomId: string;
   memberId: string;
   canEdit: boolean;
+  theme: ThemeMode;
   onLocalEdit(path: string): void;
   onMount(
     editor: Monaco.editor.IStandaloneCodeEditor,
@@ -184,7 +190,7 @@ function CollaborativeEditor({
         path={file.path}
         defaultValue={file.content}
         language={languageForPath(file.path)}
-        theme="vs-dark"
+        theme={theme === "dark" ? "vs-dark" : "vs"}
         options={{
           minimap: { enabled: false },
           fontSize: 13,

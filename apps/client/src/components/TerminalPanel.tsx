@@ -1,5 +1,6 @@
 import { RotateCcw } from "lucide-react";
 import { useRef } from "react";
+import type { ThemeMode } from "../theme";
 import type { RuntimeConfig } from "../types";
 import {
   SharedTerminal,
@@ -8,6 +9,7 @@ import {
 
 export function TerminalPanel({
   runtimeConfig,
+  theme,
   canRun,
   memberId,
   isHost,
@@ -19,6 +21,7 @@ export function TerminalPanel({
   onRunCommand
 }: {
   runtimeConfig: RuntimeConfig;
+  theme: ThemeMode;
   canRun: boolean;
   memberId: string;
   isHost: boolean;
@@ -96,6 +99,7 @@ export function TerminalPanel({
           canInput={
             runtimeConfig.terminalEnabled && isUnrestricted && canRun
           }
+          theme={theme}
         />
       </div>
     </div>

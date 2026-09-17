@@ -1,3 +1,4 @@
+import { Moon, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   claimHost,
@@ -24,6 +25,11 @@ import { EditorArea, type OpenFile } from "./components/EditorArea";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
 import { connectRoomSocket, type ClientSocket } from "./socket";
+import {
+  applyTheme,
+  THEME_STORAGE_KEY,
+  type ThemeMode
+} from "./theme";
 import type {
   ChatMessage,
   CursorPosition,
@@ -35,7 +41,8 @@ import type {
   WorkspaceNode
 } from "./types";
 
-export function App() {
+export function App({ initialTheme }: { initialTheme: ThemeMode }) {
+  const [theme, setTheme] = useState(initialTheme);
   const [roomId, setRoomId] = useState("");
   const [member, setMember] = useState<RoomMember | null>(null);
   const [members, setMembers] = useState<RoomMember[]>([]);
@@ -470,6 +477,13 @@ export function App() {
     }
   }
 
+  function toggleTheme() {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    setTheme(nextTheme);
+  }
+
   return (
     <main className="app-shell">
       <aside className="workspace-pane">
@@ -497,6 +511,7 @@ export function App() {
           canEdit={
             member?.role === "host" || sessionSettings.guestCanEditFiles
           }
+          theme={theme}
           remoteCursors={remoteCursors}
           onSelectFile={selectFile}
           onCloseFile={closeFile}
@@ -525,6 +540,7 @@ export function App() {
       <section className="terminal-pane">
         <TerminalPanel
           runtimeConfig={sessionSettings}
+          theme={theme}
           canRun={
             sessionSettings.terminalEnabled &&
             (member?.role === "host" || sessionSettings.guestCanRunCommands)
@@ -549,6 +565,16 @@ export function App() {
             Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
           </span>
         ) : null}
+        <button
+          className="theme-toggle"
+          type="button"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          data-testid="theme-toggle"
+        >
+          {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
       </div>
     </main>
   );
