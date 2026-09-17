@@ -31,6 +31,9 @@
 
 实现要求：
 
+- `SIMPLERCP_DATA_DIR` 未设置时使用服务启动目录下的 `.simplercp-data/`，设置时只接受绝对路径。
+- 数据目录保存项目代码、项目注册记录、Agent run、trace、设置和密钥；生产部署可以把整个目录挂载到持久化磁盘。
+- 新建项目、ZIP 导入和已有目录导入统一写入 `projects/<projectId>/workspace/`；已有目录导入完成以后使用服务端副本。
 - `ProjectRegistry` 保存已有项目、空白项目和最近打开时间。
 - `ProjectRuntime` 持有单个项目的 room、chat、文档、PTY 和 watcher。
 - `ProjectRuntimeManager` 按需创建和释放 runtime。

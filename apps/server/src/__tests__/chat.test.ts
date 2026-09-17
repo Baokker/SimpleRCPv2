@@ -1,16 +1,15 @@
 import fs from "node:fs/promises";
 import http from "node:http";
-import os from "node:os";
-import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createChatStore } from "../chat.js";
 import { createApp } from "../createApp.js";
 import { createEventLog } from "../eventLog.js";
+import { createTestWorkspace } from "./testWorkspace.js";
 
 let root: string;
 
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "simplercp-chat-"));
+  root = await createTestWorkspace("chat-");
 });
 
 afterEach(async () => {

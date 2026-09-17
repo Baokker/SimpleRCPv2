@@ -1,14 +1,14 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createEventLog } from "../eventLog.js";
 import { runWorkspaceCommand } from "../runner.js";
+import { createTestWorkspace } from "./testWorkspace.js";
 
 let root: string;
 
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "simplercp-runner-"));
+  root = await createTestWorkspace("runner-");
   await fs.writeFile(
     path.join(root, "package.json"),
     JSON.stringify({

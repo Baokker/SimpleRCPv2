@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -13,11 +12,12 @@ import {
   resolveWorkspacePath,
   writeWorkspaceFile
 } from "../workspace.js";
+import { createTestWorkspace } from "./testWorkspace.js";
 
 let root: string;
 
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "simplercp-workspace-"));
+  root = await createTestWorkspace("workspace-");
   await fs.mkdir(path.join(root, "src"), { recursive: true });
   await fs.writeFile(
     path.join(root, "src", "hello.ts"),

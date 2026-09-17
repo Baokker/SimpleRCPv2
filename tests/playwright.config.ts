@@ -1,8 +1,9 @@
 import { defineConfig } from "@playwright/test";
-import os from "node:os";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const workspaceRoot = path.join(os.tmpdir(), "simplercp-e2e-workspace");
+const workspaceRoot = fileURLToPath(
+  new URL("../.test-workspaces/e2e-workspace/", import.meta.url)
+);
 const serverPort = 4100;
 const clientPort = 5174;
 
@@ -18,7 +19,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_WORKSPACE=${workspaceRoot} SIMPLERCP_COMMANDS="npm test" SIMPLERCP_COMMAND_MODE=unrestricted SIMPLERCP_HOST_TOKEN=e2e-host-secret SIMPLERCP_SHELL=/bin/sh pnpm --filter @simplercp/server dev`,
+      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_WORKSPACE=${JSON.stringify(workspaceRoot)} SIMPLERCP_COMMANDS="npm test" SIMPLERCP_COMMAND_MODE=unrestricted SIMPLERCP_HOST_TOKEN=e2e-host-secret SIMPLERCP_SHELL=/bin/sh pnpm --filter @simplercp/server dev`,
       url: `http://127.0.0.1:${serverPort}/api/health`,
       reuseExistingServer: false,
       timeout: 30_000

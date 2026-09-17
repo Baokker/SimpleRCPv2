@@ -196,7 +196,6 @@ function CollaborativeEditor({
           domReadOnly: true
         }}
         onMount={(editor, monaco) => {
-          registerPythonCompletions(monaco);
           onMount(editor, monaco);
 
           const document = new Y.Doc();
@@ -333,89 +332,4 @@ function languageForPath(path: string) {
   if (path.endsWith(".json")) return "json";
   if (path.endsWith(".md")) return "markdown";
   return "plaintext";
-}
-
-let pythonCompletionsRegistered = false;
-
-function registerPythonCompletions(monaco: typeof Monaco) {
-  if (pythonCompletionsRegistered) return;
-  pythonCompletionsRegistered = true;
-
-  const keywords = [
-    "and",
-    "as",
-    "assert",
-    "async",
-    "await",
-    "break",
-    "class",
-    "continue",
-    "def",
-    "del",
-    "elif",
-    "else",
-    "except",
-    "False",
-    "finally",
-    "for",
-    "from",
-    "global",
-    "if",
-    "import",
-    "in",
-    "is",
-    "lambda",
-    "None",
-    "nonlocal",
-    "not",
-    "or",
-    "pass",
-    "raise",
-    "return",
-    "True",
-    "try",
-    "while",
-    "with",
-    "yield"
-  ];
-  const snippets = [
-    { label: "def", insertText: "def ${1:name}(${2}):\n\t${0:pass}" },
-    { label: "class", insertText: "class ${1:Name}:\n\t${0:pass}" },
-    { label: "if", insertText: "if ${1:condition}:\n\t${0:pass}" },
-    { label: "for", insertText: "for ${1:item} in ${2:items}:\n\t${0:pass}" },
-    {
-      label: "try",
-      insertText:
-        "try:\n\t${1:pass}\nexcept ${2:Exception} as ${3:error}:\n\t${0:raise}"
-    }
-  ];
-
-  monaco.languages.registerCompletionItemProvider("python", {
-    provideCompletionItems(model, position) {
-      const word = model.getWordUntilPosition(position);
-      const range = {
-        startLineNumber: position.lineNumber,
-        endLineNumber: position.lineNumber,
-        startColumn: word.startColumn,
-        endColumn: word.endColumn
-      };
-      return {
-        suggestions: [
-          ...keywords.map((keyword) => ({
-            label: keyword,
-            kind: monaco.languages.CompletionItemKind.Keyword,
-            insertText: keyword,
-            range
-          })),
-          ...snippets.map((snippet) => ({
-            ...snippet,
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertTextRules:
-              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            range
-          }))
-        ]
-      };
-    }
-  });
 }

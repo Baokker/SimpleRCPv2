@@ -4,6 +4,7 @@ coverage/
 playwright-report/
 test-results/
 artifacts/
+.simplercp-data/
 .test-workspaces/
 .env
 .DS_Store

@@ -1,5 +1,6 @@
 import { getYDoc } from "y-websocket/bin/utils";
 import type * as Y from "yjs";
+import { applyTextDelta, FILESYSTEM_ORIGIN } from "./textDelta.js";
 import { readWorkspaceFile, writeWorkspaceFile } from "./workspace.js";
 
 export interface CollaborativeDocumentStoreOptions {
@@ -12,6 +13,7 @@ export function createCollaborativeDocumentStore({
   persistDelayMs = 300
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
+  const persistedContents = new Map<string, string>();
   const persistTimers = new Map<string, NodeJS.Timeout>();
   const retired = new Set<string>();
 
@@ -48,7 +50,10 @@ export function createCollaborativeDocumentStore({
     if (text.length === 0 && result.content) {
       text.insert(0, result.content);
     }
-    document.on("update", () => schedulePersist(name, document));
+    persistedContents.set(name, result.content);
+    document.on("update", (_update, origin) => {
+      if (origin !== FILESYSTEM_ORIGIN) schedulePersist(name, document);
+    });
     return document;
   }
 
@@ -67,11 +72,9 @@ export function createCollaborativeDocumentStore({
 
   async function persistDocument(name: string, document: Y.Doc) {
     const { filePath } = parseDocumentName(name);
-    await writeWorkspaceFile(
-      workspaceRoot,
-      filePath,
-      document.getText("content").toString()
-    );
+    const content = document.getText("content").toString();
+    await writeWorkspaceFile(workspaceRoot, filePath, content);
+    persistedContents.set(name, content);
   }
 
   async function flush(roomId: string, filePath: string) {
@@ -94,6 +97,15 @@ export function createCollaborativeDocumentStore({
     if (!retired.has(name)) {
       await persistDocument(name, document);
     }
+  }
+
+  async function awaitIdle() {
+    await Promise.all(
+      [...initialized.entries()].map(async ([name, loading]) => {
+        const document = await loading;
+        await flushDocument(name, document);
+      })
+    );
   }
 
   async function retirePath(filePath: string) {
@@ -121,17 +133,21 @@ export function createCollaborativeDocumentStore({
     if (matches.length === 0) return;
 
     const result = await readWorkspaceFile(workspaceRoot, filePath, true);
-    if (result.status !== "text") return;
+    if (result.status !== "text") {
+      dropPath(filePath);
+      return;
+    }
 
     await Promise.all(
-      matches.map(async ([, loading]) => {
+      matches.map(async ([name, loading]) => {
         const document = await loading;
         const text = document.getText("content");
-        if (text.toString() === result.content) return;
+        const previousContent = persistedContents.get(name) ?? text.toString();
+        if (previousContent === result.content) return;
         document.transact(() => {
-          text.delete(0, text.length);
-          text.insert(0, result.content);
-        }, "filesystem");
+          applyTextDelta(text, previousContent, result.content);
+        }, FILESYSTEM_ORIGIN);
+        persistedContents.set(name, result.content);
       })
     );
   }
@@ -154,6 +170,7 @@ export function createCollaborativeDocumentStore({
     if (timer) clearTimeout(timer);
     persistTimers.delete(name);
     initialized.delete(name);
+    persistedContents.delete(name);
   }
 
   return {
@@ -161,6 +178,7 @@ export function createCollaborativeDocumentStore({
     prepareDocument,
     flush,
     flushDocument,
+    awaitIdle,
     retirePath,
     reloadPath,
     dropPath,

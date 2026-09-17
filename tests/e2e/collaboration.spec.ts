@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { openAs } from "./helpers";
 
-const workspaceRoot = path.join(os.tmpdir(), "simplercp-e2e-workspace");
+const workspaceRoot = fileURLToPath(
+  new URL("../../.test-workspaces/e2e-workspace/", import.meta.url)
+);
 
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({
   browser
@@ -132,14 +134,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await linus.getByTestId("file-src/hello.ts").click();
   await expectMonacoValue(linus, "src/hello.ts", "host-only update");
 
-  await ada.getByTestId("file-src/sample.py").click();
-  await triggerPythonSuggestions(ada, "src/sample.py", "de");
-  await expect(ada.locator(".suggest-widget")).toBeVisible();
-  await expect(ada.locator(".suggest-widget")).toContainText("def");
-  await ada.keyboard.press("Escape");
-
-  await ada.getByTestId("close-tab-src/sample.py").click();
-  await expect(ada.getByTestId("close-tab-src/sample.py")).toHaveCount(0);
   await expect(ada.getByTestId("close-tab-src/hello.ts")).toBeVisible();
 
   await handlePrompt(ada, "src/browser-created.ts", () =>
@@ -444,37 +438,6 @@ async function expectRemoteCursor(
       );
     },
     { filePath: path, name: displayName }
-  );
-}
-
-async function triggerPythonSuggestions(
-  page: import("@playwright/test").Page,
-  path: string,
-  text: string
-) {
-  await waitForCollaborativeEditor(page, path);
-  await page.evaluate(
-    ({ filePath, value }) => {
-      const editor = (
-        window as typeof window & {
-          __simplercpEditors?: Record<
-            string,
-            {
-              setValue(value: string): void;
-              setPosition(position: { lineNumber: number; column: number }): void;
-              trigger(source: string, handlerId: string, payload: object): void;
-              focus(): void;
-            }
-          >;
-        }
-      ).__simplercpEditors?.[filePath];
-      if (!editor) throw new Error("Monaco editor is not ready");
-      editor.setValue(value);
-      editor.setPosition({ lineNumber: 1, column: value.length + 1 });
-      editor.focus();
-      editor.trigger("e2e", "editor.action.triggerSuggest", {});
-    },
-    { filePath: path, value: text }
   );
 }
 
