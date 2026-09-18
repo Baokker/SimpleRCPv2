@@ -85,6 +85,22 @@ export interface EditorSelection {
   endColumn: number;
 }
 
+export interface EditRange {
+  startLine: number;
+  endLine: number;
+}
+
+export interface FileEditChange {
+  ranges: EditRange[];
+  addedLines: number;
+  removedLines: number;
+}
+
+export interface FileEditActivity extends FileEditChange {
+  startedAt: string;
+  finishedAt: string;
+}
+
 export interface RemoteCursor {
   memberId: string;
   displayName: string;

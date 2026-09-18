@@ -32,5 +32,11 @@ describe("runner", () => {
     expect(eventTypes[0]).toBe("command_started");
     expect(eventTypes).toContain("command_output");
     expect(eventTypes.at(-1)).toBe("command_completed");
+    expect(events.list().at(-1)?.payload).toMatchObject({
+      command: "node -e \"console.log('adhoc-ok')\"",
+      exitCode: 0,
+      durationMs: expect.any(Number),
+      startedAt: expect.any(String)
+    });
   });
 });

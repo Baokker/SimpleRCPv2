@@ -30,12 +30,14 @@ export async function runWorkspaceCommand({
     exitCode: null,
     output: ""
   };
+  const startedAt = new Date().toISOString();
+  const startedAtMs = Date.now();
 
   events.append({
     type: "command_started",
     roomId,
     memberId: initiatorId,
-    payload: { runId: run.id, command }
+    payload: { runId: run.id, command, startedAt }
   });
 
   return new Promise((resolve, reject) => {
@@ -77,6 +79,8 @@ export async function runWorkspaceCommand({
           runId: run.id,
           command,
           exitCode: run.exitCode,
+          startedAt,
+          durationMs: Date.now() - startedAtMs,
           output: summarize(run.output)
         }
       });

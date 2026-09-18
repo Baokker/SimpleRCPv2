@@ -5,9 +5,11 @@ import type * as Monaco from "monaco-editor";
 import type { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
+import { summarizeTextChange } from "../editActivity";
 import type {
   CursorPosition,
   EditorSelection,
+  FileEditChange,
   RemoteCursor
 } from "../types";
 import type { ThemeMode } from "../theme";
@@ -48,7 +50,7 @@ export function EditorArea({
   remoteCursors: RemoteCursor[];
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
-  onLocalEdit(path: string): void;
+  onLocalEdit(path: string, change: FileEditChange): void;
   onCursorChange(
     path: string,
     position: CursorPosition,
@@ -153,7 +155,7 @@ function CollaborativeEditor({
   memberId: string;
   canEdit: boolean;
   theme: ThemeMode;
-  onLocalEdit(path: string): void;
+  onLocalEdit(path: string, change: FileEditChange): void;
   onMount(
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco
@@ -203,23 +205,34 @@ function CollaborativeEditor({
           scrollBeyondLastLine: false,
           quickSuggestions: true,
           suggestOnTriggerCharacters: true,
-          readOnly: true,
-          domReadOnly: true
+          readOnly: connectionStatus !== "ready" || !canEdit,
+          domReadOnly: connectionStatus !== "ready" || !canEdit
         }}
         onMount={(editor, monaco) => {
           onMount(editor, monaco);
 
           const document = new Y.Doc();
           const text = document.getText("content");
+          let observedText = text.toString();
           let binding: MonacoBinding | undefined;
           let bindingStarting = false;
           const bindingModule = import("y-monaco");
           const observer = (
-            _event: Y.YTextEvent,
+            event: Y.YTextEvent,
             transaction: Y.Transaction
           ) => {
+            const previousText = observedText;
+            const nextText = text.toString();
+            observedText = nextText;
             if (transaction.local && transaction.origin === binding) {
-              onLocalEdit(file.path);
+              const change = summarizeTextChange(
+                previousText,
+                nextText,
+                event.delta
+              );
+              if (change.ranges.length > 0) {
+                onLocalEdit(file.path, change);
+              }
             }
           };
           text.observe(observer);

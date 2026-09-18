@@ -76,6 +76,19 @@ export interface EditorSelection {
   endColumn: number;
 }
 
+export interface EditRange {
+  startLine: number;
+  endLine: number;
+}
+
+export interface FileEditActivity {
+  ranges: EditRange[];
+  addedLines: number;
+  removedLines: number;
+  startedAt: string;
+  finishedAt: string;
+}
+
 export type ClientMessage =
   | {
       type: "ready";
@@ -96,7 +109,7 @@ export type ClientMessage =
       memberId: string;
       connectionId?: string;
       path: string;
-    }
+    } & FileEditActivity
   | {
       type: "cursor_change";
       roomId: string;

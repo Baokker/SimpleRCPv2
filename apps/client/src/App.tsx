@@ -22,6 +22,7 @@ import { JoinProject, type ProjectIdentity } from "./components/JoinProject";
 import { ProjectHome } from "./components/ProjectHome";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
+import { mergeFileEditChanges } from "./editActivity";
 import { connectRoomSocket, type ClientSocket } from "./socket";
 import {
   applyTheme,
@@ -33,11 +34,17 @@ import type {
   CursorPosition,
   EditorSelection,
   EventRecord,
+  FileEditActivity,
+  FileEditChange,
   RemoteCursor,
   RoomMember,
   ProjectRecord,
   WorkspaceNode
 } from "./types";
+
+interface PendingFileEdit extends FileEditActivity {
+  timer: number;
+}
 
 export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   const [theme, setTheme] = useState(initialTheme);
@@ -142,7 +149,7 @@ function WorkspacePage({
     null
   );
   const bootStartedRef = useRef(false);
-  const editTimersRef = useRef(new Map<string, number>());
+  const pendingFileEditsRef = useRef(new Map<string, PendingFileEdit>());
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
   const remoteCursors = useMemo(
@@ -244,15 +251,12 @@ function WorkspacePage({
     void boot();
     return () => {
       mounted = false;
+      flushAllFileEdits();
       const connection = connectionRef.current;
       if (connection) {
         sendConnectionOffline(projectId, connection.connectionId);
       }
       socketRef.current?.close();
-      for (const timer of editTimersRef.current.values()) {
-        window.clearTimeout(timer);
-      }
-      editTimersRef.current.clear();
       if (workspaceRefreshTimerRef.current) {
         window.clearTimeout(workspaceRefreshTimerRef.current);
       }
@@ -261,6 +265,7 @@ function WorkspacePage({
 
   useEffect(() => {
     function markOffline() {
+      flushAllFileEdits();
       const connection = connectionRef.current;
       if (connection) {
         sendConnectionOffline(projectId, connection.connectionId);
@@ -341,6 +346,7 @@ function WorkspacePage({
   }
 
   async function openFile(path: string) {
+    if (activePath && activePath !== path) flushFileEdit(activePath);
     if (!openFiles.some((file) => file.path === path)) {
       let result = await readWorkspaceFile(projectId, path);
       if (result.status === "binary") {
@@ -368,20 +374,45 @@ function WorkspacePage({
   }
 
   function selectFile(path: string) {
+    if (activePath && activePath !== path) flushFileEdit(activePath);
     setActivePath(path);
     socketRef.current?.sendOpenFile(path);
   }
 
-  function reportFileEdit(path: string) {
-    const existing = editTimersRef.current.get(path);
-    if (existing) window.clearTimeout(existing);
-    editTimersRef.current.set(
-      path,
-      window.setTimeout(() => {
-        editTimersRef.current.delete(path);
-        socketRef.current?.sendFileEdited(path);
-      }, 400)
-    );
+  function reportFileEdit(path: string, change: FileEditChange) {
+    const timestamp = new Date().toISOString();
+    const existing = pendingFileEditsRef.current.get(path);
+    if (existing) window.clearTimeout(existing.timer);
+    const merged = existing
+      ? mergeFileEditChanges(existing, change)
+      : change;
+    const pending: PendingFileEdit = {
+      ...merged,
+      startedAt: existing?.startedAt ?? timestamp,
+      finishedAt: timestamp,
+      timer: window.setTimeout(() => flushFileEdit(path), 2_000)
+    };
+    pendingFileEditsRef.current.set(path, pending);
+  }
+
+  function flushFileEdit(path: string) {
+    const pending = pendingFileEditsRef.current.get(path);
+    if (!pending) return;
+    window.clearTimeout(pending.timer);
+    pendingFileEditsRef.current.delete(path);
+    socketRef.current?.sendFileEdited(path, {
+      ranges: pending.ranges,
+      addedLines: pending.addedLines,
+      removedLines: pending.removedLines,
+      startedAt: pending.startedAt,
+      finishedAt: pending.finishedAt
+    });
+  }
+
+  function flushAllFileEdits() {
+    for (const path of pendingFileEditsRef.current.keys()) {
+      flushFileEdit(path);
+    }
   }
 
   function changeCursor(
@@ -426,6 +457,7 @@ function WorkspacePage({
   async function renamePathFromPrompt(path: string) {
     const toPath = window.prompt("Rename path", path);
     if (!toPath || toPath === path || !member) return;
+    flushAllFileEdits();
     await renameWorkspacePath(projectId, path, toPath, member.id);
     loadedDirectoriesRef.current = remapLoadedDirectories(
       loadedDirectoriesRef.current,
@@ -451,6 +483,7 @@ function WorkspacePage({
 
   async function deletePathWithConfirm(path: string) {
     if (!window.confirm(`Delete ${path}?`) || !member) return;
+    flushAllFileEdits();
     await deleteWorkspacePath(projectId, path, member.id);
     loadedDirectoriesRef.current = new Set(
       [...loadedDirectoriesRef.current].filter(
@@ -466,6 +499,7 @@ function WorkspacePage({
   async function runSelectedCommand() {
     const command = commandText.trim();
     if (!member || !command || !roomId) return;
+    flushAllFileEdits();
     setCommandRunning(true);
     try {
       await runQuickCommand(projectId, command, member.id);
@@ -482,6 +516,11 @@ function WorkspacePage({
   }
 
   function closePath(path: string) {
+    for (const pendingPath of pendingFileEditsRef.current.keys()) {
+      if (pendingPath === path || pendingPath.startsWith(`${path}/`)) {
+        flushFileEdit(pendingPath);
+      }
+    }
     setOpenFiles((files) =>
       files.filter((file) => file.path !== path && !file.path.startsWith(`${path}/`))
     );
@@ -493,6 +532,7 @@ function WorkspacePage({
   function closeFile(path: string) {
     const index = openFiles.findIndex((file) => file.path === path);
     if (index < 0) return;
+    flushFileEdit(path);
     const remaining = openFiles.filter((file) => file.path !== path);
     setOpenFiles(remaining);
 
@@ -549,6 +589,7 @@ function WorkspacePage({
           roomId={roomId}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
+          onOpenFile={(path) => void openFile(path)}
         />
       </aside>
       <section className="terminal-pane">

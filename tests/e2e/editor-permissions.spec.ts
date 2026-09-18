@@ -1,0 +1,36 @@
+import { expect, test } from "@playwright/test";
+import { openAs } from "./helpers";
+
+test("collaborator can keep editing after workspace state refreshes", async ({
+  page
+}) => {
+  const projectId = await page.request
+    .post("/api/projects", { data: { name: "Editor Permission Test" } })
+    .then(async (response) => {
+      const body = await response.json() as { project: { id: string } };
+      return body.project.id;
+    });
+  await openAs(page, "Editor User", projectId);
+  page.once("dialog", (dialog) => dialog.accept("editable.txt"));
+  await page.getByTestId("new-file").click();
+  await page.waitForFunction(() =>
+    Boolean(window.__simplercpYjsSynced?.["editable.txt"])
+  );
+
+  await page.waitForTimeout(2_000);
+
+  const readOnly = await page.evaluate(() =>
+    window.__simplercpEditors?.["editable.txt"]?.getRawOptions().readOnly
+  );
+  expect(readOnly).toBe(false);
+
+  await page.locator(".monaco-editor").click();
+  await page.keyboard.insertText("editable");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        window.__simplercpEditors?.["editable.txt"]?.getValue()
+      )
+    )
+    .toContain("editable");
+});

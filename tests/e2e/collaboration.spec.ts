@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { openAs } from "./helpers";
+import { fetchEvents, openAs } from "./helpers";
 
 const workspaceRoot = fileURLToPath(
   new URL("../../.test-workspaces/e2e-data/projects/demo/workspace/", import.meta.url)
@@ -134,16 +134,36 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   });
   await expectRemoteCursor(linus, "src/hello.ts", "Ada");
 
-  await replaceMonacoText(ada, "src/hello.ts", 'export const hello = "collab";');
+  await expect.poll(async () => changedFileEvents(ada)).toBeGreaterThan(0);
+  await ada.waitForTimeout(2_100);
+  const editEventsBefore = await changedFileEvents(ada);
+  await replaceMonacoText(
+    ada,
+    "src/hello.ts",
+    'export const hello = "collab";\nexport const count = 1;'
+  );
+  await replaceMonacoText(
+    ada,
+    "src/hello.ts",
+    'export const hello = "collab";\nexport const count = 2;'
+  );
   await expect(linus.getByTestId("editor-frame")).toContainText("collab");
+  await expect.poll(async () => changedFileEvents(ada)).toBe(editEventsBefore + 1);
 
   await ada.getByTestId("collab-tab-chat").click();
-  await ada.getByTestId("chat-input").fill("Linus, I updated the greeting.");
-  await ada.getByTestId("send-chat").click();
+  await expect(
+    ada.getByText("Enter to send / Shift + Enter for new line")
+  ).toBeVisible();
+  const chatInput = ada.getByTestId("chat-input");
+  await chatInput.fill("Linus, I updated");
+  await chatInput.press("Shift+Enter");
+  await chatInput.pressSequentially("the greeting.");
+  await expect(chatInput).toHaveValue("Linus, I updated\nthe greeting.");
+  await chatInput.press("Enter");
+  await expect(chatInput).toHaveValue("");
   await linus.getByTestId("collab-tab-chat").click();
-  await expect(linus.getByTestId("chat-transcript")).toContainText(
-    "Linus, I updated the greeting."
-  );
+  const receivedMessage = linus.locator(".chat-message p").last();
+  await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
 
   await ada.getByTestId("terminal-output").click();
   await ada.keyboard.type("printf 'shared-pty-ok\\n'");
@@ -163,17 +183,21 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Ada opened src/hello.ts"
-  );
-  await expect(ada.getByTestId("activity-feed")).toContainText(
     "Ada edited src/hello.ts"
   );
+  await expect(ada.getByTestId("activity-feed")).toContainText("Lines 1-2");
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Ada: Linus, I updated the greeting."
+    "Ada ran npm test · Exit 0"
   );
-  await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Ada ran npm test"
+  await expect(ada.getByTestId("activity-feed")).toContainText("Completed in");
+  await expect(ada.getByTestId("activity-feed")).not.toContainText("opened src/hello.ts");
+  await expect(ada.getByTestId("activity-feed")).not.toContainText(
+    "Linus, I updated the greeting."
   );
+  await ada.getByTestId("file-src/sample.py").click();
+  await expect(ada.locator(".tab.active")).toContainText("src/sample.py");
+  await ada.getByTitle("Open src/hello.ts").first().click();
+  await expect(ada.locator(".tab.active")).toContainText("src/hello.ts");
 
   await ada.getByTestId("collab-tab-team").click();
 
@@ -209,6 +233,11 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await contextA.close();
 });
+
+async function changedFileEvents(page: import("@playwright/test").Page) {
+  const { events } = await fetchEvents(page);
+  return events.filter((event) => event.type === "file_changed").length;
+}
 
 async function replaceMonacoText(
   page: import("@playwright/test").Page,

@@ -966,17 +966,39 @@ input {
   color: var(--text-icon);
 }
 
-.event-list li > span {
+.activity-entry {
   display: flex;
+  width: 100%;
   min-width: 0;
   flex-direction: column;
   gap: 2px;
+}
+
+button.activity-entry {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+button.activity-entry:hover strong {
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 
 .event-list strong {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
+  line-height: 1.35;
+}
+
+.activity-entry small {
+  color: var(--text-muted);
+  font-size: 11px;
   line-height: 1.35;
 }
 
@@ -1016,6 +1038,8 @@ input {
   margin: 4px 0 0;
   color: var(--text-message);
   line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .chat-box {
@@ -1040,6 +1064,21 @@ input {
   color: var(--text-primary);
 }
 
+.chat-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chat-actions small {
+  min-width: 0;
+  color: var(--text-dim);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
 .chat-box button,
 .terminal-controls button {
   margin-top: 8px;
@@ -1049,6 +1088,11 @@ input {
   background: var(--accent-action);
   color: var(--button-text);
   cursor: pointer;
+}
+
+.chat-actions button {
+  flex: 0 0 auto;
+  margin-top: 0;
 }
 
 .terminal-header {

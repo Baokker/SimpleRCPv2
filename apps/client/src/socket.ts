@@ -1,12 +1,13 @@
 import type {
   CursorPosition,
   EditorSelection,
+  FileEditActivity,
   ServerMessage
 } from "./types";
 
 export interface ClientSocket {
   sendOpenFile(path: string): void;
-  sendFileEdited(path: string): void;
+  sendFileEdited(path: string, activity: FileEditActivity): void;
   sendCursorChange(
     path: string,
     position: CursorPosition,
@@ -53,8 +54,8 @@ export function connectRoomSocket({
     sendOpenFile(path) {
       send({ type: "open_file", path });
     },
-    sendFileEdited(path) {
-      send({ type: "file_edited", path });
+    sendFileEdited(path, activity) {
+      send({ type: "file_edited", path, ...activity });
     },
     sendCursorChange(path, position, selection) {
       send({ type: "cursor_change", path, position, selection });

@@ -6,7 +6,11 @@ import type { EventLog } from "./eventLog.js";
 import type { ProjectRuntime } from "./projectRuntime.js";
 import type { ProjectRuntimeManager } from "./projectRuntimeManager.js";
 import type { RoomStore } from "./rooms.js";
-import type { ClientMessage, ServerMessage } from "./types.js";
+import type {
+  ClientMessage,
+  FileEditActivity,
+  ServerMessage
+} from "./types.js";
 
 interface SocketIdentity {
   projectId: string;
@@ -58,11 +62,12 @@ export function handleRealtimeMessage({
   }
 
   if (message.type === "file_edited") {
+    const activity = readFileEditActivity(message);
     const event = events.append({
       type: "file_changed",
       roomId: message.roomId,
       memberId: message.memberId,
-      payload: { path: message.path }
+      payload: { path: message.path, ...activity }
     });
     return { broadcast: { type: "event", event } };
   }
@@ -87,6 +92,52 @@ export function handleRealtimeMessage({
       memberId: message.memberId,
       text: message.text
     }
+  };
+}
+
+function readFileEditActivity(
+  message: Extract<ClientMessage, { type: "file_edited" }>
+): FileEditActivity {
+  if (!Array.isArray(message.ranges) || message.ranges.length === 0) {
+    throw new Error("File edit ranges are required");
+  }
+  if (message.ranges.length > 100) {
+    throw new Error("File edit range limit exceeded");
+  }
+  const ranges = message.ranges.map((range) => {
+    if (
+      !Number.isInteger(range.startLine) ||
+      !Number.isInteger(range.endLine) ||
+      range.startLine < 1 ||
+      range.endLine < range.startLine
+    ) {
+      throw new Error("File edit range is invalid");
+    }
+    return { startLine: range.startLine, endLine: range.endLine };
+  });
+  if (
+    !Number.isInteger(message.addedLines) ||
+    !Number.isInteger(message.removedLines) ||
+    message.addedLines < 0 ||
+    message.removedLines < 0
+  ) {
+    throw new Error("File edit line counts are invalid");
+  }
+  const startedAt = Date.parse(message.startedAt);
+  const finishedAt = Date.parse(message.finishedAt);
+  if (
+    !Number.isFinite(startedAt) ||
+    !Number.isFinite(finishedAt) ||
+    finishedAt < startedAt
+  ) {
+    throw new Error("File edit timestamps are invalid");
+  }
+  return {
+    ranges,
+    addedLines: message.addedLines,
+    removedLines: message.removedLines,
+    startedAt: message.startedAt,
+    finishedAt: message.finishedAt
   };
 }
 

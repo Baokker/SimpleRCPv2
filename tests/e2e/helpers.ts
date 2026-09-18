@@ -7,10 +7,10 @@ export async function openAs(page: Page, name: string, projectId = "demo") {
 }
 
 export async function fetchEvents(page: Page, projectId = "demo") {
-  return page.evaluate(async () => {
-    const response = await fetch(`/api/projects/${projectId}/events`);
+  return page.evaluate(async (activeProjectId) => {
+    const response = await fetch(`/api/projects/${activeProjectId}/events`);
     return response.json() as Promise<{
       events: Array<{ type: string; payload?: Record<string, unknown> }>;
     }>;
-  });
+  }, projectId);
 }

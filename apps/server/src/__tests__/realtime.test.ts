@@ -34,7 +34,7 @@ describe("realtime message handling", () => {
     expect(events.list().map((event) => event.type)).toContain("file_opened");
   });
 
-  it("records file edit activity without broadcasting file content", () => {
+  it("records file edit ranges without broadcasting file content", () => {
     const events = createEventLog();
     const rooms = createRoomStore(events);
     const room = rooms.createRoom("workspace");
@@ -52,7 +52,15 @@ describe("realtime message handling", () => {
         roomId: room.id,
         memberId: member.id,
         connectionId: "tab-a",
-        path: "src/hello.ts"
+        path: "src/hello.ts",
+        ranges: [
+          { startLine: 2, endLine: 4 },
+          { startLine: 8, endLine: 8 }
+        ],
+        addedLines: 3,
+        removedLines: 1,
+        startedAt: "2026-09-18T06:00:00.000Z",
+        finishedAt: "2026-09-18T06:00:02.000Z"
       }
     });
 
@@ -60,7 +68,17 @@ describe("realtime message handling", () => {
       type: "event",
       event: {
         type: "file_changed",
-        payload: { path: "src/hello.ts" }
+        payload: {
+          path: "src/hello.ts",
+          ranges: [
+            { startLine: 2, endLine: 4 },
+            { startLine: 8, endLine: 8 }
+          ],
+          addedLines: 3,
+          removedLines: 1,
+          startedAt: "2026-09-18T06:00:00.000Z",
+          finishedAt: "2026-09-18T06:00:02.000Z"
+        }
       }
     });
     expect(events.list().map((event) => event.type)).toContain("file_changed");

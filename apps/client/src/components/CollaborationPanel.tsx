@@ -1,6 +1,5 @@
 import {
   Activity,
-  FileCode2,
   FilePenLine,
   FilePlus2,
   Eye,
@@ -27,8 +26,6 @@ type CollaborationTab = "chat" | "team" | "project";
 type ActivityKind =
   | "join"
   | "leave"
-  | "chat"
-  | "open"
   | "edit"
   | "command"
   | "create"
@@ -40,6 +37,9 @@ interface ActivityItem {
   id: string;
   kind: ActivityKind;
   text: string;
+  detail?: string;
+  path?: string;
+  startedAt?: string;
   timestamp: string;
 }
 
@@ -55,7 +55,8 @@ export function CollaborationPanel({
   workspaceRoot,
   roomId,
   followingMemberId,
-  onFollowMember
+  onFollowMember,
+  onOpenFile
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -69,6 +70,7 @@ export function CollaborationPanel({
   roomId: string;
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
+  onOpenFile(path: string): void;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const activityItems = useMemo(
@@ -135,12 +137,28 @@ export function CollaborationPanel({
               <textarea
                 value={chatText}
                 onChange={(event) => onChatTextChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !event.nativeEvent.isComposing
+                  ) {
+                    event.preventDefault();
+                    onSendChat();
+                  }
+                }}
                 placeholder="Message collaborators"
+                aria-describedby="chat-keyboard-hint"
                 data-testid="chat-input"
               />
-              <button onClick={onSendChat} data-testid="send-chat">
-                Send
-              </button>
+              <div className="chat-actions">
+                <small id="chat-keyboard-hint">
+                  Enter to send / Shift + Enter for new line
+                </small>
+                <button onClick={onSendChat} data-testid="send-chat">
+                  Send
+                </button>
+              </div>
             </div>
           </section>
         ) : null}
@@ -211,10 +229,19 @@ export function CollaborationPanel({
                   activityItems.map((item) => (
                     <li key={item.id}>
                       <ActivityIcon kind={item.kind} />
-                      <span>
-                        <strong>{item.text}</strong>
-                        <time>{formatTime(item.timestamp)}</time>
-                      </span>
+                      {item.path ? (
+                        <button
+                          className="activity-entry"
+                          onClick={() => onOpenFile(item.path ?? "")}
+                          title={`Open ${item.path}`}
+                        >
+                          <ActivityText item={item} />
+                        </button>
+                      ) : (
+                        <span className="activity-entry">
+                          <ActivityText item={item} />
+                        </span>
+                      )}
                     </li>
                   ))
                 )}
@@ -266,35 +293,47 @@ function formatActivity(
     case "member_offline":
       return item(event, "leave", `${actor} left the session`);
     case "file_opened":
-      return item(event, "open", `${actor} opened ${stringValue(payload.path) ?? "a file"}`);
-    case "file_changed":
-      return item(event, "edit", `${actor} edited ${stringValue(payload.path) ?? "a file"}`);
     case "chat_message_created":
-      return item(
-        event,
-        "chat",
-        `${stringValue(payload.authorName) ?? actor}: ${truncate(stringValue(payload.text) ?? "sent a message")}`
-      );
     case "command_started":
-      return item(event, "command", `${actor} ran ${stringValue(payload.command) ?? "a command"}`);
+      return null;
+    case "file_changed": {
+      const path = stringValue(payload.path);
+      return item(event, "edit", `${actor} edited ${path ?? "a file"}`, {
+        detail: formatEditDetail(payload),
+        path,
+        startedAt: stringValue(payload.startedAt),
+        finishedAt: stringValue(payload.finishedAt)
+      });
+    }
     case "command_completed":
       return item(
         event,
         "command",
-        `${actor}'s command finished with exit ${numberValue(payload.exitCode)}`
+        `${actor} ran ${stringValue(payload.command) ?? "a command"} · Exit ${numberValue(payload.exitCode)}`,
+        {
+          detail:
+            typeof payload.durationMs === "number"
+              ? formatDuration(payload.durationMs)
+              : undefined,
+          startedAt: stringValue(payload.startedAt)
+        }
       );
     case "session_settings_updated":
       return item(event, "general", `${actor} updated session settings`);
-    case "workspace_file_created":
-      return item(event, "create", `${actor} created ${stringValue(payload.path) ?? "a file"}`);
+    case "workspace_file_created": {
+      const path = stringValue(payload.path);
+      return item(event, "create", `${actor} created ${path ?? "a file"}`);
+    }
     case "workspace_directory_created":
       return item(event, "create", `${actor} created folder ${stringValue(payload.path) ?? ""}`.trim());
-    case "workspace_path_renamed":
+    case "workspace_path_renamed": {
+      const toPath = stringValue(payload.toPath);
       return item(
         event,
         "rename",
-        `${actor} renamed ${stringValue(payload.fromPath) ?? "a path"} to ${stringValue(payload.toPath) ?? "a new path"}`
+        `${actor} renamed ${stringValue(payload.fromPath) ?? "a path"} to ${toPath ?? "a new path"}`
       );
+    }
     case "workspace_path_deleted":
       return item(event, "delete", `${actor} deleted ${stringValue(payload.path) ?? "a path"}`);
     default:
@@ -305,17 +344,43 @@ function formatActivity(
 function item(
   event: EventRecord,
   kind: ActivityKind,
-  text: string
+  text: string,
+  options: {
+    detail?: string;
+    path?: string;
+    startedAt?: string;
+    finishedAt?: string;
+  } = {}
 ): ActivityItem {
-  return { id: event.id, kind, text, timestamp: event.timestamp };
+  return {
+    id: event.id,
+    kind,
+    text,
+    detail: options.detail,
+    path: options.path,
+    startedAt: options.startedAt,
+    timestamp: options.finishedAt ?? event.timestamp
+  };
+}
+
+function ActivityText({ item }: { item: ActivityItem }) {
+  return (
+    <>
+      <strong>{item.text}</strong>
+      {item.detail ? <small>{item.detail}</small> : null}
+      <time>
+        {item.startedAt
+          ? `${formatTime(item.startedAt)}-${formatTime(item.timestamp)}`
+          : formatTime(item.timestamp)}
+      </time>
+    </>
+  );
 }
 
 function ActivityIcon({ kind }: { kind: ActivityKind }) {
   const props = { size: 14, "aria-hidden": true };
   if (kind === "join") return <LogIn {...props} />;
   if (kind === "leave") return <LogOut {...props} />;
-  if (kind === "chat") return <MessageSquareText {...props} />;
-  if (kind === "open") return <FileCode2 {...props} />;
   if (kind === "edit") return <FilePenLine {...props} />;
   if (kind === "command") return <SquareTerminal {...props} />;
   if (kind === "create") return <FilePlus2 {...props} />;
@@ -333,8 +398,43 @@ function numberValue(value: unknown) {
   return typeof value === "number" ? value : 0;
 }
 
-function truncate(value: string) {
-  return value.length > 90 ? `${value.slice(0, 87)}...` : value;
+function formatEditDetail(payload: Record<string, unknown>) {
+  if (!Array.isArray(payload.ranges)) return undefined;
+  const ranges = payload.ranges.flatMap((value) => {
+    if (!value || typeof value !== "object") return [];
+    const range = value as Record<string, unknown>;
+    const startLine = numberValue(range.startLine);
+    const endLine = numberValue(range.endLine);
+    if (startLine < 1 || endLine < startLine) return [];
+    return [{ startLine, endLine }];
+  });
+  if (ranges.length === 0) return undefined;
+  const label = ranges
+    .map((range) =>
+      range.startLine === range.endLine
+        ? String(range.startLine)
+        : `${range.startLine}-${range.endLine}`
+    )
+    .join(", ");
+  const prefix = ranges.length === 1 && ranges[0]?.startLine === ranges[0]?.endLine
+    ? "Line"
+    : "Lines";
+  const addedLines = numberValue(payload.addedLines);
+  const removedLines = numberValue(payload.removedLines);
+  if (addedLines > 0 || removedLines > 0) {
+    return `${prefix} ${label} · +${addedLines} / -${removedLines}`;
+  }
+  const changedLines = ranges.reduce(
+    (count, range) => count + range.endLine - range.startLine + 1,
+    0
+  );
+  return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
+}
+
+function formatDuration(durationMs: number) {
+  return durationMs < 1_000
+    ? `Completed in ${durationMs}ms`
+    : `Completed in ${(durationMs / 1_000).toFixed(1)}s`;
 }
 
 function formatTime(timestamp: string) {
