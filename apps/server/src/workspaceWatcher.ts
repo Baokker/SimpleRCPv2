@@ -1,5 +1,6 @@
 import path from "node:path";
 import { watch } from "chokidar";
+import type { WorkspaceChange } from "./types.js";
 import { isIgnoredPath } from "./workspacePolicy.js";
 
 export type WorkspaceChangeType =
@@ -11,10 +12,7 @@ export type WorkspaceChangeType =
 
 export function watchWorkspace(
   workspaceRoot: string,
-  onChange: (change: {
-    type: WorkspaceChangeType;
-    path: string;
-  }) => void | Promise<void>
+  onChange: (change: WorkspaceChange) => void | Promise<void>
 ) {
   const watcher = watch(workspaceRoot, {
     ignored: (candidatePath) => {

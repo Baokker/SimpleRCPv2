@@ -149,15 +149,38 @@ export function attachRealtimeServer(
   const documentWss = new WebSocketServer({ noServer: true });
   const terminalWss = new WebSocketServer({ noServer: true });
   const projectSockets = new Map<string, Set<WebSocket>>();
+  const documentProjects = new Map<WebSocket, string>();
   const terminalProjects = new Map<WebSocket, string>();
   const identities = new Map<WebSocket, SocketIdentity>();
   const runtimeSubscriptions = new Map<string, Array<() => void>>();
+  const removeProjectDisposingListener = runtimeManager.onProjectDisposing(
+    (projectId) => {
+      for (const socket of projectSockets.get(projectId) ?? []) {
+        socket.close(1001, "Project deleted");
+      }
+      projectSockets.delete(projectId);
+      for (const [socket, activeProjectId] of documentProjects) {
+        if (activeProjectId === projectId) socket.close(1001, "Project deleted");
+      }
+      for (const [socket, activeProjectId] of terminalProjects) {
+        if (activeProjectId === projectId) socket.close(1001, "Project deleted");
+      }
+      for (const remove of runtimeSubscriptions.get(projectId) ?? []) remove();
+      runtimeSubscriptions.delete(projectId);
+    }
+  );
 
   function ensureRuntimeSubscriptions(runtime: ProjectRuntime) {
     if (runtimeSubscriptions.has(runtime.project.id)) return;
-    const removeWorkspaceListener = runtime.onWorkspaceChanged((path) => {
+    const removeWorkspaceListener = runtime.onWorkspaceChanged((change) => {
       broadcastToProject(projectSockets, runtime.project.id, {
         type: "workspace_changed",
+        change
+      });
+    });
+    const removeFileSavedListener = runtime.onFileSaved((path) => {
+      broadcastToProject(projectSockets, runtime.project.id, {
+        type: "file_saved",
         path
       });
     });
@@ -174,6 +197,7 @@ export function attachRealtimeServer(
     });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,
+      removeFileSavedListener,
       removeTerminalListener
     ]);
   }
@@ -231,6 +255,8 @@ export function attachRealtimeServer(
         .prepareDocument(documentName)
         .then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
+            documentProjects.set(webSocket, projectId);
+            webSocket.on("close", () => documentProjects.delete(webSocket));
             setupWSConnection(webSocket, request, { docName: documentName });
           });
         })
@@ -331,6 +357,7 @@ export function attachRealtimeServer(
     documents: documentWss,
     terminal: terminalWss,
     dispose() {
+      removeProjectDisposingListener();
       for (const removers of runtimeSubscriptions.values()) {
         for (const remove of removers) remove();
       }

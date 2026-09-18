@@ -7,12 +7,14 @@ export interface CollaborativeDocumentStoreOptions {
   workspaceRoot: string;
   projectId?: string;
   persistDelayMs?: number;
+  onPersisted?(filePath: string): void;
 }
 
 export function createCollaborativeDocumentStore({
   workspaceRoot,
   projectId,
-  persistDelayMs = 300
+  persistDelayMs = 300,
+  onPersisted
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
   const persistedContents = new Map<string, string>();
@@ -77,6 +79,7 @@ export function createCollaborativeDocumentStore({
     const content = document.getText("content").toString();
     await writeWorkspaceFile(workspaceRoot, filePath, content);
     persistedContents.set(name, content);
+    onPersisted?.(filePath);
   }
 
   async function flush(roomId: string, filePath: string) {

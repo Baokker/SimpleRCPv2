@@ -19,6 +19,17 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await openAs(ada, "Ada");
   await openAs(linus, "Linus");
 
+  await expect(ada.getByTestId("projects-link")).toBeVisible();
+  await expect(ada.getByTestId("command-input")).toHaveCount(0);
+  await ada.getByTestId("toggle-collaboration").click();
+  await expect(ada.locator(".collab-pane")).toBeHidden();
+  await ada.getByTestId("toggle-collaboration").click();
+  await expect(ada.locator(".collab-pane")).toBeVisible();
+  await ada.getByTestId("toggle-terminal").click();
+  await expect(ada.locator(".terminal-pane")).toBeHidden();
+  await ada.getByTestId("toggle-terminal").click();
+  await expect(ada.locator(".terminal-pane")).toBeVisible();
+
   await fs.mkdir("artifacts", { recursive: true });
   await ada.getByTestId("collab-tab-project").click();
   await expect(ada.getByTestId("project-panel")).toContainText("Collaborator");
@@ -92,6 +103,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await replaceMonacoText(ada, "src/hello.ts", "middle");
   await expectMonacoValue(linus, "src/hello.ts", "middle");
+  await expect(ada.getByTestId("editor-save-status")).toContainText("Saved");
   await Promise.all([
     insertMonacoText(ada, "src/hello.ts", "start", "Ada "),
     insertMonacoText(linus, "src/hello.ts", "end", " Linus")
@@ -110,20 +122,39 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await expect(ada.getByTestId("close-tab-src/hello.ts")).toBeVisible();
 
-  await handlePrompt(ada, "src/browser-created.ts", () =>
-    ada.getByTestId("new-file").click()
+  await expect(ada.getByTestId("new-file")).toHaveAttribute(
+    "title",
+    "Create file by path"
   );
+  await expect(ada.getByTestId("new-folder")).toHaveAttribute(
+    "title",
+    "Create folder by path"
+  );
+  await openWorkspaceDialog(ada, "new-file", "src/browser-created.ts", "src/");
   await expect(ada.getByTestId("file-src/browser-created.ts")).toBeVisible();
-  await handlePrompt(ada, "src/browser-renamed.ts", () =>
-    ada.getByTestId("rename-src/browser-created.ts").click()
+  await expect(linus.getByTestId("file-src/browser-created.ts")).toBeVisible();
+  await linus.getByTestId("file-src/browser-created.ts").click();
+  await waitForCollaborativeEditor(linus, "src/browser-created.ts");
+
+  await openWorkspaceDialog(ada, "new-folder", "src/browser-folder", "src/");
+  await expect(ada.getByTestId("dir-src/browser-folder")).toBeVisible();
+  await openWorkspaceDialog(
+    ada,
+    "rename-src/browser-created.ts",
+    "src/browser-renamed.ts"
   );
   await expect(ada.getByTestId("file-src/browser-renamed.ts")).toBeVisible();
   await expect(ada.getByTestId("close-tab-src/browser-renamed.ts")).toBeVisible();
-  await handleNextDialog(ada, "confirm", "Delete", "accept", () =>
-    ada.getByTestId("delete-src/browser-renamed.ts").click()
-  );
+  await expect(linus.getByTestId("close-tab-src/browser-renamed.ts")).toBeVisible();
+  await openDeleteDialog(ada, "src/browser-renamed.ts");
   await expect(ada.getByTestId("file-src/browser-renamed.ts")).toHaveCount(0);
   await expect(ada.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
+  await expect(linus.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
+  await expect(linus.getByTestId("workspace-notice")).toContainText(
+    "src/browser-renamed.ts was deleted"
+  );
+  await openDeleteDialog(ada, "src/browser-folder");
+  await expect(ada.getByTestId("dir-src/browser-folder")).toHaveCount(0);
   await ada.getByTestId("file-src/hello.ts").click();
 
   await setMonacoSelection(ada, "src/hello.ts", {
@@ -155,7 +186,9 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
     ada.getByText("Enter to send / Shift + Enter for new line")
   ).toBeVisible();
   const chatInput = ada.getByTestId("chat-input");
+  await expect(ada.getByTestId("send-chat")).toBeDisabled();
   await chatInput.fill("Linus, I updated");
+  await expect(ada.getByTestId("send-chat")).toBeEnabled();
   await chatInput.press("Shift+Enter");
   await chatInput.pressSequentially("the greeting.");
   await expect(chatInput).toHaveValue("Linus, I updated\nthe greeting.");
@@ -175,21 +208,11 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
     "shared-pty-ok"
   );
 
-  await ada.getByTestId("command-input").fill("npm test");
-  await ada.getByTestId("run-command").click();
-  await expect(ada.getByTestId("terminal-output")).toContainText(
-    "sample-workspace-test-ok"
-  );
-
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("activity-feed")).toContainText(
     "Ada edited src/hello.ts"
   );
   await expect(ada.getByTestId("activity-feed")).toContainText("Lines 1-2");
-  await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Ada ran npm test · Exit 0"
-  );
-  await expect(ada.getByTestId("activity-feed")).toContainText("Completed in");
   await expect(ada.getByTestId("activity-feed")).not.toContainText("opened src/hello.ts");
   await expect(ada.getByTestId("activity-feed")).not.toContainText(
     "Linus, I updated the greeting."
@@ -438,15 +461,27 @@ async function waitForCollaborativeEditor(
   );
 }
 
-async function handlePrompt(
+async function openWorkspaceDialog(
   page: import("@playwright/test").Page,
+  triggerTestId: string,
   value: string,
-  trigger: () => Promise<unknown>
+  initialValue?: string
 ) {
-  const dialogHandled = (async () => {
-    const dialog = await page.waitForEvent("dialog");
-    expect(dialog.type()).toBe("prompt");
-    await dialog.accept(value);
-  })();
-  await Promise.all([trigger(), dialogHandled]);
+  await page.getByTestId(triggerTestId).click();
+  await expect(page.getByTestId("workspace-dialog")).toBeVisible();
+  const input = page.getByTestId("workspace-path-input");
+  if (initialValue !== undefined) await expect(input).toHaveValue(initialValue);
+  await input.fill(value);
+  await page.getByTestId("workspace-dialog-submit").click();
+  await expect(page.getByTestId("workspace-dialog")).toHaveCount(0);
+}
+
+async function openDeleteDialog(
+  page: import("@playwright/test").Page,
+  path: string
+) {
+  await page.getByTestId(`delete-${path}`).click();
+  await expect(page.getByTestId("workspace-dialog")).toContainText(path);
+  await page.getByTestId("workspace-dialog-submit").click();
+  await expect(page.getByTestId("workspace-dialog")).toHaveCount(0);
 }

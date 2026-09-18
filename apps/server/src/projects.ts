@@ -39,7 +39,31 @@ export async function createProjectRegistry({
   }
 
   return {
-    listProjects() {
+    async listProjects() {
+      const missingProjectIds = new Set<string>();
+      let recreatedDemo: ProjectRecord | undefined;
+      for (const project of registry.projects) {
+        if (await pathExists(project.workspacePath)) continue;
+        if (project.id === "demo") {
+          recreatedDemo = await createDemoProject({
+            projectsDir,
+            demoProjectRoot
+          });
+        } else {
+          missingProjectIds.add(project.id);
+        }
+      }
+      if (missingProjectIds.size > 0 || recreatedDemo) {
+        registry = {
+          ...registry,
+          projects: registry.projects.flatMap((project) => {
+            if (missingProjectIds.has(project.id)) return [];
+            if (project.id === "demo" && recreatedDemo) return [recreatedDemo];
+            return [project];
+          })
+        };
+        await saveRegistry(registryPath, registry);
+      }
       return [...registry.projects].sort((left, right) =>
         right.lastOpenedAt.localeCompare(left.lastOpenedAt)
       );
@@ -141,7 +165,36 @@ export async function createProjectRegistry({
         (candidate) => candidate.id === projectId
       );
       if (!project) throw new Error("Project not found");
+      if (!(await pathExists(project.workspacePath))) {
+        registry = {
+          ...registry,
+          projects: registry.projects.filter(
+            (candidate) => candidate.id !== projectId
+          )
+        };
+        await saveRegistry(registryPath, registry);
+        throw new Error("Project not found");
+      }
       project.lastOpenedAt = new Date().toISOString();
+      await saveRegistry(registryPath, registry);
+      return project;
+    },
+    async deleteProject(projectId: string) {
+      if (projectId === "demo") {
+        throw new Error("Demo project cannot be deleted");
+      }
+      const project = registry.projects.find(
+        (candidate) => candidate.id === projectId
+      );
+      if (!project) throw new Error("Project not found");
+      const projectDir = resolveProjectDir(projectsDir, project.id);
+      await fs.rm(projectDir, { recursive: true, force: true });
+      registry = {
+        ...registry,
+        projects: registry.projects.filter(
+          (candidate) => candidate.id !== projectId
+        )
+      };
       await saveRegistry(registryPath, registry);
       return project;
     }
@@ -218,6 +271,15 @@ function validateProjectName(name: string, projects: ProjectRecord[]) {
     throw new Error("A project with this name already exists");
   }
   return normalized;
+}
+
+function resolveProjectDir(projectsDir: string, projectId: string) {
+  const root = path.resolve(projectsDir);
+  const projectDir = path.resolve(root, projectId);
+  if (path.dirname(projectDir) !== root) {
+    throw new Error("Invalid project id");
+  }
+  return projectDir;
 }
 
 async function pathExists(targetPath: string) {

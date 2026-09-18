@@ -51,10 +51,6 @@ export function createSharedTerminal({
     terminal.write(data);
   }
 
-  function writeSystem(data: string) {
-    appendData(data);
-  }
-
   function resize(cols: number, rows: number) {
     terminal.resize(
       Math.max(20, Math.min(400, Math.floor(cols))),
@@ -76,7 +72,6 @@ export function createSharedTerminal({
   return {
     onData,
     write,
-    writeSystem,
     resize,
     restart,
     dispose,

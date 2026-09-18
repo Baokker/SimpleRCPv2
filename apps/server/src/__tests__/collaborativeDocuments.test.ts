@@ -18,9 +18,11 @@ afterEach(async () => {
 
 describe("collaborative document store", () => {
   it("initializes from disk and persists merged Yjs text", async () => {
+    const persistedPaths: string[] = [];
     const store = createCollaborativeDocumentStore({
       workspaceRoot: root,
-      persistDelayMs: 5
+      persistDelayMs: 5,
+      onPersisted: (filePath) => persistedPaths.push(filePath)
     });
     const document = await store.getDocument("room-one", "src/hello.ts");
     const text = document.getText("content");
@@ -34,6 +36,7 @@ describe("collaborative document store", () => {
     await expect(
       fs.readFile(path.join(root, "src", "hello.ts"), "utf8")
     ).resolves.toBe("A hello B");
+    expect(persistedPaths).toContain("src/hello.ts");
   });
 
   it("retires an active document before its path is renamed", async () => {

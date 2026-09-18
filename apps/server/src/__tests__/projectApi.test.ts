@@ -43,13 +43,21 @@ describe("project API", () => {
       ) as { projects: Array<{ id: string; name: string }> };
       expect(initial.projects).toMatchObject([{ id: "demo", name: "Demo" }]);
 
+      await fetch(`${origin}/api/projects/demo`);
+      expect(app.locals.runtimeManager.find("demo")).toBeDefined();
+      const deleteDemoResponse = await fetch(`${origin}/api/projects/demo`, {
+        method: "DELETE"
+      });
+      expect(deleteDemoResponse.status).toBe(400);
+      expect(app.locals.runtimeManager.find("demo")).toBeDefined();
+
       const createResponse = await fetch(`${origin}/api/projects`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: "Blank App" })
       });
       const created = await createResponse.json() as {
-        project: { id: string; name: string };
+        project: { id: string; name: string; workspacePath: string };
       };
       expect(createResponse.status).toBe(201);
       expect(created.project.name).toBe("Blank App");
@@ -64,6 +72,23 @@ describe("project API", () => {
       expect(openResponse.status).toBe(200);
       expect(opened.project.id).toBe(created.project.id);
       expect(opened.roomId).toBeTruthy();
+
+      const deleteResponse = await fetch(
+        `${origin}/api/projects/${created.project.id}`,
+        { method: "DELETE" }
+      );
+      expect(deleteResponse.status).toBe(200);
+      await expect(deleteResponse.json()).resolves.toEqual({
+        deletedProjectId: created.project.id
+      });
+      await expect(fs.stat(path.dirname(created.project.workspacePath))).rejects.toThrow();
+
+      const projectsAfterDelete = await fetch(`${origin}/api/projects`).then(
+        (response) => response.json()
+      ) as { projects: Array<{ id: string }> };
+      expect(projectsAfterDelete.projects.map((project) => project.id)).not.toContain(
+        created.project.id
+      );
     } finally {
       await app.locals.runtimeManager.dispose();
       await new Promise<void>((resolve, reject) => {

@@ -10,11 +10,10 @@ import {
   MessageSquareText,
   Pencil,
   Settings2,
-  SquareTerminal,
   Trash2,
   Users
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
   ChatMessage,
   EventRecord,
@@ -27,7 +26,6 @@ type ActivityKind =
   | "join"
   | "leave"
   | "edit"
-  | "command"
   | "create"
   | "rename"
   | "delete"
@@ -49,6 +47,7 @@ export function CollaborationPanel({
   chatMessages,
   remoteCursors,
   chatText,
+  chatSending,
   onChatTextChange,
   onSendChat,
   member,
@@ -63,6 +62,7 @@ export function CollaborationPanel({
   chatMessages: ChatMessage[];
   remoteCursors: RemoteCursor[];
   chatText: string;
+  chatSending: boolean;
   onChatTextChange(value: string): void;
   onSendChat(): void;
   member: RoomMember | null;
@@ -73,6 +73,10 @@ export function CollaborationPanel({
   onOpenFile(path: string): void;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
+  const [unseenMessages, setUnseenMessages] = useState(0);
+  const chatTranscriptRef = useRef<HTMLOListElement>(null);
+  const stickToLatestRef = useRef(true);
+  const previousMessageCountRef = useRef(chatMessages.length);
   const activityItems = useMemo(
     () =>
       events
@@ -84,6 +88,30 @@ export function CollaborationPanel({
         .reverse(),
     [events, members]
   );
+
+  useLayoutEffect(() => {
+    const transcript = chatTranscriptRef.current;
+    const added = Math.max(
+      0,
+      chatMessages.length - previousMessageCountRef.current
+    );
+    previousMessageCountRef.current = chatMessages.length;
+    if (!transcript) return;
+    if (stickToLatestRef.current) {
+      transcript.scrollTop = transcript.scrollHeight;
+      setUnseenMessages(0);
+    } else if (added > 0) {
+      setUnseenMessages((count) => count + added);
+    }
+  }, [chatMessages]);
+
+  function showLatestMessages() {
+    const transcript = chatTranscriptRef.current;
+    if (!transcript) return;
+    transcript.scrollTop = transcript.scrollHeight;
+    stickToLatestRef.current = true;
+    setUnseenMessages(0);
+  }
 
   return (
     <div className="panel collab-panel">
@@ -118,7 +146,17 @@ export function CollaborationPanel({
       <div className="collab-tab-body">
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
-            <ol className="chat-transcript" data-testid="chat-transcript">
+            <ol
+              ref={chatTranscriptRef}
+              className="chat-transcript"
+              onScroll={(event) => {
+                const transcript = event.currentTarget;
+                stickToLatestRef.current =
+                  transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 24;
+                if (stickToLatestRef.current) setUnseenMessages(0);
+              }}
+              data-testid="chat-transcript"
+            >
               {chatMessages.length === 0 ? (
                 <li className="empty-panel-state">No messages yet.</li>
               ) : (
@@ -133,6 +171,15 @@ export function CollaborationPanel({
                 ))
               )}
             </ol>
+            {unseenMessages > 0 ? (
+              <button
+                className="new-messages"
+                type="button"
+                onClick={showLatestMessages}
+              >
+                {unseenMessages} new {unseenMessages === 1 ? "message" : "messages"}
+              </button>
+            ) : null}
             <div className="chat-box" data-testid="chat-composer">
               <textarea
                 value={chatText}
@@ -155,8 +202,12 @@ export function CollaborationPanel({
                 <small id="chat-keyboard-hint">
                   Enter to send / Shift + Enter for new line
                 </small>
-                <button onClick={onSendChat} data-testid="send-chat">
-                  Send
+                <button
+                  onClick={onSendChat}
+                  disabled={chatSending || chatText.trim().length === 0}
+                  data-testid="send-chat"
+                >
+                  {chatSending ? "Sending" : "Send"}
                 </button>
               </div>
             </div>
@@ -294,7 +345,6 @@ function formatActivity(
       return item(event, "leave", `${actor} left the session`);
     case "file_opened":
     case "chat_message_created":
-    case "command_started":
       return null;
     case "file_changed": {
       const path = stringValue(payload.path);
@@ -305,19 +355,6 @@ function formatActivity(
         finishedAt: stringValue(payload.finishedAt)
       });
     }
-    case "command_completed":
-      return item(
-        event,
-        "command",
-        `${actor} ran ${stringValue(payload.command) ?? "a command"} · Exit ${numberValue(payload.exitCode)}`,
-        {
-          detail:
-            typeof payload.durationMs === "number"
-              ? formatDuration(payload.durationMs)
-              : undefined,
-          startedAt: stringValue(payload.startedAt)
-        }
-      );
     case "session_settings_updated":
       return item(event, "general", `${actor} updated session settings`);
     case "workspace_file_created": {
@@ -382,7 +419,6 @@ function ActivityIcon({ kind }: { kind: ActivityKind }) {
   if (kind === "join") return <LogIn {...props} />;
   if (kind === "leave") return <LogOut {...props} />;
   if (kind === "edit") return <FilePenLine {...props} />;
-  if (kind === "command") return <SquareTerminal {...props} />;
   if (kind === "create") return <FilePlus2 {...props} />;
   if (kind === "rename") return <Pencil {...props} />;
   if (kind === "delete") return <Trash2 {...props} />;
@@ -429,12 +465,6 @@ function formatEditDetail(payload: Record<string, unknown>) {
     0
   );
   return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
-}
-
-function formatDuration(durationMs: number) {
-  return durationMs < 1_000
-    ? `Completed in ${durationMs}ms`
-    : `Completed in ${(durationMs / 1_000).toFixed(1)}s`;
 }
 
 function formatTime(timestamp: string) {

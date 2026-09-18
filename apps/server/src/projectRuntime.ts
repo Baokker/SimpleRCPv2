@@ -4,19 +4,24 @@ import { createEventLog } from "./eventLog.js";
 import type { ProjectRecord } from "./projects.js";
 import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
+import type { WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
 export function createProjectRuntime(project: ProjectRecord) {
   const events = createEventLog();
   const rooms = createRoomStore(events);
   const chat = createChatStore(events);
+  const workspaceListeners = new Set<(change: WorkspaceChange) => void>();
+  const fileSavedListeners = new Set<(path: string) => void>();
   const documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
-    projectId: project.id
+    projectId: project.id,
+    onPersisted(path) {
+      for (const listener of fileSavedListeners) listener(path);
+    }
   });
   const terminal = createSharedTerminal({ workspaceRoot: project.workspacePath });
   const room = rooms.createRoom(project.workspacePath, project.name);
-  const workspaceListeners = new Set<(path: string) => void>();
   const terminalListeners = new Set<(data: string) => void>();
   const removeTerminalListener = terminal.onData((data) => {
     for (const listener of terminalListeners) listener(data);
@@ -29,7 +34,7 @@ export function createProjectRuntime(project: ProjectRecord) {
       documents.dropPath(change.path);
     }
     if (change.type !== "change") {
-      for (const listener of workspaceListeners) listener(change.path);
+      for (const listener of workspaceListeners) listener(change);
     }
   });
 
@@ -41,9 +46,16 @@ export function createProjectRuntime(project: ProjectRecord) {
     documents,
     terminal,
     room,
-    onWorkspaceChanged(listener: (path: string) => void) {
+    onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
       workspaceListeners.add(listener);
       return () => workspaceListeners.delete(listener);
+    },
+    announceWorkspaceChange(change: WorkspaceChange) {
+      for (const listener of workspaceListeners) listener(change);
+    },
+    onFileSaved(listener: (path: string) => void) {
+      fileSavedListeners.add(listener);
+      return () => fileSavedListeners.delete(listener);
     },
     onTerminalData(listener: (data: string) => void) {
       terminalListeners.add(listener);
@@ -51,6 +63,7 @@ export function createProjectRuntime(project: ProjectRecord) {
     },
     async dispose() {
       workspaceListeners.clear();
+      fileSavedListeners.clear();
       terminalListeners.clear();
       removeTerminalListener();
       await documents.awaitIdle();

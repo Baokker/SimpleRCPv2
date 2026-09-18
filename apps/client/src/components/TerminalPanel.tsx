@@ -1,5 +1,5 @@
 import { RotateCcw } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ThemeMode } from "../theme";
 import {
   SharedTerminal,
@@ -10,42 +10,33 @@ export function TerminalPanel({
   projectId,
   theme,
   canRun,
-  memberId,
-  commandText,
-  running,
-  onCommandTextChange,
-  onRunCommand
+  memberId
 }: {
   projectId: string;
   theme: ThemeMode;
   canRun: boolean;
   memberId: string;
-  commandText: string;
-  running: boolean;
-  onCommandTextChange(command: string): void;
-  onRunCommand(): void;
 }) {
   const terminalRef = useRef<SharedTerminalHandle>(null);
+  const [connectionState, setConnectionState] = useState("Connecting");
 
   return (
     <div className="panel terminal-panel">
       <div className="panel-header terminal-header">
         <span>Terminal</span>
         <div className="terminal-controls">
-          <input
-            value={commandText}
-            disabled={!canRun || running}
-            onChange={(event) => onCommandTextChange(event.target.value)}
-            placeholder={'node -e "console.log(\'ok\')"'}
-            data-testid="command-input"
-          />
-          <button
-            onClick={onRunCommand}
-            disabled={running || !canRun || commandText.trim().length === 0}
-            data-testid="run-command"
-          >
-            {running ? "Running" : "Run"}
-          </button>
+          <span className="terminal-state" data-testid="terminal-state">
+            Shared · {connectionState}
+          </span>
+          {connectionState === "Offline" ? (
+            <button
+              className="terminal-reconnect"
+              type="button"
+              onClick={() => terminalRef.current?.reconnect()}
+            >
+              Reconnect
+            </button>
+          ) : null}
           <button
             className="terminal-restart"
             onClick={() => terminalRef.current?.restart()}
@@ -64,6 +55,7 @@ export function TerminalPanel({
           memberId={memberId}
           canInput={canRun}
           theme={theme}
+          onConnectionState={setConnectionState}
         />
       </div>
     </div>

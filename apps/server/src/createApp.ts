@@ -3,7 +3,6 @@ import express from "express";
 import type { ServerConfig } from "./config.js";
 import { createProjectRuntimeManager } from "./projectRuntimeManager.js";
 import { createProjectRegistry } from "./projects.js";
-import { runWorkspaceCommand } from "./runner.js";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
@@ -35,8 +34,20 @@ export async function createApp(config: ServerConfig) {
     });
   });
 
-  app.get("/api/projects", (_req, res) => {
-    res.json({ projects: registry.listProjects() });
+  app.get("/api/projects", async (_req, res, next) => {
+    try {
+      const projects = await registry.listProjects();
+      const projectIds = new Set(projects.map((project) => project.id));
+      await Promise.all(
+        runtimeManager
+          .listActive()
+          .filter((runtime) => !projectIds.has(runtime.project.id))
+          .map((runtime) => runtimeManager.disposeProject(runtime.project.id))
+      );
+      res.json({ projects });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.post("/api/projects", async (req, res, next) => {
@@ -85,6 +96,22 @@ export async function createApp(config: ServerConfig) {
       const project = await registry.markOpened(req.params.projectId);
       const runtime = runtimeManager.get(project.id);
       res.json({ project, roomId: runtime.room.id });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/projects/:projectId", async (req, res, next) => {
+    try {
+      const projectId = req.params.projectId;
+      const project = registry.getProject(projectId);
+      if (!project) throw new Error("Project not found");
+      if (project.source === "demo") {
+        throw new Error("Demo project cannot be deleted");
+      }
+      await runtimeManager.disposeProject(projectId);
+      await registry.deleteProject(projectId);
+      res.json({ deletedProjectId: projectId });
     } catch (error) {
       next(error);
     }
@@ -187,41 +214,6 @@ export async function createApp(config: ServerConfig) {
     }
   });
 
-  app.post("/api/projects/:projectId/runner/run", async (req, res, next) => {
-    try {
-      const runtime = runtimeManager.get(req.params.projectId);
-      const { command, initiatorId } = req.body as {
-        command?: string;
-        initiatorId?: string;
-      };
-      if (!command || !initiatorId) {
-        res.status(400).json({ error: "command and initiatorId are required" });
-        return;
-      }
-      if (!runtime.rooms.getMember(runtime.room.id, initiatorId)) {
-        res.status(403).json({ error: "Project membership is required" });
-        return;
-      }
-      await runtime.documents.awaitIdle();
-      runtime.terminal.writeSystem(`\r\n$ ${command}\r\n`);
-      const run = await runWorkspaceCommand({
-        workspaceRoot: runtime.project.workspacePath,
-        command,
-        events: runtime.events,
-        roomId: runtime.room.id,
-        initiatorId,
-        timeoutMs: 30_000,
-        onOutput: (output) => runtime.terminal.writeSystem(output)
-      });
-      runtime.terminal.writeSystem(
-        `\r\n[command exited with code ${run.exitCode}]\r\n`
-      );
-      res.json({ run });
-    } catch (error) {
-      next(error);
-    }
-  });
-
   app.get("/api/projects/:projectId/workspace/directory", async (req, res, next) => {
     try {
       const runtime = runtimeManager.get(req.params.projectId);
@@ -294,6 +286,7 @@ export async function createApp(config: ServerConfig) {
         memberId: initiatorId,
         payload: { path: filePath }
       });
+      runtime.announceWorkspaceChange({ type: "add", path: filePath });
       res.json({
         tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
       });
@@ -320,6 +313,10 @@ export async function createApp(config: ServerConfig) {
         roomId: runtime.room.id,
         memberId: initiatorId,
         payload: { path: directoryPath }
+      });
+      runtime.announceWorkspaceChange({
+        type: "addDir",
+        path: directoryPath
       });
       res.json({
         tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
@@ -352,6 +349,11 @@ export async function createApp(config: ServerConfig) {
         memberId: initiatorId,
         payload: { fromPath, toPath }
       });
+      runtime.announceWorkspaceChange({
+        type: "rename",
+        fromPath,
+        path: toPath
+      });
       res.json({
         tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")
       });
@@ -377,6 +379,10 @@ export async function createApp(config: ServerConfig) {
         roomId: runtime.room.id,
         memberId: initiatorId,
         payload: { path: workspacePath }
+      });
+      runtime.announceWorkspaceChange({
+        type: "unlink",
+        path: workspacePath
       });
       res.json({
         tree: await listWorkspaceDirectory(runtime.project.workspacePath, "")

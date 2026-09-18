@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   ChevronDown,
   ChevronRight,
   FileCode2,
@@ -40,19 +41,29 @@ export function WorkspaceExplorer({
   return (
     <div className="panel">
       <div className="panel-header explorer-header">
-        <span title={workspaceName}>{workspaceName || "Workspace"}</span>
+        <div className="explorer-title">
+          <a
+            href="/"
+            aria-label="Back to projects"
+            title="Projects"
+            data-testid="projects-link"
+          >
+            <ArrowLeft size={15} />
+          </a>
+          <span title={workspaceName}>{workspaceName || "Workspace"}</span>
+        </div>
         {canManageFiles ? <div className="icon-actions">
           <button
-            aria-label="New file"
-            title="New file"
+            aria-label="Create file by path"
+            title="Create file by path"
             onClick={onCreateFile}
             data-testid="new-file"
           >
             <FilePlus2 size={15} />
           </button>
           <button
-            aria-label="New folder"
-            title="New folder"
+            aria-label="Create folder by path"
+            title="Create folder by path"
             onClick={onCreateFolder}
             data-testid="new-folder"
           >

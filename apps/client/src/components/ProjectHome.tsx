@@ -5,11 +5,13 @@ import {
   Moon,
   Plus,
   Sun,
+  Trash2,
   X
 } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   createProject,
+  deleteProject,
   getProjects,
   importExistingProject,
   importZipProject
@@ -33,11 +35,21 @@ export function ProjectHome({
   const [archive, setArchive] = useState<File>();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingProjectId, setDeletingProjectId] = useState<string>();
   const [error, setError] = useState("");
+  const [projectListError, setProjectListError] = useState("");
   const archiveInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void refreshProjects().finally(() => setLoading(false));
+    void refreshProjects()
+      .catch((nextError) => {
+        setProjectListError(
+          nextError instanceof Error
+            ? nextError.message
+            : "Project list loading failed"
+        );
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   async function refreshProjects() {
@@ -50,6 +62,7 @@ export function ProjectHome({
     setDirectoryPath("");
     setArchive(undefined);
     setError("");
+    setProjectListError("");
   }
 
   async function submit(event: FormEvent) {
@@ -72,6 +85,25 @@ export function ProjectHome({
       setError(nextError instanceof Error ? nextError.message : "Project creation failed");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function removeProject(project: ProjectRecord) {
+    const confirmed = window.confirm(
+      `Delete "${project.name}" and all stored code? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    setDeletingProjectId(project.id);
+    setProjectListError("");
+    try {
+      await deleteProject(project.id);
+      await refreshProjects();
+    } catch (nextError) {
+      setProjectListError(
+        nextError instanceof Error ? nextError.message : "Project deletion failed"
+      );
+    } finally {
+      setDeletingProjectId(undefined);
     }
   }
 
@@ -170,8 +202,11 @@ export function ProjectHome({
           <h2>Available projects</h2>
           <span>{projects.length}</span>
         </div>
+        {projectListError ? (
+          <p className="project-list-error">{projectListError}</p>
+        ) : null}
         {loading ? <p className="project-list-empty">Loading projects</p> : null}
-        {!loading && projects.length === 0 ? (
+        {!loading && !projectListError && projects.length === 0 ? (
           <p className="project-list-empty">No projects</p>
         ) : null}
         <ul className="project-list" data-testid="project-list">
@@ -185,13 +220,29 @@ export function ProjectHome({
               <time dateTime={project.lastOpenedAt}>
                 {formatDate(project.lastOpenedAt)}
               </time>
-              <button
-                type="button"
-                onClick={() => window.location.assign(`/projects/${encodeURIComponent(project.id)}`)}
-                data-testid={`open-project-${project.id}`}
-              >
-                Open
-              </button>
+              <div className="project-list-actions">
+                <button
+                  className="project-open"
+                  type="button"
+                  onClick={() => window.location.assign(`/projects/${encodeURIComponent(project.id)}`)}
+                  data-testid={`open-project-${project.id}`}
+                >
+                  Open
+                </button>
+                {project.source !== "demo" ? (
+                  <button
+                    className="project-delete"
+                    type="button"
+                    onClick={() => void removeProject(project)}
+                    disabled={Boolean(deletingProjectId)}
+                    aria-label={`Delete ${project.name}`}
+                    title="Delete project"
+                    data-testid={`delete-project-${project.id}`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

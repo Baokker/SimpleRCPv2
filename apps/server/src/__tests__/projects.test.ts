@@ -27,7 +27,7 @@ afterEach(async () => {
 describe("project registry", () => {
   it("creates the bundled Demo once and reloads it from the registry", async () => {
     const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
-    const projects = registry.listProjects();
+    const projects = await registry.listProjects();
 
     expect(projects).toHaveLength(1);
     expect(projects[0]).toMatchObject({
@@ -40,7 +40,7 @@ describe("project registry", () => {
     ).resolves.toBe("console.log('demo');\n");
 
     const restarted = await createProjectRegistry({ dataDir, demoProjectRoot });
-    expect(restarted.listProjects()).toEqual(projects);
+    expect(await restarted.listProjects()).toEqual(projects);
   });
 
   it("creates an empty project and rejects a duplicate name", async () => {
@@ -58,6 +58,44 @@ describe("project registry", () => {
 
     const restarted = await createProjectRegistry({ dataDir, demoProjectRoot });
     expect(restarted.getProject(project.id)).toEqual(project);
+  });
+
+  it("deletes a stored project and removes it from the registry", async () => {
+    const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
+    const project = await registry.createBlankProject("Disposable App");
+    const projectDir = path.dirname(project.workspacePath);
+
+    await registry.deleteProject(project.id);
+
+    await expect(fs.stat(projectDir)).rejects.toThrow();
+    expect(registry.getProject(project.id)).toBeUndefined();
+    expect(await registry.listProjects()).not.toContainEqual(project);
+    const restarted = await createProjectRegistry({ dataDir, demoProjectRoot });
+    expect(restarted.getProject(project.id)).toBeUndefined();
+  });
+
+  it("removes missing project directories from the visible registry", async () => {
+    const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
+    const project = await registry.createBlankProject("Missing App");
+    await fs.rm(path.dirname(project.workspacePath), {
+      recursive: true,
+      force: true
+    });
+
+    const projects = await registry.listProjects();
+
+    expect(projects.map((candidate) => candidate.id)).not.toContain(project.id);
+    const restarted = await createProjectRegistry({ dataDir, demoProjectRoot });
+    expect(restarted.getProject(project.id)).toBeUndefined();
+  });
+
+  it("keeps the bundled Demo project", async () => {
+    const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
+
+    await expect(registry.deleteProject("demo")).rejects.toThrow(
+      "Demo project cannot be deleted"
+    );
+    expect(registry.getProject("demo")).toBeDefined();
   });
 
   it("imports a server directory into an independent filtered workspace", async () => {

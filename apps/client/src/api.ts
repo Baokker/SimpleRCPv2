@@ -4,7 +4,6 @@ import type {
   ProjectRecord,
   RoomMember,
   RoomState,
-  RunRecord,
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
@@ -20,6 +19,13 @@ export async function createProject(name: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name })
   });
+}
+
+export async function deleteProject(projectId: string) {
+  return request<{ deletedProjectId: string }>(
+    `/api/projects/${encodeURIComponent(projectId)}`,
+    { method: "DELETE" }
+  );
 }
 
 export async function importExistingProject(name: string, path: string) {
@@ -194,31 +200,23 @@ export async function sendChatMessage(
   });
 }
 
-export async function runQuickCommand(
-  projectId: string,
-  command: string,
-  initiatorId: string
-): Promise<RunRecord> {
-  const response = await request<{ run: RunRecord }>(
-    `${projectPath(projectId)}/runner/run`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ command, initiatorId })
-    }
-  );
-  return response.run;
-}
-
 function projectPath(projectId: string) {
   return `/api/projects/${encodeURIComponent(projectId)}`;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, init);
+  let response: Response;
+  try {
+    response = await fetch(path, init);
+  } catch {
+    throw new Error("Cannot reach the SimpleRCP server");
+  }
   if (!response.ok) {
-    const body = await response.json() as { error?: string };
-    throw new Error(body.error ?? `Request failed with status ${response.status}`);
+    const contentType = response.headers.get("content-type") ?? "";
+    const message = contentType.includes("application/json")
+      ? ((await response.json()) as { error?: string }).error
+      : undefined;
+    throw new Error(message ?? `Request failed with status ${response.status}`);
   }
   return response.json() as Promise<T>;
 }

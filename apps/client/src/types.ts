@@ -101,6 +101,17 @@ export interface FileEditActivity extends FileEditChange {
   finishedAt: string;
 }
 
+export type WorkspaceChange =
+  | {
+      type: "add" | "addDir" | "change" | "unlink" | "unlinkDir";
+      path: string;
+    }
+  | {
+      type: "rename";
+      path: string;
+      fromPath: string;
+    };
+
 export interface RemoteCursor {
   memberId: string;
   displayName: string;
@@ -135,14 +146,9 @@ export type ServerMessage =
     }
   | {
       type: "workspace_changed";
+      change: WorkspaceChange;
+    }
+  | {
+      type: "file_saved";
       path: string;
     };
-
-export interface RunRecord {
-  id: string;
-  roomId: string;
-  initiatorId: string;
-  command: string;
-  exitCode: number | null;
-  output: string;
-}

@@ -11,8 +11,9 @@ test("collaborator can keep editing after workspace state refreshes", async ({
       return body.project.id;
     });
   await openAs(page, "Editor User", projectId);
-  page.once("dialog", (dialog) => dialog.accept("editable.txt"));
   await page.getByTestId("new-file").click();
+  await page.getByTestId("workspace-path-input").fill("editable.txt");
+  await page.getByTestId("workspace-dialog-submit").click();
   await page.waitForFunction(() =>
     Boolean(window.__simplercpYjsSynced?.["editable.txt"])
   );

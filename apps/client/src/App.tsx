@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react";
+import { MessagesSquare, Moon, PanelBottom, PanelRight, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createWorkspaceDirectory,
@@ -12,7 +12,6 @@ import {
   joinRoom,
   readWorkspaceFile,
   renameWorkspacePath,
-  runQuickCommand,
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
@@ -22,8 +21,16 @@ import { JoinProject, type ProjectIdentity } from "./components/JoinProject";
 import { ProjectHome } from "./components/ProjectHome";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
+import {
+  WorkspaceDialog,
+  type WorkspaceDialogAction
+} from "./components/WorkspaceDialog";
 import { mergeFileEditChanges } from "./editActivity";
-import { connectRoomSocket, type ClientSocket } from "./socket";
+import {
+  connectRoomSocket,
+  type ClientSocket,
+  type ConnectionState
+} from "./socket";
 import {
   applyTheme,
   THEME_STORAGE_KEY,
@@ -39,6 +46,7 @@ import type {
   RemoteCursor,
   RoomMember,
   ProjectRecord,
+  WorkspaceChange,
   WorkspaceNode
 } from "./types";
 
@@ -81,6 +89,9 @@ function ProjectRoute({
 }) {
   const [project, setProject] = useState<ProjectRecord>();
   const [roomId, setRoomId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const params = new URLSearchParams(window.location.search);
   const queryName = params.get("name")?.trim();
   const [identity, setIdentity] = useState<ProjectIdentity | undefined>(
@@ -90,14 +101,49 @@ function ProjectRoute({
   );
 
   useEffect(() => {
-    void getProject(projectId).then((result) => {
-      setProject(result.project);
-      setRoomId(result.roomId);
-    });
-  }, [projectId]);
+    let active = true;
+    setLoading(true);
+    setError("");
+    void getProject(projectId)
+      .then((result) => {
+        if (!active) return;
+        setProject(result.project);
+        setRoomId(result.roomId);
+      })
+      .catch((nextError) => {
+        if (!active) return;
+        setError(
+          nextError instanceof Error ? nextError.message : "Project loading failed"
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt, projectId]);
 
-  if (!project || !roomId) {
+  if (loading) {
     return <main className="route-loading">Loading project</main>;
+  }
+  if (error || !project || !roomId) {
+    return (
+      <main className="route-error" data-testid="route-error">
+        <h1>Unable to open project</h1>
+        <p>{error || "Project not found"}</p>
+        <div>
+          <a href="/" data-testid="route-error-projects">Projects</a>
+          <button
+            type="button"
+            onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+            data-testid="route-error-retry"
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
   }
   if (!identity) {
     return <JoinProject projectName={project.name} onJoin={setIdentity} />;
@@ -139,10 +185,19 @@ function WorkspacePage({
     Record<string, RemoteCursor>
   >({});
   const [chatText, setChatText] = useState("");
-  const [commandText, setCommandText] = useState("");
-  const [commandRunning, setCommandRunning] = useState(false);
-  const [connectionState, setConnectionState] = useState("Connecting");
+  const [chatSending, setChatSending] = useState(false);
+  const [connectionState, setConnectionState] =
+    useState<ConnectionState>("Connecting");
   const [followingMemberId, setFollowingMemberId] = useState<string>();
+  const [workspaceDialog, setWorkspaceDialog] =
+    useState<WorkspaceDialogAction>();
+  const [workspaceNotice, setWorkspaceNotice] = useState("");
+  const [workspaceError, setWorkspaceError] = useState("");
+  const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
+    "Saved"
+  );
+  const [collaborationVisible, setCollaborationVisible] = useState(true);
+  const [terminalVisible, setTerminalVisible] = useState(true);
   const socketRef = useRef<ClientSocket | null>(null);
   const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
@@ -150,6 +205,8 @@ function WorkspacePage({
   );
   const bootStartedRef = useRef(false);
   const pendingFileEditsRef = useRef(new Map<string, PendingFileEdit>());
+  const pendingSavePathsRef = useRef(new Set<string>());
+  const projectDeletedRef = useRef(false);
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
   const remoteCursors = useMemo(
@@ -193,8 +250,22 @@ function WorkspacePage({
         roomId,
         memberId: joined.id,
         connectionId,
+        onStateChange(state) {
+          setConnectionState(state);
+          if (state !== "Connected" && pendingSavePathsRef.current.size > 0) {
+            setSaveState("Sync failed");
+          }
+          if (state === "Connected") {
+            setWorkspaceError("");
+            void refreshSharedState().catch(showWorkspaceError);
+            void refreshWorkspaceTree().catch(showWorkspaceError);
+          }
+        },
+        onProjectDeleted() {
+          projectDeletedRef.current = true;
+          setWorkspaceError("This project was deleted.");
+        },
         onMessage(message) {
-          setConnectionState("Connected");
           if (message.type === "presence") {
             membersRef.current = message.members;
             setMembers(message.members);
@@ -236,10 +307,15 @@ function WorkspacePage({
             }));
           }
           if (message.type === "chat_message") {
-            void refreshSharedState();
+            void refreshSharedState().catch(showWorkspaceError);
           }
           if (message.type === "workspace_changed") {
+            applyWorkspaceChange(message.change);
             scheduleWorkspaceRefresh();
+          }
+          if (message.type === "file_saved") {
+            pendingSavePathsRef.current.delete(message.path);
+            if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
           }
         }
       });
@@ -248,7 +324,7 @@ function WorkspacePage({
       connected.sendReady();
     }
 
-    void boot();
+    void boot().catch(showWorkspaceError);
     return () => {
       mounted = false;
       flushAllFileEdits();
@@ -278,7 +354,7 @@ function WorkspacePage({
   useEffect(() => {
     if (!roomId) return;
     const timer = window.setInterval(() => {
-      void refreshSharedState();
+      void refreshSharedState().catch(showWorkspaceError);
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
@@ -320,6 +396,27 @@ function WorkspacePage({
     setEvents(await getEvents(projectId));
   }
 
+  function showWorkspaceError(error: unknown) {
+    if (projectDeletedRef.current) return;
+    setWorkspaceError(
+      error instanceof Error ? error.message : "Workspace request failed"
+    );
+  }
+
+  function applyWorkspaceChange(change: WorkspaceChange) {
+    if (change.type === "rename") {
+      remapOpenPath(change.fromPath, change.path);
+      setWorkspaceNotice(`${change.fromPath} was renamed to ${change.path}`);
+      return;
+    }
+    if (change.type === "unlink" || change.type === "unlinkDir") {
+      closePath(change.path, false);
+      pendingSavePathsRef.current.delete(change.path);
+      if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
+      setWorkspaceNotice(`${change.path} was deleted`);
+    }
+  }
+
   async function loadDirectory(path: string) {
     loadedDirectoriesRef.current.add(path);
     const children = await getWorkspaceDirectory(projectId, path);
@@ -341,7 +438,7 @@ function WorkspacePage({
     }
     workspaceRefreshTimerRef.current = window.setTimeout(() => {
       workspaceRefreshTimerRef.current = undefined;
-      void refreshWorkspaceTree();
+      void refreshWorkspaceTree().catch(showWorkspaceError);
     }, 150);
   }
 
@@ -380,6 +477,8 @@ function WorkspacePage({
   }
 
   function reportFileEdit(path: string, change: FileEditChange) {
+    pendingSavePathsRef.current.add(path);
+    setSaveState("Saving");
     const timestamp = new Date().toISOString();
     const existing = pendingFileEditsRef.current.get(path);
     if (existing) window.clearTimeout(existing.timer);
@@ -425,88 +524,67 @@ function WorkspacePage({
 
   async function sendChat() {
     const text = chatText.trim();
-    if (!text || !member || !roomId) return;
-    await sendChatMessage(projectId, {
-      authorId: member.id,
-      authorName: member.displayName,
-      text
-    });
-    socketRef.current?.sendChat(text);
-    setChatText("");
-    await refreshSharedState();
-  }
-
-  async function createFileFromPrompt() {
-    const path = window.prompt("New file path");
-    if (!path || !member) return;
-    await createWorkspaceFile(projectId, path, member.id);
-    addAncestorDirectories(loadedDirectoriesRef.current, path);
-    await refreshWorkspaceTree();
-    await openFile(path);
-  }
-
-  async function createFolderFromPrompt() {
-    const path = window.prompt("New folder path");
-    if (!path || !member) return;
-    await createWorkspaceDirectory(projectId, path, member.id);
-    addAncestorDirectories(loadedDirectoriesRef.current, path);
-    await refreshWorkspaceTree();
-    await refreshEvents();
-  }
-
-  async function renamePathFromPrompt(path: string) {
-    const toPath = window.prompt("Rename path", path);
-    if (!toPath || toPath === path || !member) return;
-    flushAllFileEdits();
-    await renameWorkspacePath(projectId, path, toPath, member.id);
-    loadedDirectoriesRef.current = remapLoadedDirectories(
-      loadedDirectoriesRef.current,
-      path,
-      toPath
-    );
-    addAncestorDirectories(loadedDirectoriesRef.current, toPath);
-    setOpenFiles((files) =>
-      files.map((file) =>
-        file.path === path || file.path.startsWith(`${path}/`)
-          ? { ...file, path: `${toPath}${file.path.slice(path.length)}` }
-          : file
-      )
-    );
-    if (activePath === path || activePath?.startsWith(`${path}/`)) {
-      const nextPath = `${toPath}${activePath.slice(path.length)}`;
-      setActivePath(nextPath);
-      socketRef.current?.sendOpenFile(nextPath);
+    if (!text || !member || !roomId || chatSending) return;
+    setChatSending(true);
+    setWorkspaceError("");
+    try {
+      await sendChatMessage(projectId, {
+        authorId: member.id,
+        authorName: member.displayName,
+        text
+      });
+      socketRef.current?.sendChat(text);
+      setChatText("");
+      await refreshSharedState();
+    } catch (error) {
+      showWorkspaceError(error);
+    } finally {
+      setChatSending(false);
     }
-    await refreshWorkspaceTree();
-    await refreshEvents();
   }
 
-  async function deletePathWithConfirm(path: string) {
-    if (!window.confirm(`Delete ${path}?`) || !member) return;
+  async function submitWorkspaceDialog(path: string) {
+    if (!workspaceDialog || !member) return;
+    if (workspaceDialog.type === "create-file") {
+      await createWorkspaceFile(projectId, path, member.id);
+      addAncestorDirectories(loadedDirectoriesRef.current, path);
+      await refreshWorkspaceTree();
+      await openFile(path);
+      return;
+    }
+    if (workspaceDialog.type === "create-folder") {
+      await createWorkspaceDirectory(projectId, path, member.id);
+      addAncestorDirectories(loadedDirectoriesRef.current, path);
+      await refreshWorkspaceTree();
+      await refreshEvents();
+      return;
+    }
+    if (workspaceDialog.type === "rename") {
+      if (path === workspaceDialog.path) return;
+      flushAllFileEdits();
+      await renameWorkspacePath(
+        projectId,
+        workspaceDialog.path,
+        path,
+        member.id
+      );
+      remapOpenPath(workspaceDialog.path, path);
+      await refreshWorkspaceTree();
+      await refreshEvents();
+      return;
+    }
     flushAllFileEdits();
-    await deleteWorkspacePath(projectId, path, member.id);
+    await deleteWorkspacePath(projectId, workspaceDialog.path, member.id);
     loadedDirectoriesRef.current = new Set(
       [...loadedDirectoriesRef.current].filter(
         (directory) =>
-          directory !== path && !directory.startsWith(`${path}/`)
+          directory !== workspaceDialog.path &&
+          !directory.startsWith(`${workspaceDialog.path}/`)
       )
     );
-    closePath(path);
+    closePath(workspaceDialog.path);
     await refreshWorkspaceTree();
     await refreshEvents();
-  }
-
-  async function runSelectedCommand() {
-    const command = commandText.trim();
-    if (!member || !command || !roomId) return;
-    flushAllFileEdits();
-    setCommandRunning(true);
-    try {
-      await runQuickCommand(projectId, command, member.id);
-      await refreshSharedState();
-    } finally {
-      setCommandRunning(false);
-    }
   }
 
   function followMember(memberId: string) {
@@ -515,18 +593,49 @@ function WorkspacePage({
     );
   }
 
-  function closePath(path: string) {
+  function remapOpenPath(fromPath: string, toPath: string) {
+    loadedDirectoriesRef.current = remapLoadedDirectories(
+      loadedDirectoriesRef.current,
+      fromPath,
+      toPath
+    );
+    addAncestorDirectories(loadedDirectoriesRef.current, toPath);
+    setOpenFiles((files) =>
+      files.map((file) =>
+        file.path === fromPath || file.path.startsWith(`${fromPath}/`)
+          ? { ...file, path: `${toPath}${file.path.slice(fromPath.length)}` }
+          : file
+      )
+    );
+    setActivePath((current) => {
+      if (current !== fromPath && !current?.startsWith(`${fromPath}/`)) {
+        return current;
+      }
+      const nextPath = `${toPath}${current.slice(fromPath.length)}`;
+      socketRef.current?.sendOpenFile(nextPath);
+      return nextPath;
+    });
+  }
+
+  function closePath(path: string, flush = true) {
     for (const pendingPath of pendingFileEditsRef.current.keys()) {
       if (pendingPath === path || pendingPath.startsWith(`${path}/`)) {
-        flushFileEdit(pendingPath);
+        if (flush) flushFileEdit(pendingPath);
+        else pendingFileEditsRef.current.delete(pendingPath);
       }
     }
-    setOpenFiles((files) =>
-      files.filter((file) => file.path !== path && !file.path.startsWith(`${path}/`))
-    );
-    if (activePath === path || activePath?.startsWith(`${path}/`)) {
-      setActivePath(undefined);
-    }
+    setOpenFiles((files) => {
+      const remaining = files.filter(
+        (file) => file.path !== path && !file.path.startsWith(`${path}/`)
+      );
+      setActivePath((current) => {
+        if (current !== path && !current?.startsWith(`${path}/`)) return current;
+        const nextPath = remaining.at(-1)?.path;
+        if (nextPath) socketRef.current?.sendOpenFile(nextPath);
+        return nextPath;
+      });
+      return remaining;
+    });
   }
 
   function closeFile(path: string) {
@@ -544,19 +653,64 @@ function WorkspacePage({
   }
 
   return (
-    <main className="app-shell">
+    <main
+      className={`app-shell${collaborationVisible ? "" : " collaboration-hidden"}${terminalVisible ? "" : " terminal-hidden"}`}
+    >
+      {workspaceError ? (
+        <div className="workspace-alert" role="alert" data-testid="workspace-error">
+          <span>{workspaceError}</span>
+          {workspaceError === "This project was deleted." ? (
+            <a href="/">Projects</a>
+          ) : (
+            <button type="button" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          )}
+          <button
+            type="button"
+            aria-label="Dismiss error"
+            onClick={() => setWorkspaceError("")}
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
+      {workspaceNotice ? (
+        <div className="workspace-notice" data-testid="workspace-notice">
+          <span>{workspaceNotice}</span>
+          <button
+            type="button"
+            aria-label="Dismiss notification"
+            onClick={() => setWorkspaceNotice("")}
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
       <aside className="workspace-pane">
         <WorkspaceExplorer
           tree={tree}
           activePath={activePath}
           workspaceName={project.name}
           canManageFiles={Boolean(member)}
-          onOpenFile={openFile}
-          onExpandDirectory={loadDirectory}
-          onCreateFile={createFileFromPrompt}
-          onCreateFolder={createFolderFromPrompt}
-          onRenamePath={renamePathFromPrompt}
-          onDeletePath={deletePathWithConfirm}
+          onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
+          onExpandDirectory={(path) =>
+            void loadDirectory(path).catch(showWorkspaceError)
+          }
+          onCreateFile={() =>
+            setWorkspaceDialog({
+              type: "create-file",
+              initialPath: activeDirectoryPrefix(activePath)
+            })
+          }
+          onCreateFolder={() =>
+            setWorkspaceDialog({
+              type: "create-folder",
+              initialPath: activeDirectoryPrefix(activePath)
+            })
+          }
+          onRenamePath={(path) => setWorkspaceDialog({ type: "rename", path })}
+          onDeletePath={(path) => setWorkspaceDialog({ type: "delete", path })}
         />
       </aside>
       <section className="editor-pane">
@@ -569,19 +723,21 @@ function WorkspacePage({
           canEdit={Boolean(member)}
           theme={theme}
           remoteCursors={remoteCursors}
+          saveState={saveState}
           onSelectFile={selectFile}
           onCloseFile={closeFile}
           onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
         />
       </section>
-      <aside className="collab-pane">
+      <aside className="collab-pane" hidden={!collaborationVisible}>
         <CollaborationPanel
           members={members}
           events={events}
           chatMessages={chatMessages}
           remoteCursors={remoteCursors}
           chatText={chatText}
+          chatSending={chatSending}
           onChatTextChange={setChatText}
           onSendChat={sendChat}
           member={member}
@@ -589,23 +745,28 @@ function WorkspacePage({
           roomId={roomId}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
-          onOpenFile={(path) => void openFile(path)}
+          onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
         />
       </aside>
-      <section className="terminal-pane">
+      <section className="terminal-pane" hidden={!terminalVisible}>
         <TerminalPanel
           projectId={projectId}
           theme={theme}
           canRun={Boolean(member)}
           memberId={member?.id ?? ""}
-          commandText={commandText}
-          running={commandRunning}
-          onCommandTextChange={setCommandText}
-          onRunCommand={runSelectedCommand}
         />
       </section>
       <div className="status-bar" data-testid="status-bar">
-        <span>{connectionState}</span>
+        <span data-testid="connection-state">{connectionState}</span>
+        {connectionState === "Offline" && workspaceError !== "This project was deleted." ? (
+          <button
+            className="connection-retry"
+            type="button"
+            onClick={() => socketRef.current?.retry()}
+          >
+            Reconnect
+          </button>
+        ) : null}
         <span>Room {roomId || "..."}</span>
         <span>{member?.displayName ?? "Joining"}</span>
         <span>{project.name}</span>
@@ -614,6 +775,30 @@ function WorkspacePage({
             Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
           </span>
         ) : null}
+        <button
+          className="status-tool"
+          type="button"
+          onClick={() => setTerminalVisible((visible) => !visible)}
+          aria-label={`${terminalVisible ? "Hide" : "Show"} terminal`}
+          title={`${terminalVisible ? "Hide" : "Show"} terminal`}
+          data-testid="toggle-terminal"
+        >
+          <PanelBottom size={14} />
+        </button>
+        <button
+          className="status-tool"
+          type="button"
+          onClick={() => setCollaborationVisible((visible) => !visible)}
+          aria-label={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
+          title={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
+          data-testid="toggle-collaboration"
+        >
+          {collaborationVisible ? (
+            <PanelRight size={14} />
+          ) : (
+            <MessagesSquare size={14} />
+          )}
+        </button>
         <button
           className="theme-toggle"
           type="button"
@@ -625,6 +810,13 @@ function WorkspacePage({
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
       </div>
+      {workspaceDialog ? (
+        <WorkspaceDialog
+          action={workspaceDialog}
+          onClose={() => setWorkspaceDialog(undefined)}
+          onSubmit={submitWorkspaceDialog}
+        />
+      ) : null}
     </main>
   );
 }
@@ -650,6 +842,11 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+function activeDirectoryPrefix(path: string | undefined) {
+  if (!path?.includes("/")) return "";
+  return `${path.slice(0, path.lastIndexOf("/") + 1)}`;
 }
 
 function setDirectoryChildren(

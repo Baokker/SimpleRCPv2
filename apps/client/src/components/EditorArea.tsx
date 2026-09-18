@@ -35,6 +35,7 @@ export function EditorArea({
   canEdit,
   theme,
   remoteCursors,
+  saveState,
   onSelectFile,
   onCloseFile,
   onLocalEdit,
@@ -48,6 +49,7 @@ export function EditorArea({
   canEdit: boolean;
   theme: ThemeMode;
   remoteCursors: RemoteCursor[];
+  saveState: "Saved" | "Saving" | "Sync failed";
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
   onLocalEdit(path: string, change: FileEditChange): void;
@@ -103,6 +105,12 @@ export function EditorArea({
             </button>
           </div>
         ))}
+        <span
+          className={`editor-save-state ${saveState.toLowerCase().replace(" ", "-")}`}
+          data-testid="editor-save-status"
+        >
+          {saveState}
+        </span>
       </div>
       <div className="editor-frame" data-testid="editor-frame">
         {activeFile ? (
@@ -162,7 +170,7 @@ function CollaborativeEditor({
   ): void;
 }) {
   const [connectionStatus, setConnectionStatus] = useState<
-    "connecting" | "ready"
+    "connecting" | "reconnecting" | "ready"
   >("connecting");
   const collaborationRef = useRef<{
     binding?: MonacoBinding;
@@ -254,7 +262,12 @@ function CollaborativeEditor({
           };
 
           const bindWhenSynced = async (synced: boolean) => {
-            if (!synced || binding || bindingStarting) return;
+            if (!synced) return;
+            if (binding) {
+              setConnectionStatus("ready");
+              return;
+            }
+            if (bindingStarting) return;
             bindingStarting = true;
             const { MonacoBinding } = await bindingModule;
             if (!collaborationRef.current) return;
@@ -273,17 +286,29 @@ function CollaborativeEditor({
             setConnectionStatus("ready");
           };
           provider.on("sync", (synced) => void bindWhenSynced(synced));
+          provider.on(
+            "status",
+            ({ status }: { status: "connecting" | "connected" | "disconnected" }) => {
+              if (status === "disconnected") {
+                setConnectionStatus((current) =>
+                  current === "ready" ? "reconnecting" : current
+                );
+              }
+            }
+          );
           if (provider.synced) void bindWhenSynced(true);
         }}
       />
-      {connectionStatus === "connecting" ? (
+      {connectionStatus !== "ready" ? (
         <div
           className="editor-collaboration-status"
           role="status"
           data-testid="editor-collaboration-status"
         >
           <LoaderCircle size={16} aria-hidden="true" />
-          Connecting collaboration
+          {connectionStatus === "connecting"
+            ? "Connecting collaboration"
+            : "Reconnecting collaboration"}
         </div>
       ) : null}
     </div>

@@ -3,6 +3,7 @@ import type { ProjectRegistry } from "./projects.js";
 
 export function createProjectRuntimeManager(registry: ProjectRegistry) {
   const runtimes = new Map<string, ProjectRuntime>();
+  const projectDisposingListeners = new Set<(projectId: string) => void>();
 
   return {
     get(projectId: string) {
@@ -20,9 +21,21 @@ export function createProjectRuntimeManager(registry: ProjectRegistry) {
     listActive() {
       return [...runtimes.values()];
     },
+    onProjectDisposing(listener: (projectId: string) => void) {
+      projectDisposingListeners.add(listener);
+      return () => projectDisposingListeners.delete(listener);
+    },
+    async disposeProject(projectId: string) {
+      const runtime = runtimes.get(projectId);
+      if (!runtime) return;
+      for (const listener of projectDisposingListeners) listener(projectId);
+      await runtime.dispose();
+      runtimes.delete(projectId);
+    },
     async dispose() {
       await Promise.all([...runtimes.values()].map((runtime) => runtime.dispose()));
       runtimes.clear();
+      projectDisposingListeners.clear();
     }
   };
 }
