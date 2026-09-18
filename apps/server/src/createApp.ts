@@ -179,16 +179,16 @@ export async function createApp(config: ServerConfig) {
     }
   });
 
-  app.get("/api/projects/:projectId/chat", (req, res, next) => {
+  app.get("/api/projects/:projectId/chat", async (req, res, next) => {
     try {
       const runtime = runtimeManager.get(req.params.projectId);
-      res.json({ messages: runtime.chat.listMessages(runtime.room.id) });
+      res.json({ messages: await runtime.chat.listMessages(runtime.room.id) });
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/projects/:projectId/chat", (req, res, next) => {
+  app.post("/api/projects/:projectId/chat", async (req, res, next) => {
     try {
       const runtime = runtimeManager.get(req.params.projectId);
       const { authorId, authorName, text } = req.body as {
@@ -202,7 +202,7 @@ export async function createApp(config: ServerConfig) {
         });
         return;
       }
-      const message = runtime.chat.createMessage({
+      const message = await runtime.chat.createMessage({
         roomId: runtime.room.id,
         authorId,
         authorName,
@@ -275,6 +275,7 @@ export async function createApp(config: ServerConfig) {
         return;
       }
       requireMember(runtime, initiatorId);
+      runtime.suppressWorkspaceChange({ type: "add", path: filePath });
       await createWorkspaceFile(
         runtime.project.workspacePath,
         filePath,
@@ -307,6 +308,10 @@ export async function createApp(config: ServerConfig) {
         return;
       }
       requireMember(runtime, initiatorId);
+      runtime.suppressWorkspaceChange({
+        type: "addDir",
+        path: directoryPath
+      });
       await createWorkspaceDirectory(runtime.project.workspacePath, directoryPath);
       runtime.events.append({
         type: "workspace_directory_created",
@@ -341,6 +346,11 @@ export async function createApp(config: ServerConfig) {
         return;
       }
       requireMember(runtime, initiatorId);
+      runtime.suppressWorkspaceChange({
+        type: "rename",
+        fromPath,
+        path: toPath
+      });
       await runtime.documents.retirePath(fromPath);
       await renameWorkspacePath(runtime.project.workspacePath, fromPath, toPath);
       runtime.events.append({
@@ -372,6 +382,7 @@ export async function createApp(config: ServerConfig) {
         return;
       }
       requireMember(runtime, initiatorId);
+      runtime.suppressWorkspaceChange({ type: "unlink", path: workspacePath });
       await runtime.documents.retirePath(workspacePath);
       await deleteWorkspacePath(runtime.project.workspacePath, workspacePath);
       runtime.events.append({

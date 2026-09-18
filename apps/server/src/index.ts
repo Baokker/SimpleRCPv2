@@ -1,7 +1,13 @@
 import http from "node:http";
+import { fileURLToPath } from "node:url";
+import { config as loadEnvironment } from "dotenv";
 import { createApp } from "./createApp.js";
 import { loadConfig } from "./config.js";
 import { attachRealtimeServer } from "./realtime.js";
+
+loadEnvironment({
+  path: fileURLToPath(new URL("../../../.env", import.meta.url))
+});
 
 const config = loadConfig();
 const app = await createApp(config);

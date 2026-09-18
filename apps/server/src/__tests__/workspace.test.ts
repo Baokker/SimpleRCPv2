@@ -6,7 +6,6 @@ import {
   createWorkspaceFile,
   deleteWorkspacePath,
   listWorkspaceDirectory,
-  listWorkspaceTree,
   readWorkspaceFile,
   renameWorkspacePath,
   resolveWorkspacePath,
@@ -44,7 +43,7 @@ describe("workspace service", () => {
   });
 
   it("lists one directory level at a time", async () => {
-    await expect(listWorkspaceTree(root)).resolves.toEqual([
+    await expect(listWorkspaceDirectory(root, "")).resolves.toEqual([
       {
         name: "README.md",
         path: "README.md",
@@ -73,7 +72,7 @@ describe("workspace service", () => {
     await fs.writeFile(path.join(root, "target", "classes", "Main.class"), "");
     await fs.writeFile(path.join(root, "src", "Generated.class"), "");
 
-    const tree = await listWorkspaceTree(root);
+    const tree = await listWorkspaceDirectory(root, "");
     const serialized = JSON.stringify(tree);
     const srcEntries = JSON.stringify(await listWorkspaceDirectory(root, "src"));
     const targetEntries = JSON.stringify(

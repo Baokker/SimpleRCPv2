@@ -4,6 +4,8 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 
 项目希望把代码、编辑器、终端和协作信息放在同一个页面中。后续接入 Coding Agent 时，Agent 也会使用同一份服务端代码，并在工作区中展示任务状态和 trace。
 
+当前版本已经完成多项目与实时协作功能。OpenCode、DeepSeek、Agent run、session 和 trace 仍在开发计划中，当前页面还不能启动 Agent。
+
 ## 当前功能
 
 - 项目首页：打开或删除已登记项目、创建空白项目、导入服务端已有目录、导入 ZIP。
@@ -11,7 +13,7 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 - 服务端代码保存：全部项目位于 `.simplercp-data/projects/`，也可以通过环境变量指定其他绝对路径。
 - 文件管理：按需读取文件树，支持创建、重命名和删除文件与目录。
 - 代码编辑：使用 Monaco Editor 和 Yjs 同步多人文本编辑、光标和选区，并显示保存与同步状态。
-- 实时协作：显示成员、当前文件、聊天消息和 Activity；文件编辑记录包含变化行号与增删行数。
+- 实时协作：显示成员、当前文件、持久化聊天消息和 Activity；文件编辑记录包含变化行号与增删行数。
 - 共享终端：使用 `node-pty` 在当前项目目录中运行 shell，允许输入任意命令。
 - 外部变化同步：监听终端或其他程序产生的文件变化，并更新文件树和已经打开的协作文档。
 - 错误恢复：协作连接与终端连接会自动重连，离线后可以手动重试；项目被删除后返回项目首页。
@@ -77,14 +79,19 @@ npm test
 
 ```text
 .simplercp-data/
+├── registry.json
 ├── projects
 │   └── <projectId>
+│       ├── chat.json
 │       ├── project.json
 │       └── workspace
-└── registry.json
+└── agent
+    └── settings.json
 ```
 
 `.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspace/` 是浏览器、共享终端和后续 Agent 共同访问的代码目录，也是服务端保存代码的位置。
+
+`chat.json` 在项目产生第一条聊天消息时创建，服务重新启动后继续读取。`agent/` 在 Agent 功能开发完成并保存设置后创建。
 
 导入服务端已有目录时，SimpleRCPv2 会把内容复制到新的 `workspace/`，原目录保持不变。导入 ZIP 和已有目录时会过滤 `.git`、`node_modules`、`__MACOSX` 和 `.DS_Store`。这些路径也不会出现在浏览器文件树和文件接口中。
 
@@ -116,6 +123,8 @@ pnpm dev
 
 ## 配置
 
+服务端启动时读取仓库根目录 `.env`。该文件已被 `.gitignore` 忽略，可以从 `.env.example` 开始填写。命令行环境变量的优先级高于 `.env`。
+
 - `SIMPLERCP_DATA_DIR`：项目数据目录，默认值为仓库根目录下的 `.simplercp-data/`，设置值必须为绝对路径。
 - `SIMPLERCP_HOST`：服务端监听地址，默认值为 `127.0.0.1`。
 - `SIMPLERCP_PUBLIC_URL`：用户访问的浏览器地址，默认值为 `http://127.0.0.1:5173`。
@@ -124,6 +133,23 @@ pnpm dev
 - `VITE_SIMPLERCP_CLIENT_HOST`：开发客户端监听地址，默认值为 `127.0.0.1`。
 - `VITE_SIMPLERCP_CLIENT_PORT`：开发客户端端口，默认值为 `5173`。
 - `VITE_SIMPLERCP_API_ORIGIN`：开发客户端代理连接的服务端地址，默认值为 `http://127.0.0.1:4000`。
+
+## OpenCode 与 DeepSeek
+
+Agent 功能开发完成后采用 OpenCode，默认 Provider 为 DeepSeek。计划中的配置流程如下：
+
+1. 运行 `pnpm install`，安装仓库指定版本的 OpenCode command 与 TypeScript SDK。
+2. 在仓库根目录 `.env` 中配置 DeepSeek：
+
+```dotenv
+DEEPSEEK_API_KEY=your_deepseek_api_key
+SIMPLERCP_AGENT_MODEL=deepseek-chat
+```
+
+3. 启动 `pnpm dev`，在全局 Agent 设置页面检查 OpenCode 安装状态、选择 Model 并启用 Agent。
+4. 进入项目，从 Agent 页签创建任务。新任务创建 OpenCode session，继续任务复用原 session。
+
+OpenCode 由 SimpleRCPv2 服务端启动并只监听 `127.0.0.1`。浏览器不能读取 DeepSeek API Key，也不能直接访问 OpenCode 端口。当前版本尚未实现第 3、4 步；进度见[开发计划](./docs/product/2026-09-17-development-plan.md#5-完成-agent-设置)。
 
 ## 项目结构
 
@@ -152,6 +178,8 @@ pnpm dev
 │   ├── fixtures
 │   └── playwright.config.ts
 ├── package.json
+├── packages
+│   └── shared
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 └── tsconfig.base.json
@@ -161,6 +189,7 @@ pnpm dev
 
 - `apps/client/`：React 浏览器客户端，包含项目首页、协作工作区、Monaco Editor、Yjs 客户端和共享终端界面。
 - `apps/server/`：Express 与 WebSocket 服务，负责项目注册、代码保存、Room、Yjs 文档、终端和文件监听。
+- `packages/shared/`：客户端与服务端共同使用的项目、协作、聊天和 WebSocket TypeScript 类型。
 - `demo/workspace/`：首次启动时导入的数据示例项目。
 - `docs/product/`：基线需求、开发计划、已知问题和后续改进方向。
 - `docs/research/`：Agent runtime、文档同步和并行 Agent 等调研记录。

@@ -32,7 +32,7 @@ DeepSeek Harness 的 session event、JSONL 保存、fork、Credentials 和子 Ag
 - Agent 固定为 OpenCode 内置 `build` Agent。
 - Provider 固定为 DeepSeek。
 - Model 允许在系统设置中修改。
-- API Key 只保存在 SimpleRCPv2 的服务端 secrets 文件。
+- API Key 由 SimpleRCPv2 服务端从 `DEEPSEEK_API_KEY` 读取；本地开发可以使用仓库根目录 `.env`。
 - OpenCode 端口不提供给浏览器。
 - 安装检查不调用模型。
 

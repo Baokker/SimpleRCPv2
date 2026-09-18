@@ -2,6 +2,10 @@
 
 当前有效的产品与开发文件集中在 `product` 目录。调研材料按照调研日期归档，开发时以产品文件为准。
 
+当前代码已经完成多项目、文件协作、聊天持久化、共享终端和主题等协作功能。OpenCode、DeepSeek、Agent run、session 和 trace 仍在开发计划中。
+
+OpenCode 与 DeepSeek 的计划配置方式见[项目 README](../README.md#opencode-与-deepseek)。
+
 ## 当前产品文件
 
 - [基线需求](./product/2026-09-17-baseline.md)：产品范围、用户流程、系统边界、Agent 规则与验收条件。

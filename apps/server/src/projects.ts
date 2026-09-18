@@ -1,19 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { ProjectRecord, ProjectSource } from "@simplercp/shared";
 import { nanoid } from "nanoid";
 import { extractZipArchive } from "./archiveImport.js";
 import { isIgnoredPath } from "./workspacePolicy.js";
 
-export type ProjectSource = "demo" | "blank" | "directory" | "zip";
-
-export interface ProjectRecord {
-  id: string;
-  name: string;
-  source: ProjectSource;
-  workspacePath: string;
-  createdAt: string;
-  lastOpenedAt: string;
-}
+export type { ProjectRecord, ProjectSource } from "@simplercp/shared";
 
 interface RegistryFile {
   version: 1;

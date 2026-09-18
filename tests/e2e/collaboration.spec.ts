@@ -30,7 +30,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await ada.getByTestId("toggle-terminal").click();
   await expect(ada.locator(".terminal-pane")).toBeVisible();
 
-  await fs.mkdir("artifacts", { recursive: true });
   await ada.getByTestId("collab-tab-project").click();
   await expect(ada.getByTestId("project-panel")).toContainText("Collaborator");
 
@@ -224,11 +223,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await ada.getByTestId("collab-tab-team").click();
 
-  await ada.screenshot({
-    path: "artifacts/collaboration-core.png",
-    fullPage: true
-  });
-
   await ada.setViewportSize({ width: 860, height: 900 });
   const terminalBox = await ada.locator(".terminal-pane").boundingBox();
   const collaborationBox = await ada.locator(".collab-pane").boundingBox();
@@ -244,11 +238,6 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   expect((peopleBox?.y ?? 0) + (peopleBox?.height ?? 0)).toBeLessThanOrEqual(
     activityHeadingBox?.y ?? 0
   );
-  await ada.screenshot({
-    path: "artifacts/collaboration-core-narrow.png",
-    fullPage: true
-  });
-
   await contextB.close();
   await expect(ada.getByTestId("activity-feed")).toContainText(
     "Linus left the session"

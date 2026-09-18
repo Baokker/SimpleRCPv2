@@ -20,6 +20,9 @@ importers:
       '@monaco-editor/react':
         specifier: ^4.6.0
         version: 4.7.0(monaco-editor@0.49.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@simplercp/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@vitejs/plugin-react':
         specifier: ^4.2.0
         version: 4.7.0(vite@5.4.21(@types/node@20.19.41))
@@ -63,12 +66,18 @@ importers:
 
   apps/server:
     dependencies:
+      '@simplercp/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
       cors:
         specifier: ^2.8.5
         version: 2.8.6
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       express:
         specifier: ^4.18.3
         version: 4.22.2
@@ -127,6 +136,8 @@ importers:
       yazl:
         specifier: ^3.3.1
         version: 3.3.1
+
+  packages/shared: {}
 
 packages:
 
@@ -949,6 +960,10 @@ packages:
   diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2381,6 +2396,8 @@ snapshots:
   destroy@1.2.0: {}
 
   diff-sequences@29.6.3: {}
+
+  dotenv@16.6.1: {}
 
   dunder-proto@1.0.1:
     dependencies:

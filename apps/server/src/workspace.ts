@@ -25,10 +25,6 @@ export function resolveWorkspacePath(root: string, relativePath: string) {
   return candidate;
 }
 
-export async function listWorkspaceTree(root: string): Promise<WorkspaceNode[]> {
-  return listWorkspaceDirectory(root, "");
-}
-
 export async function listWorkspaceDirectory(
   root: string,
   relativeDir: string
