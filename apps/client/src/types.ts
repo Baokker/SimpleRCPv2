@@ -4,6 +4,15 @@ import type {
 } from "@simplercp/shared";
 
 export type {
+  AgentFileChange,
+  AgentPromptContext,
+  AgentRun,
+  AgentSession,
+  AgentRunStatus,
+  AgentRuntimeStatus,
+  AgentSettings,
+  AgentSettingsResponse,
+  AgentTraceEvent,
   ChatMessage,
   ClientMessage,
   CursorPosition,

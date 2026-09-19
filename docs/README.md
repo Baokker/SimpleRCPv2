@@ -2,12 +2,14 @@
 
 当前有效的产品与开发文件集中在 `product` 目录。调研材料按照调研日期归档，开发时以产品文件为准。
 
-当前代码已经完成多项目、文件协作、聊天持久化、共享终端和主题等协作功能。OpenCode、DeepSeek、Agent run、session 和 trace 仍在开发计划中。
+当前代码已经完成多项目、文件协作、聊天持久化、共享终端、主题、OpenCode、DeepSeek、Agent run、session 和 trace。
 
 OpenCode 与 DeepSeek 的计划配置方式见[项目 README](../README.md#opencode-与-deepseek)。
 
 ## 当前产品文件
 
+- [Agent Session 设计与开发范围](./product/2026-09-19-agent-sessions.md)：成员私有会话、会话内 run、接口和页面行为。
+- [IDE Agent 界面与 Monaco 语言支持调研](./research/2026-09-19/ide-agent-ui-and-monaco.md)：Cursor、VS Code、Zed 的 Agent 交互设计，以及 Monaco 的内置语言支持。
 - [基线需求](./product/2026-09-17-baseline.md)：产品范围、用户流程、系统边界、Agent 规则与验收条件。
 - [开发计划](./product/2026-09-17-development-plan.md)：代码修改顺序、模块职责、同步修复与测试范围。
 - [已知问题](./product/known-issues.md)：基线接受的问题、触发条件、当前提示方式与完整处理方向。

@@ -20,6 +20,7 @@ export function createCollaborativeDocumentStore({
   const persistedContents = new Map<string, string>();
   const persistTimers = new Map<string, NodeJS.Timeout>();
   const retired = new Set<string>();
+  const revisions = new Map<string, number>();
 
   async function getDocument(roomId: string, filePath: string) {
     return prepareDocument(documentName(roomId, filePath, projectId));
@@ -56,7 +57,10 @@ export function createCollaborativeDocumentStore({
     }
     persistedContents.set(name, result.content);
     document.on("update", (_update, origin) => {
-      if (origin !== FILESYSTEM_ORIGIN) schedulePersist(name, document);
+      if (origin !== FILESYSTEM_ORIGIN) {
+        revisions.set(filePath, (revisions.get(filePath) ?? 0) + 1);
+        schedulePersist(name, document);
+      }
     });
     return document;
   }
@@ -178,6 +182,14 @@ export function createCollaborativeDocumentStore({
     persistedContents.delete(name);
   }
 
+  function getRevision(filePath: string) {
+    return revisions.get(filePath) ?? 0;
+  }
+
+  function getRevisions() {
+    return new Map(revisions);
+  }
+
   return {
     getDocument,
     prepareDocument,
@@ -187,7 +199,9 @@ export function createCollaborativeDocumentStore({
     retirePath,
     reloadPath,
     dropPath,
-    release
+    release,
+    getRevision,
+    getRevisions
   };
 }
 

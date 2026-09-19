@@ -1,4 +1,11 @@
 import type {
+  AgentRun,
+  AgentSession,
+  AgentRuntimeStatus,
+  AgentPromptContext,
+  AgentSettings,
+  AgentSettingsResponse,
+  AgentTraceEvent,
   ChatMessage,
   EventRecord,
   ProjectRecord,
@@ -7,6 +14,95 @@ import type {
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
+
+export async function getAgentSettings() {
+  return request<AgentSettingsResponse>("/api/agent/settings");
+}
+
+export async function updateAgentSettings(settings: AgentSettings) {
+  return request<AgentSettingsResponse>("/api/agent/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings)
+  });
+}
+
+export async function getAgentStatus() {
+  return request<AgentRuntimeStatus>("/api/agent/status");
+}
+
+export async function getAgentRuns(projectId: string) {
+  const response = await request<{ runs: AgentRun[] }>(
+    `${projectPath(projectId)}/agent/runs`
+  );
+  return response.runs;
+}
+
+export async function getAgentSessions(projectId: string, memberId: string) {
+  const response = await request<{ sessions: AgentSession[] }>(
+    `${projectPath(projectId)}/agent/sessions?memberId=${encodeURIComponent(memberId)}`
+  );
+  return response.sessions;
+}
+
+export async function createAgentSession(
+  projectId: string,
+  input: { memberId: string; title?: string }
+) {
+  return request<{ session: AgentSession }>(`${projectPath(projectId)}/agent/sessions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+export async function createAgentSessionRun(
+  projectId: string,
+  sessionId: string,
+  input: { memberId: string; prompt: string; contexts?: AgentPromptContext[] }
+) {
+  return request<{ run: AgentRun }>(
+    `${projectPath(projectId)}/agent/sessions/${encodeURIComponent(sessionId)}/runs`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    }
+  );
+}
+
+export async function createAgentRun(
+  projectId: string,
+  input: { memberId: string; prompt: string; sessionId?: string; contexts?: AgentPromptContext[] }
+) {
+  return request<{ run: AgentRun }>(`${projectPath(projectId)}/agent/runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+export async function getAgentTrace(projectId: string, runId: string) {
+  const response = await request<{ events: AgentTraceEvent[] }>(
+    `${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/trace`
+  );
+  return response.events;
+}
+
+export async function cancelAgentRun(
+  projectId: string,
+  runId: string,
+  memberId: string
+) {
+  return request<{ run: AgentRun }>(
+    `${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/cancel`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memberId })
+    }
+  );
+}
 
 export async function getProjects() {
   const response = await request<{ projects: ProjectRecord[] }>("/api/projects");

@@ -9,7 +9,14 @@ describe("server config", () => {
       host: "127.0.0.1",
       publicOrigin: "http://127.0.0.1:5173",
       dataDir: "/srv/simplercp/.simplercp-data",
-      demoProjectRoot: "/srv/simplercp/demo/workspace"
+      demoProjectRoot: "/srv/simplercp/demo/workspace",
+      agent: {
+        apiKey: undefined,
+        baseUrl: "https://api.deepseek.com/v1",
+        model: "deepseek-chat",
+        openCodePort: 4096,
+        runTimeoutMs: 600_000
+      }
     });
   });
 
@@ -19,14 +26,24 @@ describe("server config", () => {
         PORT: "4500",
         SIMPLERCP_HOST: "0.0.0.0",
         SIMPLERCP_PUBLIC_URL: "https://code.example.com",
-        SIMPLERCP_DATA_DIR: "/srv/simplercp-data"
+        SIMPLERCP_DATA_DIR: "/srv/simplercp-data",
+        DEEPSEEK_API_KEY: "configured-key",
+        DEEPSEEK_BASE_URL: "https://models.example.com/v1",
+        DEEPSEEK_MODEL: "DeepSeek-V4-Flash"
       }, "/srv/simplercp")
     ).toEqual({
       port: 4500,
       host: "0.0.0.0",
       publicOrigin: "https://code.example.com",
       dataDir: "/srv/simplercp-data",
-      demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace")
+      demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
+      agent: {
+        apiKey: "configured-key",
+        baseUrl: "https://models.example.com/v1",
+        model: "DeepSeek-V4-Flash",
+        openCodePort: 4096,
+        runTimeoutMs: 600_000
+      }
     });
   });
 

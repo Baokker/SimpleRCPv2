@@ -1,24 +1,24 @@
 # SimpleRCPv2 基线开发计划
 
-状态：协作功能已完成，下一项工作为 Agent 公共数据与设置
+状态：基线功能已完成
 
-更新时间：2026-09-18
+更新时间：2026-09-19
 
 需求依据见 [基线需求](./2026-09-17-baseline.md)。每个阶段结束时运行对应测试，并保持项目可以启动。
 
-## 当前进度与下一项工作
+## 当前进度
 
-当前仓库已经包含多项目管理、项目导入与删除、Yjs 协作编辑、持久化聊天、Activity、共享终端、主题切换和公共 TypeScript 类型。
+当前仓库已经包含多项目管理、项目导入与删除、Yjs 协作编辑、持久化聊天、Activity、共享终端、主题切换、OpenCode runtime、DeepSeek Provider、Agent 任务、session、trace 和公共 TypeScript 类型。
 
-当前仓库尚未包含 OpenCode command、OpenCode SDK、Agent 设置接口、Agent run、session、trace、任务队列或 Agent 页面。`.env.example` 中的 `DEEPSEEK_API_KEY` 和 `SIMPLERCP_AGENT_MODEL` 仅用于约定后续配置，当前服务不会读取这些值来调用模型。
+OpenCode command 与 SDK 固定为 `1.18.31`。服务端读取 `.env` 中的 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL` 和 `DEEPSEEK_MODEL`，项目首页提供全局设置入口，项目工作区提供 Agent 页签。
 
-下一项开发工作是第 5 节的 Agent 公共数据与设置。该阶段完成以后，服务端能够保存非敏感设置、报告 API Key 是否存在，并提供后续 runtime、run 和 trace 共同使用的数据类型。OpenCode 的安装、进程管理和正式 DeepSeek 调用属于第 6 节。
+基线后的开发工作见[改进路线](./improvement-roadmap.md)，包括独立任务目录、三方合并、同一项目并行任务、运行隔离和 trace 分析。
 
 Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测试，运行测试确认测试能够发现缺失行为，完成实现并运行全部现有测试。OpenCode 集成与 Agent E2E 使用正式 OpenCode 和专用 DeepSeek API Key，不创建替代 runtime 或伪造模型响应。
 
 ## 1. 修复文件同步
 
-状态：部分完成。最小 delta、忽略路径、`FILESYSTEM_ORIGIN` 和 retired 文档已经完成；同一文件的异步操作队列与 revision 仍待开发。
+状态：部分完成。最小 delta、忽略路径、`FILESYSTEM_ORIGIN`、retired 文档和成员 revision 已经完成；同一文件的异步操作队列仍待开发。
 
 新增 `textDelta.ts` 和 `workspacePolicy.ts`，修改 `collaborativeDocuments.ts`、`workspaceWatcher.ts`、`workspace.ts` 与 `config.ts`。
 
@@ -39,7 +39,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 ## 2. 建立项目注册与运行对象
 
-状态：已经完成。Agent 数据目录在 Agent 功能开发时创建。
+状态：已经完成。Agent 数据目录在保存设置和创建任务时生成。
 
 新增 `projects.ts`、`projectRuntime.ts` 和 `projectRuntimeManager.ts`，按 `projectId` 改写 HTTP、项目 WebSocket 与 Yjs WebSocket。
 
@@ -94,7 +94,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 ## 5. 完成 Agent 公共数据与设置
 
-状态：下一项工作，尚未开发。
+状态：已经完成。
 
 新增 `agent/agentSettingsStore.ts` 和 Agent 设置接口。公共数据类型放在 `packages/shared`。
 
@@ -107,13 +107,14 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 - 设置存储使用同目录中间文件和 rename 更新。
 - `GET /api/agent/settings` 返回 Provider、Model、Enabled 和 `apiKeyConfigured`。
 - `PUT /api/agent/settings` 只允许修改非敏感设置，不接收或返回密钥明文。
+- 存在运行中或排队任务时，不允许修改 Model 或 Enabled。
 - 配置缺失或内容无效时在对应请求位置报告明确错误。
 
 验收测试：默认设置正确；设置在重启后保留；无效 Provider、Model 和 Enabled 被拒绝；接口、错误与日志不含密钥。
 
 ## 6. 验证并接入 OpenCode runtime
 
-状态：尚未开发，仓库内没有 OpenCode 依赖与运行代码。
+状态：已经完成。
 
 新增 `agent/agentRuntime.ts`、`agent/openCodeRuntime.ts` 和 `agent/openCodeProcess.ts`。
 
@@ -132,7 +133,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 ## 7. 完成 Agent run、session 与 trace
 
-状态：尚未开发。
+状态：已经完成。
 
 新增 `agent/agentRunStore.ts`、`agent/agentRunManager.ts` 和 `agent/traceStore.ts`。
 
@@ -146,7 +147,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 - 每个 run 保存 JSONL；sequence 按服务端接收顺序连续增加。
 - 标准事件与 raw、summary、data 全部经过敏感值过滤。
 - OpenCode 能查询原 session 时允许继续；无法查询时只允许作为新任务继续。
-- Agent 文件读取事件记录路径、时间、哈希和 Yjs revision；后续成员修改产生 `concurrent_change`。
+- run 开始时记录工作区内容与成员 revision；成员和 Agent 在任务期间修改同一路径时产生 `concurrent_change`。
 - 创建 run 之前等待项目协作文档的 `awaitIdle()` 完成。
 - 提供设置、run 列表、run 创建、run 继续、run 详情、trace 下载和取消接口。
 
@@ -154,9 +155,9 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 ## 8. 完成 Agent 页面与实时事件
 
-状态：尚未开发。
+状态：已经完成。
 
-新增 `AgentPanel.tsx` 和 `agentApi.ts`，扩展项目 WebSocket 的公共消息类型。
+新增 `AgentPanel.tsx` 和浏览器 Agent API，扩展项目 WebSocket 的公共消息类型。
 
 实现要求：
 
@@ -169,9 +170,17 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 验收测试：两位成员可以分别创建任务并查看归属；刷新与断线重连后恢复任务状态；取消、文件跳转和 trace 下载可以使用。
 
-## 9. 整理自动化测试
+## 9. 显式 Agent Session
 
-状态：协作测试已经完成，Agent 测试随第 5 至第 8 节增加。
+状态：已经完成。
+
+详细设计见 [2026-09-19 Agent Session 设计与开发范围](./2026-09-19-agent-sessions.md)。本阶段将 `AgentSession` 从公共类型提升为持久化数据对象。每位成员可以在一个项目中创建多个私有会话；每个会话包含多个 Agent run；run 保存会话 ID 和独立 trace。页面默认按当前成员的会话显示，项目活动继续显示跨成员的状态摘要。
+
+验收重点已经完成：服务端保存会话、连续 run 复用同一个 OpenCode runtime session、不同成员不能继续彼此会话、不同会话上下文互不混合、会话级 Continue 在第二次和后续 run 中持续存在。
+
+## 10. 整理自动化测试
+
+状态：已经完成。
 
 服务端测试保留正确性边界和持久化行为，删除已经移除功能的测试。
 
@@ -182,12 +191,11 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 - `editor-permissions.spec.ts`
 - `theme.spec.ts`
 - `demo.spec.ts`
+- `agent-run.spec.ts`
 
-Agent 接入时新增 `agent-run.spec.ts`。
+测试工作目录统一使用 `.test-workspaces/`。`agent-run.spec.ts` 使用正式 OpenCode 与专用 DeepSeek API Key，覆盖设置、创建任务、trace、文件变化和并发修改提示。服务端集成测试覆盖项目 FIFO、成员任务归属、session 继续、取消、超时、重新启动处理和 JSONL 下载。缺少专用 API Key 时明确报告没有运行，不能用其他 runtime 代替。
 
-测试工作目录统一使用 `.test-workspaces/`。`agent-run.spec.ts` 使用正式 OpenCode 与专用 DeepSeek API Key，覆盖设置、创建任务、项目 FIFO、两位成员任务归属、session 继续、trace、取消和文件变化。缺少专用 API Key 时明确报告没有运行，不能用其他 runtime 代替。
-
-## 10. 交付文档
+## 11. 交付文档
 
 状态：持续维护。
 

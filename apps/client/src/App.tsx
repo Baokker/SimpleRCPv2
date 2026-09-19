@@ -54,6 +54,8 @@ interface PendingFileEdit extends FileEditActivity {
   timer: number;
 }
 
+const WORKSPACE_NOTICE_DURATION_MS = 4_000;
+
 export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   const [theme, setTheme] = useState(initialTheme);
   const projectMatch = window.location.pathname.match(/^\/projects\/([^/]+)\/?$/);
@@ -193,6 +195,7 @@ function WorkspacePage({
     useState<WorkspaceDialogAction>();
   const [workspaceNotice, setWorkspaceNotice] = useState("");
   const [workspaceError, setWorkspaceError] = useState("");
+  const [agentRefreshVersion, setAgentRefreshVersion] = useState(0);
   const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
     "Saved"
   );
@@ -209,6 +212,7 @@ function WorkspacePage({
   const projectDeletedRef = useRef(false);
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
+  const agentRefreshTimerRef = useRef<number>();
   const remoteCursors = useMemo(
     () => Object.values(remoteCursorMap),
     [remoteCursorMap]
@@ -317,6 +321,12 @@ function WorkspacePage({
             pendingSavePathsRef.current.delete(message.path);
             if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
           }
+          if (
+            message.type === "agent_run_updated" ||
+            message.type === "agent_trace_appended"
+          ) {
+            scheduleAgentRefresh();
+          }
         }
       });
       connectionRef.current = { roomId, connectionId };
@@ -335,6 +345,9 @@ function WorkspacePage({
       socketRef.current?.close();
       if (workspaceRefreshTimerRef.current) {
         window.clearTimeout(workspaceRefreshTimerRef.current);
+      }
+      if (agentRefreshTimerRef.current) {
+        window.clearTimeout(agentRefreshTimerRef.current);
       }
     };
   }, [displayName, identity.role, projectId, roomId]);
@@ -358,6 +371,15 @@ function WorkspacePage({
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
+
+  useEffect(() => {
+    if (!workspaceNotice) return;
+    const timer = window.setTimeout(
+      () => setWorkspaceNotice(""),
+      WORKSPACE_NOTICE_DURATION_MS
+    );
+    return () => window.clearTimeout(timer);
+  }, [workspaceNotice]);
 
   useEffect(() => {
     if (!followingMemberId) return;
@@ -442,6 +464,16 @@ function WorkspacePage({
     }, 150);
   }
 
+  function scheduleAgentRefresh() {
+    if (agentRefreshTimerRef.current) {
+      window.clearTimeout(agentRefreshTimerRef.current);
+    }
+    agentRefreshTimerRef.current = window.setTimeout(() => {
+      agentRefreshTimerRef.current = undefined;
+      setAgentRefreshVersion((version) => version + 1);
+    }, 150);
+  }
+
   async function openFile(path: string) {
     if (activePath && activePath !== path) flushFileEdit(activePath);
     if (!openFiles.some((file) => file.path === path)) {
@@ -460,10 +492,11 @@ function WorkspacePage({
         result = await readWorkspaceFile(projectId, path, true);
       }
       if (result.status !== "text") return;
-      setOpenFiles((files) => [
-        ...files,
-        { path, content: result.content }
-      ]);
+      setOpenFiles((files) =>
+        files.some((file) => file.path === path)
+          ? files
+          : [...files, { path, content: result.content }]
+      );
     }
     setActivePath(path);
     socketRef.current?.sendOpenFile(path);
@@ -741,11 +774,15 @@ function WorkspacePage({
           onChatTextChange={setChatText}
           onSendChat={sendChat}
           member={member}
+          projectId={projectId}
           workspaceRoot={project.workspacePath}
+          workspaceTree={tree}
           roomId={roomId}
+          agentRefreshVersion={agentRefreshVersion}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
+          onError={showWorkspaceError}
         />
       </aside>
       <section className="terminal-pane" hidden={!terminalVisible}>

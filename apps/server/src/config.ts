@@ -9,6 +9,13 @@ export interface ServerConfig {
   publicOrigin: string;
   dataDir: string;
   demoProjectRoot: string;
+  agent?: {
+    apiKey?: string;
+    baseUrl: string;
+    model: string;
+    openCodePort?: number;
+    runTimeoutMs?: number;
+  };
 }
 
 export function loadConfig(
@@ -31,11 +38,34 @@ export function loadConfig(
     throw new Error("SIMPLERCP_PUBLIC_URL must use http or https");
   }
 
+  const agentBaseUrl = new URL(
+    env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1"
+  );
+  if (!["http:", "https:"].includes(agentBaseUrl.protocol)) {
+    throw new Error("DEEPSEEK_BASE_URL must use http or https");
+  }
+  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
+  const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
+  if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
+    throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");
+  }
+  const runTimeoutMs = Number(env.SIMPLERCP_AGENT_RUN_TIMEOUT_MS ?? 600_000);
+  if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 1) {
+    throw new Error("SIMPLERCP_AGENT_RUN_TIMEOUT_MS must be a positive integer");
+  }
+
   return {
     port,
     host: env.SIMPLERCP_HOST ?? "127.0.0.1",
     publicOrigin: publicUrl.origin,
     dataDir: configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"),
-    demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace")
+    demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
+    agent: {
+      apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
+      baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
+      model: agentModel,
+      openCodePort,
+      runTimeoutMs
+    }
   };
 }

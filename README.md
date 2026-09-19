@@ -2,9 +2,9 @@
 
 SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编程系统。用户在浏览器中选择项目，进入协作工作区，共同查看和编辑文件、聊天、观察成员状态并使用共享终端。
 
-项目希望把代码、编辑器、终端和协作信息放在同一个页面中。后续接入 Coding Agent 时，Agent 也会使用同一份服务端代码，并在工作区中展示任务状态和 trace。
+项目把代码、编辑器、终端、协作信息和 Coding Agent 放在同一个页面中。Agent 使用同一份服务端代码，任务状态、输出、文件变化和 trace 会显示在工作区中。
 
-当前版本已经完成多项目与实时协作功能。OpenCode、DeepSeek、Agent run、session 和 trace 仍在开发计划中，当前页面还不能启动 Agent。
+当前版本已经完成多项目、实时协作和 OpenCode Agent 基线。每位成员可以创建自己的任务或继续自己的 session；同一项目中的任务依次执行，不同项目可以同时执行。
 
 ## 当前功能
 
@@ -19,6 +19,9 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 - 错误恢复：协作连接与终端连接会自动重连，离线后可以手动重试；项目被删除后返回项目首页。
 - 工作区控制：文件操作使用应用内确认窗口，Terminal 与 Collaboration 面板可以从状态栏显示或隐藏。
 - 日间模式与夜间模式：主题选择保存在当前浏览器中。
+- Agent 设置：首页可以查看 OpenCode 状态和版本，设置 DeepSeek Model，并启用或停用 Agent。
+- Agent 任务：项目侧栏可以创建任务、继续 session、取消自己的任务、查看队列位置、模型输出和文件变化。
+- Agent trace：OpenCode SSE、状态、文件变化和并发修改提示按 JSONL 保存，可以在页面查看并下载。
 
 ## 使用流程
 
@@ -26,6 +29,7 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 2. 从项目列表打开 Demo、创建空白项目、导入 ZIP，或者填写服务端已有目录的绝对路径。
 3. 填写显示名称和可选角色，进入项目工作区。
 4. 与其他成员共同编辑文件、聊天和使用终端。
+5. 在 `Agent` 页签输入任务，查看执行状态、输出、文件变化和 trace。
 
 角色只用于界面显示，不改变成员权限。当前系统面向可信成员，进入项目的成员拥有相同的文件与终端能力。
 
@@ -84,14 +88,21 @@ npm test
 │   └── <projectId>
 │       ├── chat.json
 │       ├── project.json
-│       └── workspace
+│       ├── workspace
+│       ├── agent-sessions
+│       │   └── <sessionId>
+│       │       └── session.json
+│       └── agent-runs
+│           └── <runId>
+│               ├── run.json
+│               └── trace.jsonl
 └── agent
     └── settings.json
 ```
 
-`.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspace/` 是浏览器、共享终端和后续 Agent 共同访问的代码目录，也是服务端保存代码的位置。
+`.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspace/` 是浏览器、共享终端和 Agent 共同访问的代码目录，也是服务端保存代码的位置。
 
-`chat.json` 在项目产生第一条聊天消息时创建，服务重新启动后继续读取。`agent/` 在 Agent 功能开发完成并保存设置后创建。
+`chat.json` 在项目产生第一条聊天消息时创建，服务重新启动后继续读取。`agent/settings.json` 保存非敏感 Agent 设置，API Key 只从服务端环境变量读取。
 
 导入服务端已有目录时，SimpleRCPv2 会把内容复制到新的 `workspace/`，原目录保持不变。导入 ZIP 和已有目录时会过滤 `.git`、`node_modules`、`__MACOSX` 和 `.DS_Store`。这些路径也不会出现在浏览器文件树和文件接口中。
 
@@ -133,23 +144,35 @@ pnpm dev
 - `VITE_SIMPLERCP_CLIENT_HOST`：开发客户端监听地址，默认值为 `127.0.0.1`。
 - `VITE_SIMPLERCP_CLIENT_PORT`：开发客户端端口，默认值为 `5173`。
 - `VITE_SIMPLERCP_API_ORIGIN`：开发客户端代理连接的服务端地址，默认值为 `http://127.0.0.1:4000`。
+- `DEEPSEEK_API_KEY`：DeepSeek API Key，Agent 任务需要该变量。
+- `DEEPSEEK_BASE_URL`：OpenAI-compatible API 地址，默认值为 `https://api.deepseek.com/v1`。
+- `DEEPSEEK_MODEL`：默认 Model，默认值为 `deepseek-chat`。
+- `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
+- `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 
 ## OpenCode 与 DeepSeek
 
-Agent 功能开发完成后采用 OpenCode，默认 Provider 为 DeepSeek。计划中的配置流程如下：
+Agent 使用 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.31`，默认 Provider 为 DeepSeek。配置流程如下：
 
 1. 运行 `pnpm install`，安装仓库指定版本的 OpenCode command 与 TypeScript SDK。
-2. 在仓库根目录 `.env` 中配置 DeepSeek：
+2. 复制配置模板，并在仓库根目录 `.env` 中填写 DeepSeek：
+
+```bash
+cp .env.example .env
+```
 
 ```dotenv
 DEEPSEEK_API_KEY=your_deepseek_api_key
-SIMPLERCP_AGENT_MODEL=deepseek-chat
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+DEEPSEEK_MODEL=deepseek-chat
 ```
 
 3. 启动 `pnpm dev`，在全局 Agent 设置页面检查 OpenCode 安装状态、选择 Model 并启用 Agent。
 4. 进入项目，从 Agent 页签创建任务。新任务创建 OpenCode session，继续任务复用原 session。
 
-OpenCode 由 SimpleRCPv2 服务端启动并只监听 `127.0.0.1`。浏览器不能读取 DeepSeek API Key，也不能直接访问 OpenCode 端口。当前版本尚未实现第 3、4 步；进度见[开发计划](./docs/product/2026-09-17-development-plan.md#5-完成-agent-设置)。
+OpenCode 由 SimpleRCPv2 服务端启动并只监听 `127.0.0.1`。浏览器不能读取 DeepSeek API Key，也不能直接访问 OpenCode 端口。每个新任务创建 session；在当前成员的 session 中继续输入时，会复用同一个 OpenCode session。
+
+存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止其他成员的任务被配置变化中断。
 
 ## 项目结构
 
@@ -188,13 +211,14 @@ OpenCode 由 SimpleRCPv2 服务端启动并只监听 `127.0.0.1`。浏览器不�
 主要目录职责：
 
 - `apps/client/`：React 浏览器客户端，包含项目首页、协作工作区、Monaco Editor、Yjs 客户端和共享终端界面。
-- `apps/server/`：Express 与 WebSocket 服务，负责项目注册、代码保存、Room、Yjs 文档、终端和文件监听。
-- `packages/shared/`：客户端与服务端共同使用的项目、协作、聊天和 WebSocket TypeScript 类型。
+- `apps/server/`：Express 与 WebSocket 服务，负责项目注册、代码保存、Room、Yjs 文档、终端、文件监听和 OpenCode 进程。
+- `apps/server/src/agent/`：Agent 设置、OpenCode runtime、任务队列、工作区变化与 trace 存储。
+- `packages/shared/`：客户端与服务端共同使用的项目、协作、Agent 和 WebSocket TypeScript 类型。
 - `demo/workspace/`：首次启动时导入的数据示例项目。
 - `docs/product/`：基线需求、开发计划、已知问题和后续改进方向。
 - `docs/research/`：Agent runtime、文档同步和并行 Agent 等调研记录。
 - `scripts/`：仓库启动辅助命令。
-- `tests/e2e/`：项目流程、多人协作和主题的 Playwright 测试。
+- `tests/e2e/`：项目流程、多人协作、主题和正式 Agent 运行的 Playwright 测试。
 - `tests/fixtures/`：自动化测试使用的项目文件。
 
 ## 测试与构建
@@ -228,4 +252,4 @@ pnpm build
 - [文档同步调研](./docs/research/2026-09-17/document-sync.md)：磁盘、Yjs、终端和 Agent 同时修改文件时的同步处理。
 - [Agent 并行执行调研](./docs/research/2026-09-17/parallel-agent.md)：多 session、独立工作目录和并行处理方式。
 
-Agent 配置、Agent run、session 延续和 trace 页面仍在开发计划中。当前代码已经提供多项目与协作基础，每个项目拥有独立的 Room、Yjs 文档、共享终端和文件监听器。
+当前基线的后续改进集中在 Agent 写入的三方合并、同一项目并行任务、运行隔离和更完整的 trace 分析，详情见[改进方向](./docs/product/improvement-roadmap.md)。

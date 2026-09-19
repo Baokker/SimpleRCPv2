@@ -66,6 +66,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@opencode-ai/sdk':
+        specifier: 1.18.31
+        version: 1.18.31
       '@simplercp/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -93,6 +96,9 @@ importers:
       node-pty:
         specifier: ^1.1.0
         version: 1.1.0
+      opencode-ai:
+        specifier: 1.18.31
+        version: 1.18.31
       ws:
         specifier: ^8.16.0
         version: 8.21.0
@@ -547,6 +553,9 @@ packages:
       monaco-editor: '>= 0.25.0 < 1'
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@opencode-ai/sdk@1.18.31':
+    resolution: {integrity: sha512-Raouthf8Lhe9edjvYeeSK7SgvdoU6bBjH9qV3f70dHoa6h+z0X2TMz/e22/wKp/StlFUZ4kIRpYYxFnY8/k01w==}
 
   '@playwright/test@1.60.0':
     resolution: {integrity: sha512-O71yZIbAh/PxDMNGns37GHBIfrVkEVyn+AXyIa5dOTfb4/xNvRWV+Vv/NMbNCtODB/pO7vLlF2OTmMVLhmr7Ag==}
@@ -1319,6 +1328,75 @@ packages:
     resolution: {integrity: sha512-1FlR+gjXK7X+AsAHso35MnyN5KqGwJRi/31ft6x0M194ht7S+rWAvd7PHss9xSKMzE0asv1pyIHaJYq+BbacAQ==}
     engines: {node: '>=12'}
 
+  opencode-ai@1.18.31:
+    resolution: {integrity: sha512-J95feefeWwtIaw3irx76WjzWcgQXxmuHmDVphvs5ep9X30fBJ6T6bFhw50i9Kx50MG/xPn5w2pafXIfNtdry9w==}
+    cpu: [arm64, x64]
+    os: [darwin, linux, win32]
+    hasBin: true
+
+  opencode-darwin-arm64@1.18.31:
+    resolution: {integrity: sha512-IN642oFENleWVDNqMnXi8NQLsZnA8hMswJ6X+GWz+CfBFuCpotjDb5OHgE2HBdC6r5wjG6v0mATb+Mn8xXCp1A==}
+    cpu: [arm64]
+    os: [darwin]
+
+  opencode-darwin-x64-baseline@1.18.31:
+    resolution: {integrity: sha512-4/4UMyPhsIeHln3AT3bxBvrWC+cmbOcdGOeBfoeOQIWcNZ3ycSvFnoJdLX969p9CtR6oNtroaQoNKZHgzSqg6A==}
+    cpu: [x64]
+    os: [darwin]
+
+  opencode-darwin-x64@1.18.31:
+    resolution: {integrity: sha512-xrw512dou9Drxs/1yH4CHEt/kvrSl8j1Ulez0wTOsW0lWZaATJMnlfHBjagWzv+QWIC4nz/cBgYzjn3JvxS7zQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  opencode-linux-arm64-musl@1.18.31:
+    resolution: {integrity: sha512-qeEg7HsYupDeLkFqr+QNIgcE4kVRPycb/7ymyYUffSg+z2A6fU065pvU6uaZ+LjIzdJaZHUe1wDQvrSP/EJAqg==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  opencode-linux-arm64@1.18.31:
+    resolution: {integrity: sha512-tLTZlOeWz4u48WQWg7PhKTn4gIXPHf7xaiWSHcmci1O3qKXEDLv/TaMzmqIuMChdwtflu2PSNIC00W+Hij/IkA==}
+    cpu: [arm64]
+    os: [linux]
+
+  opencode-linux-x64-baseline-musl@1.18.31:
+    resolution: {integrity: sha512-gZ9TkeoIkckNZjDRreHj0sQk91uRQTgeuMCIZgSKewHN1fq/jjQHMzSAI0HevPEov9O2cDRRzPBF4cppzc+AYg==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  opencode-linux-x64-baseline@1.18.31:
+    resolution: {integrity: sha512-T/hyCHb7gSCuJzLDXs8YfEhjelUes2zkWFPTGEdBPqV/eKrKbEo9U1YdA/WvntjXv0I6k+blZEID54QIcF7Djw==}
+    cpu: [x64]
+    os: [linux]
+
+  opencode-linux-x64-musl@1.18.31:
+    resolution: {integrity: sha512-TxKfcJII53MZ17NSrJ0p51wx0dJtZrX8By60N5O5/M+eP0oO4jCXKIkdBpP/Bku44gm8QZkTNLBWpPc2OTJweg==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  opencode-linux-x64@1.18.31:
+    resolution: {integrity: sha512-gTJ5nGNq+KJblwmeusEdz8YFwvkV7a3xTOV9EKKEmsv0Lkbajq/oQO9jEC0sMiS66mjHDOrhLgIUxSVqfLBM8g==}
+    cpu: [x64]
+    os: [linux]
+
+  opencode-windows-arm64@1.18.31:
+    resolution: {integrity: sha512-K+Dh5r5yLQJ6Maeo1+JhQr27Un6lzUIWEp3LGoeXSfLkcSqi7ueTecGbg7HAbtEIY5a9j3yNCS3//AjgTcZa+w==}
+    cpu: [arm64]
+    os: [win32]
+
+  opencode-windows-x64-baseline@1.18.31:
+    resolution: {integrity: sha512-wz5K8SpL+GTKez4BpYX1AbhRwBY7AVt+95ijWZrow84ibLTDoZ1skEsN5UUcQJ8LYeC+o1Vq0xi4A5kLGfvQ0w==}
+    cpu: [x64]
+    os: [win32]
+
+  opencode-windows-x64@1.18.31:
+    resolution: {integrity: sha512-1Za7uKeGLonNUkUIGHD7xfV5omi7ju/7z2WYfS5YvDLTr1iU/W1PPVHzHXiwiyV4gMxsWGwHHLubWdH99D7pSA==}
+    cpu: [x64]
+    os: [win32]
+
   p-limit@5.0.0:
     resolution: {integrity: sha512-/Eaoq+QyLSiXQ4lyYV23f14mZRQcXnxfHrN0vCai+ak9G0pp9iEQukIIZq5NccEvwRB8PUnZT0KsOoDCINS1qQ==}
     engines: {node: '>=18'}
@@ -2005,6 +2083,10 @@ snapshots:
       monaco-editor: 0.49.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  '@opencode-ai/sdk@1.18.31':
+    dependencies:
+      cross-spawn: 7.0.6
 
   '@playwright/test@1.60.0':
     dependencies:
@@ -2805,6 +2887,57 @@ snapshots:
   onetime@6.0.0:
     dependencies:
       mimic-fn: 4.0.0
+
+  opencode-ai@1.18.31:
+    optionalDependencies:
+      opencode-darwin-arm64: 1.18.31
+      opencode-darwin-x64: 1.18.31
+      opencode-darwin-x64-baseline: 1.18.31
+      opencode-linux-arm64: 1.18.31
+      opencode-linux-arm64-musl: 1.18.31
+      opencode-linux-x64: 1.18.31
+      opencode-linux-x64-baseline: 1.18.31
+      opencode-linux-x64-baseline-musl: 1.18.31
+      opencode-linux-x64-musl: 1.18.31
+      opencode-windows-arm64: 1.18.31
+      opencode-windows-x64: 1.18.31
+      opencode-windows-x64-baseline: 1.18.31
+
+  opencode-darwin-arm64@1.18.31:
+    optional: true
+
+  opencode-darwin-x64-baseline@1.18.31:
+    optional: true
+
+  opencode-darwin-x64@1.18.31:
+    optional: true
+
+  opencode-linux-arm64-musl@1.18.31:
+    optional: true
+
+  opencode-linux-arm64@1.18.31:
+    optional: true
+
+  opencode-linux-x64-baseline-musl@1.18.31:
+    optional: true
+
+  opencode-linux-x64-baseline@1.18.31:
+    optional: true
+
+  opencode-linux-x64-musl@1.18.31:
+    optional: true
+
+  opencode-linux-x64@1.18.31:
+    optional: true
+
+  opencode-windows-arm64@1.18.31:
+    optional: true
+
+  opencode-windows-x64-baseline@1.18.31:
+    optional: true
+
+  opencode-windows-x64@1.18.31:
+    optional: true
 
   p-limit@5.0.0:
     dependencies:

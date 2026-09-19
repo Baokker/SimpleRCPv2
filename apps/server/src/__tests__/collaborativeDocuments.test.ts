@@ -111,6 +111,19 @@ describe("collaborative document store", () => {
     ).resolves.toBe("hello world");
   });
 
+  it("increments a file revision for member edits and ignores external reloads", async () => {
+    const store = createCollaborativeDocumentStore({ workspaceRoot: root });
+    const document = await store.getDocument("room-revision", "src/hello.ts");
+
+    expect(store.getRevision("src/hello.ts")).toBe(0);
+    document.getText("content").insert(5, " member");
+    expect(store.getRevision("src/hello.ts")).toBe(1);
+
+    await fs.writeFile(path.join(root, "src", "hello.ts"), "external change");
+    await store.reloadPath("src/hello.ts");
+    expect(store.getRevision("src/hello.ts")).toBe(1);
+  });
+
   it("retires an active document when its file becomes binary", async () => {
     const store = createCollaborativeDocumentStore({
       workspaceRoot: root,

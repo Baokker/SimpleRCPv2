@@ -1,5 +1,6 @@
 import {
   Archive,
+  Bot,
   FolderInput,
   FolderOpen,
   Moon,
@@ -18,6 +19,7 @@ import {
 } from "../api";
 import type { ThemeMode } from "../theme";
 import type { ProjectRecord } from "../types";
+import { AgentSettingsDialog } from "./AgentSettingsDialog";
 
 type ProjectAction = "blank" | "directory" | "zip";
 
@@ -38,6 +40,7 @@ export function ProjectHome({
   const [deletingProjectId, setDeletingProjectId] = useState<string>();
   const [error, setError] = useState("");
   const [projectListError, setProjectListError] = useState("");
+  const [agentSettingsOpen, setAgentSettingsOpen] = useState(false);
   const archiveInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -114,16 +117,28 @@ export function ProjectHome({
           <h1>SimpleRCP</h1>
           <span>Projects</span>
         </div>
-        <button
-          className="home-theme-toggle"
-          type="button"
-          onClick={onToggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-          data-testid="theme-toggle"
-        >
-          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+        <div className="project-home-actions">
+          <button
+            className="home-theme-toggle"
+            type="button"
+            onClick={() => setAgentSettingsOpen(true)}
+            aria-label="Open Agent settings"
+            title="Agent settings"
+            data-testid="agent-settings-open"
+          >
+            <Bot size={17} />
+          </button>
+          <button
+            className="home-theme-toggle"
+            type="button"
+            onClick={onToggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            data-testid="theme-toggle"
+          >
+            {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+        </div>
       </header>
 
       <section className="project-toolbar" aria-label="Project actions">
@@ -247,6 +262,9 @@ export function ProjectHome({
           ))}
         </ul>
       </section>
+      {agentSettingsOpen ? (
+        <AgentSettingsDialog onClose={() => setAgentSettingsOpen(false)} />
+      ) : null}
     </main>
   );
 }

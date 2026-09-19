@@ -3,6 +3,7 @@ import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { setPersistence, setupWSConnection } from "y-websocket/bin/utils";
 import { parseDocumentName } from "./collaborativeDocuments.js";
 import type { EventLog } from "./eventLog.js";
+import type { AgentRunManager } from "./agent/agentRunManager.js";
 import type { ProjectRuntime } from "./projectRuntime.js";
 import type { ProjectRuntimeManager } from "./projectRuntimeManager.js";
 import type { RoomStore } from "./rooms.js";
@@ -143,7 +144,8 @@ function readFileEditActivity(
 
 export function attachRealtimeServer(
   server: http.Server,
-  runtimeManager: ProjectRuntimeManager
+  runtimeManager: ProjectRuntimeManager,
+  agentRuns?: AgentRunManager
 ) {
   const presenceWss = new WebSocketServer({ noServer: true });
   const documentWss = new WebSocketServer({ noServer: true });
@@ -153,6 +155,20 @@ export function attachRealtimeServer(
   const terminalProjects = new Map<WebSocket, string>();
   const identities = new Map<WebSocket, SocketIdentity>();
   const runtimeSubscriptions = new Map<string, Array<() => void>>();
+  const removeAgentListener = agentRuns?.onEvent((event) => {
+    if (event.type === "run_updated") {
+      broadcastToProject(projectSockets, event.projectId, {
+        type: "agent_run_updated",
+        run: event.run
+      });
+      return;
+    }
+    broadcastToProject(projectSockets, event.projectId, {
+      type: "agent_trace_appended",
+      runId: event.runId,
+      sequence: event.event.sequence
+    });
+  });
   const removeProjectDisposingListener = runtimeManager.onProjectDisposing(
     (projectId) => {
       for (const socket of projectSockets.get(projectId) ?? []) {
@@ -357,6 +373,7 @@ export function attachRealtimeServer(
     documents: documentWss,
     terminal: terminalWss,
     dispose() {
+      removeAgentListener?.();
       removeProjectDisposingListener();
       for (const removers of runtimeSubscriptions.values()) {
         for (const remove of removers) remove();

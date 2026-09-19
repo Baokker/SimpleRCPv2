@@ -1,6 +1,7 @@
-import Editor from "@monaco-editor/react";
+import Editor, { loader } from "@monaco-editor/react";
 import { LoaderCircle, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import * as monacoRuntime from "monaco-editor";
 import type * as Monaco from "monaco-editor";
 import type { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
@@ -14,6 +15,8 @@ import type {
 } from "../types";
 import type { ThemeMode } from "../theme";
 
+loader.config({ monaco: monacoRuntime });
+
 export interface OpenFile {
   path: string;
   content: string;
@@ -23,6 +26,7 @@ declare global {
   interface Window {
     __simplercpEditors?: Record<string, Monaco.editor.IStandaloneCodeEditor>;
     __simplercpYjsSynced?: Record<string, boolean>;
+    __simplercpMonaco?: typeof Monaco;
   }
 }
 
@@ -126,6 +130,7 @@ export function EditorArea({
             onMount={(editor, monaco) => {
               editorRef.current = editor;
               monacoRef.current = monaco;
+              window.__simplercpMonaco = monaco;
               decorationIdsRef.current = [];
               setEditorVersion((version) => version + 1);
               window.__simplercpEditors ??= {};
@@ -204,7 +209,6 @@ function CollaborativeEditor({
       <Editor
         path={file.path}
         defaultValue={file.content}
-        language={languageForPath(file.path)}
         theme={theme === "dark" ? "vs-dark" : "vs"}
         options={{
           minimap: { enabled: false },
@@ -370,15 +374,4 @@ function colorIndex(memberId: string) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
   }
   return hash % 4;
-}
-
-function languageForPath(path: string) {
-  if (path.endsWith(".ts") || path.endsWith(".tsx")) return "typescript";
-  if (path.endsWith(".js") || path.endsWith(".jsx")) return "javascript";
-  if (path.endsWith(".java")) return "java";
-  if (path.endsWith(".py")) return "python";
-  if (path.endsWith(".xml")) return "xml";
-  if (path.endsWith(".json")) return "json";
-  if (path.endsWith(".md")) return "markdown";
-  return "plaintext";
 }

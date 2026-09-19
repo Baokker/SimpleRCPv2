@@ -1,5 +1,9 @@
 import cors from "cors";
 import express from "express";
+import path from "node:path";
+import { createAgentSettingsStore } from "./agent/agentSettingsStore.js";
+import { createOpenCodeRuntime } from "./agent/openCodeRuntime.js";
+import { createAgentRunManager } from "./agent/agentRunManager.js";
 import type { ServerConfig } from "./config.js";
 import { createProjectRuntimeManager } from "./projectRuntimeManager.js";
 import { createProjectRegistry } from "./projects.js";
@@ -19,10 +23,33 @@ export async function createApp(config: ServerConfig) {
     demoProjectRoot: config.demoProjectRoot
   });
   const runtimeManager = createProjectRuntimeManager(registry);
+  const agentSettings = await createAgentSettingsStore({
+    storagePath: path.join(config.dataDir, "agent", "settings.json"),
+    defaultModel: config.agent?.model ?? "deepseek-chat",
+    apiKeyConfigured: Boolean(config.agent?.apiKey)
+  });
+  const agentRuntime = createOpenCodeRuntime({
+    port: config.agent?.openCodePort ?? 4096,
+    apiKey: config.agent?.apiKey,
+    baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
+    getSettings: () => agentSettings.get()
+  });
+  const agentRuns = createAgentRunManager({
+    runtime: agentRuntime,
+    registry,
+    runtimeManager,
+    getSettings: () => agentSettings.get(),
+    apiKey: config.agent?.apiKey,
+    runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000
+  });
+  await agentRuns.initialize();
   const app = express();
 
   app.locals.registry = registry;
   app.locals.runtimeManager = runtimeManager;
+  app.locals.agentSettings = agentSettings;
+  app.locals.agentRuntime = agentRuntime;
+  app.locals.agentRuns = agentRuns;
   app.use(cors());
   app.use(express.json({ limit: "5mb" }));
 
@@ -33,6 +60,212 @@ export async function createApp(config: ServerConfig) {
       publicOrigin: config.publicOrigin
     });
   });
+
+  app.get("/api/agent/settings", (_req, res) => {
+    res.json(agentSettings.get());
+  });
+
+  app.put("/api/agent/settings", async (req, res, next) => {
+    try {
+      const current = agentSettings.get();
+      const nextSettings = req.body as {
+        model?: unknown;
+        enabled?: unknown;
+      };
+      if (
+        agentRuns.hasActiveTasks() &&
+        (nextSettings.model !== current.model ||
+          nextSettings.enabled !== current.enabled)
+      ) {
+        throw new Error("Agent settings cannot change while tasks are active");
+      }
+      res.json(await agentSettings.update(req.body));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/agent/status", async (_req, res, next) => {
+    try {
+      res.json(await agentRuntime.status());
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
+    try {
+      const memberId = String(req.query.memberId ?? "");
+      if (!memberId) {
+        res.status(400).json({ error: "memberId is required" });
+        return;
+      }
+      res.json({
+        sessions: await agentRuns.listSessions(req.params.projectId, memberId)
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
+    try {
+      const memberId = String(req.body?.memberId ?? "");
+      if (!memberId) {
+        res.status(400).json({ error: "memberId is required" });
+        return;
+      }
+      const session = await agentRuns.createSession({
+        projectId: req.params.projectId,
+        memberId,
+        title: typeof req.body?.title === "string" ? req.body.title : undefined
+      });
+      res.status(201).json({ session });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get(
+    "/api/projects/:projectId/agent/sessions/:sessionId",
+    async (req, res, next) => {
+      try {
+        const memberId = String(req.query.memberId ?? "");
+        if (!memberId) {
+          res.status(400).json({ error: "memberId is required" });
+          return;
+        }
+        const session = await agentRuns.getSession(
+          req.params.projectId,
+          req.params.sessionId
+        );
+        if (memberId && session.memberId !== memberId) {
+          res.status(403).json({ error: "Agent session belongs to another member" });
+          return;
+        }
+        res.json({ session });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.post(
+    "/api/projects/:projectId/agent/sessions/:sessionId/runs",
+    async (req, res, next) => {
+      try {
+        const memberId = String(req.body?.memberId ?? "");
+        const prompt = String(req.body?.prompt ?? "");
+        const contexts = Array.isArray(req.body?.contexts) ? req.body.contexts : undefined;
+        if (!memberId || !prompt) {
+          res.status(400).json({ error: "memberId and prompt are required" });
+          return;
+        }
+        const run = await agentRuns.createRun({
+          projectId: req.params.projectId,
+          memberId,
+          prompt,
+          sessionId: req.params.sessionId,
+          contexts
+        });
+        res.status(202).json({ run });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get("/api/projects/:projectId/agent/runs", async (req, res, next) => {
+    try {
+      res.json({ runs: await agentRuns.listRuns(req.params.projectId) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/agent/runs", async (req, res, next) => {
+    try {
+      const { memberId, prompt, sessionId, contexts } = req.body as {
+        memberId?: string;
+        prompt?: string;
+        sessionId?: string;
+        contexts?: import("@simplercp/shared").AgentPromptContext[];
+      };
+      if (!memberId || !prompt) {
+        res.status(400).json({ error: "memberId and prompt are required" });
+        return;
+      }
+      const run = await agentRuns.createRun({
+        projectId: req.params.projectId,
+        memberId,
+        prompt,
+        sessionId,
+        contexts
+      });
+      res.status(202).json({ run });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get(
+    "/api/projects/:projectId/agent/runs/:runId",
+    async (req, res, next) => {
+      try {
+        res.json({
+          run: await agentRuns.getRun(req.params.projectId, req.params.runId)
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.get(
+    "/api/projects/:projectId/agent/runs/:runId/trace",
+    async (req, res, next) => {
+      try {
+        const events = await agentRuns.listTrace(
+          req.params.projectId,
+          req.params.runId
+        );
+        if (req.query.download === "true") {
+          res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="trace-${req.params.runId}.jsonl"`
+          );
+          res.send(`${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+          return;
+        }
+        res.json({ events });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.post(
+    "/api/projects/:projectId/agent/runs/:runId/cancel",
+    async (req, res, next) => {
+      try {
+        const memberId = String(req.body?.memberId ?? "");
+        if (!memberId) {
+          res.status(400).json({ error: "memberId is required" });
+          return;
+        }
+        res.json({
+          run: await agentRuns.cancelRun(
+            req.params.projectId,
+            req.params.runId,
+            memberId
+          )
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
 
   app.get("/api/projects", async (_req, res, next) => {
     try {
@@ -109,6 +342,7 @@ export async function createApp(config: ServerConfig) {
       if (project.source === "demo") {
         throw new Error("Demo project cannot be deleted");
       }
+      await agentRuns.disposeProject(projectId);
       await runtimeManager.disposeProject(projectId);
       await registry.deleteProject(projectId);
       res.json({ deletedProjectId: projectId });

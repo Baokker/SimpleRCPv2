@@ -10,6 +10,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@opencode-ai/sdk": "1.18.31",
     "@simplercp/shared": "workspace:*",
     "chokidar": "^5.0.0",
     "cors": "^2.8.5",
@@ -19,6 +20,7 @@
     "lib0": "^0.2.117",
     "nanoid": "^5.0.0",
     "node-pty": "^1.1.0",
+    "opencode-ai": "1.18.31",
     "ws": "^8.16.0",
     "y-protocols": "^1.0.7",
     "y-websocket": "2.1.0",

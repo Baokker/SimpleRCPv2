@@ -152,6 +152,9 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(linus.getByTestId("workspace-notice")).toContainText(
     "src/browser-renamed.ts was deleted"
   );
+  await expect(linus.getByTestId("workspace-notice")).toHaveCount(0, {
+    timeout: 6_000
+  });
   await openDeleteDialog(ada, "src/browser-folder");
   await expect(ada.getByTestId("dir-src/browser-folder")).toHaveCount(0);
   await ada.getByTestId("file-src/hello.ts").click();

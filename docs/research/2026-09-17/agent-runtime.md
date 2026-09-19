@@ -19,6 +19,8 @@ OpenCode 提供服务端模式、官方 TypeScript SDK、HTTP API 和 SSE。可�
 
 SimpleRCPv2 可以把 OpenCode 绑定到回环地址，由服务端持有 SDK client，并把 SSE 转换成自身 trace 事件。每位成员拥有独立 session，同一服务进程可以管理多个 session。
 
+当前实现固定使用 `opencode-ai@1.18.31` 和 `@opencode-ai/sdk@1.18.31`。安装包许可证为 MIT。服务端使用 `@opencode-ai/sdk/v2`，通过 `opencode serve --hostname=127.0.0.1` 启动进程，并检查 health 返回的版本。
+
 ## DeepSeek Harness
 
 DeepSeek Harness 的 session event、JSONL 保存、fork、Credentials 和子 Agent 设计较完整，适合需要更深运行控制的系统。当前组件数量和开发预览状态会增加基线维护范围。
@@ -35,6 +37,8 @@ DeepSeek Harness 的 session event、JSONL 保存、fork、Credentials 和子 Ag
 - API Key 由 SimpleRCPv2 服务端从 `DEEPSEEK_API_KEY` 读取；本地开发可以使用仓库根目录 `.env`。
 - OpenCode 端口不提供给浏览器。
 - 安装检查不调用模型。
+- Provider 使用 OpenAI-compatible `/v1/chat/completions`，地址来自 `DEEPSEEK_BASE_URL`。
+- Model 来自 `DEEPSEEK_MODEL`，也可以在项目首页的 Agent 设置窗口中修改。
 
 ## session 与并发结论
 
@@ -50,3 +54,5 @@ DeepSeek Harness 的 session event、JSONL 保存、fork、Credentials 和子 Ag
 ## trace 结论
 
 每个 run 保存 JSONL，包含原始事件和系统标准事件。标准事件至少覆盖消息、工具、命令、文件变化、权限记录、状态、token、费用、错误和结束原因。未知事件继续保存，便于 OpenCode 升级后检查。
+
+当前实现保存经过敏感值过滤的 SSE 事件，并补充 `run_queued`、`run_started`、`session_created`、`assistant_message`、`file_changes`、`concurrent_change`、`run_completed`、`run_failed` 和 `run_cancelled`。无 Git 项目通过运行前后的工作区内容比较生成文件变化，OpenCode session diff 提供 patch 时一并保存。

@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bot,
   FilePenLine,
   FilePlus2,
   Eye,
@@ -14,14 +15,16 @@ import {
   Users
 } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { AgentPanel } from "./AgentPanel";
 import type {
   ChatMessage,
   EventRecord,
   RemoteCursor,
-  RoomMember
+  RoomMember,
+  WorkspaceNode
 } from "../types";
 
-type CollaborationTab = "chat" | "team" | "project";
+type CollaborationTab = "chat" | "agent" | "team" | "project";
 type ActivityKind =
   | "join"
   | "leave"
@@ -51,11 +54,15 @@ export function CollaborationPanel({
   onChatTextChange,
   onSendChat,
   member,
+  projectId,
   workspaceRoot,
+  workspaceTree,
   roomId,
+  agentRefreshVersion,
   followingMemberId,
   onFollowMember,
-  onOpenFile
+  onOpenFile,
+  onError
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -66,11 +73,15 @@ export function CollaborationPanel({
   onChatTextChange(value: string): void;
   onSendChat(): void;
   member: RoomMember | null;
+  projectId: string;
   workspaceRoot: string;
+  workspaceTree: WorkspaceNode[];
   roomId: string;
+  agentRefreshVersion: number;
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
+  onError(error: unknown): void;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const [unseenMessages, setUnseenMessages] = useState(0);
@@ -124,6 +135,14 @@ export function CollaborationPanel({
         >
           <MessageSquareText size={14} />
           Chat
+        </button>
+        <button
+          className={activeTab === "agent" ? "active" : ""}
+          onClick={() => setActiveTab("agent")}
+          data-testid="collab-tab-agent"
+        >
+          <Bot size={14} />
+          Agent
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
@@ -299,6 +318,18 @@ export function CollaborationPanel({
               </ol>
             </div>
           </section>
+        ) : null}
+
+        {activeTab === "agent" ? (
+          <AgentPanel
+            projectId={projectId}
+            member={member}
+            members={members}
+            refreshVersion={agentRefreshVersion}
+            onOpenFile={onOpenFile}
+            workspaceTree={workspaceTree}
+            onError={onError}
+          />
         ) : null}
 
         {activeTab === "project" ? (

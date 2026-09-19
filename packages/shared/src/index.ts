@@ -76,6 +76,86 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface AgentSettings {
+  provider: "deepseek";
+  model: string;
+  enabled: boolean;
+}
+
+export interface AgentSettingsResponse extends AgentSettings {
+  apiKeyConfigured: boolean;
+}
+
+export interface AgentRuntimeStatus {
+  runtime: "opencode";
+  state: "ready" | "disabled" | "unavailable";
+  version?: string;
+  model: string;
+  apiKeyConfigured: boolean;
+}
+
+export type AgentRunStatus =
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export interface AgentFileChange {
+  file: string;
+  patch?: string;
+  additions: number;
+  deletions: number;
+  status?: "added" | "deleted" | "modified";
+}
+
+export interface AgentPromptContext {
+  type: "file";
+  path: string;
+}
+
+export interface AgentRun {
+  id: string;
+  projectId: string;
+  memberId: string;
+  memberName?: string;
+  prompt: string;
+  contexts?: AgentPromptContext[];
+  status: AgentRunStatus;
+  runtime: "opencode";
+  provider: "deepseek";
+  model: string;
+  sessionId?: string;
+  runtimeSessionId?: string;
+  output?: string;
+  error?: string;
+  fileChanges?: AgentFileChange[];
+  createdAt: string;
+  startedAt?: string;
+  finishedAt?: string;
+}
+
+export interface AgentSession {
+  id: string;
+  projectId: string;
+  memberId: string;
+  memberName?: string;
+  title: string;
+  runtime: "opencode";
+  runtimeSessionId?: string;
+  lastRunId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgentTraceEvent {
+  sequence: number;
+  timestamp: string;
+  type: string;
+  summary?: string;
+  data?: Record<string, unknown>;
+}
+
 export interface CursorPosition {
   lineNumber: number;
   column: number;
@@ -184,4 +264,13 @@ export type ServerMessage =
   | {
       type: "file_saved";
       path: string;
+    }
+  | {
+      type: "agent_run_updated";
+      run: AgentRun;
+    }
+  | {
+      type: "agent_trace_appended";
+      runId: string;
+      sequence: number;
     };

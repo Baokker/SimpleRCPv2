@@ -6,7 +6,8 @@ test-results/
 artifacts/
 .simplercp-data/
 .test-workspaces/
-.env
+.env*
+!.env.example
 .DS_Store
 .superpowers/
 .claude/logs/

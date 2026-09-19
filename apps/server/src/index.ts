@@ -12,7 +12,11 @@ loadEnvironment({
 const config = loadConfig();
 const app = await createApp(config);
 const server = http.createServer(app);
-const realtime = attachRealtimeServer(server, app.locals.runtimeManager);
+const realtime = attachRealtimeServer(
+  server,
+  app.locals.runtimeManager,
+  app.locals.agentRuns
+);
 
 server.listen(config.port, config.host, () => {
   console.log(`SimpleRCPv2 server listening on http://${config.host}:${config.port}`);
@@ -34,6 +38,8 @@ async function shutdown() {
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
   }
+  await app.locals.agentRuns.dispose();
+  await app.locals.agentRuntime.dispose();
   await app.locals.runtimeManager.dispose();
   server.close(() => process.exit(0));
 }
