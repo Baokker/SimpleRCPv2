@@ -68,6 +68,37 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       expect(traceBody.events.at(-1)?.summary).toContain(
         "OpenCode Provider request failed"
       );
+
+      const eventsResponse = await fetch(
+        `${running.origin}/api/projects/demo/events`
+      );
+      const eventsBody = await eventsResponse.json() as {
+        events: Array<{
+          type: string;
+          memberId?: string;
+          payload?: Record<string, unknown>;
+        }>;
+      };
+      expect(eventsBody.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "agent_task_started",
+            memberId,
+            payload: expect.objectContaining({
+              runId: created.id,
+              promptPreview: "Reply with exactly: this request should fail"
+            })
+          }),
+          expect.objectContaining({
+            type: "agent_task_failed",
+            memberId,
+            payload: expect.objectContaining({
+              runId: created.id,
+              error: expect.stringContaining("OpenCode Provider request failed")
+            })
+          })
+        ])
+      );
     } finally {
       await running.close();
     }

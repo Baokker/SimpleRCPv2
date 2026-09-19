@@ -156,6 +156,13 @@ export function attachRealtimeServer(
   const identities = new Map<WebSocket, SocketIdentity>();
   const runtimeSubscriptions = new Map<string, Array<() => void>>();
   const removeAgentListener = agentRuns?.onEvent((event) => {
+    if (event.type === "activity_appended") {
+      broadcastToProject(projectSockets, event.projectId, {
+        type: "event",
+        event: event.event
+      });
+      return;
+    }
     if (event.type === "run_updated") {
       broadcastToProject(projectSockets, event.projectId, {
         type: "agent_run_updated",

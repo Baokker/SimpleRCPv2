@@ -313,6 +313,11 @@ function WorkspacePage({
           if (message.type === "chat_message") {
             void refreshSharedState().catch(showWorkspaceError);
           }
+          if (message.type === "event") {
+            setEvents((current) => current.some((event) => event.id === message.event.id)
+              ? current
+              : [...current, message.event]);
+          }
           if (message.type === "workspace_changed") {
             applyWorkspaceChange(message.change);
             scheduleWorkspaceRefresh();

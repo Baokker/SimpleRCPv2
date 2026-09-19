@@ -40,7 +40,10 @@ export async function createApp(config: ServerConfig) {
     runtimeManager,
     getSettings: () => agentSettings.get(),
     apiKey: config.agent?.apiKey,
-    runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000
+    runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000,
+    appendActivity(projectId, input) {
+      return runtimeManager.get(projectId).events.append(input);
+    }
   });
   await agentRuns.initialize();
   const app = express();

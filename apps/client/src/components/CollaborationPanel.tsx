@@ -32,6 +32,7 @@ type ActivityKind =
   | "create"
   | "rename"
   | "delete"
+  | "agent"
   | "general";
 
 interface ActivityItem {
@@ -404,6 +405,35 @@ function formatActivity(
     }
     case "workspace_path_deleted":
       return item(event, "delete", `${actor} deleted ${stringValue(payload.path) ?? "a path"}`);
+    case "agent_task_started": {
+      const prompt = stringValue(payload.promptPreview);
+      return item(
+        event,
+        "agent",
+        `${actor} asked OpenCode to work on this project`,
+        { detail: prompt ? `“${prompt}”` : stringValue(payload.sessionTitle) }
+      );
+    }
+    case "agent_task_completed": {
+      const files = fileChanges(payload.files);
+      return item(
+        event,
+        "agent",
+        `${actor}'s Agent task completed`,
+        {
+          detail: files.length ? formatAgentFiles(files) : "No files changed",
+          path: files[0]?.file
+        }
+      );
+    }
+    case "agent_task_failed":
+      return item(event, "agent", `${actor}'s Agent task failed`, {
+        detail: stringValue(payload.error)
+      });
+    case "agent_task_cancelled":
+      return item(event, "agent", `${actor}'s Agent task was cancelled`, {
+        detail: stringValue(payload.reason)
+      });
     default:
       return null;
   }
@@ -453,6 +483,7 @@ function ActivityIcon({ kind }: { kind: ActivityKind }) {
   if (kind === "create") return <FilePlus2 {...props} />;
   if (kind === "rename") return <Pencil {...props} />;
   if (kind === "delete") return <Trash2 {...props} />;
+  if (kind === "agent") return <Bot {...props} />;
   if (kind === "general") return <Activity {...props} />;
   return <FolderPlus {...props} />;
 }
@@ -463,6 +494,34 @@ function stringValue(value: unknown) {
 
 function numberValue(value: unknown) {
   return typeof value === "number" ? value : 0;
+}
+
+interface AgentActivityFile {
+  file: string;
+  additions: number;
+  deletions: number;
+}
+
+function fileChanges(value: unknown): AgentActivityFile[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const file = entry as Record<string, unknown>;
+    const path = stringValue(file.file);
+    if (!path) return [];
+    return [{
+      file: path,
+      additions: numberValue(file.additions),
+      deletions: numberValue(file.deletions)
+    }];
+  });
+}
+
+function formatAgentFiles(files: AgentActivityFile[]) {
+  const additions = files.reduce((total, file) => total + file.additions, 0);
+  const deletions = files.reduce((total, file) => total + file.deletions, 0);
+  const summary = `${files.length} ${files.length === 1 ? "file" : "files"} changed · +${additions} / -${deletions}`;
+  return files.length === 1 ? `${summary} · ${files[0]?.file}` : summary;
 }
 
 function formatEditDetail(payload: Record<string, unknown>) {

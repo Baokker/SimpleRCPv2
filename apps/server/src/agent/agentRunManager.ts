@@ -4,7 +4,8 @@ import type {
   AgentRun,
   AgentSettingsResponse,
   AgentTraceEvent,
-  AgentPromptContext
+  AgentPromptContext,
+  EventRecord
 } from "@simplercp/shared";
 import type { AgentRuntime } from "./agentRuntime.js";
 import { createAgentRunStore, type AgentRunStore } from "./agentRunStore.js";
@@ -28,6 +29,10 @@ interface AgentRunManagerOptions {
   getSettings(): AgentSettingsResponse;
   apiKey?: string;
   runTimeoutMs: number;
+  appendActivity?: (
+    projectId: string,
+    input: Omit<EventRecord, "id" | "timestamp">
+  ) => EventRecord;
 }
 
 interface ProjectQueue {
@@ -43,6 +48,7 @@ interface ActiveRun {
 
 export type AgentRunManagerEvent =
   | { type: "run_updated"; projectId: string; run: AgentRun }
+  | { type: "activity_appended"; projectId: string; event: EventRecord }
   | {
       type: "trace_appended";
       projectId: string;
@@ -122,6 +128,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const event = await getTrace(projectId, runId).append(input);
     emit({ type: "trace_appended", projectId, runId, event });
     return event;
+  }
+
+  function appendActivity(
+    projectId: string,
+    input: Omit<EventRecord, "id" | "timestamp">
+  ) {
+    if (!options.appendActivity) return;
+    const event = options.appendActivity(projectId, input);
+    emit({ type: "activity_appended", projectId, event });
   }
 
   async function migrateLegacySessions(projectId: string) {
@@ -216,6 +231,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await getSessionStore(projectId).update(run.sessionId!, { lastRunId: run.id });
       }
 
+      appendActivity(projectId, {
+        type: "agent_task_started",
+        memberId: run.memberId,
+        payload: {
+          runId: run.id,
+          sessionId: run.sessionId,
+          sessionTitle: session.title,
+          promptPreview: previewPrompt(run.prompt)
+        }
+      });
+
       activeRuns.set(runId, {
         workspacePath: projectRuntime.project.workspacePath,
         runtimeSessionId
@@ -294,6 +320,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         fileChanges,
         finishedAt
       });
+      appendActivity(projectId, {
+        type: "agent_task_completed",
+        memberId: run.memberId,
+        payload: {
+          runId: run.id,
+          sessionId: run.sessionId,
+          files: fileChanges
+        }
+      });
       await appendTrace(projectId, runId, {
         type: "run_completed",
         summary: "Agent run completed"
@@ -306,6 +341,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         status: "failed",
         error: message,
         finishedAt: new Date().toISOString()
+      });
+      appendActivity(projectId, {
+        type: "agent_task_failed",
+        memberId: current.memberId,
+        payload: {
+          runId: current.id,
+          sessionId: current.sessionId,
+          error: message
+        }
       });
       await appendTrace(projectId, runId, {
         type: "run_failed",
@@ -469,6 +513,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         type: "run_cancelled",
         summary: "Agent run cancelled"
       });
+      appendActivity(projectId, {
+        type: "agent_task_cancelled",
+        memberId: run.memberId,
+        payload: {
+          runId: run.id,
+          sessionId: run.sessionId
+        }
+      });
 
       const active = activeRuns.get(runId);
       if (active) {
@@ -508,6 +560,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await appendTrace(projectId, run.id, {
           type: "run_cancelled",
           summary: "Agent run cancelled because the project was deleted"
+        });
+        appendActivity(projectId, {
+          type: "agent_task_cancelled",
+          memberId: run.memberId,
+          payload: {
+            runId: run.id,
+            sessionId: run.sessionId,
+            reason: "Project deleted"
+          }
         });
       }
 
@@ -567,6 +628,11 @@ async function buildRuntimePrompt(
     sections.push(`--- ${context.path} ---\n${result.content}\n--- end ${context.path} ---`);
   }
   return `Relevant project files:\n${sections.join("\n")}\n\nUser request:\n${prompt}`;
+}
+
+function previewPrompt(prompt: string) {
+  const normalized = prompt.replace(/\s+/g, " ").trim();
+  return normalized.length > 120 ? `${normalized.slice(0, 117)}…` : normalized;
 }
 
 function normalizeAgentContexts(contexts: AgentPromptContext[] | undefined) {
