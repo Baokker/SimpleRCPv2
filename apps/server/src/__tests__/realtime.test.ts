@@ -10,7 +10,7 @@ describe("realtime message handling", () => {
     const room = rooms.createRoom("workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionId: "tab-a"
     });
 
@@ -40,7 +40,7 @@ describe("realtime message handling", () => {
     const room = rooms.createRoom("workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionId: "tab-a"
     });
 
@@ -90,7 +90,7 @@ describe("realtime message handling", () => {
     const room = rooms.createRoom("workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionId: "tab-a"
     });
     const eventCountBeforeCursorMove = events.list().length;

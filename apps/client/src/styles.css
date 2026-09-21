@@ -627,7 +627,8 @@ body {
 }
 
 .project-create-form input,
-.join-project input {
+.join-project input,
+.join-project select {
   width: 100%;
   min-height: 36px;
   border: 1px solid var(--border-control);

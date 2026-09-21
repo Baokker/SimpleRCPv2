@@ -8,6 +8,54 @@ const workspaceRoot = fileURLToPath(
   new URL("../../.test-workspaces/e2e-data/projects/demo/workspace/", import.meta.url)
 );
 
+test("tabs in one browser can use different project participants", async ({
+  browser
+}) => {
+  const context = await browser.newContext();
+  const firstTab = await context.newPage();
+  const secondTab = await context.newPage();
+
+  await firstTab.goto("/projects/demo");
+  const firstParticipantSelect = firstTab.getByTestId("participant-select");
+  if (await firstParticipantSelect.count()) {
+    await firstParticipantSelect.selectOption("new");
+  }
+  await firstTab.getByTestId("display-name").fill("Tab One");
+  await firstTab.getByTestId("join-project").click();
+  await firstTab.getByTestId("status-bar").waitFor();
+  await expect.poll(() => firstTab.evaluate(() =>
+    window.sessionStorage.getItem("simplercp.participantId.demo")
+  )).not.toBeNull();
+  const firstParticipantId = await firstTab.evaluate(() =>
+    window.sessionStorage.getItem("simplercp.participantId.demo")
+  );
+
+  await secondTab.goto("/projects/demo");
+  await secondTab.getByTestId("participant-select").selectOption("new");
+  await secondTab.getByTestId("display-name").fill("Tab Two");
+  await secondTab.getByTestId("join-project").click();
+  await secondTab.getByTestId("status-bar").waitFor();
+  await expect.poll(() => secondTab.evaluate(() =>
+    window.sessionStorage.getItem("simplercp.participantId.demo")
+  )).not.toBeNull();
+  const secondParticipantId = await secondTab.evaluate(() =>
+    window.sessionStorage.getItem("simplercp.participantId.demo")
+  );
+
+  expect(firstParticipantId).toBeTruthy();
+  expect(secondParticipantId).toBeTruthy();
+  expect(secondParticipantId).not.toBe(firstParticipantId);
+
+  await firstTab.reload();
+  await expect(firstTab.getByTestId("participant-select")).toHaveValue(
+    firstParticipantId ?? ""
+  );
+  await firstTab.getByTestId("join-project").click();
+  await firstTab.getByTestId("status-bar").waitFor();
+
+  await context.close();
+});
+
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({
   browser
 }) => {

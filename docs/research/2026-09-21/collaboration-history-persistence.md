@@ -40,13 +40,13 @@ OpenCode 官方源码把数据库文件放在 XDG data directory 下的 `opencod
 
 SimpleRCP 保存 OpenCode `runtimeSessionId` 后，可以在服务重新启动时重新连接原有 OpenCode session。OpenCode data directory 也需要位于能够长期保存的服务端存储中。
 
-## 当前代码行为
+## 调研发现与实现结果
 
-### Activity 在服务重新启动后清空
+### Activity 保存
 
-`apps/server/src/eventLog.ts` 使用进程内数组保存 `EventRecord`。`createProjectRuntime` 每次创建项目运行环境时都会创建新的 `EventLog`。服务停止以后，这个数组随进程一起消失。重新启动时只能看到本次进程新产生的 Activity。
+调研时，`apps/server/src/eventLog.ts` 使用进程内数组保存 `EventRecord`，Server 结束后会丢失 Activity。当前实现把文件操作、文件编辑和 Agent 状态写入项目目录的 `activity.json`，Server 重新启动后继续读取。
 
-因此，用户观察到的 Activity 丢失符合当前代码行为，但不符合需要回顾项目历史的协作产品流程。
+成员进入、离开、光标与当前文件仍属于即时状态，只在当前 Server 运行期间显示。
 
 ### Agent 数据已经写入服务端目录
 
@@ -59,13 +59,11 @@ SimpleRCP 保存 OpenCode `runtimeSessionId` 后，可以在服务重新启动�
 
 这些文件位于项目工作目录的上一级项目数据目录。服务重新启动不会主动删除它们。
 
-### Agent session 被变化的 `memberId` 隐藏
+### Agent session 所有权
 
-浏览器会把稳定的 `userId` 保存在 `localStorage`。服务端 Room 和 Member 只保存在内存；项目运行环境重新创建时，Room 为空。用户重新加入以后，`rooms.ts` 会生成新的 `memberId`。
+调研时，Agent session 使用临时 `memberId` 记录所有权。Server 重新启动以后，新生成的 `memberId` 无法查询原 session。
 
-Agent session 当前以 `memberId` 记录所属成员，session 列表接口也按 `memberId` 过滤。服务重新启动以后，浏览器虽然仍然使用原有 `userId`，新生成的 `memberId` 已经无法匹配旧 session。旧 session、run 和 trace 仍在服务端文件中，页面查询不到它们。
-
-这个现象包含两种情况：Activity 数据已经消失；Agent 数据仍然存在，但成员标识变化使页面无法访问。
+当前实现增加项目级 Participant。Agent session 与 run 使用 `participantId` 记录所有权，`memberId` 只用于当前 Room 的接口校验。用户重新选择原 Participant 后，可以查询原 session、run 和 trace，并继续使用已保存的 `runtimeSessionId`。
 
 ## 适合 SimpleRCP 的保存边界
 
@@ -91,9 +89,9 @@ Agent session 当前以 `memberId` 记录所属成员，session 列表接口也�
 
 ## 数据归属与重新进入流程
 
-Agent session 应当使用稳定的 `userId` 记录所有者。`memberId` 可以继续表示一次服务运行期间的 Room 成员，适合 Presence、光标与 WebSocket 消息。
+Agent session 使用 Server 保存的 `participantId` 记录所有者。`memberId` 表示一次 Server 运行期间的 Room 成员，适合 Presence、光标与 WebSocket 消息；`connectionId` 表示单个页面连接。
 
-基线版本没有账号系统，浏览器 `localStorage` 中的 `userId` 可以提供同一浏览器内的连续访问。公网部署需要由登录账号提供稳定用户标识，服务端应当校验 session 所有者。
+浏览器 `sessionStorage` 保存当前标签页选择的 Participant，`localStorage` 保存最近选择。Server 中的 `participants.json` 是身份记录来源，清除浏览器存储以后仍可重新选择。公网部署需要由登录账号关联并校验 Participant。
 
 用户重新进入项目时，页面应当执行以下读取：
 
@@ -105,19 +103,19 @@ Agent session 应当使用稳定的 `userId` 记录所有者。`memberId` 可以
 
 ## Activity 的保存形式
 
-Activity 适合采用项目级追加记录文件，例如 `activity.jsonl`。每条记录包含：
+Activity 采用项目级 `activity.json`。每条记录包含：
 
 - `id`、`projectId`、`timestamp`、`type`；
-- 稳定 `userId`、当时的成员名称与角色；
+- `participantId`、当时的成员名称与角色；
 - `sessionId`、`runId`、文件路径等关联标识；
 - 用于列表显示的简短信息与行数变化。
 
 完整 Agent trace 已经保存在 `trace.jsonl`。Activity 只保存摘要和关联标识，页面需要详细信息时读取对应 run 与 trace，可以减少重复数据。
 
-Activity 接口需要支持按时间或记录 ID 分页。服务端可以设置保留数量或保留天数，并在项目删除时一起删除。Agent session 与 run 由用户明确删除或项目删除时清除，不应当跟随服务进程停止而清除。
+当前接口读取项目完整 Activity。数据量增加以后需要支持按时间或记录 ID 分页，并设置保留数量或保留天数。项目删除时，Activity、Participant、Agent session、run 和 trace 会与项目目录一起删除。
 
 ## 开发判断
 
 SimpleRCP 采用 Server Only 数据来源时，Chat、Activity、Agent session、Agent run 和 trace 都属于服务端项目数据。服务重新启动只影响在线成员、连接、光标和终端屏幕等即时状态。
 
-当前 Agent 数据保存结构已经具备继续使用的基础。需要修正 session 所有者标识与查询条件，并为 Activity 增加项目级保存。完成这两项以后，用户能够重新进入项目、查看历史协作记录，并在原 Agent session 中继续工作，无需重新说明已有上下文。
+当前代码已经保存 Participant 与 Activity，并使用 `participantId` 查询 Agent session。用户能够重新进入项目、查看历史协作记录，并在原 Agent session 中继续工作，无需重新说明已有上下文。

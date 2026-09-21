@@ -22,6 +22,7 @@ export type {
   FileEditActivity,
   FileEditChange,
   ProjectRecord,
+  ProjectParticipant,
   ProjectSource,
   RoomConnection,
   RoomMember,

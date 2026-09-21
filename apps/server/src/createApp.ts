@@ -138,13 +138,22 @@ export async function createApp(config: ServerConfig) {
           res.status(400).json({ error: "memberId is required" });
           return;
         }
-        const session = await agentRuns.getSession(
-          req.params.projectId,
-          req.params.sessionId
-        );
-        if (memberId && session.memberId !== memberId) {
-          res.status(403).json({ error: "Agent session belongs to another member" });
-          return;
+        let session;
+        try {
+          session = await agentRuns.getSessionForMember(
+            req.params.projectId,
+            req.params.sessionId,
+            memberId
+          );
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message === "Agent session belongs to another participant"
+          ) {
+            res.status(403).json({ error: error.message });
+            return;
+          }
+          throw error;
         }
         res.json({ session });
       } catch (error) {
@@ -363,27 +372,40 @@ export async function createApp(config: ServerConfig) {
     }
   });
 
-  app.post("/api/projects/:projectId/members", (req, res, next) => {
+  app.get("/api/projects/:projectId/participants", async (req, res, next) => {
     try {
       const runtime = runtimeManager.get(req.params.projectId);
-      const { name, role, userId, connectionId } = req.body as {
+      res.json({ participants: await runtime.participants.list() });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/members", async (req, res, next) => {
+    try {
+      const runtime = runtimeManager.get(req.params.projectId);
+      const { name, role, participantId, connectionId } = req.body as {
         name?: string;
         role?: string;
-        userId?: string;
+        participantId?: string;
         connectionId?: string;
       };
       if (!name) {
         res.status(400).json({ error: "name is required" });
         return;
       }
-      res.json({
-        member: runtime.rooms.joinRoom(runtime.room.id, {
-          name,
-          userId,
-          connectionId,
-          profileRole: role?.trim() || undefined
-        })
+      const participant = await runtime.participants.resolve({
+        participantId,
+        displayName: name,
+        profileRole: role
       });
+      const member = runtime.rooms.joinRoom(runtime.room.id, {
+        name: participant.displayName,
+        participantId: participant.id,
+        connectionId,
+        profileRole: participant.profileRole
+      });
+      res.json({ member, participant });
     } catch (error) {
       next(error);
     }
@@ -406,10 +428,12 @@ export async function createApp(config: ServerConfig) {
     }
   );
 
-  app.get("/api/projects/:projectId/events", (req, res, next) => {
+  app.get("/api/projects/:projectId/events", async (req, res, next) => {
     try {
+      const events = runtimeManager.get(req.params.projectId).events;
+      await events.awaitIdle();
       res.json({
-        events: runtimeManager.get(req.params.projectId).events.list()
+        events: events.list()
       });
     } catch (error) {
       next(error);
@@ -511,7 +535,7 @@ export async function createApp(config: ServerConfig) {
         res.status(400).json({ error: "path and initiatorId are required" });
         return;
       }
-      requireMember(runtime, initiatorId);
+      const member = requireMember(runtime, initiatorId);
       runtime.suppressWorkspaceChange({ type: "add", path: filePath });
       await createWorkspaceFile(
         runtime.project.workspacePath,
@@ -522,7 +546,8 @@ export async function createApp(config: ServerConfig) {
         type: "workspace_file_created",
         roomId: runtime.room.id,
         memberId: initiatorId,
-        payload: { path: filePath }
+        participantId: member.participantId,
+        payload: { path: filePath, name: member.displayName }
       });
       runtime.announceWorkspaceChange({ type: "add", path: filePath });
       res.json({
@@ -544,7 +569,7 @@ export async function createApp(config: ServerConfig) {
         res.status(400).json({ error: "path and initiatorId are required" });
         return;
       }
-      requireMember(runtime, initiatorId);
+      const member = requireMember(runtime, initiatorId);
       runtime.suppressWorkspaceChange({
         type: "addDir",
         path: directoryPath
@@ -554,7 +579,8 @@ export async function createApp(config: ServerConfig) {
         type: "workspace_directory_created",
         roomId: runtime.room.id,
         memberId: initiatorId,
-        payload: { path: directoryPath }
+        participantId: member.participantId,
+        payload: { path: directoryPath, name: member.displayName }
       });
       runtime.announceWorkspaceChange({
         type: "addDir",
@@ -582,7 +608,7 @@ export async function createApp(config: ServerConfig) {
         });
         return;
       }
-      requireMember(runtime, initiatorId);
+      const member = requireMember(runtime, initiatorId);
       runtime.suppressWorkspaceChange({
         type: "rename",
         fromPath,
@@ -594,7 +620,8 @@ export async function createApp(config: ServerConfig) {
         type: "workspace_path_renamed",
         roomId: runtime.room.id,
         memberId: initiatorId,
-        payload: { fromPath, toPath }
+        participantId: member.participantId,
+        payload: { fromPath, toPath, name: member.displayName }
       });
       runtime.announceWorkspaceChange({
         type: "rename",
@@ -618,7 +645,7 @@ export async function createApp(config: ServerConfig) {
         res.status(400).json({ error: "path and initiatorId are required" });
         return;
       }
-      requireMember(runtime, initiatorId);
+      const member = requireMember(runtime, initiatorId);
       runtime.suppressWorkspaceChange({ type: "unlink", path: workspacePath });
       await runtime.documents.retirePath(workspacePath);
       await deleteWorkspacePath(runtime.project.workspacePath, workspacePath);
@@ -626,7 +653,8 @@ export async function createApp(config: ServerConfig) {
         type: "workspace_path_deleted",
         roomId: runtime.room.id,
         memberId: initiatorId,
-        payload: { path: workspacePath }
+        participantId: member.participantId,
+        payload: { path: workspacePath, name: member.displayName }
       });
       runtime.announceWorkspaceChange({
         type: "unlink",
@@ -659,7 +687,9 @@ function requireMember(
   runtime: ReturnType<ReturnType<typeof createProjectRuntimeManager>["get"]>,
   memberId: string
 ) {
-  if (!runtime.rooms.getMember(runtime.room.id, memberId)) {
+  const member = runtime.rooms.getMember(runtime.room.id, memberId);
+  if (!member) {
     throw new Error("Project membership is required");
   }
+  return member;
 }

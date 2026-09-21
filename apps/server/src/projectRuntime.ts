@@ -2,6 +2,7 @@ import path from "node:path";
 import { createChatStore } from "./chat.js";
 import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import { createEventLog } from "./eventLog.js";
+import { createParticipantStore } from "./participantStore.js";
 import type { ProjectRecord } from "./projects.js";
 import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
@@ -9,7 +10,9 @@ import type { WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
 export function createProjectRuntime(project: ProjectRecord) {
-  const events = createEventLog();
+  const projectRoot = path.dirname(project.workspacePath);
+  const events = createEventLog(path.join(projectRoot, "activity.json"));
+  const participants = createParticipantStore(project.id, projectRoot);
   const rooms = createRoomStore(events);
   const chat = createChatStore(events, {
     storagePath: path.join(path.dirname(project.workspacePath), "chat.json")
@@ -100,6 +103,7 @@ export function createProjectRuntime(project: ProjectRecord) {
   return {
     project,
     events,
+    participants,
     rooms,
     chat,
     documents,
@@ -131,6 +135,7 @@ export function createProjectRuntime(project: ProjectRecord) {
       removeTerminalListener();
       await documents.awaitIdle();
       await chat.awaitIdle();
+      await events.awaitIdle();
       terminal.dispose();
       await watcher.close();
     }

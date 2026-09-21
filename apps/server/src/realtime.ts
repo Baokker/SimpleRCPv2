@@ -66,11 +66,14 @@ export function handleRealtimeMessage({
 
   if (message.type === "file_edited") {
     const activity = readFileEditActivity(message);
+    const member = rooms.getMember(message.roomId, message.memberId);
+    if (!member) throw new Error("Project membership is required");
     const event = events.append({
       type: "file_changed",
       roomId: message.roomId,
       memberId: message.memberId,
-      payload: { path: message.path, ...activity }
+      participantId: member.participantId,
+      payload: { path: message.path, name: member.displayName, ...activity }
     });
     return { broadcast: { type: "event", event } };
   }

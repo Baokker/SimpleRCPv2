@@ -2,6 +2,7 @@ import path from "node:path";
 import type {
   AgentFileChange,
   AgentRun,
+  AgentSession,
   AgentSettingsResponse,
   AgentTraceEvent,
   AgentPromptContext,
@@ -16,6 +17,7 @@ import {
 import { createTraceStore, type TraceStore } from "./traceStore.js";
 import type { ProjectRegistry } from "../projects.js";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
+import type { ProjectRuntime } from "../projectRuntime.js";
 import {
   compareAgentWorkspaceSnapshots,
   createAgentWorkspaceSnapshot
@@ -234,10 +236,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       appendActivity(projectId, {
         type: "agent_task_started",
         memberId: run.memberId,
+        participantId: run.participantId,
         payload: {
           runId: run.id,
           sessionId: run.sessionId,
           sessionTitle: session.title,
+          name: run.memberName,
           promptPreview: previewPrompt(run.prompt)
         }
       });
@@ -323,9 +327,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       appendActivity(projectId, {
         type: "agent_task_completed",
         memberId: run.memberId,
+        participantId: run.participantId,
         payload: {
           runId: run.id,
           sessionId: run.sessionId,
+          name: run.memberName,
           files: fileChanges
         }
       });
@@ -345,9 +351,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       appendActivity(projectId, {
         type: "agent_task_failed",
         memberId: current.memberId,
+        participantId: current.participantId,
         payload: {
           runId: current.id,
           sessionId: current.sessionId,
+          name: current.memberName,
           error: message
         }
       });
@@ -380,6 +388,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: "run_failed",
             summary: message
           });
+          appendActivity(project.id, {
+            type: "agent_task_failed",
+            memberId: run.memberId,
+            participantId: run.participantId,
+            payload: {
+              runId: run.id,
+              sessionId: run.sessionId,
+              name: run.memberName,
+              error: message
+            }
+          });
         }
       }
     },
@@ -409,14 +428,24 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       let session = input.sessionId
         ? await sessionStore.get(input.sessionId)
         : undefined;
-      if (session && session.memberId !== input.memberId) {
-        throw new Error("Agent session belongs to another member");
+      if (session) {
+        session = await claimLegacySession(
+          projectRuntime,
+          sessionStore,
+          session,
+          member.participantId,
+          member.displayName
+        );
+        if (session.participantId !== member.participantId) {
+          throw new Error("Agent session belongs to another participant");
+        }
       }
       if (!session) {
         if (input.sessionId) throw new Error("Agent session not found");
         session = await sessionStore.create({
           projectId: input.projectId,
           memberId: input.memberId,
+          participantId: member.participantId,
           memberName: member.displayName,
           title: prompt.slice(0, 80),
           runtime: "opencode"
@@ -426,6 +455,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const run = await store.create({
         projectId: input.projectId,
         memberId: input.memberId,
+        participantId: member.participantId,
         memberName: member.displayName,
         prompt,
         contexts,
@@ -460,6 +490,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       return getSessionStore(input.projectId).create({
         projectId: input.projectId,
         memberId: input.memberId,
+        participantId: member.participantId,
         memberName: member.displayName,
         title,
         runtime: "opencode"
@@ -470,12 +501,49 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!session) throw new Error("Agent session not found");
       return session;
     },
+    async getSessionForMember(
+      projectId: string,
+      sessionId: string,
+      memberId: string
+    ) {
+      const projectRuntime = options.runtimeManager.get(projectId);
+      const member = projectRuntime.rooms.getMember(projectRuntime.room.id, memberId);
+      if (!member) throw new Error("Project membership is required");
+      const sessionStore = getSessionStore(projectId);
+      const stored = await sessionStore.get(sessionId);
+      if (!stored) throw new Error("Agent session not found");
+      const session = await claimLegacySession(
+        projectRuntime,
+        sessionStore,
+        stored,
+        member.participantId,
+        member.displayName
+      );
+      if (session.participantId !== member.participantId) {
+        throw new Error("Agent session belongs to another participant");
+      }
+      return session;
+    },
     async listSessions(projectId: string, memberId: string) {
       const projectRuntime = options.runtimeManager.get(projectId);
-      if (!projectRuntime.rooms.getMember(projectRuntime.room.id, memberId)) {
+      const member = projectRuntime.rooms.getMember(projectRuntime.room.id, memberId);
+      if (!member) {
         throw new Error("Project membership is required");
       }
-      return getSessionStore(projectId).list(memberId);
+      const sessionStore = getSessionStore(projectId);
+      const sessions = await sessionStore.list();
+      await Promise.all(
+        sessions.map((session) =>
+          claimLegacySession(
+            projectRuntime,
+            sessionStore,
+            session,
+            member.participantId,
+            member.displayName
+          )
+        )
+      );
+      return sessionStore.list(member.participantId);
     },
     async getRun(projectId: string, runId: string) {
       const run = await getStore(projectId).get(runId);
@@ -492,14 +560,19 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     },
     async cancelRun(projectId: string, runId: string, memberId: string) {
       const projectRuntime = options.runtimeManager.get(projectId);
-      if (!projectRuntime.rooms.getMember(projectRuntime.room.id, memberId)) {
+      const member = projectRuntime.rooms.getMember(projectRuntime.room.id, memberId);
+      if (!member) {
         throw new Error("Project membership is required");
       }
       const store = getStore(projectId);
       const run = await store.get(runId);
       if (!run) throw new Error("Agent run not found");
-      if (run.memberId !== memberId) {
-        throw new Error("Agent run belongs to another member");
+      if (
+        run.participantId
+          ? run.participantId !== member.participantId
+          : run.memberId !== memberId
+      ) {
+        throw new Error("Agent run belongs to another participant");
       }
       if (["completed", "failed", "cancelled"].includes(run.status)) return run;
 
@@ -516,9 +589,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       appendActivity(projectId, {
         type: "agent_task_cancelled",
         memberId: run.memberId,
+        participantId: run.participantId,
         payload: {
           runId: run.id,
-          sessionId: run.sessionId
+          sessionId: run.sessionId,
+          name: run.memberName
         }
       });
 
@@ -564,9 +639,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         appendActivity(projectId, {
           type: "agent_task_cancelled",
           memberId: run.memberId,
+          participantId: run.participantId,
           payload: {
             runId: run.id,
             sessionId: run.sessionId,
+            name: run.memberName,
             reason: "Project deleted"
           }
         });
@@ -628,6 +705,26 @@ async function buildRuntimePrompt(
     sections.push(`--- ${context.path} ---\n${result.content}\n--- end ${context.path} ---`);
   }
   return `Relevant project files:\n${sections.join("\n")}\n\nUser request:\n${prompt}`;
+}
+
+async function claimLegacySession(
+  projectRuntime: ProjectRuntime,
+  sessionStore: AgentSessionStore,
+  session: AgentSession,
+  participantId: string,
+  displayName: string
+) {
+  if (session.participantId || session.memberName !== displayName) return session;
+  const matchingParticipants = (await projectRuntime.participants.list()).filter(
+    (participant) => participant.displayName === displayName
+  );
+  if (
+    matchingParticipants.length !== 1 ||
+    matchingParticipants[0]?.id !== participantId
+  ) {
+    return session;
+  }
+  return sessionStore.update(session.id, { participantId });
 }
 
 function previewPrompt(prompt: string) {

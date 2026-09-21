@@ -9,14 +9,14 @@ describe("room store", () => {
     const room = rooms.createRoom("sample-workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionId: "tab-a"
     });
 
     expect(member).toMatchObject({
       name: "Ada",
       displayName: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionCount: 1,
       online: true
     });
@@ -32,7 +32,7 @@ describe("room store", () => {
     const room = rooms.createRoom("sample-workspace");
     const member = rooms.joinRoom(room.id, {
       name: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionId: "tab-a"
     });
 
@@ -55,12 +55,12 @@ describe("room store", () => {
 
     const first = rooms.joinRoom(room.id, {
       name: "Bob",
-      userId: "user-bob",
+      participantId: "user-bob",
       connectionId: "tab-1"
     });
     const second = rooms.joinRoom(room.id, {
       name: "Bob",
-      userId: "user-bob",
+      participantId: "user-bob",
       connectionId: "tab-2"
     });
 
@@ -77,12 +77,12 @@ describe("room store", () => {
 
     rooms.joinRoom(room.id, {
       name: "Bob",
-      userId: "user-a",
+      participantId: "user-a",
       connectionId: "tab-a"
     });
     rooms.joinRoom(room.id, {
       name: "Bob",
-      userId: "user-b",
+      participantId: "user-b",
       connectionId: "tab-b"
     });
 
@@ -97,12 +97,12 @@ describe("room store", () => {
     const room = rooms.createRoom("sample-workspace");
     rooms.joinRoom(room.id, {
       name: "Bob",
-      userId: "user-bob",
+      participantId: "user-bob",
       connectionId: "tab-1"
     });
     rooms.joinRoom(room.id, {
       name: "Bob",
-      userId: "user-bob",
+      participantId: "user-bob",
       connectionId: "tab-2"
     });
 
@@ -125,7 +125,7 @@ describe("room store", () => {
     const room = rooms.createRoom("sample-workspace");
     rooms.joinRoom(room.id, {
       name: "Ada",
-      userId: "user-ada",
+      participantId: "user-ada",
       connectionId: "tab-a"
     });
     rooms.markConnectionOffline(

@@ -2,20 +2,25 @@
 
 ## 目标
 
-Agent 页面需要让每位成员拥有自己的多个 Agent 会话。一个会话表示一项持续的工作上下文，会话中可以有多次 Agent run。项目协作仍然共享代码和文件变化，成员之间的 Agent 对话上下文保持分开。
+Agent 页面需要让每位 Participant 拥有自己的多个 Agent 会话。一个会话表示一项持续的工作上下文，会话中可以有多次 Agent run。项目协作仍然共享代码和文件变化，Participant 之间的 Agent 对话上下文保持分开。会话所有权在 Server 重启后保持不变。
 
 ## 领域关系
 
 ```mermaid
 flowchart LR
-  Project --> Member
-  Member --> AgentSession
+  Project --> Participant
+  Participant --> AgentSession
+  Participant --> RoomMember
+  RoomMember --> Connection
   AgentSession --> AgentRun
   AgentRun --> AgentTraceEvent
   AgentRun --> AgentFileChange
 ```
 
-- `AgentSession`：SimpleRCP 管理的稳定会话，归属于一个项目成员。
+- `ProjectParticipant`：项目内长期保存的身份，使用 `participantId` 标识。
+- `RoomMember`：本次 Server 运行期间的在线成员，使用 `memberId` 标识。
+- `Connection`：单个页面连接，使用 `connectionId` 标识。
+- `AgentSession`：SimpleRCP 管理的稳定会话，归属于一个 Participant。
 - `AgentRun`：会话中的一次具体请求和执行结果。
 - `AgentTraceEvent`：一次 run 的过程记录。
 - `AgentFileChange`：一次 run 产生的文件变化。
@@ -25,14 +30,17 @@ flowchart LR
 
 ## 用户流程
 
-1. 成员进入项目的 Agent 页面。
-2. 页面顶部显示该成员在当前项目中的 session 标签，按照最近活动时间排序。
+1. 用户进入项目时选择已有 Participant，或者创建新的 Participant。显示名称与角色都可以修改。
+2. 页面顶部显示该 Participant 在当前项目中的 session 标签，按照最近活动时间排序。
 3. 成员点击“新建会话”，输入会话标题；页面打开空会话。
 4. 成员在当前会话中提交任务。每次提交都会创建一个新的 run。
 5. run 排队、运行、完成或失败；会话保留所有 run 的请求、回复、文件变化和折叠 Trace。
 6. run 完成后，继续输入会直接在当前会话创建下一个 run，复用同一个 OpenCode runtime session。
 7. 成员可以切换到自己的其他会话。不同会话不会共享 Agent 上下文。
-8. 项目活动仍然可以显示其他成员的 Agent 状态和文件变化；其他成员不能继续当前成员的私有会话。
+8. 项目活动仍然可以显示其他 Participant 的 Agent 状态和文件变化；其他 Participant 不能继续当前 Participant 的私有会话。
+9. Server 重启后，用户重新选择原 Participant，页面恢复原有 session、run 和 trace，并可以继续原 session。
+
+浏览器使用 `sessionStorage` 保存当前标签页选择的 Participant，使用 `localStorage` 保存最近选择。两个标签页可以选择不同 Participant。浏览器存储被清除以后，用户仍然可以从 Server 返回的 Participant 列表中恢复身份。
 
 ## 接口
 
@@ -43,7 +51,14 @@ GET  /api/projects/:projectId/agent/sessions/:sessionId
 POST /api/projects/:projectId/agent/sessions/:sessionId/runs
 ```
 
-创建会话请求包含 `memberId` 和可选 `title`。创建 run 请求包含 `memberId`、`prompt` 和可选 `contexts`。服务端验证会话属于当前成员，并将 `sessionId` 与文件上下文写入 run。
+Participant 接口：
+
+```text
+GET  /api/projects/:projectId/participants
+POST /api/projects/:projectId/members
+```
+
+创建会话请求包含当前 `memberId` 和可选 `title`。创建 run 请求包含当前 `memberId`、`prompt` 和可选 `contexts`。服务端通过 Room Member 取得 `participantId`，验证会话属于当前 Participant，并将 `sessionId` 与文件上下文写入 run。
 
 ```json
 {
@@ -55,7 +70,7 @@ POST /api/projects/:projectId/agent/sessions/:sessionId/runs
 }
 ```
 
-现有的按项目列出全部 run 的接口继续保留给项目活动和兼容调用。Agent 页面默认读取当前成员的 sessions，不再把所有成员的 run 作为一个平面列表。
+现有的按项目列出全部 run 的接口继续保留给项目活动和兼容调用。Agent 页面默认读取当前 Participant 的 sessions，不再把全部 run 作为一个平面列表。
 
 ## 数据保存
 
@@ -63,9 +78,11 @@ POST /api/projects/:projectId/agent/sessions/:sessionId/runs
 projects/<projectId>/agent-sessions/<sessionId>/session.json
 projects/<projectId>/agent-runs/<runId>/run.json
 projects/<projectId>/agent-runs/<runId>/trace.jsonl
+projects/<projectId>/participants.json
+projects/<projectId>/activity.json
 ```
 
-`AgentSession` 保存项目、成员、标题、runtime、`runtimeSessionId`、创建时间、更新时间和最近一次 run 标识。文件使用中间文件和 rename 更新。
+`AgentSession` 保存项目、Participant、创建时的成员信息、标题、runtime、`runtimeSessionId`、创建时间、更新时间和最近一次 run 标识。文件使用中间文件和 rename 更新。`activity.json` 保存文件操作与 Agent 状态摘要；在线状态、光标、当前文件和终端屏幕只在 Server 运行期间保留。
 
 ## 页面结构
 
@@ -82,11 +99,12 @@ projects/<projectId>/agent-runs/<runId>/trace.jsonl
 - 增加持久化 `AgentSessionStore`。
 - 增加会话列表、创建、详情和会话内创建 run 的服务端接口。
 - 运行管理器使用 SimpleRCP session 取得和保存 OpenCode runtime session。
-- Agent 页面改为按成员会话显示，并支持同一会话连续创建多个 run。
+- Agent 页面改为按 Participant 会话显示，并支持同一会话连续创建多个 run。
 - 保留原始 trace 下载和现有 FIFO、取消、超时、并发修改提示。
 - Trace 默认收起，运行期间自动展开；页面显示命令执行、文件读取、文件写入、文件编辑和文件变化路径。
 - 增加结构化 `AgentPromptContext`，保存每轮消息使用的项目文件路径。文件上下文只接受项目内、浏览器可读取且小于 1 MB 的文本文件。
 - 增加服务端和 E2E 测试，覆盖成员隔离、多个会话隔离和连续 Continue。
+- 增加项目级 Participant 与 Activity 保存，覆盖 Server 重启恢复和同一浏览器多标签页身份隔离。
 
 ## 后续范围
 

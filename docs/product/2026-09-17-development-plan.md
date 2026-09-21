@@ -2,13 +2,13 @@
 
 状态：基线功能已完成
 
-更新时间：2026-09-19
+更新时间：2026-09-21
 
 需求依据见 [基线需求](./2026-09-17-baseline.md)。每个阶段结束时运行对应测试，并保持项目可以启动。
 
 ## 当前进度
 
-当前仓库已经包含多项目管理、项目导入与删除、Yjs 协作编辑、持久化聊天、Activity、共享终端、主题切换、OpenCode runtime、DeepSeek Provider、Agent 任务、session、trace 和公共 TypeScript 类型。
+当前仓库已经包含多项目管理、项目导入与删除、Yjs 协作编辑、持久化聊天、持久化 Activity、共享终端、主题切换、OpenCode runtime、DeepSeek Provider、Agent 任务、session、trace、项目 Participant 和公共 TypeScript 类型。
 
 OpenCode command 与 SDK 固定为 `1.18.31`。服务端读取 `.env` 中的 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL` 和 `DEEPSEEK_MODEL`，项目首页提供全局设置入口，项目工作区提供 Agent 页签。
 
@@ -46,15 +46,16 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 实现要求：
 
 - `SIMPLERCP_DATA_DIR` 未设置时使用 SimpleRCPv2 仓库根目录下的 `.simplercp-data/`，设置时只接受绝对路径。
-- 数据目录保存项目代码、项目注册记录、聊天、Agent run、trace 和非敏感设置；生产部署可以把整个目录挂载到持久化磁盘。
+- 数据目录保存项目代码、项目注册记录、Participant、聊天、Activity、Agent session、run、trace 和非敏感设置；生产部署可以把整个目录挂载到持久化磁盘。
 - 新建项目、ZIP 导入和已有目录导入统一写入 `projects/<projectId>/workspace/`；已有目录导入完成以后使用服务端副本。
 - `ProjectRegistry` 保存已有项目、空白项目和最近打开时间。
 - `ProjectRuntime` 持有单个项目的 room、chat、文档、PTY 和 watcher。
 - `ProjectRuntimeManager` 按需创建和释放 runtime。
 - 服务启动不再要求 `SIMPLERCP_WORKSPACE`。
 - 删除 `listWorkspaceTree`，目录接口只返回下一层。
-- 浏览器稳定保存 `userId`，每个标签页使用独立 `connectionId`。
-- 服务端按用户保存成员资料，按连接保存在线状态、光标和当前文件；关闭一个标签页不能让同一用户的其他连接离线。
+- Server 按项目保存 Participant，每个标签页使用独立 `connectionId`，每次 Server 运行期间生成 `memberId`。
+- `sessionStorage` 保存当前标签页选择，`localStorage` 保存最近选择；清除浏览器存储后仍可从 Server Participant 列表重新选择。
+- 服务端按 Participant 保存 Agent 所有权，按连接保存在线状态、光标和当前文件；关闭一个标签页不能让同一 Participant 的其他连接离线。
 - HTTP 和 WebSocket 消息类型放在 `packages/shared`，服务端与浏览器共同使用。
 
 验收测试：项目登记在重启后保留；两个项目完全隔离；同名用户保持独立；同一用户两个标签页的连接状态互不覆盖。
@@ -65,7 +66,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 删除 Host token、Host session、Guest 权限、命令模式、命令白名单、快捷命令接口、Session 设置页面、Python 手写补全、只读连接分支和独立录制用例。
 
-聊天使用项目 WebSocket 发送和广播。Activity 保留成员进入、离开、文件操作和文件编辑记录；文件编辑记录显示变化行号与增删行数。共享 PTY 使用独立 Terminal WebSocket，Yjs 使用独立二进制通道。
+聊天使用项目 WebSocket 发送和广播。Activity 长期保存文件操作、文件编辑和 Agent 状态；成员进入与离开只在当前 Server 运行期间显示。文件编辑记录显示变化行号与增删行数。共享 PTY 使用独立 Terminal WebSocket，Yjs 使用独立二进制通道。
 
 验收测试：所有成员拥有相同能力；聊天发送一次只产生一条记录；Activity 可以打开相关文件；终端输入输出正常。
 
@@ -140,7 +141,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 实现要求：
 
 - 每个项目一个 FIFO run 队列；不同项目可以同时运行。
-- 每位成员可以创建自己的 session 和 run，run 记录保存 `memberId`、`sessionId`、`projectId`、runtime、Provider 与 Model。
+- 每位 Participant 可以创建自己的 session 和 run，run 记录保存 `participantId`、创建时的 `memberId`、`sessionId`、`projectId`、runtime、Provider 与 Model。
 - run 支持排队取消、运行取消、10 分钟超时和服务重启清理。
 - 新任务创建 session，继续任务复用 session。
 - run 元数据保存到 `projects/<projectId>/agent-runs/<runId>/run.json`。
@@ -163,7 +164,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 - 全局设置入口显示 OpenCode 版本、运行状态、Provider、Model、Enabled 和 API Key 是否存在。
 - 项目工作区提供 Agent 页签，成员可以输入任务、创建新 session 或继续已有 session。
-- 页面显示当前成员的任务与项目任务，明确显示创建者、状态、队列位置和 session 关系。
+- 页面显示当前 Participant 的任务与项目任务，明确显示创建者、状态、队列位置和 session 关系。
 - 页面显示 trace、运行输出、文件变化、错误、取消、相关文件跳转和 JSONL 下载。
 - 项目 WebSocket 广播 run 状态与新增 trace sequence；断线重连后通过 HTTP 读取当前 run 与缺失 trace。
 - Agent 功能关闭、API Key 缺失、OpenCode 不可用和任务失败时提供明确操作说明。
@@ -174,7 +175,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 状态：已经完成。
 
-详细设计见 [2026-09-19 Agent Session 设计与开发范围](./2026-09-19-agent-sessions.md)。本阶段将 `AgentSession` 从公共类型提升为持久化数据对象。每位成员可以在一个项目中创建多个私有会话；每个会话包含多个 Agent run；run 保存会话 ID 和独立 trace。页面默认按当前成员的会话显示，项目活动继续显示跨成员的状态摘要。
+详细设计见 [2026-09-19 Agent Session 设计与开发范围](./2026-09-19-agent-sessions.md)。本阶段将 `AgentSession` 从公共类型提升为持久化数据对象。每位 Participant 可以在一个项目中创建多个私有会话；每个会话包含多个 Agent run；run 保存会话 ID 和独立 trace。页面默认按当前 Participant 的会话显示，项目活动继续显示其他 Participant 的状态摘要。
 
 验收重点已经完成：服务端保存会话、连续 run 复用同一个 OpenCode runtime session、不同成员不能继续彼此会话、不同会话上下文互不混合、会话级 Continue 在第二次和后续 run 中持续存在。
 
@@ -182,7 +183,7 @@ Agent 各阶段遵循 TDD：为状态变化、持久化和错误条件编写测�
 
 状态：已经完成。
 
-服务端测试保留正确性边界和持久化行为，删除已经移除功能的测试。
+服务端测试保留正确性边界和持久化行为，删除已经移除功能的测试。Participant、Agent session 和 Activity 通过关闭并重新启动正式 Server 实例验证恢复行为。
 
 当前 Playwright 文件：
 

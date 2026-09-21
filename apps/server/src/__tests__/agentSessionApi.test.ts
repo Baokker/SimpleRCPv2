@@ -56,6 +56,114 @@ describe("Agent session API", () => {
       await running.close();
     }
   });
+
+  it("restores participants, Agent sessions, and durable activity after restart", async () => {
+    const firstServer = await startServer();
+    let participantId = "";
+    let sessionId = "";
+    try {
+      const joined = await joinParticipant(firstServer.origin, {
+        name: "Ada",
+        role: "Developer",
+        connectionId: "ada-first-tab"
+      });
+      participantId = joined.participant.id;
+
+      const createSessionResponse = await fetch(
+        `${firstServer.origin}/api/projects/demo/agent/sessions`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            memberId: joined.member.id,
+            title: "Persistent work"
+          })
+        }
+      );
+      const createdSession = await createSessionResponse.json() as {
+        session: { id: string };
+      };
+      sessionId = createdSession.session.id;
+
+      const createFileResponse = await fetch(
+        `${firstServer.origin}/api/projects/demo/workspace/file`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            path: "src/persisted.ts",
+            content: "export const persisted = true;\n",
+            initiatorId: joined.member.id
+          })
+        }
+      );
+      expect(createSessionResponse.status).toBe(201);
+      expect(createFileResponse.status).toBe(200);
+    } finally {
+      await firstServer.close();
+    }
+
+    const secondServer = await startServer();
+    try {
+      const participantsResponse = await fetch(
+        `${secondServer.origin}/api/projects/demo/participants`
+      );
+      await expect(participantsResponse.json()).resolves.toMatchObject({
+        participants: [
+          {
+            id: participantId,
+            displayName: "Ada",
+            profileRole: "Developer"
+          }
+        ]
+      });
+
+      const eventsResponse = await fetch(
+        `${secondServer.origin}/api/projects/demo/events`
+      );
+      const eventsBody = await eventsResponse.json() as {
+        events: Array<{ type: string; participantId?: string }>;
+      };
+      expect(eventsBody.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "workspace_file_created",
+            participantId
+          })
+        ])
+      );
+      expect(eventsBody.events.map((event) => event.type)).not.toContain(
+        "member_joined"
+      );
+      expect(
+        eventsBody.events.filter((event) => event.type === "room_created")
+      ).toHaveLength(1);
+
+      const joined = await joinParticipant(secondServer.origin, {
+        participantId,
+        name: "Ada",
+        role: "Developer",
+        connectionId: "ada-second-tab"
+      });
+      expect(joined.member.id).toBeTruthy();
+      expect(joined.member.participantId).toBe(participantId);
+
+      const sessionsResponse = await fetch(
+        `${secondServer.origin}/api/projects/demo/agent/sessions?memberId=${joined.member.id}`
+      );
+      await expect(sessionsResponse.json()).resolves.toMatchObject({
+        sessions: [
+          {
+            id: sessionId,
+            participantId,
+            title: "Persistent work"
+          }
+        ]
+      });
+    } finally {
+      await secondServer.close();
+    }
+  });
 });
 
 async function join(origin: string, name: string, userId: string) {
@@ -66,6 +174,27 @@ async function join(origin: string, name: string, userId: string) {
   });
   const body = await response.json() as { member: { id: string } };
   return body.member.id;
+}
+
+async function joinParticipant(
+  origin: string,
+  input: {
+    participantId?: string;
+    name: string;
+    role?: string;
+    connectionId: string;
+  }
+) {
+  const response = await fetch(`${origin}/api/projects/demo/members`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  expect(response.status).toBe(200);
+  return response.json() as Promise<{
+    member: { id: string; participantId: string };
+    participant: { id: string; displayName: string; profileRole?: string };
+  }>;
 }
 
 async function startServer() {

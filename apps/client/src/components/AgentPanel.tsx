@@ -321,7 +321,11 @@ export function AgentPanel({
               run={run}
               trace={traces[run.id] ?? []}
               queuedRuns={queuedRuns}
-              canCancel={run.memberId === member?.id}
+              canCancel={
+                run.participantId
+                  ? run.participantId === member?.participantId
+                  : run.memberId === member?.id
+              }
               onCancel={() => void cancelRun(run)}
               onOpenFile={onOpenFile}
             />

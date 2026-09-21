@@ -6,6 +6,7 @@ import {
   deleteWorkspacePath,
   getChatMessages,
   getEvents,
+  getParticipants,
   getProject,
   getRoom,
   getWorkspaceDirectory,
@@ -17,7 +18,11 @@ import {
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
-import { JoinProject, type ProjectIdentity } from "./components/JoinProject";
+import {
+  JoinProject,
+  rememberParticipant,
+  type ProjectIdentity
+} from "./components/JoinProject";
 import { ProjectHome } from "./components/ProjectHome";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
@@ -46,6 +51,7 @@ import type {
   RemoteCursor,
   RoomMember,
   ProjectRecord,
+  ProjectParticipant,
   WorkspaceChange,
   WorkspaceNode
 } from "./types";
@@ -91,26 +97,33 @@ function ProjectRoute({
 }) {
   const [project, setProject] = useState<ProjectRecord>();
   const [roomId, setRoomId] = useState("");
+  const [participants, setParticipants] = useState<ProjectParticipant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [loadAttempt, setLoadAttempt] = useState(0);
   const params = new URLSearchParams(window.location.search);
   const queryName = params.get("name")?.trim();
-  const [identity, setIdentity] = useState<ProjectIdentity | undefined>(
-    queryName
-      ? { displayName: queryName, role: params.get("role")?.trim() ?? "" }
-      : undefined
-  );
+  const [identity, setIdentity] = useState<ProjectIdentity>();
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError("");
-    void getProject(projectId)
-      .then((result) => {
+    void Promise.all([getProject(projectId), getParticipants(projectId)])
+      .then(([result, loadedParticipants]) => {
         if (!active) return;
         setProject(result.project);
         setRoomId(result.roomId);
+        setParticipants(loadedParticipants);
+        if (queryName) {
+          setIdentity({
+            participantId: loadedParticipants.find(
+              (participant) => participant.displayName === queryName
+            )?.id,
+            displayName: queryName,
+            role: params.get("role")?.trim() ?? ""
+          });
+        }
       })
       .catch((nextError) => {
         if (!active) return;
@@ -148,7 +161,14 @@ function ProjectRoute({
     );
   }
   if (!identity) {
-    return <JoinProject projectName={project.name} onJoin={setIdentity} />;
+    return (
+      <JoinProject
+        projectName={project.name}
+        projectId={project.id}
+        participants={participants}
+        onJoin={setIdentity}
+      />
+    );
   }
   return (
     <WorkspacePage
@@ -224,13 +244,12 @@ function WorkspacePage({
     let mounted = true;
 
     async function boot() {
-      const userId = getUserId(displayName);
-      const connectionId = getConnectionId();
+      const connectionId = window.crypto.randomUUID();
       const joined = await joinRoom(
         projectId,
         displayName,
         identity.role,
-        userId,
+        identity.participantId,
         connectionId
       );
       const [room, workspaceTree, eventRecords, messages] =
@@ -243,7 +262,8 @@ function WorkspacePage({
 
       if (!mounted) return;
       membersRef.current = room.members;
-      setMember(joined);
+      rememberParticipant(projectId, joined.participant.id);
+      setMember(joined.member);
       setMembers(room.members);
       setTree(workspaceTree);
       setEvents(eventRecords);
@@ -252,7 +272,7 @@ function WorkspacePage({
       const connected = connectRoomSocket({
         projectId,
         roomId,
-        memberId: joined.id,
+        memberId: joined.member.id,
         connectionId,
         onStateChange(state) {
           setConnectionState(state);
@@ -295,7 +315,10 @@ function WorkspacePage({
               )
             );
           }
-          if (message.type === "cursor_change" && message.memberId !== joined.id) {
+          if (
+            message.type === "cursor_change" &&
+            message.memberId !== joined.member.id
+          ) {
             const collaborator = membersRef.current.find(
               (candidate) => candidate.id === message.memberId
             );
@@ -861,23 +884,6 @@ function WorkspacePage({
       ) : null}
     </main>
   );
-}
-
-function getUserId(displayName: string) {
-  const key = `simplercp.userId.${displayName.toLowerCase()}`;
-  const existing = window.localStorage.getItem(key);
-  if (existing) return existing;
-  const next = window.crypto.randomUUID();
-  window.localStorage.setItem(key, next);
-  return next;
-}
-
-function getConnectionId() {
-  const existing = window.sessionStorage.getItem("simplercp.connectionId");
-  if (existing) return existing;
-  const next = window.crypto.randomUUID();
-  window.sessionStorage.setItem("simplercp.connectionId", next);
-  return next;
 }
 
 function formatBytes(bytes: number) {

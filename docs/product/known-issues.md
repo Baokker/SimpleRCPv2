@@ -1,6 +1,6 @@
 # SimpleRCPv2 已知问题
 
-更新时间：2026-09-18
+更新时间：2026-09-21
 
 本文件记录基线明确接受的问题。每项都包含可观察现象、影响范围、当前处理和完整处理方向。开发过程中发现新的可复现问题时，应当在修复代码或接受该问题的同一次提交中更新本文件。
 
@@ -98,7 +98,9 @@ Agent 或命令修改这些路径时，浏览器不会显示文件变化，也�
 
 ## KI-009 在线状态保存范围有限
 
-聊天消息写入项目目录中的 `chat.json`，服务重新启动后可以恢复。成员在线状态、光标和当前文件只保存在内存中，服务重新启动后重新建立。
+Participant 写入 `participants.json`，聊天消息写入 `chat.json`，文件与 Agent Activity 写入 `activity.json`。Agent session、run 和 trace 也保存在项目目录中。Server 重新启动后可以恢复这些内容，并通过原 Participant 继续 Agent session。
+
+成员在线状态、页面连接、光标、当前文件和终端屏幕只保存在内存中，Server 重新启动后重新建立。运行中或排队的 Agent run 会标记为 `failed`，并保留已有记录与 trace。
 
 ## KI-010 OpenCode 或 Provider 故障会导致 run 失败
 

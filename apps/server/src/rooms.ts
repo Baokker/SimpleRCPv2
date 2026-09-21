@@ -5,7 +5,7 @@ import type { RoomConnection, RoomMember, RoomState } from "./types.js";
 
 export interface JoinRoomInput {
   name: string;
-  userId?: string;
+  participantId?: string;
   connectionId?: string;
   profileRole?: string;
 }
@@ -43,11 +43,11 @@ export function createRoomStore(events: EventLog) {
       const existing = findExistingMember(room.members, normalized);
       if (existing) {
         existing.name = normalized.name;
-        existing.userId = normalized.userId;
+        existing.participantId = normalized.participantId;
         existing.profileRole = normalized.profileRole;
         upsertConnection(room, {
           id: normalized.connectionId,
-          userId: existing.userId,
+          participantId: existing.participantId,
           roomId,
           online: true,
           lastSeenAt: now
@@ -60,7 +60,7 @@ export function createRoomStore(events: EventLog) {
           memberId: existing.id,
           payload: {
             name: existing.name,
-            userId: existing.userId,
+            participantId: existing.participantId,
             connectionId: normalized.connectionId,
             connectionCount: existing.connectionCount
           }
@@ -70,9 +70,9 @@ export function createRoomStore(events: EventLog) {
 
       const member: RoomMember = {
         id: nanoid(10),
+        participantId: normalized.participantId,
         name: normalized.name,
         displayName: normalized.name,
-        userId: normalized.userId,
         online: true,
         lastSeenAt: now,
         connectionCount: 1,
@@ -81,7 +81,7 @@ export function createRoomStore(events: EventLog) {
       room.members.push(member);
       upsertConnection(room, {
         id: normalized.connectionId,
-        userId: member.userId,
+        participantId: member.participantId,
         roomId,
         online: true,
         lastSeenAt: now
@@ -93,7 +93,7 @@ export function createRoomStore(events: EventLog) {
         memberId: member.id,
         payload: {
           name: member.name,
-          userId: member.userId,
+          participantId: member.participantId,
           connectionId: normalized.connectionId
         }
       });
@@ -123,7 +123,7 @@ export function createRoomStore(events: EventLog) {
         throw new Error("Connection not found");
       }
       const member = room.members.find(
-        (candidate) => candidate.userId === connection.userId
+        (candidate) => candidate.participantId === connection.participantId
       );
       if (!member) {
         throw new Error("Member not found");
@@ -170,7 +170,7 @@ export function createRoomStore(events: EventLog) {
         throw new Error("Connection not found");
       }
       const member = room.members.find(
-        (candidate) => candidate.userId === connection.userId
+        (candidate) => candidate.participantId === connection.participantId
       );
       if (!member) {
         throw new Error("Member not found");
@@ -258,23 +258,26 @@ export function createRoomStore(events: EventLog) {
 export type RoomStore = ReturnType<typeof createRoomStore>;
 
 type NormalizedJoinInput = Required<Pick<JoinRoomInput, "name">> & {
-  userId: string;
+  participantId: string;
   connectionId: string;
   profileRole?: string;
 };
 
 function normalizeJoinInput(input: JoinRoomInput): NormalizedJoinInput {
-  const userId = input.userId ?? input.connectionId ?? `human:${input.name}`;
+  const participantId =
+    input.participantId ?? input.connectionId ?? `human:${input.name}`;
   return {
     name: input.name,
-    userId,
-    connectionId: input.connectionId ?? userId,
+    participantId,
+    connectionId: input.connectionId ?? participantId,
     profileRole: input.profileRole
   };
 }
 
 function findExistingMember(members: RoomMember[], input: NormalizedJoinInput) {
-  return members.find((member) => member.userId === input.userId);
+  return members.find(
+    (member) => member.participantId === input.participantId
+  );
 }
 
 function upsertConnection(room: RoomState, connection: RoomConnection) {
@@ -295,7 +298,7 @@ function syncMemberFromConnections(
   fallbackLastSeenAt: string
 ) {
   const connections = room.connections.filter(
-    (connection) => connection.userId === member.userId
+    (connection) => connection.participantId === member.participantId
   );
   const onlineConnections = connections.filter((connection) => connection.online);
   member.connectionCount = onlineConnections.length;

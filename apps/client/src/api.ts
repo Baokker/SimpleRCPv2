@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   EventRecord,
   ProjectRecord,
+  ProjectParticipant,
   RoomMember,
   RoomState,
   WorkspaceFileLoadResult,
@@ -145,22 +146,28 @@ export async function getRoom(projectId: string): Promise<RoomState> {
   return response.room;
 }
 
+export async function getParticipants(projectId: string) {
+  const response = await request<{ participants: ProjectParticipant[] }>(
+    `${projectPath(projectId)}/participants`
+  );
+  return response.participants;
+}
+
 export async function joinRoom(
   projectId: string,
   name: string,
   role: string,
-  userId: string,
+  participantId: string | undefined,
   connectionId: string
-): Promise<RoomMember> {
-  const response = await request<{ member: RoomMember }>(
+): Promise<{ member: RoomMember; participant: ProjectParticipant }> {
+  return request<{ member: RoomMember; participant: ProjectParticipant }>(
     `${projectPath(projectId)}/members`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, role, userId, connectionId })
+      body: JSON.stringify({ name, role, participantId, connectionId })
     }
   );
-  return response.member;
 }
 
 export function sendConnectionOffline(

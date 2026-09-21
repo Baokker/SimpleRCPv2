@@ -15,7 +15,8 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 - 服务端代码保存：全部项目位于 `.simplercp-data/projects/`，也可以通过环境变量指定其他绝对路径。
 - 文件管理：按需读取文件树，支持创建、重命名和删除文件与目录。
 - 代码编辑：使用 Monaco Editor 和 Yjs 同步多人文本编辑、光标和选区，并显示保存与同步状态。
-- 实时协作：显示成员、当前文件、聊天消息和 Activity；聊天消息保存在服务端，文件编辑记录包含变化行号与增删行数。
+- 实时协作：显示成员、当前文件、聊天消息和 Activity；聊天与 Activity 保存在服务端，文件编辑记录包含变化行号与增删行数。
+- Participant 身份：项目保存 Participant，重新进入时可以恢复自己的 Agent session；同一浏览器的不同标签页可以选择不同 Participant。
 - 共享终端：使用 `node-pty` 在当前项目目录中运行 shell，允许输入任意命令。
 - 外部变化同步：监听终端或其他程序产生的文件变化，并更新文件树和已经打开的协作文档。
 - 错误恢复：协作连接与终端连接会自动重连，离线后可以手动重试；项目被删除后返回项目首页。
@@ -139,6 +140,8 @@ npm test
 ├── projects
 │   └── <projectId>
 │       ├── chat.json
+│       ├── activity.json
+│       ├── participants.json
 │       ├── project.json
 │       ├── workspace
 │       ├── agent-sessions
@@ -154,7 +157,9 @@ npm test
 
 `.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspace/` 是浏览器、共享终端和 Agent 共同访问的代码目录，也是服务端保存代码的位置。
 
-`chat.json` 在项目产生第一条聊天消息时创建，服务重新启动后继续读取。`agent/settings.json` 保存非敏感 Agent 设置，API Key 只从服务端环境变量读取。
+`participants.json` 保存项目身份，`chat.json` 保存聊天，`activity.json` 保存文件操作、文件编辑和 Agent 状态摘要。Server 重新启动后会继续读取这些内容。`agent/settings.json` 保存非敏感 Agent 设置，API Key 只从服务端环境变量读取。
+
+进入项目时可以选择已有 Participant，或者创建新的 Participant。Agent session 与 `participantId` 关联。当前标签页选择保存在 `sessionStorage`，最近选择保存在 `localStorage`；清除浏览器存储不会删除 Server 中的 Participant 与 Agent 历史。
 
 导入服务端已有目录时，SimpleRCPv2 会把内容复制到新的 `workspace/`，原目录保持不变。导入 ZIP 和已有目录时会过滤 `.git`、`node_modules`、`__MACOSX` 和 `.DS_Store`。这些路径也不会出现在浏览器文件树和文件接口中。
 
@@ -188,7 +193,7 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 
-启动以后，可以在项目首页的 Agent 设置页面查看 OpenCode 状态、版本和 Model，并启用或停用 Agent。新任务创建 OpenCode session；在当前成员的 session 中继续输入时，会复用同一个 OpenCode session。存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止执行过程被配置变化中断。
+启动以后，可以在项目首页的 Agent 设置页面查看 OpenCode 状态、版本和 Model，并启用或停用 Agent。新任务创建 OpenCode session；在当前 Participant 的 session 中继续输入时，会复用同一个 OpenCode session。存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止执行过程被配置变化中断。
 
 ## 公网访问
 

@@ -24,6 +24,15 @@ export interface WorkspaceDirectoryNode {
 
 export type WorkspaceNode = WorkspaceFileNode | WorkspaceDirectoryNode;
 
+export interface ProjectParticipant {
+  id: string;
+  projectId: string;
+  displayName: string;
+  profileRole?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type WorkspaceFileLoadResult =
   | { status: "text"; path: string; size: number; content: string }
   | { status: "binary"; path: string; size: number }
@@ -31,7 +40,7 @@ export type WorkspaceFileLoadResult =
 
 export interface RoomMember {
   id: string;
-  userId: string;
+  participantId: string;
   name: string;
   displayName: string;
   online: boolean;
@@ -50,7 +59,7 @@ export interface RoomState {
 
 export interface RoomConnection {
   id: string;
-  userId: string;
+  participantId: string;
   roomId: string;
   currentFile?: string;
   online: boolean;
@@ -62,6 +71,7 @@ export interface EventRecord {
   type: string;
   roomId?: string;
   memberId?: string;
+  participantId?: string;
   timestamp: string;
   payload?: Record<string, unknown>;
 }
@@ -118,6 +128,7 @@ export interface AgentRun {
   id: string;
   projectId: string;
   memberId: string;
+  participantId?: string;
   memberName?: string;
   prompt: string;
   contexts?: AgentPromptContext[];
@@ -139,6 +150,7 @@ export interface AgentSession {
   id: string;
   projectId: string;
   memberId: string;
+  participantId?: string;
   memberName?: string;
   title: string;
   runtime: "opencode";

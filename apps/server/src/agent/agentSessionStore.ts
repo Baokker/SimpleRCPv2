@@ -27,9 +27,13 @@ export function createAgentSessionStore(projectId: string, projectRoot: string) 
       return records.create({ ...input, id: nanoid(12), createdAt: now, updatedAt: now });
     },
     get: records.get,
-    async list(memberId?: string) {
+    async list(participantId?: string) {
       return (await records.list())
-        .filter((session) => !memberId || session.memberId === memberId)
+        .filter(
+          (session) =>
+            !participantId ||
+            (session.participantId ?? session.memberId) === participantId
+        )
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
     },
     update(sessionId: string, update: Partial<AgentSession>) {
