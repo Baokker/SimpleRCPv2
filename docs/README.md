@@ -4,7 +4,7 @@
 
 当前代码已经完成多项目、文件协作、聊天持久化、共享终端、主题、OpenCode、DeepSeek、Agent run、session 和 trace。
 
-OpenCode 与 DeepSeek 的计划配置方式见[项目 README](../README.md#opencode-与-deepseek)。
+OpenCode 与 DeepSeek 的配置方式见[项目 README](../README.md#配置)。
 
 ## 当前产品文件
 
@@ -26,6 +26,10 @@ OpenCode 与 DeepSeek 的计划配置方式见[项目 README](../README.md#openc
 - [Agent runtime 调研](./research/2026-09-17/agent-runtime.md)：OpenCode、DeepSeek Harness、session、trace 与并发模型。
 - [文档同步调研](./research/2026-09-17/document-sync.md)：磁盘、Yjs、终端与 Agent 共同修改文件时的同步规则。
 - [Agent 并行执行调研](./research/2026-09-17/parallel-agent.md)：OpenCode 多 session、独立工作目录和并行合并路线。
+
+### 2026-09-21
+
+- [协作 Activity 与 Agent 会话保存调研](./research/2026-09-21/collaboration-history-persistence.md)：Activity、Agent session、run、trace 与稳定用户标识的保存边界。
 
 ## 阅读顺序
 
