@@ -3,6 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { ThemeMode } from "../theme";
+import type { TerminalClientMessage, TerminalServerMessage } from "../types";
 
 export interface SharedTerminalHandle {
   restart(): void;
@@ -44,7 +45,7 @@ export const SharedTerminal = forwardRef<
   useImperativeHandle(ref, () => ({
     restart() {
       if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify({ type: "restart" }));
+        socketRef.current.send(JSON.stringify({ type: "restart" } satisfies TerminalClientMessage));
       }
     },
     reconnect() {
@@ -86,7 +87,7 @@ export const SharedTerminal = forwardRef<
           type: "resize",
           cols: terminal.cols,
           rows: terminal.rows
-        })
+        } satisfies TerminalClientMessage)
       );
     }
 
@@ -111,10 +112,7 @@ export const SharedTerminal = forwardRef<
         terminal.focus();
       });
       socket.addEventListener("message", (event) => {
-        const message = JSON.parse(String(event.data)) as
-          | { type: "terminal_snapshot"; data: string }
-          | { type: "terminal_output"; data: string }
-          | { type: "terminal_error"; message: string };
+        const message = JSON.parse(String(event.data)) as TerminalServerMessage;
         if (message.type === "terminal_snapshot") {
           terminal.reset();
           terminal.write(message.data);
@@ -158,7 +156,7 @@ export const SharedTerminal = forwardRef<
     const dataSubscription = terminal.onData((data) => {
       const socket = socketRef.current;
       if (!canInputRef.current || socket?.readyState !== WebSocket.OPEN) return;
-      socket.send(JSON.stringify({ type: "input", data }));
+      socket.send(JSON.stringify({ type: "input", data } satisfies TerminalClientMessage));
     });
     const resizeSubscription = terminal.onResize(sendResize);
     const resizeObserver = new ResizeObserver(fit);

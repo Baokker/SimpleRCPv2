@@ -23,6 +23,7 @@ import type {
   RoomMember,
   WorkspaceNode
 } from "../types";
+import { formatTime } from "../format";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project";
 type ActivityKind =
@@ -468,8 +469,8 @@ function ActivityText({ item }: { item: ActivityItem }) {
       {item.detail ? <small>{item.detail}</small> : null}
       <time>
         {item.startedAt
-          ? `${formatTime(item.startedAt)}-${formatTime(item.timestamp)}`
-          : formatTime(item.timestamp)}
+          ? `${formatTime(item.startedAt, true)}-${formatTime(item.timestamp, true)}`
+          : formatTime(item.timestamp, true)}
       </time>
     </>
   );
@@ -555,12 +556,4 @@ function formatEditDetail(payload: Record<string, unknown>) {
     0
   );
   return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
-}
-
-function formatTime(timestamp: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  }).format(new Date(timestamp));
 }

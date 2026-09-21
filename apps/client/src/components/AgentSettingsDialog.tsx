@@ -6,6 +6,7 @@ import {
   updateAgentSettings
 } from "../api";
 import type { AgentRuntimeStatus, AgentSettingsResponse } from "../types";
+import { titleCase } from "../format";
 
 export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
   const [settings, setSettings] = useState<AgentSettingsResponse>();
@@ -137,8 +138,4 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
       </form>
     </div>
   );
-}
-
-function titleCase(value: string) {
-  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
 }

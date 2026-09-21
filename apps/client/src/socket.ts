@@ -61,8 +61,8 @@ export function connectRoomSocket({
     nextSocket.addEventListener("open", () => {
       reconnectAttempt = 0;
       onStateChange("Connected");
-      if (readyRequested) sendNow({ type: "ready" });
-      if (currentFile) sendNow({ type: "open_file", path: currentFile });
+      if (readyRequested) send({ type: "ready" });
+      if (currentFile) send({ type: "open_file", path: currentFile });
     });
     nextSocket.addEventListener("message", (event) => {
       onMessage(JSON.parse(event.data) as ServerMessage);
@@ -96,10 +96,6 @@ export function connectRoomSocket({
     return JSON.stringify({ roomId, memberId, connectionId, ...message });
   }
 
-  function sendNow(message: Record<string, unknown>) {
-    if (socket?.readyState === WebSocket.OPEN) socket.send(envelope(message));
-  }
-
   function send(message: Record<string, unknown>) {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(envelope(message));
@@ -124,7 +120,7 @@ export function connectRoomSocket({
     },
     sendReady() {
       readyRequested = true;
-      sendNow({ type: "ready" });
+      send({ type: "ready" });
     },
     retry() {
       if (closed || socket) return;

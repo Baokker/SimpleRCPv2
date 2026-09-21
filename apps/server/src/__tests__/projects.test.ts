@@ -25,6 +25,14 @@ afterEach(async () => {
 });
 
 describe("project registry", () => {
+  it("rejects invalid registry content", async () => {
+    await fs.mkdir(dataDir, { recursive: true });
+    await fs.writeFile(path.join(dataDir, "registry.json"), "null\n", "utf8");
+    await expect(createProjectRegistry({ dataDir, demoProjectRoot })).rejects.toThrow(
+      "Invalid project registry"
+    );
+  });
+
   it("creates the bundled Demo once and reloads it from the registry", async () => {
     const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
     const projects = await registry.listProjects();

@@ -71,17 +71,6 @@ export async function createAgentSessionRun(
   );
 }
 
-export async function createAgentRun(
-  projectId: string,
-  input: { memberId: string; prompt: string; sessionId?: string; contexts?: AgentPromptContext[] }
-) {
-  return request<{ run: AgentRun }>(`${projectPath(projectId)}/agent/runs`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
-  });
-}
-
 export async function getAgentTrace(projectId: string, runId: string) {
   const response = await request<{ events: AgentTraceEvent[] }>(
     `${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/trace`

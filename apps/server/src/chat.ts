@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { nanoid } from "nanoid";
 import type { EventLog } from "./eventLog.js";
+import { readJsonFile, writeJsonFileAtomically } from "./jsonFile.js";
 import type { ChatMessage } from "./types.js";
 
 export interface CreateChatMessageInput {
@@ -74,16 +73,12 @@ export type ChatStore = ReturnType<typeof createChatStore>;
 
 async function loadMessages(storagePath?: string): Promise<ChatMessage[]> {
   if (!storagePath) return [];
-  try {
-    const parsed = JSON.parse(await fs.readFile(storagePath, "utf8")) as ChatFile;
-    if (parsed.version !== 1 || !Array.isArray(parsed.messages)) {
-      throw new Error("Invalid chat history");
-    }
-    return parsed.messages;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
+  const parsed = await readJsonFile<ChatFile>(storagePath);
+  if (parsed === undefined) return [];
+  if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.messages)) {
+    throw new Error("Invalid chat history");
   }
+  return parsed.messages;
 }
 
 async function saveMessages(
@@ -91,12 +86,5 @@ async function saveMessages(
   messages: ChatMessage[]
 ) {
   if (!storagePath) return;
-  await fs.mkdir(path.dirname(storagePath), { recursive: true });
-  const nextPath = `${storagePath}.next`;
-  await fs.writeFile(
-    nextPath,
-    `${JSON.stringify({ version: 1, messages } satisfies ChatFile, null, 2)}\n`,
-    "utf8"
-  );
-  await fs.rename(nextPath, storagePath);
+  await writeJsonFileAtomically(storagePath, { version: 1, messages } satisfies ChatFile);
 }

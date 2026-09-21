@@ -274,3 +274,13 @@ export type ServerMessage =
       runId: string;
       sequence: number;
     };
+
+export type TerminalClientMessage =
+  | { type: "input"; data: string }
+  | { type: "resize"; cols: number; rows: number }
+  | { type: "restart" };
+
+export type TerminalServerMessage =
+  | { type: "terminal_snapshot"; data: string }
+  | { type: "terminal_output"; data: string }
+  | { type: "terminal_error"; message: string };

@@ -10,7 +10,9 @@ import type { RoomStore } from "./rooms.js";
 import type {
   ClientMessage,
   FileEditActivity,
-  ServerMessage
+  ServerMessage,
+  TerminalClientMessage,
+  TerminalServerMessage
 } from "./types.js";
 
 interface SocketIdentity {
@@ -86,14 +88,19 @@ export function handleRealtimeMessage({
     };
   }
 
-  return {
-    broadcast: {
-      type: "chat_message",
-      roomId: message.roomId,
-      memberId: message.memberId,
-      text: message.text
-    }
-  };
+  if (message.type === "chat_message") {
+    return {
+      broadcast: {
+        type: "chat_message",
+        roomId: message.roomId,
+        memberId: message.memberId,
+        text: message.text
+      }
+    };
+  }
+
+  const unexpected: never = message;
+  throw new Error(`Unknown realtime message: ${JSON.stringify(unexpected)}`);
 }
 
 function readFileEditActivity(
@@ -208,7 +215,10 @@ export function attachRealtimeServer(
       });
     });
     const removeTerminalListener = runtime.onTerminalData((data) => {
-      const payload = JSON.stringify({ type: "terminal_output", data });
+      const payload = JSON.stringify({
+        type: "terminal_output",
+        data
+      } satisfies TerminalServerMessage);
       for (const socket of terminalWss.clients) {
         if (
           terminalProjects.get(socket) === runtime.project.id &&
@@ -390,11 +400,6 @@ export function attachRealtimeServer(
   };
 }
 
-type TerminalClientMessage =
-  | { type: "input"; data: string }
-  | { type: "resize"; cols: number; rows: number }
-  | { type: "restart" };
-
 function setupTerminalConnection(
   socket: WebSocket,
   memberId: string,
@@ -404,7 +409,7 @@ function setupTerminalConnection(
     JSON.stringify({
       type: "terminal_snapshot",
       data: runtime.terminal.getScrollback()
-    })
+    } satisfies TerminalServerMessage)
   );
   socket.on("message", (raw: RawData) => {
     try {
@@ -419,7 +424,7 @@ function setupTerminalConnection(
         JSON.stringify({
           type: "terminal_error",
           message: "Invalid terminal message"
-        })
+        } satisfies TerminalServerMessage)
       );
     }
   });
@@ -445,7 +450,7 @@ function handleTerminalMessage(
       JSON.stringify({
         type: "terminal_error",
         message: "Terminal input exceeds the 10000 character limit"
-      })
+      } satisfies TerminalServerMessage)
     );
     return;
   }

@@ -27,6 +27,8 @@ export type {
   RoomMember,
   RoomState,
   ServerMessage,
+  TerminalClientMessage,
+  TerminalServerMessage,
   WorkspaceChange,
   WorkspaceDirectoryNode,
   WorkspaceFileLoadResult,

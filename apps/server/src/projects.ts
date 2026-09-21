@@ -3,6 +3,7 @@ import path from "node:path";
 import type { ProjectRecord, ProjectSource } from "@simplercp/shared";
 import { nanoid } from "nanoid";
 import { extractZipArchive } from "./archiveImport.js";
+import { readJsonFile, writeJsonFileAtomically } from "./jsonFile.js";
 import { isIgnoredPath } from "./workspacePolicy.js";
 
 export type { ProjectRecord, ProjectSource } from "@simplercp/shared";
@@ -196,11 +197,9 @@ export async function createProjectRegistry({
 export type ProjectRegistry = Awaited<ReturnType<typeof createProjectRegistry>>;
 
 async function loadRegistry(registryPath: string): Promise<RegistryFile> {
-  if (!(await pathExists(registryPath))) {
-    return { version: 1, projects: [] };
-  }
-  const parsed = JSON.parse(await fs.readFile(registryPath, "utf8")) as RegistryFile;
-  if (parsed.version !== 1 || !Array.isArray(parsed.projects)) {
+  const parsed = await readJsonFile<RegistryFile>(registryPath);
+  if (parsed === undefined) return { version: 1, projects: [] };
+  if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.projects)) {
     throw new Error("Invalid project registry");
   }
   return parsed;
@@ -236,17 +235,11 @@ async function writeProjectMetadata(
   projectDir: string,
   project: ProjectRecord
 ) {
-  await fs.writeFile(
-    path.join(projectDir, "project.json"),
-    `${JSON.stringify(project, null, 2)}\n`,
-    "utf8"
-  );
+  await writeJsonFileAtomically(path.join(projectDir, "project.json"), project);
 }
 
 async function saveRegistry(registryPath: string, registry: RegistryFile) {
-  const nextPath = `${registryPath}.${nanoid(8)}.next`;
-  await fs.writeFile(nextPath, `${JSON.stringify(registry, null, 2)}\n`, "utf8");
-  await fs.rename(nextPath, registryPath);
+  await writeJsonFileAtomically(registryPath, registry);
 }
 
 function validateProjectName(name: string, projects: ProjectRecord[]) {
@@ -257,7 +250,7 @@ function validateProjectName(name: string, projects: ProjectRecord[]) {
   }
   if (
     projects.some(
-      (project) => project.name.toLocaleLowerCase() === normalized.toLocaleLowerCase()
+      (project) => project.name.toLowerCase() === normalized.toLowerCase()
     )
   ) {
     throw new Error("A project with this name already exists");

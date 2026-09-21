@@ -1,5 +1,4 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import type {
   AgentSettings,
   AgentSettingsResponse
@@ -22,13 +21,12 @@ export async function createAgentSettingsStore(
   let settings = await loadSettings(options.storagePath, options.defaultModel);
   let operations = Promise.resolve();
 
+  function get(): AgentSettingsResponse {
+    return { ...settings, apiKeyConfigured: options.apiKeyConfigured };
+  }
+
   return {
-    get(): AgentSettingsResponse {
-      return {
-        ...settings,
-        apiKeyConfigured: options.apiKeyConfigured
-      };
-    },
+    get,
     async update(input: unknown): Promise<AgentSettingsResponse> {
       const nextSettings = validateSettings(input);
       operations = operations.then(async () => {
@@ -36,7 +34,7 @@ export async function createAgentSettingsStore(
         settings = nextSettings;
       });
       await operations;
-      return this.get();
+      return get();
     }
   };
 }
@@ -45,26 +43,17 @@ async function loadSettings(
   storagePath: string,
   defaultModel: string
 ): Promise<AgentSettings> {
-  try {
-    const parsed = JSON.parse(
-      await fs.readFile(storagePath, "utf8")
-    ) as AgentSettingsFile;
-    validateSettingsFile(parsed);
-    return parsed.settings;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {
-        provider: "deepseek",
-        model: defaultModel,
-        enabled: true
-      };
-    }
-    throw error;
+  const parsed = await readJsonFile<AgentSettingsFile>(storagePath);
+  if (parsed === undefined) {
+    return { provider: "deepseek", model: defaultModel, enabled: true };
   }
+  validateSettingsFile(parsed);
+  return parsed.settings;
 }
 
 function validateSettingsFile(value: AgentSettingsFile) {
   if (
+    !value ||
     value.version !== 1 ||
     value.settings?.provider !== "deepseek" ||
     typeof value.settings.model !== "string" ||
@@ -100,12 +89,5 @@ function validateSettings(value: unknown): AgentSettings {
 }
 
 async function saveSettings(storagePath: string, settings: AgentSettings) {
-  await fs.mkdir(path.dirname(storagePath), { recursive: true });
-  const nextPath = `${storagePath}.next`;
-  await fs.writeFile(
-    nextPath,
-    `${JSON.stringify({ version: 1, settings } satisfies AgentSettingsFile, null, 2)}\n`,
-    "utf8"
-  );
-  await fs.rename(nextPath, storagePath);
+  await writeJsonFileAtomically(storagePath, { version: 1, settings } satisfies AgentSettingsFile);
 }
