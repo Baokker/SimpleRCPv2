@@ -57,6 +57,14 @@ DEEPSEEK_MODEL=deepseek-flash
 
 `.env` 已经加入 `.gitignore`，不会进入 Git 提交。OpenCode command 和 TypeScript SDK 会随项目依赖一起安装，无需单独安装 OpenCode。
 
+共享终端默认启用。无需共享终端时，可以在 `.env` 中关闭：
+
+```dotenv
+SIMPLERCP_TERMINAL_ENABLED=false
+```
+
+关闭后，工作区不会显示终端区域和终端按钮，服务端不会创建 PTY，并会拒绝 `/terminal` WebSocket 连接。
+
 4. 在仓库根目录启动客户端和服务端：
 
 ```bash
@@ -183,6 +191,7 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `SIMPLERCP_HOST`：服务端监听地址，默认值为 `127.0.0.1`。
 - `SIMPLERCP_PUBLIC_URL`：用户访问的浏览器地址，默认值为 `http://127.0.0.1:5173`。
 - `SIMPLERCP_SHELL`：共享终端使用的 shell 路径，默认读取当前进程的 `SHELL`，随后使用 `/bin/sh`。
+- `SIMPLERCP_TERMINAL_ENABLED`：是否启用共享终端，默认值为 `true`；设置为 `false` 后关闭终端页面和服务端 PTY。
 - `PORT`：服务端端口，默认值为 `4000`。
 - `VITE_SIMPLERCP_CLIENT_HOST`：开发客户端监听地址，默认值为 `127.0.0.1`。
 - `VITE_SIMPLERCP_CLIENT_PORT`：开发客户端端口，默认值为 `5173`。
@@ -207,7 +216,9 @@ VITE_SIMPLERCP_API_ORIGIN="http://127.0.0.1:4000" \
 pnpm dev
 ```
 
-公网部署建议由同一个域名提供页面和接口。反向代理需要转发普通 HTTP 路径 `/api`，并为 `/ws`、`/yjs` 和 `/terminal` 开启 WebSocket 转发。页面使用 HTTPS 时，浏览器会自动使用 WSS。
+公网部署建议由同一个域名提供页面和接口。反向代理需要转发普通 HTTP 路径 `/api`，并为 `/ws` 和 `/yjs` 开启 WebSocket 转发；启用共享终端时还需要转发 `/terminal`。页面使用 HTTPS 时，浏览器会自动使用 WSS。
+
+公网环境无需共享终端时，建议设置 `SIMPLERCP_TERMINAL_ENABLED=false`。该配置可以减少远程命令入口，并避免创建项目 PTY。
 
 当前版本允许项目成员运行任意 shell 命令，并直接访问服务端项目目录。公网部署需要在可信网络、VPN 或外部身份认证之后提供访问，不应直接开放为匿名公共服务。相关限制见 [已知问题](./docs/product/known-issues.md)。
 
@@ -233,6 +244,12 @@ Linux 环境需要同时安装系统依赖时运行 `pnpm exec playwright instal
 
 ```bash
 pnpm test:e2e
+```
+
+单独验证共享终端关闭后的页面行为：
+
+```bash
+pnpm test:e2e:terminal-disabled
 ```
 
 浏览器 Agent 用例在 `DEEPSEEK_API_KEY` 已配置时向 Provider 发出请求；缺少 API Key 时自动跳过。

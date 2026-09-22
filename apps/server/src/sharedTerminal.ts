@@ -4,14 +4,16 @@ const MAX_SCROLLBACK_CHARS = 100_000;
 
 export function createSharedTerminal({
   workspaceRoot,
-  shell = process.env.SIMPLERCP_SHELL || process.env.SHELL || "/bin/sh"
+  shell = process.env.SIMPLERCP_SHELL || process.env.SHELL || "/bin/sh",
+  enabled = true
 }: {
   workspaceRoot: string;
   shell?: string;
+  enabled?: boolean;
 }) {
   const listeners = new Set<(data: string) => void>();
   let scrollback = "";
-  let terminal = spawnTerminal();
+  let terminal = enabled ? spawnTerminal() : undefined;
 
   function spawnTerminal() {
     let expectedExit = false;
@@ -48,17 +50,18 @@ export function createSharedTerminal({
   }
 
   function write(data: string) {
-    terminal.write(data);
+    terminal?.write(data);
   }
 
   function resize(cols: number, rows: number) {
-    terminal.resize(
+    terminal?.resize(
       Math.max(20, Math.min(400, Math.floor(cols))),
       Math.max(5, Math.min(200, Math.floor(rows)))
     );
   }
 
   function restart() {
+    if (!enabled || !terminal) return;
     terminal.killExpected();
     appendData("\r\n[terminal restarted]\r\n");
     terminal = spawnTerminal();
@@ -66,7 +69,7 @@ export function createSharedTerminal({
 
   function dispose() {
     listeners.clear();
-    terminal.killExpected();
+    terminal?.killExpected();
   }
 
   return {
@@ -75,6 +78,7 @@ export function createSharedTerminal({
     resize,
     restart,
     dispose,
+    enabled,
     getScrollback: () => scrollback
   };
 }

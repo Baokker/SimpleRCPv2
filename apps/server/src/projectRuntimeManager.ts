@@ -1,7 +1,10 @@
 import { createProjectRuntime, type ProjectRuntime } from "./projectRuntime.js";
 import type { ProjectRegistry } from "./projects.js";
 
-export function createProjectRuntimeManager(registry: ProjectRegistry) {
+export function createProjectRuntimeManager(
+  registry: ProjectRegistry,
+  options: { terminalEnabled?: boolean } = {}
+) {
   const runtimes = new Map<string, ProjectRuntime>();
   const projectDisposingListeners = new Set<(projectId: string) => void>();
 
@@ -11,7 +14,7 @@ export function createProjectRuntimeManager(registry: ProjectRegistry) {
       if (existing) return existing;
       const project = registry.getProject(projectId);
       if (!project) throw new Error("Project not found");
-      const runtime = createProjectRuntime(project);
+      const runtime = createProjectRuntime(project, options);
       runtimes.set(projectId, runtime);
       return runtime;
     },

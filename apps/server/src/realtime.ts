@@ -304,6 +304,10 @@ export function attachRealtimeServer(
       const projectId = requestUrl.searchParams.get("projectId") ?? "";
       const runtime = getRuntime(runtimeManager, projectId, socket);
       if (!runtime) return;
+      if (!runtime.terminalEnabled) {
+        socket.destroy();
+        return;
+      }
       ensureRuntimeSubscriptions(runtime);
       const memberId = requestUrl.searchParams.get("memberId") ?? "";
       if (!runtime.rooms.getMember(runtime.room.id, memberId)) {

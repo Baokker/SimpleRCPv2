@@ -10,6 +10,7 @@ describe("server config", () => {
       publicOrigin: "http://127.0.0.1:5173",
       dataDir: "/srv/simplercp/.simplercp-data",
       demoProjectRoot: "/srv/simplercp/demo/workspace",
+      terminalEnabled: true,
       agent: {
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
@@ -27,6 +28,7 @@ describe("server config", () => {
         SIMPLERCP_HOST: "0.0.0.0",
         SIMPLERCP_PUBLIC_URL: "https://code.example.com",
         SIMPLERCP_DATA_DIR: "/srv/simplercp-data",
+        SIMPLERCP_TERMINAL_ENABLED: "false",
         DEEPSEEK_API_KEY: "configured-key",
         DEEPSEEK_BASE_URL: "https://models.example.com/v1",
         DEEPSEEK_MODEL: "DeepSeek-V4-Flash"
@@ -37,6 +39,7 @@ describe("server config", () => {
       publicOrigin: "https://code.example.com",
       dataDir: "/srv/simplercp-data",
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
+      terminalEnabled: false,
       agent: {
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
@@ -51,5 +54,11 @@ describe("server config", () => {
     expect(() =>
       loadConfig({ SIMPLERCP_DATA_DIR: "runtime-data" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_DATA_DIR must be an absolute path");
+  });
+
+  it("rejects an invalid terminal setting", () => {
+    expect(() =>
+      loadConfig({ SIMPLERCP_TERMINAL_ENABLED: "disabled" }, "/srv/simplercp")
+    ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
   });
 });

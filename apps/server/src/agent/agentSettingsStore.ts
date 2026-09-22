@@ -91,3 +91,7 @@ function validateSettings(value: unknown): AgentSettings {
 async function saveSettings(storagePath: string, settings: AgentSettings) {
   await writeJsonFileAtomically(storagePath, { version: 1, settings } satisfies AgentSettingsFile);
 }
+
+export type AgentSettingsStore = Awaited<
+  ReturnType<typeof createAgentSettingsStore>
+>;

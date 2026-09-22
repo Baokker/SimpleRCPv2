@@ -4,6 +4,26 @@ import { createSharedTerminal } from "../sharedTerminal.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 
 describe("shared terminal", () => {
+  it("stays inactive when disabled", async () => {
+    const root = await createTestWorkspace("disabled-terminal-");
+    const terminal = createSharedTerminal({
+      workspaceRoot: root,
+      shell: "/path/that/does/not/exist",
+      enabled: false
+    });
+
+    try {
+      expect(terminal.enabled).toBe(false);
+      terminal.write("echo unavailable\n");
+      terminal.resize(80, 24);
+      terminal.restart();
+      expect(terminal.getScrollback()).toBe("");
+    } finally {
+      terminal.dispose();
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("streams a real PTY and retains scrollback for later clients", async () => {
     const root = await createTestWorkspace("shared-terminal-");
     const terminal = createSharedTerminal({

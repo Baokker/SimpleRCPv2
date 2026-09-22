@@ -9,7 +9,10 @@ import { createSharedTerminal } from "./sharedTerminal.js";
 import type { WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
-export function createProjectRuntime(project: ProjectRecord) {
+export function createProjectRuntime(
+  project: ProjectRecord,
+  options: { terminalEnabled?: boolean } = {}
+) {
   const projectRoot = path.dirname(project.workspacePath);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
   const participants = createParticipantStore(project.id, projectRoot);
@@ -32,7 +35,10 @@ export function createProjectRuntime(project: ProjectRecord) {
       for (const listener of fileSavedListeners) listener(path);
     }
   });
-  const terminal = createSharedTerminal({ workspaceRoot: project.workspacePath });
+  const terminal = createSharedTerminal({
+    workspaceRoot: project.workspacePath,
+    enabled: options.terminalEnabled !== false
+  });
   const room = rooms.createRoom(project.workspacePath, project.name);
   const terminalListeners = new Set<(data: string) => void>();
   const removeTerminalListener = terminal.onData((data) => {
@@ -102,6 +108,7 @@ export function createProjectRuntime(project: ProjectRecord) {
 
   return {
     project,
+    terminalEnabled: terminal.enabled,
     events,
     participants,
     rooms,

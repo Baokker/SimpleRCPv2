@@ -6,8 +6,6 @@ import {
   deleteWorkspacePath,
   getChatMessages,
   getEvents,
-  getParticipants,
-  getProject,
   getRoom,
   getWorkspaceDirectory,
   joinRoom,
@@ -31,6 +29,8 @@ import {
   type WorkspaceDialogAction
 } from "./components/WorkspaceDialog";
 import { mergeFileEditChanges } from "./editActivity";
+import { useProjectRoute } from "./hooks/useProjectRoute";
+import { useWorkspaceNotifications } from "./hooks/useWorkspaceNotifications";
 import {
   connectRoomSocket,
   type ClientSocket,
@@ -41,6 +41,13 @@ import {
   THEME_STORAGE_KEY,
   type ThemeMode
 } from "./theme";
+import {
+  activeDirectoryPrefix,
+  addAncestorDirectories,
+  composeWorkspaceTree,
+  remapLoadedDirectories,
+  setDirectoryChildren
+} from "./workspaceTree";
 import type {
   ChatMessage,
   CursorPosition,
@@ -51,7 +58,6 @@ import type {
   RemoteCursor,
   RoomMember,
   ProjectRecord,
-  ProjectParticipant,
   WorkspaceChange,
   WorkspaceNode
 } from "./types";
@@ -59,8 +65,6 @@ import type {
 interface PendingFileEdit extends FileEditActivity {
   timer: number;
 }
-
-const WORKSPACE_NOTICE_DURATION_MS = 4_000;
 
 export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   const [theme, setTheme] = useState(initialTheme);
@@ -95,49 +99,17 @@ function ProjectRoute({
   theme: ThemeMode;
   onToggleTheme(): void;
 }) {
-  const [project, setProject] = useState<ProjectRecord>();
-  const [roomId, setRoomId] = useState("");
-  const [participants, setParticipants] = useState<ProjectParticipant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [loadAttempt, setLoadAttempt] = useState(0);
-  const params = new URLSearchParams(window.location.search);
-  const queryName = params.get("name")?.trim();
-  const [identity, setIdentity] = useState<ProjectIdentity>();
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError("");
-    void Promise.all([getProject(projectId), getParticipants(projectId)])
-      .then(([result, loadedParticipants]) => {
-        if (!active) return;
-        setProject(result.project);
-        setRoomId(result.roomId);
-        setParticipants(loadedParticipants);
-        if (queryName) {
-          setIdentity({
-            participantId: loadedParticipants.find(
-              (participant) => participant.displayName === queryName
-            )?.id,
-            displayName: queryName,
-            role: params.get("role")?.trim() ?? ""
-          });
-        }
-      })
-      .catch((nextError) => {
-        if (!active) return;
-        setError(
-          nextError instanceof Error ? nextError.message : "Project loading failed"
-        );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [loadAttempt, projectId]);
+  const {
+    project,
+    roomId,
+    participants,
+    terminalEnabled,
+    identity,
+    loading,
+    error,
+    setIdentity,
+    retry
+  } = useProjectRoute(projectId);
 
   if (loading) {
     return <main className="route-loading">Loading project</main>;
@@ -151,7 +123,7 @@ function ProjectRoute({
           <a href="/" data-testid="route-error-projects">Projects</a>
           <button
             type="button"
-            onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+            onClick={retry}
             data-testid="route-error-retry"
           >
             Retry
@@ -175,6 +147,7 @@ function ProjectRoute({
       project={project}
       roomId={roomId}
       identity={identity}
+      terminalEnabled={terminalEnabled}
       theme={theme}
       onToggleTheme={onToggleTheme}
     />
@@ -185,12 +158,14 @@ function WorkspacePage({
   project,
   roomId,
   identity,
+  terminalEnabled,
   theme,
   onToggleTheme
 }: {
   project: ProjectRecord;
   roomId: string;
   identity: ProjectIdentity;
+  terminalEnabled: boolean;
   theme: ThemeMode;
   onToggleTheme(): void;
 }) {
@@ -213,14 +188,22 @@ function WorkspacePage({
   const [followingMemberId, setFollowingMemberId] = useState<string>();
   const [workspaceDialog, setWorkspaceDialog] =
     useState<WorkspaceDialogAction>();
-  const [workspaceNotice, setWorkspaceNotice] = useState("");
-  const [workspaceError, setWorkspaceError] = useState("");
+  const {
+    workspaceNotice,
+    workspaceError,
+    showWorkspaceNotice,
+    clearWorkspaceNotice,
+    showWorkspaceError,
+    clearWorkspaceError,
+    showProjectDeleted,
+    projectDeleted
+  } = useWorkspaceNotifications();
   const [agentRefreshVersion, setAgentRefreshVersion] = useState(0);
   const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
     "Saved"
   );
   const [collaborationVisible, setCollaborationVisible] = useState(true);
-  const [terminalVisible, setTerminalVisible] = useState(true);
+  const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
   const socketRef = useRef<ClientSocket | null>(null);
   const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
@@ -229,7 +212,6 @@ function WorkspacePage({
   const bootStartedRef = useRef(false);
   const pendingFileEditsRef = useRef(new Map<string, PendingFileEdit>());
   const pendingSavePathsRef = useRef(new Set<string>());
-  const projectDeletedRef = useRef(false);
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
   const agentRefreshTimerRef = useRef<number>();
@@ -280,14 +262,13 @@ function WorkspacePage({
             setSaveState("Sync failed");
           }
           if (state === "Connected") {
-            setWorkspaceError("");
+            clearWorkspaceError();
             void refreshSharedState().catch(showWorkspaceError);
             void refreshWorkspaceTree().catch(showWorkspaceError);
           }
         },
         onProjectDeleted() {
-          projectDeletedRef.current = true;
-          setWorkspaceError("This project was deleted.");
+          showProjectDeleted();
         },
         onMessage(message) {
           if (message.type === "presence") {
@@ -401,15 +382,6 @@ function WorkspacePage({
   }, [roomId]);
 
   useEffect(() => {
-    if (!workspaceNotice) return;
-    const timer = window.setTimeout(
-      () => setWorkspaceNotice(""),
-      WORKSPACE_NOTICE_DURATION_MS
-    );
-    return () => window.clearTimeout(timer);
-  }, [workspaceNotice]);
-
-  useEffect(() => {
     if (!followingMemberId) return;
     const cursor = remoteCursorMap[followingMemberId];
     const collaborator = members.find(
@@ -446,24 +418,17 @@ function WorkspacePage({
     setEvents(await getEvents(projectId));
   }
 
-  function showWorkspaceError(error: unknown) {
-    if (projectDeletedRef.current) return;
-    setWorkspaceError(
-      error instanceof Error ? error.message : "Workspace request failed"
-    );
-  }
-
   function applyWorkspaceChange(change: WorkspaceChange) {
     if (change.type === "rename") {
       remapOpenPath(change.fromPath, change.path);
-      setWorkspaceNotice(`${change.fromPath} was renamed to ${change.path}`);
+      showWorkspaceNotice(`${change.fromPath} was renamed to ${change.path}`);
       return;
     }
     if (change.type === "unlink" || change.type === "unlinkDir") {
       closePath(change.path, false);
       pendingSavePathsRef.current.delete(change.path);
       if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
-      setWorkspaceNotice(`${change.path} was deleted`);
+      showWorkspaceNotice(`${change.path} was deleted`);
     }
   }
 
@@ -587,7 +552,7 @@ function WorkspacePage({
     const text = chatText.trim();
     if (!text || !member || !roomId || chatSending) return;
     setChatSending(true);
-    setWorkspaceError("");
+    clearWorkspaceError();
     try {
       await sendChatMessage(projectId, {
         authorId: member.id,
@@ -720,7 +685,7 @@ function WorkspacePage({
       {workspaceError ? (
         <div className="workspace-alert" role="alert" data-testid="workspace-error">
           <span>{workspaceError}</span>
-          {workspaceError === "This project was deleted." ? (
+          {projectDeleted ? (
             <a href="/">Projects</a>
           ) : (
             <button type="button" onClick={() => window.location.reload()}>
@@ -730,7 +695,7 @@ function WorkspacePage({
           <button
             type="button"
             aria-label="Dismiss error"
-            onClick={() => setWorkspaceError("")}
+            onClick={clearWorkspaceError}
           >
             ×
           </button>
@@ -742,7 +707,7 @@ function WorkspacePage({
           <button
             type="button"
             aria-label="Dismiss notification"
-            onClick={() => setWorkspaceNotice("")}
+            onClick={clearWorkspaceNotice}
           >
             ×
           </button>
@@ -813,17 +778,19 @@ function WorkspacePage({
           onError={showWorkspaceError}
         />
       </aside>
-      <section className="terminal-pane" hidden={!terminalVisible}>
-        <TerminalPanel
-          projectId={projectId}
-          theme={theme}
-          canRun={Boolean(member)}
-          memberId={member?.id ?? ""}
-        />
-      </section>
+      {terminalEnabled ? (
+        <section className="terminal-pane" hidden={!terminalVisible}>
+          <TerminalPanel
+            projectId={projectId}
+            theme={theme}
+            canRun={Boolean(member)}
+            memberId={member?.id ?? ""}
+          />
+        </section>
+      ) : null}
       <div className="status-bar" data-testid="status-bar">
         <span data-testid="connection-state">{connectionState}</span>
-        {connectionState === "Offline" && workspaceError !== "This project was deleted." ? (
+        {connectionState === "Offline" && !projectDeleted ? (
           <button
             className="connection-retry"
             type="button"
@@ -840,16 +807,18 @@ function WorkspacePage({
             Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
           </span>
         ) : null}
-        <button
-          className="status-tool"
-          type="button"
-          onClick={() => setTerminalVisible((visible) => !visible)}
-          aria-label={`${terminalVisible ? "Hide" : "Show"} terminal`}
-          title={`${terminalVisible ? "Hide" : "Show"} terminal`}
-          data-testid="toggle-terminal"
-        >
-          <PanelBottom size={14} />
-        </button>
+        {terminalEnabled ? (
+          <button
+            className="status-tool"
+            type="button"
+            onClick={() => setTerminalVisible((visible) => !visible)}
+            aria-label={`${terminalVisible ? "Hide" : "Show"} terminal`}
+            title={`${terminalVisible ? "Hide" : "Show"} terminal`}
+            data-testid="toggle-terminal"
+          >
+            <PanelBottom size={14} />
+          </button>
+        ) : null}
         <button
           className="status-tool"
           type="button"
@@ -890,60 +859,4 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
-}
-
-function activeDirectoryPrefix(path: string | undefined) {
-  if (!path?.includes("/")) return "";
-  return `${path.slice(0, path.lastIndexOf("/") + 1)}`;
-}
-
-function setDirectoryChildren(
-  nodes: WorkspaceNode[],
-  path: string,
-  children: WorkspaceNode[]
-): WorkspaceNode[] {
-  if (!path) return children;
-  return nodes.map((node) => {
-    if (node.type !== "directory") return node;
-    if (node.path === path) return { ...node, children };
-    if (!node.children) return node;
-    return {
-      ...node,
-      children: setDirectoryChildren(node.children, path, children)
-    };
-  });
-}
-
-function composeWorkspaceTree(
-  nodes: WorkspaceNode[],
-  directories: Map<string, WorkspaceNode[]>
-): WorkspaceNode[] {
-  return nodes.map((node) => {
-    if (node.type !== "directory") return node;
-    const children = directories.get(node.path);
-    return children
-      ? { ...node, children: composeWorkspaceTree(children, directories) }
-      : node;
-  });
-}
-
-function addAncestorDirectories(directories: Set<string>, path: string) {
-  const parts = path.split("/");
-  for (let index = 1; index < parts.length; index += 1) {
-    directories.add(parts.slice(0, index).join("/"));
-  }
-}
-
-function remapLoadedDirectories(
-  directories: Set<string>,
-  fromPath: string,
-  toPath: string
-) {
-  return new Set(
-    [...directories].map((directory) =>
-      directory === fromPath || directory.startsWith(`${fromPath}/`)
-        ? `${toPath}${directory.slice(fromPath.length)}`
-        : directory
-    )
-  );
 }

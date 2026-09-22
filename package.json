@@ -12,6 +12,7 @@
     "test": "pnpm --filter @simplercp/server test && pnpm test:demo",
     "test:demo": "node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs",
     "test:e2e": "playwright test --config tests/playwright.config.ts",
+    "test:e2e:terminal-disabled": "SIMPLERCP_TERMINAL_ENABLED=false playwright test --config tests/playwright.config.ts tests/e2e/terminal-disabled.spec.ts",
     "test:collab": "playwright test --config tests/playwright.config.ts tests/e2e/collaboration.spec.ts",
     "demo:record": "SIMPLERCP_RECORD_VIDEO=1 playwright test --config tests/playwright.config.ts tests/e2e/demo.spec.ts"
   },

@@ -1,8 +1,6 @@
 import path from "node:path";
 import type {
-  AgentFileChange,
   AgentRun,
-  AgentSession,
   AgentSettingsResponse,
   AgentTraceEvent,
   AgentPromptContext,
@@ -17,12 +15,21 @@ import {
 import { createTraceStore, type TraceStore } from "./traceStore.js";
 import type { ProjectRegistry } from "../projects.js";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
-import type { ProjectRuntime } from "../projectRuntime.js";
 import {
   compareAgentWorkspaceSnapshots,
   createAgentWorkspaceSnapshot
 } from "./agentWorkspaceSnapshot.js";
-import { readWorkspaceFile } from "../workspace.js";
+import {
+  buildRuntimePrompt,
+  mergeFileChanges,
+  normalizeAgentContexts,
+  previewPrompt,
+  runWithTimeout
+} from "./agentRunSupport.js";
+import {
+  claimLegacyAgentSession,
+  migrateLegacyAgentSessions
+} from "./agentSessionAccess.js";
 
 interface AgentRunManagerOptions {
   runtime: AgentRuntime;
@@ -142,33 +149,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   }
 
   async function migrateLegacySessions(projectId: string) {
-    const runStore = getStore(projectId);
-    const sessionStore = getSessionStore(projectId);
-    const runs = await runStore.list();
-    const migrated = new Map<string, Awaited<ReturnType<typeof sessionStore.create>>>();
-
-    for (const run of runs) {
-      if (run.sessionId && await sessionStore.get(run.sessionId)) continue;
-      const legacyRuntimeSessionId = run.runtimeSessionId ?? run.sessionId;
-      const migrationKey = `${run.memberId}:${legacyRuntimeSessionId ?? run.id}`;
-      let session = migrated.get(migrationKey);
-      if (!session) {
-        session = await sessionStore.create({
-          projectId,
-          memberId: run.memberId,
-          memberName: run.memberName,
-          title: run.prompt.slice(0, 80),
-          runtime: "opencode",
-          runtimeSessionId: legacyRuntimeSessionId,
-          lastRunId: run.id
-        });
-        migrated.set(migrationKey, session);
-      }
-      await runStore.update(run.id, {
-        sessionId: session.id,
-        runtimeSessionId: legacyRuntimeSessionId
-      });
-    }
+    await migrateLegacyAgentSessions(
+      projectId,
+      getStore(projectId),
+      getSessionStore(projectId)
+    );
   }
 
   async function processQueue(projectId: string) {
@@ -429,7 +414,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         ? await sessionStore.get(input.sessionId)
         : undefined;
       if (session) {
-        session = await claimLegacySession(
+        session = await claimLegacyAgentSession(
           projectRuntime,
           sessionStore,
           session,
@@ -512,7 +497,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const sessionStore = getSessionStore(projectId);
       const stored = await sessionStore.get(sessionId);
       if (!stored) throw new Error("Agent session not found");
-      const session = await claimLegacySession(
+      const session = await claimLegacyAgentSession(
         projectRuntime,
         sessionStore,
         stored,
@@ -534,7 +519,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const sessions = await sessionStore.list();
       await Promise.all(
         sessions.map((session) =>
-          claimLegacySession(
+          claimLegacyAgentSession(
             projectRuntime,
             sessionStore,
             session,
@@ -688,101 +673,6 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       listeners.clear();
     }
   };
-}
-
-async function buildRuntimePrompt(
-  workspacePath: string,
-  prompt: string,
-  contexts: AgentPromptContext[] | undefined
-) {
-  if (!contexts || contexts.length === 0) return prompt;
-  const sections: string[] = [];
-  for (const context of contexts) {
-    const result = await readWorkspaceFile(workspacePath, context.path);
-    if (result.status !== "text") {
-      throw new Error(`Agent context must be a text file smaller than 1 MB: ${context.path}`);
-    }
-    sections.push(`--- ${context.path} ---\n${result.content}\n--- end ${context.path} ---`);
-  }
-  return `Relevant project files:\n${sections.join("\n")}\n\nUser request:\n${prompt}`;
-}
-
-async function claimLegacySession(
-  projectRuntime: ProjectRuntime,
-  sessionStore: AgentSessionStore,
-  session: AgentSession,
-  participantId: string,
-  displayName: string
-) {
-  if (session.participantId || session.memberName !== displayName) return session;
-  const matchingParticipants = (await projectRuntime.participants.list()).filter(
-    (participant) => participant.displayName === displayName
-  );
-  if (
-    matchingParticipants.length !== 1 ||
-    matchingParticipants[0]?.id !== participantId
-  ) {
-    return session;
-  }
-  return sessionStore.update(session.id, { participantId });
-}
-
-function previewPrompt(prompt: string) {
-  const normalized = prompt.replace(/\s+/g, " ").trim();
-  return normalized.length > 120 ? `${normalized.slice(0, 117)}…` : normalized;
-}
-
-function normalizeAgentContexts(contexts: AgentPromptContext[] | undefined) {
-  if (!contexts) return undefined;
-  if (!Array.isArray(contexts)) throw new Error("Agent contexts must be an array");
-  const normalized = contexts.map((context) => {
-    if (context?.type !== "file" || typeof context.path !== "string" || !context.path.trim()) {
-      throw new Error("Invalid Agent file context");
-    }
-    return { type: "file" as const, path: context.path.trim() };
-  });
-  return normalized.length ? normalized : undefined;
-}
-
-async function runWithTimeout<T>(
-  operation: Promise<T>,
-  timeoutMs: number,
-  cancel: () => Promise<void>
-) {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  let cancellation: Promise<void> | undefined;
-  const timeout = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => {
-      cancellation = cancel();
-      reject(new Error(`Agent run exceeded ${timeoutMs} ms`));
-    }, timeoutMs);
-  });
-  try {
-    return await Promise.race([operation, timeout]);
-  } catch (error) {
-    if (cancellation) await cancellation;
-    throw error;
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-function mergeFileChanges(
-  workspaceChanges: AgentRun["fileChanges"] = [],
-  runtimeChanges: AgentRun["fileChanges"] = []
-) {
-  const runtimeByFile = new Map(
-    runtimeChanges.map((change) => [change.file, change])
-  );
-  const merged: AgentFileChange[] = workspaceChanges.map((change) => ({
-    ...change,
-    patch: runtimeByFile.get(change.file)?.patch
-  }));
-  const workspacePaths = new Set(workspaceChanges.map((change) => change.file));
-  merged.push(
-    ...runtimeChanges.filter((change) => !workspacePaths.has(change.file))
-  );
-  return merged;
 }
 
 export type AgentRunManager = ReturnType<typeof createAgentRunManager>;

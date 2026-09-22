@@ -16,6 +16,19 @@ import type {
   WorkspaceNode
 } from "./types";
 
+export interface ServerInfo {
+  ok: boolean;
+  dataDir: string;
+  publicOrigin: string;
+  features: {
+    terminal: boolean;
+  };
+}
+
+export function getServerInfo() {
+  return request<ServerInfo>("/api/health");
+}
+
 export async function getAgentSettings() {
   return request<AgentSettingsResponse>("/api/agent/settings");
 }

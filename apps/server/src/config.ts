@@ -9,6 +9,7 @@ export interface ServerConfig {
   publicOrigin: string;
   dataDir: string;
   demoProjectRoot: string;
+  terminalEnabled?: boolean;
   agent?: {
     apiKey?: string;
     baseUrl: string;
@@ -53,6 +54,11 @@ export function loadConfig(
   if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 1) {
     throw new Error("SIMPLERCP_AGENT_RUN_TIMEOUT_MS must be a positive integer");
   }
+  const terminalEnabled = readBoolean(
+    env.SIMPLERCP_TERMINAL_ENABLED,
+    "SIMPLERCP_TERMINAL_ENABLED",
+    true
+  );
 
   return {
     port,
@@ -60,6 +66,7 @@ export function loadConfig(
     publicOrigin: publicUrl.origin,
     dataDir: configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"),
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
+    terminalEnabled,
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
@@ -68,4 +75,15 @@ export function loadConfig(
       runTimeoutMs
     }
   };
+}
+
+function readBoolean(
+  value: string | undefined,
+  name: string,
+  defaultValue: boolean
+) {
+  if (value === undefined) return defaultValue;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw new Error(`${name} must be true or false`);
 }
