@@ -45,15 +45,5 @@ export async function claimLegacyAgentSession(
   participantId: string,
   displayName: string
 ) {
-  if (session.participantId || session.memberName !== displayName) return session;
-  const matchingParticipants = (await projectRuntime.participants.list()).filter(
-    (participant) => participant.displayName === displayName
-  );
-  if (
-    matchingParticipants.length !== 1 ||
-    matchingParticipants[0]?.id !== participantId
-  ) {
-    return session;
-  }
-  return sessionStore.update(session.id, { participantId });
+  return session;
 }

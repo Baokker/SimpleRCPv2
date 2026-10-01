@@ -15,33 +15,40 @@ interface RegistryFile {
 
 export async function createProjectRegistry({
   dataDir,
+  workspacesDir,
+  importRoots = [],
   demoProjectRoot
 }: {
   dataDir: string;
+  workspacesDir?: string;
+  importRoots?: string[];
   demoProjectRoot: string;
 }) {
   const projectsDir = path.join(dataDir, "projects");
+  const workspacesRoot = workspacesDir ?? path.join(dataDir, "workspaces");
   const registryPath = path.join(dataDir, "registry.json");
-  await fs.mkdir(projectsDir, { recursive: true });
+  await fs.mkdir(projectsDir, { recursive: true, mode: 0o700 });
+  await fs.mkdir(workspacesRoot, { recursive: true, mode: 0o700 });
 
   let registry = await loadRegistry(registryPath);
+  registry = await migrateLegacyProjects(registry, { projectsDir, workspacesDir: workspacesRoot, dataDir, registryPath });
   if (!registry.projects.some((project) => project.id === "demo")) {
-    const project = await createDemoProject({ projectsDir, demoProjectRoot });
+    const project = await createDemoProject({ projectsDir, workspacesDir: workspacesRoot, demoProjectRoot });
     registry = { ...registry, projects: [...registry.projects, project] };
     await saveRegistry(registryPath, registry);
   }
 
   return {
+    listProjectsSync() {
+      return [...registry.projects];
+    },
     async listProjects() {
       const missingProjectIds = new Set<string>();
       let recreatedDemo: ProjectRecord | undefined;
       for (const project of registry.projects) {
         if (await pathExists(project.workspacePath)) continue;
         if (project.id === "demo") {
-          recreatedDemo = await createDemoProject({
-            projectsDir,
-            demoProjectRoot
-          });
+          recreatedDemo = await createDemoProject({ projectsDir, workspacesDir: workspacesRoot, demoProjectRoot });
         } else {
           missingProjectIds.add(project.id);
         }
@@ -68,14 +75,15 @@ export async function createProjectRegistry({
       const normalizedName = validateProjectName(name, registry.projects);
       const id = nanoid(12);
       const projectDir = path.join(projectsDir, id);
-      const workspacePath = path.join(projectDir, "workspace");
-      await fs.mkdir(workspacePath, { recursive: true });
+      const workspacePath = path.join(workspacesRoot, id);
+      await fs.mkdir(workspacePath, { recursive: true, mode: 0o700 });
       const timestamp = new Date().toISOString();
       const project: ProjectRecord = {
         id,
         name: normalizedName,
         source: "blank",
         workspacePath,
+        metadataPath: projectDir,
         createdAt: timestamp,
         lastOpenedAt: timestamp
       };
@@ -89,20 +97,24 @@ export async function createProjectRegistry({
       if (!path.isAbsolute(sourcePath)) {
         throw new Error("Existing project path must be absolute");
       }
-      const sourceStat = await fs.stat(sourcePath);
+      if (importRoots.length === 0) throw new Error("Directory import is disabled");
+      const realSource = await fs.realpath(sourcePath);
+      const allowed = (await Promise.all(importRoots.map((root) => fs.realpath(root)))).some((root) => realSource === root || realSource.startsWith(`${root}${path.sep}`));
+      if (!allowed) throw new Error("Directory import path is outside SIMPLERCP_IMPORT_ROOTS");
+      const sourceStat = await fs.stat(realSource);
       if (!sourceStat.isDirectory()) {
         throw new Error("Existing project path must be a directory");
       }
 
       const id = nanoid(12);
       const projectDir = path.join(projectsDir, id);
-      const workspacePath = path.join(projectDir, "workspace");
-      await fs.mkdir(projectDir, { recursive: true });
+      const workspacePath = path.join(workspacesRoot, id);
+      await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });
       try {
-        await fs.cp(sourcePath, workspacePath, {
+        await fs.cp(realSource, workspacePath, {
           recursive: true,
           filter(candidatePath) {
-            const relativePath = path.relative(sourcePath, candidatePath);
+            const relativePath = path.relative(realSource, candidatePath);
             return !relativePath || !isIgnoredPath(relativePath);
           }
         });
@@ -112,6 +124,7 @@ export async function createProjectRegistry({
           name: normalizedName,
           source: "directory",
           workspacePath,
+          metadataPath: projectDir,
           createdAt: timestamp,
           lastOpenedAt: timestamp
         };
@@ -128,8 +141,8 @@ export async function createProjectRegistry({
       const normalizedName = validateProjectName(name, registry.projects);
       const id = nanoid(12);
       const projectDir = path.join(projectsDir, id);
-      const workspacePath = path.join(projectDir, "workspace");
-      await fs.mkdir(projectDir, { recursive: true });
+      const workspacePath = path.join(workspacesRoot, id);
+      await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });
       try {
         const { filteredEntries } = await extractZipArchive({
           archive,
@@ -141,6 +154,7 @@ export async function createProjectRegistry({
           name: normalizedName,
           source: "zip",
           workspacePath,
+          metadataPath: projectDir,
           createdAt: timestamp,
           lastOpenedAt: timestamp
         };
@@ -182,6 +196,7 @@ export async function createProjectRegistry({
       if (!project) throw new Error("Project not found");
       const projectDir = resolveProjectDir(projectsDir, project.id);
       await fs.rm(projectDir, { recursive: true, force: true });
+      await fs.rm(project.workspacePath, { recursive: true, force: true });
       registry = {
         ...registry,
         projects: registry.projects.filter(
@@ -207,15 +222,17 @@ async function loadRegistry(registryPath: string): Promise<RegistryFile> {
 
 async function createDemoProject({
   projectsDir,
+  workspacesDir,
   demoProjectRoot
 }: {
   projectsDir: string;
+  workspacesDir: string;
   demoProjectRoot: string;
 }): Promise<ProjectRecord> {
   const projectDir = path.join(projectsDir, "demo");
-  const workspacePath = path.join(projectDir, "workspace");
+  const workspacePath = path.join(workspacesDir, "demo");
   if (!(await pathExists(workspacePath))) {
-    await fs.mkdir(projectDir, { recursive: true });
+    await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });
     await fs.cp(demoProjectRoot, workspacePath, { recursive: true });
   }
   const timestamp = new Date().toISOString();
@@ -224,11 +241,32 @@ async function createDemoProject({
     name: "Demo",
     source: "demo",
     workspacePath,
+    metadataPath: projectDir,
     createdAt: timestamp,
     lastOpenedAt: timestamp
   };
   await writeProjectMetadata(projectDir, project);
   return project;
+}
+
+async function migrateLegacyProjects(registry: RegistryFile, options: { projectsDir: string; workspacesDir: string; dataDir: string; registryPath: string }) {
+  const markerDir = path.join(options.dataDir, "instance");
+  await fs.mkdir(markerDir, { recursive: true, mode: 0o700 });
+  const migrated: ProjectRecord[] = [];
+  for (const project of registry.projects) {
+    const metadataPath = project.metadataPath ?? path.dirname(project.workspacePath);
+    const legacyWorkspace = path.join(metadataPath, "workspace");
+    const nextWorkspace = path.join(options.workspacesDir, project.id);
+    if (!project.metadataPath && await pathExists(legacyWorkspace)) {
+      await fs.writeFile(path.join(markerDir, `migration-${project.id}.started`), new Date().toISOString());
+      if (!(await pathExists(nextWorkspace))) await fs.rename(legacyWorkspace, nextWorkspace);
+      await fs.writeFile(path.join(markerDir, `migration-${project.id}.complete`), new Date().toISOString());
+    }
+    migrated.push({ ...project, metadataPath, workspacePath: nextWorkspace });
+  }
+  const next = { ...registry, projects: migrated };
+  if (JSON.stringify(next) !== JSON.stringify(registry)) await saveRegistry(options.registryPath, next);
+  return next;
 }
 
 async function writeProjectMetadata(

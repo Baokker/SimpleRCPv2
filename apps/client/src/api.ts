@@ -29,6 +29,14 @@ export function getServerInfo() {
   return request<ServerInfo>("/api/health");
 }
 
+export function createAdminSession(token: string) {
+  return request<{ kind: "admin" }>("/api/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+}
+
+export function createInvite(projectId: string) {
+  return request<{ url: string }>(`${projectPath(projectId)}/invites`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+}
+
 export async function getAgentSettings() {
   return request<AgentSettingsResponse>("/api/agent/settings");
 }
@@ -54,7 +62,7 @@ export async function getAgentRuns(projectId: string) {
 
 export async function getAgentSessions(projectId: string, memberId: string) {
   const response = await request<{ sessions: AgentSession[] }>(
-    `${projectPath(projectId)}/agent/sessions?memberId=${encodeURIComponent(memberId)}`
+    `${projectPath(projectId)}/agent/sessions`
   );
   return response.sessions;
 }
@@ -66,7 +74,7 @@ export async function createAgentSession(
   return request<{ session: AgentSession }>(`${projectPath(projectId)}/agent/sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
+    body: JSON.stringify({ title: input.title })
   });
 }
 
@@ -80,7 +88,7 @@ export async function createAgentSessionRun(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
+      body: JSON.stringify({ prompt: input.prompt, contexts: input.contexts })
     }
   );
 }
@@ -102,7 +110,7 @@ export async function cancelAgentRun(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId })
+      body: JSON.stringify({})
     }
   );
 }
@@ -152,6 +160,19 @@ export async function getProject(projectId: string) {
   );
 }
 
+export async function getPublicProject(projectId: string) {
+  return request<{ project: Pick<ProjectRecord, "id" | "name" | "source"> }>(
+    `/api/projects/${encodeURIComponent(projectId)}/public`
+  );
+}
+
+export async function joinProject(projectId: string, inviteToken: string, name: string) {
+  return request<{ member: { memberId: string; projectId: string; displayName: string; role: string } }>(
+    `/api/projects/${encodeURIComponent(projectId)}/join`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inviteToken, name }) }
+  );
+}
+
 export async function getRoom(projectId: string): Promise<RoomState> {
   const response = await request<{ room: RoomState }>(
     `${projectPath(projectId)}/room`
@@ -178,7 +199,7 @@ export async function joinRoom(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, role, participantId, connectionId })
+      body: JSON.stringify({ connectionId })
     }
   );
 }
@@ -228,7 +249,7 @@ export async function createWorkspaceFile(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path, content, initiatorId })
+      body: JSON.stringify({ path, content })
     }
   );
   return response.tree;
@@ -244,7 +265,7 @@ export async function createWorkspaceDirectory(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path, initiatorId })
+      body: JSON.stringify({ path })
     }
   );
   return response.tree;
@@ -261,7 +282,7 @@ export async function renameWorkspacePath(
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fromPath, toPath, initiatorId })
+      body: JSON.stringify({ fromPath, toPath })
     }
   );
   return response.tree;
@@ -273,7 +294,7 @@ export async function deleteWorkspacePath(
   initiatorId: string
 ) {
   return request<{ tree: WorkspaceNode[] }>(
-    `${projectPath(projectId)}/workspace/path?path=${encodeURIComponent(path)}&initiatorId=${encodeURIComponent(initiatorId)}`,
+    `${projectPath(projectId)}/workspace/path?path=${encodeURIComponent(path)}`,
     { method: "DELETE" }
   );
 }
@@ -301,7 +322,7 @@ export async function sendChatMessage(
   return request<{ message: ChatMessage }>(`${projectPath(projectId)}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
+    body: JSON.stringify({ text: input.text })
   });
 }
 

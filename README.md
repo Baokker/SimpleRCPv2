@@ -72,7 +72,7 @@ pnpm dev
 ```
 
 5. 打开 `http://127.0.0.1:5173`。项目列表会显示内置 Demo，也可以创建空白项目、导入 ZIP，或者导入服务端已有目录。
-6. 填写显示名称和可选角色，进入项目工作区。角色只用于界面显示，进入项目的成员拥有相同的文件与终端能力。
+6. 使用启动日志中的邀请链接加入项目，填写显示名称后进入工作区。成员角色由邀请记录提供。
 7. 在工作区中编辑文件、聊天、使用共享终端，或者在 `Agent` 页签向 OpenCode 提交任务。
 
 默认地址为：
@@ -188,6 +188,10 @@ SIMPLERCP_DATA_DIR="/srv/simplercp-data" pnpm dev
 Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.31`，Provider 默认为 DeepSeek。OpenCode 由服务端启动并监听 `127.0.0.1`，浏览器无法读取 DeepSeek API Key，也无法直接访问 OpenCode 端口。
 
 - `SIMPLERCP_DATA_DIR`：项目数据目录，默认值为仓库根目录下的 `.simplercp-data/`，设置值必须为绝对路径。
+- `SIMPLERCP_WORKSPACES_DIR`：工作区根目录，默认值为数据目录下的 `workspaces/`。
+- `SIMPLERCP_ADMIN_TOKEN`：管理员令牌；未设置时首次启动生成并打印管理员链接。
+- `SIMPLERCP_ALLOWED_ORIGINS`：允许的来源，使用逗号分隔。
+- `SIMPLERCP_IMPORT_ROOTS`：允许目录导入的绝对路径根目录，未设置时关闭目录导入。
 - `SIMPLERCP_HOST`：服务端监听地址，默认值为 `127.0.0.1`。
 - `SIMPLERCP_PUBLIC_URL`：用户访问的浏览器地址，默认值为 `http://127.0.0.1:5173`。
 - `SIMPLERCP_SHELL`：共享终端使用的 shell 路径，默认读取当前进程的 `SHELL`，随后使用 `/bin/sh`。

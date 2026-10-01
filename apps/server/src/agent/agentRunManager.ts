@@ -37,6 +37,7 @@ interface AgentRunManagerOptions {
   runtimeManager: ProjectRuntimeManager;
   getSettings(): AgentSettingsResponse;
   apiKey?: string;
+  sensitiveValues?: string[];
   runTimeoutMs: number;
   appendActivity?: (
     projectId: string,
@@ -79,7 +80,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (existing) return existing;
     const project = options.registry.getProject(projectId);
     if (!project) throw new Error("Project not found");
-    const store = createAgentRunStore(projectId, path.dirname(project.workspacePath));
+    const store = createAgentRunStore(projectId, project.metadataPath ?? path.dirname(project.workspacePath));
     stores.set(projectId, store);
     return store;
   }
@@ -91,7 +92,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const store = getStore(projectId);
     const trace = createTraceStore(
       path.join(store.runsRoot, runId, "trace.jsonl"),
-      options.apiKey ? [options.apiKey] : []
+      options.sensitiveValues ?? (options.apiKey ? [options.apiKey] : [])
     );
     traces.set(key, trace);
     return trace;
@@ -102,7 +103,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (existing) return existing;
     const project = options.registry.getProject(projectId);
     if (!project) throw new Error("Project not found");
-    const store = createAgentSessionStore(projectId, path.dirname(project.workspacePath));
+    const store = createAgentSessionStore(projectId, project.metadataPath ?? path.dirname(project.workspacePath));
     sessionStores.set(projectId, store);
     return store;
   }
@@ -390,6 +391,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     async createRun(input: {
       projectId: string;
       memberId: string;
+      initiatorRole?: string;
       prompt: string;
       sessionId?: string;
       contexts?: AgentPromptContext[];
@@ -440,6 +442,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const run = await store.create({
         projectId: input.projectId,
         memberId: input.memberId,
+        initiatorMemberId: input.memberId,
+        initiatorRole: input.initiatorRole,
         participantId: member.participantId,
         memberName: member.displayName,
         prompt,
@@ -543,20 +547,20 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!run) throw new Error("Agent run not found");
       return getTrace(projectId, runId).list();
     },
-    async cancelRun(projectId: string, runId: string, memberId: string) {
+    async cancelRun(projectId: string, runId: string, memberId: string, admin = false) {
       const projectRuntime = options.runtimeManager.get(projectId);
       const member = projectRuntime.rooms.getMember(projectRuntime.room.id, memberId);
-      if (!member) {
+      if (!member && !admin) {
         throw new Error("Project membership is required");
       }
       const store = getStore(projectId);
       const run = await store.get(runId);
       if (!run) throw new Error("Agent run not found");
-      if (
+      if (!admin && member && (
         run.participantId
           ? run.participantId !== member.participantId
           : run.memberId !== memberId
-      ) {
+      )) {
         throw new Error("Agent run belongs to another participant");
       }
       if (["completed", "failed", "cancelled"].includes(run.status)) return run;

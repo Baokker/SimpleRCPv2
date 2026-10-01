@@ -8,6 +8,7 @@
     "dev:demo": "node scripts/start-demo.mjs",
     "dev:server": "pnpm --filter @simplercp/server dev",
     "dev:client": "pnpm --filter @simplercp/client dev",
+    "invite": "node scripts/invite.mjs",
     "build": "pnpm -r build",
     "test": "pnpm --filter @simplercp/server test && pnpm test:demo",
     "test:demo": "node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs",

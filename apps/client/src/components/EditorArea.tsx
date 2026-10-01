@@ -255,7 +255,7 @@ function CollaborativeEditor({
             document,
             {
               disableBc: true,
-              params: { memberId }
+              params: {}
             }
           );
           collaborationRef.current = {

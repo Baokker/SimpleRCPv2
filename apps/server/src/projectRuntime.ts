@@ -13,7 +13,7 @@ export function createProjectRuntime(
   project: ProjectRecord,
   options: { terminalEnabled?: boolean } = {}
 ) {
-  const projectRoot = path.dirname(project.workspacePath);
+  const projectRoot = project.metadataPath ?? path.dirname(project.workspacePath);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
   const participants = createParticipantStore(project.id, projectRoot);
   const rooms = createRoomStore(events);
@@ -41,6 +41,9 @@ export function createProjectRuntime(
   });
   const room = rooms.createRoom(project.workspacePath, project.name);
   const terminalListeners = new Set<(data: string) => void>();
+  const removeTerminalInputListener = terminal.onInput((memberId) => {
+    events.append({ type: "terminal_input", roomId: room.id, memberId, payload: { count: 1 } });
+  });
   const removeTerminalListener = terminal.onData((data) => {
     for (const listener of terminalListeners) listener(data);
   });
@@ -140,6 +143,7 @@ export function createProjectRuntime(
       fileSavedListeners.clear();
       terminalListeners.clear();
       removeTerminalListener();
+      removeTerminalInputListener();
       await documents.awaitIdle();
       await chat.awaitIdle();
       await events.awaitIdle();

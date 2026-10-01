@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getParticipants, getProject, getServerInfo } from "../api";
+import { getParticipants, getProject, getPublicProject, getServerInfo, joinProject } from "../api";
 import type { ProjectIdentity } from "../components/JoinProject";
 import type { ProjectParticipant, ProjectRecord } from "../types";
 
@@ -14,6 +14,7 @@ interface ProjectRouteState {
 }
 
 export function useProjectRoute(projectId: string) {
+  const inviteToken = new URLSearchParams(window.location.hash.slice(1)).get("invite") ?? "";
   const [state, setState] = useState<ProjectRouteState>({
     roomId: "",
     participants: [],
@@ -29,11 +30,7 @@ export function useProjectRoute(projectId: string) {
     const queryName = params.get("name")?.trim();
 
     setState((current) => ({ ...current, loading: true, error: "" }));
-    void Promise.all([
-      getProject(projectId),
-      getParticipants(projectId),
-      getServerInfo()
-    ])
+    void Promise.all([getProject(projectId), getParticipants(projectId), getServerInfo()])
       .then(([result, participants, serverInfo]) => {
         if (!active) return;
         setState({
@@ -54,8 +51,15 @@ export function useProjectRoute(projectId: string) {
           error: ""
         });
       })
-      .catch((error) => {
+      .catch(async (error) => {
         if (!active) return;
+        if (inviteToken) {
+          try {
+            const publicProject = await getPublicProject(projectId);
+            setState({ project: publicProject.project as ProjectRecord, roomId: "", participants: [], terminalEnabled: true, loading: false, error: "" });
+            return;
+          } catch { /* preserve the original route error */ }
+        }
         setState((current) => ({
           ...current,
           loading: false,
@@ -70,7 +74,14 @@ export function useProjectRoute(projectId: string) {
 
   return {
     ...state,
-    setIdentity(identity: ProjectIdentity) {
+    async setIdentity(identity: ProjectIdentity) {
+      if (inviteToken && !identity.memberId) {
+        const joined = await joinProject(projectId, inviteToken, identity.displayName);
+        window.history.replaceState({}, "", `/projects/${encodeURIComponent(projectId)}`);
+        const result = await getProject(projectId);
+        setState((current) => ({ ...current, project: result.project, roomId: result.roomId, identity: { ...identity, memberId: joined.member.memberId, participantId: joined.member.memberId, role: joined.member.role } }));
+        return;
+      }
       setState((current) => ({ ...current, identity }));
     },
     retry() {

@@ -15,13 +15,18 @@ const server = http.createServer(app);
 const realtime = attachRealtimeServer(
   server,
   app.locals.runtimeManager,
-  app.locals.agentRuns
+  app.locals.agentRuns,
+  { auth: app.locals.auth, allowedOrigins: app.locals.allowedOrigins }
 );
 
 server.listen(config.port, config.host, () => {
   console.log(`SimpleRCPv2 server listening on http://${config.host}:${config.port}`);
   console.log(`Open ${config.publicOrigin}`);
   console.log(`Project data: ${config.dataDir}`);
+  if (app.locals.adminToken) console.log(`Admin link: ${config.publicOrigin}/admin#token=${app.locals.adminToken}`);
+  void app.locals.auth.createInvite("demo", {}).then(({ token }: { token: string }) => {
+    console.log(`Demo invite: ${config.publicOrigin}/join/demo#invite=${token}`);
+  });
 });
 
 let shuttingDown = false;

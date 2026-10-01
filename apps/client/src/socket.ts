@@ -93,7 +93,7 @@ export function connectRoomSocket({
   }
 
   function envelope(message: Record<string, unknown>) {
-    return JSON.stringify({ roomId, memberId, connectionId, ...message });
+    return JSON.stringify({ roomId, connectionId, ...message });
   }
 
   function send(message: Record<string, unknown>) {

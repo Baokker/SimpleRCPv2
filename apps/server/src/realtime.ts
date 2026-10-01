@@ -14,6 +14,8 @@ import type {
   TerminalClientMessage,
   TerminalServerMessage
 } from "./types.js";
+import { parseCookies, type AuthStore, type Identity } from "./auth/identity.js";
+import { originAllowed } from "./auth/access.js";
 
 interface SocketIdentity {
   projectId: string;
@@ -155,7 +157,8 @@ function readFileEditActivity(
 export function attachRealtimeServer(
   server: http.Server,
   runtimeManager: ProjectRuntimeManager,
-  agentRuns?: AgentRunManager
+  agentRuns?: AgentRunManager,
+  options?: { auth?: AuthStore; allowedOrigins?: string[] }
 ) {
   const presenceWss = new WebSocketServer({ noServer: true });
   const documentWss = new WebSocketServer({ noServer: true });
@@ -251,6 +254,7 @@ export function attachRealtimeServer(
   });
 
   server.on("upgrade", (request, socket, head) => {
+    if (options?.allowedOrigins && !originAllowed(request.headers, options.allowedOrigins)) { socket.destroy(); return; }
     const requestUrl = new URL(request.url ?? "/", "http://localhost");
     const pathname = requestUrl.pathname;
 
@@ -258,13 +262,15 @@ export function attachRealtimeServer(
       const projectId = requestUrl.searchParams.get("projectId") ?? "";
       const runtime = getRuntime(runtimeManager, projectId, socket);
       if (!runtime) return;
-      ensureRuntimeSubscriptions(runtime);
-      if (!projectSockets.has(projectId)) {
-        projectSockets.set(projectId, new Set());
-      }
-      presenceWss.handleUpgrade(request, socket, head, (webSocket) => {
-        projectSockets.get(projectId)?.add(webSocket);
-        presenceWss.emit("connection", webSocket, request, projectId);
+      void authenticateUpgrade(request, projectId, options?.auth).then((identity) => {
+        if (!identity || identity.kind !== "member" || !runtime.rooms.getMember(runtime.room.id, identity.memberId)) { socket.destroy(); return; }
+        ensureRuntimeSubscriptions(runtime);
+        if (!projectSockets.has(projectId)) projectSockets.set(projectId, new Set());
+        presenceWss.handleUpgrade(request, socket, head, (webSocket) => {
+          identities.set(webSocket, { projectId, roomId: runtime.room.id, memberId: identity.memberId });
+          projectSockets.get(projectId)?.add(webSocket);
+          presenceWss.emit("connection", webSocket, request, projectId);
+        });
       });
       return;
     }
@@ -279,24 +285,20 @@ export function attachRealtimeServer(
       const documentPart = decodeURIComponent(segments[1] ?? "");
       const runtime = getRuntime(runtimeManager, projectId, socket);
       if (!runtime) return;
-      ensureRuntimeSubscriptions(runtime);
       const documentName = `${projectId}|${documentPart}`;
-      const memberId = requestUrl.searchParams.get("memberId") ?? "";
-      const { roomId } = parseDocumentName(documentName);
-      if (!runtime.rooms.getMember(roomId, memberId)) {
-        socket.destroy();
-        return;
-      }
-      void runtime.documents
-        .prepareDocument(documentName)
-        .then(() => {
+      void authenticateUpgrade(request, projectId, options?.auth).then((identity) => {
+        if (!identity || identity.kind !== "member") { socket.destroy(); return; }
+        ensureRuntimeSubscriptions(runtime);
+        const { roomId } = parseDocumentName(documentName);
+        if (!runtime.rooms.getMember(roomId, identity.memberId)) { socket.destroy(); return; }
+        void runtime.documents.prepareDocument(documentName).then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
             documentProjects.set(webSocket, projectId);
             webSocket.on("close", () => documentProjects.delete(webSocket));
             setupWSConnection(webSocket, request, { docName: documentName });
           });
-        })
-        .catch(() => socket.destroy());
+        }).catch(() => socket.destroy());
+      });
       return;
     }
 
@@ -308,16 +310,14 @@ export function attachRealtimeServer(
         socket.destroy();
         return;
       }
-      ensureRuntimeSubscriptions(runtime);
-      const memberId = requestUrl.searchParams.get("memberId") ?? "";
-      if (!runtime.rooms.getMember(runtime.room.id, memberId)) {
-        socket.destroy();
-        return;
-      }
-      terminalWss.handleUpgrade(request, socket, head, (webSocket) => {
-        terminalProjects.set(webSocket, projectId);
-        webSocket.on("close", () => terminalProjects.delete(webSocket));
-        setupTerminalConnection(webSocket, memberId, runtime);
+      void authenticateUpgrade(request, projectId, options?.auth).then((identity) => {
+        if (!identity || identity.kind !== "member" || !runtime.rooms.getMember(runtime.room.id, identity.memberId)) { socket.destroy(); return; }
+        ensureRuntimeSubscriptions(runtime);
+        terminalWss.handleUpgrade(request, socket, head, (webSocket) => {
+          terminalProjects.set(webSocket, projectId);
+          webSocket.on("close", () => terminalProjects.delete(webSocket));
+          setupTerminalConnection(webSocket, identity.memberId, runtime);
+        });
       });
       return;
     }
@@ -355,21 +355,19 @@ export function attachRealtimeServer(
       const runtime = runtimeManager.get(projectId);
       try {
         const parsed = JSON.parse(data.toString()) as ClientMessage;
-        identities.set(socket, {
-          projectId,
-          roomId: parsed.roomId,
-          memberId: parsed.memberId,
-          connectionId: parsed.connectionId
-        });
+        const identity = identities.get(socket);
+        if (!identity || parsed.roomId !== identity.roomId) throw new Error("Invalid room identity");
+        const bound = { ...parsed, roomId: identity.roomId, memberId: identity.memberId };
+        identities.set(socket, { ...identity, connectionId: parsed.connectionId });
         if (parsed.connectionId) {
-          runtime.rooms.markConnectionOnline(parsed.roomId, parsed.connectionId);
+          runtime.rooms.markConnectionOnline(identity.roomId, parsed.connectionId);
         } else {
-          runtime.rooms.markOnline(parsed.roomId, parsed.memberId);
+          runtime.rooms.markOnline(identity.roomId, identity.memberId);
         }
         const { broadcast } = handleRealtimeMessage({
           events: runtime.events,
           rooms: runtime.rooms,
-          message: parsed
+          message: bound
         });
         broadcastToProject(projectSockets, projectId, broadcast);
       } catch (error) {
@@ -461,7 +459,17 @@ function handleTerminalMessage(
     );
     return;
   }
-  runtime.terminal.write(message.data);
+  runtime.terminal.write(message.data, memberId);
+}
+
+async function authenticateUpgrade(request: http.IncomingMessage, projectId: string, auth: AuthStore | undefined): Promise<Identity | undefined> {
+  if (!auth) return undefined;
+  const bearer = request.headers.authorization?.startsWith("Bearer ") ? request.headers.authorization.slice(7).trim() : undefined;
+  const cookies = parseCookies(request.headers.cookie);
+  const token = bearer ?? cookies.get(auth.memberCookieName(projectId));
+  if (!token) return undefined;
+  const member = await auth.authenticateMember(projectId, token);
+  return member ? { kind: "member", projectId, memberId: member.memberId, role: member.role } : undefined;
 }
 
 function getRuntime(

@@ -4,6 +4,7 @@ import type { ProjectParticipant } from "../types";
 
 export interface ProjectIdentity {
   participantId?: string;
+  memberId?: string;
   displayName: string;
   role: string;
 }
@@ -17,7 +18,7 @@ export function JoinProject({
   projectName: string;
   projectId: string;
   participants: ProjectParticipant[];
-  onJoin(identity: ProjectIdentity): void;
+  onJoin(identity: ProjectIdentity): void | Promise<void>;
 }) {
   const storedParticipantId = readStoredParticipantId(projectId, participants);
   const storedParticipant = participants.find(
@@ -31,7 +32,6 @@ export function JoinProject({
       window.localStorage.getItem("simplercp.displayName") ??
       ""
   );
-  const [role, setRole] = useState(storedParticipant?.profileRole ?? "");
 
   function selectParticipant(nextParticipantId: string) {
     setParticipantId(nextParticipantId);
@@ -40,11 +40,9 @@ export function JoinProject({
     );
     if (!participant) {
       setDisplayName("");
-      setRole("");
       return;
     }
     setDisplayName(participant.displayName);
-    setRole(participant.profileRole ?? "");
   }
 
   function submit(event: FormEvent) {
@@ -56,10 +54,10 @@ export function JoinProject({
     if (selectedParticipantId) {
       rememberParticipant(projectId, selectedParticipantId);
     }
-    onJoin({
+    void onJoin({
       participantId: selectedParticipantId,
       displayName: name,
-      role: role.trim()
+      role: "member"
     });
   }
 
@@ -100,15 +98,6 @@ export function JoinProject({
             required
             autoFocus
             data-testid="display-name"
-          />
-        </label>
-        <label>
-          <span>Role <small>Optional</small></span>
-          <input
-            value={role}
-            onChange={(event) => setRole(event.target.value)}
-            placeholder="Designer, developer, reviewer"
-            data-testid="member-role"
           />
         </label>
         <button type="submit" data-testid="join-project">

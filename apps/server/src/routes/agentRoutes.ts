@@ -3,6 +3,7 @@ import type { AgentPromptContext } from "@simplercp/shared";
 import type { AgentRuntime } from "../agent/agentRuntime.js";
 import type { AgentRunManager } from "../agent/agentRunManager.js";
 import type { AgentSettingsStore } from "../agent/agentSettingsStore.js";
+import { requirePermission } from "../auth/permissions.js";
 
 export function registerAgentRoutes(
   app: Express,
@@ -14,12 +15,14 @@ export function registerAgentRoutes(
 ) {
   const { agentRuntime, agentRuns, agentSettings } = dependencies;
 
-  app.get("/api/agent/settings", (_req, res) => {
+  app.get("/api/agent/settings", (req, res) => {
+    if (!requirePermission(req, res, "agent:read")) return;
     res.json(agentSettings.get());
   });
 
   app.put("/api/agent/settings", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "agent:settings")) return;
       const current = agentSettings.get();
       const nextSettings = req.body as {
         model?: unknown;
@@ -38,8 +41,9 @@ export function registerAgentRoutes(
     }
   });
 
-  app.get("/api/agent/status", async (_req, res, next) => {
+  app.get("/api/agent/status", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "agent:read")) return;
       res.json(await agentRuntime.status());
     } catch (error) {
       next(error);
@@ -48,7 +52,7 @@ export function registerAgentRoutes(
 
   app.get("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
     try {
-      const memberId = String(req.query.memberId ?? "");
+      const memberId = memberIdFor(req);
       if (!memberId) {
         res.status(400).json({ error: "memberId is required" });
         return;
@@ -63,7 +67,7 @@ export function registerAgentRoutes(
 
   app.post("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
     try {
-      const memberId = String(req.body?.memberId ?? "");
+      const memberId = memberIdFor(req);
       if (!memberId) {
         res.status(400).json({ error: "memberId is required" });
         return;
@@ -83,7 +87,7 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/sessions/:sessionId",
     async (req, res, next) => {
       try {
-        const memberId = String(req.query.memberId ?? "");
+      const memberId = memberIdFor(req);
         if (!memberId) {
           res.status(400).json({ error: "memberId is required" });
           return;
@@ -115,7 +119,7 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/sessions/:sessionId/runs",
     async (req, res, next) => {
       try {
-        const memberId = String(req.body?.memberId ?? "");
+        const memberId = memberIdFor(req);
         const prompt = String(req.body?.prompt ?? "");
         const contexts = Array.isArray(req.body?.contexts)
           ? req.body.contexts
@@ -127,6 +131,7 @@ export function registerAgentRoutes(
         const run = await agentRuns.createRun({
           projectId: req.params.projectId,
           memberId,
+          initiatorRole: req.identity?.kind === "member" ? req.identity.role : undefined,
           prompt,
           sessionId: req.params.sessionId,
           contexts
@@ -148,12 +153,12 @@ export function registerAgentRoutes(
 
   app.post("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
-      const { memberId, prompt, sessionId, contexts } = req.body as {
-        memberId?: string;
+      const { prompt, sessionId, contexts } = req.body as {
         prompt?: string;
         sessionId?: string;
         contexts?: AgentPromptContext[];
       };
+      const memberId = memberIdFor(req);
       if (!memberId || !prompt) {
         res.status(400).json({ error: "memberId and prompt are required" });
         return;
@@ -161,6 +166,7 @@ export function registerAgentRoutes(
       const run = await agentRuns.createRun({
         projectId: req.params.projectId,
         memberId,
+        initiatorRole: req.identity?.kind === "member" ? req.identity.role : undefined,
         prompt,
         sessionId,
         contexts
@@ -209,8 +215,10 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/runs/:runId/cancel",
     async (req, res, next) => {
       try {
-        const memberId = String(req.body?.memberId ?? "");
-        if (!memberId) {
+        const memberId = memberIdFor(req);
+        const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+        if (!requirePermission(req, res, "agent:cancel", { projectId: req.params.projectId, ownerMemberId: run.initiatorMemberId ?? run.memberId })) return;
+        if (!memberId && req.identity?.kind !== "admin") {
           res.status(400).json({ error: "memberId is required" });
           return;
         }
@@ -218,7 +226,8 @@ export function registerAgentRoutes(
           run: await agentRuns.cancelRun(
             req.params.projectId,
             req.params.runId,
-            memberId
+            memberId ?? "",
+            req.identity?.kind === "admin"
           )
         });
       } catch (error) {
@@ -226,4 +235,8 @@ export function registerAgentRoutes(
       }
     }
   );
+}
+
+function memberIdFor(req: import("express").Request) {
+  return req.identity?.kind === "member" ? req.identity.memberId : undefined;
 }

@@ -8,8 +8,12 @@ export interface ServerConfig {
   host: string;
   publicOrigin: string;
   dataDir: string;
+  workspacesDir?: string;
+  adminToken?: string;
   demoProjectRoot: string;
   terminalEnabled?: boolean;
+  allowedOrigins?: string[];
+  importRoots?: string[];
   agent?: {
     apiKey?: string;
     baseUrl: string;
@@ -59,8 +63,16 @@ export function loadConfig(
     "SIMPLERCP_TERMINAL_ENABLED",
     true
   );
+  const clientPort = env.VITE_SIMPLERCP_CLIENT_PORT ?? "5173";
+  const allowedOrigins = (env.SIMPLERCP_ALLOWED_ORIGINS ?? `${publicUrl.origin},http://127.0.0.1:${clientPort},http://localhost:${clientPort},http://127.0.0.1:5174,http://localhost:5174`)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const importRoots = (env.SIMPLERCP_IMPORT_ROOTS ?? "")
+    .split(",").map((value) => value.trim()).filter(Boolean);
+  if (importRoots.some((root) => !path.isAbsolute(root))) throw new Error("SIMPLERCP_IMPORT_ROOTS must contain absolute paths");
 
-  return {
+  const config: ServerConfig = {
     port,
     host: env.SIMPLERCP_HOST ?? "127.0.0.1",
     publicOrigin: publicUrl.origin,
@@ -75,6 +87,13 @@ export function loadConfig(
       runTimeoutMs
     }
   };
+  Object.defineProperties(config, {
+    adminToken: { value: env.SIMPLERCP_ADMIN_TOKEN?.trim() || undefined, enumerable: false },
+    workspacesDir: { value: env.SIMPLERCP_WORKSPACES_DIR ?? path.join(configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"), "workspaces"), enumerable: false },
+    allowedOrigins: { value: allowedOrigins, enumerable: false },
+    importRoots: { value: importRoots, enumerable: false }
+  });
+  return config;
 }
 
 function readBoolean(

@@ -14,6 +14,7 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
+import { createAdminSession, createInvite } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -77,6 +78,9 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
     setTheme(nextTheme);
   }
 
+  if (window.location.pathname === "/admin") {
+    return <AdminPage />;
+  }
   if (!projectMatch) {
     return <ProjectHome theme={theme} onToggleTheme={toggleTheme} />;
   }
@@ -114,7 +118,7 @@ function ProjectRoute({
   if (loading) {
     return <main className="route-loading">Loading project</main>;
   }
-  if (error || !project || !roomId) {
+  if (error || !project || (identity && !roomId)) {
     return (
       <main className="route-error" data-testid="route-error">
         <h1>Unable to open project</h1>
@@ -152,6 +156,21 @@ function ProjectRoute({
       onToggleTheme={onToggleTheme}
     />
   );
+}
+
+function AdminPage() {
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  async function open() {
+    try {
+      const token = new URLSearchParams(window.location.hash.slice(1)).get("token") ?? "";
+      await createAdminSession(token);
+      window.history.replaceState({}, "", "/admin");
+      const result = await createInvite("demo");
+      setUrl(result.url);
+    } catch (nextError) { setError(nextError instanceof Error ? nextError.message : "Admin session failed"); }
+  }
+  return <main className="route-error"><h1>Admin</h1><button type="button" onClick={() => void open()}>Generate Demo invite</button>{url ? <p>{url}</p> : null}{error ? <p>{error}</p> : null}</main>;
 }
 
 function WorkspacePage({

@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import type { EventRecord } from "./types.js";
 import { readJsonFile, writeJsonFileAtomically } from "./jsonFile.js";
+import { redactSensitive } from "./agent/traceStore.js";
 
 export interface EventInput {
   type: string;
@@ -16,6 +17,8 @@ interface EventFile {
 }
 
 const durableEventTypes = new Set([
+  "access_decision",
+  "terminal_input",
   "file_changed",
   "workspace_file_created",
   "workspace_directory_created",
@@ -40,11 +43,11 @@ export function createEventLog(storagePath?: string) {
 
   return {
     append(input: EventInput) {
-      const event: EventRecord = {
+      const event: EventRecord = redactSensitive({
         id: nanoid(),
         timestamp: new Date().toISOString(),
         ...input
-      };
+      }) as EventRecord;
       events.push(event);
       if (storagePath && durableEventTypes.has(event.type)) {
         enqueue(async () => {
