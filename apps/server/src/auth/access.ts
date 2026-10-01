@@ -59,6 +59,10 @@ export function registerAccess(app: Express, options: {
       options.accessLog.deny(req.identity, resource.projectId, action, reason);
       res.status(status).json({ error: reason });
     }
+    if (!req.headers.origin && !req.headers.authorization?.startsWith("Bearer ") && req.path !== "/health") {
+      deny(403, "Origin or Bearer token is required");
+      return;
+    }
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method) && !originAllowed(req.headers, options.allowedOrigins)) {
       deny(403, "Origin denied");
       return;
