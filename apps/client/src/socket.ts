@@ -43,7 +43,7 @@ export function connectRoomSocket({
   onProjectDeleted(): void;
 }): ClientSocket {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  const endpoint = `${protocol}://${window.location.host}/ws?projectId=${encodeURIComponent(projectId)}`;
+  const endpoint = `${protocol}://${window.location.host}/ws?projectId=${encodeURIComponent(projectId)}&memberId=${encodeURIComponent(memberId)}`;
   let socket: WebSocket | undefined;
   let reconnectTimer: number | undefined;
   let reconnectAttempt = 0;

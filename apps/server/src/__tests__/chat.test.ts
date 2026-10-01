@@ -6,6 +6,7 @@ import { createChatStore } from "../chat.js";
 import { createApp } from "../createApp.js";
 import { createEventLog } from "../eventLog.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import { joinMember } from "./memberTestHelper.js";
 
 let root: string;
 
@@ -57,24 +58,27 @@ describe("chat", () => {
     }
 
     try {
+      const member = await joinMember(`http://127.0.0.1:${address.port}`, "demo", { name: "Bob" });
       const response = await fetch(
         `http://127.0.0.1:${address.port}/api/projects/demo/chat`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: member.headers,
           body: JSON.stringify({
-            authorId: "user-bob",
-            authorName: "Bob",
+            authorId: "forged-id",
+            authorName: "Forged",
             text: "@Ada please review pom.xml"
           })
         }
       );
       const body = (await response.json()) as {
-        message: { text: string };
+        message: { text: string; authorId: string; authorName: string };
       };
 
       expect(response.status).toBe(200);
       expect(body.message.text).toBe("@Ada please review pom.xml");
+      expect(body.message.authorId).toBe(member.member.id);
+      expect(body.message.authorName).toBe("Bob");
       expect(Object.keys(body)).toEqual(["message"]);
     } finally {
       await app.locals.runtimeManager.dispose();
@@ -88,11 +92,12 @@ describe("chat", () => {
   it("restores project chat history after the service restarts", async () => {
     const dataDir = path.join(root, "data");
     const first = await startTestServer(dataDir);
+    const member = await joinMember(first.origin, "demo", { name: "Ada" });
 
     try {
       const response = await fetch(`${first.origin}/api/projects/demo/chat`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: member.headers,
         body: JSON.stringify({
           authorId: "user-ada",
           authorName: "Ada",
@@ -107,7 +112,7 @@ describe("chat", () => {
     const restarted = await startTestServer(dataDir);
     try {
       const response = await fetch(
-        `${restarted.origin}/api/projects/demo/chat`
+        `${restarted.origin}/api/projects/demo/chat`, { headers: member.headers }
       );
       const body = (await response.json()) as {
         messages: Array<{ sequence: number; text: string }>;

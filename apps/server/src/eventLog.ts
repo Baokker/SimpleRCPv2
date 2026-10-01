@@ -17,8 +17,8 @@ interface EventFile {
 }
 
 const durableEventTypes = new Set([
-  "access_decision",
   "terminal_input",
+  "chat_message_created",
   "file_changed",
   "workspace_file_created",
   "workspace_directory_created",

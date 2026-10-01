@@ -3,6 +3,7 @@ import path from "node:path";
 import type { AgentTraceEvent } from "@simplercp/shared";
 
 export function createTraceStore(storagePath: string, sensitiveValues: string[] = collectSensitiveEnvironment()) {
+  const collectedValues = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])];
   let operations = Promise.resolve();
 
   return {
@@ -16,7 +17,7 @@ export function createTraceStore(storagePath: string, sensitiveValues: string[] 
             sequence: (events.at(-1)?.sequence ?? 0) + 1,
             timestamp: new Date().toISOString()
           },
-          sensitiveValues
+          collectedValues
         ) as AgentTraceEvent;
         await fs.mkdir(path.dirname(storagePath), { recursive: true });
         await fs.appendFile(storagePath, `${JSON.stringify(event)}\n`, "utf8");
@@ -48,15 +49,16 @@ async function readTrace(storagePath: string): Promise<AgentTraceEvent[]> {
 
 export function redactSensitive(value: unknown, sensitiveValues: string[] = collectSensitiveEnvironment()): unknown {
   if (typeof value === "string") {
-    let filtered = sensitiveValues
+    let filtered = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])]
       .filter(Boolean)
+      .sort((left, right) => right.length - left.length)
       .reduce(
         (filtered, sensitive) => filtered.split(sensitive).join(`[REDACTED:${sensitiveLabel(sensitive)}]`),
         value
       );
     filtered = filtered.replace(/sk-[A-Za-z0-9_-]{16,}/g, "[REDACTED:API_KEY]");
     filtered = filtered.replace(/Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "Bearer [REDACTED:TOKEN]");
-    filtered = filtered.replace(/(Authorization:\s*)([^\s]+)/gi, "$1[REDACTED:TOKEN]");
+    filtered = filtered.replace(/(Authorization:[ \t]*)[^\r\n]+/gi, "$1[REDACTED:TOKEN]");
     return filtered;
   }
   if (Array.isArray(value)) {

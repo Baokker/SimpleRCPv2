@@ -16,7 +16,7 @@ interface RegistryFile {
 export async function createProjectRegistry({
   dataDir,
   workspacesDir,
-  importRoots = [],
+  importRoots,
   demoProjectRoot
 }: {
   dataDir: string;
@@ -97,10 +97,11 @@ export async function createProjectRegistry({
       if (!path.isAbsolute(sourcePath)) {
         throw new Error("Existing project path must be absolute");
       }
-      if (importRoots.length === 0) throw new Error("Directory import is disabled");
       const realSource = await fs.realpath(sourcePath);
-      const allowed = (await Promise.all(importRoots.map((root) => fs.realpath(root)))).some((root) => realSource === root || realSource.startsWith(`${root}${path.sep}`));
-      if (!allowed) throw new Error("Directory import path is outside SIMPLERCP_IMPORT_ROOTS");
+      if (importRoots) {
+        const allowed = (await Promise.all(importRoots.map((root) => fs.realpath(root)))).some((root) => realSource === root || realSource.startsWith(`${root}${path.sep}`));
+        if (!allowed) throw new Error("Directory import path is outside SIMPLERCP_IMPORT_ROOTS");
+      }
       const sourceStat = await fs.stat(realSource);
       if (!sourceStat.isDirectory()) {
         throw new Error("Existing project path must be a directory");
@@ -253,20 +254,53 @@ async function migrateLegacyProjects(registry: RegistryFile, options: { projects
   const markerDir = path.join(options.dataDir, "instance");
   await fs.mkdir(markerDir, { recursive: true, mode: 0o700 });
   const migrated: ProjectRecord[] = [];
+  const completed: string[] = [];
   for (const project of registry.projects) {
+    if (project.metadataPath) {
+      if (await pathExists(path.join(markerDir, `migration-${project.id}.started`)) && await pathExists(project.workspacePath)) completed.push(project.id);
+      migrated.push(project);
+      continue;
+    }
     const metadataPath = project.metadataPath ?? path.dirname(project.workspacePath);
     const legacyWorkspace = path.join(metadataPath, "workspace");
     const nextWorkspace = path.join(options.workspacesDir, project.id);
-    if (!project.metadataPath && await pathExists(legacyWorkspace)) {
-      await fs.writeFile(path.join(markerDir, `migration-${project.id}.started`), new Date().toISOString());
-      if (!(await pathExists(nextWorkspace))) await fs.rename(legacyWorkspace, nextWorkspace);
-      await fs.writeFile(path.join(markerDir, `migration-${project.id}.complete`), new Date().toISOString());
+    const copiedMarker = path.join(markerDir, `migration-${project.id}.copied.json`);
+    await fs.writeFile(path.join(markerDir, `migration-${project.id}.started`), new Date().toISOString());
+    const sourceExists = await pathExists(legacyWorkspace);
+    const destinationExists = await pathExists(nextWorkspace);
+    if (sourceExists && destinationExists) {
+      const copied = await readJsonFile<{ source: string; destination: string }>(copiedMarker);
+      if (copied?.source !== legacyWorkspace || copied.destination !== nextWorkspace) throw new Error("Migration destination already exists");
+      await fs.rm(legacyWorkspace, { recursive: true });
+    } else if (sourceExists) {
+      try {
+        await fs.rename(legacyWorkspace, nextWorkspace);
+      } catch (error) {
+        if (!(error instanceof Error && "code" in error && error.code === "EXDEV")) throw error;
+        const stagingPath = `${nextWorkspace}.migration`;
+        await fs.rm(stagingPath, { recursive: true, force: true });
+        await fs.cp(legacyWorkspace, stagingPath, { recursive: true, preserveTimestamps: true });
+        await writeJsonFileAtomically(copiedMarker, { source: legacyWorkspace, destination: nextWorkspace });
+        await fs.rename(stagingPath, nextWorkspace);
+        await fs.rm(legacyWorkspace, { recursive: true });
+      }
     }
-    migrated.push({ ...project, metadataPath, workspacePath: nextWorkspace });
+    const updated = { ...project, metadataPath, workspacePath: nextWorkspace };
+    await writeProjectMetadata(metadataPath, updated);
+    migrated.push(updated);
+    completed.push(project.id);
   }
   const next = { ...registry, projects: migrated };
   if (JSON.stringify(next) !== JSON.stringify(registry)) await saveRegistry(options.registryPath, next);
+  for (const projectId of completed) {
+    await fs.writeFile(path.join(markerDir, `migration-${projectId}.complete`), new Date().toISOString());
+  }
   return next;
+}
+
+export function getProjectMetadataPath(project: ProjectRecord) {
+  if (!project.metadataPath) throw new Error("Project metadata path is required");
+  return project.metadataPath;
 }
 
 async function writeProjectMetadata(

@@ -15,6 +15,7 @@ import type {
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
+import { activeMemberId, rememberMember, storedMemberId } from "./memberIdentity";
 
 export interface ServerInfo {
   ok: boolean;
@@ -27,14 +28,6 @@ export interface ServerInfo {
 
 export function getServerInfo() {
   return request<ServerInfo>("/api/health");
-}
-
-export function createAdminSession(token: string) {
-  return request<{ kind: "admin" }>("/api/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
-}
-
-export function createInvite(projectId: string) {
-  return request<{ url: string }>(`${projectPath(projectId)}/invites`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
 }
 
 export async function getAgentSettings() {
@@ -100,6 +93,19 @@ export async function getAgentTrace(projectId: string, runId: string) {
   return response.events;
 }
 
+export async function downloadAgentTrace(projectId: string, runId: string) {
+  const response = await fetch(`${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/trace?download=true`, {
+    headers: { "X-SimpleRCP-Member": storedMemberId(projectId) ?? "" }
+  });
+  if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `trace-${runId}.jsonl`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function cancelAgentRun(
   projectId: string,
   runId: string,
@@ -160,19 +166,6 @@ export async function getProject(projectId: string) {
   );
 }
 
-export async function getPublicProject(projectId: string) {
-  return request<{ project: Pick<ProjectRecord, "id" | "name" | "source"> }>(
-    `/api/projects/${encodeURIComponent(projectId)}/public`
-  );
-}
-
-export async function joinProject(projectId: string, inviteToken: string, name: string) {
-  return request<{ member: { memberId: string; projectId: string; displayName: string; role: string } }>(
-    `/api/projects/${encodeURIComponent(projectId)}/join`,
-    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inviteToken, name }) }
-  );
-}
-
 export async function getRoom(projectId: string): Promise<RoomState> {
   const response = await request<{ room: RoomState }>(
     `${projectPath(projectId)}/room`
@@ -191,17 +184,19 @@ export async function joinRoom(
   projectId: string,
   name: string,
   role: string,
-  participantId: string | undefined,
+  memberId: string | undefined,
   connectionId: string
 ): Promise<{ member: RoomMember; participant: ProjectParticipant }> {
-  return request<{ member: RoomMember; participant: ProjectParticipant }>(
+  const result = await request<{ member: RoomMember; participant: ProjectParticipant }>(
     `${projectPath(projectId)}/members`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ connectionId })
+      body: JSON.stringify({ name, role, memberId, connectionId })
     }
   );
+  rememberMember(projectId, result.member.id);
+  return result;
 }
 
 export function sendConnectionOffline(
@@ -209,11 +204,7 @@ export function sendConnectionOffline(
   connectionId: string
 ) {
   const endpoint = `${projectPath(projectId)}/connections/${encodeURIComponent(connectionId)}/offline`;
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(endpoint, new Blob([], { type: "application/json" }));
-    return;
-  }
-  void fetch(endpoint, { method: "POST", keepalive: true });
+  void request(endpoint, { method: "POST", keepalive: true });
 }
 
 export async function getWorkspaceDirectory(
@@ -331,9 +322,14 @@ function projectPath(projectId: string) {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const projectId = path.match(/^\/api\/projects\/([^/?]+)/)?.[1];
+  const headers = new Headers(init?.headers);
+  const memberId = projectId && !["import", "import-zip"].includes(projectId)
+    ? storedMemberId(decodeURIComponent(projectId)) : activeMemberId();
+  if (memberId) headers.set("X-SimpleRCP-Member", memberId);
   let response: Response;
   try {
-    response = await fetch(path, init);
+    response = await fetch(path, { ...init, headers });
   } catch {
     throw new Error("Cannot reach the SimpleRCP server");
   }

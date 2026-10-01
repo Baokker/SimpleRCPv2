@@ -9,10 +9,8 @@ export interface ServerConfig {
   publicOrigin: string;
   dataDir: string;
   workspacesDir?: string;
-  adminToken?: string;
   demoProjectRoot: string;
   terminalEnabled?: boolean;
-  allowedOrigins?: string[];
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -32,7 +30,7 @@ export function loadConfig(
     throw new Error("PORT must be an integer between 1 and 65535");
   }
 
-  const configuredDataDir = env.SIMPLERCP_DATA_DIR;
+  const configuredDataDir = env.SIMPLERCP_DATA_DIR?.trim() || undefined;
   if (configuredDataDir && !path.isAbsolute(configuredDataDir)) {
     throw new Error("SIMPLERCP_DATA_DIR must be an absolute path");
   }
@@ -63,20 +61,21 @@ export function loadConfig(
     "SIMPLERCP_TERMINAL_ENABLED",
     true
   );
-  const clientPort = env.VITE_SIMPLERCP_CLIENT_PORT ?? "5173";
-  const allowedOrigins = (env.SIMPLERCP_ALLOWED_ORIGINS ?? `${publicUrl.origin},http://127.0.0.1:${clientPort},http://localhost:${clientPort},http://127.0.0.1:5174,http://localhost:5174`)
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-  const importRoots = (env.SIMPLERCP_IMPORT_ROOTS ?? "")
-    .split(",").map((value) => value.trim()).filter(Boolean);
-  if (importRoots.some((root) => !path.isAbsolute(root))) throw new Error("SIMPLERCP_IMPORT_ROOTS must contain absolute paths");
+  const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
+    ? undefined
+    : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
+  if (importRoots?.some((root) => !path.isAbsolute(root))) throw new Error("SIMPLERCP_IMPORT_ROOTS must contain absolute paths");
+  const dataDir = configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data");
+  const workspacesDir = env.SIMPLERCP_WORKSPACES_DIR?.trim() || path.join(dataDir, "workspaces");
+  if (!path.isAbsolute(workspacesDir)) throw new Error("SIMPLERCP_WORKSPACES_DIR must be an absolute path");
 
   const config: ServerConfig = {
     port,
     host: env.SIMPLERCP_HOST ?? "127.0.0.1",
     publicOrigin: publicUrl.origin,
-    dataDir: configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"),
+    dataDir,
+    workspacesDir,
+    importRoots,
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     agent: {
@@ -87,12 +86,6 @@ export function loadConfig(
       runTimeoutMs
     }
   };
-  Object.defineProperties(config, {
-    adminToken: { value: env.SIMPLERCP_ADMIN_TOKEN?.trim() || undefined, enumerable: false },
-    workspacesDir: { value: env.SIMPLERCP_WORKSPACES_DIR ?? path.join(configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"), "workspaces"), enumerable: false },
-    allowedOrigins: { value: allowedOrigins, enumerable: false },
-    importRoots: { value: importRoots, enumerable: false }
-  });
   return config;
 }
 

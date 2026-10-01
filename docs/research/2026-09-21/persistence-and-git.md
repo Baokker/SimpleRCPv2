@@ -12,7 +12,7 @@ SimpleRCP 以服务端目录作为项目的唯一代码来源。需要明确哪�
 
 Replit 的 checkpoint 保存完整项目状态，内容包括项目文件、目录、已安装包、项目配置、完整 AI 对话上下文、Agent memory，以及 checkpoint 时刻的数据库内容。checkpoint 可以从 Agent History 和 Git pane 访问，Replit 建议同时使用 checkpoint 与手动 Git commit。[Replit：Checkpoints and Rollbacks](https://docs.replit.com/features/version-control/checkpoints-and-rollbacks)
 
-Replit 把 Agent 的每个后台任务放在项目的独立副本中。任务完成后，用户查看工作日志、测试结果和文件变化，再决定是否把修改应用到主版本。多个任务可以并行运行，修改在应用时统一处理冲突。[Replit：Task system](https://docs.replit.com/core-concepts/agent/task-system)、[Replit：Invite teammates](https://docs.replit.com/build/invite-teammates)
+Replit 把 Agent 的每个后台任务放在项目的独立副本中。任务完成后，用户查看工作日志、测试结果和文件变化，再决定是否把修改应用到主版本。多个任务可以并行运行，修改在应用时统一处理冲突。[Replit：Task system](https://docs.replit.com/core-concepts/agent/task-system)
 
 Replit 的项目页面把 Agent 对话组织为 thread；主 thread 用于方向和决策，后台任务拥有独立 thread 与独立工作副本。项目重新打开时，项目文件、历史记录和运行中的应用仍可访问。[Replit：Project Editor](https://docs.replit.com/learn/projects-and-artifacts/project-editor)
 

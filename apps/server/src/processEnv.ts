@@ -1,8 +1,8 @@
 const baseNames = new Set([
   "PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "TERM", "COLORTERM", "TMPDIR", "TZ"
 ]);
-const identityNames = /TOKEN|SECRET|PASSWORD|ADMIN|COOKIE/i;
-const sensitiveNames = /KEY|TOKEN|SECRET|PASSWORD|ADMIN|COOKIE/i;
+const identityNames = /TOKEN|SECRET|PASSWORD|COOKIE/i;
+const sensitiveNames = /KEY|TOKEN|SECRET|PASSWORD|COOKIE/i;
 
 function buildEnvironment(env: NodeJS.ProcessEnv, additional: string[], agent: boolean) {
   const allowed = new Set([...baseNames, ...additional]);

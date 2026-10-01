@@ -8,7 +8,7 @@ const workspaceRoot = fileURLToPath(
   new URL("../../.test-workspaces/e2e-data/workspaces/demo/", import.meta.url)
 );
 
-test("tabs in one browser can use different project participants", async ({
+test("tabs and refresh in one browser preserve the project member", async ({
   browser
 }) => {
   const context = await browser.newContext();
@@ -16,42 +16,32 @@ test("tabs in one browser can use different project participants", async ({
   const secondTab = await context.newPage();
 
   await firstTab.goto("/projects/demo");
-  const firstParticipantSelect = firstTab.getByTestId("participant-select");
-  if (await firstParticipantSelect.count()) {
-    await firstParticipantSelect.selectOption("new");
-  }
   await firstTab.getByTestId("display-name").fill("Tab One");
   await firstTab.getByTestId("join-project").click();
   await firstTab.getByTestId("status-bar").waitFor();
   await expect.poll(() => firstTab.evaluate(() =>
-    window.sessionStorage.getItem("simplercp.participantId.demo")
+    window.localStorage.getItem("simplercp.memberId.demo")
   )).not.toBeNull();
   const firstParticipantId = await firstTab.evaluate(() =>
-    window.sessionStorage.getItem("simplercp.participantId.demo")
+    window.localStorage.getItem("simplercp.memberId.demo")
   );
 
   await secondTab.goto("/projects/demo");
-  await secondTab.getByTestId("participant-select").selectOption("new");
-  await secondTab.getByTestId("display-name").fill("Tab Two");
-  await secondTab.getByTestId("join-project").click();
   await secondTab.getByTestId("status-bar").waitFor();
   await expect.poll(() => secondTab.evaluate(() =>
-    window.sessionStorage.getItem("simplercp.participantId.demo")
+    window.localStorage.getItem("simplercp.memberId.demo")
   )).not.toBeNull();
   const secondParticipantId = await secondTab.evaluate(() =>
-    window.sessionStorage.getItem("simplercp.participantId.demo")
+    window.localStorage.getItem("simplercp.memberId.demo")
   );
 
   expect(firstParticipantId).toBeTruthy();
   expect(secondParticipantId).toBeTruthy();
-  expect(secondParticipantId).not.toBe(firstParticipantId);
+  expect(secondParticipantId).toBe(firstParticipantId);
 
   await firstTab.reload();
-  await expect(firstTab.getByTestId("participant-select")).toHaveValue(
-    firstParticipantId ?? ""
-  );
-  await firstTab.getByTestId("join-project").click();
   await firstTab.getByTestId("status-bar").waitFor();
+  expect(await firstTab.evaluate(() => localStorage.getItem("simplercp.memberId.demo"))).toBe(firstParticipantId);
 
   await context.close();
 });
@@ -64,7 +54,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   const ada = await contextA.newPage();
   const linus = await contextB.newPage();
 
-  await openAs(ada, "Ada");
+  await openAs(ada, "Ada", "demo", "student");
   await openAs(linus, "Linus");
 
   await expect(ada.getByTestId("projects-link")).toBeVisible();
@@ -79,7 +69,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(ada.locator(".terminal-pane")).toBeVisible();
 
   await ada.getByTestId("collab-tab-project").click();
-  await expect(ada.getByTestId("project-panel")).toContainText("Collaborator");
+  await expect(ada.getByTestId("project-panel")).toContainText("student");
 
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("member-list")).toContainText("Ada");

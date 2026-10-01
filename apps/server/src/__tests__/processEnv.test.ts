@@ -8,11 +8,11 @@ describe("child process environments", () => {
       HOME: "/home/test",
       DEEPSEEK_API_KEY: "test-key",
       DEEPSEEK_BASE_URL: "https://example.test/v1",
-      SIMPLERCP_ADMIN_TOKEN: "admin-token",
+      SESSION_TOKEN: "session-token",
       SESSION_COOKIE: "cookie"
     };
     expect(terminalEnv(env)).toEqual({ PATH: "/bin", HOME: "/home/test" });
     expect(agentEnv(env)).toMatchObject({ PATH: "/bin", HOME: "/home/test", DEEPSEEK_API_KEY: "test-key", DEEPSEEK_BASE_URL: "https://example.test/v1" });
-    expect(agentEnv(env)).not.toHaveProperty("SIMPLERCP_ADMIN_TOKEN");
+    expect(agentEnv(env)).not.toHaveProperty("SESSION_TOKEN");
   });
 });

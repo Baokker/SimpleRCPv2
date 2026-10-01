@@ -9,6 +9,8 @@ describe("server config", () => {
       host: "127.0.0.1",
       publicOrigin: "http://127.0.0.1:5173",
       dataDir: "/srv/simplercp/.simplercp-data",
+      workspacesDir: "/srv/simplercp/.simplercp-data/workspaces",
+      importRoots: undefined,
       demoProjectRoot: "/srv/simplercp/demo/workspace",
       terminalEnabled: true,
       agent: {
@@ -38,6 +40,8 @@ describe("server config", () => {
       host: "0.0.0.0",
       publicOrigin: "https://code.example.com",
       dataDir: "/srv/simplercp-data",
+      workspacesDir: "/srv/simplercp-data/workspaces",
+      importRoots: undefined,
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
       agent: {
@@ -60,5 +64,15 @@ describe("server config", () => {
     expect(() =>
       loadConfig({ SIMPLERCP_TERMINAL_ENABLED: "disabled" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
+  });
+
+  it("uses defaults for blank optional paths and validates workspace and import paths", () => {
+    const config = loadConfig({ SIMPLERCP_DATA_DIR: "", SIMPLERCP_WORKSPACES_DIR: "", SIMPLERCP_IMPORT_ROOTS: "" }, "/srv/simplercp");
+    expect(config.dataDir).toBe("/srv/simplercp/.simplercp-data");
+    expect(config.workspacesDir).toBe("/srv/simplercp/.simplercp-data/workspaces");
+    expect(config.importRoots).toBeUndefined();
+    expect(() => loadConfig({ SIMPLERCP_WORKSPACES_DIR: "relative" })).toThrow("absolute path");
+    expect(() => loadConfig({ SIMPLERCP_IMPORT_ROOTS: "relative" })).toThrow("absolute paths");
+    expect(loadConfig({ SIMPLERCP_IMPORT_ROOTS: "/srv/imports,/srv/examples" }).importRoots).toEqual(["/srv/imports", "/srv/examples"]);
   });
 });

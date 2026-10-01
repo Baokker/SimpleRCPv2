@@ -51,7 +51,7 @@ export function createSharedTerminal({
     return () => listeners.delete(listener);
   }
 
-  function write(data: string, memberId = "unknown") {
+  function write(data: string, memberId: string) {
     for (const listener of inputListeners) listener(memberId, data);
     terminal?.write(data);
   }
@@ -77,6 +77,7 @@ export function createSharedTerminal({
 
   function dispose() {
     listeners.clear();
+    inputListeners.clear();
     terminal?.killExpected();
   }
 

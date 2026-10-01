@@ -1,13 +1,17 @@
-import type { AgentSession } from "@simplercp/shared";
-import type { ProjectRuntime } from "../projectRuntime.js";
 import type { AgentRunStore } from "./agentRunStore.js";
 import type { AgentSessionStore } from "./agentSessionStore.js";
 
 export async function migrateLegacyAgentSessions(
   projectId: string,
   runStore: AgentRunStore,
-  sessionStore: AgentSessionStore
+  sessionStore: AgentSessionStore,
+  memberIds: Set<string>
 ) {
+  for (const session of await sessionStore.list()) {
+    if (!memberIds.has(session.memberId) && !session.historical) {
+      await sessionStore.update(session.id, { historical: true });
+    }
+  }
   const runs = await runStore.list();
   const migrated = new Map<
     string,
@@ -24,6 +28,7 @@ export async function migrateLegacyAgentSessions(
         projectId,
         memberId: run.memberId,
         memberName: run.memberName,
+        historical: !memberIds.has(run.memberId),
         title: run.prompt.slice(0, 80),
         runtime: "opencode",
         runtimeSessionId: legacyRuntimeSessionId,
@@ -36,14 +41,4 @@ export async function migrateLegacyAgentSessions(
       runtimeSessionId: legacyRuntimeSessionId
     });
   }
-}
-
-export async function claimLegacyAgentSession(
-  projectRuntime: ProjectRuntime,
-  sessionStore: AgentSessionStore,
-  session: AgentSession,
-  participantId: string,
-  displayName: string
-) {
-  return session;
 }

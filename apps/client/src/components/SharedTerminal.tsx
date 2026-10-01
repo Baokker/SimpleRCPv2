@@ -74,7 +74,7 @@ export const SharedTerminal = forwardRef<
     terminalRef.current = terminal;
 
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const endpoint = `${protocol}://${window.location.host}/terminal?projectId=${encodeURIComponent(projectId)}`;
+    const endpoint = `${protocol}://${window.location.host}/terminal?projectId=${encodeURIComponent(projectId)}&memberId=${encodeURIComponent(memberId)}`;
     let reconnectTimer: number | undefined;
     let reconnectAttempt = 0;
     let disposed = false;

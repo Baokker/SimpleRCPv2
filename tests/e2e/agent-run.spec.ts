@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { openAs } from "./helpers";
 
 test("project home displays and saves the OpenCode settings", async ({ page }) => {
@@ -93,10 +95,15 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
   await expect(page.getByTestId("agent-trace")).not.toContainText(
     "opencode.message.updated"
   );
-  await expect(page.getByTestId("agent-trace-download")).toHaveAttribute(
-    "href",
-    /\/trace\?download=true$/
-  );
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("agent-trace-download").click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^trace-.+\.jsonl$/);
+  const savedPath = path.resolve(".test-workspaces", download.suggestedFilename());
+  await download.saveAs(savedPath);
+  const entries = (await fs.readFile(savedPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+  expect(entries.map((entry) => entry.type)).toContain("run_completed");
+  expect(entries.map((entry) => entry.sequence)).toEqual(entries.map((_, index) => index + 1));
 });
 
 test("member sees a concurrent change warning when editing an Agent file", async ({

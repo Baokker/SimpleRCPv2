@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../createApp.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import { memberHeaders } from "./memberTestHelper.js";
 
 let root: string;
 
@@ -23,33 +24,33 @@ describe("Agent session API", () => {
     const running = await startServer();
     try {
       const memberA = await join(running.origin, "Ada", "ada");
-      const memberB = await join(running.origin, "Linus", "linus");
+      const memberB = await join(running.origin, "Ada", "second-ada");
       const createResponse = await fetch(
         `${running.origin}/api/projects/demo/agent/sessions`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ memberId: memberA, title: "Fix login" })
+          headers: memberHeaders(memberA),
+          body: JSON.stringify({ memberId: memberB, title: "Fix login" })
         }
       );
       const created = await createResponse.json() as { session: { id: string } };
 
       expect(createResponse.status).toBe(201);
       await expect(
-        fetch(`${running.origin}/api/projects/demo/agent/sessions?memberId=${memberA}`).then(
+        fetch(`${running.origin}/api/projects/demo/agent/sessions`, { headers: memberHeaders(memberA) }).then(
           (response) => response.json()
         )
       ).resolves.toMatchObject({
         sessions: [{ id: created.session.id, memberId: memberA, title: "Fix login" }]
       });
       await expect(
-        fetch(`${running.origin}/api/projects/demo/agent/sessions?memberId=${memberB}`).then(
+        fetch(`${running.origin}/api/projects/demo/agent/sessions`, { headers: memberHeaders(memberB) }).then(
           (response) => response.json()
         )
       ).resolves.toEqual({ sessions: [] });
 
       const foreignResponse = await fetch(
-        `${running.origin}/api/projects/demo/agent/sessions/${created.session.id}?memberId=${memberB}`
+        `${running.origin}/api/projects/demo/agent/sessions/${created.session.id}`, { headers: memberHeaders(memberB) }
       );
       expect(foreignResponse.status).toBe(403);
     } finally {
@@ -73,7 +74,7 @@ describe("Agent session API", () => {
         `${firstServer.origin}/api/projects/demo/agent/sessions`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(joined.member.id),
           body: JSON.stringify({
             memberId: joined.member.id,
             title: "Persistent work"
@@ -89,7 +90,7 @@ describe("Agent session API", () => {
         `${firstServer.origin}/api/projects/demo/workspace/file`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(joined.member.id),
           body: JSON.stringify({
             path: "src/persisted.ts",
             content: "export const persisted = true;\n",
@@ -119,7 +120,7 @@ describe("Agent session API", () => {
       });
 
       const eventsResponse = await fetch(
-        `${secondServer.origin}/api/projects/demo/events`
+        `${secondServer.origin}/api/projects/demo/events`, { headers: memberHeaders(participantId) }
       );
       const eventsBody = await eventsResponse.json() as {
         events: Array<{ type: string; participantId?: string }>;
@@ -140,7 +141,7 @@ describe("Agent session API", () => {
       ).toHaveLength(1);
 
       const joined = await joinParticipant(secondServer.origin, {
-        participantId,
+        memberId: participantId,
         name: "Ada",
         role: "Developer",
         connectionId: "ada-second-tab"
@@ -149,7 +150,7 @@ describe("Agent session API", () => {
       expect(joined.member.participantId).toBe(participantId);
 
       const sessionsResponse = await fetch(
-        `${secondServer.origin}/api/projects/demo/agent/sessions?memberId=${joined.member.id}`
+        `${secondServer.origin}/api/projects/demo/agent/sessions`, { headers: memberHeaders(joined.member.id) }
       );
       await expect(sessionsResponse.json()).resolves.toMatchObject({
         sessions: [
@@ -163,6 +164,23 @@ describe("Agent session API", () => {
     } finally {
       await secondServer.close();
     }
+  });
+
+  it("marks sessions without a current member as historical", async () => {
+    const directory = path.join(root, "data/projects/demo/agent-sessions/old-session");
+    await fs.mkdir(directory, { recursive: true });
+    const timestamp = new Date().toISOString();
+    await fs.writeFile(path.join(directory, "session.json"), JSON.stringify({ version: 1, session: {
+      id: "old-session", projectId: "demo", memberId: "old-member", memberName: "Ada", title: "Historical", runtime: "opencode", createdAt: timestamp, updatedAt: timestamp
+    } }));
+    const running = await startServer();
+    try {
+      const memberId = await join(running.origin, "Ada", "ada-current");
+      const response = await fetch(`${running.origin}/api/projects/demo/agent/sessions`, { headers: memberHeaders(memberId) });
+      expect(await response.json()).toEqual({ sessions: [] });
+      const stored = JSON.parse(await fs.readFile(path.join(directory, "session.json"), "utf8"));
+      expect(stored.session).toMatchObject({ memberId: "old-member", historical: true });
+    } finally { await running.close(); }
   });
 });
 
@@ -179,7 +197,7 @@ async function join(origin: string, name: string, userId: string) {
 async function joinParticipant(
   origin: string,
   input: {
-    participantId?: string;
+    memberId?: string;
     name: string;
     role?: string;
     connectionId: string;

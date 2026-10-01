@@ -14,12 +14,10 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
-import { createAdminSession, createInvite } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
   JoinProject,
-  rememberParticipant,
   type ProjectIdentity
 } from "./components/JoinProject";
 import { ProjectHome } from "./components/ProjectHome";
@@ -78,9 +76,6 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
     setTheme(nextTheme);
   }
 
-  if (window.location.pathname === "/admin") {
-    return <AdminPage />;
-  }
   if (!projectMatch) {
     return <ProjectHome theme={theme} onToggleTheme={toggleTheme} />;
   }
@@ -156,21 +151,6 @@ function ProjectRoute({
       onToggleTheme={onToggleTheme}
     />
   );
-}
-
-function AdminPage() {
-  const [url, setUrl] = useState("");
-  const [error, setError] = useState("");
-  async function open() {
-    try {
-      const token = new URLSearchParams(window.location.hash.slice(1)).get("token") ?? "";
-      await createAdminSession(token);
-      window.history.replaceState({}, "", "/admin");
-      const result = await createInvite("demo");
-      setUrl(result.url);
-    } catch (nextError) { setError(nextError instanceof Error ? nextError.message : "Admin session failed"); }
-  }
-  return <main className="route-error"><h1>Admin</h1><button type="button" onClick={() => void open()}>Generate Demo invite</button>{url ? <p>{url}</p> : null}{error ? <p>{error}</p> : null}</main>;
 }
 
 function WorkspacePage({
@@ -250,7 +230,7 @@ function WorkspacePage({
         projectId,
         displayName,
         identity.role,
-        identity.participantId,
+        identity.memberId,
         connectionId
       );
       const [room, workspaceTree, eventRecords, messages] =
@@ -263,7 +243,6 @@ function WorkspacePage({
 
       if (!mounted) return;
       membersRef.current = room.members;
-      rememberParticipant(projectId, joined.participant.id);
       setMember(joined.member);
       setMembers(room.members);
       setTree(workspaceTree);

@@ -155,6 +155,7 @@ export interface AgentSession {
   memberId: string;
   participantId?: string;
   memberName?: string;
+  historical?: boolean;
   title: string;
   runtime: "opencode";
   runtimeSessionId?: string;

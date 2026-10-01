@@ -3,7 +3,8 @@ import type { AgentPromptContext } from "@simplercp/shared";
 import type { AgentRuntime } from "../agent/agentRuntime.js";
 import type { AgentRunManager } from "../agent/agentRunManager.js";
 import type { AgentSettingsStore } from "../agent/agentSettingsStore.js";
-import { requirePermission } from "../auth/permissions.js";
+import { can, requirePermission } from "../auth/permissions.js";
+import { requireIdentity } from "../auth/permissions.js";
 
 export function registerAgentRoutes(
   app: Express,
@@ -16,13 +17,12 @@ export function registerAgentRoutes(
   const { agentRuntime, agentRuns, agentSettings } = dependencies;
 
   app.get("/api/agent/settings", (req, res) => {
-    if (!requirePermission(req, res, "agent:read")) return;
     res.json(agentSettings.get());
   });
 
   app.put("/api/agent/settings", async (req, res, next) => {
     try {
-      if (!requirePermission(req, res, "agent:settings")) return;
+      if (!can(req.identity, "agent:settings")) { res.sendStatus(403); return; }
       const current = agentSettings.get();
       const nextSettings = req.body as {
         model?: unknown;
@@ -43,7 +43,6 @@ export function registerAgentRoutes(
 
   app.get("/api/agent/status", async (req, res, next) => {
     try {
-      if (!requirePermission(req, res, "agent:read")) return;
       res.json(await agentRuntime.status());
     } catch (error) {
       next(error);
@@ -54,7 +53,7 @@ export function registerAgentRoutes(
     try {
       const memberId = memberIdFor(req);
       if (!memberId) {
-        res.status(400).json({ error: "memberId is required" });
+        res.status(401).json({ error: "Member identity is required" });
         return;
       }
       res.json({
@@ -69,7 +68,7 @@ export function registerAgentRoutes(
     try {
       const memberId = memberIdFor(req);
       if (!memberId) {
-        res.status(400).json({ error: "memberId is required" });
+        res.status(401).json({ error: "Member identity is required" });
         return;
       }
       const session = await agentRuns.createSession({
@@ -121,6 +120,7 @@ export function registerAgentRoutes(
       try {
         const memberId = memberIdFor(req);
         const prompt = String(req.body?.prompt ?? "");
+        if (!requirePermission(req, res, "agent:create")) return;
         const contexts = Array.isArray(req.body?.contexts)
           ? req.body.contexts
           : undefined;
@@ -131,7 +131,7 @@ export function registerAgentRoutes(
         const run = await agentRuns.createRun({
           projectId: req.params.projectId,
           memberId,
-          initiatorRole: req.identity?.kind === "member" ? req.identity.role : undefined,
+          initiatorRole: req.identity?.role,
           prompt,
           sessionId: req.params.sessionId,
           contexts
@@ -145,6 +145,7 @@ export function registerAgentRoutes(
 
   app.get("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
+      if (!requireIdentity(req, res)) return;
       res.json({ runs: await agentRuns.listRuns(req.params.projectId) });
     } catch (error) {
       next(error);
@@ -153,6 +154,7 @@ export function registerAgentRoutes(
 
   app.post("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "agent:create")) return;
       const { prompt, sessionId, contexts } = req.body as {
         prompt?: string;
         sessionId?: string;
@@ -166,7 +168,7 @@ export function registerAgentRoutes(
       const run = await agentRuns.createRun({
         projectId: req.params.projectId,
         memberId,
-        initiatorRole: req.identity?.kind === "member" ? req.identity.role : undefined,
+        initiatorRole: req.identity?.role,
         prompt,
         sessionId,
         contexts
@@ -179,6 +181,7 @@ export function registerAgentRoutes(
 
   app.get("/api/projects/:projectId/agent/runs/:runId", async (req, res, next) => {
     try {
+      if (!requireIdentity(req, res)) return;
       res.json({
         run: await agentRuns.getRun(req.params.projectId, req.params.runId)
       });
@@ -191,6 +194,7 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/runs/:runId/trace",
     async (req, res, next) => {
       try {
+        if (!requireIdentity(req, res)) return;
         const events = await agentRuns.listTrace(
           req.params.projectId,
           req.params.runId
@@ -218,16 +222,15 @@ export function registerAgentRoutes(
         const memberId = memberIdFor(req);
         const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
         if (!requirePermission(req, res, "agent:cancel", { projectId: req.params.projectId, ownerMemberId: run.initiatorMemberId ?? run.memberId })) return;
-        if (!memberId && req.identity?.kind !== "admin") {
-          res.status(400).json({ error: "memberId is required" });
+        if (!memberId) {
+          res.status(401).json({ error: "Member identity is required" });
           return;
         }
         res.json({
           run: await agentRuns.cancelRun(
             req.params.projectId,
             req.params.runId,
-            memberId ?? "",
-            req.identity?.kind === "admin"
+            memberId
           )
         });
       } catch (error) {
@@ -238,5 +241,5 @@ export function registerAgentRoutes(
 }
 
 function memberIdFor(req: import("express").Request) {
-  return req.identity?.kind === "member" ? req.identity.memberId : undefined;
+  return req.identity?.memberId;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getParticipants, getProject, getPublicProject, getServerInfo, joinProject } from "../api";
+import { getParticipants, getProject, getServerInfo } from "../api";
+import { storedMemberId } from "../memberIdentity";
 import type { ProjectIdentity } from "../components/JoinProject";
 import type { ProjectParticipant, ProjectRecord } from "../types";
 
@@ -14,7 +15,6 @@ interface ProjectRouteState {
 }
 
 export function useProjectRoute(projectId: string) {
-  const inviteToken = new URLSearchParams(window.location.hash.slice(1)).get("invite") ?? "";
   const [state, setState] = useState<ProjectRouteState>({
     roomId: "",
     participants: [],
@@ -33,6 +33,8 @@ export function useProjectRoute(projectId: string) {
     void Promise.all([getProject(projectId), getParticipants(projectId), getServerInfo()])
       .then(([result, participants, serverInfo]) => {
         if (!active) return;
+        const memberId = storedMemberId(projectId);
+        const member = participants.find((candidate) => candidate.id === memberId);
         setState({
           project: result.project,
           roomId: result.roomId,
@@ -40,26 +42,17 @@ export function useProjectRoute(projectId: string) {
           terminalEnabled: serverInfo.features.terminal,
           identity: queryName
             ? {
-                participantId: participants.find(
-                  (participant) => participant.displayName === queryName
-                )?.id,
+                memberId,
                 displayName: queryName,
-                role: params.get("role")?.trim() ?? ""
+                role: params.get("role")?.trim() ?? member?.profileRole ?? ""
               }
-            : undefined,
+            : member ? { memberId, displayName: member.displayName, role: member.profileRole ?? "" } : undefined,
           loading: false,
           error: ""
         });
       })
-      .catch(async (error) => {
+      .catch((error) => {
         if (!active) return;
-        if (inviteToken) {
-          try {
-            const publicProject = await getPublicProject(projectId);
-            setState({ project: publicProject.project as ProjectRecord, roomId: "", participants: [], terminalEnabled: true, loading: false, error: "" });
-            return;
-          } catch { /* preserve the original route error */ }
-        }
         setState((current) => ({
           ...current,
           loading: false,
@@ -74,14 +67,7 @@ export function useProjectRoute(projectId: string) {
 
   return {
     ...state,
-    async setIdentity(identity: ProjectIdentity) {
-      if (inviteToken && !identity.memberId) {
-        const joined = await joinProject(projectId, inviteToken, identity.displayName);
-        window.history.replaceState({}, "", `/projects/${encodeURIComponent(projectId)}`);
-        const result = await getProject(projectId);
-        setState((current) => ({ ...current, project: result.project, roomId: result.roomId, identity: { ...identity, memberId: joined.member.memberId, participantId: joined.member.memberId, role: joined.member.role } }));
-        return;
-      }
+    setIdentity(identity: ProjectIdentity) {
       setState((current) => ({ ...current, identity }));
     },
     retry() {

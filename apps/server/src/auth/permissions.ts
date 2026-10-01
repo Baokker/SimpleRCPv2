@@ -5,27 +5,23 @@ export type Action =
   | "project:list"
   | "project:write"
   | "project:read"
-  | "invite:manage"
+  | "member:join"
   | "member:role"
   | "agent:settings"
   | "agent:read"
   | "agent:create"
   | "agent:cancel"
+  | "terminal:input"
   | "workspace:read"
   | "workspace:write";
 
-export function can(identity: Identity | undefined, action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {
-  if (!identity) return false;
-  if (identity.kind === "admin") return true;
-  if (resource?.projectId && identity.projectId !== resource.projectId) return false;
-  if (["project:write", "invite:manage", "member:role", "agent:settings"].includes(action)) return false;
-  if (action === "agent:cancel" && resource?.ownerMemberId && resource.ownerMemberId !== identity.memberId) return false;
+export function can(identity: Identity | undefined, _action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {
   return true;
 }
 
 export function requireIdentity(request: Request, response: Response) {
   if (!request.identity) {
-    response.status(401).json({ error: "Authentication required" });
+    response.status(401).json({ error: "Member identity is required" });
     return undefined;
   }
   return request.identity;

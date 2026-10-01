@@ -18,6 +18,7 @@ import {
   cancelAgentRun,
   createAgentSession,
   createAgentSessionRun,
+  downloadAgentTrace,
   getAgentRuns,
   getAgentSessions,
   getAgentStatus,
@@ -321,11 +322,7 @@ export function AgentPanel({
               run={run}
               trace={traces[run.id] ?? []}
               queuedRuns={queuedRuns}
-              canCancel={
-                run.participantId
-                  ? run.participantId === member?.participantId
-                  : run.memberId === member?.id
-              }
+              canCancel={Boolean(member)}
               onCancel={() => void cancelRun(run)}
               onOpenFile={onOpenFile}
             />
@@ -475,14 +472,14 @@ function AgentMessage({
               </li>
             ))}
           </ol>
-          <a
+          <button
+            type="button"
             className="agent-trace-download"
-            href={`/api/projects/${encodeURIComponent(projectId)}/agent/runs/${encodeURIComponent(run.id)}/trace?download=true`}
-            download={`trace-${run.id}.jsonl`}
+            onClick={() => void downloadAgentTrace(projectId, run.id)}
             data-testid="agent-trace-download"
           >
             <Download size={13} /> Download trace
-          </a>
+          </button>
         </div>
       </details>
 

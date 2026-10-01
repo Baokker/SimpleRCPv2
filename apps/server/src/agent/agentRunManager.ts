@@ -13,7 +13,7 @@ import {
   type AgentSessionStore
 } from "./agentSessionStore.js";
 import { createTraceStore, type TraceStore } from "./traceStore.js";
-import type { ProjectRegistry } from "../projects.js";
+import { getProjectMetadataPath, type ProjectRegistry } from "../projects.js";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import {
   compareAgentWorkspaceSnapshots,
@@ -26,12 +26,11 @@ import {
   previewPrompt,
   runWithTimeout
 } from "./agentRunSupport.js";
-import {
-  claimLegacyAgentSession,
-  migrateLegacyAgentSessions
-} from "./agentSessionAccess.js";
+import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
+import type { MemberStore } from "../auth/identity.js";
 
 interface AgentRunManagerOptions {
+  members: MemberStore;
   runtime: AgentRuntime;
   registry: ProjectRegistry;
   runtimeManager: ProjectRuntimeManager;
@@ -80,7 +79,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (existing) return existing;
     const project = options.registry.getProject(projectId);
     if (!project) throw new Error("Project not found");
-    const store = createAgentRunStore(projectId, project.metadataPath ?? path.dirname(project.workspacePath));
+    const store = createAgentRunStore(projectId, getProjectMetadataPath(project));
     stores.set(projectId, store);
     return store;
   }
@@ -103,7 +102,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (existing) return existing;
     const project = options.registry.getProject(projectId);
     if (!project) throw new Error("Project not found");
-    const store = createAgentSessionStore(projectId, project.metadataPath ?? path.dirname(project.workspacePath));
+    const store = createAgentSessionStore(projectId, getProjectMetadataPath(project));
     sessionStores.set(projectId, store);
     return store;
   }
@@ -153,7 +152,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     await migrateLegacyAgentSessions(
       projectId,
       getStore(projectId),
-      getSessionStore(projectId)
+      getSessionStore(projectId),
+      new Set((await options.members.listMembers(projectId)).map((member) => member.memberId))
     );
   }
 
@@ -416,14 +416,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         ? await sessionStore.get(input.sessionId)
         : undefined;
       if (session) {
-        session = await claimLegacyAgentSession(
-          projectRuntime,
-          sessionStore,
-          session,
-          member.participantId,
-          member.displayName
-        );
-        if (session.participantId !== member.participantId) {
+        if (session.memberId !== input.memberId) {
           throw new Error("Agent session belongs to another participant");
         }
       }
@@ -432,7 +425,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         session = await sessionStore.create({
           projectId: input.projectId,
           memberId: input.memberId,
-          participantId: member.participantId,
+          participantId: input.memberId,
           memberName: member.displayName,
           title: prompt.slice(0, 80),
           runtime: "opencode"
@@ -444,7 +437,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         memberId: input.memberId,
         initiatorMemberId: input.memberId,
         initiatorRole: input.initiatorRole,
-        participantId: member.participantId,
+        participantId: input.memberId,
         memberName: member.displayName,
         prompt,
         contexts,
@@ -501,17 +494,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const sessionStore = getSessionStore(projectId);
       const stored = await sessionStore.get(sessionId);
       if (!stored) throw new Error("Agent session not found");
-      const session = await claimLegacyAgentSession(
-        projectRuntime,
-        sessionStore,
-        stored,
-        member.participantId,
-        member.displayName
-      );
-      if (session.participantId !== member.participantId) {
+      if (stored.memberId !== memberId) {
         throw new Error("Agent session belongs to another participant");
       }
-      return session;
+      return stored;
     },
     async listSessions(projectId: string, memberId: string) {
       const projectRuntime = options.runtimeManager.get(projectId);
@@ -520,19 +506,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         throw new Error("Project membership is required");
       }
       const sessionStore = getSessionStore(projectId);
-      const sessions = await sessionStore.list();
-      await Promise.all(
-        sessions.map((session) =>
-          claimLegacyAgentSession(
-            projectRuntime,
-            sessionStore,
-            session,
-            member.participantId,
-            member.displayName
-          )
-        )
-      );
-      return sessionStore.list(member.participantId);
+      return sessionStore.list(memberId);
     },
     async getRun(projectId: string, runId: string) {
       const run = await getStore(projectId).get(runId);
@@ -547,22 +521,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!run) throw new Error("Agent run not found");
       return getTrace(projectId, runId).list();
     },
-    async cancelRun(projectId: string, runId: string, memberId: string, admin = false) {
+    async cancelRun(projectId: string, runId: string, memberId: string) {
       const projectRuntime = options.runtimeManager.get(projectId);
       const member = projectRuntime.rooms.getMember(projectRuntime.room.id, memberId);
-      if (!member && !admin) {
+      if (!member) {
         throw new Error("Project membership is required");
       }
       const store = getStore(projectId);
       const run = await store.get(runId);
       if (!run) throw new Error("Agent run not found");
-      if (!admin && member && (
-        run.participantId
-          ? run.participantId !== member.participantId
-          : run.memberId !== memberId
-      )) {
-        throw new Error("Agent run belongs to another participant");
-      }
       if (["completed", "failed", "cancelled"].includes(run.status)) return run;
 
       const queue = getQueue(projectId);

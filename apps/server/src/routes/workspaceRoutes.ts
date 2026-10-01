@@ -10,6 +10,7 @@ import {
   renameWorkspacePath,
   writeWorkspaceFile
 } from "../workspace.js";
+import { requireIdentity, requirePermission } from "../auth/permissions.js";
 
 export function registerWorkspaceRoutes(
   app: Express,
@@ -17,6 +18,7 @@ export function registerWorkspaceRoutes(
 ) {
   app.get("/api/projects/:projectId/workspace/directory", async (req, res, next) => {
     try {
+      if (!requireIdentity(req, res)) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const directoryPath = String(req.query.path ?? "");
       res.json({
@@ -32,6 +34,7 @@ export function registerWorkspaceRoutes(
 
   app.get("/api/projects/:projectId/workspace/file", async (req, res, next) => {
     try {
+      if (!requireIdentity(req, res)) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const filePath = String(req.query.path ?? "");
       const force = req.query.force === "true";
@@ -45,6 +48,7 @@ export function registerWorkspaceRoutes(
 
   app.put("/api/projects/:projectId/workspace/file", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "workspace:write")) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const { path: filePath, content } = req.body as {
         path?: string;
@@ -54,7 +58,7 @@ export function registerWorkspaceRoutes(
         res.status(400).json({ error: "path and content are required" });
         return;
       }
-      requireMember(runtime, req.identity?.kind === "member" ? req.identity.memberId : "");
+      requireMember(runtime, req.identity?.memberId ?? "");
       await writeWorkspaceFile(runtime.project.workspacePath, filePath, content);
       res.json({ ok: true });
     } catch (error) {
@@ -64,6 +68,7 @@ export function registerWorkspaceRoutes(
 
   app.post("/api/projects/:projectId/workspace/file", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "workspace:write")) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const { path: filePath, content } = req.body as {
         path?: string;
@@ -73,7 +78,7 @@ export function registerWorkspaceRoutes(
         res.status(400).json({ error: "path is required" });
         return;
       }
-      const member = requireMember(runtime, req.identity?.kind === "member" ? req.identity.memberId : "");
+      const member = requireMember(runtime, req.identity?.memberId ?? "");
       const initiatorId = member.id;
       runtime.suppressWorkspaceChange({ type: "add", path: filePath });
       await createWorkspaceFile(
@@ -99,6 +104,7 @@ export function registerWorkspaceRoutes(
 
   app.post("/api/projects/:projectId/workspace/directory", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "workspace:write")) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const { path: directoryPath } = req.body as {
         path?: string;
@@ -107,7 +113,7 @@ export function registerWorkspaceRoutes(
         res.status(400).json({ error: "path is required" });
         return;
       }
-      const member = requireMember(runtime, req.identity?.kind === "member" ? req.identity.memberId : "");
+      const member = requireMember(runtime, req.identity?.memberId ?? "");
       const initiatorId = member.id;
       runtime.suppressWorkspaceChange({ type: "addDir", path: directoryPath });
       await createWorkspaceDirectory(runtime.project.workspacePath, directoryPath);
@@ -129,6 +135,7 @@ export function registerWorkspaceRoutes(
 
   app.patch("/api/projects/:projectId/workspace/path", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "workspace:write")) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const { fromPath, toPath } = req.body as {
         fromPath?: string;
@@ -140,7 +147,7 @@ export function registerWorkspaceRoutes(
         });
         return;
       }
-      const member = requireMember(runtime, req.identity?.kind === "member" ? req.identity.memberId : "");
+      const member = requireMember(runtime, req.identity?.memberId ?? "");
       const initiatorId = member.id;
       runtime.suppressWorkspaceChange({
         type: "rename",
@@ -171,13 +178,14 @@ export function registerWorkspaceRoutes(
 
   app.delete("/api/projects/:projectId/workspace/path", async (req, res, next) => {
     try {
+      if (!requirePermission(req, res, "workspace:write")) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const workspacePath = String(req.query.path ?? "");
       if (!workspacePath) {
         res.status(400).json({ error: "path is required" });
         return;
       }
-      const member = requireMember(runtime, req.identity?.kind === "member" ? req.identity.memberId : "");
+      const member = requireMember(runtime, req.identity?.memberId ?? "");
       const initiatorId = member.id;
       runtime.suppressWorkspaceChange({ type: "unlink", path: workspacePath });
       await runtime.documents.retirePath(workspacePath);
