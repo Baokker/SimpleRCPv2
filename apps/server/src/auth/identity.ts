@@ -90,6 +90,7 @@ export function createAuthStore(options: { dataDir: string; adminToken?: string;
     if (options.adminToken?.trim()) {
       adminPlaintext = options.adminToken.trim();
       adminHash = hashToken(adminPlaintext);
+      await writeJsonFileAtomically(path.join(instanceDir, "admin.json"), { version: 1, tokenHash: adminHash }, 0o600);
     } else if (stored?.version === 1 && typeof stored.tokenHash === "string") {
       adminHash = stored.tokenHash;
     } else {
