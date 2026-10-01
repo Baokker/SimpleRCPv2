@@ -32,6 +32,6 @@ describe("foundation identity and isolation", () => {
 
   it("redacts environment values and common credential formats", () => {
     const output = redactSensitive("key=fake-key-value Bearer abcdefghijkl sk-abcdefghijklmnop", ["fake-key-value"]);
-    expect(output).toBe("key=[REDACTED] Bearer [REDACTED:TOKEN] [REDACTED:API_KEY]");
+    expect(output).toBe("key=[REDACTED:TOKEN] Bearer [REDACTED:TOKEN] [REDACTED:API_KEY]");
   });
 });

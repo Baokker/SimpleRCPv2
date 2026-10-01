@@ -51,7 +51,7 @@ export function redactSensitive(value: unknown, sensitiveValues: string[] = coll
     let filtered = sensitiveValues
       .filter(Boolean)
       .reduce(
-        (filtered, sensitive) => filtered.split(sensitive).join("[REDACTED]"),
+        (filtered, sensitive) => filtered.split(sensitive).join(`[REDACTED:${sensitiveLabel(sensitive)}]`),
         value
       );
     filtered = filtered.replace(/sk-[A-Za-z0-9_-]{16,}/g, "[REDACTED:API_KEY]");
@@ -71,6 +71,11 @@ export function redactSensitive(value: unknown, sensitiveValues: string[] = coll
     );
   }
   return value;
+}
+
+function sensitiveLabel(value: string) {
+  const entry = Object.entries(process.env).find(([, candidate]) => candidate === value);
+  return entry?.[0] ?? "TOKEN";
 }
 
 function collectSensitiveEnvironment() {
