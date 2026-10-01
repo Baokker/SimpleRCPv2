@@ -12,7 +12,7 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 
 - 项目首页：打开或删除已登记项目、创建空白项目、导入服务端已有目录、导入 ZIP。
 - 默认 Demo：首次启动时自动复制 `demo/workspace` 并登记为 Demo 项目。
-- 服务端代码保存：全部项目位于 `.simplercp-data/projects/`，也可以通过环境变量指定其他绝对路径。
+- 服务端元数据保存：项目记录位于 `.simplercp-data/projects/`，工作区默认位于 `.simplercp-data/workspaces/`，也可以通过环境变量指定其他绝对路径。
 - 文件管理：按需读取文件树，支持创建、重命名和删除文件与目录。
 - 代码编辑：使用 Monaco Editor 和 Yjs 同步多人文本编辑、光标和选区，并显示保存与同步状态。
 - 实时协作：显示成员、当前文件、聊天消息和 Activity；聊天与 Activity 保存在服务端，文件编辑记录包含变化行号与增删行数。
@@ -80,7 +80,7 @@ pnpm dev
 - 浏览器：`http://127.0.0.1:5173`
 - 服务端：`http://127.0.0.1:4000`
 
-启动命令无需填写 Workspace 参数。首次启动会创建 `.simplercp-data/`，并把仓库中的 `demo/workspace/` 复制到数据目录。浏览器项目列表中会直接显示 Demo。
+启动命令无需填写 Workspace 参数。首次启动会创建 `.simplercp-data/`，并把仓库中的 `demo/workspace/` 复制到工作区目录。浏览器项目列表中会直接显示 Demo。
 
 Demo 只使用 Node.js 内置功能。进入 Demo 后可以在共享终端运行：
 
@@ -145,13 +145,15 @@ npm test
 ```text
 .simplercp-data/
 ├── registry.json
+├── instance/
+├── workspaces/
+│   └── <projectId>/
 ├── projects
 │   └── <projectId>
 │       ├── chat.json
 │       ├── activity.json
 │       ├── participants.json
 │       ├── project.json
-│       ├── workspace
 │       ├── agent-sessions
 │       │   └── <sessionId>
 │       │       └── session.json
@@ -163,7 +165,7 @@ npm test
     └── settings.json
 ```
 
-`.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspace/` 是浏览器、共享终端和 Agent 共同访问的代码目录，也是服务端保存代码的位置。
+`.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspaces/<projectId>/` 是浏览器、共享终端和 Agent 共同访问的代码目录；`projects/<projectId>/` 保存项目元数据、成员、聊天、活动、session、run 和 trace。
 
 `participants.json` 保存项目身份，`chat.json` 保存聊天，`activity.json` 保存文件操作、文件编辑和 Agent 状态摘要。Server 重新启动后会继续读取这些内容。`agent/settings.json` 保存非敏感 Agent 设置，API Key 只从服务端环境变量读取。
 

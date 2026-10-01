@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const source = path.resolve(here, "../fixtures/sample-workspace");
 const target = fileURLToPath(
-  new URL("../../.test-workspaces/e2e-data/projects/demo/workspace/", import.meta.url)
+  new URL("../../.test-workspaces/e2e-data/workspaces/demo/", import.meta.url)
 );
 
 const dataDir = fileURLToPath(
@@ -15,12 +15,14 @@ const dataDir = fileURLToPath(
 await fs.rm(dataDir, { recursive: true, force: true });
 
 await fs.cp(source, target, { recursive: true });
+await fs.mkdir(path.join(dataDir, "projects", "demo"), { recursive: true });
 const timestamp = new Date().toISOString();
 const project = {
   id: "demo",
   name: "Demo",
   source: "demo",
   workspacePath: target.replace(/\/$/, ""),
+  metadataPath: fileURLToPath(new URL("../../.test-workspaces/e2e-data/projects/demo/", import.meta.url)),
   createdAt: timestamp,
   lastOpenedAt: timestamp
 };

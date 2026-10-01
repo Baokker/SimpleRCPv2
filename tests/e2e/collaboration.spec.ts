@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { fetchEvents, openAs } from "./helpers";
 
 const workspaceRoot = fileURLToPath(
-  new URL("../../.test-workspaces/e2e-data/projects/demo/workspace/", import.meta.url)
+  new URL("../../.test-workspaces/e2e-data/workspaces/demo/", import.meta.url)
 );
 
 test("tabs in one browser can use different project participants", async ({
