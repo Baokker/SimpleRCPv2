@@ -2,8 +2,11 @@ import type { Express } from "express";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import type { MemberStore } from "../auth/identity.js";
 import { requireIdentity } from "../auth/permissions.js";
+import { SCENARIOS, roleLevel } from "../guard/roles.js";
 
 export function registerCollaborationRoutes(app: Express, runtimeManager: ProjectRuntimeManager, members: MemberStore) {
+  app.get("/api/guard/roles", (_req, res) => res.json({ scenarios: SCENARIOS }));
+
   app.get("/api/projects/:projectId/room", (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
@@ -63,6 +66,8 @@ export function registerCollaborationRoutes(app: Express, runtimeManager: Projec
         return;
       }
       runtime.rooms.markConnectionOffline(runtime.room.id, req.params.connectionId);
+      const member = runtime.rooms.getMember(runtime.room.id, identity.memberId);
+      if (member && !member.online) runtime.guard.memberOffline(identity.memberId);
       runtime.rooms.cleanupStaleMembers(runtime.room.id);
       res.json({ ok: true });
     } catch (error) { next(error); }
@@ -118,7 +123,83 @@ export function registerCollaborationRoutes(app: Express, runtimeManager: Projec
         displayName: String(req.body?.name ?? identity.displayName),
         role: String(req.body?.role ?? identity.role)
       });
+      const runtime = runtimeManager.get(req.params.projectId);
+      runtime.updateMemberRole(identity.memberId, member.role || undefined);
       res.json({ member });
+    } catch (error) { next(error); }
+  });
+
+  app.get("/api/projects/:projectId/guard/approvals", (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId);
+      res.json({ approvals: runtime.guard.pending().filter((approval) => approval.approverIds.includes(identity.memberId)) });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/guard/approvals/:approvalId", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const approve = req.body?.approve;
+      if (typeof approve !== "boolean") { res.status(400).json({ error: "approve must be a boolean" }); return; }
+      const runtime = runtimeManager.get(req.params.projectId);
+      const accepted = approve
+        ? await runtime.guard.approve(req.params.approvalId, identity.memberId)
+        : await runtime.guard.reject(req.params.approvalId, identity.memberId);
+      if (!accepted) { res.status(403).json({ error: "Approval is unavailable or the member is no longer authorized" }); return; }
+      runtime.guard.publishResolution(req.params.approvalId, approve);
+      res.json({ accepted: true });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/terminal/control", (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId);
+      const holderMemberId = req.body?.holderMemberId;
+      if (holderMemberId !== null && typeof holderMemberId !== "string") { res.status(400).json({ error: "holderMemberId must be a string or null" }); return; }
+      runtime.guard.setControl(holderMemberId, identity.memberId);
+      res.json(runtime.guard.controlState());
+    } catch (error) { next(error); }
+  });
+
+  app.get("/api/projects/:projectId/guard/settings", async (req, res, next) => {
+    try {
+      if (!requireIdentity(req, res)) return;
+      res.json(await runtimeManager.get(req.params.projectId).guard.getPolicy());
+    } catch (error) { next(error); }
+  });
+
+  app.put("/api/projects/:projectId/guard/settings", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      if (roleLevel((await members.getMember(identity.projectId, identity.memberId))?.role) !== "owner") { res.sendStatus(403); return; }
+      const protectedPaths = req.body?.protectedPaths;
+      if (protectedPaths !== undefined && (!Array.isArray(protectedPaths) || protectedPaths.some((value: unknown) => typeof value !== "string"))) { res.status(400).json({ error: "protectedPaths must be an array of strings" }); return; }
+      res.json(await runtimeManager.get(req.params.projectId).guard.updatePolicy({
+        protectedPaths,
+        llmMode: req.body?.llmMode
+      }));
+    } catch (error) { next(error); }
+  });
+
+  app.get("/api/projects/:projectId/guard/snapshots", async (req, res, next) => {
+    try {
+      if (!requireIdentity(req, res)) return;
+      res.json({ snapshots: await runtimeManager.get(req.params.projectId).guard.listSnapshots() });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/guard/snapshots/:snapshotId/restore", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const manifest = await runtimeManager.get(req.params.projectId).guard.restoreSnapshot(req.params.snapshotId, identity.memberId);
+      res.json({ manifest });
     } catch (error) { next(error); }
   });
 }

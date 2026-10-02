@@ -1,7 +1,8 @@
 import { ArrowLeft, LogIn } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import type { ProjectParticipant } from "../types";
 import { rememberMember, storedMemberId } from "../memberIdentity";
+import { getGuardRoles, type GuardScenarioRole } from "../api";
 
 export interface ProjectIdentity {
   memberId?: string;
@@ -29,6 +30,11 @@ export function JoinProject({
       ""
   );
   const [role, setRole] = useState(storedMember?.profileRole ?? "");
+  const [scenarioRoles, setScenarioRoles] = useState<GuardScenarioRole[]>([]);
+
+  useEffect(() => {
+    void getGuardRoles().then((result) => setScenarioRoles(result.scenarios));
+  }, []);
 
   function selectMember(nextMemberId: string) {
     setMemberId(nextMemberId);
@@ -97,12 +103,20 @@ export function JoinProject({
         </label>
         <label>
           <span>Role <small>Optional</small></span>
-          <input
+          <select
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            placeholder="Designer, developer, reviewer"
             data-testid="member-role"
-          />
+          >
+            <option value="">Unassigned (collaborator)</option>
+            {groupRoles(scenarioRoles).map(([scenario, entries]) => (
+              <optgroup key={scenario} label={scenario}>
+                {entries.map((entry) => (
+                  <option key={entry.role} value={entry.role}>{entry.role} ({entry.level})</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </label>
         <button type="submit" data-testid="join-project">
           <LogIn size={16} /> Enter project
@@ -110,4 +124,10 @@ export function JoinProject({
       </form>
     </main>
   );
+}
+
+function groupRoles(entries: GuardScenarioRole[]) {
+  const groups = new Map<string, GuardScenarioRole[]>();
+  for (const entry of entries) groups.set(entry.scenario, [...(groups.get(entry.scenario) ?? []), entry]);
+  return [...groups.entries()];
 }

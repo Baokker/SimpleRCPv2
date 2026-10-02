@@ -21,6 +21,7 @@ export type {
   EventRecord,
   FileEditActivity,
   FileEditChange,
+  GuardApproval,
   ProjectRecord,
   ProjectParticipant,
   ProjectSource,

@@ -26,6 +26,45 @@ export interface ServerInfo {
   };
 }
 
+export interface GuardScenarioRole {
+  scenario: string;
+  role: string;
+  label: string;
+  level: "observer" | "student" | "collaborator" | "trusted" | "owner";
+}
+
+export async function getGuardRoles() {
+  return request<{ scenarios: GuardScenarioRole[] }>("/api/guard/roles");
+}
+
+export async function updateMyRole(projectId: string, role: string) {
+  return request<{ member: { role: string } }>(`${projectPath(projectId)}/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role })
+  });
+}
+
+export async function replyGuardApproval(projectId: string, approvalId: string, approve: boolean) {
+  return request<{ accepted: boolean }>(`${projectPath(projectId)}/guard/approvals/${encodeURIComponent(approvalId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ approve })
+  });
+}
+
+export async function listGuardApprovals(projectId: string) {
+  return request<{ approvals: import("@simplercp/shared").GuardApproval[] }>(`${projectPath(projectId)}/guard/approvals`);
+}
+
+export async function setTerminalControl(projectId: string, holderMemberId: string | null) {
+  return request<{ holderMemberId: string | null; expiresAt?: string }>(`${projectPath(projectId)}/terminal/control`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ holderMemberId })
+  });
+}
+
 export function getServerInfo() {
   return request<ServerInfo>("/api/health");
 }

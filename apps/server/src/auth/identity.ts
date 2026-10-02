@@ -3,6 +3,7 @@ import path from "node:path";
 import type { NextFunction, Request, Response } from "express";
 import { getProjectMetadataPath, type ProjectRecord } from "../projects.js";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
+import { normalizeStoredRole } from "../guard/roles.js";
 
 export interface MemberRecord {
   memberId: string;
@@ -20,7 +21,7 @@ interface MemberFile {
   members: MemberRecord[];
 }
 
-export function createMemberStore(options: { projects: () => ProjectRecord[] }) {
+export function createMemberStore(options: { projects: () => ProjectRecord[]; normalizeRoles?: boolean }) {
   const cache = new Map<string, MemberFile>();
   const loading = new Map<string, Promise<MemberFile>>();
   let operations = Promise.resolve();
@@ -89,7 +90,7 @@ export function createMemberStore(options: { projects: () => ProjectRecord[] }) 
           const index = file.members.findIndex((member) => member.memberId === input.memberId);
           if (index >= 0) {
             const current = file.members[index]!;
-            const member = { ...current, displayName, role: input.role?.trim() ?? current.role, updatedAt: now };
+            const member = { ...current, displayName, role: input.role === undefined ? current.role : normalizeRole(input.role), updatedAt: now };
             file.members[index] = member;
             await save(projectId, file);
             return member;
@@ -99,7 +100,7 @@ export function createMemberStore(options: { projects: () => ProjectRecord[] }) 
           memberId: crypto.randomUUID(),
           projectId,
           displayName,
-          role: input.role?.trim() ?? "",
+          role: normalizeRole(input.role),
           createdAt: now,
           updatedAt: now
         };
@@ -123,6 +124,10 @@ export function createMemberStore(options: { projects: () => ProjectRecord[] }) 
       }
     }
   };
+
+  function normalizeRole(raw: string | undefined) {
+    return options.normalizeRoles ? normalizeStoredRole(raw) : raw?.trim() ?? "";
+  }
 }
 
 export type MemberStore = ReturnType<typeof createMemberStore>;

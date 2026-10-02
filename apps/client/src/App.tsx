@@ -5,6 +5,8 @@ import {
   createWorkspaceFile,
   deleteWorkspacePath,
   getChatMessages,
+  getGuardRoles,
+  listGuardApprovals,
   getEvents,
   getRoom,
   getWorkspaceDirectory,
@@ -14,6 +16,7 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
+import type { GuardApproval } from "./types";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -172,6 +175,9 @@ function WorkspacePage({
   const displayName = identity.displayName;
   const [member, setMember] = useState<RoomMember | null>(null);
   const [members, setMembers] = useState<RoomMember[]>([]);
+  const [scenarioRoles, setScenarioRoles] = useState<Awaited<ReturnType<typeof getGuardRoles>>["scenarios"]>([]);
+  const [guardApprovals, setGuardApprovals] = useState<GuardApproval[]>([]);
+  const [terminalControl, setTerminalControl] = useState<{ holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" }>({ holderMemberId: null });
   const [tree, setTree] = useState<WorkspaceNode[]>([]);
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activePath, setActivePath] = useState<string>();
@@ -220,6 +226,10 @@ function WorkspacePage({
   );
 
   useEffect(() => {
+    void getGuardRoles().then((result) => setScenarioRoles(result.scenarios));
+  }, []);
+
+  useEffect(() => {
     if (bootStartedRef.current) return;
     bootStartedRef.current = true;
     let mounted = true;
@@ -248,6 +258,7 @@ function WorkspacePage({
       setTree(workspaceTree);
       setEvents(eventRecords);
       setChatMessages(messages);
+      void listGuardApprovals(projectId).then((result) => setGuardApprovals(result.approvals));
 
       const connected = connectRoomSocket({
         projectId,
@@ -272,6 +283,8 @@ function WorkspacePage({
           if (message.type === "presence") {
             membersRef.current = message.members;
             setMembers(message.members);
+            const currentMember = message.members.find((candidate) => candidate.id === joined.member.id);
+            if (currentMember) setMember(currentMember);
             const onlineIds = new Set(
               message.members
                 .filter((candidate) => candidate.online)
@@ -293,6 +306,12 @@ function WorkspacePage({
                   ])
               )
             );
+          }
+          if (message.type === "guard_approval") {
+            setGuardApprovals((current) => current.some((approval) => approval.id === message.approval.id) ? current : [...current, message.approval]);
+          }
+          if (message.type === "guard_approval_resolved") {
+            setGuardApprovals((current) => current.filter((approval) => approval.id !== message.approvalId));
           }
           if (
             message.type === "cursor_change" &&
@@ -769,6 +788,10 @@ function WorkspacePage({
           workspaceRoot={project.workspacePath}
           workspaceTree={tree}
           roomId={roomId}
+          guardApprovals={guardApprovals}
+          onApprovalResolved={() => void listGuardApprovals(projectId).then((result) => setGuardApprovals(result.approvals)).catch(showWorkspaceError)}
+          controlHolderMemberId={terminalControl.holderMemberId}
+          onControlState={(holderMemberId: string | null) => setTerminalControl((current) => ({ ...current, holderMemberId }))}
           agentRefreshVersion={agentRefreshVersion}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
@@ -783,6 +806,8 @@ function WorkspacePage({
             theme={theme}
             canRun={Boolean(member)}
             memberId={member?.id ?? ""}
+            isOwner={scenarioRoles.some((role) => role.role === member?.profileRole && role.level === "owner")}
+            onControlState={(holderMemberId, expiresAt, mode) => setTerminalControl({ holderMemberId, expiresAt, mode })}
           />
         </section>
       ) : null}

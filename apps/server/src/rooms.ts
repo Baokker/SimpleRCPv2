@@ -2,6 +2,7 @@ import path from "node:path";
 import { nanoid } from "nanoid";
 import type { EventLog } from "./eventLog.js";
 import type { RoomConnection, RoomMember, RoomState } from "./types.js";
+import { normalizeStoredRole } from "./guard/roles.js";
 
 export interface JoinRoomInput {
   memberId?: string;
@@ -11,7 +12,7 @@ export interface JoinRoomInput {
   profileRole?: string;
 }
 
-export function createRoomStore(events: EventLog) {
+export function createRoomStore(events: EventLog, options: { normalizeRoles?: boolean } = {}) {
   const rooms = new Map<string, RoomState>();
 
   return {
@@ -39,7 +40,7 @@ export function createRoomStore(events: EventLog) {
         throw new Error("Room not found");
       }
 
-      const normalized = normalizeJoinInput(input);
+      const normalized = normalizeJoinInput(input, options.normalizeRoles === true);
       const now = new Date().toISOString();
       const existing = findExistingMember(room.members, normalized);
       if (existing) {
@@ -250,6 +251,11 @@ export function createRoomStore(events: EventLog) {
         .get(roomId)
         ?.members.find((member) => member.id === memberId);
     },
+    updateMemberRole(roomId: string, memberId: string, profileRole: string | undefined) {
+      const member = findMember(rooms, roomId, memberId);
+      member.profileRole = profileRole;
+      return member;
+    },
     listRooms() {
       return [...rooms.values()];
     }
@@ -264,14 +270,14 @@ type NormalizedJoinInput = Required<Pick<JoinRoomInput, "name">> & {
   profileRole?: string;
 };
 
-function normalizeJoinInput(input: JoinRoomInput): NormalizedJoinInput {
+function normalizeJoinInput(input: JoinRoomInput, normalizeRoles: boolean): NormalizedJoinInput {
   const participantId =
     input.participantId ?? input.connectionId ?? `human:${input.name}`;
   return {
     name: input.name,
     participantId,
     connectionId: input.connectionId ?? participantId,
-    profileRole: input.profileRole
+    profileRole: normalizeRoles ? normalizeStoredRole(input.profileRole) || undefined : input.profileRole?.trim() || undefined
   };
 }
 

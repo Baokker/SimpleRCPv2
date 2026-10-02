@@ -14,7 +14,7 @@ import {
   Trash2,
   Users
 } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
 import type {
   ChatMessage,
@@ -24,6 +24,8 @@ import type {
   WorkspaceNode
 } from "../types";
 import { formatTime } from "../format";
+import { getGuardRoles, setTerminalControl, updateMyRole, replyGuardApproval, type GuardScenarioRole } from "../api";
+import type { GuardApproval } from "../types";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project";
 type ActivityKind =
@@ -64,7 +66,11 @@ export function CollaborationPanel({
   followingMemberId,
   onFollowMember,
   onOpenFile,
-  onError
+  onError,
+  guardApprovals = [],
+  onApprovalResolved,
+  controlHolderMemberId,
+  onControlState
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -84,9 +90,15 @@ export function CollaborationPanel({
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
+  guardApprovals?: GuardApproval[];
+  onApprovalResolved?(): void;
+  controlHolderMemberId?: string | null;
+  onControlState?(holderMemberId: string | null): void;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const [unseenMessages, setUnseenMessages] = useState(0);
+  const [scenarioRoles, setScenarioRoles] = useState<GuardScenarioRole[]>([]);
+  useEffect(() => { void getGuardRoles().then((result) => setScenarioRoles(result.scenarios)); }, []);
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
   const previousMessageCountRef = useRef(chatMessages.length);
@@ -252,7 +264,10 @@ export function CollaborationPanel({
                       <span>
                         <i className={candidate.online ? "status-dot online" : "status-dot"} />
                         <strong>{candidate.displayName}</strong>
-                        {candidate.profileRole ? <em>{candidate.profileRole}</em> : null}
+                        {candidate.id === member?.id ? (
+                          <label className="member-role-editor"><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => void updateMyRole(projectId, event.target.value).catch(onError)}><option value="">Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role}>{entry.role} ({entry.level})</option>)}</optgroup>)}</select></label>
+                        ) : <em>{candidate.profileRole || "unassigned"}</em>}
+                        {candidate.id !== member?.id ? candidate.profileRole ? <em>({scenarioRoles.find((role) => role.role === candidate.profileRole)?.level ?? "collaborator"})</em> : <em>(collaborator)</em> : null}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>
                         ) : null}
@@ -283,6 +298,11 @@ export function CollaborationPanel({
                             )}
                           </button>
                         ) : null}
+                        {member && scenarioRoles.some((role) => role.role === (member.profileRole ?? "") && role.level === "owner") ? (
+                          <button type="button" className="member-control" onClick={() => void setTerminalControl(projectId, controlHolderMemberId === candidate.id ? null : candidate.id).then((state) => onControlState?.(state.holderMemberId)).catch(onError)}>
+                            {controlHolderMemberId === candidate.id ? "Revoke control" : "Grant interactive control"}
+                          </button>
+                        ) : null}
                       </span>
                       <small>
                         {cursor
@@ -293,6 +313,9 @@ export function CollaborationPanel({
                   );
                 })}
               </ul>
+              {guardApprovals.filter((approval) => approval.approverIds.includes(member?.id ?? "")).map((approval) => (
+                <div key={approval.id} className="guard-approval-card"><strong>{approval.request.source} approval</strong><code>{approval.request.command ?? approval.request.paths?.join(", ")}</code><small>{approval.decision.matchedRules.join(", ")}</small><div><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError)}>Approve</button><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError)}>Reject</button></div></div>
+              ))}
             </div>
 
             <div className="team-block activity-block">
@@ -385,6 +408,19 @@ function formatActivity(
       return item(event, "general", `${stringValue(payload.authorName) ?? actor} sent a chat message`);
     case "terminal_input":
       return item(event, "general", `${actor} used the terminal`, { detail: `${numberValue(payload.count)} inputs` });
+    case "guard_action":
+      return item(event, "general", `${actor}'s terminal or Agent request was ${stringValue(payload.action) ?? "checked"}`, {
+        detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
+      });
+    case "guard_approval":
+      return item(event, "general", `${actor}'s request was ${payload.approved ? "approved" : "rejected"}`, {
+        detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
+      });
+    case "terminal_control_granted":
+      return item(event, "general", `${actor} received interactive terminal control`);
+    case "terminal_control_revoked":
+    case "terminal_control_expired":
+      return item(event, "general", `${actor}'s interactive terminal control ended`);
     case "file_changed": {
       const path = stringValue(payload.path);
       return item(event, "edit", `${actor} edited ${path ?? "a file"}`, {
@@ -562,4 +598,12 @@ function formatEditDetail(payload: Record<string, unknown>) {
     0
   );
   return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
+}
+
+function groupRoles(entries: GuardScenarioRole[]) {
+  const groups = new Map<string, GuardScenarioRole[]>();
+  for (const entry of entries) {
+    groups.set(entry.scenario, [...(groups.get(entry.scenario) ?? []), entry]);
+  }
+  return [...groups.entries()];
 }
