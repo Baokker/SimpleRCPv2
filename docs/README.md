@@ -16,6 +16,7 @@ OpenCode 与 DeepSeek 的配置方式见[项目 README](../README.md#配置)。
 - [开发计划](./product/2026-09-17-development-plan.md)：代码修改顺序、模块职责、同步修复与测试范围。
 - [已知问题](./product/known-issues.md)：基线接受的问题、触发条件、当前提示方式与完整处理方向。
 - [改进路线](./product/improvement-roadmap.md)：基线完成后的并行 Agent、合并、恢复、隔离和分析能力。
+- [Guard 功能验证教程](./guard/verification-guide.md)：启动配置、共享终端、角色权限、审批、快照、Agent 和 LLM 验证步骤。
 
 ## 调研归档
 

@@ -269,6 +269,7 @@ pnpm build
 - [基线需求](./docs/product/2026-09-17-baseline.md)：完整产品流程、功能范围和验收条件。
 - [开发计划](./docs/product/2026-09-17-development-plan.md)：模块职责、开发顺序和测试范围。
 - [已知问题](./docs/product/known-issues.md)：成员、终端和 Agent 同时修改文件等当前限制。
+- [Guard 功能验证教程](./docs/guard/verification-guide.md)：启动配置、共享终端、角色权限、审批、快照、Agent 和 LLM 验证步骤。
 - [改进方向](./docs/product/improvement-roadmap.md)：并行 Agent、任务目录、运行恢复和 trace 分析方向。
 - [Agent runtime 调研](./docs/research/2026-09-17/agent-runtime.md)：OpenCode、DeepSeek、session 和 trace 调研。
 - [文档同步调研](./docs/research/2026-09-17/document-sync.md)：磁盘、Yjs、终端和 Agent 同时修改文件时的同步处理。
