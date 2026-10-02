@@ -8,6 +8,7 @@ export interface CreateChatMessageInput {
   roomId: string;
   authorId: string;
   authorName: string;
+  authorRole?: string;
   text: string;
 }
 
@@ -51,6 +52,7 @@ export function createChatStore(
           payload: {
             messageId: message.id,
             authorName: message.authorName,
+            ...(message.authorRole ? { authorRole: message.authorRole } : {}),
             text: message.text
           }
         });

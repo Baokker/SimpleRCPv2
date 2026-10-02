@@ -96,6 +96,7 @@ export function registerCollaborationRoutes(app: Express, runtimeManager: Projec
         roomId: runtime.room.id,
         authorId: identity.memberId,
         authorName: identity.displayName,
+        authorRole: identity.role || undefined,
         text
       });
       res.json({ message });

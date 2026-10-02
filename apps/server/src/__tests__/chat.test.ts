@@ -27,6 +27,7 @@ describe("chat", () => {
       roomId: "room-1",
       authorId: "user-bob",
       authorName: "Bob",
+      authorRole: "reviewer",
       text: "Can you review pom.xml?"
     });
 
@@ -36,6 +37,7 @@ describe("chat", () => {
       memberId: "user-bob",
       payload: {
         authorName: "Bob",
+        authorRole: "reviewer",
         text: "Can you review pom.xml?"
       }
     });
@@ -72,13 +74,14 @@ describe("chat", () => {
         }
       );
       const body = (await response.json()) as {
-        message: { text: string; authorId: string; authorName: string };
+        message: { text: string; authorId: string; authorName: string; authorRole?: string };
       };
 
       expect(response.status).toBe(200);
       expect(body.message.text).toBe("@Ada please review pom.xml");
       expect(body.message.authorId).toBe(member.member.id);
       expect(body.message.authorName).toBe("Bob");
+      expect(body.message.authorRole).toBeUndefined();
       expect(Object.keys(body)).toEqual(["message"]);
     } finally {
       await app.locals.runtimeManager.dispose();

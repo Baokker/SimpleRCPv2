@@ -242,6 +242,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await linus.getByTestId("collab-tab-chat").click();
   const receivedMessage = linus.locator(".chat-message p").last();
   await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
+  await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · student");
 
   await ada.getByTestId("terminal-output").click();
   await ada.keyboard.type("printf 'shared-pty-ok\\n'");

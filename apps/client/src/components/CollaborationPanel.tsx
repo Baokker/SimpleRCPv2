@@ -184,7 +184,10 @@ export function CollaborationPanel({
                 chatMessages.map((message) => (
                   <li key={message.id} className="chat-message">
                     <span>
-                      <strong>{message.authorName}</strong>
+                      <strong>
+                        {message.authorName}
+                        {message.authorRole ? ` · ${message.authorRole}` : ""}
+                      </strong>
                       <time>{formatTime(message.timestamp)}</time>
                     </span>
                     <p>{message.text}</p>

@@ -83,6 +83,7 @@ export interface ChatMessage {
   roomId: string;
   authorId: string;
   authorName: string;
+  authorRole?: string;
   text: string;
   timestamp: string;
 }
