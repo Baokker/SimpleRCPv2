@@ -111,7 +111,7 @@ OpenCode 进程退出、DeepSeek 请求失败、网络中断或达到超时都�
 
 终端和 Agent 仍以服务端系统用户运行，绝对路径可以读取该系统用户有权限读取的其他文件，包括其他项目和仓库根目录的 `.env`。元数据移出工作区只阻止直接使用 `../` 访问，不能提供操作系统级隔离。当前没有 CPU、内存或进程数限制；需要每个项目一个系统用户或容器时，应在部署环境中增加。
 
-OpenCode bash 工具会继承 Agent 进程环境，Agent 可以通过 bash 看到模型 Key。后续 B3 将 bash 权限改为 ask，并由服务端审批命令。
+OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，bash 工具会继承这部分环境，因此 Agent 可以通过 bash 看到模型 Key。终端进程不会继承模型 Key。后续 B3 将 bash 权限改为 ask，并由服务端审批命令。
 
 ## KI-012 历史 session 与工作目录迁移
 

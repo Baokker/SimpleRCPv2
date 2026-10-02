@@ -8,7 +8,7 @@ const workspaceRoot = fileURLToPath(
   new URL("../../.test-workspaces/e2e-data/workspaces/demo/", import.meta.url)
 );
 
-test("tabs and refresh in one browser preserve the project member", async ({
+test("tabs in one browser can choose different project members", async ({
   browser
 }) => {
   const context = await browser.newContext();
@@ -20,28 +20,33 @@ test("tabs and refresh in one browser preserve the project member", async ({
   await firstTab.getByTestId("join-project").click();
   await firstTab.getByTestId("status-bar").waitFor();
   await expect.poll(() => firstTab.evaluate(() =>
-    window.localStorage.getItem("simplercp.memberId.demo")
+    window.sessionStorage.getItem("simplercp.memberId.demo")
   )).not.toBeNull();
   const firstParticipantId = await firstTab.evaluate(() =>
-    window.localStorage.getItem("simplercp.memberId.demo")
+    window.sessionStorage.getItem("simplercp.memberId.demo")
   );
 
   await secondTab.goto("/projects/demo");
+  await expect(secondTab.getByTestId("join-project-form")).toBeVisible();
+  await expect(secondTab.getByTestId("participant-select")).toHaveValue(firstParticipantId!);
+  await secondTab.getByTestId("participant-select").selectOption("new");
+  await secondTab.getByTestId("display-name").fill("Tab Two");
+  await secondTab.getByTestId("join-project").click();
   await secondTab.getByTestId("status-bar").waitFor();
-  await expect.poll(() => secondTab.evaluate(() =>
-    window.localStorage.getItem("simplercp.memberId.demo")
-  )).not.toBeNull();
   const secondParticipantId = await secondTab.evaluate(() =>
-    window.localStorage.getItem("simplercp.memberId.demo")
+    window.sessionStorage.getItem("simplercp.memberId.demo")
   );
 
   expect(firstParticipantId).toBeTruthy();
   expect(secondParticipantId).toBeTruthy();
-  expect(secondParticipantId).toBe(firstParticipantId);
+  expect(secondParticipantId).not.toBe(firstParticipantId);
+  expect(await firstTab.evaluate(() =>
+    window.sessionStorage.getItem("simplercp.memberId.demo")
+  )).toBe(firstParticipantId);
 
   await firstTab.reload();
   await firstTab.getByTestId("status-bar").waitFor();
-  expect(await firstTab.evaluate(() => localStorage.getItem("simplercp.memberId.demo"))).toBe(firstParticipantId);
+  expect(await firstTab.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"))).toBe(firstParticipantId);
 
   await context.close();
 });

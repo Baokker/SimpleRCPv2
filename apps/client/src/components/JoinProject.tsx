@@ -1,7 +1,7 @@
 import { ArrowLeft, LogIn } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { ProjectParticipant } from "../types";
-import { storedMemberId } from "../memberIdentity";
+import { rememberMember, storedMemberId } from "../memberIdentity";
 
 export interface ProjectIdentity {
   memberId?: string;
@@ -20,7 +20,9 @@ export function JoinProject({
   participants: ProjectParticipant[];
   onJoin(identity: ProjectIdentity): void | Promise<void>;
 }) {
-  const storedMember = participants.find((participant) => participant.id === storedMemberId(projectId));
+  const storedId = storedMemberId(projectId);
+  const storedMember = participants.find((participant) => participant.id === storedId);
+  const [memberId, setMemberId] = useState(storedMember?.id ?? "new");
   const [displayName, setDisplayName] = useState(
     storedMember?.displayName ??
       window.localStorage.getItem("simplercp.displayName") ??
@@ -28,13 +30,27 @@ export function JoinProject({
   );
   const [role, setRole] = useState(storedMember?.profileRole ?? "");
 
+  function selectMember(nextMemberId: string) {
+    setMemberId(nextMemberId);
+    const member = participants.find((candidate) => candidate.id === nextMemberId);
+    if (!member) {
+      setDisplayName("");
+      setRole("");
+      return;
+    }
+    setDisplayName(member.displayName);
+    setRole(member.profileRole ?? "");
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     const name = displayName.trim();
     if (!name) return;
     window.localStorage.setItem("simplercp.displayName", name);
+    const selectedMemberId = memberId === "new" ? undefined : memberId;
+    if (selectedMemberId) rememberMember(projectId, selectedMemberId);
     void onJoin({
-      memberId: storedMemberId(projectId),
+      memberId: selectedMemberId,
       displayName: name,
       role: role.trim()
     });
@@ -51,6 +67,24 @@ export function JoinProject({
       </button>
       <form onSubmit={submit} data-testid="join-project-form">
         <h1>{projectName}</h1>
+        {participants.length > 0 ? (
+          <label>
+            <span>Participant</span>
+            <select
+              value={memberId}
+              onChange={(event) => selectMember(event.target.value)}
+              data-testid="participant-select"
+            >
+              {participants.map((participant) => (
+                <option key={participant.id} value={participant.id}>
+                  {participant.displayName}
+                  {participant.profileRole ? ` · ${participant.profileRole}` : ""}
+                </option>
+              ))}
+              <option value="new">Create a new participant</option>
+            </select>
+          </label>
+        ) : null}
         <label>
           <span>Display name</span>
           <input
@@ -63,7 +97,12 @@ export function JoinProject({
         </label>
         <label>
           <span>Role <small>Optional</small></span>
-          <input value={role} onChange={(event) => setRole(event.target.value)} data-testid="member-role" />
+          <input
+            value={role}
+            onChange={(event) => setRole(event.target.value)}
+            placeholder="Designer, developer, reviewer"
+            data-testid="member-role"
+          />
         </label>
         <button type="submit" data-testid="join-project">
           <LogIn size={16} /> Enter project

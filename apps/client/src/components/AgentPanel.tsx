@@ -100,7 +100,7 @@ export function AgentPanel({
     }
     void Promise.all([
       getAgentStatus(),
-      getAgentSessions(projectId, member.id),
+      getAgentSessions(projectId),
       getAgentRuns(projectId)
     ]).then(([nextRuntime, nextSessions, nextRuns]) => {
       if (!active) return;
@@ -122,7 +122,7 @@ export function AgentPanel({
     async function refresh() {
       const [nextRuns, nextSessions] = await Promise.all([
         getAgentRuns(projectId),
-        getAgentSessions(projectId, member!.id)
+        getAgentSessions(projectId)
       ]);
       const visibleRuns = nextRuns.filter((run) => run.sessionId === selectedSessionId);
       const traceEntries = await Promise.all(
@@ -154,7 +154,6 @@ export function AgentPanel({
     setSessionCreating(true);
     try {
       const response = await createAgentSession(projectId, {
-        memberId: member.id,
         title: sessionTitle.trim() || "New Agent session"
       });
       setSessions((current) => [response.session, ...current]);
@@ -176,7 +175,6 @@ export function AgentPanel({
       let session = selectedSession;
       if (!session) {
         const response = await createAgentSession(projectId, {
-          memberId: member.id,
           title: text.slice(0, 80)
         });
         session = response.session;
@@ -184,7 +182,6 @@ export function AgentPanel({
         setSelectedSessionId(response.session.id);
       }
       const response = await createAgentSessionRun(projectId, session.id, {
-        memberId: member.id,
         prompt: text,
         contexts
       });
@@ -235,7 +232,7 @@ export function AgentPanel({
   async function cancelRun(run: AgentRun) {
     if (!member) return;
     try {
-      const response = await cancelAgentRun(projectId, run.id, member.id);
+      const response = await cancelAgentRun(projectId, run.id);
       setRuns((current) => current.map((item) => item.id === run.id ? response.run : item));
     } catch (error) {
       onErrorRef.current(error);

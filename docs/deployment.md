@@ -6,7 +6,7 @@
 
 安装 Node.js 20 以上与 pnpm 9，在仓库执行 `pnpm install`，参考 `.env.example` 设置环境变量。文件协作与共享终端无需模型 Key；Agent 使用 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL` 和 `DEEPSEEK_MODEL`。
 
-执行 `pnpm dev` 或 `pnpm dev:demo`，打开 `http://127.0.0.1:5173`，选择项目，输入显示名和可选 Role。Role 仅用于显示，成员能力相同。浏览器按项目保存 `memberId`，刷新后恢复原成员。
+执行 `pnpm dev` 或 `pnpm dev:demo`，打开 `http://127.0.0.1:5173`，选择项目，输入显示名和可选 Role。Role 仅用于显示，成员能力相同。当前标签页使用 `sessionStorage` 保存 `memberId`，`localStorage` 只保存最近选择；刷新当前标签页会恢复原成员，新标签页可以选择其他成员或创建新成员。
 
 ## 内网服务器
 
