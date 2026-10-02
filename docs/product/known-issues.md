@@ -111,8 +111,16 @@ OpenCode 进程退出、DeepSeek 请求失败、网络中断或达到超时都�
 
 终端和 Agent 仍以服务端系统用户运行，绝对路径可以读取该系统用户有权限读取的其他文件，包括其他项目和仓库根目录的 `.env`。元数据移出工作区只阻止直接使用 `../` 访问，不能提供操作系统级隔离。当前没有 CPU、内存或进程数限制；需要每个项目一个系统用户或容器时，应在部署环境中增加。
 
-OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，bash 工具会继承这部分环境，因此 Agent 可以通过 bash 看到模型 Key。终端进程不会继承模型 Key。后续 B3 将 bash 权限改为 ask，并由服务端审批命令。
+OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，bash 工具会继承这部分环境，因此 Agent 在获得 bash 审批后仍可能看到模型 Key。终端进程不会继承模型 Key。Guard 会把 bash 请求交给服务端策略和审批队列。
 
 ## KI-012 历史 session 与工作目录迁移
 
 无法对应当前成员记录的 session 标为历史记录，保留数据，不按显示名认领。移动工作区后，旧 OpenCode `runtimeSessionId` 仍可能关联原目录；历史内容保留，需要继续工作时创建新的 session。
+# Guard 限制
+
+- 成员可以自行填写角色，当前身份系统不会验证角色的真实性。
+- Monaco 编辑器内的人工编辑不经过 Guard。
+- 交互控制期间的按键直接写入 pty，不经过逐次命令判定。
+- OpenCode 的 `read` 已配置受保护路径；`grep`、`glob`、`list`、`env`、`printenv` 仍可能通过工具或进程间接读取敏感内容。
+- 同一系统用户下的绝对路径读取没有 OS 沙箱隔离。
+- 快照恢复只覆盖快照中的文件，不删除快照之后的新文件。

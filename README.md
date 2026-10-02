@@ -17,7 +17,7 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 - 代码编辑：使用 Monaco Editor 和 Yjs 同步多人文本编辑、光标和选区，并显示保存与同步状态。
 - 实时协作：显示成员、当前文件、聊天消息和 Activity；聊天与 Activity 保存在服务端，文件编辑记录包含变化行号与增删行数。
 - 成员身份：服务端分配 `memberId`，客户端在 `sessionStorage` 保存当前标签页身份，在 `localStorage` 保存最近选择；刷新当前标签页会恢复身份，不同标签页可以选择不同成员。
-- 共享终端：使用 `node-pty` 在当前项目目录中运行 shell，允许输入任意命令。
+- 共享终端：使用 `node-pty` 在当前项目目录中运行 shell，命令提交经过 Guard 判定，交互程序使用限时交互控制。
 - 外部变化同步：监听终端或其他程序产生的文件变化，并更新文件树和已经打开的协作文档。
 - 错误恢复：协作连接与终端连接会自动重连，离线后可以手动重试；项目被删除后返回项目首页。
 - 工作区控制：文件操作使用应用内确认窗口，Terminal 与 Collaboration 面板可以从状态栏显示或隐藏。
@@ -276,3 +276,8 @@ pnpm build
 - [协作记录保存调研](./docs/research/2026-09-21/collaboration-history-persistence.md)：Activity、Agent 会话、身份归属与服务重新启动后的数据边界。
 
 当前基线的后续改进集中在 Agent 写入的三方合并、同一项目并行任务、运行隔离和更完整的 trace 分析，详情见[改进方向](./docs/product/improvement-roadmap.md)。
+## 共享终端 Guard
+
+共享终端默认使用命令模式。命令会按成员角色和路径分区判定，必要时进入在线 owner 审批队列。owner 可以授予十分钟交互控制以运行需要持续输入的程序。OpenCode Agent 的 `bash`、`edit`、`read` 和 `webfetch` 请求经过同一策略服务，批准只回复 `once`。
+
+Guard 运行模式由 `SIMPLERCP_GUARD_MODE` 设置为 `full`、`human-only` 或 `off`。项目策略和审计文件位于项目元数据目录，审计文件名为 `guard-audit.jsonl`。
