@@ -11,6 +11,8 @@ export interface ServerConfig {
   workspacesDir?: string;
   demoProjectRoot: string;
   terminalEnabled?: boolean;
+  guardMode?: "full" | "human-only" | "off";
+  guardApprovalTimeoutMs?: number;
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -61,6 +63,14 @@ export function loadConfig(
     "SIMPLERCP_TERMINAL_ENABLED",
     true
   );
+  const guardMode = env.SIMPLERCP_GUARD_MODE ?? "full";
+  if (!["full", "human-only", "off"].includes(guardMode)) {
+    throw new Error("SIMPLERCP_GUARD_MODE must be full, human-only, or off");
+  }
+  const guardApprovalTimeoutMs = Number(env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS ?? 120_000);
+  if (!Number.isInteger(guardApprovalTimeoutMs) || guardApprovalTimeoutMs < 1) {
+    throw new Error("SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS must be a positive integer");
+  }
   const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
     ? undefined
     : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -86,6 +96,10 @@ export function loadConfig(
       runTimeoutMs
     }
   };
+  Object.defineProperties(config, {
+    guardMode: { value: guardMode, enumerable: env.SIMPLERCP_GUARD_MODE !== undefined },
+    guardApprovalTimeoutMs: { value: guardApprovalTimeoutMs, enumerable: env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS !== undefined }
+  });
   return config;
 }
 
