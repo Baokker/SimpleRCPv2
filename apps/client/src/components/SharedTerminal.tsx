@@ -8,6 +8,7 @@ import type { TerminalClientMessage, TerminalServerMessage } from "../types";
 export interface SharedTerminalHandle {
   restart(): void;
   reconnect(): void;
+  submitCommand(text: string): void;
 }
 
 export const SharedTerminal = forwardRef<
@@ -17,10 +18,12 @@ export const SharedTerminal = forwardRef<
     memberId: string;
     canInput: boolean;
     theme: ThemeMode;
+    onControl(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "off"): void;
+    onStatus(message: string): void;
     onConnectionState(state: "Connecting" | "Connected" | "Reconnecting" | "Offline"): void;
   }
 >(function SharedTerminal(
-  { projectId, memberId, canInput, theme, onConnectionState },
+  { projectId, memberId, canInput, theme, onConnectionState, onControl, onStatus },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +53,11 @@ export const SharedTerminal = forwardRef<
     },
     reconnect() {
       reconnectRef.current?.();
+    }
+    ,submitCommand(text: string) {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({ type: "command", text } satisfies TerminalClientMessage));
+      }
     }
   }));
 
@@ -118,8 +126,15 @@ export const SharedTerminal = forwardRef<
           terminal.write(message.data);
         } else if (message.type === "terminal_output") {
           terminal.write(message.data);
+        } else if (message.type === "control") {
+          onControl(message.holderMemberId, message.expiresAt, message.mode);
+        } else if (message.type === "guard_pending") {
+          onStatus("Waiting for approval");
+        } else if (message.type === "guard_decision") {
+          onStatus(`${message.action}: ${message.reason}`);
         } else {
           terminal.write(`\r\n\x1b[31m${message.message}\x1b[0m\r\n`);
+          onStatus(message.message);
         }
       });
       socket.addEventListener("close", (event) => {
@@ -175,7 +190,7 @@ export const SharedTerminal = forwardRef<
       terminalRef.current = undefined;
       reconnectRef.current = undefined;
     };
-  }, [memberId, onConnectionState, projectId]);
+  }, [memberId, onConnectionState, onControl, onStatus, projectId]);
 
   return (
     <div

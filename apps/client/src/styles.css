@@ -2496,3 +2496,90 @@ button.activity-entry:hover strong {
   border-top: 1px solid var(--border-subtle);
   padding-top: 6px;
 }
+
+.terminal-command-box {
+  display: flex;
+  gap: 6px;
+  padding: 7px 8px;
+  border-top: 1px solid var(--border-main);
+}
+
+.terminal-command-box input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: var(--background-control);
+  color: var(--text-primary);
+}
+
+.terminal-command-box button,
+.guard-approval-card button,
+.member-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  padding: 5px 8px;
+  background: var(--background-control-alt);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.terminal-command-box button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.terminal-control-state,
+.terminal-guard-status {
+  padding: 3px 9px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.member-role-editor select {
+  min-width: 0;
+  max-width: 150px;
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  padding: 3px 5px;
+  background: var(--background-control);
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.member-control {
+  min-height: 24px;
+  font-size: 11px;
+}
+
+.guard-approval-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  padding: 9px;
+  background: var(--background-panel-raised);
+  overflow-wrap: anywhere;
+}
+
+.guard-approval-card code {
+  white-space: pre-wrap;
+  color: var(--text-primary);
+}
+
+.guard-approval-card small {
+  color: var(--text-muted);
+}
+
+.guard-approval-card > div {
+  display: flex;
+  gap: 6px;
+}

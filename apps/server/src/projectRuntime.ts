@@ -7,14 +7,26 @@ import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import type { WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
+import type { MemberStore } from "./auth/identity.js";
+import { createGuardService } from "./guard/service.js";
+import { createMemberStore } from "./auth/identity.js";
 
 export function createProjectRuntime(
   project: ProjectRecord,
-  options: { terminalEnabled?: boolean } = {}
+  options: {
+    terminalEnabled?: boolean;
+    guardMembers?: MemberStore;
+    guardDataRoot?: string;
+    guardMode?: "full" | "human-only" | "off";
+    guardApprovalTimeoutMs?: number;
+    guardLlm?: { baseUrl?: string; apiKey?: string; model?: string };
+    otherWorkspaceRoots?: () => string[];
+  } = {}
 ) {
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
-  const rooms = createRoomStore(events);
+  const guardMode = options.guardMode ?? "off";
+  const rooms = createRoomStore(events, { normalizeRoles: guardMode !== "off" });
   const chat = createChatStore(events, {
     storagePath: path.join(projectRoot, "chat.json")
   });
@@ -38,7 +50,22 @@ export function createProjectRuntime(
     enabled: options.terminalEnabled !== false
   });
   const room = rooms.createRoom(project.workspacePath, project.name);
+  const guardMembers = options.guardMembers ?? createMemberStore({ projects: () => [project], normalizeRoles: guardMode !== "off" });
+  const guard = createGuardService({
+    project,
+    roomId: room.id,
+    rooms,
+    events,
+    members: guardMembers,
+    metadataRoot: projectRoot,
+    platformDataRoot: options.guardDataRoot ?? path.dirname(projectRoot),
+    mode: guardMode,
+    approvalTimeoutMs: options.guardApprovalTimeoutMs,
+    llm: options.guardLlm,
+    otherWorkspaceRoots: options.otherWorkspaceRoots
+  });
   const terminalListeners = new Set<(data: string) => void>();
+  const memberRoleListeners = new Set<(member: import("./types.js").RoomMember) => void>();
   const inputWindows = new Map<string, { count: number; timer: ReturnType<typeof setTimeout> }>();
   function flushInput(memberId: string) {
     const window = inputWindows.get(memberId);
@@ -129,6 +156,7 @@ export function createProjectRuntime(
     documents,
     terminal,
     room,
+    guard,
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
       workspaceListeners.add(listener);
       return () => workspaceListeners.delete(listener);
@@ -147,17 +175,29 @@ export function createProjectRuntime(
       terminalListeners.add(listener);
       return () => terminalListeners.delete(listener);
     },
+    updateMemberRole(memberId: string, profileRole: string | undefined) {
+      const member = rooms.updateMemberRole(room.id, memberId, profileRole);
+      for (const listener of memberRoleListeners) listener(member);
+      return member;
+    },
+    onMemberRoleChanged(listener: (member: import("./types.js").RoomMember) => void) {
+      memberRoleListeners.add(listener);
+      return () => memberRoleListeners.delete(listener);
+    },
     async dispose() {
       workspaceListeners.clear();
       suppressedWorkspaceChanges = [];
       fileSavedListeners.clear();
       terminalListeners.clear();
+      memberRoleListeners.clear();
       removeTerminalListener();
       removeTerminalInputListener();
       for (const memberId of inputWindows.keys()) flushInput(memberId);
       await documents.awaitIdle();
       await chat.awaitIdle();
       await events.awaitIdle();
+      await guard.awaitIdle();
+      guard.dispose();
       terminal.dispose();
       await watcher.close();
     }

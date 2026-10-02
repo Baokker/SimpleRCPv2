@@ -32,6 +32,7 @@ export function createSharedTerminal({
       appendData(`\r\n[terminal exited with code ${exitCode}]\r\n`);
     });
     return {
+      get process() { return next.process; },
       write: (data: string) => next.write(data),
       resize: (cols: number, rows: number) => next.resize(cols, rows),
       killExpected() {
@@ -51,8 +52,8 @@ export function createSharedTerminal({
     return () => listeners.delete(listener);
   }
 
-  function write(data: string, memberId: string) {
-    for (const listener of inputListeners) listener(memberId, data);
+  function write(data: string, memberId: string, auditInput = true) {
+    if (auditInput) for (const listener of inputListeners) listener(memberId, data);
     terminal?.write(data);
   }
 
@@ -89,6 +90,8 @@ export function createSharedTerminal({
     restart,
     dispose,
     enabled,
+    foregroundProcess() { return terminal?.process; },
+    shellName: shell.split(/[\\/]/).at(-1) ?? shell,
     getScrollback: () => scrollback
   };
 }

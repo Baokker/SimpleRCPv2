@@ -7,6 +7,7 @@ export type {
   EventRecord,
   FileEditActivity,
   FileEditChange,
+  GuardApproval,
   ProjectRecord,
   ProjectSource,
   RoomConnection,

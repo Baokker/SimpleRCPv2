@@ -234,10 +234,41 @@ export function attachRealtimeServer(
         }
       }
     });
+    const removeMemberRoleListener = runtime.onMemberRoleChanged((member) => {
+      broadcastToProject(projectSockets, runtime.project.id, { type: "member_role_updated", member });
+      broadcastToProject(projectSockets, runtime.project.id, {
+        type: "presence",
+        roomId: runtime.room.id,
+        members: runtime.room.members
+      });
+    });
+    const removeApprovalListener = runtime.guard.onPending((approval) => {
+      broadcastToProject(projectSockets, runtime.project.id, {
+        type: "guard_approval",
+        approval
+      });
+    });
+    const removeControlListener = runtime.guard.onControl((holderMemberId, expiresAt) => {
+      const payload = JSON.stringify({ type: "control", holderMemberId, expiresAt, mode: runtime.guard.mode() } satisfies TerminalServerMessage);
+      for (const socket of terminalWss.clients) {
+        if (terminalProjects.get(socket) === runtime.project.id && socket.readyState === socket.OPEN) socket.send(payload);
+      }
+    });
+    const removeGuardActivityListener = runtime.guard.onActivity((event) => {
+      broadcastToProject(projectSockets, runtime.project.id, { type: "event", event });
+    });
+    const removeGuardResolutionListener = runtime.guard.onResolution((approvalId, approved) => {
+      broadcastToProject(projectSockets, runtime.project.id, { type: "guard_approval_resolved", approvalId, approved });
+    });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,
       removeFileSavedListener,
-      removeTerminalListener
+      removeTerminalListener,
+      removeMemberRoleListener,
+      removeApprovalListener,
+      removeControlListener,
+      removeGuardActivityListener,
+      removeGuardResolutionListener
     ]);
   }
 
@@ -342,6 +373,9 @@ export function attachRealtimeServer(
       } else {
         runtime.rooms.markOffline(identity.roomId, identity.memberId);
       }
+      if (!runtime.rooms.getMember(identity.roomId, identity.memberId)?.online) {
+        runtime.guard.memberOffline(identity.memberId);
+      }
       runtime.rooms.cleanupStaleMembers(identity.roomId);
       broadcastToProject(projectSockets, projectId, {
         type: "presence",
@@ -418,26 +452,26 @@ function setupTerminalConnection(
       data: runtime.terminal.getScrollback()
     } satisfies TerminalServerMessage)
   );
+  const controlState = runtime.guard.controlState();
+  socket.send(JSON.stringify({ type: "control", ...controlState, mode: runtime.guard.mode() } satisfies TerminalServerMessage));
   socket.on("message", (raw: RawData) => {
-    try {
-      handleTerminalMessage(
+    void handleTerminalMessage(
         socket,
         JSON.parse(raw.toString()) as TerminalClientMessage,
         identity,
         runtime
-      );
-    } catch {
+      ).catch(() => {
       socket.send(
         JSON.stringify({
           type: "terminal_error",
           message: "Invalid terminal message"
         } satisfies TerminalServerMessage)
       );
-    }
+      });
   });
 }
 
-function handleTerminalMessage(
+async function handleTerminalMessage(
   socket: WebSocket,
   message: TerminalClientMessage,
   identity: Identity,
@@ -445,25 +479,69 @@ function handleTerminalMessage(
 ) {
   const memberId = identity.memberId;
   if (!runtime.rooms.getMember(runtime.room.id, memberId)) return;
-  if (!can(identity, "terminal:input", { projectId: runtime.project.id })) return;
   if (message.type === "resize") {
     runtime.terminal.resize(message.cols, message.rows);
     return;
   }
   if (message.type === "restart") {
+    if (runtime.guard.mode() !== "off" && !runtime.guard.isOwner(memberId)) {
+      sendTerminalMessage(socket, { type: "terminal_error", message: "Owner permission is required" });
+      return;
+    }
     runtime.terminal.restart();
     return;
   }
-  if (message.data.length > 10_000) {
-    socket.send(
-      JSON.stringify({
-        type: "terminal_error",
-        message: "Terminal input exceeds the 10000 character limit"
-      } satisfies TerminalServerMessage)
-    );
+  if (message.type === "input") {
+    if (message.data.length > 10_000) {
+      sendTerminalMessage(socket, { type: "terminal_error", message: "Terminal input exceeds the 10000 character limit" });
+      return;
+    }
+    if (runtime.guard.mode() !== "off" && !runtime.guard.isController(memberId)) {
+      sendTerminalMessage(socket, { type: "terminal_error", message: "Interactive control is required" });
+      return;
+    }
+    runtime.terminal.write(message.data, memberId, runtime.guard.mode() === "off");
     return;
   }
-  runtime.terminal.write(message.data, memberId);
+  if (message.text.length > 10_000) {
+    sendTerminalMessage(socket, { type: "terminal_error", message: "Command exceeds the 10000 character limit" });
+    return;
+  }
+  const foreground = runtime.terminal.foregroundProcess();
+  if (foreground && foreground !== runtime.terminal.shellName) {
+    sendTerminalMessage(socket, { type: "guard_decision", action: "deny", reason: "终端正忙" });
+    return;
+  }
+  const request = {
+    projectId: runtime.project.id,
+    memberId,
+    source: "terminal" as const,
+    kind: "command" as const,
+    command: message.text,
+    cwd: runtime.project.workspacePath
+  };
+  const pendingListener = runtime.guard.onPending((approval) => {
+    if (approval.request.memberId === memberId && approval.request.source === "terminal") {
+      sendTerminalMessage(socket, { type: "guard_pending", requestId: approval.id });
+    }
+  });
+  try {
+    const result = await runtime.guard.submit(request);
+    const decision = result.decision;
+    if (!result.approved) {
+      sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, reason: decision.matchedRules.join(", ") || "审批已拒绝" });
+      return;
+    }
+    if (decision.action === "allow_snapshot") await runtime.guard.createSnapshot(request);
+    runtime.terminal.write(`${message.text}\r`, memberId, false);
+    sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, reason: decision.matchedRules.join(", ") || "已允许" });
+  } finally {
+    pendingListener();
+  }
+}
+
+function sendTerminalMessage(socket: WebSocket, message: TerminalServerMessage) {
+  if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message));
 }
 
 async function authenticateUpgrade(request: http.IncomingMessage, projectId: string, members: MemberStore | undefined): Promise<Identity | undefined> {

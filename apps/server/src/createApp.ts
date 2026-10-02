@@ -21,9 +21,20 @@ export async function createApp(config: ServerConfig) {
     importRoots: config.importRoots,
     demoProjectRoot: config.demoProjectRoot
   });
-  const members = createMemberStore({ projects: () => registry.listProjectsSync() });
+  const guardMode = config.guardMode ?? "off";
+  const members = createMemberStore({ projects: () => registry.listProjectsSync(), normalizeRoles: guardMode !== "off" });
   const runtimeManager = createProjectRuntimeManager(registry, {
-    terminalEnabled: config.terminalEnabled !== false
+    terminalEnabled: config.terminalEnabled !== false,
+    guardMembers: members,
+    guardDataRoot: config.dataDir,
+    guardMode,
+    guardApprovalTimeoutMs: config.guardApprovalTimeoutMs,
+    otherWorkspaceRoots: () => registry.listProjectsSync().filter((project) => project.id !== "demo").map((project) => project.workspacePath),
+    guardLlm: {
+      baseUrl: config.agent?.baseUrl,
+      apiKey: config.agent?.apiKey,
+      model: config.agent?.model
+    }
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
@@ -34,7 +45,8 @@ export async function createApp(config: ServerConfig) {
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
-    getSettings: () => agentSettings.get()
+    getSettings: () => agentSettings.get(),
+    guardMode
   });
   const agentRuns = createAgentRunManager({
     members,

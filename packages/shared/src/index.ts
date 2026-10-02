@@ -290,14 +290,53 @@ export type ServerMessage =
       type: "agent_trace_appended";
       runId: string;
       sequence: number;
+    }
+  | {
+      type: "guard_approval";
+      approval: GuardApproval;
+    }
+  | {
+      type: "guard_approval_resolved";
+      approvalId: string;
+      approved: boolean;
+    }
+  | {
+      type: "member_role_updated";
+      member: RoomMember;
     };
+
+export interface GuardApproval {
+  id: string;
+  request: {
+    projectId: string;
+    memberId: string;
+    source: "terminal" | "agent";
+    agentRunId?: string;
+    kind: "command" | "edit" | "read" | "fetch";
+    command?: string;
+    paths?: string[];
+    url?: string;
+  };
+  decision: {
+    action: "allow" | "allow_snapshot" | "ask" | "deny";
+    segments: Array<{ text: string; capabilities: string[]; zone: string; reversibility: string }>;
+    matchedRules: string[];
+    llm?: { mode: "off" | "suggest" | "auto"; risk: string; confidence: number; reason: string; applied: boolean };
+  };
+  createdAt: string;
+  approverIds: string[];
+}
 
 export type TerminalClientMessage =
   | { type: "input"; data: string }
   | { type: "resize"; cols: number; rows: number }
-  | { type: "restart" };
+  | { type: "restart" }
+  | { type: "command"; text: string };
 
 export type TerminalServerMessage =
   | { type: "terminal_snapshot"; data: string }
   | { type: "terminal_output"; data: string }
-  | { type: "terminal_error"; message: string };
+  | { type: "terminal_error"; message: string }
+  | { type: "guard_decision"; requestId?: string; action: string; reason: string }
+  | { type: "guard_pending"; requestId: string }
+  | { type: "control"; holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" };

@@ -1,9 +1,18 @@
 import { createProjectRuntime, type ProjectRuntime } from "./projectRuntime.js";
 import type { ProjectRegistry } from "./projects.js";
+import type { MemberStore } from "./auth/identity.js";
 
 export function createProjectRuntimeManager(
   registry: ProjectRegistry,
-  options: { terminalEnabled?: boolean } = {}
+  options: {
+    terminalEnabled?: boolean;
+    guardMembers?: MemberStore;
+    guardDataRoot?: string;
+    guardMode?: "full" | "human-only" | "off";
+    guardApprovalTimeoutMs?: number;
+    guardLlm?: { baseUrl?: string; apiKey?: string; model?: string };
+    otherWorkspaceRoots?: () => string[];
+  } = {}
 ) {
   const runtimes = new Map<string, ProjectRuntime>();
   const projectDisposingListeners = new Set<(projectId: string) => void>();
