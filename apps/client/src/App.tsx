@@ -3,10 +3,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
+  createTeamAgent,
+  cancelAgentRun,
   deleteWorkspacePath,
   getChatMessages,
   getEvents,
   getRoom,
+  getAgentRuns,
+  getTeamAgents,
   getWorkspaceDirectory,
   joinRoom,
   readWorkspaceFile,
@@ -48,6 +52,8 @@ import {
   setDirectoryChildren
 } from "./workspaceTree";
 import type {
+  AgentRun,
+  AgentSession,
   ChatMessage,
   CursorPosition,
   EditorSelection,
@@ -177,6 +183,8 @@ function WorkspacePage({
   const [activePath, setActivePath] = useState<string>();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [teamAgents, setTeamAgents] = useState<AgentSession[]>([]);
+  const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
@@ -233,12 +241,14 @@ function WorkspacePage({
         identity.memberId,
         connectionId
       );
-      const [room, workspaceTree, eventRecords, messages] =
+      const [room, workspaceTree, eventRecords, messages, agents, runs] =
         await Promise.all([
           getRoom(projectId),
           getWorkspaceDirectory(projectId, ""),
           getEvents(projectId),
-          getChatMessages(projectId)
+          getChatMessages(projectId),
+          getTeamAgents(projectId),
+          getAgentRuns(projectId)
         ]);
 
       if (!mounted) return;
@@ -248,6 +258,8 @@ function WorkspacePage({
       setTree(workspaceTree);
       setEvents(eventRecords);
       setChatMessages(messages);
+      setTeamAgents(agents);
+      setAgentRuns(runs);
 
       const connected = connectRoomSocket({
         projectId,
@@ -314,6 +326,18 @@ function WorkspacePage({
           }
           if (message.type === "chat_message") {
             void refreshSharedState().catch(showWorkspaceError);
+          }
+          if (message.type === "chat_message_created") {
+            setChatMessages((current) => {
+              const index = current.findIndex((item) => item.id === message.message.id);
+              if (index < 0) return [...current, message.message];
+              const next = [...current];
+              next[index] = message.message;
+              return next;
+            });
+          }
+          if (message.type === "team_agents_changed") {
+            setTeamAgents(message.agents);
           }
           if (message.type === "event") {
             setEvents((current) => current.some((event) => event.id === message.event.id)
@@ -401,15 +425,19 @@ function WorkspacePage({
   }, [activePath, followingMemberId, members, remoteCursorMap]);
 
   async function refreshSharedState() {
-    const [room, eventRecords, messages] = await Promise.all([
+    const [room, eventRecords, messages, agents, runs] = await Promise.all([
       getRoom(projectId),
       getEvents(projectId),
-      getChatMessages(projectId)
+      getChatMessages(projectId),
+      getTeamAgents(projectId),
+      getAgentRuns(projectId)
     ]);
     membersRef.current = room.members;
     setMembers(room.members);
     setEvents(eventRecords);
     setChatMessages(messages);
+    setTeamAgents(agents);
+    setAgentRuns(runs);
   }
 
   async function refreshEvents() {
@@ -552,12 +580,13 @@ function WorkspacePage({
     setChatSending(true);
     clearWorkspaceError();
     try {
-      await sendChatMessage(projectId, {
-        authorId: member.id,
-        authorName: member.displayName,
-        text
-      });
-      socketRef.current?.sendChat(text);
+      const command = text.match(/^\/agent\s+new\s+(.+)$/i);
+      if (command?.[1]) {
+        const response = await createTeamAgent(projectId, { name: command[1].trim() });
+        setTeamAgents((current) => [response.agent, ...current.filter((agent) => agent.id !== response.agent.id)]);
+      } else {
+        await sendChatMessage(projectId, { text });
+      }
       setChatText("");
       await refreshSharedState();
     } catch (error) {
@@ -759,6 +788,8 @@ function WorkspacePage({
           members={members}
           events={events}
           chatMessages={chatMessages}
+          teamAgents={teamAgents}
+          agentRuns={agentRuns}
           remoteCursors={remoteCursors}
           chatText={chatText}
           chatSending={chatSending}
@@ -774,6 +805,14 @@ function WorkspacePage({
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
           onError={showWorkspaceError}
+          onCreateTeamAgent={async (name) => {
+            const response = await createTeamAgent(projectId, { name });
+            setTeamAgents((current) => [response.agent, ...current.filter((agent) => agent.id !== response.agent.id)]);
+          }}
+          onCancelAgentRun={async (runId) => {
+            const response = await cancelAgentRun(projectId, runId);
+            setAgentRuns((current) => current.map((run) => run.id === runId ? response.run : run));
+          }}
         />
       </aside>
       {terminalEnabled ? (

@@ -1967,6 +1967,55 @@ input {
   list-style: none;
 }
 
+.team-agent-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.team-agent-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.team-agent-bar > button,
+.team-agent-create button,
+.chat-agent-card button,
+.chat-output-toggle {
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  padding: 3px 7px;
+  background: var(--background-control-alt);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.team-agent-create {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.team-agent-create input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: var(--background-control);
+  color: var(--text-primary);
+}
+
 .member-list li {
   display: flex;
   flex-direction: column;
@@ -2131,7 +2180,77 @@ button.activity-entry:hover strong {
   white-space: pre-wrap;
 }
 
+.chat-message-agent {
+  border-left-color: var(--accent-action);
+}
+
+.chat-message-system {
+  border-left-color: transparent;
+  background: transparent;
+}
+
+.chat-system-message {
+  text-align: center;
+  color: var(--text-dim) !important;
+  font-size: 11px;
+}
+
+.chat-agent-card {
+  margin-top: 8px;
+  border: 1px solid var(--border-control);
+  border-radius: 5px;
+  padding: 7px;
+  background: var(--background-control-alt);
+}
+
+.chat-agent-card > div:first-child,
+.chat-agent-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat-agent-card ul {
+  margin: 6px 0;
+  padding-left: 16px;
+}
+
+.chat-agent-card-actions details {
+  flex: 1;
+}
+
+.mention-candidates {
+  position: absolute;
+  right: 8px;
+  bottom: 76px;
+  z-index: 2;
+  width: min(280px, calc(100% - 16px));
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--border-control);
+  border-radius: 5px;
+  background: var(--background-panel);
+  list-style: none;
+}
+
+.mention-candidates button {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.my-agent-hint {
+  margin: 8px 10px 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .chat-box {
+  position: relative;
   flex: 0 0 auto;
   min-height: 0;
   border-bottom: 0;

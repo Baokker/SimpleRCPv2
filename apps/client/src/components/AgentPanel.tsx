@@ -243,6 +243,7 @@ export function AgentPanel({
 
   return (
     <section className="collab-section agent-section">
+      <p className="my-agent-hint" data-testid="my-agent-hint">These are your own Agent sessions. To direct the shared agent together, mention @agent in Chat.</p>
       <header className="agent-runtime">
         <span className={`agent-runtime-dot ${runtime?.state ?? "checking"}`} aria-hidden="true" />
         <div>
@@ -355,7 +356,7 @@ export function AgentPanel({
               void submitRun();
             }
           }}
-          placeholder="Ask OpenCode about this project"
+          placeholder="Ask OpenCode about this project (only you can see this session)"
           data-testid="agent-prompt"
         />
         <div className="agent-composer-toolbar">

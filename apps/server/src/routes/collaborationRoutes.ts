@@ -2,8 +2,14 @@ import type { Express } from "express";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import type { MemberStore } from "../auth/identity.js";
 import { requireIdentity } from "../auth/permissions.js";
+import type { ChatAgentBridge } from "../agent/chatAgentBridge.js";
 
-export function registerCollaborationRoutes(app: Express, runtimeManager: ProjectRuntimeManager, members: MemberStore) {
+export function registerCollaborationRoutes(
+  app: Express,
+  runtimeManager: ProjectRuntimeManager,
+  members: MemberStore,
+  chatAgentBridge: ChatAgentBridge
+) {
   app.get("/api/projects/:projectId/room", (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
@@ -99,7 +105,29 @@ export function registerCollaborationRoutes(app: Express, runtimeManager: Projec
         authorRole: identity.role || undefined,
         text
       });
-      res.json({ message });
+      try {
+        const processed = await chatAgentBridge.handleMessage(req.params.projectId, message);
+        res.json({ message: processed });
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : "Unable to start the team Agent";
+        runtime.events.append({
+          type: "agent_task_failed",
+          roomId: runtime.room.id,
+          memberId: identity.memberId,
+          payload: {
+            chatMessageId: message.id,
+            error: detail
+          }
+        });
+        await runtime.chat.createMessage({
+          roomId: runtime.room.id,
+          authorId: "agent",
+          authorName: "System",
+          kind: "system",
+          text: `Unable to start the team Agent: ${detail}`
+        });
+        res.json({ message });
+      }
     } catch (error) { next(error); }
   });
 

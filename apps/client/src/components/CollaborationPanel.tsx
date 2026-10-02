@@ -9,6 +9,7 @@ import {
   LogIn,
   LogOut,
   MessageSquareText,
+  Plus,
   Pencil,
   Settings2,
   Trash2,
@@ -17,6 +18,8 @@ import {
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
 import type {
+  AgentRun,
+  AgentSession,
   ChatMessage,
   EventRecord,
   RemoteCursor,
@@ -50,6 +53,8 @@ export function CollaborationPanel({
   members,
   events,
   chatMessages,
+  teamAgents,
+  agentRuns,
   remoteCursors,
   chatText,
   chatSending,
@@ -64,11 +69,15 @@ export function CollaborationPanel({
   followingMemberId,
   onFollowMember,
   onOpenFile,
-  onError
+  onError,
+  onCreateTeamAgent,
+  onCancelAgentRun
 }: {
   members: RoomMember[];
   events: EventRecord[];
   chatMessages: ChatMessage[];
+  teamAgents: AgentSession[];
+  agentRuns: AgentRun[];
   remoteCursors: RemoteCursor[];
   chatText: string;
   chatSending: boolean;
@@ -84,8 +93,12 @@ export function CollaborationPanel({
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
+  onCreateTeamAgent(name: string): Promise<void>;
+  onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
+  const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
+  const [teamAgentName, setTeamAgentName] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
@@ -101,6 +114,22 @@ export function CollaborationPanel({
         .reverse(),
     [events, members]
   );
+  const mentionQuery = chatText.match(/(?:^|\s)@([a-z0-9-]*)$/i)?.[1]?.toLowerCase();
+  const mentionCandidates = useMemo(() => [
+    ...teamAgents
+      .filter((agent): agent is AgentSession & { handle: string } => Boolean(agent.handle))
+      .map((agent) => ({ id: agent.id, handle: agent.handle, name: agent.handle, team: true })),
+    ...members.map((candidate) => ({
+      id: candidate.id,
+      handle: memberHandle(candidate.displayName),
+      name: candidate.displayName,
+      team: false
+    }))
+  ], [members, teamAgents]);
+  const visibleMentionCandidates = mentionQuery === undefined
+    ? []
+    : mentionCandidates.filter((candidate) => candidate.handle.startsWith(mentionQuery));
+  const runsById = useMemo(() => new Map(agentRuns.map((run) => [run.id, run])), [agentRuns]);
 
   useLayoutEffect(() => {
     const transcript = chatTranscriptRef.current;
@@ -144,7 +173,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-agent"
         >
           <Bot size={14} />
-          Agent
+          My Agent
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
@@ -167,6 +196,47 @@ export function CollaborationPanel({
       <div className="collab-tab-body">
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
+            <div className="team-agent-bar" data-testid="team-agent-bar">
+              <strong>Team Agents</strong>
+              {teamAgents.map((agent) => {
+                const active = agentRuns.some(
+                  (run) => run.sessionId === agent.id && (run.status === "queued" || run.status === "running")
+                );
+                return (
+                  <span key={agent.id} className="team-agent-status">
+                    <Bot size={13} /> @{agent.handle ?? agent.title} · {active ? "Running" : "Idle"}
+                  </span>
+                );
+              })}
+              <button type="button" data-testid="team-agent-create" onClick={() => setTeamAgentFormOpen((current) => !current)}>
+                <Plus size={13} /> Agent
+              </button>
+            </div>
+            {teamAgentFormOpen ? (
+              <div className="team-agent-create">
+                <input
+                  value={teamAgentName}
+                  onChange={(event) => setTeamAgentName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" || !teamAgentName.trim()) return;
+                    void onCreateTeamAgent(teamAgentName.trim()).then(() => {
+                      setTeamAgentName("");
+                      setTeamAgentFormOpen(false);
+                    }).catch(onError);
+                  }}
+                  placeholder="Agent name"
+                  data-testid="team-agent-name"
+                />
+                <button
+                  type="button"
+                  disabled={!teamAgentName.trim()}
+                  onClick={() => void onCreateTeamAgent(teamAgentName.trim()).then(() => {
+                    setTeamAgentName("");
+                    setTeamAgentFormOpen(false);
+                  }).catch(onError)}
+                >Create</button>
+              </div>
+            ) : null}
             <ol
               ref={chatTranscriptRef}
               className="chat-transcript"
@@ -179,18 +249,30 @@ export function CollaborationPanel({
               data-testid="chat-transcript"
             >
               {chatMessages.length === 0 ? (
-                <li className="empty-panel-state">No messages yet.</li>
+                <li className="empty-panel-state">Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.</li>
               ) : (
                 chatMessages.map((message) => (
-                  <li key={message.id} className="chat-message">
+                  <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}`}>
                     <span>
                       <strong>
+                        {message.kind === "agent" ? <Bot size={13} /> : null}
                         {message.authorName}
                         {message.authorRole ? ` · ${message.authorRole}` : ""}
                       </strong>
                       <time>{formatTime(message.timestamp)}</time>
                     </span>
-                    <p>{message.text}</p>
+                    {message.kind === "system" ? (
+                      <p className="chat-system-message">{message.text}</p>
+                    ) : message.kind === "agent" ? (
+                      <ChatAgentMessage
+                        message={message}
+                        run={message.runId ? runsById.get(message.runId) : undefined}
+                        onOpenFile={onOpenFile}
+                        onCancelAgentRun={onCancelAgentRun}
+                      />
+                    ) : (
+                      <p>{message.text}</p>
+                    )}
                   </li>
                 ))
               )}
@@ -218,10 +300,27 @@ export function CollaborationPanel({
                     onSendChat();
                   }
                 }}
-                placeholder="Message collaborators"
+                placeholder="Message the team, or @agent to give the shared agent a task"
                 aria-describedby="chat-keyboard-hint"
                 data-testid="chat-input"
               />
+              {visibleMentionCandidates.length > 0 ? (
+                <ul className="mention-candidates" data-testid="mention-candidates">
+                  {visibleMentionCandidates.map((candidate) => (
+                    <li key={`${candidate.team ? "team" : "member"}-${candidate.id}`}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const prefix = chatText.slice(0, chatText.length - (mentionQuery?.length ?? 0) - 1);
+                          onChatTextChange(`${prefix}@${candidate.handle} `);
+                        }}
+                      >
+                        {candidate.team ? <Bot size={13} /> : <Users size={13} />} @{candidate.handle} · {candidate.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="chat-actions">
                 <small id="chat-keyboard-hint">
                   Enter to send / Shift + Enter for new line
@@ -350,6 +449,60 @@ export function CollaborationPanel({
       </div>
     </div>
   );
+}
+
+function ChatAgentMessage({
+  message,
+  run,
+  onOpenFile,
+  onCancelAgentRun
+}: {
+  message: ChatMessage;
+  run?: AgentRun;
+  onOpenFile(path: string): void;
+  onCancelAgentRun(runId: string): Promise<void>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = message.text.split("\n");
+  const canExpand = lines.length > 20;
+  const visibleText = canExpand && !expanded ? lines.slice(0, 20).join("\n") : message.text;
+  return (
+    <>
+      <p>{visibleText}</p>
+      {canExpand ? (
+        <button type="button" className="chat-output-toggle" onClick={() => setExpanded((current) => !current)}>
+          {expanded ? "Collapse" : "Show full response"}
+        </button>
+      ) : null}
+      {run ? (
+        <article className="chat-agent-card" data-testid="chat-agent-card">
+          <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.status}</span></div>
+          {run.fileChanges?.length ? (
+            <ul>
+              {run.fileChanges.map((change) => (
+                <li key={change.file}>
+                  <button type="button" onClick={() => onOpenFile(change.file)}>{change.file}</button>
+                </li>
+              ))}
+            </ul>
+          ) : <small>No file changes recorded.</small>}
+          <div className="chat-agent-card-actions">
+            <details>
+              <summary>View trace</summary>
+              <small>Open My Agent to inspect the complete trace.</small>
+            </details>
+            {run.status === "queued" || run.status === "running" ? (
+              <button type="button" onClick={() => void onCancelAgentRun(run.id)}>Stop</button>
+            ) : null}
+          </div>
+        </article>
+      ) : null}
+    </>
+  );
+}
+
+function memberHandle(name: string) {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || "member";
 }
 
 function formatActivity(

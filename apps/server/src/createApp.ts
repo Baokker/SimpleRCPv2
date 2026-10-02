@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import path from "node:path";
 import { createAgentRunManager } from "./agent/agentRunManager.js";
+import { createChatAgentBridge } from "./agent/chatAgentBridge.js";
 import { createAgentSettingsStore } from "./agent/agentSettingsStore.js";
 import { createOpenCodeRuntime } from "./agent/openCodeRuntime.js";
 import type { ServerConfig } from "./config.js";
@@ -50,6 +51,7 @@ export async function createApp(config: ServerConfig) {
     }
   });
   await agentRuns.initialize();
+  const chatAgentBridge = createChatAgentBridge({ agentRuns, runtimeManager });
 
   const app = express();
   app.locals.registry = registry;
@@ -57,6 +59,7 @@ export async function createApp(config: ServerConfig) {
   app.locals.agentSettings = agentSettings;
   app.locals.agentRuntime = agentRuntime;
   app.locals.agentRuns = agentRuns;
+  app.locals.chatAgentBridge = chatAgentBridge;
   app.locals.members = members;
   app.use(cors());
   app.use(express.json({ limit: "5mb" }));
@@ -85,7 +88,7 @@ export async function createApp(config: ServerConfig) {
 
   registerAgentRoutes(app, { agentRuntime, agentRuns, agentSettings });
   registerProjectRoutes(app, { agentRuns, registry, runtimeManager });
-  registerCollaborationRoutes(app, runtimeManager, members);
+  registerCollaborationRoutes(app, runtimeManager, members, chatAgentBridge);
   registerWorkspaceRoutes(app, runtimeManager);
 
   app.use(
