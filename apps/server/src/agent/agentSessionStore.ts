@@ -27,13 +27,23 @@ export function createAgentSessionStore(projectId: string, projectRoot: string) 
       return records.create({ ...input, id: nanoid(12), createdAt: now, updatedAt: now });
     },
     get: records.get,
-    async list(memberId?: string) {
+    async list(memberId?: string, scope?: AgentSession["scope"]) {
       return (await records.list())
         .filter(
-          (session) =>
-            !memberId || (!session.historical && session.memberId === memberId)
+          (session) => {
+            const sessionScope = session.scope ?? "personal";
+            if (scope && sessionScope !== scope) return false;
+            if (!memberId) return true;
+            if (sessionScope === "team") return scope === "team";
+            return !session.historical && session.memberId === memberId;
+          }
         )
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+    },
+    async findByHandle(handle: string) {
+      return (await records.list()).find(
+        (session) => (session.scope ?? "personal") === "team" && session.handle === handle
+      );
     },
     update(sessionId: string, update: Partial<AgentSession>) {
       return records.update(sessionId, (current) => ({

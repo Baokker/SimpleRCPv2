@@ -86,6 +86,10 @@ export interface ChatMessage {
   authorRole?: string;
   text: string;
   timestamp: string;
+  kind?: "member" | "agent" | "system";
+  agentSessionId?: string;
+  runId?: string;
+  mentions?: string[];
 }
 
 export interface AgentSettings {
@@ -140,6 +144,11 @@ export interface AgentRun {
   runtime: "opencode";
   provider: "deepseek";
   model: string;
+  source?: "agent-panel" | "chat";
+  chatMessageId?: string;
+  extraPrompt?: string;
+  interruptedByRunId?: string;
+  interruptedByMemberId?: string;
   sessionId?: string;
   runtimeSessionId?: string;
   output?: string;
@@ -154,6 +163,10 @@ export interface AgentSession {
   id: string;
   projectId: string;
   memberId: string;
+  scope?: "personal" | "team";
+  handle?: string;
+  description?: string;
+  createdByMemberId?: string;
   participantId?: string;
   memberName?: string;
   historical?: boolean;
@@ -290,6 +303,16 @@ export type ServerMessage =
       type: "agent_trace_appended";
       runId: string;
       sequence: number;
+    }
+  | {
+      type: "chat_message_created";
+      roomId: string;
+      message: ChatMessage;
+    }
+  | {
+      type: "team_agents_changed";
+      projectId: string;
+      agents: AgentSession[];
     };
 
 export type TerminalClientMessage =
