@@ -53,7 +53,7 @@ export async function getAgentRuns(projectId: string) {
   return response.runs;
 }
 
-export async function getAgentSessions(projectId: string, memberId: string) {
+export async function getAgentSessions(projectId: string) {
   const response = await request<{ sessions: AgentSession[] }>(
     `${projectPath(projectId)}/agent/sessions`
   );
@@ -62,7 +62,7 @@ export async function getAgentSessions(projectId: string, memberId: string) {
 
 export async function createAgentSession(
   projectId: string,
-  input: { memberId: string; title?: string }
+  input: { title?: string }
 ) {
   return request<{ session: AgentSession }>(`${projectPath(projectId)}/agent/sessions`, {
     method: "POST",
@@ -74,7 +74,7 @@ export async function createAgentSession(
 export async function createAgentSessionRun(
   projectId: string,
   sessionId: string,
-  input: { memberId: string; prompt: string; contexts?: AgentPromptContext[] }
+  input: { prompt: string; contexts?: AgentPromptContext[] }
 ) {
   return request<{ run: AgentRun }>(
     `${projectPath(projectId)}/agent/sessions/${encodeURIComponent(sessionId)}/runs`,
@@ -108,8 +108,7 @@ export async function downloadAgentTrace(projectId: string, runId: string) {
 
 export async function cancelAgentRun(
   projectId: string,
-  runId: string,
-  memberId: string
+  runId: string
 ) {
   return request<{ run: AgentRun }>(
     `${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/cancel`,

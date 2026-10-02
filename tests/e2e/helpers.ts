@@ -11,7 +11,12 @@ export async function openAs(page: Page, name: string, projectId = "demo", role 
 export async function fetchEvents(page: Page, projectId = "demo") {
   return page.evaluate(async (activeProjectId) => {
     const response = await fetch(`/api/projects/${activeProjectId}/events`, {
-      headers: { "X-SimpleRCP-Member": localStorage.getItem(`simplercp.memberId.${activeProjectId}`) ?? "" }
+      headers: {
+        "X-SimpleRCP-Member":
+          sessionStorage.getItem(`simplercp.memberId.${activeProjectId}`)
+          ?? localStorage.getItem(`simplercp.memberId.${activeProjectId}`)
+          ?? ""
+      }
     });
     return response.json() as Promise<{
       events: Array<{ type: string; payload?: Record<string, unknown> }>;

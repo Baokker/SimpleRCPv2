@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getParticipants, getProject, getServerInfo } from "../api";
-import { storedMemberId } from "../memberIdentity";
+import { sessionMemberId } from "../memberIdentity";
 import type { ProjectIdentity } from "../components/JoinProject";
 import type { ProjectParticipant, ProjectRecord } from "../types";
 
@@ -33,7 +33,7 @@ export function useProjectRoute(projectId: string) {
     void Promise.all([getProject(projectId), getParticipants(projectId), getServerInfo()])
       .then(([result, participants, serverInfo]) => {
         if (!active) return;
-        const memberId = storedMemberId(projectId);
+        const memberId = sessionMemberId(projectId);
         const member = participants.find((candidate) => candidate.id === memberId);
         setState({
           project: result.project,

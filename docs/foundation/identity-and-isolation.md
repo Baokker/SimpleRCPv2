@@ -6,7 +6,7 @@
 
 `POST /api/projects/:projectId/members` 接收 `name`、可选 `role`、`memberId` 与连接标识 `connectionId`。已有成员 ID 恢复原成员并更新显示名；提供 Role 时更新 Role，省略时保留。未知 ID 会得到新的服务端 ID。
 
-客户端以 `simplercp.memberId.<projectId>` 保存 ID，刷新和多个标签页共享成员身份，连接仍分别使用自己的 `connectionId`。旧 `participants.json` 可以在首次读取时转换为成员记录；兼容接口中的 `participantId` 与 `memberId` 使用同一个值。
+客户端以 `sessionStorage` 保存当前标签页的 `simplercp.memberId.<projectId>`，并以同名 `localStorage` 项保存最近一次选择。刷新当前标签页会恢复自己的成员；新标签页可以从最近选择开始，也可以在加入页选择已有成员或创建新成员。连接仍分别使用自己的 `connectionId`。旧 `participants.json` 可以在首次读取时转换为成员记录；兼容接口中的 `participantId` 与 `memberId` 使用同一个值。
 
 ## 身份传递
 
@@ -34,7 +34,7 @@
 
 `processEnv.ts` 为终端提供 PATH、HOME、USER、LOGNAME、SHELL、LANG、LC_*、TERM、COLORTERM、TMPDIR、TZ。可以增加普通变量，名称匹配 KEY、TOKEN、SECRET、PASSWORD、COOKIE 的变量始终过滤。OpenCode 额外接收 DeepSeek 配置。`SIMPLERCP_TERMINAL_HOME` 可以指定专用 HOME。
 
-OpenCode `external_directory=deny` 限制文件工具越界。trace 收集环境中疑似密钥变量值，替换为 `[REDACTED:<变量名>]`，同时处理 `sk-`、Bearer 与 Authorization。活动和聊天使用同一脱敏函数。
+OpenCode `external_directory=deny` 限制文件工具越界。OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，因此其 bash 工具可以读取模型 Key；终端进程不会继承该变量。trace 收集环境中疑似密钥变量值，替换为 `[REDACTED:<变量名>]`，同时处理 `sk-`、Bearer 与 Authorization。活动和聊天使用同一脱敏函数。
 
 ## 使用范围
 
