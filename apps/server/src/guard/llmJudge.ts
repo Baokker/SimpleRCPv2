@@ -40,6 +40,8 @@ export async function judgeGuardRequest(input: {
     const result = JSON.parse(content) as Partial<JudgeResult>;
     if (!["low", "medium", "high"].includes(result.risk ?? "") || typeof result.confidence !== "number" || typeof result.reason !== "string") return undefined;
     return { risk: result.risk as JudgeResult["risk"], confidence: Math.max(0, Math.min(1, result.confidence)), reason: result.reason };
+  } catch {
+    return undefined;
   } finally {
     clearTimeout(timer);
   }
