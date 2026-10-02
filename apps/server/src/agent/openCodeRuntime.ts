@@ -11,6 +11,7 @@ interface OpenCodeRuntimeOptions {
   apiKey?: string;
   baseUrl: string;
   getSettings(): AgentSettingsResponse;
+  guardMode?: "full" | "human-only" | "off";
 }
 
 export function createOpenCodeRuntime(
@@ -25,7 +26,8 @@ export function createOpenCodeRuntime(
       port: options.port,
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
-      model: settings.model
+      model: settings.model,
+      guardMode: options.guardMode ?? "full"
     });
   }
 
@@ -141,6 +143,15 @@ export function createOpenCodeRuntime(
           : []
       );
     },
+    async replyPermission(input) {
+      const client = await getClient(input.workspacePath);
+      await client.permission.reply({
+        requestID: input.requestId,
+        directory: input.workspacePath,
+        reply: input.reply,
+        message: input.message
+      }, { throwOnError: true });
+    },
     async cancel(input) {
       const client = await getClient(input.workspacePath);
       await client.session.abort(
@@ -203,10 +214,12 @@ function eventBelongsToSession(event: {
     sessionID?: unknown;
     info?: { sessionID?: unknown };
     part?: { sessionID?: unknown };
+    data?: { sessionID?: unknown };
   };
   return (
     properties.sessionID === sessionId ||
     properties.info?.sessionID === sessionId ||
-    properties.part?.sessionID === sessionId
+    properties.part?.sessionID === sessionId ||
+    properties.data?.sessionID === sessionId
   );
 }

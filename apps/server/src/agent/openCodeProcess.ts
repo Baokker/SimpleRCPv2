@@ -12,6 +12,7 @@ interface OpenCodeProcessOptions {
   apiKey?: string;
   baseUrl: string;
   model: string;
+  guardMode?: "full" | "human-only" | "off";
 }
 
 interface RunningOpenCodeProcess {
@@ -94,7 +95,8 @@ function resolveOpenCodeExecutable() {
   return path.join(path.dirname(packagePath), "bin", "opencode.exe");
 }
 
-function openCodeConfig(options: OpenCodeProcessOptions): Config {
+export function openCodeConfig(options: OpenCodeProcessOptions): Config {
+  const guarded = (options.guardMode ?? process.env.SIMPLERCP_GUARD_MODE ?? "full") === "full";
   return {
     autoupdate: false,
     share: "disabled",
@@ -118,9 +120,10 @@ function openCodeConfig(options: OpenCodeProcessOptions): Config {
       }
     },
     permission: {
-      edit: "allow",
-      bash: "allow",
-      webfetch: "allow",
+      read: guarded ? { "*": "allow", ".env*": "ask", "*.pem": "ask", "*.key": "ask", ".git/config": "ask", ".git/hooks/**": "ask" } : "allow",
+      edit: guarded ? "ask" : "allow",
+      bash: guarded ? "ask" : "allow",
+      webfetch: guarded ? "ask" : "allow",
       doom_loop: "allow",
       external_directory: "deny"
     }

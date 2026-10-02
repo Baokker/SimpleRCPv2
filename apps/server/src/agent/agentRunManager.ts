@@ -247,6 +247,53 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: `opencode.${event.type}`,
             data: event.data
           });
+          const permissionEvent = event.type === "permission.asked" || event.type === "permission.v2.asked";
+          if (!permissionEvent) return;
+          const envelope = event.data as {
+            data?: Record<string, unknown>;
+          };
+          const data = (event.type === "permission.v2.asked" ? envelope.data : envelope) as {
+            id?: unknown;
+            sessionID?: unknown;
+            permission?: unknown;
+            action?: unknown;
+            patterns?: unknown;
+            resources?: unknown;
+            metadata?: Record<string, unknown>;
+          };
+          if (typeof data.id !== "string") throw new Error("OpenCode permission request id is missing");
+          const permission = typeof data.permission === "string" ? data.permission : typeof data.action === "string" ? data.action : "";
+          const rawPatterns = Array.isArray(data.patterns) ? data.patterns : data.resources;
+          const patterns = Array.isArray(rawPatterns)
+            ? rawPatterns.filter((value): value is string => typeof value === "string")
+            : [];
+          const metadata = data.metadata ?? {};
+          const supported = ["bash", "edit", "read", "webfetch"].includes(permission);
+          const commandValue = metadata.command ?? metadata.description ?? patterns[0];
+          const request = {
+            projectId,
+            memberId: run.initiatorMemberId ?? run.memberId,
+            source: "agent" as const,
+            agentRunId: run.id,
+            kind: permission === "edit" ? "edit" as const : permission === "read" ? "read" as const : permission === "webfetch" ? "fetch" as const : "command" as const,
+            command: permission === "bash" ? String(commandValue ?? "") : undefined,
+            paths: permission === "edit" || permission === "read" ? patterns : undefined,
+            url: permission === "webfetch" ? String(metadata.url ?? patterns[0] ?? "") : undefined,
+            cwd: projectRuntime.project.workspacePath,
+            unknownTool: !supported
+          };
+          const permissionResult = await projectRuntime.guard.submit(request, {
+            timeoutMs: Math.min(projectRuntime.guard.approvalTimeoutMs(), Math.max(1, Math.floor(options.runTimeoutMs / 2)))
+          });
+          if (permissionResult.approved && permissionResult.decision.action === "allow_snapshot") {
+            await projectRuntime.guard.createSnapshot(request);
+          }
+          await options.runtime.replyPermission({
+            workspacePath: projectRuntime.project.workspacePath,
+            requestId: data.id,
+            reply: permissionResult.approved ? "once" : "reject",
+            message: permissionResult.approved ? undefined : permissionResult.decision.matchedRules.join(", ") || "Permission denied by project guard"
+          });
         }
       );
 
@@ -257,11 +304,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           prompt: await buildRuntimePrompt(projectRuntime.project.workspacePath, run.prompt, run.contexts)
         }),
         options.runTimeoutMs,
-        () =>
-          options.runtime.cancel({
+        async () => {
+          projectRuntime.guard.cancelRun(run.id);
+          await options.runtime.cancel({
             workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId
-          })
+            sessionId: runtimeSessionId
+          });
+        }
       ).finally(stopEvents);
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") return;
@@ -554,6 +603,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
 
       const active = activeRuns.get(runId);
+      projectRuntime.guard.cancelRun(runId);
       if (active) {
         await options.runtime.cancel({
           workspacePath: active.workspacePath,

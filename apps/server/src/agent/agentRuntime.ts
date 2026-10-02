@@ -24,6 +24,12 @@ export interface AgentRuntime {
     sessionId: string;
     messageId?: string;
   }): Promise<AgentFileChange[]>;
+  replyPermission(input: {
+    workspacePath: string;
+    requestId: string;
+    reply: "once" | "reject";
+    message?: string;
+  }): Promise<void>;
   cancel(input: {
     workspacePath: string;
     sessionId: string;
