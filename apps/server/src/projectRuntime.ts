@@ -2,8 +2,7 @@ import path from "node:path";
 import { createChatStore } from "./chat.js";
 import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import { createEventLog } from "./eventLog.js";
-import { createParticipantStore } from "./participantStore.js";
-import type { ProjectRecord } from "./projects.js";
+import { getProjectMetadataPath, type ProjectRecord } from "./projects.js";
 import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import type { WorkspaceChange } from "./types.js";
@@ -13,12 +12,11 @@ export function createProjectRuntime(
   project: ProjectRecord,
   options: { terminalEnabled?: boolean } = {}
 ) {
-  const projectRoot = path.dirname(project.workspacePath);
+  const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
-  const participants = createParticipantStore(project.id, projectRoot);
   const rooms = createRoomStore(events);
   const chat = createChatStore(events, {
-    storagePath: path.join(path.dirname(project.workspacePath), "chat.json")
+    storagePath: path.join(projectRoot, "chat.json")
   });
   const workspaceListeners = new Set<(change: WorkspaceChange) => void>();
   let suppressedWorkspaceChanges: Array<{
@@ -41,6 +39,22 @@ export function createProjectRuntime(
   });
   const room = rooms.createRoom(project.workspacePath, project.name);
   const terminalListeners = new Set<(data: string) => void>();
+  const inputWindows = new Map<string, { count: number; timer: ReturnType<typeof setTimeout> }>();
+  function flushInput(memberId: string) {
+    const window = inputWindows.get(memberId);
+    if (!window) return;
+    clearTimeout(window.timer);
+    inputWindows.delete(memberId);
+    events.append({ type: "terminal_input", roomId: room.id, memberId, payload: {
+      count: window.count,
+      name: room.members.find((member) => member.id === memberId)?.displayName ?? memberId
+    } });
+  }
+  const removeTerminalInputListener = terminal.onInput((memberId) => {
+    const window = inputWindows.get(memberId);
+    if (window) window.count += 1;
+    else inputWindows.set(memberId, { count: 1, timer: setTimeout(() => flushInput(memberId), 1_000) });
+  });
   const removeTerminalListener = terminal.onData((data) => {
     for (const listener of terminalListeners) listener(data);
   });
@@ -110,7 +124,6 @@ export function createProjectRuntime(
     project,
     terminalEnabled: terminal.enabled,
     events,
-    participants,
     rooms,
     chat,
     documents,
@@ -140,6 +153,8 @@ export function createProjectRuntime(
       fileSavedListeners.clear();
       terminalListeners.clear();
       removeTerminalListener();
+      removeTerminalInputListener();
+      for (const memberId of inputWindows.keys()) flushInput(memberId);
       await documents.awaitIdle();
       await chat.awaitIdle();
       await events.awaitIdle();

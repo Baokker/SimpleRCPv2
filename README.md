@@ -12,18 +12,18 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 
 - 项目首页：打开或删除已登记项目、创建空白项目、导入服务端已有目录、导入 ZIP。
 - 默认 Demo：首次启动时自动复制 `demo/workspace` 并登记为 Demo 项目。
-- 服务端代码保存：全部项目位于 `.simplercp-data/projects/`，也可以通过环境变量指定其他绝对路径。
+- 服务端元数据保存：项目记录位于 `.simplercp-data/projects/`，工作区默认位于 `.simplercp-data/workspaces/`，也可以通过环境变量指定其他绝对路径。
 - 文件管理：按需读取文件树，支持创建、重命名和删除文件与目录。
 - 代码编辑：使用 Monaco Editor 和 Yjs 同步多人文本编辑、光标和选区，并显示保存与同步状态。
 - 实时协作：显示成员、当前文件、聊天消息和 Activity；聊天与 Activity 保存在服务端，文件编辑记录包含变化行号与增删行数。
-- Participant 身份：项目保存 Participant，重新进入时可以恢复自己的 Agent session；同一浏览器的不同标签页可以选择不同 Participant。
+- 成员身份：服务端分配 `memberId`，客户端按项目保存在 localStorage；刷新、重新打开浏览器和多个标签页使用同一成员身份。
 - 共享终端：使用 `node-pty` 在当前项目目录中运行 shell，允许输入任意命令。
 - 外部变化同步：监听终端或其他程序产生的文件变化，并更新文件树和已经打开的协作文档。
 - 错误恢复：协作连接与终端连接会自动重连，离线后可以手动重试；项目被删除后返回项目首页。
 - 工作区控制：文件操作使用应用内确认窗口，Terminal 与 Collaboration 面板可以从状态栏显示或隐藏。
 - 日间模式与夜间模式：主题选择保存在当前浏览器中。
 - Agent 设置：首页可以查看 OpenCode 状态和版本，设置 DeepSeek Model，并启用或停用 Agent。
-- Agent 任务：项目侧栏可以创建任务、继续 session、取消自己的任务、查看队列位置、模型输出和文件变化。
+- Agent 任务：项目侧栏可以创建任务、继续自己的 session、取消任务、查看队列位置、模型输出和文件变化。
 - Agent trace：OpenCode SSE、状态、文件变化和并发修改提示按 JSONL 保存，可以在页面查看并下载。
 
 ## 配置与使用
@@ -72,7 +72,7 @@ pnpm dev
 ```
 
 5. 打开 `http://127.0.0.1:5173`。项目列表会显示内置 Demo，也可以创建空白项目、导入 ZIP，或者导入服务端已有目录。
-6. 填写显示名称和可选角色，进入项目工作区。角色只用于界面显示，进入项目的成员拥有相同的文件与终端能力。
+6. 打开项目，填写显示名和可选的 Role 后进入工作区。Role 仅作为显示标签，所有成员能力相同。
 7. 在工作区中编辑文件、聊天、使用共享终端，或者在 `Agent` 页签向 OpenCode 提交任务。
 
 默认地址为：
@@ -80,7 +80,7 @@ pnpm dev
 - 浏览器：`http://127.0.0.1:5173`
 - 服务端：`http://127.0.0.1:4000`
 
-启动命令无需填写 Workspace 参数。首次启动会创建 `.simplercp-data/`，并把仓库中的 `demo/workspace/` 复制到数据目录。浏览器项目列表中会直接显示 Demo。
+启动命令无需填写 Workspace 参数。首次启动会创建 `.simplercp-data/`，并把仓库中的 `demo/workspace/` 复制到工作区目录。浏览器项目列表中会直接显示 Demo。
 
 Demo 只使用 Node.js 内置功能。进入 Demo 后可以在共享终端运行：
 
@@ -94,35 +94,48 @@ npm test
 ## 项目结构
 
 ```text
-.
-├── README.md
-├── apps
-│   ├── client
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   ├── src
-│   │   └── vite.config.ts
-│   └── server
-│       ├── package.json
-│       ├── src
-│       └── vitest.config.ts
-├── demo
-│   └── workspace
-├── docs
-│   ├── product
-│   └── research
-├── scripts
-│   └── start-demo.mjs
-├── tests
-│   ├── e2e
-│   ├── fixtures
-│   └── playwright.config.ts
-├── package.json
-├── packages
-│   └── shared
-├── pnpm-lock.yaml
-├── pnpm-workspace.yaml
-└── tsconfig.base.json
+README.md
+package.json
+pnpm-workspace.yaml
+tsconfig.base.json
+
+apps/
+  client/
+    src/
+    index.html
+    package.json
+    vite.config.ts
+  server/
+    src/
+      agent/
+      auth/
+      routes/
+      __tests__/
+    package.json
+    vitest.config.ts
+
+packages/
+  shared/
+    src/
+    package.json
+
+demo/
+  workspace/
+
+docs/
+  foundation/
+  product/
+  research/
+  deployment.md
+  README.md
+
+scripts/
+  start-demo.mjs
+
+tests/
+  e2e/
+  fixtures/
+  playwright.config.ts
 ```
 
 主要目录职责：
@@ -142,36 +155,21 @@ npm test
 
 默认数据目录为仓库根目录下的 `.simplercp-data/`：
 
-```text
-.simplercp-data/
-├── registry.json
-├── projects
-│   └── <projectId>
-│       ├── chat.json
-│       ├── activity.json
-│       ├── participants.json
-│       ├── project.json
-│       ├── workspace
-│       ├── agent-sessions
-│       │   └── <sessionId>
-│       │       └── session.json
-│       └── agent-runs
-│           └── <runId>
-│               ├── run.json
-│               └── trace.jsonl
-└── agent
-    └── settings.json
-```
+- `registry.json`：项目登记表。
+- `instance/`：迁移标记。
+- `workspaces/<projectId>/`：项目代码。
+- `projects/<projectId>/`：`project.json`、`members.json`、`chat.json`、`activity.json`、`agent-sessions/<sessionId>/session.json`、`agent-runs/<runId>/run.json` 与 `trace.jsonl`。
+- `agent/settings.json`：全局 Agent 设置。
 
-`.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspace/` 是浏览器、共享终端和 Agent 共同访问的代码目录，也是服务端保存代码的位置。
+`.simplercp-data/` 已经加入仓库的 `.gitignore`。`workspaces/<projectId>/` 是浏览器、共享终端和 Agent 共同访问的代码目录；`projects/<projectId>/` 保存项目元数据、成员、聊天、活动、session、run 和 trace。
 
-`participants.json` 保存项目身份，`chat.json` 保存聊天，`activity.json` 保存文件操作、文件编辑和 Agent 状态摘要。Server 重新启动后会继续读取这些内容。`agent/settings.json` 保存非敏感 Agent 设置，API Key 只从服务端环境变量读取。
+`members.json` 保存成员身份与 Role，`chat.json` 保存聊天，`activity.json` 保存文件操作、文件编辑、终端输入次数、聊天归属和 Agent 状态摘要。Server 重新启动后会继续读取这些内容。`agent/settings.json` 保存非敏感 Agent 设置，API Key 只从服务端环境变量读取。
 
-进入项目时可以选择已有 Participant，或者创建新的 Participant。Agent session 与 `participantId` 关联。当前标签页选择保存在 `sessionStorage`，最近选择保存在 `localStorage`；清除浏览器存储不会删除 Server 中的 Participant 与 Agent 历史。
+进入项目时输入显示名与可选 Role。Agent session 与 `memberId` 关联。成员 ID 按项目保存在 `localStorage`；清除浏览器存储后重新加入会创建新成员，服务端的历史记录继续保留。
 
-导入服务端已有目录时，SimpleRCPv2 会把内容复制到新的 `workspace/`，原目录保持不变。导入 ZIP 和已有目录时会过滤 `.git`、`node_modules`、`__MACOSX` 和 `.DS_Store`。这些路径也不会出现在浏览器文件树和文件接口中。
+导入服务端已有目录时，SimpleRCPv2 会把内容复制到新的 `workspaces/<projectId>/`，原目录保持不变。导入 ZIP 和已有目录时会过滤 `.git`、`node_modules`、`__MACOSX` 和 `.DS_Store`。这些路径也不会出现在浏览器文件树和文件接口中。
 
-从项目首页删除项目会停止该项目的运行资源，并删除 `.simplercp-data/projects/<projectId>/` 与 Registry 记录。导入项目的原目录不受影响。内置 Demo 始终保留。
+从项目首页删除项目会停止该项目的运行资源，并删除项目元数据、工作区与 Registry 记录。导入项目的原目录不受影响。内置 Demo 始终保留。
 
 可以指定其他数据目录，路径必须为绝对路径：
 
@@ -188,6 +186,11 @@ SIMPLERCP_DATA_DIR="/srv/simplercp-data" pnpm dev
 Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.31`，Provider 默认为 DeepSeek。OpenCode 由服务端启动并监听 `127.0.0.1`，浏览器无法读取 DeepSeek API Key，也无法直接访问 OpenCode 端口。
 
 - `SIMPLERCP_DATA_DIR`：项目数据目录，默认值为仓库根目录下的 `.simplercp-data/`，设置值必须为绝对路径。
+- `SIMPLERCP_WORKSPACES_DIR`：工作区根目录，默认值为数据目录下的 `workspaces/`。
+- `SIMPLERCP_IMPORT_ROOTS`：可选的目录导入根目录，使用逗号分隔；设置后检查 realpath，未设置时允许导入服务端目录。
+- `SIMPLERCP_TERMINAL_HOME`：可选的终端专用 HOME。
+- `SIMPLERCP_TERMINAL_ENV_ALLOW`：终端额外环境变量名，使用逗号分隔；名称包含 KEY、TOKEN、SECRET、PASSWORD、COOKIE 的变量始终被过滤。
+- `SIMPLERCP_AGENT_ENV_ALLOW`：OpenCode 额外环境变量名，使用逗号分隔。
 - `SIMPLERCP_HOST`：服务端监听地址，默认值为 `127.0.0.1`。
 - `SIMPLERCP_PUBLIC_URL`：用户访问的浏览器地址，默认值为 `http://127.0.0.1:5173`。
 - `SIMPLERCP_SHELL`：共享终端使用的 shell 路径，默认读取当前进程的 `SHELL`，随后使用 `/bin/sh`。
@@ -202,25 +205,25 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 
-启动以后，可以在项目首页的 Agent 设置页面查看 OpenCode 状态、版本和 Model，并启用或停用 Agent。新任务创建 OpenCode session；在当前 Participant 的 session 中继续输入时，会复用同一个 OpenCode session。存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止执行过程被配置变化中断。
+启动以后，可以在项目首页的 Agent 设置页面查看 OpenCode 状态、版本和 Model，并启用或停用 Agent。新任务创建 OpenCode session；在当前成员的 session 中继续输入时，会复用同一个 OpenCode session。存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止执行过程被配置变化中断。
 
-## 公网访问
+## 内网访问
 
 下列命令用于开发环境的远程访问，可以同时配置服务端和客户端的监听地址：
 
 ```bash
 SIMPLERCP_HOST="0.0.0.0" \
-SIMPLERCP_PUBLIC_URL="https://code.example.com" \
+SIMPLERCP_PUBLIC_URL="http://192.168.1.10:5173" \
 VITE_SIMPLERCP_CLIENT_HOST="0.0.0.0" \
 VITE_SIMPLERCP_API_ORIGIN="http://127.0.0.1:4000" \
 pnpm dev
 ```
 
-公网部署建议由同一个域名提供页面和接口。反向代理需要转发普通 HTTP 路径 `/api`，并为 `/ws` 和 `/yjs` 开启 WebSocket 转发；启用共享终端时还需要转发 `/terminal`。页面使用 HTTPS 时，浏览器会自动使用 WSS。
+内网部署可以由同一个域名提供页面和接口。反向代理需要转发普通 HTTP 路径 `/api`，并为 `/ws` 和 `/yjs` 开启 WebSocket 转发；启用共享终端时还需要转发 `/terminal`。页面使用 HTTPS 时，浏览器会自动使用 WSS。
 
-公网环境无需共享终端时，建议设置 `SIMPLERCP_TERMINAL_ENABLED=false`。该配置可以减少远程命令入口，并避免创建项目 PTY。
+无需共享终端时，可以设置 `SIMPLERCP_TERMINAL_ENABLED=false`。
 
-当前版本允许项目成员运行任意 shell 命令，并直接访问服务端项目目录。公网部署需要在可信网络、VPN 或外部身份认证之后提供访问，不应直接开放为匿名公共服务。相关限制见 [已知问题](./docs/product/known-issues.md)。
+当前版本不做鉴权，知道 `memberId` 即可冒充成员，项目管理和全局设置也开放。平台只适合受信的内部环境，不应部署到公网。终端与 Agent 可以运行 shell 命令并通过绝对路径访问服务端用户能读取的文件。相关限制见 [已知问题](./docs/product/known-issues.md) 与 [部署说明](./docs/deployment.md)。
 
 仓库当前提供 Vite 开发服务和构建命令，没有提供生产环境进程管理与静态文件服务。正式部署需要由部署环境提供静态文件服务、Node.js 服务进程和反向代理。
 

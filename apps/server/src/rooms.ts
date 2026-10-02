@@ -4,6 +4,7 @@ import type { EventLog } from "./eventLog.js";
 import type { RoomConnection, RoomMember, RoomState } from "./types.js";
 
 export interface JoinRoomInput {
+  memberId?: string;
   name: string;
   participantId?: string;
   connectionId?: string;
@@ -69,7 +70,7 @@ export function createRoomStore(events: EventLog) {
       }
 
       const member: RoomMember = {
-        id: nanoid(10),
+        id: input.memberId ?? nanoid(10),
         participantId: normalized.participantId,
         name: normalized.name,
         displayName: normalized.name,

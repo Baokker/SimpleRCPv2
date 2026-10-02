@@ -1,13 +1,17 @@
-import type { AgentSession } from "@simplercp/shared";
-import type { ProjectRuntime } from "../projectRuntime.js";
 import type { AgentRunStore } from "./agentRunStore.js";
 import type { AgentSessionStore } from "./agentSessionStore.js";
 
 export async function migrateLegacyAgentSessions(
   projectId: string,
   runStore: AgentRunStore,
-  sessionStore: AgentSessionStore
+  sessionStore: AgentSessionStore,
+  memberIds: Set<string>
 ) {
+  for (const session of await sessionStore.list()) {
+    if (!memberIds.has(session.memberId) && !session.historical) {
+      await sessionStore.update(session.id, { historical: true });
+    }
+  }
   const runs = await runStore.list();
   const migrated = new Map<
     string,
@@ -24,6 +28,7 @@ export async function migrateLegacyAgentSessions(
         projectId,
         memberId: run.memberId,
         memberName: run.memberName,
+        historical: !memberIds.has(run.memberId),
         title: run.prompt.slice(0, 80),
         runtime: "opencode",
         runtimeSessionId: legacyRuntimeSessionId,
@@ -36,24 +41,4 @@ export async function migrateLegacyAgentSessions(
       runtimeSessionId: legacyRuntimeSessionId
     });
   }
-}
-
-export async function claimLegacyAgentSession(
-  projectRuntime: ProjectRuntime,
-  sessionStore: AgentSessionStore,
-  session: AgentSession,
-  participantId: string,
-  displayName: string
-) {
-  if (session.participantId || session.memberName !== displayName) return session;
-  const matchingParticipants = (await projectRuntime.participants.list()).filter(
-    (participant) => participant.displayName === displayName
-  );
-  if (
-    matchingParticipants.length !== 1 ||
-    matchingParticipants[0]?.id !== participantId
-  ) {
-    return session;
-  }
-  return sessionStore.update(session.id, { participantId });
 }

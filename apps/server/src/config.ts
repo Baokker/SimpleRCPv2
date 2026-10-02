@@ -8,8 +8,10 @@ export interface ServerConfig {
   host: string;
   publicOrigin: string;
   dataDir: string;
+  workspacesDir?: string;
   demoProjectRoot: string;
   terminalEnabled?: boolean;
+  importRoots?: string[];
   agent?: {
     apiKey?: string;
     baseUrl: string;
@@ -28,7 +30,7 @@ export function loadConfig(
     throw new Error("PORT must be an integer between 1 and 65535");
   }
 
-  const configuredDataDir = env.SIMPLERCP_DATA_DIR;
+  const configuredDataDir = env.SIMPLERCP_DATA_DIR?.trim() || undefined;
   if (configuredDataDir && !path.isAbsolute(configuredDataDir)) {
     throw new Error("SIMPLERCP_DATA_DIR must be an absolute path");
   }
@@ -59,12 +61,21 @@ export function loadConfig(
     "SIMPLERCP_TERMINAL_ENABLED",
     true
   );
+  const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
+    ? undefined
+    : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
+  if (importRoots?.some((root) => !path.isAbsolute(root))) throw new Error("SIMPLERCP_IMPORT_ROOTS must contain absolute paths");
+  const dataDir = configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data");
+  const workspacesDir = env.SIMPLERCP_WORKSPACES_DIR?.trim() || path.join(dataDir, "workspaces");
+  if (!path.isAbsolute(workspacesDir)) throw new Error("SIMPLERCP_WORKSPACES_DIR must be an absolute path");
 
-  return {
+  const config: ServerConfig = {
     port,
     host: env.SIMPLERCP_HOST ?? "127.0.0.1",
     publicOrigin: publicUrl.origin,
-    dataDir: configuredDataDir ?? path.resolve(repositoryRoot, ".simplercp-data"),
+    dataDir,
+    workspacesDir,
+    importRoots,
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     agent: {
@@ -75,6 +86,7 @@ export function loadConfig(
       runTimeoutMs
     }
   };
+  return config;
 }
 
 function readBoolean(

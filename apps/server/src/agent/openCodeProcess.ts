@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createOpencodeClient, type Config } from "@opencode-ai/sdk/v2";
+import { agentEnv } from "../processEnv.js";
 
 export const OPEN_CODE_PROVIDER_ID = "simplercp-deepseek";
 const OPEN_CODE_VERSION = "1.18.31";
@@ -36,7 +37,7 @@ export function createOpenCodeProcess(options: OpenCodeProcessOptions) {
       ["serve", "--hostname=127.0.0.1", `--port=${options.port}`],
       {
         env: {
-          ...process.env,
+          ...agentEnv(),
           DEEPSEEK_API_KEY: options.apiKey ?? "",
           OPENCODE_CONFIG_CONTENT: JSON.stringify(openCodeConfig(options))
         },

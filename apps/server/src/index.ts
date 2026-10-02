@@ -15,7 +15,8 @@ const server = http.createServer(app);
 const realtime = attachRealtimeServer(
   server,
   app.locals.runtimeManager,
-  app.locals.agentRuns
+  app.locals.agentRuns,
+  { members: app.locals.members }
 );
 
 server.listen(config.port, config.host, () => {

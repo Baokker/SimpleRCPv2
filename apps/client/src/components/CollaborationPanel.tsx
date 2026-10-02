@@ -340,7 +340,7 @@ export function CollaborationPanel({
             <dl className="session-facts">
               <div><dt>Room</dt><dd>{roomId}</dd></div>
               <div><dt>Workspace</dt><dd title={workspaceRoot}>{workspaceRoot}</dd></div>
-              <div><dt>Your role</dt><dd>{member?.profileRole || "Collaborator"}</dd></div>
+              {member?.profileRole ? <div><dt>Your role</dt><dd>{member.profileRole}</dd></div> : null}
             </dl>
           </section>
         ) : null}
@@ -377,8 +377,11 @@ function formatActivity(
     case "member_offline":
       return item(event, "leave", `${actor} left the session`);
     case "file_opened":
-    case "chat_message_created":
       return null;
+    case "chat_message_created":
+      return item(event, "general", `${stringValue(payload.authorName) ?? actor} sent a chat message`);
+    case "terminal_input":
+      return item(event, "general", `${actor} used the terminal`, { detail: `${numberValue(payload.count)} inputs` });
     case "file_changed": {
       const path = stringValue(payload.path);
       return item(event, "edit", `${actor} edited ${path ?? "a file"}`, {

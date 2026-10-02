@@ -114,7 +114,7 @@ describe("project API", () => {
       await expect(deleteResponse.json()).resolves.toEqual({
         deletedProjectId: created.project.id
       });
-      await expect(fs.stat(path.dirname(created.project.workspacePath))).rejects.toThrow();
+      await expect(fs.stat(created.project.workspacePath)).rejects.toThrow();
 
       const projectsAfterDelete = await fetch(`${origin}/api/projects`).then(
         (response) => response.json()

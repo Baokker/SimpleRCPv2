@@ -3,6 +3,8 @@ import type { AgentPromptContext } from "@simplercp/shared";
 import type { AgentRuntime } from "../agent/agentRuntime.js";
 import type { AgentRunManager } from "../agent/agentRunManager.js";
 import type { AgentSettingsStore } from "../agent/agentSettingsStore.js";
+import { can, requirePermission } from "../auth/permissions.js";
+import { requireIdentity } from "../auth/permissions.js";
 
 export function registerAgentRoutes(
   app: Express,
@@ -14,12 +16,13 @@ export function registerAgentRoutes(
 ) {
   const { agentRuntime, agentRuns, agentSettings } = dependencies;
 
-  app.get("/api/agent/settings", (_req, res) => {
+  app.get("/api/agent/settings", (req, res) => {
     res.json(agentSettings.get());
   });
 
   app.put("/api/agent/settings", async (req, res, next) => {
     try {
+      if (!can(req.identity, "agent:settings")) { res.sendStatus(403); return; }
       const current = agentSettings.get();
       const nextSettings = req.body as {
         model?: unknown;
@@ -38,7 +41,7 @@ export function registerAgentRoutes(
     }
   });
 
-  app.get("/api/agent/status", async (_req, res, next) => {
+  app.get("/api/agent/status", async (req, res, next) => {
     try {
       res.json(await agentRuntime.status());
     } catch (error) {
@@ -48,9 +51,9 @@ export function registerAgentRoutes(
 
   app.get("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
     try {
-      const memberId = String(req.query.memberId ?? "");
+      const memberId = memberIdFor(req);
       if (!memberId) {
-        res.status(400).json({ error: "memberId is required" });
+        res.status(401).json({ error: "Member identity is required" });
         return;
       }
       res.json({
@@ -63,9 +66,9 @@ export function registerAgentRoutes(
 
   app.post("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
     try {
-      const memberId = String(req.body?.memberId ?? "");
+      const memberId = memberIdFor(req);
       if (!memberId) {
-        res.status(400).json({ error: "memberId is required" });
+        res.status(401).json({ error: "Member identity is required" });
         return;
       }
       const session = await agentRuns.createSession({
@@ -83,7 +86,7 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/sessions/:sessionId",
     async (req, res, next) => {
       try {
-        const memberId = String(req.query.memberId ?? "");
+      const memberId = memberIdFor(req);
         if (!memberId) {
           res.status(400).json({ error: "memberId is required" });
           return;
@@ -115,8 +118,9 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/sessions/:sessionId/runs",
     async (req, res, next) => {
       try {
-        const memberId = String(req.body?.memberId ?? "");
+        const memberId = memberIdFor(req);
         const prompt = String(req.body?.prompt ?? "");
+        if (!requirePermission(req, res, "agent:create")) return;
         const contexts = Array.isArray(req.body?.contexts)
           ? req.body.contexts
           : undefined;
@@ -127,6 +131,7 @@ export function registerAgentRoutes(
         const run = await agentRuns.createRun({
           projectId: req.params.projectId,
           memberId,
+          initiatorRole: req.identity?.role,
           prompt,
           sessionId: req.params.sessionId,
           contexts
@@ -140,6 +145,7 @@ export function registerAgentRoutes(
 
   app.get("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
+      if (!requireIdentity(req, res)) return;
       res.json({ runs: await agentRuns.listRuns(req.params.projectId) });
     } catch (error) {
       next(error);
@@ -148,12 +154,13 @@ export function registerAgentRoutes(
 
   app.post("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
-      const { memberId, prompt, sessionId, contexts } = req.body as {
-        memberId?: string;
+      if (!requirePermission(req, res, "agent:create")) return;
+      const { prompt, sessionId, contexts } = req.body as {
         prompt?: string;
         sessionId?: string;
         contexts?: AgentPromptContext[];
       };
+      const memberId = memberIdFor(req);
       if (!memberId || !prompt) {
         res.status(400).json({ error: "memberId and prompt are required" });
         return;
@@ -161,6 +168,7 @@ export function registerAgentRoutes(
       const run = await agentRuns.createRun({
         projectId: req.params.projectId,
         memberId,
+        initiatorRole: req.identity?.role,
         prompt,
         sessionId,
         contexts
@@ -173,6 +181,7 @@ export function registerAgentRoutes(
 
   app.get("/api/projects/:projectId/agent/runs/:runId", async (req, res, next) => {
     try {
+      if (!requireIdentity(req, res)) return;
       res.json({
         run: await agentRuns.getRun(req.params.projectId, req.params.runId)
       });
@@ -185,6 +194,7 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/runs/:runId/trace",
     async (req, res, next) => {
       try {
+        if (!requireIdentity(req, res)) return;
         const events = await agentRuns.listTrace(
           req.params.projectId,
           req.params.runId
@@ -209,9 +219,11 @@ export function registerAgentRoutes(
     "/api/projects/:projectId/agent/runs/:runId/cancel",
     async (req, res, next) => {
       try {
-        const memberId = String(req.body?.memberId ?? "");
+        const memberId = memberIdFor(req);
+        const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+        if (!requirePermission(req, res, "agent:cancel", { projectId: req.params.projectId, ownerMemberId: run.initiatorMemberId ?? run.memberId })) return;
         if (!memberId) {
-          res.status(400).json({ error: "memberId is required" });
+          res.status(401).json({ error: "Member identity is required" });
           return;
         }
         res.json({
@@ -226,4 +238,8 @@ export function registerAgentRoutes(
       }
     }
   );
+}
+
+function memberIdFor(req: import("express").Request) {
+  return req.identity?.memberId;
 }

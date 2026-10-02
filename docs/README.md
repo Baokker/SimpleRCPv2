@@ -6,6 +6,8 @@
 
 OpenCode 与 DeepSeek 的配置方式见[项目 README](../README.md#配置)。
 
+轻量身份、运行隔离与内部环境的使用方式见[身份与隔离](./foundation/identity-and-isolation.md)、[部署说明](./deployment.md) 和[验证报告](./foundation/lightweight-identity-report.md)。
+
 ## 当前产品文件
 
 - [Agent Session 设计与开发范围](./product/2026-09-19-agent-sessions.md)：成员私有会话、会话内 run、接口和页面行为。

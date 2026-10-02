@@ -71,11 +71,12 @@ describe("project registry", () => {
   it("deletes a stored project and removes it from the registry", async () => {
     const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
     const project = await registry.createBlankProject("Disposable App");
-    const projectDir = path.dirname(project.workspacePath);
+    const projectDir = project.metadataPath!;
 
     await registry.deleteProject(project.id);
 
     await expect(fs.stat(projectDir)).rejects.toThrow();
+    await expect(fs.stat(project.workspacePath)).rejects.toThrow();
     expect(registry.getProject(project.id)).toBeUndefined();
     expect(await registry.listProjects()).not.toContainEqual(project);
     const restarted = await createProjectRegistry({ dataDir, demoProjectRoot });
@@ -85,7 +86,7 @@ describe("project registry", () => {
   it("removes missing project directories from the visible registry", async () => {
     const registry = await createProjectRegistry({ dataDir, demoProjectRoot });
     const project = await registry.createBlankProject("Missing App");
-    await fs.rm(path.dirname(project.workspacePath), {
+    await fs.rm(project.workspacePath, {
       recursive: true,
       force: true
     });
@@ -156,6 +157,20 @@ describe("project registry", () => {
     await expect(
       fs.stat(path.join(result.project.workspacePath, "node_modules"))
     ).rejects.toThrow();
+  });
+
+  it("checks configured import roots using real paths", async () => {
+    const allowedRoot = path.join(root, "allowed");
+    const outside = path.join(root, "outside");
+    await fs.mkdir(allowedRoot);
+    await fs.mkdir(outside);
+    await fs.writeFile(path.join(outside, "README.md"), "outside");
+    await fs.symlink(outside, path.join(allowedRoot, "outside-link"));
+    const registry = await createProjectRegistry({ dataDir, demoProjectRoot, importRoots: [allowedRoot] });
+    await expect(registry.importDirectory("Outside", outside)).rejects.toThrow("outside SIMPLERCP_IMPORT_ROOTS");
+    await expect(registry.importDirectory("Linked", path.join(allowedRoot, "outside-link"))).rejects.toThrow("outside SIMPLERCP_IMPORT_ROOTS");
+    const project = await registry.importDirectory("Allowed", allowedRoot);
+    expect(project.source).toBe("directory");
   });
 });
 

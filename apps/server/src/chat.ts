@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import type { EventLog } from "./eventLog.js";
 import { readJsonFile, writeJsonFileAtomically } from "./jsonFile.js";
 import type { ChatMessage } from "./types.js";
+import { redactSensitive } from "./agent/traceStore.js";
 
 export interface CreateChatMessageInput {
   roomId: string;
@@ -37,7 +38,8 @@ export function createChatStore(
           sequence: (messages.at(-1)?.sequence ?? 0) + 1,
           id: nanoid(10),
           timestamp: new Date().toISOString(),
-          ...input
+          ...input,
+          text: String(redactSensitive(input.text))
         };
         const nextMessages = [...messages, message];
         await saveMessages(options.storagePath, nextMessages);

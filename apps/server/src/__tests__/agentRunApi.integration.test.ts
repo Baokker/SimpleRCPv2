@@ -9,6 +9,7 @@ import WebSocket from "ws";
 import { createApp } from "../createApp.js";
 import { attachRealtimeServer } from "../realtime.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import { memberHeaders } from "./memberTestHelper.js";
 
 const environmentPath = fileURLToPath(new URL("../../../../.env", import.meta.url));
 const environment = fs.existsSync(environmentPath)
@@ -48,6 +49,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       const failed = await waitForRun(
         running.origin,
         created.id,
+        memberId,
         (run) => run.status === "failed"
       );
 
@@ -56,7 +58,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       expect(failed.error).toContain("OpenCode Provider request failed");
 
       const traceResponse = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${created.id}/trace`
+        `${running.origin}/api/projects/demo/agent/runs/${created.id}/trace`, { headers: memberHeaders(memberId) }
       );
       const traceBody = await traceResponse.json() as {
         events: Array<{ type: string; summary?: string }>;
@@ -70,7 +72,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       );
 
       const eventsResponse = await fetch(
-        `${running.origin}/api/projects/demo/events`
+        `${running.origin}/api/projects/demo/events`, { headers: memberHeaders(memberId) }
       );
       const eventsBody = await eventsResponse.json() as {
         events: Array<{
@@ -113,13 +115,14 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           name: "Agent Tester",
+          role: "student",
           userId: "agent-tester",
           connectionId: "agent-test-connection"
         })
       });
       const memberBody = await memberResponse.json() as { member: { id: string } };
       const socket = new WebSocket(
-        `${running.origin.replace("http", "ws")}/ws?projectId=demo`
+        `${running.origin.replace("http", "ws")}/ws?projectId=demo&memberId=${memberBody.member.id}`
       );
       const realtimeMessages: Array<Record<string, unknown>> = [];
       socket.on("message", (data) => {
@@ -133,9 +136,9 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         `${running.origin}/api/projects/demo/agent/runs`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(memberBody.member.id),
           body: JSON.stringify({
-            memberId: memberBody.member.id,
+            memberId: "forged-id",
             prompt: "Do not use tools. Reply with exactly: agent run completed"
           })
         }
@@ -144,8 +147,9 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
 
       expect(createResponse.status).toBe(202);
       expect(created.run.status).toBe("queued");
+      expect(created.run).toMatchObject({ initiatorMemberId: memberBody.member.id, initiatorRole: "student" });
 
-      const completed = await waitForCompletedRun(running.origin, created.run.id);
+      const completed = await waitForCompletedRun(running.origin, created.run.id, memberBody.member.id);
       expect(completed.output?.trim().toLowerCase()).toBe("agent run completed");
       expect(completed.sessionId).toBeTruthy();
       await waitForCondition(() =>
@@ -164,7 +168,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       socket.close();
 
       const traceResponse = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${created.run.id}/trace`
+        `${running.origin}/api/projects/demo/agent/runs/${created.run.id}/trace`, { headers: memberHeaders(memberBody.member.id) }
       );
       const traceBody = await traceResponse.json() as {
         events: Array<{ sequence: number; type: string }>;
@@ -185,7 +189,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       ).toBe(true);
 
       const downloadResponse = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${created.run.id}/trace?download=true`
+        `${running.origin}/api/projects/demo/agent/runs/${created.run.id}/trace?download=true`, { headers: memberHeaders(memberBody.member.id) }
       );
       const downloadedEvents = (await downloadResponse.text())
         .trim()
@@ -220,7 +224,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         `${running.origin}/api/projects/demo/agent/runs`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(otherMember.member.id),
           body: JSON.stringify({
             memberId: otherMember.member.id,
             sessionId: completed.sessionId,
@@ -234,7 +238,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         `${running.origin}/api/projects/demo/agent/runs`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(memberBody.member.id),
           body: JSON.stringify({
             memberId: memberBody.member.id,
             sessionId: completed.sessionId,
@@ -248,7 +252,8 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       expect(continuedResponse.status).toBe(202);
       const continued = await waitForCompletedRun(
         running.origin,
-        continuedBody.run.id
+        continuedBody.run.id,
+        memberBody.member.id
       );
       expect(continued.sessionId).toBe(completed.sessionId);
       expect(continued.runtimeSessionId).toBe(completed.runtimeSessionId);
@@ -258,7 +263,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         `${running.origin}/api/projects/demo/agent/sessions/${completed.sessionId}/runs`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(memberBody.member.id),
           body: JSON.stringify({
             memberId: memberBody.member.id,
             prompt: "Do not use tools. Reply with exactly: session continued twice"
@@ -271,7 +276,8 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       expect(continuedAgainResponse.status).toBe(202);
       const continuedAgain = await waitForCompletedRun(
         running.origin,
-        continuedAgainBody.run.id
+        continuedAgainBody.run.id,
+        memberBody.member.id
       );
       expect(continuedAgain.sessionId).toBe(completed.sessionId);
       expect(continuedAgain.runtimeSessionId).toBe(completed.runtimeSessionId);
@@ -317,15 +323,16 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
     const running = await startServer();
 
     try {
+      const memberId = await joinAgentTester(running.origin);
       const response = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${runId}`
+        `${running.origin}/api/projects/demo/agent/runs/${runId}`, { headers: memberHeaders(memberId) }
       );
       const body = await response.json() as { run: AgentRunResult & { error?: string } };
       expect(body.run.status).toBe("failed");
       expect(body.run.error).toBe("Agent run was interrupted by a server restart");
 
       const traceResponse = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${runId}/trace`
+        `${running.origin}/api/projects/demo/agent/runs/${runId}/trace`, { headers: memberHeaders(memberId) }
       );
       const traceBody = await traceResponse.json() as {
         events: Array<{ type: string; summary?: string }>;
@@ -352,6 +359,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       const failed = await waitForRun(
         running.origin,
         created.id,
+        memberId,
         (run) => run.status === "failed"
       );
       expect(failed).toMatchObject({
@@ -373,7 +381,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         memberId,
         "Use the file editing tools to create agent-created.txt in the project root. Its entire content must be exactly: agent file created"
       );
-      const completed = await waitForCompletedRun(running.origin, created.id);
+      const completed = await waitForCompletedRun(running.origin, created.id, memberId);
       expect(completed.fileChanges).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -384,13 +392,13 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       );
       await expect(
         fsPromises.readFile(
-          path.join(root, "data", "projects", "demo", "workspace", "agent-created.txt"),
+          path.join(root, "data", "workspaces", "demo", "agent-created.txt"),
           "utf8"
         ).then((content) => content.trimEnd())
       ).resolves.toBe("agent file created");
 
       const traceResponse = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${created.id}/trace`
+        `${running.origin}/api/projects/demo/agent/runs/${created.id}/trace`, { headers: memberHeaders(memberId) }
       );
       const traceBody = await traceResponse.json() as {
         events: Array<{ type: string; data?: Record<string, unknown> }>;
@@ -442,7 +450,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         `${running.origin}/api/projects/${projectId}/agent/runs`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(memberBody.member.id),
           body: JSON.stringify({
             memberId: memberBody.member.id,
             prompt: "Use the bash tool to run sleep 5, then reply with done."
@@ -454,6 +462,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         running.origin,
         projectId,
         created.run.id,
+        memberBody.member.id,
         (run) => run.status === "running" && Boolean(run.sessionId)
       );
 
@@ -484,6 +493,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       await waitForRun(
         running.origin,
         first.id,
+        memberId,
         (run) => run.status === "running" && Boolean(run.sessionId)
       );
 
@@ -524,20 +534,21 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         member: { id: string };
       };
       const foreignCancel = await fetch(
-        `${running.origin}/api/projects/demo/agent/runs/${first.id}/cancel`,
+        `${running.origin}/api/projects/demo/agent/runs/${second.id}/cancel`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(otherMember.member.id),
           body: JSON.stringify({ memberId: otherMember.member.id })
         }
       );
-      expect(foreignCancel.status).toBe(400);
+      expect(foreignCancel.status).toBe(200);
+      await expect(foreignCancel.json()).resolves.toMatchObject({ run: { id: second.id, status: "cancelled" } });
 
       const cancelSecond = await fetch(
         `${running.origin}/api/projects/demo/agent/runs/${second.id}/cancel`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(memberId),
           body: JSON.stringify({ memberId })
         }
       );
@@ -550,7 +561,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         `${running.origin}/api/projects/demo/agent/runs/${first.id}/cancel`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: memberHeaders(memberId),
           body: JSON.stringify({ memberId })
         }
       );
@@ -561,6 +572,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       await waitForRun(
         running.origin,
         first.id,
+        memberId,
         (run) => run.status === "cancelled"
       );
     } finally {
@@ -586,11 +598,11 @@ interface AgentRunResult {
   }>;
 }
 
-async function waitForCompletedRun(origin: string, runId: string) {
+async function waitForCompletedRun(origin: string, runId: string, memberId: string) {
   const deadline = Date.now() + 90_000;
   while (Date.now() < deadline) {
     const response = await fetch(
-      `${origin}/api/projects/demo/agent/runs/${runId}`
+      `${origin}/api/projects/demo/agent/runs/${runId}`, { headers: memberHeaders(memberId) }
     );
     const body = await response.json() as { run: AgentRunResult };
     if (body.run.status === "completed") return body.run;
@@ -607,12 +619,13 @@ async function waitForCompletedRun(origin: string, runId: string) {
 async function waitForRun(
   origin: string,
   runId: string,
+  memberId: string,
   predicate: (run: AgentRunResult) => boolean
 ) {
   const deadline = Date.now() + 90_000;
   while (Date.now() < deadline) {
     const response = await fetch(
-      `${origin}/api/projects/demo/agent/runs/${runId}`
+      `${origin}/api/projects/demo/agent/runs/${runId}`, { headers: memberHeaders(memberId) }
     );
     const body = await response.json() as { run: AgentRunResult };
     if (predicate(body.run)) return body.run;
@@ -628,12 +641,13 @@ async function waitForProjectRun(
   origin: string,
   projectId: string,
   runId: string,
+  memberId: string,
   predicate: (run: AgentRunResult) => boolean
 ) {
   const deadline = Date.now() + 90_000;
   while (Date.now() < deadline) {
     const response = await fetch(
-      `${origin}/api/projects/${projectId}/agent/runs/${runId}`
+      `${origin}/api/projects/${projectId}/agent/runs/${runId}`, { headers: memberHeaders(memberId) }
     );
     const body = await response.json() as { run: AgentRunResult };
     if (predicate(body.run)) return body.run;
@@ -662,8 +676,8 @@ async function joinAgentTester(origin: string) {
 async function createRun(origin: string, memberId: string, prompt: string) {
   const response = await fetch(`${origin}/api/projects/demo/agent/runs`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ memberId, prompt })
+    headers: memberHeaders(memberId),
+    body: JSON.stringify({ prompt })
   });
   expect(response.status).toBe(202);
   const body = await response.json() as { run: AgentRunResult };
@@ -689,7 +703,8 @@ async function startServer(runTimeoutMs?: number, agentApiKey = apiKey) {
   const realtime = attachRealtimeServer(
     server,
     app.locals.runtimeManager,
-    app.locals.agentRuns
+    app.locals.agentRuns,
+    { members: app.locals.members }
   );
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();

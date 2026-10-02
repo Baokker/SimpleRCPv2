@@ -5,6 +5,7 @@ export interface ProjectRecord {
   name: string;
   source: ProjectSource;
   workspacePath: string;
+  metadataPath?: string;
   createdAt: string;
   lastOpenedAt: string;
 }
@@ -128,6 +129,8 @@ export interface AgentRun {
   id: string;
   projectId: string;
   memberId: string;
+  initiatorMemberId?: string;
+  initiatorRole?: string;
   participantId?: string;
   memberName?: string;
   prompt: string;
@@ -152,6 +155,7 @@ export interface AgentSession {
   memberId: string;
   participantId?: string;
   memberName?: string;
+  historical?: boolean;
   title: string;
   runtime: "opencode";
   runtimeSessionId?: string;

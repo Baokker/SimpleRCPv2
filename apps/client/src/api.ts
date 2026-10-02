@@ -15,6 +15,7 @@ import type {
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
+import { activeMemberId, rememberMember, storedMemberId } from "./memberIdentity";
 
 export interface ServerInfo {
   ok: boolean;
@@ -54,7 +55,7 @@ export async function getAgentRuns(projectId: string) {
 
 export async function getAgentSessions(projectId: string, memberId: string) {
   const response = await request<{ sessions: AgentSession[] }>(
-    `${projectPath(projectId)}/agent/sessions?memberId=${encodeURIComponent(memberId)}`
+    `${projectPath(projectId)}/agent/sessions`
   );
   return response.sessions;
 }
@@ -66,7 +67,7 @@ export async function createAgentSession(
   return request<{ session: AgentSession }>(`${projectPath(projectId)}/agent/sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
+    body: JSON.stringify({ title: input.title })
   });
 }
 
@@ -80,7 +81,7 @@ export async function createAgentSessionRun(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
+      body: JSON.stringify({ prompt: input.prompt, contexts: input.contexts })
     }
   );
 }
@@ -90,6 +91,19 @@ export async function getAgentTrace(projectId: string, runId: string) {
     `${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/trace`
   );
   return response.events;
+}
+
+export async function downloadAgentTrace(projectId: string, runId: string) {
+  const response = await fetch(`${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/trace?download=true`, {
+    headers: { "X-SimpleRCP-Member": storedMemberId(projectId) ?? "" }
+  });
+  if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `trace-${runId}.jsonl`;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function cancelAgentRun(
@@ -102,7 +116,7 @@ export async function cancelAgentRun(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId })
+      body: JSON.stringify({})
     }
   );
 }
@@ -170,17 +184,19 @@ export async function joinRoom(
   projectId: string,
   name: string,
   role: string,
-  participantId: string | undefined,
+  memberId: string | undefined,
   connectionId: string
 ): Promise<{ member: RoomMember; participant: ProjectParticipant }> {
-  return request<{ member: RoomMember; participant: ProjectParticipant }>(
+  const result = await request<{ member: RoomMember; participant: ProjectParticipant }>(
     `${projectPath(projectId)}/members`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, role, participantId, connectionId })
+      body: JSON.stringify({ name, role, memberId, connectionId })
     }
   );
+  rememberMember(projectId, result.member.id);
+  return result;
 }
 
 export function sendConnectionOffline(
@@ -188,11 +204,7 @@ export function sendConnectionOffline(
   connectionId: string
 ) {
   const endpoint = `${projectPath(projectId)}/connections/${encodeURIComponent(connectionId)}/offline`;
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(endpoint, new Blob([], { type: "application/json" }));
-    return;
-  }
-  void fetch(endpoint, { method: "POST", keepalive: true });
+  void request(endpoint, { method: "POST", keepalive: true });
 }
 
 export async function getWorkspaceDirectory(
@@ -228,7 +240,7 @@ export async function createWorkspaceFile(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path, content, initiatorId })
+      body: JSON.stringify({ path, content })
     }
   );
   return response.tree;
@@ -244,7 +256,7 @@ export async function createWorkspaceDirectory(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path, initiatorId })
+      body: JSON.stringify({ path })
     }
   );
   return response.tree;
@@ -261,7 +273,7 @@ export async function renameWorkspacePath(
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fromPath, toPath, initiatorId })
+      body: JSON.stringify({ fromPath, toPath })
     }
   );
   return response.tree;
@@ -273,7 +285,7 @@ export async function deleteWorkspacePath(
   initiatorId: string
 ) {
   return request<{ tree: WorkspaceNode[] }>(
-    `${projectPath(projectId)}/workspace/path?path=${encodeURIComponent(path)}&initiatorId=${encodeURIComponent(initiatorId)}`,
+    `${projectPath(projectId)}/workspace/path?path=${encodeURIComponent(path)}`,
     { method: "DELETE" }
   );
 }
@@ -301,7 +313,7 @@ export async function sendChatMessage(
   return request<{ message: ChatMessage }>(`${projectPath(projectId)}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
+    body: JSON.stringify({ text: input.text })
   });
 }
 
@@ -310,9 +322,14 @@ function projectPath(projectId: string) {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const projectId = path.match(/^\/api\/projects\/([^/?]+)/)?.[1];
+  const headers = new Headers(init?.headers);
+  const memberId = projectId && !["import", "import-zip"].includes(projectId)
+    ? storedMemberId(decodeURIComponent(projectId)) : activeMemberId();
+  if (memberId) headers.set("X-SimpleRCP-Member", memberId);
   let response: Response;
   try {
-    response = await fetch(path, init);
+    response = await fetch(path, { ...init, headers });
   } catch {
     throw new Error("Cannot reach the SimpleRCP server");
   }

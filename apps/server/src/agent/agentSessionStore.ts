@@ -27,12 +27,11 @@ export function createAgentSessionStore(projectId: string, projectRoot: string) 
       return records.create({ ...input, id: nanoid(12), createdAt: now, updatedAt: now });
     },
     get: records.get,
-    async list(participantId?: string) {
+    async list(memberId?: string) {
       return (await records.list())
         .filter(
           (session) =>
-            !participantId ||
-            (session.participantId ?? session.memberId) === participantId
+            !memberId || (!session.historical && session.memberId === memberId)
         )
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
     },

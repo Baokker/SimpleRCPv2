@@ -18,7 +18,6 @@ import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
   JoinProject,
-  rememberParticipant,
   type ProjectIdentity
 } from "./components/JoinProject";
 import { ProjectHome } from "./components/ProjectHome";
@@ -114,7 +113,7 @@ function ProjectRoute({
   if (loading) {
     return <main className="route-loading">Loading project</main>;
   }
-  if (error || !project || !roomId) {
+  if (error || !project || (identity && !roomId)) {
     return (
       <main className="route-error" data-testid="route-error">
         <h1>Unable to open project</h1>
@@ -231,7 +230,7 @@ function WorkspacePage({
         projectId,
         displayName,
         identity.role,
-        identity.participantId,
+        identity.memberId,
         connectionId
       );
       const [room, workspaceTree, eventRecords, messages] =
@@ -244,7 +243,6 @@ function WorkspacePage({
 
       if (!mounted) return;
       membersRef.current = room.members;
-      rememberParticipant(projectId, joined.participant.id);
       setMember(joined.member);
       setMembers(room.members);
       setTree(workspaceTree);
