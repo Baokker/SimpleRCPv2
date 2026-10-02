@@ -93,6 +93,51 @@ npm test
 
 ## 项目结构
 
+```text
+README.md
+package.json
+pnpm-workspace.yaml
+tsconfig.base.json
+
+apps/
+  client/
+    src/
+    index.html
+    package.json
+    vite.config.ts
+  server/
+    src/
+      agent/
+      auth/
+      routes/
+      __tests__/
+    package.json
+    vitest.config.ts
+
+packages/
+  shared/
+    src/
+    package.json
+
+demo/
+  workspace/
+
+docs/
+  foundation/
+  product/
+  research/
+  deployment.md
+  README.md
+
+scripts/
+  start-demo.mjs
+
+tests/
+  e2e/
+  fixtures/
+  playwright.config.ts
+```
+
 主要目录职责：
 
 - `apps/client/`：React 浏览器客户端，包含项目首页、协作工作区、Monaco Editor、Yjs 客户端和共享终端界面。
