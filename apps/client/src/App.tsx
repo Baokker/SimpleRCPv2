@@ -1,5 +1,6 @@
 import { MessagesSquare, Moon, PanelBottom, PanelRight, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
@@ -68,6 +69,12 @@ import type {
   WorkspaceChange,
   WorkspaceNode
 } from "./types";
+
+type ResizeTarget = "workspace" | "collaboration" | "terminal";
+
+const WORKSPACE_WIDTH_KEY = "simplercp.layout.workspaceWidth";
+const COLLABORATION_WIDTH_KEY = "simplercp.layout.collaborationWidth";
+const TERMINAL_HEIGHT_KEY = "simplercp.layout.terminalHeight";
 
 interface PendingFileEdit extends FileEditActivity {
   timer: number;
@@ -215,6 +222,9 @@ function WorkspacePage({
   );
   const [collaborationVisible, setCollaborationVisible] = useState(true);
   const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
+  const [workspaceWidth, setWorkspaceWidth] = useState(() => readLayoutDimension(WORKSPACE_WIDTH_KEY, 252, 180, 420));
+  const [collaborationWidth, setCollaborationWidth] = useState(() => readLayoutDimension(COLLABORATION_WIDTH_KEY, 380, 280, 560));
+  const [terminalHeight, setTerminalHeight] = useState(() => readLayoutDimension(TERMINAL_HEIGHT_KEY, 188, 120, 460));
   const socketRef = useRef<ClientSocket | null>(null);
   const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
@@ -401,6 +411,41 @@ function WorkspacePage({
       }
     };
   }, [displayName, identity.role, projectId, roomId]);
+
+  useEffect(() => {
+    window.localStorage.setItem(WORKSPACE_WIDTH_KEY, String(workspaceWidth));
+  }, [workspaceWidth]);
+  useEffect(() => {
+    window.localStorage.setItem(COLLABORATION_WIDTH_KEY, String(collaborationWidth));
+  }, [collaborationWidth]);
+  useEffect(() => {
+    window.localStorage.setItem(TERMINAL_HEIGHT_KEY, String(terminalHeight));
+  }, [terminalHeight]);
+  function startResize(target: ResizeTarget, event: ReactPointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const initial = { workspaceWidth, collaborationWidth, terminalHeight };
+    document.body.dataset.resizing = target;
+    const move = (moveEvent: PointerEvent) => {
+      if (target === "workspace") setWorkspaceWidth(clampLayoutDimension(initial.workspaceWidth + moveEvent.clientX - startX, 180, 420));
+      if (target === "collaboration") setCollaborationWidth(clampLayoutDimension(initial.collaborationWidth - (moveEvent.clientX - startX), 280, 560));
+      if (target === "terminal") setTerminalHeight(clampLayoutDimension(initial.terminalHeight - (moveEvent.clientY - startY), 120, 460));
+    };
+    const stop = () => {
+      document.body.removeAttribute("data-resizing");
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop, { once: true });
+  }
+
+  const shellStyle = {
+    "--workspace-pane-width": `${workspaceWidth}px`,
+    "--collaboration-pane-width": `${collaborationWidth}px`,
+    "--terminal-pane-height": `${terminalHeight}px`
+  } as CSSProperties;
 
   useEffect(() => {
     function markOffline() {
@@ -752,6 +797,7 @@ function WorkspacePage({
   return (
     <main
       className={`app-shell${collaborationVisible ? "" : " collaboration-hidden"}${terminalVisible ? "" : " terminal-hidden"}`}
+      style={shellStyle}
     >
       {workspaceError ? (
         <div className="workspace-alert" role="alert" data-testid="workspace-error">
@@ -928,6 +974,13 @@ function WorkspacePage({
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
       </div>
+      <div className="resize-handle resize-handle-workspace" role="separator" aria-orientation="vertical" aria-label="Resize workspace explorer" onPointerDown={(event) => startResize("workspace", event)} />
+      {collaborationVisible ? (
+        <div className="resize-handle resize-handle-collaboration" role="separator" aria-orientation="vertical" aria-label="Resize collaboration panel" onPointerDown={(event) => startResize("collaboration", event)} />
+      ) : null}
+      {terminalVisible && terminalEnabled ? (
+        <div className={`resize-handle resize-handle-terminal${collaborationVisible ? "" : " collaboration-hidden"}`} role="separator" aria-orientation="horizontal" aria-label="Resize terminal panel" onPointerDown={(event) => startResize("terminal", event)} />
+      ) : null}
       {workspaceDialog ? (
         <WorkspaceDialog
           action={workspaceDialog}
@@ -937,6 +990,17 @@ function WorkspacePage({
       ) : null}
     </main>
   );
+}
+
+function readLayoutDimension(key: string, fallback: number, minimum: number, maximum: number) {
+  const stored = window.localStorage.getItem(key);
+  if (stored === null) return fallback;
+  const value = Number(stored);
+  return Number.isFinite(value) ? clampLayoutDimension(value, minimum, maximum) : fallback;
+}
+
+function clampLayoutDimension(value: number, minimum: number, maximum: number) {
+  return Math.min(maximum, Math.max(minimum, value));
 }
 
 function formatBytes(bytes: number) {
