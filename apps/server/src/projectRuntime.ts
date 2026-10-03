@@ -1,4 +1,5 @@
 import path from "node:path";
+import type { GuardLlmMode } from "@simplercp/shared";
 import { createChatStore } from "./chat.js";
 import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import { createEventLog } from "./eventLog.js";
@@ -18,6 +19,7 @@ export function createProjectRuntime(
     guardMembers?: MemberStore;
     guardDataRoot?: string;
     guardMode?: "full" | "human-only" | "off";
+    guardLlmMode?: GuardLlmMode;
     guardApprovalTimeoutMs?: number;
     guardLlm?: { baseUrl?: string; apiKey?: string; model?: string };
     otherWorkspaceRoots?: (currentProjectId: string) => string[];
@@ -60,6 +62,7 @@ export function createProjectRuntime(
     metadataRoot: projectRoot,
     platformDataRoot: options.guardDataRoot ?? path.dirname(projectRoot),
     mode: guardMode,
+    llmMode: options.guardLlmMode,
     approvalTimeoutMs: options.guardApprovalTimeoutMs,
     llm: options.guardLlm,
     otherWorkspaceRoots: options.otherWorkspaceRoots

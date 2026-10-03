@@ -8,6 +8,8 @@ import type {
   AgentTraceEvent,
   ChatMessage,
   EventRecord,
+  GuardLlmMode,
+  GuardSettings,
   ProjectRecord,
   ProjectParticipant,
   RoomMember,
@@ -55,6 +57,18 @@ export async function replyGuardApproval(projectId: string, approvalId: string, 
 
 export async function listGuardApprovals(projectId: string) {
   return request<{ approvals: import("@simplercp/shared").GuardApproval[] }>(`${projectPath(projectId)}/guard/approvals`);
+}
+
+export async function getGuardSettings(projectId: string) {
+  return request<GuardSettings>(`${projectPath(projectId)}/guard/settings`);
+}
+
+export async function updateGuardLlmMode(projectId: string, llmMode: GuardLlmMode) {
+  return request<GuardSettings>(`${projectPath(projectId)}/guard/settings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ llmMode })
+  });
 }
 
 export async function setTerminalControl(projectId: string, holderMemberId: string | null) {

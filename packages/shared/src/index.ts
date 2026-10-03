@@ -354,6 +354,15 @@ export interface GuardApproval {
   approverIds: string[];
 }
 
+export type GuardLlmMode = "off" | "suggest" | "auto";
+
+export interface GuardSettings {
+  protectedPaths: string[];
+  llmMode: GuardLlmMode;
+  llmConfigured: boolean;
+  guardMode: "full" | "human-only" | "off";
+}
+
 export type TerminalClientMessage =
   | { type: "input"; data: string }
   | { type: "resize"; cols: number; rows: number }

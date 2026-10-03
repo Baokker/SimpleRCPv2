@@ -195,6 +195,7 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `SIMPLERCP_PUBLIC_URL`：用户访问的浏览器地址，默认值为 `http://127.0.0.1:5173`。
 - `SIMPLERCP_SHELL`：共享终端使用的 shell 路径，默认读取当前进程的 `SHELL`，随后使用 `/bin/sh`。
 - `SIMPLERCP_TERMINAL_ENABLED`：是否启用共享终端，默认值为 `true`；设置为 `false` 后关闭终端页面和服务端 PTY。
+- `SIMPLERCP_GUARD_LLM_MODE`：项目 Guard 的默认模型模式，可选 `off`、`suggest`、`auto`，默认使用 `suggest`；项目 owner 也可以在共享终端底部选择器中修改后续请求的模式。
 - `PORT`：服务端端口，默认值为 `4000`。
 - `VITE_SIMPLERCP_CLIENT_HOST`：开发客户端监听地址，默认值为 `127.0.0.1`。
 - `VITE_SIMPLERCP_CLIENT_PORT`：开发客户端端口，默认值为 `5173`。

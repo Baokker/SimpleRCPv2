@@ -1,4 +1,5 @@
 import path from "node:path";
+import type { GuardLlmMode, GuardSettings } from "@simplercp/shared";
 import type { ProjectRecord } from "../projects.js";
 import type { MemberStore } from "../auth/identity.js";
 import type { EventLog } from "../eventLog.js";
@@ -14,7 +15,7 @@ import type { Action, GuardDecision, GuardRequest, Level } from "./types.js";
 
 interface GuardPolicy {
   protectedPaths: string[];
-  llmMode: "off" | "suggest" | "auto";
+  llmMode: GuardLlmMode;
 }
 
 export function createGuardService(options: {
@@ -26,6 +27,7 @@ export function createGuardService(options: {
   metadataRoot: string;
   platformDataRoot: string;
   mode: "full" | "human-only" | "off";
+  llmMode?: GuardLlmMode;
   llm?: { baseUrl?: string; apiKey?: string; model?: string };
   approvalTimeoutMs?: number;
   otherWorkspaceRoots?: (currentProjectId: string) => string[];
@@ -39,9 +41,15 @@ export function createGuardService(options: {
   const resolutionListeners = new Set<(id: string, approved: boolean) => void>();
   const controlListeners = new Set<(holderMemberId: string | null, expiresAt?: string) => void>();
   let control: { memberId: string; expiresAt: number; timer: ReturnType<typeof setTimeout> } | undefined;
+  let selectedLlmMode = options.llmMode;
 
   async function policy(): Promise<GuardPolicy> {
-    return (await readJsonFile<GuardPolicy>(policyPath)) ?? { protectedPaths: [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], llmMode: "suggest" };
+    const stored = (await readJsonFile<GuardPolicy>(policyPath)) ?? { protectedPaths: [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], llmMode: "suggest" };
+    return { ...stored, llmMode: selectedLlmMode ?? stored.llmMode };
+  }
+
+  async function settings(): Promise<GuardSettings> {
+    return { ...await policy(), llmConfigured: Boolean(options.llm?.baseUrl && options.llm.apiKey), guardMode: options.mode };
   }
 
   function publishActivity(input: Parameters<EventLog["append"]>[0]) {
@@ -198,12 +206,16 @@ export function createGuardService(options: {
     },
     listSnapshots: () => snapshots.list(),
     async getPolicy() { return policy(); },
+    getSettings: settings,
     async updatePolicy(input: Partial<GuardPolicy>) {
       const current = await policy();
       const next = { protectedPaths: input.protectedPaths ?? current.protectedPaths, llmMode: input.llmMode ?? current.llmMode };
       if (!(["off", "suggest", "auto"] as string[]).includes(next.llmMode)) throw new Error("Invalid guard judging mode");
       await writeJsonFileAtomically(policyPath, next);
-      return next;
+      selectedLlmMode = next.llmMode;
+      const updated = await settings();
+      publishActivity({ type: "guard_settings_updated", payload: { ...updated } });
+      return updated;
     },
     async awaitIdle() { await audit.awaitIdle(); },
     dispose() { approvals.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); }

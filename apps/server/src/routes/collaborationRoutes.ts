@@ -196,7 +196,7 @@ export function registerCollaborationRoutes(
   app.get("/api/projects/:projectId/guard/settings", async (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
-      res.json(await runtimeManager.get(req.params.projectId).guard.getPolicy());
+      res.json(await runtimeManager.get(req.params.projectId).guard.getSettings());
     } catch (error) { next(error); }
   });
 

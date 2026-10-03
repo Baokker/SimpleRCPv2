@@ -2889,6 +2889,47 @@ button.activity-entry:hover strong {
   font-size: 11px;
 }
 
+.terminal-review-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  border-top: 1px solid var(--border-main);
+  padding: 5px 9px;
+  background: var(--background-control);
+  font-size: 11px;
+}
+
+.terminal-review-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.terminal-review-choice svg {
+  color: var(--accent-text);
+}
+
+.terminal-review-choice select {
+  max-width: 100%;
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  padding: 3px 5px;
+  background: var(--background-control-alt);
+  color: var(--text-primary);
+}
+
+.terminal-review-choice select:disabled {
+  opacity: 0.7;
+}
+
+.terminal-review-description {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .member-role-editor select {
   min-width: 0;
   max-width: 150px;

@@ -22,6 +22,8 @@ export type {
   FileEditActivity,
   FileEditChange,
   GuardApproval,
+  GuardLlmMode,
+  GuardSettings,
   ProjectRecord,
   ProjectParticipant,
   ProjectSource,

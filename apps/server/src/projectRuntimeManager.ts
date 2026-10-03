@@ -1,6 +1,7 @@
 import { createProjectRuntime, type ProjectRuntime } from "./projectRuntime.js";
 import type { ProjectRegistry } from "./projects.js";
 import type { MemberStore } from "./auth/identity.js";
+import type { GuardLlmMode } from "@simplercp/shared";
 
 export function createProjectRuntimeManager(
   registry: ProjectRegistry,
@@ -9,6 +10,7 @@ export function createProjectRuntimeManager(
     guardMembers?: MemberStore;
     guardDataRoot?: string;
     guardMode?: "full" | "human-only" | "off";
+    guardLlmMode?: GuardLlmMode;
     guardApprovalTimeoutMs?: number;
     guardLlm?: { baseUrl?: string; apiKey?: string; model?: string };
     otherWorkspaceRoots?: (currentProjectId: string) => string[];

@@ -30,6 +30,7 @@ export async function createApp(config: ServerConfig) {
     guardMembers: members,
     guardDataRoot: config.dataDir,
     guardMode,
+    guardLlmMode: config.guardLlmMode,
     guardApprovalTimeoutMs: config.guardApprovalTimeoutMs,
     otherWorkspaceRoots: (currentProjectId) => registry.listProjectsSync().filter((project) => project.id !== currentProjectId).map((project) => project.workspacePath),
     guardLlm: {

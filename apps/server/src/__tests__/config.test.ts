@@ -32,6 +32,7 @@ describe("server config", () => {
         SIMPLERCP_PUBLIC_URL: "https://code.example.com",
         SIMPLERCP_DATA_DIR: "/srv/simplercp-data",
         SIMPLERCP_TERMINAL_ENABLED: "false",
+        SIMPLERCP_GUARD_LLM_MODE: "auto",
         DEEPSEEK_API_KEY: "configured-key",
         DEEPSEEK_BASE_URL: "https://models.example.com/v1",
         DEEPSEEK_MODEL: "DeepSeek-V4-Flash"
@@ -45,6 +46,7 @@ describe("server config", () => {
       importRoots: undefined,
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
+      guardLlmMode: "auto",
       fakeAgentRuntime: false,
       agent: {
         apiKey: "configured-key",
@@ -66,6 +68,12 @@ describe("server config", () => {
     expect(() =>
       loadConfig({ SIMPLERCP_TERMINAL_ENABLED: "disabled" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
+  });
+
+  it("rejects an invalid Guard model mode", () => {
+    expect(() => loadConfig({ SIMPLERCP_GUARD_LLM_MODE: "sometimes" })).toThrow(
+      "SIMPLERCP_GUARD_LLM_MODE must be off, suggest, or auto"
+    );
   });
 
   it("uses defaults for blank optional paths and validates workspace and import paths", () => {

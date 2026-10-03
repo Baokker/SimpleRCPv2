@@ -1,7 +1,8 @@
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, ShieldCheck } from "lucide-react";
 import { useRef, useState } from "react";
 import { Send } from "lucide-react";
 import type { ThemeMode } from "../theme";
+import type { GuardLlmMode, GuardSettings } from "../types";
 import {
   SharedTerminal,
   type SharedTerminalHandle
@@ -10,16 +11,22 @@ import {
 export function TerminalPanel({
   projectId,
   theme,
-    canRun,
-    memberId,
-    isOwner,
-    onControlState
+  canRun,
+  memberId,
+  isOwner,
+  guardSettings,
+  onLlmModeChange,
+  onError,
+  onControlState
 }: {
   projectId: string;
   theme: ThemeMode;
   canRun: boolean;
   memberId: string;
   isOwner?: boolean;
+  guardSettings?: GuardSettings;
+  onLlmModeChange(mode: GuardLlmMode): Promise<void>;
+  onError(error: unknown): void;
   onControlState?(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "off"): void;
 }) {
   const terminalRef = useRef<SharedTerminalHandle>(null);
@@ -29,7 +36,19 @@ export function TerminalPanel({
   const [controlExpiresAt, setControlExpiresAt] = useState<string>();
   const [status, setStatus] = useState("");
   const [guardMode, setGuardMode] = useState<"full" | "human-only" | "off">("full");
+  const [savingReviewMode, setSavingReviewMode] = useState(false);
   const controlled = controlHolder === memberId;
+
+  async function changeReviewMode(mode: GuardLlmMode) {
+    setSavingReviewMode(true);
+    try {
+      await onLlmModeChange(mode);
+    } catch (error) {
+      onError(error);
+    } finally {
+      setSavingReviewMode(false);
+    }
+  }
 
   return (
     <div className="panel terminal-panel">
@@ -80,6 +99,33 @@ export function TerminalPanel({
         </form>
       ) : null}
       {status ? <small className="terminal-guard-status">{status}</small> : null}
+      <div className="terminal-review-bar" data-testid="terminal-review-bar">
+        <label className="terminal-review-choice">
+          <ShieldCheck size={14} aria-hidden="true" />
+          <span>Request review</span>
+          <select
+            aria-label="Request review mode"
+            data-testid="guard-llm-mode"
+            value={guardSettings?.llmMode ?? "suggest"}
+            disabled={!guardSettings || !isOwner || savingReviewMode || connectionState !== "Connected" || guardMode === "off"}
+            onChange={(event) => void changeReviewMode(event.target.value as GuardLlmMode)}
+          >
+            <option value="off">Manual review</option>
+            <option value="suggest">Model suggestion</option>
+            <option value="auto">Model auto review</option>
+          </select>
+        </label>
+        <span className="terminal-review-description" role="status">
+          {!guardSettings ? "Loading review settings…"
+            : guardMode === "off" ? "Guard is disabled"
+            : savingReviewMode ? "Saving…"
+            : guardSettings.llmMode !== "off" && !guardSettings.llmConfigured ? "Configure DEEPSEEK_API_KEY to enable model review; requests require human approval"
+            : guardSettings.llmMode === "off" ? "Requests needing approval go directly to human review"
+            : guardSettings.llmMode === "suggest" ? "The model advises; a person approves or rejects"
+            : "Eligible requests are approved or rejected by the model; others need human review"}
+          {guardSettings && !isOwner && guardMode !== "off" ? " · Only an owner can change this project setting" : ""}
+        </span>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,8 @@ import {
   deleteWorkspacePath,
   getChatMessages,
   getGuardRoles,
+  getGuardSettings,
+  updateGuardLlmMode,
   listGuardApprovals,
   getEvents,
   getRoom,
@@ -22,7 +24,7 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
-import type { GuardApproval } from "./types";
+import type { GuardApproval, GuardSettings } from "./types";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -192,6 +194,7 @@ function WorkspacePage({
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [scenarioRoles, setScenarioRoles] = useState<Awaited<ReturnType<typeof getGuardRoles>>["scenarios"]>([]);
   const [guardApprovals, setGuardApprovals] = useState<GuardApproval[]>([]);
+  const [guardSettings, setGuardSettings] = useState<GuardSettings>();
   const [terminalControl, setTerminalControl] = useState<{ holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" }>({ holderMemberId: null });
   const [tree, setTree] = useState<WorkspaceNode[]>([]);
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
@@ -268,14 +271,15 @@ function WorkspacePage({
         identity.memberId,
         connectionId
       );
-      const [room, workspaceTree, eventRecords, messages, agents, runs] =
+      const [room, workspaceTree, eventRecords, messages, agents, runs, settings] =
         await Promise.all([
           getRoom(projectId),
           getWorkspaceDirectory(projectId, ""),
           getEvents(projectId),
           getChatMessages(projectId),
           getTeamAgents(projectId),
-          getAgentRuns(projectId)
+          getAgentRuns(projectId),
+          getGuardSettings(projectId)
         ]);
       const chatRunIds = messages.flatMap((message) => message.runId ? [message.runId] : []).slice(-20);
       const relevantRuns = runs.filter((run) => run.status === "queued" || run.status === "running" || chatRunIds.includes(run.id));
@@ -288,6 +292,7 @@ function WorkspacePage({
       setTree(workspaceTree);
       setEvents(eventRecords);
       setChatMessages(messages);
+      setGuardSettings(settings);
       void listGuardApprovals(projectId).then((result) => {
         setGuardApprovals(result.approvals);
         setUnseenApprovalIds(new Set(result.approvals.filter((approval) => approval.approverIds.includes(joined.member.id)).map((approval) => approval.id)));
@@ -309,6 +314,7 @@ function WorkspacePage({
           }
           if (state === "Connected") {
             clearWorkspaceError();
+            void getGuardSettings(projectId).then(setGuardSettings).catch(showWorkspaceError);
             void refreshSharedState().catch(showWorkspaceError);
             void refreshWorkspaceTree().catch(showWorkspaceError);
           }
@@ -397,6 +403,9 @@ function WorkspacePage({
             setEvents((current) => current.some((event) => event.id === message.event.id)
               ? current
               : [...current, message.event]);
+            if (message.event.type === "guard_settings_updated") {
+              void getGuardSettings(projectId).then(setGuardSettings).catch(showWorkspaceError);
+            }
             if (message.event.type === "guard_llm_judging") {
               setLlmJudging(true);
               setGuardNotice({ title: "The model is reviewing a guarded request", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "Review in progress"), tone: "model" });
@@ -985,6 +994,13 @@ function WorkspacePage({
             canRun={Boolean(member)}
             memberId={member?.id ?? ""}
             isOwner={scenarioRoles.some((role) => role.role === member?.profileRole && role.level === "owner")}
+            guardSettings={guardSettings}
+            onLlmModeChange={async (mode) => {
+              const settings = await updateGuardLlmMode(projectId, mode);
+              setGuardSettings(settings);
+              showWorkspaceNotice("Review mode updated for new project requests");
+            }}
+            onError={showWorkspaceError}
             onControlState={(holderMemberId, expiresAt, mode) => setTerminalControl({ holderMemberId, expiresAt, mode })}
           />
         </section>

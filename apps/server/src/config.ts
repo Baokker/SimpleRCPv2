@@ -1,4 +1,5 @@
 import path from "node:path";
+import type { GuardLlmMode } from "@simplercp/shared";
 import { fileURLToPath } from "node:url";
 
 const defaultRepositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
@@ -12,6 +13,7 @@ export interface ServerConfig {
   demoProjectRoot: string;
   terminalEnabled?: boolean;
   guardMode?: "full" | "human-only" | "off";
+  guardLlmMode?: GuardLlmMode;
   guardApprovalTimeoutMs?: number;
   fakeAgentRuntime?: boolean;
   importRoots?: string[];
@@ -68,6 +70,10 @@ export function loadConfig(
   if (!["full", "human-only", "off"].includes(guardMode)) {
     throw new Error("SIMPLERCP_GUARD_MODE must be full, human-only, or off");
   }
+  const guardLlmMode = env.SIMPLERCP_GUARD_LLM_MODE?.trim() || undefined;
+  if (guardLlmMode !== undefined && !["off", "suggest", "auto"].includes(guardLlmMode)) {
+    throw new Error("SIMPLERCP_GUARD_LLM_MODE must be off, suggest, or auto");
+  }
   const guardApprovalTimeoutMs = Number(env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS ?? 120_000);
   if (!Number.isInteger(guardApprovalTimeoutMs) || guardApprovalTimeoutMs < 1) {
     throw new Error("SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS must be a positive integer");
@@ -94,6 +100,7 @@ export function loadConfig(
     importRoots,
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
+    ...(guardLlmMode ? { guardLlmMode: guardLlmMode as GuardLlmMode } : {}),
     fakeAgentRuntime,
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,

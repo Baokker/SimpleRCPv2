@@ -46,6 +46,7 @@ SIMPLERCP_HOST=127.0.0.1
 SIMPLERCP_PUBLIC_URL=http://127.0.0.1:5173
 SIMPLERCP_TERMINAL_ENABLED=true
 SIMPLERCP_GUARD_MODE=full
+SIMPLERCP_GUARD_LLM_MODE=suggest
 SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS=120000
 
 DEEPSEEK_API_KEY=your_deepseek_api_key
@@ -574,6 +575,16 @@ Delete guard-agent-check.txt and report whether it was removed.
   "llmMode": "suggest"
 }
 ```
+
+`SIMPLERCP_GUARD_LLM_MODE` 是服务启动时的默认模式，也可以在共享终端底部的 `Request review` 选择器中修改当前项目策略。选项含义如下：
+
+| 选择项 | 行为 |
+| --- | --- |
+| `Manual review` | 不调用模型，进入审批的请求直接等待人员处理 |
+| `Model suggestion` | 调用模型展示风险、置信度和理由，最终等待人员处理 |
+| `Model auto review` | 满足自动判断条件的低风险请求自动批准，高风险请求自动拒绝，其余请求等待人员处理 |
+
+共享终端底部的选择器只有 owner 可以修改，其他成员可以查看当前模式。`.env` 需要重新启动服务端才会读取新的默认值；界面选择会立即作用于后续请求。
 
 修改策略需要在线 owner。先从浏览器加入项目的成员文件或项目元数据中取得 `<OWNER_MEMBER_ID>`，再执行：
 
