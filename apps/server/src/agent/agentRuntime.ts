@@ -10,6 +10,7 @@ export interface AgentRuntimeEvent {
 
 export interface AgentRuntime {
   status(): Promise<AgentRuntimeStatus>;
+  prepareWorkspace?(workspacePath: string): Promise<boolean>;
   createSession(input: {
     workspacePath: string;
     title: string;

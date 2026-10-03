@@ -217,6 +217,21 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       await projectRuntime.documents.awaitIdle();
+      const workspacePrepared = await options.runtime.prepareWorkspace?.(
+        projectRuntime.project.workspacePath
+      );
+      if (workspacePrepared) {
+        const sessions = await getSessionStore(projectId).list();
+        await Promise.all(
+          sessions
+            .filter((session) => session.runtimeSessionId)
+            .map((session) =>
+              getSessionStore(projectId).update(session.id, {
+                runtimeSessionId: undefined
+              })
+            )
+        );
+      }
       const workspaceBefore = await createAgentWorkspaceSnapshot(
         projectRuntime.project.workspacePath
       );
@@ -226,6 +241,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         status: "running",
         startedAt
       });
+      if (workspacePrepared && run.runtimeSessionId) {
+        run = await updateRun(projectId, runId, {
+          runtimeSessionId: undefined
+        });
+      }
       await appendTrace(projectId, runId, {
         type: "run_started",
         summary: "Agent run started"
@@ -294,7 +314,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           prompt: await buildRuntimePrompt(
             projectRuntime.project.workspacePath,
             run.extraPrompt ? `${run.extraPrompt}\n\n${run.prompt}` : run.prompt,
-            run.contexts
+            run.contexts,
+            projectRuntime.project.name
           )
         }),
         options.runTimeoutMs,

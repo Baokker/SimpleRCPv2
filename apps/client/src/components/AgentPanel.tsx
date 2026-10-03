@@ -43,7 +43,6 @@ export function AgentPanel({
   projectId,
   member,
   members,
-  teamAgents,
   workspaceTree,
   refreshVersion,
   traces,
@@ -53,7 +52,6 @@ export function AgentPanel({
   projectId: string;
   member: RoomMember | null;
   members: RoomMember[];
-  teamAgents: AgentSession[];
   workspaceTree: WorkspaceNode[];
   refreshVersion: number;
   traces: Record<string, AgentTraceEvent[]>;
@@ -89,16 +87,6 @@ export function AgentPanel({
       .filter((run) => run.status === "queued")
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
     [runs]
-  );
-  const teamAgentIds = useMemo(
-    () => new Set(teamAgents.map((agent) => agent.id)),
-    [teamAgents]
-  );
-  const teamRuns = useMemo(
-    () => runs
-      .filter((run) => run.sessionId && teamAgentIds.has(run.sessionId))
-      .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
-    [runs, teamAgentIds]
   );
   const projectFiles = contextFiles.length ? contextFiles : flattenFiles(workspaceTree);
 
@@ -334,40 +322,6 @@ export function AgentPanel({
           </li>
         ))}
       </ol>
-
-      {teamRuns.length > 0 ? (
-        <section className="agent-team-traces" data-testid="agent-team-traces">
-          <header>
-            <strong>Team Agent traces</strong>
-            <small>These runs use the same trace shown in Chat.</small>
-          </header>
-          <ol className="agent-message-list">
-            {teamRuns.map((run) => (
-              <li key={run.id} className="agent-turn">
-                <div className="agent-team-run-label">
-                  @{teamAgents.find((agent) => agent.id === run.sessionId)?.handle ?? "agent"}
-                </div>
-                <article className="agent-user-message">
-                  <header>
-                    <strong>{runMemberName(run, members)}</strong>
-                    <time>{formatTime(run.createdAt)}</time>
-                  </header>
-                  <p>{run.prompt}</p>
-                </article>
-                <AgentMessage
-                  projectId={projectId}
-                  run={run}
-                  trace={traces[run.id] ?? []}
-                  queuedRuns={queuedRuns}
-                  canCancel={Boolean(member)}
-                  onCancel={() => void cancelRun(run)}
-                  onOpenFile={onOpenFile}
-                />
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
 
       <div className="agent-composer">
         {contexts.length ? (

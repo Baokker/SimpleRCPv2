@@ -67,6 +67,8 @@ test("Chat and My Agent share a live team trace and download", async ({ page }) 
   expect(download.suggestedFilename()).toMatch(/^trace-.+\.jsonl$/);
 
   await page.getByTestId("collab-tab-agent").click();
-  await expect(page.getByTestId("agent-team-traces")).toContainText("shared chat trace verified", { timeout: 20_000 });
-  await expect(page.getByTestId("agent-team-traces")).toContainText("Run completed");
+  await expect(page.getByTestId("agent-team-traces")).toHaveCount(0);
+  await expect(page.getByTestId("agent-prompt")).toBeVisible();
+  await page.getByTestId("collab-tab-chat").click();
+  await expect(page.getByTestId("chat-agent-card").last()).toContainText("Run completed");
 });

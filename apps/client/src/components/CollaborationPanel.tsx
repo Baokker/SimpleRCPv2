@@ -456,7 +456,6 @@ export function CollaborationPanel({
             projectId={projectId}
             member={member}
             members={members}
-            teamAgents={teamAgents}
             refreshVersion={agentRefreshVersion}
             traces={agentTraces}
             onOpenFile={onOpenFile}

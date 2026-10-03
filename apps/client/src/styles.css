@@ -2302,37 +2302,6 @@ button.activity-entry:hover strong {
   font: inherit;
 }
 
-.agent-team-traces {
-  margin-top: 12px;
-  border-top: 1px solid var(--border-section);
-  padding-top: 10px;
-}
-
-.agent-team-traces > header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 7px;
-}
-
-.agent-team-traces > header strong {
-  color: var(--text-label);
-  font-size: 11px;
-  text-transform: uppercase;
-}
-
-.agent-team-traces > header small,
-.agent-team-run-label {
-  color: var(--text-muted);
-  font-size: 10px;
-}
-
-.agent-team-run-label {
-  margin-bottom: 4px;
-  color: var(--accent-text);
-}
-
 .mention-candidates {
   position: absolute;
   right: 8px;
