@@ -46,7 +46,6 @@ export function createOpenCodeRuntime(
   }
 
   async function getClient(workspacePath: string) {
-    await ensureWorkspaceRepository(workspacePath);
     const current = await ensureCurrentProcess();
     const running = await current.start();
     return createOpencodeClient({
@@ -190,7 +189,7 @@ export function createOpenCodeRuntime(
   };
 }
 
-async function ensureWorkspaceRepository(workspacePath: string) {
+export async function ensureWorkspaceRepository(workspacePath: string) {
   const gitPath = path.join(workspacePath, ".git");
   const repositoryExists = await fs.stat(gitPath)
     .then(() => true)

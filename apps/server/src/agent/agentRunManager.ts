@@ -276,20 +276,42 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       await projectRuntime.documents.awaitIdle();
-      const workspacePrepared = await options.runtime.prepareWorkspace?.(
-        projectRuntime.project.workspacePath
-      );
+      const session = current.sessionId
+        ? await getSessionStore(projectId).get(current.sessionId)
+        : undefined;
+      if (!session) throw new Error("Agent session not found");
+      const workspacePrepared = session.scope === "team"
+        ? await options.runtime.prepareWorkspace?.(projectRuntime.project.workspacePath)
+        : false;
       if (workspacePrepared) {
         const sessions = await getSessionStore(projectId).list();
+        const affectedSessionIds = new Set(
+          sessions
+            .filter((candidate) => candidate.scope === "team" && candidate.runtimeSessionId)
+            .map((candidate) => candidate.id)
+        );
         await Promise.all(
           sessions
-            .filter((session) => session.runtimeSessionId)
-            .map((session) =>
-              getSessionStore(projectId).update(session.id, {
-                runtimeSessionId: undefined
-              })
-            )
+            .filter((candidate) => affectedSessionIds.has(candidate.id))
+            .map((candidate) => getSessionStore(projectId).update(candidate.id, { runtimeSessionId: undefined }))
         );
+        const existingRuns = await getStore(projectId).list();
+        await Promise.all(
+          existingRuns
+            .filter((candidate) => candidate.sessionId && affectedSessionIds.has(candidate.sessionId) && candidate.runtimeSessionId)
+            .map((candidate) => updateRun(projectId, candidate.id, { runtimeSessionId: undefined }))
+        );
+        if (affectedSessionIds.size > 0) {
+          appendActivity(projectId, {
+            type: "agent_workspace_isolated",
+            memberId: current.memberId,
+            participantId: current.participantId,
+            payload: {
+              sessionIds: [...affectedSessionIds],
+              reason: "Team Agent workspace now has an isolated Git repository"
+            }
+          });
+        }
       }
       const workspaceBefore = await createAgentWorkspaceSnapshot(
         projectRuntime.project.workspacePath
@@ -300,21 +322,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         status: "running",
         startedAt
       });
-      if (workspacePrepared && run.runtimeSessionId) {
-        run = await updateRun(projectId, runId, {
-          runtimeSessionId: undefined
-        });
-      }
+      if (workspacePrepared && run.runtimeSessionId) run = await updateRun(projectId, runId, { runtimeSessionId: undefined });
       await appendTrace(projectId, runId, {
         type: "run_started",
         summary: "Agent run started"
       });
 
-      const session = run.sessionId
-        ? await getSessionStore(projectId).get(run.sessionId)
-        : undefined;
-      if (!session) throw new Error("Agent session not found");
-      let runtimeSessionId = run.runtimeSessionId ?? session.runtimeSessionId;
+      let runtimeSessionId = workspacePrepared ? undefined : run.runtimeSessionId ?? session.runtimeSessionId;
       if (!runtimeSessionId) {
         const session = await options.runtime.createSession({
           workspacePath: projectRuntime.project.workspacePath,
