@@ -228,19 +228,27 @@ export function CollaborationPanel({
                   onChange={(event) => setTeamAgentName(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key !== "Enter" || !teamAgentName.trim()) return;
-                    void onCreateTeamAgent(teamAgentName.trim()).then(() => {
+                    void onCreateTeamAgent(teamAgentName.trim(), teamAgentDescription.trim() || undefined).then(() => {
                       setTeamAgentName("");
+                      setTeamAgentDescription("");
                       setTeamAgentFormOpen(false);
                     }).catch(onError);
                   }}
                   placeholder="Agent name"
                   data-testid="team-agent-name"
                 />
+                <input
+                  value={teamAgentDescription}
+                  onChange={(event) => setTeamAgentDescription(event.target.value)}
+                  placeholder="Description (optional)"
+                  data-testid="team-agent-description"
+                />
                 <button
                   type="button"
                   disabled={!teamAgentName.trim()}
-                  onClick={() => void onCreateTeamAgent(teamAgentName.trim()).then(() => {
+                  onClick={() => void onCreateTeamAgent(teamAgentName.trim(), teamAgentDescription.trim() || undefined).then(() => {
                     setTeamAgentName("");
+                    setTeamAgentDescription("");
                     setTeamAgentFormOpen(false);
                   }).catch(onError)}
                 >Create</button>
@@ -353,7 +361,7 @@ export function CollaborationPanel({
                 </ul>
               ) : null}
               <small className="chat-command-hint" data-testid="chat-command-hint">
-                Create a shared Agent with <code>/agent new reviewer</code>, then mention <code>@reviewer</code> in Chat.
+                Create a shared Agent with <code>/agent new reviewer code reviews</code>, then mention <code>@reviewer</code> in Chat.
               </small>
               <div className="chat-actions">
                 <small id="chat-keyboard-hint">
@@ -528,7 +536,7 @@ function ChatAgentMessage({
       ) : null}
       {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
-          <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.status}</span></div>
+          <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
           {run.fileChanges?.length ? (
             <ul>
               {run.fileChanges.map((change) => (
@@ -570,7 +578,7 @@ function ChatAgentMessage({
               <Download size={13} />
             </button>
             {run.status === "queued" || run.status === "running" ? (
-              <button type="button" onClick={() => void onCancelAgentRun(run.id)}>Stop</button>
+              <button type="button" onClick={() => void onCancelAgentRun(run.id).catch(onError)}>Stop</button>
             ) : null}
           </div>
         </article>

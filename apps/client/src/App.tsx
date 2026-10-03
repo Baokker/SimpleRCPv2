@@ -622,7 +622,11 @@ function WorkspacePage({
     try {
       const command = text.match(/^\/agent\s+new\s+(.+)$/i);
       if (command?.[1]) {
-        const response = await createTeamAgent(projectId, { name: command[1].trim() });
+        const [name, ...description] = command[1].trim().split(/\s+/);
+        const response = await createTeamAgent(projectId, {
+          name: name ?? "",
+          description: description.join(" ") || undefined
+        });
         setTeamAgents((current) => [response.agent, ...current.filter((agent) => agent.id !== response.agent.id)]);
       } else {
         await sendChatMessage(projectId, { text });

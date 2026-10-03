@@ -83,6 +83,7 @@ describe("chat", () => {
       expect(body.message.authorName).toBe("Bob");
       expect(body.message.authorRole).toBeUndefined();
       expect(Object.keys(body)).toEqual(["message"]);
+      await waitForMessageProcessed(`http://127.0.0.1:${address.port}`, member.headers, body.message.text);
     } finally {
       await app.locals.runtimeManager.dispose();
       await fs.rm(`${root}-data`, { recursive: true, force: true });
@@ -108,6 +109,7 @@ describe("chat", () => {
         })
       });
       expect(response.status).toBe(200);
+      await waitForMessageProcessed(first.origin, member.headers, "Keep this message after restart");
     } finally {
       await first.close();
     }
@@ -159,4 +161,16 @@ async function startTestServer(dataDir: string) {
       });
     }
   };
+}
+
+async function waitForMessageProcessed(origin: string, headers: Record<string, string>, text: string) {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const response = await fetch(`${origin}/api/projects/demo/chat`, { headers });
+    const body = await response.json() as { messages: Array<{ text: string; mentions?: string[] }> };
+    const message = body.messages.find((item) => item.text === text);
+    if (message?.mentions) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error(`Chat message processing did not finish: ${text}`);
 }

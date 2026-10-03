@@ -485,7 +485,7 @@ function AgentMessage({
           <button
             type="button"
             className="agent-trace-download"
-            onClick={() => void downloadAgentTrace(projectId, run.id)}
+            onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
             data-testid="agent-trace-download"
           >
             <Download size={13} /> Download trace
@@ -531,6 +531,7 @@ function runMemberName(run: AgentRun, members: RoomMember[]) {
 }
 
 function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[]) {
+  if (run.interruptedByRunId) return "Interrupted";
   if (run.status !== "queued") return titleCase(run.status);
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
   return position > 0 ? `Queued #${position}` : "Queued";

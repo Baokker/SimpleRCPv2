@@ -105,10 +105,10 @@ export function registerCollaborationRoutes(
         authorRole: identity.role || undefined,
         text
       });
-      try {
-        const processed = await chatAgentBridge.handleMessage(req.params.projectId, message);
-        res.json({ message: processed });
-      } catch (error) {
+      res.json({ message });
+      void Promise.resolve()
+        .then(() => chatAgentBridge.handleMessage(req.params.projectId, message))
+        .catch(async (error) => {
         const detail = error instanceof Error ? error.message : "Unable to start the team Agent";
         runtime.events.append({
           type: "agent_task_failed",
@@ -126,8 +126,8 @@ export function registerCollaborationRoutes(
           kind: "system",
           text: `Unable to start the team Agent: ${detail}`
         });
-        res.json({ message });
-      }
+        })
+        .catch((error) => console.error("Unable to report team Agent startup failure", error));
     } catch (error) { next(error); }
   });
 

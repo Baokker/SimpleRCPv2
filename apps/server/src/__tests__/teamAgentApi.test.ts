@@ -53,12 +53,18 @@ describe("team Agent API", () => {
         body: JSON.stringify({ text: "@agent please inspect README" })
       });
       expect(response.status).toBe(200);
-      const messages = await fetch(`${running.origin}/api/projects/demo/chat`, { headers: memberHeaders(member) }).then((result) => result.json()) as { messages: Array<{ mentions?: string[]; kind?: string }> };
+      const messages = await waitFor(async () => {
+        const result = await fetch(`${running.origin}/api/projects/demo/chat`, { headers: memberHeaders(member) });
+        return (await result.json()) as { messages: Array<{ mentions?: string[]; kind?: string }> };
+      }, (result) => result.messages.some((item) => item.mentions?.includes("agent")) && result.messages.some((item) => item.kind === "system"));
       expect(messages.messages).toEqual(expect.arrayContaining([
         expect.objectContaining({ mentions: ["agent"] }),
         expect.objectContaining({ kind: "system" })
       ]));
-      const events = await fetch(`${running.origin}/api/projects/demo/events`, { headers: memberHeaders(member) }).then((result) => result.json()) as { events: Array<{ type: string; payload?: Record<string, unknown> }> };
+      const events = await waitFor(async () => {
+        const result = await fetch(`${running.origin}/api/projects/demo/events`, { headers: memberHeaders(member) });
+        return (await result.json()) as { events: Array<{ type: string; payload?: Record<string, unknown> }> };
+      }, (result) => result.events.some((event) => event.type === "agent_task_failed"));
       expect(events.events).toEqual(expect.arrayContaining([
         expect.objectContaining({
           type: "agent_task_failed",
@@ -119,6 +125,16 @@ async function startServer() {
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     }
   };
+}
+
+async function waitFor<T>(read: () => Promise<T>, ready: (value: T) => boolean) {
+  const deadline = Date.now() + 5_000;
+  let value = await read();
+  while (!ready(value) && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    value = await read();
+  }
+  return value;
 }
 
 async function join(origin: string, name: string) {
