@@ -81,17 +81,28 @@ export function createGuardService(options: {
     const initial = await makeDecision(request);
     let decision = initial.decision;
     if (decision.action === "ask" && initial.policy.llmMode !== "off") {
+      if (options.llm?.baseUrl && options.llm.apiKey) {
+        publishActivity({
+          type: "guard_llm_judging",
+          memberId: request.memberId,
+          payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, mode: initial.policy.llmMode }
+        });
+      }
       const model = await judgeGuardRequest({ request, decision, mode: initial.policy.llmMode, ...options.llm });
       if (model) {
-        const applied = initial.policy.llmMode === "auto" && decision.autoEligible && model.risk === "low" && model.confidence >= (request.source === "agent" ? 0.95 : 0.85);
-        decision = { ...decision, action: applied ? (decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow") : decision.action, llm: { mode: initial.policy.llmMode, ...model, applied } };
+        const confidenceThreshold = request.source === "agent" ? 0.95 : 0.85;
+        const applied = initial.policy.llmMode === "auto" && decision.autoEligible && model.confidence >= confidenceThreshold && (model.risk === "low" || model.risk === "high");
+        const modelAction = model.risk === "high"
+          ? "deny"
+          : decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow";
+        decision = { ...decision, action: applied ? modelAction : decision.action, llm: { mode: initial.policy.llmMode, ...model, applied } };
       }
     }
     if (decision.action !== "ask") {
-      if (decision.action !== "allow") publishActivity({
+      if (decision.action !== "allow" || decision.llm?.applied) publishActivity({
         type: "guard_action",
         memberId: request.memberId,
-        payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules }
+        payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, llm: decision.llm }
       });
       return { request, decision, approved: decision.action !== "deny" };
     }
