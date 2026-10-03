@@ -5,7 +5,7 @@ import { createEventLog } from "./eventLog.js";
 import { getProjectMetadataPath, type ProjectRecord } from "./projects.js";
 import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
-import type { WorkspaceChange } from "./types.js";
+import type { ChatMessage, WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
 export function createProjectRuntime(
@@ -132,6 +132,9 @@ export function createProjectRuntime(
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
       workspaceListeners.add(listener);
       return () => workspaceListeners.delete(listener);
+    },
+    onChatMessage(listener: (message: ChatMessage) => void) {
+      return chat.onMessage(listener);
     },
     suppressWorkspaceChange(change: WorkspaceChange) {
       suppressWatcherDuplicates(change);

@@ -2,6 +2,7 @@ import path from "node:path";
 import type {
   AgentRun,
   AgentSettingsResponse,
+  AgentSession,
   AgentTraceEvent,
   AgentPromptContext,
   EventRecord
@@ -28,6 +29,7 @@ import {
 } from "./agentRunSupport.js";
 import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
+import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
 
 interface AgentRunManagerOptions {
   members: MemberStore;
@@ -63,7 +65,23 @@ export type AgentRunManagerEvent =
       projectId: string;
       runId: string;
       event: AgentTraceEvent;
-    };
+    }
+  | { type: "team_agents_changed"; projectId: string; agents: AgentSession[] };
+
+function buildInterruptionPrompt(
+  interruptedRun: AgentRun,
+  nextRun: AgentRun,
+  members: Array<{ id: string; displayName: string }>
+) {
+  const interruptedBy = members.find((member) => member.id === nextRun.memberId)?.displayName
+    ?? nextRun.memberName
+    ?? nextRun.memberId;
+  const files = interruptedRun.fileChanges?.map((change) => change.file) ?? [];
+  return [
+    `The previous task from ${interruptedRun.memberName ?? interruptedRun.memberId} was interrupted by ${interruptedBy}. Continue from the current workspace state.`,
+    `Files changed before interruption: ${files.length ? files.join(", ") : "none"}.`
+  ].join(" ");
+}
 
 export function createAgentRunManager(options: AgentRunManagerOptions) {
   const stores = new Map<string, AgentRunStore>();
@@ -71,6 +89,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const traces = new Map<string, TraceStore>();
   const queues = new Map<string, ProjectQueue>();
   const activeRuns = new Map<string, ActiveRun>();
+  const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
   let disposing = false;
 
@@ -148,6 +167,39 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     emit({ type: "activity_appended", projectId, event });
   }
 
+  async function withTeamAgentLock<T>(projectId: string, operation: () => Promise<T>) {
+    const previous = teamAgentOperations.get(projectId) ?? Promise.resolve();
+    const current = previous.then(operation);
+    teamAgentOperations.set(projectId, current.then(() => undefined, () => undefined));
+    return current;
+  }
+
+  async function listTeamAgentsWithoutEnsuring(projectId: string) {
+    return getSessionStore(projectId).list(undefined, "team");
+  }
+
+  async function ensureDefaultTeamAgent(projectId: string) {
+    await withTeamAgentLock(projectId, async () => {
+      const store = getSessionStore(projectId);
+      const existing = await store.findByHandle("agent");
+      if (existing) return;
+      const agent = await store.create({
+        projectId,
+        memberId: "",
+        scope: "team",
+        handle: "agent",
+        description: "Shared agent for the whole team",
+        title: "agent",
+        runtime: "opencode"
+      });
+      emit({
+        type: "team_agents_changed",
+        projectId,
+        agents: await listTeamAgentsWithoutEnsuring(projectId)
+      });
+    });
+  }
+
   async function migrateLegacySessions(projectId: string) {
     await migrateLegacyAgentSessions(
       projectId,
@@ -173,6 +225,50 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     return queue.completion;
   }
 
+  async function recordCancelledFileChanges(
+    projectId: string,
+    runId: string,
+    workspacePath: string,
+    runtimeSessionId: string,
+    workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>>,
+    messageId?: string
+  ) {
+    let workspaceChanges: AgentRun["fileChanges"] = [];
+    let runtimeChanges: AgentRun["fileChanges"] = [];
+    try {
+      workspaceChanges = compareAgentWorkspaceSnapshots(
+        workspaceBefore,
+        await createAgentWorkspaceSnapshot(workspacePath)
+      );
+    } catch (error) {
+      await appendTrace(projectId, runId, {
+        type: "file_changes_unavailable",
+        summary: `Workspace snapshot failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    }
+    try {
+      runtimeChanges = await options.runtime.getDiff({
+        workspacePath,
+        sessionId: runtimeSessionId,
+        messageId
+      });
+    } catch (error) {
+      await appendTrace(projectId, runId, {
+        type: "file_changes_unavailable",
+        summary: `Runtime diff failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    }
+    const fileChanges = mergeFileChanges(workspaceChanges, runtimeChanges);
+    await updateRun(projectId, runId, { fileChanges });
+    if (fileChanges.length > 0) {
+      await appendTrace(projectId, runId, {
+        type: "file_changes",
+        summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed before cancellation`,
+        data: { files: fileChanges }
+      });
+    }
+  }
+
   async function executeRun(projectId: string, runId: string) {
     const store = getStore(projectId);
     const current = await store.get(runId);
@@ -180,6 +276,43 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       await projectRuntime.documents.awaitIdle();
+      const session = current.sessionId
+        ? await getSessionStore(projectId).get(current.sessionId)
+        : undefined;
+      if (!session) throw new Error("Agent session not found");
+      const workspacePrepared = session.scope === "team"
+        ? await options.runtime.prepareWorkspace?.(projectRuntime.project.workspacePath)
+        : false;
+      if (workspacePrepared) {
+        const sessions = await getSessionStore(projectId).list();
+        const affectedSessionIds = new Set(
+          sessions
+            .filter((candidate) => candidate.scope === "team" && candidate.runtimeSessionId)
+            .map((candidate) => candidate.id)
+        );
+        await Promise.all(
+          sessions
+            .filter((candidate) => affectedSessionIds.has(candidate.id))
+            .map((candidate) => getSessionStore(projectId).update(candidate.id, { runtimeSessionId: undefined }))
+        );
+        const existingRuns = await getStore(projectId).list();
+        await Promise.all(
+          existingRuns
+            .filter((candidate) => candidate.sessionId && affectedSessionIds.has(candidate.sessionId) && candidate.runtimeSessionId)
+            .map((candidate) => updateRun(projectId, candidate.id, { runtimeSessionId: undefined }))
+        );
+        if (affectedSessionIds.size > 0) {
+          appendActivity(projectId, {
+            type: "agent_workspace_isolated",
+            memberId: current.memberId,
+            participantId: current.participantId,
+            payload: {
+              sessionIds: [...affectedSessionIds],
+              reason: "Team Agent workspace now has an isolated Git repository"
+            }
+          });
+        }
+      }
       const workspaceBefore = await createAgentWorkspaceSnapshot(
         projectRuntime.project.workspacePath
       );
@@ -189,16 +322,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         status: "running",
         startedAt
       });
+      if (workspacePrepared && run.runtimeSessionId) run = await updateRun(projectId, runId, { runtimeSessionId: undefined });
       await appendTrace(projectId, runId, {
         type: "run_started",
         summary: "Agent run started"
       });
 
-      const session = run.sessionId
-        ? await getSessionStore(projectId).get(run.sessionId)
-        : undefined;
-      if (!session) throw new Error("Agent session not found");
-      let runtimeSessionId = run.runtimeSessionId ?? session.runtimeSessionId;
+      let runtimeSessionId = workspacePrepared ? undefined : run.runtimeSessionId ?? session.runtimeSessionId;
       if (!runtimeSessionId) {
         const session = await options.runtime.createSession({
           workspacePath: projectRuntime.project.workspacePath,
@@ -237,6 +367,24 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runtimeSessionId
       });
 
+      const previousRun = run.interruptsRunId
+        ? await store.get(run.interruptsRunId)
+        : undefined;
+      const interruptionPrompt = previousRun
+        ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
+        : undefined;
+      const runtimePrompt = await buildRuntimePrompt(
+        projectRuntime.project.workspacePath,
+        [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
+        run.contexts,
+        projectRuntime.project.name
+      );
+      await options.runtime.prepareRun?.({
+        workspacePath: projectRuntime.project.workspacePath,
+        sessionId: runtimeSessionId,
+        runPrompt: run.prompt
+      });
+
       const stopEvents = await options.runtime.subscribe(
         {
           workspacePath: projectRuntime.project.workspacePath,
@@ -250,21 +398,29 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       );
 
-      const result = await runWithTimeout(
-        options.runtime.run({
+      let result: { text: string; messageId?: string };
+      try {
+        result = await runWithTimeout(options.runtime.run({
           workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId,
-          prompt: await buildRuntimePrompt(projectRuntime.project.workspacePath, run.prompt, run.contexts)
-        }),
-        options.runTimeoutMs,
-        () =>
-          options.runtime.cancel({
-            workspacePath: projectRuntime.project.workspacePath,
+          prompt: runtimePrompt
+        }), options.runTimeoutMs, () => options.runtime.cancel({
+          workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId
-          })
-      ).finally(stopEvents);
+        })).finally(stopEvents);
+      } catch (error) {
+        const latestAfterFailure = await store.get(runId);
+        if (latestAfterFailure?.status === "cancelled") {
+          await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
+          return;
+        }
+        throw error;
+      }
       const latest = await store.get(runId);
-      if (latest?.status === "cancelled") return;
+      if (latest?.status === "cancelled") {
+        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, result.messageId);
+        return;
+      }
       const runtimeFileChanges = await options.runtime.getDiff({
         workspacePath: projectRuntime.project.workspacePath,
         sessionId: runtimeSessionId,
@@ -310,6 +466,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         fileChanges,
         finishedAt
       });
+      if (run.source === "chat" && session.scope === "team") {
+        await projectRuntime.chat.createMessage({
+          roomId: projectRuntime.room.id,
+          authorId: "agent",
+          authorName: session.handle ?? session.title,
+          kind: "agent",
+          agentSessionId: session.id,
+          runId: run.id,
+          text: result.text
+        });
+      }
       appendActivity(projectId, {
         type: "agent_task_completed",
         memberId: run.memberId,
@@ -345,6 +512,20 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           error: message
         }
       });
+      if (current.source === "chat" && current.sessionId) {
+        const session = await getSessionStore(projectId).get(current.sessionId);
+        if (session?.scope === "team") {
+          await options.runtimeManager.get(projectId).chat.createMessage({
+            roomId: options.runtimeManager.get(projectId).room.id,
+            authorId: "agent",
+            authorName: "System",
+            kind: "system",
+            agentSessionId: session.id,
+            runId: current.id,
+            text: `Team Agent task failed: ${message}`
+          });
+        }
+      }
       await appendTrace(projectId, runId, {
         type: "run_failed",
         summary: message
@@ -395,6 +576,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       prompt: string;
       sessionId?: string;
       contexts?: AgentPromptContext[];
+      source?: AgentRun["source"];
+      chatMessageId?: string;
+      extraPrompt?: string;
+      interruptsRunId?: string;
+      runId?: string;
     }) {
       if (disposing) throw new Error("Agent run manager is closing");
       const prompt = input.prompt.trim();
@@ -416,7 +602,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         ? await sessionStore.get(input.sessionId)
         : undefined;
       if (session) {
-        if (session.memberId !== input.memberId) {
+        if ((session.scope ?? "personal") !== "team" && session.memberId !== input.memberId) {
           throw new Error("Agent session belongs to another participant");
         }
       }
@@ -446,8 +632,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         status: "queued",
         runtime: "opencode",
         provider: "deepseek",
-        model: settings.model
-      });
+        model: settings.model,
+        source: input.source ?? "agent-panel",
+        chatMessageId: input.chatMessageId,
+        extraPrompt: input.extraPrompt?.trim() || undefined,
+        interruptsRunId: input.interruptsRunId
+      }, input.runId);
       emit({ type: "run_updated", projectId: input.projectId, run });
       await appendTrace(input.projectId, run.id, {
         type: "run_queued",
@@ -478,6 +668,47 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runtime: "opencode"
       });
     },
+    async listTeamAgents(projectId: string) {
+      await ensureDefaultTeamAgent(projectId);
+      return listTeamAgentsWithoutEnsuring(projectId);
+    },
+    async createTeamAgent(input: {
+      projectId: string;
+      memberId: string;
+      name: string;
+      description?: string;
+    }) {
+      const projectRuntime = options.runtimeManager.get(input.projectId);
+      const member = projectRuntime.rooms.getMember(
+        projectRuntime.room.id,
+        input.memberId
+      );
+      if (!member) throw new Error("Project membership is required");
+      const handle = normalizeHandle(input.name);
+      validateHandle(handle);
+      await ensureDefaultTeamAgent(input.projectId);
+      return withTeamAgentLock(input.projectId, async () => {
+        const sessionStore = getSessionStore(input.projectId);
+        const existing = await sessionStore.findByHandle(handle);
+        if (existing) throw new Error(`Team Agent handle already exists: ${handle}`);
+        const session = await sessionStore.create({
+          projectId: input.projectId,
+          memberId: "",
+          scope: "team",
+          handle,
+          description: input.description?.trim() || undefined,
+          createdByMemberId: member.id,
+          title: handle,
+          runtime: "opencode"
+        });
+        emit({
+          type: "team_agents_changed",
+          projectId: input.projectId,
+          agents: await listTeamAgentsWithoutEnsuring(input.projectId)
+        });
+        return session;
+      });
+    },
     async getSession(projectId: string, sessionId: string) {
       const session = await getSessionStore(projectId).get(sessionId);
       if (!session) throw new Error("Agent session not found");
@@ -494,7 +725,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const sessionStore = getSessionStore(projectId);
       const stored = await sessionStore.get(sessionId);
       if (!stored) throw new Error("Agent session not found");
-      if (stored.memberId !== memberId) {
+      if ((stored.scope ?? "personal") !== "team" && stored.memberId !== memberId) {
         throw new Error("Agent session belongs to another participant");
       }
       return stored;
@@ -506,7 +737,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         throw new Error("Project membership is required");
       }
       const sessionStore = getSessionStore(projectId);
-      return sessionStore.list(memberId);
+      return sessionStore.list(memberId, "personal");
     },
     async getRun(projectId: string, runId: string) {
       const run = await getStore(projectId).get(runId);
@@ -521,7 +752,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!run) throw new Error("Agent run not found");
       return getTrace(projectId, runId).list();
     },
-    async cancelRun(projectId: string, runId: string, memberId: string) {
+    async cancelRun(
+      projectId: string,
+      runId: string,
+      memberId: string,
+      interruptedBy?: { runId: string; memberId: string }
+    ) {
       const projectRuntime = options.runtimeManager.get(projectId);
       const member = projectRuntime.rooms.getMember(projectRuntime.room.id, memberId);
       if (!member) {
@@ -536,11 +772,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       queue.runIds = queue.runIds.filter((queuedRunId) => queuedRunId !== runId);
       const cancelled = await updateRun(projectId, runId, {
         status: "cancelled",
-        finishedAt: new Date().toISOString()
+        finishedAt: new Date().toISOString(),
+        interruptedByRunId: interruptedBy?.runId,
+        interruptedByMemberId: interruptedBy?.memberId
       });
       await appendTrace(projectId, runId, {
-        type: "run_cancelled",
-        summary: "Agent run cancelled"
+        type: interruptedBy ? "run_interrupted" : "run_cancelled",
+        summary: interruptedBy ? "Agent run interrupted" : "Agent run cancelled",
+        data: interruptedBy ? { interruptedByRunId: interruptedBy.runId, interruptedByMemberId: interruptedBy.memberId } : undefined
       });
       appendActivity(projectId, {
         type: "agent_task_cancelled",
@@ -549,7 +788,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         payload: {
           runId: run.id,
           sessionId: run.sessionId,
-          name: run.memberName
+          name: run.memberName,
+          reason: interruptedBy ? "interrupted" : "cancelled"
         }
       });
 

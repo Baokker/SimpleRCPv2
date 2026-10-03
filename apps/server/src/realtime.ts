@@ -183,10 +183,19 @@ export function attachRealtimeServer(
       });
       return;
     }
+    if (event.type === "team_agents_changed") {
+      broadcastToProject(projectSockets, event.projectId, {
+        type: "team_agents_changed",
+        projectId: event.projectId,
+        agents: event.agents
+      });
+      return;
+    }
     broadcastToProject(projectSockets, event.projectId, {
       type: "agent_trace_appended",
       runId: event.runId,
-      sequence: event.event.sequence
+      sequence: event.event.sequence,
+      event: event.event
     });
   });
   const removeProjectDisposingListener = runtimeManager.onProjectDisposing(
@@ -234,10 +243,18 @@ export function attachRealtimeServer(
         }
       }
     });
+    const removeChatListener = runtime.onChatMessage((message) => {
+      broadcastToProject(projectSockets, runtime.project.id, {
+        type: "chat_message_created",
+        roomId: runtime.room.id,
+        message
+      });
+    });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,
       removeFileSavedListener,
-      removeTerminalListener
+      removeTerminalListener,
+      removeChatListener
     ]);
   }
 

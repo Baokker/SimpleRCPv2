@@ -64,6 +64,60 @@ export function registerAgentRoutes(
     }
   });
 
+  app.get("/api/projects/:projectId/team-agents", async (req, res, next) => {
+    try {
+      if (!requireIdentity(req, res)) return;
+      res.json({ agents: await agentRuns.listTeamAgents(req.params.projectId) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/team-agents", async (req, res, next) => {
+    try {
+      const identity = requirePermission(req, res, "agent:create");
+      if (!identity) return;
+      const name = String(req.body?.name ?? "");
+      if (!name.trim()) {
+        res.status(400).json({ error: "name is required" });
+        return;
+      }
+      try {
+        const agent = await agentRuns.createTeamAgent({
+          projectId: req.params.projectId,
+          memberId: identity.memberId,
+          name,
+          description: typeof req.body?.description === "string" ? req.body.description : undefined
+        });
+        res.status(201).json({ agent });
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith("Team Agent handle already exists:")) {
+          res.status(409).json({ error: error.message });
+          return;
+        }
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:projectId/team-agents/:sessionId/runs", async (req, res, next) => {
+    try {
+      if (!requireIdentity(req, res)) return;
+      const session = await agentRuns.getSession(req.params.projectId, req.params.sessionId);
+      if ((session.scope ?? "personal") !== "team") {
+        res.status(404).json({ error: "Team Agent not found" });
+        return;
+      }
+      const runs = (await agentRuns.listRuns(req.params.projectId))
+        .filter((run) => run.sessionId === session.id);
+      res.json({ runs });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.post("/api/projects/:projectId/agent/sessions", async (req, res, next) => {
     try {
       const memberId = memberIdFor(req);

@@ -13,7 +13,6 @@ export interface ClientSocket {
     position: CursorPosition,
     selection: EditorSelection
   ): void;
-  sendChat(text: string): void;
   sendReady(): void;
   retry(): void;
   close(): void;
@@ -114,9 +113,6 @@ export function connectRoomSocket({
     },
     sendCursorChange(path, position, selection) {
       send({ type: "cursor_change", path, position, selection });
-    },
-    sendChat(text) {
-      send({ type: "chat_message", text });
     },
     sendReady() {
       readyRequested = true;

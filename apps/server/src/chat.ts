@@ -10,6 +10,10 @@ export interface CreateChatMessageInput {
   authorName: string;
   authorRole?: string;
   text: string;
+  kind?: ChatMessage["kind"];
+  agentSessionId?: string;
+  runId?: string;
+  mentions?: string[];
 }
 
 interface ChatFile {
@@ -23,6 +27,7 @@ export function createChatStore(
 ) {
   let messages: ChatMessage[] = [];
   let operations: Promise<void> | undefined;
+  const listeners = new Set<(message: ChatMessage) => void>();
 
   function ensureLoaded() {
     operations ??= loadMessages(options.storagePath).then((loaded) => {
@@ -39,7 +44,14 @@ export function createChatStore(
           sequence: (messages.at(-1)?.sequence ?? 0) + 1,
           id: nanoid(10),
           timestamp: new Date().toISOString(),
-          ...input,
+          roomId: input.roomId,
+          authorId: input.authorId,
+          authorName: input.authorName,
+          authorRole: input.authorRole,
+          agentSessionId: input.agentSessionId,
+          runId: input.runId,
+          mentions: input.mentions,
+          kind: input.kind ?? "member",
           text: String(redactSensitive(input.text))
         };
         const nextMessages = [...messages, message];
@@ -57,6 +69,7 @@ export function createChatStore(
           }
         });
         created = message;
+        for (const listener of listeners) listener(message);
       });
       operations = creation;
       await creation;
@@ -66,6 +79,30 @@ export function createChatStore(
     async listMessages(roomId: string) {
       await ensureLoaded();
       return messages.map((message) => ({ ...message, roomId }));
+    },
+    async updateMessage(messageId: string, update: Partial<Pick<ChatMessage, "mentions" | "agentSessionId" | "runId">>) {
+      let updated: ChatMessage | undefined;
+      const operation = ensureLoaded().then(async () => {
+        const index = messages.findIndex((message) => message.id === messageId);
+        if (index < 0) throw new Error("Chat message not found");
+        const current = messages[index];
+        if (!current) throw new Error("Chat message not found");
+        const message: ChatMessage = { ...current, ...update };
+        const nextMessages = [...messages];
+        nextMessages[index] = message;
+        await saveMessages(options.storagePath, nextMessages);
+        messages = nextMessages;
+        updated = message;
+        for (const listener of listeners) listener(message);
+      });
+      operations = operation;
+      await operation;
+      if (!updated) throw new Error("Chat message was not updated");
+      return updated;
+    },
+    onMessage(listener: (message: ChatMessage) => void) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
     },
     async awaitIdle() {
       await ensureLoaded();

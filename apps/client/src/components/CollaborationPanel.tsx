@@ -1,6 +1,7 @@
 import {
   Activity,
   Bot,
+  Download,
   FilePenLine,
   FilePlus2,
   Eye,
@@ -9,6 +10,7 @@ import {
   LogIn,
   LogOut,
   MessageSquareText,
+  Plus,
   Pencil,
   Settings2,
   Trash2,
@@ -16,7 +18,12 @@ import {
 } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
+import { downloadAgentTrace } from "../api";
+import { presentTrace } from "../agentTracePresentation";
 import type {
+  AgentRun,
+  AgentSession,
+  AgentTraceEvent,
   ChatMessage,
   EventRecord,
   RemoteCursor,
@@ -50,6 +57,9 @@ export function CollaborationPanel({
   members,
   events,
   chatMessages,
+  teamAgents,
+  agentRuns,
+  agentTraces,
   remoteCursors,
   chatText,
   chatSending,
@@ -64,11 +74,17 @@ export function CollaborationPanel({
   followingMemberId,
   onFollowMember,
   onOpenFile,
-  onError
+  onError,
+  onLoadAgentTrace,
+  onCreateTeamAgent,
+  onCancelAgentRun
 }: {
   members: RoomMember[];
   events: EventRecord[];
   chatMessages: ChatMessage[];
+  teamAgents: AgentSession[];
+  agentRuns: AgentRun[];
+  agentTraces: Record<string, AgentTraceEvent[]>;
   remoteCursors: RemoteCursor[];
   chatText: string;
   chatSending: boolean;
@@ -84,8 +100,14 @@ export function CollaborationPanel({
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
+  onLoadAgentTrace(runId: string): void;
+  onCreateTeamAgent(name: string, description?: string): Promise<void>;
+  onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
+  const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
+  const [teamAgentName, setTeamAgentName] = useState("");
+  const [teamAgentDescription, setTeamAgentDescription] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
@@ -101,6 +123,22 @@ export function CollaborationPanel({
         .reverse(),
     [events, members]
   );
+  const mentionQuery = chatText.match(/(?:^|\s)@([a-z0-9-]*)$/i)?.[1]?.toLowerCase();
+  const mentionCandidates = useMemo(() => [
+    ...teamAgents
+      .filter((agent): agent is AgentSession & { handle: string } => Boolean(agent.handle))
+      .map((agent) => ({ id: agent.id, handle: agent.handle, name: agent.handle, team: true })),
+    ...members.map((candidate) => ({
+      id: candidate.id,
+      handle: memberHandle(candidate.displayName),
+      name: candidate.displayName,
+      team: false
+    }))
+  ], [members, teamAgents]);
+  const visibleMentionCandidates = mentionQuery === undefined
+    ? []
+    : mentionCandidates.filter((candidate) => candidate.handle.startsWith(mentionQuery));
+  const runsById = useMemo(() => new Map(agentRuns.map((run) => [run.id, run])), [agentRuns]);
 
   useLayoutEffect(() => {
     const transcript = chatTranscriptRef.current;
@@ -144,7 +182,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-agent"
         >
           <Bot size={14} />
-          Agent
+          My Agent
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
@@ -167,6 +205,55 @@ export function CollaborationPanel({
       <div className="collab-tab-body">
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
+            <div className="team-agent-bar" data-testid="team-agent-bar">
+              <strong>Team Agents</strong>
+              {teamAgents.map((agent) => {
+                const active = agentRuns.some(
+                  (run) => run.sessionId === agent.id && (run.status === "queued" || run.status === "running")
+                );
+                return (
+                  <span key={agent.id} className="team-agent-status">
+                    <Bot size={13} /> @{agent.handle ?? agent.title} · {active ? "Running" : "Idle"}
+                  </span>
+                );
+              })}
+              <button type="button" data-testid="team-agent-create" onClick={() => setTeamAgentFormOpen((current) => !current)}>
+                <Plus size={13} /> Agent
+              </button>
+            </div>
+            {teamAgentFormOpen ? (
+              <div className="team-agent-create">
+                <input
+                  value={teamAgentName}
+                  onChange={(event) => setTeamAgentName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" || !teamAgentName.trim()) return;
+                    void onCreateTeamAgent(teamAgentName.trim(), teamAgentDescription.trim() || undefined).then(() => {
+                      setTeamAgentName("");
+                      setTeamAgentDescription("");
+                      setTeamAgentFormOpen(false);
+                    }).catch(onError);
+                  }}
+                  placeholder="Agent name"
+                  data-testid="team-agent-name"
+                />
+                <input
+                  value={teamAgentDescription}
+                  onChange={(event) => setTeamAgentDescription(event.target.value)}
+                  placeholder="Description (optional)"
+                  data-testid="team-agent-description"
+                />
+                <button
+                  type="button"
+                  disabled={!teamAgentName.trim()}
+                  onClick={() => void onCreateTeamAgent(teamAgentName.trim(), teamAgentDescription.trim() || undefined).then(() => {
+                    setTeamAgentName("");
+                    setTeamAgentDescription("");
+                    setTeamAgentFormOpen(false);
+                  }).catch(onError)}
+                >Create</button>
+              </div>
+            ) : null}
             <ol
               ref={chatTranscriptRef}
               className="chat-transcript"
@@ -179,18 +266,52 @@ export function CollaborationPanel({
               data-testid="chat-transcript"
             >
               {chatMessages.length === 0 ? (
-                <li className="empty-panel-state">No messages yet.</li>
+                <li className="empty-panel-state">Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.</li>
               ) : (
                 chatMessages.map((message) => (
-                  <li key={message.id} className="chat-message">
+                  <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}`}>
                     <span>
                       <strong>
+                        {message.kind === "agent" ? <Bot size={13} /> : null}
                         {message.authorName}
                         {message.authorRole ? ` · ${message.authorRole}` : ""}
                       </strong>
                       <time>{formatTime(message.timestamp)}</time>
                     </span>
-                    <p>{message.text}</p>
+                    {message.kind === "system" ? (
+                      <p className="chat-system-message">{message.text}</p>
+                    ) : message.kind === "agent" ? (
+                      <ChatAgentMessage
+                        message={message}
+                        run={message.runId ? runsById.get(message.runId) : undefined}
+                        trace={message.runId ? agentTraces[message.runId] ?? [] : []}
+                        projectId={projectId}
+                        showCard={false}
+                        onOpenFile={onOpenFile}
+                        onError={onError}
+                        onLoadAgentTrace={onLoadAgentTrace}
+                        interruptedByName={members.find((candidate) => candidate.id === runsById.get(message.runId ?? "")?.interruptedByMemberId)?.displayName}
+                        onCancelAgentRun={onCancelAgentRun}
+                      />
+                    ) : (
+                      <>
+                        <p>{message.text}</p>
+                        {message.runId ? (
+                          <ChatAgentMessage
+                            message={message}
+                            run={runsById.get(message.runId)}
+                            trace={agentTraces[message.runId] ?? []}
+                            projectId={projectId}
+                            showText={false}
+                            onOpenFile={onOpenFile}
+                            onError={onError}
+                            onLoadAgentTrace={onLoadAgentTrace}
+                            interruptedByName={members.find((candidate) => candidate.id === runsById.get(message.runId ?? "")?.interruptedByMemberId)?.displayName}
+                            onCancelAgentRun={onCancelAgentRun}
+                          />
+                        ) : null}
+                      </>
+                    )}
                   </li>
                 ))
               )}
@@ -218,10 +339,30 @@ export function CollaborationPanel({
                     onSendChat();
                   }
                 }}
-                placeholder="Message collaborators"
+                placeholder="Message the team, or @agent to give the shared agent a task"
                 aria-describedby="chat-keyboard-hint"
                 data-testid="chat-input"
               />
+              {visibleMentionCandidates.length > 0 ? (
+                <ul className="mention-candidates" data-testid="mention-candidates">
+                  {visibleMentionCandidates.map((candidate) => (
+                    <li key={`${candidate.team ? "team" : "member"}-${candidate.id}`}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const prefix = chatText.slice(0, chatText.length - (mentionQuery?.length ?? 0) - 1);
+                          onChatTextChange(`${prefix}@${candidate.handle} `);
+                        }}
+                      >
+                        {candidate.team ? <Bot size={13} /> : <Users size={13} />} @{candidate.handle} · {candidate.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <small className="chat-command-hint" data-testid="chat-command-hint">
+                Create a shared Agent with <code>/agent new reviewer code reviews</code>, then mention <code>@reviewer</code> in Chat.
+              </small>
               <div className="chat-actions">
                 <small id="chat-keyboard-hint">
                   Enter to send / Shift + Enter for new line
@@ -331,9 +472,11 @@ export function CollaborationPanel({
             member={member}
             members={members}
             refreshVersion={agentRefreshVersion}
+            traces={agentTraces}
             onOpenFile={onOpenFile}
             workspaceTree={workspaceTree}
             onError={onError}
+            onLoadTrace={onLoadAgentTrace}
           />
         ) : null}
 
@@ -350,6 +493,102 @@ export function CollaborationPanel({
       </div>
     </div>
   );
+}
+
+function ChatAgentMessage({
+  message,
+  run,
+  trace,
+  projectId,
+  showText = true,
+  showCard = true,
+  onOpenFile,
+  onError,
+  onLoadAgentTrace,
+  interruptedByName,
+  onCancelAgentRun
+}: {
+  message: ChatMessage;
+  run?: AgentRun;
+  trace: AgentTraceEvent[];
+  projectId: string;
+  showText?: boolean;
+  showCard?: boolean;
+  onOpenFile(path: string): void;
+  onError(error: unknown): void;
+  onLoadAgentTrace(runId: string): void;
+  interruptedByName?: string;
+  onCancelAgentRun(runId: string): Promise<void>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = message.text.split("\n");
+  const canExpand = lines.length > 20;
+  const visibleText = canExpand && !expanded ? lines.slice(0, 20).join("\n") : message.text;
+  const presentation = useMemo(() => presentTrace(trace), [trace]);
+  const active = run?.status === "queued" || run?.status === "running";
+  return (
+    <>
+      {showText ? <p>{visibleText}</p> : null}
+      {showText && canExpand ? (
+        <button type="button" className="chat-output-toggle" onClick={() => setExpanded((current) => !current)}>
+          {expanded ? "Collapse" : "Show full response"}
+        </button>
+      ) : null}
+      {run && showCard ? (
+        <article className="chat-agent-card" data-testid="chat-agent-card">
+          <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
+          {run.fileChanges?.length ? (
+            <ul>
+              {run.fileChanges.map((change) => (
+                <li key={change.file}>
+                  <button type="button" onClick={() => onOpenFile(change.file)}>{change.file}</button>
+                </li>
+              ))}
+            </ul>
+          ) : <small>No file changes recorded.</small>}
+          <details className={`chat-agent-trace ${run.status}`} open={active} onToggle={(event) => {
+            if (event.currentTarget.open) onLoadAgentTrace(run.id);
+          }}>
+            <summary>
+              <span><strong>{active ? "Agent is working" : "Work trace"}</strong><small>{presentation.visible.length} actions</small></span>
+              <span>{active ? "Live" : "Open"}</span>
+            </summary>
+            <div className="chat-agent-trace-content">
+              {active ? <div className="agent-trace-live-status"><span className="agent-trace-live-dot" />Receiving live updates from OpenCode</div> : null}
+              {presentation.visible.length > 0 ? (
+                <ol className="agent-trace" data-testid="chat-agent-trace">
+                  {presentation.visible.map((item) => (
+                    <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
+                      <span className="agent-trace-entry-marker" aria-hidden="true" />
+                      <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}</div>
+                    </li>
+                  ))}
+                </ol>
+              ) : <p className="chat-trace-empty">Waiting for the Agent to report its first action.</p>}
+            </div>
+          </details>
+          <div className="chat-agent-card-actions">
+            <button
+              type="button"
+              className="chat-trace-download"
+              onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
+              title="Download complete trace"
+              aria-label="Download complete trace"
+            >
+              <Download size={13} />
+            </button>
+            {run.status === "queued" || run.status === "running" ? (
+              <button type="button" onClick={() => void onCancelAgentRun(run.id).catch(onError)}>Stop</button>
+            ) : null}
+          </div>
+        </article>
+      ) : null}
+    </>
+  );
+}
+
+function memberHandle(name: string) {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || "member";
 }
 
 function formatActivity(

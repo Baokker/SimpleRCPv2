@@ -22,7 +22,6 @@ import {
   getAgentRuns,
   getAgentSessions,
   getAgentStatus,
-  getAgentTrace,
   getWorkspaceDirectory,
   readWorkspaceFile
 } from "../api";
@@ -46,6 +45,8 @@ export function AgentPanel({
   members,
   workspaceTree,
   refreshVersion,
+  traces,
+  onLoadTrace,
   onOpenFile,
   onError
 }: {
@@ -54,13 +55,14 @@ export function AgentPanel({
   members: RoomMember[];
   workspaceTree: WorkspaceNode[];
   refreshVersion: number;
+  traces: Record<string, AgentTraceEvent[]>;
+  onLoadTrace(runId: string): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
 }) {
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [sessions, setSessions] = useState<AgentSession[]>([]);
-  const [traces, setTraces] = useState<Record<string, AgentTraceEvent[]>>({});
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   const [prompt, setPrompt] = useState("");
   const [contexts, setContexts] = useState<AgentPromptContext[]>([]);
@@ -89,6 +91,7 @@ export function AgentPanel({
     [runs]
   );
   const projectFiles = contextFiles.length ? contextFiles : flattenFiles(workspaceTree);
+  const sessionRunIds = sessionRuns.map((run) => run.id).join(",");
 
   useEffect(() => {
     let active = true;
@@ -101,7 +104,7 @@ export function AgentPanel({
     void Promise.all([
       getAgentStatus(),
       getAgentSessions(projectId),
-      getAgentRuns(projectId)
+      getAgentRuns(projectId),
     ]).then(([nextRuntime, nextSessions, nextRuns]) => {
       if (!active) return;
       setRuntime(nextRuntime);
@@ -124,14 +127,9 @@ export function AgentPanel({
         getAgentRuns(projectId),
         getAgentSessions(projectId)
       ]);
-      const visibleRuns = nextRuns.filter((run) => run.sessionId === selectedSessionId);
-      const traceEntries = await Promise.all(
-        visibleRuns.map(async (run) => [run.id, await getAgentTrace(projectId, run.id)] as const)
-      );
       if (!active) return;
       setRuns(nextRuns);
       setSessions(nextSessions);
-      setTraces((current) => ({ ...current, ...Object.fromEntries(traceEntries) }));
     }
     void refresh().catch((error) => onErrorRef.current(error));
     const timer = window.setInterval(
@@ -142,12 +140,17 @@ export function AgentPanel({
       active = false;
       window.clearInterval(timer);
     };
-  }, [member?.id, projectId, refreshVersion, selectedSessionId]);
+  }, [member?.id, projectId, refreshVersion]);
 
   useEffect(() => {
     const transcript = transcriptRef.current;
     if (transcript) transcript.scrollTop = transcript.scrollHeight;
   }, [sessionRuns.length, sessionRuns.at(-1)?.status]);
+
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    for (const runId of sessionRunIds.split(",").filter(Boolean)) onLoadTrace(runId);
+  }, [selectedSessionId, sessionRunIds, onLoadTrace]);
 
   async function createSession() {
     if (!member || sessionCreating) return;
@@ -243,6 +246,7 @@ export function AgentPanel({
 
   return (
     <section className="collab-section agent-section">
+      <p className="my-agent-hint" data-testid="my-agent-hint">These are your own Agent sessions. To direct the shared agent together, mention @agent in Chat.</p>
       <header className="agent-runtime">
         <span className={`agent-runtime-dot ${runtime?.state ?? "checking"}`} aria-hidden="true" />
         <div>
@@ -318,10 +322,12 @@ export function AgentPanel({
               projectId={projectId}
               run={run}
               trace={traces[run.id] ?? []}
+              onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
               canCancel={Boolean(member)}
               onCancel={() => void cancelRun(run)}
               onOpenFile={onOpenFile}
+              onError={onErrorRef.current}
             />
           </li>
         ))}
@@ -355,7 +361,7 @@ export function AgentPanel({
               void submitRun();
             }
           }}
-          placeholder="Ask OpenCode about this project"
+          placeholder="Ask OpenCode about this project (only you can see this session)"
           data-testid="agent-prompt"
         />
         <div className="agent-composer-toolbar">
@@ -412,18 +418,22 @@ function AgentMessage({
   projectId,
   run,
   trace,
+  onLoadTrace,
   queuedRuns,
   canCancel,
   onCancel,
-  onOpenFile
+  onOpenFile,
+  onError
 }: {
   projectId: string;
   run: AgentRun;
   trace: AgentTraceEvent[];
+  onLoadTrace(): void;
   queuedRuns: AgentRun[];
   canCancel: boolean;
   onCancel(): void;
   onOpenFile(path: string): void;
+  onError(error: unknown): void;
 }) {
   const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
   useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
@@ -447,7 +457,10 @@ function AgentMessage({
       <details
         className={`agent-trace-block ${run.status}`}
         open={expanded}
-        onToggle={(event) => setExpanded(event.currentTarget.open)}
+        onToggle={(event) => {
+          setExpanded(event.currentTarget.open);
+          if (event.currentTarget.open) onLoadTrace();
+        }}
         data-testid="agent-trace-disclosure"
       >
         <summary data-testid="agent-trace-summary">
@@ -472,7 +485,7 @@ function AgentMessage({
           <button
             type="button"
             className="agent-trace-download"
-            onClick={() => void downloadAgentTrace(projectId, run.id)}
+            onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
             data-testid="agent-trace-download"
           >
             <Download size={13} /> Download trace
@@ -518,6 +531,7 @@ function runMemberName(run: AgentRun, members: RoomMember[]) {
 }
 
 function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[]) {
+  if (run.interruptedByRunId) return "Interrupted";
   if (run.status !== "queued") return titleCase(run.status);
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
   return position > 0 ? `Queued #${position}` : "Queued";
