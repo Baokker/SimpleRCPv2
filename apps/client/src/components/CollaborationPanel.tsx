@@ -482,7 +482,7 @@ export function CollaborationPanel({
                         <small>{llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : "Human approval remains required"}</small>
                       </div>
                     ) : <div className="guard-llm-status">Model judgment unavailable</div>}
-                    <div><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError)}>Approve</button><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError)}>Reject</button></div>
+                    {llm?.applied ? <small className="guard-llm-resolved">Resolved automatically by the model</small> : <div><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError)}>Approve</button><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError)}>Reject</button></div>}
                   </div>
                 );
               })}

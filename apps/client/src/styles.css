@@ -2995,6 +2995,10 @@ button.activity-entry:hover strong {
   line-height: 1.4;
 }
 
+.guard-llm-resolved {
+  color: var(--accent-text);
+}
+
 .guard-llm-spinner {
   display: inline-block;
   width: 10px;

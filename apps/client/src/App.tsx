@@ -414,6 +414,14 @@ function WorkspacePage({
               setLlmJudging(false);
               const llm = message.event.payload?.llm;
               if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
+                setGuardApprovals((current) => current.filter((approval) => !approvalMatchesGuardAction(approval, message.event)));
+                setUnseenApprovalIds((current) => {
+                  const next = new Set(current);
+                  for (const approval of guardApprovals) {
+                    if (approvalMatchesGuardAction(approval, message.event)) next.delete(approval.id);
+                  }
+                  return next;
+                });
                 const model = llm as Record<string, unknown>;
                 const action = message.event.payload?.action === "deny" ? "rejected" : "approved";
                 const confidence = typeof model.confidence === "number" ? `${Math.round(model.confidence * 100)}% confidence` : "confidence unavailable";
@@ -1088,6 +1096,16 @@ function readLayoutDimension(key: string, fallback: number, minimum: number, max
 
 function clampLayoutDimension(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function approvalMatchesGuardAction(approval: GuardApproval, event: EventRecord) {
+  if (approval.request.memberId !== event.memberId) return false;
+  const payload = event.payload ?? {};
+  if (payload.source && approval.request.source !== payload.source) return false;
+  if (payload.runId && approval.request.agentRunId !== payload.runId) return false;
+  if (typeof payload.command === "string") return approval.request.command === payload.command;
+  if (Array.isArray(payload.paths)) return JSON.stringify(approval.request.paths ?? []) === JSON.stringify(payload.paths);
+  return false;
 }
 
 function formatBytes(bytes: number) {
