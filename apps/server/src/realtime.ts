@@ -525,7 +525,7 @@ async function handleTerminalMessage(
     return;
   }
   const foreground = runtime.terminal.foregroundProcess();
-  if (foreground && foreground !== runtime.terminal.shellName) {
+  if (foreground && !runtime.terminal.isShellProcess(foreground)) {
     sendTerminalMessage(socket, { type: "guard_decision", action: "deny", reason: "终端正忙" });
     return;
   }

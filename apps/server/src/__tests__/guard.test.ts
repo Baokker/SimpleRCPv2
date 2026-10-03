@@ -47,6 +47,36 @@ describe("guard decisions", () => {
     expect(command("owner", "ls $SIMPLERCP_DATA_DIR").action).toBe("deny");
   });
 
+  it("keeps the current workspace inside the data root", () => {
+    const currentWorkspace = "/d/workspaces/p1";
+    const currentContext: GuardContext = {
+      memberLevel: "owner",
+      initiatorOnline: true,
+      workspaceRoot: currentWorkspace,
+      platformDataRoot: "/d",
+      otherWorkspaceRoots: ["/d/workspaces/p2"]
+    };
+    const request = (text: string): GuardRequest => ({
+      projectId: "p1",
+      memberId: "member",
+      source: "terminal",
+      kind: "command",
+      command: text,
+      cwd: currentWorkspace
+    });
+
+    expect(decide(request("ls"), currentContext)).toMatchObject({
+      action: "allow",
+      segments: [{ zone: "workspace" }]
+    });
+    const otherWorkspaceDecision = decide(request("cat ../p2/x"), currentContext);
+    expect(otherWorkspaceDecision.action).toBe("deny");
+    expect(otherWorkspaceDecision.segments[0]?.zone).toBe("metadata");
+    const projectMetadataDecision = decide(request("cat /d/projects/p1/chat.json"), currentContext);
+    expect(projectMetadataDecision.action).toBe("deny");
+    expect(projectMetadataDecision.segments[0]?.zone).toBe("metadata");
+  });
+
   it("requires approval for protected paths and dynamic shell syntax", () => {
     expect(command("owner", "cat .env").action).toBe("ask");
     expect(command("owner", "cat $(echo .env)").action).toBe("ask");

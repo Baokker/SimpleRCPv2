@@ -28,7 +28,7 @@ export function createGuardService(options: {
   mode: "full" | "human-only" | "off";
   llm?: { baseUrl?: string; apiKey?: string; model?: string };
   approvalTimeoutMs?: number;
-  otherWorkspaceRoots?: () => string[];
+  otherWorkspaceRoots?: (currentProjectId: string) => string[];
 }) {
   const policyPath = path.join(options.metadataRoot, "guard-policy.json");
   const audit = createGuardAudit(path.join(options.metadataRoot, "guard-audit.jsonl"), options.llm?.apiKey ? [options.llm.apiKey] : []);
@@ -66,7 +66,7 @@ export function createGuardService(options: {
       initiatorOnline: stored.online,
       workspaceRoot: options.project.workspacePath,
       platformDataRoot: options.platformDataRoot,
-      otherWorkspaceRoots: options.otherWorkspaceRoots?.(),
+      otherWorkspaceRoots: options.otherWorkspaceRoots?.(options.project.id),
       protectedPaths: currentPolicy.protectedPaths
     });
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);

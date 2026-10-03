@@ -39,6 +39,10 @@ describe("shared terminal", () => {
     });
 
     try {
+      expect(terminal.foregroundProcess()).toBeTruthy();
+      expect(terminal.isShellProcess(terminal.foregroundProcess()!)).toBe(true);
+      expect(terminal.isShellProcess("bash")).toBe(true);
+      expect(terminal.isShellProcess("sleep")).toBe(false);
       terminal.write("printf 'shared-terminal-ok\\n'\n", "member-pty");
       await receivedMarker;
 

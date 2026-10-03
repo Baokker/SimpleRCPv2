@@ -20,7 +20,7 @@ export function createProjectRuntime(
     guardMode?: "full" | "human-only" | "off";
     guardApprovalTimeoutMs?: number;
     guardLlm?: { baseUrl?: string; apiKey?: string; model?: string };
-    otherWorkspaceRoots?: () => string[];
+    otherWorkspaceRoots?: (currentProjectId: string) => string[];
   } = {}
 ) {
   const projectRoot = getProjectMetadataPath(project);

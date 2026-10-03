@@ -1,4 +1,5 @@
 import * as pty from "node-pty";
+import path from "node:path";
 import { terminalEnv } from "./processEnv.js";
 
 const MAX_SCROLLBACK_CHARS = 100_000;
@@ -15,6 +16,8 @@ export function createSharedTerminal({
   const listeners = new Set<(data: string) => void>();
   const inputListeners = new Set<(memberId: string, data: string) => void>();
   let scrollback = "";
+  const configuredShellName = path.basename(shell);
+  let shellProcessName = configuredShellName;
   let terminal = enabled ? spawnTerminal() : undefined;
 
   function spawnTerminal() {
@@ -26,6 +29,7 @@ export function createSharedTerminal({
       cwd: workspaceRoot,
       env: terminalEnv()
     });
+    shellProcessName = path.basename(next.process);
     next.onData(appendData);
     next.onExit(({ exitCode }) => {
       if (expectedExit) return;
@@ -91,6 +95,10 @@ export function createSharedTerminal({
     dispose,
     enabled,
     foregroundProcess() { return terminal?.process; },
+    isShellProcess(processName: string) {
+      const name = path.basename(processName);
+      return name === configuredShellName || name === shellProcessName || configuredShellName === "sh" && name === "bash";
+    },
     shellName: shell.split(/[\\/]/).at(-1) ?? shell,
     getScrollback: () => scrollback
   };

@@ -28,7 +28,7 @@ test("tabs in one browser can choose different project members", async ({
 
   await secondTab.goto("/projects/demo");
   await expect(secondTab.getByTestId("join-project-form")).toBeVisible();
-  await expect(secondTab.getByTestId("participant-select")).toHaveValue(firstParticipantId!);
+  await expect(secondTab.getByTestId("participant-select")).toHaveValue("new");
   await secondTab.getByTestId("participant-select").selectOption("new");
   await secondTab.getByTestId("display-name").fill("Tab Two");
   await secondTab.getByTestId("join-project").click();
@@ -45,6 +45,9 @@ test("tabs in one browser can choose different project members", async ({
   )).toBe(firstParticipantId);
 
   await firstTab.reload();
+  await expect(firstTab.getByTestId("join-project-form")).toBeVisible();
+  await expect(firstTab.getByTestId("participant-select")).toHaveValue(firstParticipantId!);
+  await firstTab.getByTestId("join-project").click();
   await firstTab.getByTestId("status-bar").waitFor();
   expect(await firstTab.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"))).toBe(firstParticipantId);
 
@@ -244,14 +247,16 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
   await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · student");
 
-  await ada.getByTestId("terminal-output").click();
-  await ada.keyboard.type("printf 'shared-pty-ok\\n'");
-  await ada.keyboard.press("Enter");
+  const terminalCommand = ada.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  await expect(terminalCommand).toBeVisible();
+  await terminalCommand.fill("ls");
+  await terminalCommand.press("Enter");
+  await expect(ada.locator(".terminal-guard-status")).toContainText("allow");
   await expect(ada.getByTestId("terminal-output")).toContainText(
-    "shared-pty-ok"
+    "src"
   );
   await expect(linus.getByTestId("terminal-output")).toContainText(
-    "shared-pty-ok"
+    "src"
   );
 
   await ada.getByTestId("collab-tab-team").click();

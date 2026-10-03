@@ -31,7 +31,7 @@ export async function createApp(config: ServerConfig) {
     guardDataRoot: config.dataDir,
     guardMode,
     guardApprovalTimeoutMs: config.guardApprovalTimeoutMs,
-    otherWorkspaceRoots: () => registry.listProjectsSync().filter((project) => project.id !== "demo").map((project) => project.workspacePath),
+    otherWorkspaceRoots: (currentProjectId) => registry.listProjectsSync().filter((project) => project.id !== currentProjectId).map((project) => project.workspacePath),
     guardLlm: {
       baseUrl: config.agent?.baseUrl,
       apiKey: config.agent?.apiKey,

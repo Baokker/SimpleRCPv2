@@ -14,19 +14,20 @@ function zoneFor(target: string, request: GuardRequest, platformDataRoot: string
   const resolved = path.resolve(target);
   const workspace = path.resolve(request.cwd);
   const metadata = path.resolve(platformDataRoot);
-  if (metadata && (resolved === metadata || resolved.startsWith(`${metadata}${path.sep}`))) return "metadata";
-  if (otherWorkspaceRoots.some((root) => {
-    const other = path.resolve(root);
-    return resolved === other || resolved.startsWith(`${other}${path.sep}`);
-  })) return "metadata";
+  const inWorkspace = resolved === workspace || resolved.startsWith(`${workspace}${path.sep}`);
   const protectedMatch = protectedPaths.some((pattern) => {
     const normalized = pattern.replaceAll("\\", "/");
     const relative = path.relative(workspace, resolved).replaceAll("\\", "/");
     const escaped = normalized.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
     return new RegExp(`^${escaped}$`).test(relative) || new RegExp(`^${escaped}/`).test(relative);
   });
-  if (protectedMatch) return "protected";
-  if (resolved === workspace || resolved.startsWith(`${workspace}${path.sep}`)) return "workspace";
+  if (inWorkspace && protectedMatch) return "protected";
+  if (inWorkspace) return "workspace";
+  if (metadata && (resolved === metadata || resolved.startsWith(`${metadata}${path.sep}`))) return "metadata";
+  if (otherWorkspaceRoots.some((root) => {
+    const other = path.resolve(root);
+    return resolved === other || resolved.startsWith(`${other}${path.sep}`);
+  })) return "metadata";
   return "outside";
 }
 
