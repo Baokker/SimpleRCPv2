@@ -1,6 +1,7 @@
 import {
   Activity,
   Bot,
+  Download,
   FilePenLine,
   FilePlus2,
   Eye,
@@ -17,9 +18,12 @@ import {
 } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
+import { downloadAgentTrace } from "../api";
+import { presentTrace } from "../agentTracePresentation";
 import type {
   AgentRun,
   AgentSession,
+  AgentTraceEvent,
   ChatMessage,
   EventRecord,
   RemoteCursor,
@@ -55,6 +59,7 @@ export function CollaborationPanel({
   chatMessages,
   teamAgents,
   agentRuns,
+  agentTraces,
   remoteCursors,
   chatText,
   chatSending,
@@ -78,6 +83,7 @@ export function CollaborationPanel({
   chatMessages: ChatMessage[];
   teamAgents: AgentSession[];
   agentRuns: AgentRun[];
+  agentTraces: Record<string, AgentTraceEvent[]>;
   remoteCursors: RemoteCursor[];
   chatText: string;
   chatSending: boolean;
@@ -267,11 +273,29 @@ export function CollaborationPanel({
                       <ChatAgentMessage
                         message={message}
                         run={message.runId ? runsById.get(message.runId) : undefined}
+                        trace={message.runId ? agentTraces[message.runId] ?? [] : []}
+                        projectId={projectId}
+                        showCard={false}
                         onOpenFile={onOpenFile}
+                        onError={onError}
                         onCancelAgentRun={onCancelAgentRun}
                       />
                     ) : (
-                      <p>{message.text}</p>
+                      <>
+                        <p>{message.text}</p>
+                        {message.runId ? (
+                          <ChatAgentMessage
+                            message={message}
+                            run={runsById.get(message.runId)}
+                            trace={agentTraces[message.runId] ?? []}
+                            projectId={projectId}
+                            showText={false}
+                            onOpenFile={onOpenFile}
+                            onError={onError}
+                            onCancelAgentRun={onCancelAgentRun}
+                          />
+                        ) : null}
+                      </>
                     )}
                   </li>
                 ))
@@ -321,6 +345,9 @@ export function CollaborationPanel({
                   ))}
                 </ul>
               ) : null}
+              <small className="chat-command-hint" data-testid="chat-command-hint">
+                Create a shared Agent with <code>/agent new reviewer</code>, then mention <code>@reviewer</code> in Chat.
+              </small>
               <div className="chat-actions">
                 <small id="chat-keyboard-hint">
                   Enter to send / Shift + Enter for new line
@@ -429,7 +456,9 @@ export function CollaborationPanel({
             projectId={projectId}
             member={member}
             members={members}
+            teamAgents={teamAgents}
             refreshVersion={agentRefreshVersion}
+            traces={agentTraces}
             onOpenFile={onOpenFile}
             workspaceTree={workspaceTree}
             onError={onError}
@@ -454,27 +483,39 @@ export function CollaborationPanel({
 function ChatAgentMessage({
   message,
   run,
+  trace,
+  projectId,
+  showText = true,
+  showCard = true,
   onOpenFile,
+  onError,
   onCancelAgentRun
 }: {
   message: ChatMessage;
   run?: AgentRun;
+  trace: AgentTraceEvent[];
+  projectId: string;
+  showText?: boolean;
+  showCard?: boolean;
   onOpenFile(path: string): void;
+  onError(error: unknown): void;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const lines = message.text.split("\n");
   const canExpand = lines.length > 20;
   const visibleText = canExpand && !expanded ? lines.slice(0, 20).join("\n") : message.text;
+  const presentation = useMemo(() => presentTrace(trace), [trace]);
+  const active = run?.status === "queued" || run?.status === "running";
   return (
     <>
-      <p>{visibleText}</p>
-      {canExpand ? (
+      {showText ? <p>{visibleText}</p> : null}
+      {showText && canExpand ? (
         <button type="button" className="chat-output-toggle" onClick={() => setExpanded((current) => !current)}>
           {expanded ? "Collapse" : "Show full response"}
         </button>
       ) : null}
-      {run ? (
+      {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.status}</span></div>
           {run.fileChanges?.length ? (
@@ -486,11 +527,35 @@ function ChatAgentMessage({
               ))}
             </ul>
           ) : <small>No file changes recorded.</small>}
+          <details className={`chat-agent-trace ${run.status}`} open={active}>
+            <summary>
+              <span><strong>{active ? "Agent is working" : "Work trace"}</strong><small>{presentation.visible.length} actions</small></span>
+              <span>{active ? "Live" : "Open"}</span>
+            </summary>
+            <div className="chat-agent-trace-content">
+              {active ? <div className="agent-trace-live-status"><span className="agent-trace-live-dot" />Receiving live updates from OpenCode</div> : null}
+              {presentation.visible.length > 0 ? (
+                <ol className="agent-trace" data-testid="chat-agent-trace">
+                  {presentation.visible.map((item) => (
+                    <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
+                      <span className="agent-trace-entry-marker" aria-hidden="true" />
+                      <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}</div>
+                    </li>
+                  ))}
+                </ol>
+              ) : <p className="chat-trace-empty">Waiting for the Agent to report its first action.</p>}
+            </div>
+          </details>
           <div className="chat-agent-card-actions">
-            <details>
-              <summary>View trace</summary>
-              <small>Open My Agent to inspect the complete trace.</small>
-            </details>
+            <button
+              type="button"
+              className="chat-trace-download"
+              onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
+              title="Download complete trace"
+              aria-label="Download complete trace"
+            >
+              <Download size={13} />
+            </button>
             {run.status === "queued" || run.status === "running" ? (
               <button type="button" onClick={() => void onCancelAgentRun(run.id)}>Stop</button>
             ) : null}

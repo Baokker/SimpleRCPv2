@@ -303,6 +303,7 @@ export type ServerMessage =
       type: "agent_trace_appended";
       runId: string;
       sequence: number;
+      event: AgentTraceEvent;
     }
   | {
       type: "chat_message_created";

@@ -194,7 +194,8 @@ export function attachRealtimeServer(
     broadcastToProject(projectSockets, event.projectId, {
       type: "agent_trace_appended",
       runId: event.runId,
-      sequence: event.event.sequence
+      sequence: event.event.sequence,
+      event: event.event
     });
   });
   const removeProjectDisposingListener = runtimeManager.onProjectDisposing(

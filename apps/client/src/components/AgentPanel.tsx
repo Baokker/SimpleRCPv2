@@ -22,7 +22,6 @@ import {
   getAgentRuns,
   getAgentSessions,
   getAgentStatus,
-  getAgentTrace,
   getWorkspaceDirectory,
   readWorkspaceFile
 } from "../api";
@@ -44,23 +43,26 @@ export function AgentPanel({
   projectId,
   member,
   members,
+  teamAgents,
   workspaceTree,
   refreshVersion,
+  traces,
   onOpenFile,
   onError
 }: {
   projectId: string;
   member: RoomMember | null;
   members: RoomMember[];
+  teamAgents: AgentSession[];
   workspaceTree: WorkspaceNode[];
   refreshVersion: number;
+  traces: Record<string, AgentTraceEvent[]>;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
 }) {
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [sessions, setSessions] = useState<AgentSession[]>([]);
-  const [traces, setTraces] = useState<Record<string, AgentTraceEvent[]>>({});
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   const [prompt, setPrompt] = useState("");
   const [contexts, setContexts] = useState<AgentPromptContext[]>([]);
@@ -88,6 +90,16 @@ export function AgentPanel({
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
     [runs]
   );
+  const teamAgentIds = useMemo(
+    () => new Set(teamAgents.map((agent) => agent.id)),
+    [teamAgents]
+  );
+  const teamRuns = useMemo(
+    () => runs
+      .filter((run) => run.sessionId && teamAgentIds.has(run.sessionId))
+      .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
+    [runs, teamAgentIds]
+  );
   const projectFiles = contextFiles.length ? contextFiles : flattenFiles(workspaceTree);
 
   useEffect(() => {
@@ -101,7 +113,7 @@ export function AgentPanel({
     void Promise.all([
       getAgentStatus(),
       getAgentSessions(projectId),
-      getAgentRuns(projectId)
+      getAgentRuns(projectId),
     ]).then(([nextRuntime, nextSessions, nextRuns]) => {
       if (!active) return;
       setRuntime(nextRuntime);
@@ -124,14 +136,9 @@ export function AgentPanel({
         getAgentRuns(projectId),
         getAgentSessions(projectId)
       ]);
-      const visibleRuns = nextRuns.filter((run) => run.sessionId === selectedSessionId);
-      const traceEntries = await Promise.all(
-        visibleRuns.map(async (run) => [run.id, await getAgentTrace(projectId, run.id)] as const)
-      );
       if (!active) return;
       setRuns(nextRuns);
       setSessions(nextSessions);
-      setTraces((current) => ({ ...current, ...Object.fromEntries(traceEntries) }));
     }
     void refresh().catch((error) => onErrorRef.current(error));
     const timer = window.setInterval(
@@ -142,7 +149,7 @@ export function AgentPanel({
       active = false;
       window.clearInterval(timer);
     };
-  }, [member?.id, projectId, refreshVersion, selectedSessionId]);
+  }, [member?.id, projectId, refreshVersion]);
 
   useEffect(() => {
     const transcript = transcriptRef.current;
@@ -327,6 +334,40 @@ export function AgentPanel({
           </li>
         ))}
       </ol>
+
+      {teamRuns.length > 0 ? (
+        <section className="agent-team-traces" data-testid="agent-team-traces">
+          <header>
+            <strong>Team Agent traces</strong>
+            <small>These runs use the same trace shown in Chat.</small>
+          </header>
+          <ol className="agent-message-list">
+            {teamRuns.map((run) => (
+              <li key={run.id} className="agent-turn">
+                <div className="agent-team-run-label">
+                  @{teamAgents.find((agent) => agent.id === run.sessionId)?.handle ?? "agent"}
+                </div>
+                <article className="agent-user-message">
+                  <header>
+                    <strong>{runMemberName(run, members)}</strong>
+                    <time>{formatTime(run.createdAt)}</time>
+                  </header>
+                  <p>{run.prompt}</p>
+                </article>
+                <AgentMessage
+                  projectId={projectId}
+                  run={run}
+                  trace={traces[run.id] ?? []}
+                  queuedRuns={queuedRuns}
+                  canCancel={Boolean(member)}
+                  onCancel={() => void cancelRun(run)}
+                  onOpenFile={onOpenFile}
+                />
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       <div className="agent-composer">
         {contexts.length ? (

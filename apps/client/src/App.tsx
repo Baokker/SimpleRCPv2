@@ -9,6 +9,7 @@ import {
   getChatMessages,
   getEvents,
   getRoom,
+  getAgentTrace,
   getAgentRuns,
   getTeamAgents,
   getWorkspaceDirectory,
@@ -54,6 +55,7 @@ import {
 import type {
   AgentRun,
   AgentSession,
+  AgentTraceEvent,
   ChatMessage,
   CursorPosition,
   EditorSelection,
@@ -185,6 +187,7 @@ function WorkspacePage({
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [teamAgents, setTeamAgents] = useState<AgentSession[]>([]);
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
+  const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
@@ -250,6 +253,7 @@ function WorkspacePage({
           getTeamAgents(projectId),
           getAgentRuns(projectId)
         ]);
+      const traceEntries = await fetchAgentTraces(projectId, runs);
 
       if (!mounted) return;
       membersRef.current = room.members;
@@ -260,6 +264,7 @@ function WorkspacePage({
       setChatMessages(messages);
       setTeamAgents(agents);
       setAgentRuns(runs);
+      setAgentTraces(traceEntries);
 
       const connected = connectRoomSocket({
         projectId,
@@ -352,11 +357,21 @@ function WorkspacePage({
             pendingSavePathsRef.current.delete(message.path);
             if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
           }
-          if (
-            message.type === "agent_run_updated" ||
-            message.type === "agent_trace_appended"
-          ) {
+          if (message.type === "agent_run_updated") {
+            setAgentRuns((current) => {
+              const index = current.findIndex((run) => run.id === message.run.id);
+              if (index < 0) return [message.run, ...current];
+              const next = [...current];
+              next[index] = message.run;
+              return next;
+            });
             scheduleAgentRefresh();
+          }
+          if (message.type === "agent_trace_appended") {
+            setAgentTraces((current) => ({
+              ...current,
+              [message.runId]: mergeTraceEvents(current[message.runId] ?? [], [message.event])
+            }));
           }
         }
       });
@@ -440,6 +455,13 @@ function WorkspacePage({
     setAgentRuns(runs);
   }
 
+  async function refreshAgentState() {
+    const runs = await getAgentRuns(projectId);
+    const traces = await fetchAgentTraces(projectId, runs);
+    setAgentRuns(runs);
+    setAgentTraces((current) => mergeTraceMaps(current, traces));
+  }
+
   async function refreshEvents() {
     setEvents(await getEvents(projectId));
   }
@@ -489,6 +511,7 @@ function WorkspacePage({
     }
     agentRefreshTimerRef.current = window.setTimeout(() => {
       agentRefreshTimerRef.current = undefined;
+      void refreshAgentState().catch(showWorkspaceError);
       setAgentRefreshVersion((version) => version + 1);
     }, 150);
   }
@@ -790,6 +813,7 @@ function WorkspacePage({
           chatMessages={chatMessages}
           teamAgents={teamAgents}
           agentRuns={agentRuns}
+          agentTraces={agentTraces}
           remoteCursors={remoteCursors}
           chatText={chatText}
           chatSending={chatSending}
@@ -812,6 +836,7 @@ function WorkspacePage({
           onCancelAgentRun={async (runId) => {
             const response = await cancelAgentRun(projectId, runId);
             setAgentRuns((current) => current.map((run) => run.id === runId ? response.run : run));
+            void refreshAgentState().catch(showWorkspaceError);
           }}
         />
       </aside>
@@ -896,4 +921,32 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+async function fetchAgentTraces(projectId: string, runs: AgentRun[]) {
+  const entries = await Promise.all(
+    runs.map(async (run) => [run.id, await getAgentTrace(projectId, run.id)] as const)
+  );
+  return Object.fromEntries(entries) as Record<string, AgentTraceEvent[]>;
+}
+
+function mergeTraceMaps(
+  current: Record<string, AgentTraceEvent[]>,
+  incoming: Record<string, AgentTraceEvent[]>
+) {
+  return Object.fromEntries(
+    Object.entries(incoming).map(([runId, events]) => [
+      runId,
+      mergeTraceEvents(current[runId] ?? [], events)
+    ])
+  ) as Record<string, AgentTraceEvent[]>;
+}
+
+function mergeTraceEvents(
+  current: AgentTraceEvent[],
+  incoming: AgentTraceEvent[]
+) {
+  const bySequence = new Map(current.map((event) => [event.sequence, event]));
+  for (const event of incoming) bySequence.set(event.sequence, event);
+  return [...bySequence.values()].sort((left, right) => left.sequence - right.sequence);
 }
