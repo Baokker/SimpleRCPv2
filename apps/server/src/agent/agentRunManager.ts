@@ -68,6 +68,21 @@ export type AgentRunManagerEvent =
     }
   | { type: "team_agents_changed"; projectId: string; agents: AgentSession[] };
 
+function buildInterruptionPrompt(
+  interruptedRun: AgentRun,
+  nextRun: AgentRun,
+  members: Array<{ id: string; displayName: string }>
+) {
+  const interruptedBy = members.find((member) => member.id === nextRun.memberId)?.displayName
+    ?? nextRun.memberName
+    ?? nextRun.memberId;
+  const files = interruptedRun.fileChanges?.map((change) => change.file) ?? [];
+  return [
+    `The previous task from ${interruptedRun.memberName ?? interruptedRun.memberId} was interrupted by ${interruptedBy}. Continue from the current workspace state.`,
+    `Files changed before interruption: ${files.length ? files.join(", ") : "none"}.`
+  ].join(" ");
+}
+
 export function createAgentRunManager(options: AgentRunManagerOptions) {
   const stores = new Map<string, AgentRunStore>();
   const sessionStores = new Map<string, AgentSessionStore>();
@@ -210,6 +225,50 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     return queue.completion;
   }
 
+  async function recordCancelledFileChanges(
+    projectId: string,
+    runId: string,
+    workspacePath: string,
+    runtimeSessionId: string,
+    workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>>,
+    messageId?: string
+  ) {
+    let workspaceChanges: AgentRun["fileChanges"] = [];
+    let runtimeChanges: AgentRun["fileChanges"] = [];
+    try {
+      workspaceChanges = compareAgentWorkspaceSnapshots(
+        workspaceBefore,
+        await createAgentWorkspaceSnapshot(workspacePath)
+      );
+    } catch (error) {
+      await appendTrace(projectId, runId, {
+        type: "file_changes_unavailable",
+        summary: `Workspace snapshot failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    }
+    try {
+      runtimeChanges = await options.runtime.getDiff({
+        workspacePath,
+        sessionId: runtimeSessionId,
+        messageId
+      });
+    } catch (error) {
+      await appendTrace(projectId, runId, {
+        type: "file_changes_unavailable",
+        summary: `Runtime diff failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    }
+    const fileChanges = mergeFileChanges(workspaceChanges, runtimeChanges);
+    await updateRun(projectId, runId, { fileChanges });
+    if (fileChanges.length > 0) {
+      await appendTrace(projectId, runId, {
+        type: "file_changes",
+        summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed before cancellation`,
+        data: { files: fileChanges }
+      });
+    }
+  }
+
   async function executeRun(projectId: string, runId: string) {
     const store = getStore(projectId);
     const current = await store.get(runId);
@@ -307,26 +366,41 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       );
 
-      const result = await runWithTimeout(
-        options.runtime.run({
+      const previousRun = run.interruptsRunId
+        ? await store.get(run.interruptsRunId)
+        : undefined;
+      const interruptionPrompt = previousRun
+        ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
+        : undefined;
+
+      let result: { text: string; messageId?: string };
+      try {
+        result = await runWithTimeout(options.runtime.run({
           workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId,
           prompt: await buildRuntimePrompt(
             projectRuntime.project.workspacePath,
-            run.extraPrompt ? `${run.extraPrompt}\n\n${run.prompt}` : run.prompt,
+            [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
             run.contexts,
             projectRuntime.project.name
           )
-        }),
-        options.runTimeoutMs,
-        () =>
-          options.runtime.cancel({
-            workspacePath: projectRuntime.project.workspacePath,
+        }), options.runTimeoutMs, () => options.runtime.cancel({
+          workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId
-          })
-      ).finally(stopEvents);
+        })).finally(stopEvents);
+      } catch (error) {
+        const latestAfterFailure = await store.get(runId);
+        if (latestAfterFailure?.status === "cancelled") {
+          await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
+          return;
+        }
+        throw error;
+      }
       const latest = await store.get(runId);
-      if (latest?.status === "cancelled") return;
+      if (latest?.status === "cancelled") {
+        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, result.messageId);
+        return;
+      }
       const runtimeFileChanges = await options.runtime.getDiff({
         workspacePath: projectRuntime.project.workspacePath,
         sessionId: runtimeSessionId,
@@ -485,6 +559,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       source?: AgentRun["source"];
       chatMessageId?: string;
       extraPrompt?: string;
+      interruptsRunId?: string;
       runId?: string;
     }) {
       if (disposing) throw new Error("Agent run manager is closing");
@@ -540,7 +615,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         model: settings.model,
         source: input.source ?? "agent-panel",
         chatMessageId: input.chatMessageId,
-        extraPrompt: input.extraPrompt?.trim() || undefined
+        extraPrompt: input.extraPrompt?.trim() || undefined,
+        interruptsRunId: input.interruptsRunId
       }, input.runId);
       emit({ type: "run_updated", projectId: input.projectId, run });
       await appendTrace(input.projectId, run.id, {

@@ -147,6 +147,7 @@ export interface AgentRun {
   source?: "agent-panel" | "chat";
   chatMessageId?: string;
   extraPrompt?: string;
+  interruptsRunId?: string;
   interruptedByRunId?: string;
   interruptedByMemberId?: string;
   sessionId?: string;

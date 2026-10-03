@@ -80,9 +80,11 @@ describe("chat Agent bridge", () => {
       interruptedByMemberId: "member-a"
     });
     expect(fixture.createdRuns[0]).toMatchObject({ sessionId: "team-session", runId: expect.any(String) });
+    expect(fixture.createdRuns[0]).toMatchObject({ interruptsRunId: "old-run" });
     const extraPrompt = String(fixture.createdRuns[0]?.extraPrompt);
-    expect(extraPrompt.startsWith("The previous task from Alice was interrupted by Bob.")).toBe(true);
+    expect(extraPrompt).toContain("Requested by Bob (Role: Developer)");
     await expect(fixture.chat.listMessages("room")).resolves.toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "system", agentSessionId: "team-session", runId: "old-run" }),
       expect.objectContaining({ kind: "system", text: expect.stringContaining("interrupted @agent") })
     ]));
   });
