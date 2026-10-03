@@ -8,7 +8,7 @@ export async function migrateLegacyAgentSessions(
   memberIds: Set<string>
 ) {
   for (const session of await sessionStore.list()) {
-    if (!memberIds.has(session.memberId) && !session.historical) {
+    if ((session.scope ?? "personal") !== "team" && !memberIds.has(session.memberId) && !session.historical) {
       await sessionStore.update(session.id, { historical: true });
     }
   }

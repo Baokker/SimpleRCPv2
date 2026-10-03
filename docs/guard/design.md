@@ -52,6 +52,14 @@ Guard 模式为 `full` 时，OpenCode 的 `bash`、`edit`、`webfetch` 使用 `a
 
 `SIMPLERCP_GUARD_MODE` 有三个评价条件：`full` 同时管控人和 Agent，`human-only` 只管控人的终端，`off` 保持旧终端与 Agent 行为。正式启动由 `loadConfig()` 默认使用 `full`；直接构造旧测试配置时没有该字段，会保留旧入口行为。
 
+## 团队 Agent
+
+团队 Agent 的每次 run 都把本次聊天消息作者作为发起成员，Guard 请求使用 `run.initiatorMemberId ?? run.memberId` 获取成员身份。团队 session 的 `memberId` 为空字符串，只用于标识共享 session，不能用于读取角色或审批人。每次工具请求都会按发起成员当前档位重新判定，因此成员角色变化会立即影响后续请求。
+
+团队 Agent 请求会记录 `sessionScope: "team"` 和 Agent handle。审批卡片显示 Agent handle 与触发成员，在线 owner 或本次触发成员按照 Guard 决策处理审批。网络加执行、不可逆操作和发起成员离线时的非读取请求继续受 Agent 额外上限约束。
+
+团队 Agent 被新消息打断时，旧 run 标记为 `cancelled`，对应待审批请求立即拒绝并向 OpenCode 回复 `reject`，审批卡片从在线审批人的列表中移除。共享聊天上下文会作为讨论材料注入提示词，Guard 仍按每次工具调用的请求数据判定，不把讨论内容当作授权依据。
+
 ## 审计
 
-每次决策和审批结果追加到项目元数据目录的 `guard-audit.jsonl`，记录时间、成员、来源、运行标识、命令或路径、动作、命中规则、审批人、模型结论和判定耗时。写入前调用现有脱敏函数。`allow_snapshot`、`ask`、`deny` 和审批结果同步写入活动日志，`allow` 只写审计文件。
+每次决策和审批结果追加到项目元数据目录的 `guard-audit.jsonl`，记录时间、成员、来源、运行标识、团队会话范围、Agent handle、命令或路径、动作、命中规则、审批人、模型结论和判定耗时。写入前调用现有脱敏函数。`allow_snapshot`、`ask`、`deny` 和审批结果同步写入活动日志，`allow` 只写审计文件。

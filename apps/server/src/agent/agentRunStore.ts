@@ -21,10 +21,10 @@ export function createAgentRunStore(projectId: string, projectRoot: string) {
 
   return {
     runsRoot,
-    create(input: Omit<AgentRun, "id" | "createdAt">) {
+    create(input: Omit<AgentRun, "id" | "createdAt">, id = nanoid(12)) {
       return records.create({
         ...input,
-        id: nanoid(12),
+        id,
         createdAt: new Date().toISOString()
       });
     },

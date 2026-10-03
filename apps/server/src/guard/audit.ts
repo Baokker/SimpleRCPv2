@@ -8,6 +8,8 @@ export interface GuardAuditRecord {
   memberId: string;
   source: string;
   agentRunId?: string;
+  sessionScope?: "personal" | "team";
+  agentHandle?: string;
   command?: string;
   paths?: string[];
   action: string;

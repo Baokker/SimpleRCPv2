@@ -2,8 +2,10 @@ import cors from "cors";
 import express from "express";
 import path from "node:path";
 import { createAgentRunManager } from "./agent/agentRunManager.js";
+import { createChatAgentBridge } from "./agent/chatAgentBridge.js";
 import { createAgentSettingsStore } from "./agent/agentSettingsStore.js";
 import { createOpenCodeRuntime } from "./agent/openCodeRuntime.js";
+import { createFakeAgentRuntime, createTestAgentRuntime } from "./agent/fakeAgentRuntime.js";
 import type { ServerConfig } from "./config.js";
 import { createProjectRuntimeManager } from "./projectRuntimeManager.js";
 import { createProjectRegistry } from "./projects.js";
@@ -39,15 +41,18 @@ export async function createApp(config: ServerConfig) {
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
     defaultModel: config.agent?.model ?? "deepseek-chat",
-    apiKeyConfigured: Boolean(config.agent?.apiKey)
+    apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
   });
-  const agentRuntime = createOpenCodeRuntime({
+  const openCodeRuntime = createOpenCodeRuntime({
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
     getSettings: () => agentSettings.get(),
     guardMode
   });
+  const agentRuntime = config.fakeAgentRuntime
+    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime(), Boolean(config.agent?.apiKey))
+    : openCodeRuntime;
   const agentRuns = createAgentRunManager({
     members,
     runtime: agentRuntime,
@@ -62,6 +67,7 @@ export async function createApp(config: ServerConfig) {
     }
   });
   await agentRuns.initialize();
+  const chatAgentBridge = createChatAgentBridge({ agentRuns, runtimeManager });
 
   const app = express();
   app.locals.registry = registry;
@@ -69,6 +75,7 @@ export async function createApp(config: ServerConfig) {
   app.locals.agentSettings = agentSettings;
   app.locals.agentRuntime = agentRuntime;
   app.locals.agentRuns = agentRuns;
+  app.locals.chatAgentBridge = chatAgentBridge;
   app.locals.members = members;
   app.use(cors());
   app.use(express.json({ limit: "5mb" }));
@@ -97,7 +104,7 @@ export async function createApp(config: ServerConfig) {
 
   registerAgentRoutes(app, { agentRuntime, agentRuns, agentSettings });
   registerProjectRoutes(app, { agentRuns, registry, runtimeManager });
-  registerCollaborationRoutes(app, runtimeManager, members);
+  registerCollaborationRoutes(app, runtimeManager, members, chatAgentBridge);
   registerWorkspaceRoutes(app, runtimeManager);
 
   app.use(

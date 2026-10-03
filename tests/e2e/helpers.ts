@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 export async function openAs(page: Page, name: string, projectId = "demo", role = "") {
   await page.goto(`/projects/${projectId}`);
   await page.getByTestId("display-name").fill(name);
-  await page.getByTestId("member-role").fill(role);
+  await page.getByTestId("member-role").selectOption(role.trim().toLowerCase());
   await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();
 }

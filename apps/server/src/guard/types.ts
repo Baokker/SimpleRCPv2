@@ -20,6 +20,8 @@ export interface GuardRequest {
   memberId: string;
   source: "terminal" | "agent";
   agentRunId?: string;
+  sessionScope?: "personal" | "team";
+  agentHandle?: string;
   kind: "command" | "edit" | "read" | "fetch";
   command?: string;
   paths?: string[];

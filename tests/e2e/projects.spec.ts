@@ -16,7 +16,7 @@ test("project home opens Demo and creates an empty project", async ({ page }) =>
   );
 
   await page.getByTestId("display-name").fill("Ada");
-  await page.getByTestId("member-role").fill("Developer");
+  await page.getByTestId("member-role").selectOption("developer");
   await page.getByTestId("join-project").click();
   await expect(page.getByTestId("status-bar")).toContainText("Browser Project");
   await expect(page.getByTestId("projects-link")).toBeVisible();

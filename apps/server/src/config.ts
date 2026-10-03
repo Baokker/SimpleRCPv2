@@ -13,6 +13,7 @@ export interface ServerConfig {
   terminalEnabled?: boolean;
   guardMode?: "full" | "human-only" | "off";
   guardApprovalTimeoutMs?: number;
+  fakeAgentRuntime?: boolean;
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -71,6 +72,11 @@ export function loadConfig(
   if (!Number.isInteger(guardApprovalTimeoutMs) || guardApprovalTimeoutMs < 1) {
     throw new Error("SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS must be a positive integer");
   }
+  const fakeAgentRuntime = readBoolean(
+    env.SIMPLERCP_FAKE_AGENT_RUNTIME,
+    "SIMPLERCP_FAKE_AGENT_RUNTIME",
+    false
+  );
   const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
     ? undefined
     : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -88,6 +94,7 @@ export function loadConfig(
     importRoots,
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
+    fakeAgentRuntime,
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),

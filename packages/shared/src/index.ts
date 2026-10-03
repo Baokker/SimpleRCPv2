@@ -86,6 +86,10 @@ export interface ChatMessage {
   authorRole?: string;
   text: string;
   timestamp: string;
+  kind?: "member" | "agent" | "system";
+  agentSessionId?: string;
+  runId?: string;
+  mentions?: string[];
 }
 
 export interface AgentSettings {
@@ -140,6 +144,12 @@ export interface AgentRun {
   runtime: "opencode";
   provider: "deepseek";
   model: string;
+  source?: "agent-panel" | "chat";
+  chatMessageId?: string;
+  extraPrompt?: string;
+  interruptsRunId?: string;
+  interruptedByRunId?: string;
+  interruptedByMemberId?: string;
   sessionId?: string;
   runtimeSessionId?: string;
   output?: string;
@@ -154,6 +164,10 @@ export interface AgentSession {
   id: string;
   projectId: string;
   memberId: string;
+  scope?: "personal" | "team";
+  handle?: string;
+  description?: string;
+  createdByMemberId?: string;
   participantId?: string;
   memberName?: string;
   historical?: boolean;
@@ -290,6 +304,7 @@ export type ServerMessage =
       type: "agent_trace_appended";
       runId: string;
       sequence: number;
+      event: AgentTraceEvent;
     }
   | {
       type: "guard_approval";
@@ -303,6 +318,16 @@ export type ServerMessage =
   | {
       type: "member_role_updated";
       member: RoomMember;
+    }
+  | {
+      type: "chat_message_created";
+      roomId: string;
+      message: ChatMessage;
+    }
+  | {
+      type: "team_agents_changed";
+      projectId: string;
+      agents: AgentSession[];
     };
 
 export interface GuardApproval {
@@ -312,6 +337,8 @@ export interface GuardApproval {
     memberId: string;
     source: "terminal" | "agent";
     agentRunId?: string;
+    sessionScope?: "personal" | "team";
+    agentHandle?: string;
     kind: "command" | "edit" | "read" | "fetch";
     command?: string;
     paths?: string[];

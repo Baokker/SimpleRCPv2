@@ -37,7 +37,7 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
       characterization.segments.some((segment) => segment.capabilities.includes("network") && segment.capabilities.includes("exec")) ||
       Boolean(request.command && /\|/.test(request.command) && /\b(curl|wget|ssh|scp)\b/i.test(request.command));
     if (agentCap) {
-      agentOnlyAsk = humanAction === "allow" || humanAction === "allow_snapshot";
+      agentOnlyAsk = true;
       action = stricter(action, "ask");
       matchedRules.add("agent.default");
     }

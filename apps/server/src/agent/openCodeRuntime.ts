@@ -1,10 +1,16 @@
+import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { AgentSettingsResponse } from "@simplercp/shared";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
+import { promisify } from "node:util";
 import type { AgentRuntime } from "./agentRuntime.js";
 import {
   createOpenCodeProcess,
   OPEN_CODE_PROVIDER_ID
 } from "./openCodeProcess.js";
+
+const execFileAsync = promisify(execFile);
 
 interface OpenCodeRuntimeOptions {
   port: number;
@@ -58,6 +64,9 @@ export function createOpenCodeRuntime(
   }
 
   return {
+    async prepareWorkspace(workspacePath: string) {
+      return ensureWorkspaceRepository(workspacePath);
+    },
     async status() {
       const settings = options.getSettings();
       if (!settings.enabled) {
@@ -189,6 +198,19 @@ export function createOpenCodeRuntime(
       await process.dispose();
     }
   };
+}
+
+export async function ensureWorkspaceRepository(workspacePath: string) {
+  const gitPath = path.join(workspacePath, ".git");
+  const repositoryExists = await fs.stat(gitPath)
+    .then(() => true)
+    .catch((error: unknown) => {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") return false;
+      throw error;
+    });
+  if (repositoryExists) return false;
+  await execFileAsync("git", ["init", "--quiet", workspacePath]);
+  return true;
 }
 
 function formatProviderError(

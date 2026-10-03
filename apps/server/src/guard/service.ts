@@ -70,7 +70,7 @@ export function createGuardService(options: {
       protectedPaths: currentPolicy.protectedPaths
     });
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros });
     return { decision, member: stored, policy: currentPolicy };
   }
 
@@ -101,7 +101,7 @@ export function createGuardService(options: {
     const pending = approvals.enqueue(request, decision, approverIds, input.timeoutMs);
     for (const listener of pendingListeners) listener(approvals.list().find((item) => item.id === pending.id)!);
     const approved = await pending.result;
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: approved ? "approved" : "rejected", durationMicros: 0, model: decision.llm });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: approved ? "approved" : "rejected", durationMicros: 0, model: decision.llm });
     publishActivity({
       type: "guard_approval",
       memberId: request.memberId,

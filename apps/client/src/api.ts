@@ -99,6 +99,24 @@ export async function getAgentSessions(projectId: string) {
   return response.sessions;
 }
 
+export async function getTeamAgents(projectId: string) {
+  const response = await request<{ agents: AgentSession[] }>(
+    `${projectPath(projectId)}/team-agents`
+  );
+  return response.agents;
+}
+
+export async function createTeamAgent(
+  projectId: string,
+  input: { name: string; description?: string }
+) {
+  return request<{ agent: AgentSession }>(`${projectPath(projectId)}/team-agents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
 export async function createAgentSession(
   projectId: string,
   input: { title?: string }
@@ -346,7 +364,7 @@ export async function getChatMessages(
 
 export async function sendChatMessage(
   projectId: string,
-  input: { authorId: string; authorName: string; text: string }
+  input: { text: string }
 ) {
   return request<{ message: ChatMessage }>(`${projectPath(projectId)}/chat`, {
     method: "POST",
