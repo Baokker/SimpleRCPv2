@@ -1064,7 +1064,9 @@ function WorkspacePage({
 }
 
 function readLayoutDimension(key: string, fallback: number, minimum: number, maximum: number) {
-  const value = Number(window.localStorage.getItem(key));
+  const stored = window.localStorage.getItem(key);
+  if (stored === null) return fallback;
+  const value = Number(stored);
   return Number.isFinite(value) ? clampLayoutDimension(value, minimum, maximum) : fallback;
 }
 
