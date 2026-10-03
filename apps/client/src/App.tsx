@@ -1,5 +1,6 @@
 import { MessagesSquare, Moon, PanelBottom, PanelRight, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
@@ -71,6 +72,12 @@ import type {
   WorkspaceChange,
   WorkspaceNode
 } from "./types";
+
+type ResizeTarget = "workspace" | "collaboration" | "terminal";
+
+const WORKSPACE_WIDTH_KEY = "simplercp.layout.workspaceWidth";
+const COLLABORATION_WIDTH_KEY = "simplercp.layout.collaborationWidth";
+const TERMINAL_HEIGHT_KEY = "simplercp.layout.terminalHeight";
 
 interface PendingFileEdit extends FileEditActivity {
   timer: number;
@@ -221,6 +228,12 @@ function WorkspacePage({
   );
   const [collaborationVisible, setCollaborationVisible] = useState(true);
   const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
+  const [workspaceWidth, setWorkspaceWidth] = useState(() => readLayoutDimension(WORKSPACE_WIDTH_KEY, 252, 180, 420));
+  const [collaborationWidth, setCollaborationWidth] = useState(() => readLayoutDimension(COLLABORATION_WIDTH_KEY, 380, 280, 560));
+  const [terminalHeight, setTerminalHeight] = useState(() => readLayoutDimension(TERMINAL_HEIGHT_KEY, 188, 120, 460));
+  const [unseenApprovalIds, setUnseenApprovalIds] = useState<Set<string>>(() => new Set());
+  const [guardNotice, setGuardNotice] = useState<{ title: string; detail: string; tone: "approval" | "model" }>();
+  const [llmJudging, setLlmJudging] = useState(false);
   const socketRef = useRef<ClientSocket | null>(null);
   const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
@@ -275,7 +288,10 @@ function WorkspacePage({
       setTree(workspaceTree);
       setEvents(eventRecords);
       setChatMessages(messages);
-      void listGuardApprovals(projectId).then((result) => setGuardApprovals(result.approvals));
+      void listGuardApprovals(projectId).then((result) => {
+        setGuardApprovals(result.approvals);
+        setUnseenApprovalIds(new Set(result.approvals.filter((approval) => approval.approverIds.includes(joined.member.id)).map((approval) => approval.id)));
+      });
       setTeamAgents(agents);
       setAgentRuns(runs);
       setAgentTraces(traceEntries);
@@ -330,9 +346,19 @@ function WorkspacePage({
           }
           if (message.type === "guard_approval") {
             setGuardApprovals((current) => current.some((approval) => approval.id === message.approval.id) ? current : [...current, message.approval]);
+            setLlmJudging(false);
+            if (message.approval.approverIds.includes(joined.member.id)) {
+              setUnseenApprovalIds((current) => new Set(current).add(message.approval.id));
+              setGuardNotice({ title: "Approval required in Team", detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "A guarded request is waiting", tone: "approval" });
+            }
           }
           if (message.type === "guard_approval_resolved") {
             setGuardApprovals((current) => current.filter((approval) => approval.id !== message.approvalId));
+            setUnseenApprovalIds((current) => {
+              const next = new Set(current);
+              next.delete(message.approvalId);
+              return next;
+            });
           }
           if (
             message.type === "cursor_change" &&
@@ -371,6 +397,20 @@ function WorkspacePage({
             setEvents((current) => current.some((event) => event.id === message.event.id)
               ? current
               : [...current, message.event]);
+            if (message.event.type === "guard_llm_judging") {
+              setLlmJudging(true);
+              setGuardNotice({ title: "The model is reviewing a guarded request", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "Review in progress"), tone: "model" });
+            }
+            if (message.event.type === "guard_action") {
+              setLlmJudging(false);
+              const llm = message.event.payload?.llm;
+              if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
+                const model = llm as Record<string, unknown>;
+                const action = message.event.payload?.action === "deny" ? "rejected" : "approved";
+                const confidence = typeof model.confidence === "number" ? `${Math.round(model.confidence * 100)}% confidence` : "confidence unavailable";
+                setGuardNotice({ title: `The model automatically ${action} a request`, detail: `${confidence} · ${String(model.reason ?? "No reason provided")}`, tone: "model" });
+              }
+            }
           }
           if (message.type === "workspace_changed") {
             applyWorkspaceChange(message.change);
@@ -420,6 +460,47 @@ function WorkspacePage({
       }
     };
   }, [displayName, identity.role, projectId, roomId]);
+
+  useEffect(() => {
+    window.localStorage.setItem(WORKSPACE_WIDTH_KEY, String(workspaceWidth));
+  }, [workspaceWidth]);
+  useEffect(() => {
+    window.localStorage.setItem(COLLABORATION_WIDTH_KEY, String(collaborationWidth));
+  }, [collaborationWidth]);
+  useEffect(() => {
+    window.localStorage.setItem(TERMINAL_HEIGHT_KEY, String(terminalHeight));
+  }, [terminalHeight]);
+  useEffect(() => {
+    if (!guardNotice) return;
+    const timer = window.setTimeout(() => setGuardNotice(undefined), 7_000);
+    return () => window.clearTimeout(timer);
+  }, [guardNotice]);
+
+  function startResize(target: ResizeTarget, event: ReactPointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const initial = { workspaceWidth, collaborationWidth, terminalHeight };
+    document.body.dataset.resizing = target;
+    const move = (moveEvent: PointerEvent) => {
+      if (target === "workspace") setWorkspaceWidth(clampLayoutDimension(initial.workspaceWidth + moveEvent.clientX - startX, 180, 420));
+      if (target === "collaboration") setCollaborationWidth(clampLayoutDimension(initial.collaborationWidth - (moveEvent.clientX - startX), 280, 560));
+      if (target === "terminal") setTerminalHeight(clampLayoutDimension(initial.terminalHeight - (moveEvent.clientY - startY), 120, 460));
+    };
+    const stop = () => {
+      document.body.removeAttribute("data-resizing");
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop, { once: true });
+  }
+
+  const shellStyle = {
+    "--workspace-pane-width": `${workspaceWidth}px`,
+    "--collaboration-pane-width": `${collaborationWidth}px`,
+    "--terminal-pane-height": `${terminalHeight}px`
+  } as CSSProperties;
 
   useEffect(() => {
     function markOffline() {
@@ -771,6 +852,7 @@ function WorkspacePage({
   return (
     <main
       className={`app-shell${collaborationVisible ? "" : " collaboration-hidden"}${terminalVisible ? "" : " terminal-hidden"}`}
+      style={shellStyle}
     >
       {workspaceError ? (
         <div className="workspace-alert" role="alert" data-testid="workspace-error">
@@ -801,6 +883,13 @@ function WorkspacePage({
           >
             ×
           </button>
+        </div>
+      ) : null}
+      {guardNotice ? (
+        <div className={`guard-notification guard-notification-${guardNotice.tone}`} role="status" data-testid="guard-notification">
+          <strong>{guardNotice.title}</strong>
+          <span>{guardNotice.detail}</span>
+          <button type="button" aria-label="Dismiss guard notification" onClick={() => setGuardNotice(undefined)}>×</button>
         </div>
       ) : null}
       <aside className="workspace-pane">
@@ -865,6 +954,9 @@ function WorkspacePage({
           workspaceTree={tree}
           roomId={roomId}
           guardApprovals={guardApprovals}
+          unreadApprovalCount={unseenApprovalIds.size}
+          llmJudging={llmJudging}
+          onApprovalSeen={() => setUnseenApprovalIds(new Set())}
           onApprovalResolved={() => void listGuardApprovals(projectId).then((result) => setGuardApprovals(result.approvals)).catch(showWorkspaceError)}
           controlHolderMemberId={terminalControl.holderMemberId}
           onControlState={(holderMemberId: string | null) => setTerminalControl((current) => ({ ...current, holderMemberId }))}
@@ -953,6 +1045,13 @@ function WorkspacePage({
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
       </div>
+      <div className="resize-handle resize-handle-workspace" role="separator" aria-orientation="vertical" aria-label="Resize workspace explorer" onPointerDown={(event) => startResize("workspace", event)} />
+      {collaborationVisible ? (
+        <div className="resize-handle resize-handle-collaboration" role="separator" aria-orientation="vertical" aria-label="Resize collaboration panel" onPointerDown={(event) => startResize("collaboration", event)} />
+      ) : null}
+      {terminalVisible && terminalEnabled ? (
+        <div className={`resize-handle resize-handle-terminal${collaborationVisible ? "" : " collaboration-hidden"}`} role="separator" aria-orientation="horizontal" aria-label="Resize terminal panel" onPointerDown={(event) => startResize("terminal", event)} />
+      ) : null}
       {workspaceDialog ? (
         <WorkspaceDialog
           action={workspaceDialog}
@@ -962,6 +1061,15 @@ function WorkspacePage({
       ) : null}
     </main>
   );
+}
+
+function readLayoutDimension(key: string, fallback: number, minimum: number, maximum: number) {
+  const value = Number(window.localStorage.getItem(key));
+  return Number.isFinite(value) ? clampLayoutDimension(value, minimum, maximum) : fallback;
+}
+
+function clampLayoutDimension(value: number, minimum: number, maximum: number) {
+  return Math.min(maximum, Math.max(minimum, value));
 }
 
 function formatBytes(bytes: number) {

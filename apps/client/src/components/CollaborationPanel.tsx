@@ -78,6 +78,9 @@ export function CollaborationPanel({
   onOpenFile,
   onError,
   guardApprovals = [],
+  unreadApprovalCount = 0,
+  llmJudging = false,
+  onApprovalSeen,
   onApprovalResolved,
   controlHolderMemberId,
   onControlState,
@@ -107,6 +110,9 @@ export function CollaborationPanel({
   onOpenFile(path: string): void;
   onError(error: unknown): void;
   guardApprovals?: GuardApproval[];
+  unreadApprovalCount?: number;
+  llmJudging?: boolean;
+  onApprovalSeen?(): void;
   onApprovalResolved?(): void;
   controlHolderMemberId?: string | null;
   onControlState?(holderMemberId: string | null): void;
@@ -121,6 +127,10 @@ export function CollaborationPanel({
   const [unseenMessages, setUnseenMessages] = useState(0);
   const [scenarioRoles, setScenarioRoles] = useState<GuardScenarioRole[]>([]);
   useEffect(() => { void getGuardRoles().then((result) => setScenarioRoles(result.scenarios)); }, []);
+  function selectTab(tab: CollaborationTab) {
+    setActiveTab(tab);
+    if (tab === "team") onApprovalSeen?.();
+  }
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
   const previousMessageCountRef = useRef(chatMessages.length);
@@ -182,7 +192,7 @@ export function CollaborationPanel({
       <nav className="collab-tabs" aria-label="Collaboration sections">
         <button
           className={activeTab === "chat" ? "active" : ""}
-          onClick={() => setActiveTab("chat")}
+          onClick={() => selectTab("chat")}
           data-testid="collab-tab-chat"
         >
           <MessageSquareText size={14} />
@@ -190,7 +200,7 @@ export function CollaborationPanel({
         </button>
         <button
           className={activeTab === "agent" ? "active" : ""}
-          onClick={() => setActiveTab("agent")}
+          onClick={() => selectTab("agent")}
           data-testid="collab-tab-agent"
         >
           <Bot size={14} />
@@ -198,7 +208,7 @@ export function CollaborationPanel({
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
-          onClick={() => setActiveTab("project")}
+          onClick={() => selectTab("project")}
           data-testid="collab-tab-project"
         >
           <Settings2 size={14} />
@@ -206,11 +216,12 @@ export function CollaborationPanel({
         </button>
         <button
           className={activeTab === "team" ? "active" : ""}
-          onClick={() => setActiveTab("team")}
+          onClick={() => selectTab("team")}
           data-testid="collab-tab-team"
         >
           <Users size={14} />
           Team
+          {unreadApprovalCount > 0 ? <span className="collab-tab-badge" aria-label={`${unreadApprovalCount} pending approvals`}>{unreadApprovalCount > 99 ? "99+" : unreadApprovalCount}</span> : null}
         </button>
       </nav>
 
@@ -454,9 +465,27 @@ export function CollaborationPanel({
                   );
                 })}
               </ul>
-              {guardApprovals.filter((approval) => approval.approverIds.includes(member?.id ?? "")).map((approval) => (
-                <div key={approval.id} className="guard-approval-card"><strong>{approval.request.agentHandle ? `@${approval.request.agentHandle} approval` : `${approval.request.source} approval`}</strong><span>Triggered by {members.find((candidate) => candidate.id === approval.request.memberId)?.displayName ?? approval.request.memberId}</span><code>{approval.request.command ?? approval.request.paths?.join(", ")}</code><small>{approval.decision.matchedRules.join(", ")}</small><div><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError)}>Approve</button><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError)}>Reject</button></div></div>
-              ))}
+              {llmJudging ? <div className="guard-llm-status" role="status"><span className="guard-llm-spinner" />The model is reviewing a guarded request…</div> : null}
+              {guardApprovals.filter((approval) => approval.approverIds.includes(member?.id ?? "")).map((approval) => {
+                const llm = approval.decision.llm;
+                return (
+                  <div key={approval.id} className="guard-approval-card">
+                    <strong>{approval.request.agentHandle ? `@${approval.request.agentHandle} approval` : `${approval.request.source} approval`}</strong>
+                    <span>Triggered by {members.find((candidate) => candidate.id === approval.request.memberId)?.displayName ?? approval.request.memberId}</span>
+                    <code>{approval.request.command ?? approval.request.paths?.join(", ")}</code>
+                    <small>{approval.decision.matchedRules.join(", ")}</small>
+                    {llm ? (
+                      <div className="guard-llm-result">
+                        <strong>Model judgment: {llm.risk}</strong>
+                        <span>Confidence {Math.round(llm.confidence * 100)}%</span>
+                        <p>{llm.reason}</p>
+                        <small>{llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : "Human approval remains required"}</small>
+                      </div>
+                    ) : <div className="guard-llm-status">Model judgment unavailable</div>}
+                    <div><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError)}>Approve</button><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError)}>Reject</button></div>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="team-block activity-block">
@@ -648,7 +677,11 @@ function formatActivity(
     case "terminal_input":
       return item(event, "general", `${actor} used the terminal`, { detail: `${numberValue(payload.count)} inputs` });
     case "guard_action":
-      return item(event, "general", `${actor}'s terminal or Agent request was ${stringValue(payload.action) ?? "checked"}`, {
+      return item(event, "general", guardActionText(actor, payload), {
+        detail: formatGuardActionDetail(payload)
+      });
+    case "guard_llm_judging":
+      return item(event, "general", `${actor}'s request is being reviewed by the model`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
     case "guard_approval":
@@ -772,6 +805,25 @@ function ActivityIcon({ kind }: { kind: ActivityKind }) {
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
+}
+
+function guardActionText(actor: string, payload: Record<string, unknown>) {
+  const llm = payload.llm;
+  if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
+    return `${actor}'s request was automatically ${payload.action === "deny" ? "rejected" : "approved"} by the model`;
+  }
+  return `${actor}'s terminal or Agent request was ${stringValue(payload.action) ?? "checked"}`;
+}
+
+function formatGuardActionDetail(payload: Record<string, unknown>) {
+  const command = stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined);
+  const llm = payload.llm;
+  if (!llm || typeof llm !== "object") return command;
+  const model = llm as Record<string, unknown>;
+  const risk = stringValue(model.risk);
+  const confidence = typeof model.confidence === "number" ? `${Math.round(model.confidence * 100)}% confidence` : undefined;
+  const reason = stringValue(model.reason);
+  return [command, risk ? `risk ${risk}` : undefined, confidence, reason].filter(Boolean).join(" · ");
 }
 
 function numberValue(value: unknown) {

@@ -815,15 +815,19 @@ input {
 }
 
 .app-shell {
+  --workspace-pane-width: 252px;
+  --collaboration-pane-width: 380px;
+  --terminal-pane-height: 188px;
+  position: relative;
   display: grid;
-  grid-template-columns: 252px minmax(360px, 1fr) 380px;
-  grid-template-rows: minmax(0, 1fr) 188px 24px;
+  grid-template-columns: var(--workspace-pane-width) minmax(360px, 1fr) var(--collaboration-pane-width);
+  grid-template-rows: minmax(0, 1fr) var(--terminal-pane-height) 24px;
   height: 100vh;
   overflow: hidden;
 }
 
 .app-shell.collaboration-hidden {
-  grid-template-columns: 252px minmax(360px, 1fr);
+  grid-template-columns: var(--workspace-pane-width) minmax(360px, 1fr);
 }
 
 .app-shell.collaboration-hidden .status-bar {
@@ -832,6 +836,87 @@ input {
 
 .app-shell.terminal-hidden {
   grid-template-rows: minmax(0, 1fr) 24px;
+}
+
+.resize-handle {
+  position: absolute;
+  z-index: 25;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+}
+
+.resize-handle::after {
+  position: absolute;
+  display: block;
+  border-radius: 3px;
+  background: var(--accent);
+  content: "";
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after,
+body[data-resizing] .resize-handle::after {
+  opacity: 0.85;
+}
+
+.resize-handle-workspace,
+.resize-handle-collaboration {
+  top: 0;
+  bottom: 24px;
+  width: 9px;
+  cursor: col-resize;
+  transform: translateX(-50%);
+}
+
+.resize-handle-workspace {
+  left: var(--workspace-pane-width);
+}
+
+.resize-handle-collaboration {
+  right: var(--collaboration-pane-width);
+  transform: translateX(50%);
+}
+
+.resize-handle-workspace::after,
+.resize-handle-collaboration::after {
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 3px;
+}
+
+.resize-handle-terminal {
+  right: var(--collaboration-pane-width);
+  bottom: calc(var(--terminal-pane-height) + 24px);
+  left: var(--workspace-pane-width);
+  height: 9px;
+  cursor: row-resize;
+  transform: translateY(50%);
+}
+
+.resize-handle-terminal::after {
+  top: 3px;
+  right: 0;
+  left: 0;
+  height: 3px;
+}
+
+.resize-handle-terminal.collaboration-hidden {
+  right: 0;
+}
+
+body[data-resizing="workspace"],
+body[data-resizing="collaboration"] {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body[data-resizing="terminal"] {
+  cursor: row-resize;
+  user-select: none;
 }
 
 .app-shell.terminal-hidden .workspace-pane,
@@ -860,6 +945,48 @@ input {
   box-shadow: 0 8px 28px rgb(0 0 0 / 24%);
   color: var(--text-primary);
   transform: translateX(-50%);
+}
+
+.guard-notification {
+  position: fixed;
+  z-index: 21;
+  right: 18px;
+  bottom: 38px;
+  display: flex;
+  max-width: min(440px, calc(100% - 36px));
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 11px 34px 11px 13px;
+  background: var(--background-panel);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
+  color: var(--text-primary);
+}
+
+.guard-notification-approval {
+  border-color: var(--danger);
+}
+
+.guard-notification strong {
+  color: var(--text-heading);
+  font-size: 12px;
+}
+
+.guard-notification span {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.guard-notification button {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
 .workspace-alert {
@@ -1066,6 +1193,20 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.collab-tab-badge {
+  display: inline-flex;
+  min-width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  padding: 0 5px;
+  background: var(--danger);
+  color: var(--background-page);
+  font-size: 10px;
+  font-weight: 750;
 }
 
 .tree-children {
@@ -2783,4 +2924,42 @@ button.activity-entry:hover strong {
 .guard-approval-card > div {
   display: flex;
   gap: 6px;
+}
+
+.guard-llm-status,
+.guard-llm-result {
+  display: grid;
+  gap: 3px;
+  border-left: 2px solid var(--accent);
+  padding: 6px 8px;
+  background: var(--background-control);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.guard-approval-card > .guard-llm-result {
+  display: grid;
+}
+
+.guard-llm-result strong {
+  color: var(--accent-text);
+}
+
+.guard-llm-result p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.guard-llm-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: guard-llm-spin 800ms linear infinite;
+}
+
+@keyframes guard-llm-spin {
+  to { transform: rotate(360deg); }
 }
