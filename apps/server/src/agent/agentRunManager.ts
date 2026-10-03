@@ -367,6 +367,24 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runtimeSessionId
       });
 
+      const previousRun = run.interruptsRunId
+        ? await store.get(run.interruptsRunId)
+        : undefined;
+      const interruptionPrompt = previousRun
+        ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
+        : undefined;
+      const runtimePrompt = await buildRuntimePrompt(
+        projectRuntime.project.workspacePath,
+        [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
+        run.contexts,
+        projectRuntime.project.name
+      );
+      await options.runtime.prepareRun?.({
+        workspacePath: projectRuntime.project.workspacePath,
+        sessionId: runtimeSessionId,
+        runPrompt: run.prompt
+      });
+
       const stopEvents = await options.runtime.subscribe(
         {
           workspacePath: projectRuntime.project.workspacePath,
@@ -380,24 +398,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       );
 
-      const previousRun = run.interruptsRunId
-        ? await store.get(run.interruptsRunId)
-        : undefined;
-      const interruptionPrompt = previousRun
-        ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
-        : undefined;
-
       let result: { text: string; messageId?: string };
       try {
         result = await runWithTimeout(options.runtime.run({
           workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId,
-          prompt: await buildRuntimePrompt(
-            projectRuntime.project.workspacePath,
-            [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
-            run.contexts,
-            projectRuntime.project.name
-          )
+          prompt: runtimePrompt
         }), options.runTimeoutMs, () => options.runtime.cancel({
           workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId

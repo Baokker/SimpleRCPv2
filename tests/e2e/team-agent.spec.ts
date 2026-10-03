@@ -101,8 +101,8 @@ test("team Agent replies are shared across member browser contexts", async ({ br
   await pageA.getByTestId("send-chat").click();
 
   await expect(pageB.getByTestId("chat-transcript")).toContainText("fake-delay=250", { timeout: 10_000 });
-  await expect(pageB.getByTestId("chat-agent-card")).toBeVisible({ timeout: 10_000 });
-  await expect(pageB.getByTestId("chat-transcript")).toContainText("shared response from team agent", { timeout: 15_000 });
+  await expect(pageB.getByTestId("chat-agent-card").last()).toBeVisible({ timeout: 10_000 });
+  await expect(pageB.locator(".chat-message-agent").last()).toContainText("shared response from team agent", { timeout: 15_000 });
   await contextA.close();
   await contextB.close();
 });

@@ -16,6 +16,9 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
     async prepareWorkspace(workspacePath) {
       return real.prepareWorkspace?.(workspacePath) ?? false;
     },
+    async prepareRun(input) {
+      modes.set(input.sessionId, /fake-(?:delay|write|reply)=/.test(input.runPrompt) ? "fake" : "real");
+    },
     async createSession(input) {
       const mode = /fake-(?:delay|write|reply)=/.test(input.title) ? "fake" : "real";
       const session = await (mode === "fake" ? fake : real).createSession(input);
