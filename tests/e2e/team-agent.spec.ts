@@ -54,6 +54,8 @@ test("team Agent state and Chat history survive a reload", async ({ page }) => {
   await page.getByTestId("send-chat").click();
   await expect(page.getByTestId("chat-transcript")).toContainText("Team discussion");
   await page.reload();
+  await expect(page.getByTestId("join-project-form")).toBeVisible();
+  await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();
   await expect(page.getByTestId("team-agent-bar")).toContainText("@agent");
   await expect(page.getByTestId("chat-transcript")).toContainText("Team discussion");
@@ -95,7 +97,7 @@ test("team Agent replies are shared across member browser contexts", async ({ br
   const pageA = await contextA.newPage();
   const pageB = await contextB.newPage();
   await openAs(pageA, "Shared Alice", "demo", "Developer");
-  await openAs(pageB, "Shared Bob", "demo", "Reviewer");
+  await openAs(pageB, "Shared Bob", "demo", "Developer");
 
   await pageA.getByTestId("chat-input").fill("@agent fake-delay=250 fake-reply=shared response from team agent");
   await pageA.getByTestId("send-chat").click();
@@ -113,7 +115,7 @@ test("interrupting a team run records changed files for the next run", async ({ 
   const pageA = await contextA.newPage();
   const pageB = await contextB.newPage();
   await openAs(pageA, "Interrupt Alice", "demo", "Developer");
-  await openAs(pageB, "Interrupt Bob", "demo", "Reviewer");
+  await openAs(pageB, "Interrupt Bob", "demo", "Developer");
 
   const firstNewCardIndex = await pageA.getByTestId("chat-agent-card").count();
   await pageA.getByTestId("chat-input").fill("@agent fake-write=interrupted-file.txt fake-delay=5000 fake-reply=old work");

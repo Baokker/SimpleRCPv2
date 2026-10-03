@@ -58,6 +58,9 @@ test("an open project reports when another client deletes it", async ({
   const created = await createResponse.json() as { project: { id: string } };
   const page = await browser.newPage();
   await page.goto(`/projects/${created.project.id}?name=ActiveUser`);
+  await expect(page.getByTestId("join-project-form")).toBeVisible();
+  await page.getByTestId("display-name").fill("ActiveUser");
+  await page.getByTestId("join-project").click();
   await expect(page.getByTestId("connection-state")).toHaveText("Connected");
 
   const deleteResponse = await request.delete(

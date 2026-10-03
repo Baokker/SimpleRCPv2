@@ -1,7 +1,7 @@
 import { ArrowLeft, LogIn } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import type { ProjectParticipant } from "../types";
-import { rememberMember, storedMemberId } from "../memberIdentity";
+import { rememberMember, sessionMemberId } from "../memberIdentity";
 import { getGuardRoles, type GuardScenarioRole } from "../api";
 
 export interface ProjectIdentity {
@@ -21,7 +21,7 @@ export function JoinProject({
   participants: ProjectParticipant[];
   onJoin(identity: ProjectIdentity): void | Promise<void>;
 }) {
-  const storedId = storedMemberId(projectId);
+  const storedId = sessionMemberId(projectId);
   const storedMember = participants.find((participant) => participant.id === storedId);
   const [memberId, setMemberId] = useState(storedMember?.id ?? "new");
   const [displayName, setDisplayName] = useState(

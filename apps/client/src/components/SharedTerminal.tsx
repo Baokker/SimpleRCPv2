@@ -31,6 +31,8 @@ export const SharedTerminal = forwardRef<
   const terminalRef = useRef<Terminal>();
   const canInputRef = useRef(canInput);
   const reconnectRef = useRef<() => void>();
+  const callbacksRef = useRef({ onConnectionState, onControl, onStatus });
+  callbacksRef.current = { onConnectionState, onControl, onStatus };
 
   useEffect(() => {
     canInputRef.current = canInput;
@@ -110,12 +112,12 @@ export const SharedTerminal = forwardRef<
 
     function connect() {
       if (disposed) return;
-      onConnectionState(reconnectAttempt === 0 ? "Connecting" : "Reconnecting");
+      callbacksRef.current.onConnectionState(reconnectAttempt === 0 ? "Connecting" : "Reconnecting");
       const socket = new WebSocket(endpoint);
       socketRef.current = socket;
       socket.addEventListener("open", () => {
         reconnectAttempt = 0;
-        onConnectionState("Connected");
+        callbacksRef.current.onConnectionState("Connected");
         fit();
         terminal.focus();
       });
@@ -127,30 +129,30 @@ export const SharedTerminal = forwardRef<
         } else if (message.type === "terminal_output") {
           terminal.write(message.data);
         } else if (message.type === "control") {
-          onControl(message.holderMemberId, message.expiresAt, message.mode);
+          callbacksRef.current.onControl(message.holderMemberId, message.expiresAt, message.mode);
         } else if (message.type === "guard_pending") {
-          onStatus("Waiting for approval");
+          callbacksRef.current.onStatus("Waiting for approval");
         } else if (message.type === "guard_decision") {
-          onStatus(`${message.action}: ${message.reason}`);
+          callbacksRef.current.onStatus(`${message.action}: ${message.reason}`);
         } else {
           terminal.write(`\r\n\x1b[31m${message.message}\x1b[0m\r\n`);
-          onStatus(message.message);
+          callbacksRef.current.onStatus(message.message);
         }
       });
       socket.addEventListener("close", (event) => {
         if (socketRef.current === socket) socketRef.current = undefined;
         if (disposed) return;
         if (event.code === 1001 && event.reason === "Project deleted") {
-          onConnectionState("Offline");
+          callbacksRef.current.onConnectionState("Offline");
           terminal.write("\r\n[project deleted]\r\n");
           return;
         }
         reconnectAttempt += 1;
         if (reconnectAttempt >= 5) {
-          onConnectionState("Offline");
+          callbacksRef.current.onConnectionState("Offline");
           return;
         }
-        onConnectionState("Reconnecting");
+        callbacksRef.current.onConnectionState("Reconnecting");
         reconnectTimer = window.setTimeout(
           connect,
           Math.min(5_000, 500 * 2 ** Math.min(reconnectAttempt, 4))
@@ -190,7 +192,7 @@ export const SharedTerminal = forwardRef<
       terminalRef.current = undefined;
       reconnectRef.current = undefined;
     };
-  }, [memberId, onConnectionState, onControl, onStatus, projectId]);
+  }, [memberId, projectId]);
 
   return (
     <div

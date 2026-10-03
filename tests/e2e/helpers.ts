@@ -1,9 +1,13 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export async function openAs(page: Page, name: string, projectId = "demo", role = "") {
   await page.goto(`/projects/${projectId}`);
   await page.getByTestId("display-name").fill(name);
-  await page.getByTestId("member-role").selectOption(role.trim().toLowerCase());
+  const selectedRole = role.trim().toLowerCase();
+  if (selectedRole) {
+    await expect(page.getByTestId("member-role").locator(`option[value="${selectedRole}"]`)).toHaveCount(1);
+  }
+  await page.getByTestId("member-role").selectOption(selectedRole);
   await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();
 }

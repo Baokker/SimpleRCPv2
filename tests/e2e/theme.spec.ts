@@ -19,6 +19,8 @@ test("member can switch theme and keep the choice after refresh", async ({
     .toBe("light");
 
   await page.reload();
+  await expect(page.getByTestId("join-project-form")).toBeVisible();
+  await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
