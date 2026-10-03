@@ -15,6 +15,8 @@
 - 工作区文件快照、快照恢复和快照保留规则。
 - Agent 使用发起成员当前角色的权限，以及发起成员离线后的限制。
 - LLM 的 `off`、`suggest`、`auto` 三种研判模式。
+- 可拖动的工作区、协作面板和共享终端尺寸。
+- Team 审批角标、右下角通知，以及模型判断过程和结果展示。
 - `guard-audit.jsonl`、`guard-policy.json`、`activity.json`、快照清单和 Agent `trace.jsonl`。
 
 ## 环境要求
@@ -118,6 +120,16 @@ curl http://127.0.0.1:4000/api/health
 - [ ] 工作区底部显示 `Terminal`，终端状态最终显示 `Shared · Connected`。
 - [ ] `SIMPLERCP_GUARD_MODE=full` 时，终端面板显示命令输入框。
 
+### 验证可调布局
+
+进入项目后，在以下边界上移动鼠标，光标会变为调整方向：
+
+1. 工作区与编辑器之间的竖直边界：调整左侧工作区宽度。
+2. 编辑器与协作面板之间的竖直边界：调整右侧协作面板宽度。
+3. 编辑器与终端之间的水平边界：调整底部终端高度。
+
+拖动过程中松开鼠标，页面会保留当前尺寸；刷新项目后尺寸仍然保留。每个尺寸有最小值和最大值，编辑器会始终保留可用空间。隐藏协作面板或终端后重新显示，之前的尺寸会继续使用。
+
 ## 创建验证成员
 
 1. 在项目首页打开 `Demo`。
@@ -154,7 +166,7 @@ Guard 启用时，原始按键输入只对交互控制持有者开放。owner �
 
 ### 审批队列
 
-`ask` 请求进入审批队列。普通人员请求需要在线 owner 处理；Agent 因不可逆操作或网络加执行提高的审批请求交给发起成员本人。审批卡片展示来源、命令或路径、命中的规则，并提供 `Approve` 和 `Reject`。
+`ask` 请求进入审批队列。普通人员请求需要在线 owner 处理；Agent 因不可逆操作或网络加执行提高的审批请求交给发起成员本人。审批卡片展示来源、命令或路径、命中的规则，并提供 `Approve` 和 `Reject`。当前成员属于审批人时，Team 页签显示待处理数量角标，页面右下角显示通知；点击 Team 后角标清除，审批卡片仍保留到请求结束。
 
 ### 文件快照
 
@@ -166,7 +178,7 @@ OpenCode 的 `bash`、`edit`、`read` 和 `webfetch` 请求都经过同一 Guard
 
 ### LLM 研判
 
-LLM 只接收已经进入 `ask` 的请求。模型结果包含风险、置信度和理由。`suggest` 只展示模型意见；`auto` 仅对满足自动放行条件的请求改变动作。
+LLM 只接收已经进入 `ask` 的请求。模型结果包含风险、置信度和理由。请求等待模型响应时，Team 卡片和 Activity 会显示判断进行中；模型返回后，卡片会显示风险、置信度、理由和是否已经自动处理。自动批准或自动拒绝会在右下角通知中显示结果。
 
 ## 验证共享终端
 
@@ -627,12 +639,12 @@ curl https://example.com
 自动放行必须同时满足以下条件：
 
 - `decision.autoEligible` 为 `true`。
-- 模型 `risk` 为 `low`。
+- 模型 `risk` 为 `low` 时自动批准，模型 `risk` 为 `high` 时自动拒绝。
 - 人员终端的 `confidence >= 0.85`。
 - Agent 的 `confidence >= 0.95`。
 - 请求没有不可逆操作、工作区外路径、受保护路径、动态 Shell、硬规则或 Agent 上限规则。
 
-满足条件时，`decision.llm.applied` 为 `true`。原始动作是 `ask` 时，最终动作会变为 `allow` 或 `allow_snapshot`。不满足任一条件时，最终动作继续是 `ask`。
+满足条件时，`decision.llm.applied` 为 `true`。原始动作是 `ask` 时，低风险结果会变为 `allow` 或 `allow_snapshot`，高风险结果会变为 `deny`。中风险结果、置信度不足或请求不满足 `autoEligible` 条件时，最终动作继续是 `ask`。
 
 下面是服务端识别的模型返回结构：
 
@@ -672,7 +684,7 @@ curl https://example.com
   "risk": "high",
   "confidence": 0.99,
   "reason": "The command can change remote state or remove data.",
-  "applied": false
+  "applied": true
 }
 ```
 
