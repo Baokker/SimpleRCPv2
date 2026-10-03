@@ -13,6 +13,7 @@ describe("server config", () => {
       importRoots: undefined,
       demoProjectRoot: "/srv/simplercp/demo/workspace",
       terminalEnabled: true,
+      fakeAgentRuntime: false,
       agent: {
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
@@ -44,6 +45,7 @@ describe("server config", () => {
       importRoots: undefined,
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
+      fakeAgentRuntime: false,
       agent: {
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",

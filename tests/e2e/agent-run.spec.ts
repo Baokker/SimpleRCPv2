@@ -67,6 +67,8 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
     apiKeyConfigured: boolean;
   };
   test.skip(!settings.apiKeyConfigured, "DEEPSEEK_API_KEY is not configured");
+  const runtime = await page.request.get("/api/agent/status").then((response) => response.json()) as { version?: string };
+  test.skip(runtime.version === "fake", "DEEPSEEK_API_KEY is not configured");
 
   await openAs(page, "Agent Member");
   await page.getByTestId("collab-tab-agent").click();
@@ -114,6 +116,8 @@ test("member sees a concurrent change warning when editing an Agent file", async
     apiKeyConfigured: boolean;
   };
   test.skip(!settings.apiKeyConfigured, "DEEPSEEK_API_KEY is not configured");
+  const runtime = await page.request.get("/api/agent/status").then((response) => response.json()) as { version?: string };
+  test.skip(runtime.version === "fake", "DEEPSEEK_API_KEY is not configured");
 
   await openAs(page, "Concurrent Member");
   await page.getByTestId("dir-src").click();

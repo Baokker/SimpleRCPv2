@@ -5,6 +5,7 @@ import { createAgentRunManager } from "./agent/agentRunManager.js";
 import { createChatAgentBridge } from "./agent/chatAgentBridge.js";
 import { createAgentSettingsStore } from "./agent/agentSettingsStore.js";
 import { createOpenCodeRuntime } from "./agent/openCodeRuntime.js";
+import { createFakeAgentRuntime, createTestAgentRuntime } from "./agent/fakeAgentRuntime.js";
 import type { ServerConfig } from "./config.js";
 import { createProjectRuntimeManager } from "./projectRuntimeManager.js";
 import { createProjectRegistry } from "./projects.js";
@@ -29,14 +30,17 @@ export async function createApp(config: ServerConfig) {
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
     defaultModel: config.agent?.model ?? "deepseek-chat",
-    apiKeyConfigured: Boolean(config.agent?.apiKey)
+    apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
   });
-  const agentRuntime = createOpenCodeRuntime({
+  const openCodeRuntime = createOpenCodeRuntime({
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
     getSettings: () => agentSettings.get()
   });
+  const agentRuntime = config.fakeAgentRuntime
+    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime(), Boolean(config.agent?.apiKey))
+    : openCodeRuntime;
   const agentRuns = createAgentRunManager({
     members,
     runtime: agentRuntime,
