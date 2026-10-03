@@ -188,6 +188,7 @@ function WorkspacePage({
   const [teamAgents, setTeamAgents] = useState<AgentSession[]>([]);
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
+  const loadedAgentTraceIdsRef = useRef(new Set<string>());
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
@@ -253,7 +254,9 @@ function WorkspacePage({
           getTeamAgents(projectId),
           getAgentRuns(projectId)
         ]);
-      const traceEntries = await fetchAgentTraces(projectId, runs);
+      const chatRunIds = messages.flatMap((message) => message.runId ? [message.runId] : []).slice(-20);
+      const relevantRuns = runs.filter((run) => run.status === "queued" || run.status === "running" || chatRunIds.includes(run.id));
+      const traceEntries = await fetchAgentTraces(projectId, relevantRuns);
 
       if (!mounted) return;
       membersRef.current = room.members;
@@ -265,6 +268,7 @@ function WorkspacePage({
       setTeamAgents(agents);
       setAgentRuns(runs);
       setAgentTraces(traceEntries);
+      for (const run of relevantRuns) loadedAgentTraceIdsRef.current.add(run.id);
 
       const connected = connectRoomSocket({
         projectId,
@@ -457,9 +461,22 @@ function WorkspacePage({
 
   async function refreshAgentState() {
     const runs = await getAgentRuns(projectId);
-    const traces = await fetchAgentTraces(projectId, runs);
     setAgentRuns(runs);
-    setAgentTraces((current) => mergeTraceMaps(current, traces));
+  }
+
+  async function loadAgentTrace(runId: string) {
+    if (loadedAgentTraceIdsRef.current.has(runId)) return;
+    loadedAgentTraceIdsRef.current.add(runId);
+    try {
+      const events = await getAgentTrace(projectId, runId);
+      setAgentTraces((current) => ({
+        ...current,
+        [runId]: mergeTraceEvents(current[runId] ?? [], events)
+      }));
+    } catch (error) {
+      loadedAgentTraceIdsRef.current.delete(runId);
+      throw error;
+    }
   }
 
   async function refreshEvents() {
@@ -829,8 +846,9 @@ function WorkspacePage({
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
           onError={showWorkspaceError}
-          onCreateTeamAgent={async (name) => {
-            const response = await createTeamAgent(projectId, { name });
+          onLoadAgentTrace={(runId) => void loadAgentTrace(runId).catch(showWorkspaceError)}
+          onCreateTeamAgent={async (name, description) => {
+            const response = await createTeamAgent(projectId, { name, description });
             setTeamAgents((current) => [response.agent, ...current.filter((agent) => agent.id !== response.agent.id)]);
           }}
           onCancelAgentRun={async (runId) => {
@@ -928,18 +946,6 @@ async function fetchAgentTraces(projectId: string, runs: AgentRun[]) {
     runs.map(async (run) => [run.id, await getAgentTrace(projectId, run.id)] as const)
   );
   return Object.fromEntries(entries) as Record<string, AgentTraceEvent[]>;
-}
-
-function mergeTraceMaps(
-  current: Record<string, AgentTraceEvent[]>,
-  incoming: Record<string, AgentTraceEvent[]>
-) {
-  return Object.fromEntries(
-    Object.entries(incoming).map(([runId, events]) => [
-      runId,
-      mergeTraceEvents(current[runId] ?? [], events)
-    ])
-  ) as Record<string, AgentTraceEvent[]>;
 }
 
 function mergeTraceEvents(

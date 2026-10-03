@@ -46,6 +46,7 @@ export function AgentPanel({
   workspaceTree,
   refreshVersion,
   traces,
+  onLoadTrace,
   onOpenFile,
   onError
 }: {
@@ -55,6 +56,7 @@ export function AgentPanel({
   workspaceTree: WorkspaceNode[];
   refreshVersion: number;
   traces: Record<string, AgentTraceEvent[]>;
+  onLoadTrace(runId: string): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
 }) {
@@ -89,6 +91,7 @@ export function AgentPanel({
     [runs]
   );
   const projectFiles = contextFiles.length ? contextFiles : flattenFiles(workspaceTree);
+  const sessionRunIds = sessionRuns.map((run) => run.id).join(",");
 
   useEffect(() => {
     let active = true;
@@ -143,6 +146,11 @@ export function AgentPanel({
     const transcript = transcriptRef.current;
     if (transcript) transcript.scrollTop = transcript.scrollHeight;
   }, [sessionRuns.length, sessionRuns.at(-1)?.status]);
+
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    for (const runId of sessionRunIds.split(",").filter(Boolean)) onLoadTrace(runId);
+  }, [selectedSessionId, sessionRunIds, onLoadTrace]);
 
   async function createSession() {
     if (!member || sessionCreating) return;
@@ -314,10 +322,12 @@ export function AgentPanel({
               projectId={projectId}
               run={run}
               trace={traces[run.id] ?? []}
+              onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
               canCancel={Boolean(member)}
               onCancel={() => void cancelRun(run)}
               onOpenFile={onOpenFile}
+              onError={onErrorRef.current}
             />
           </li>
         ))}
@@ -408,18 +418,22 @@ function AgentMessage({
   projectId,
   run,
   trace,
+  onLoadTrace,
   queuedRuns,
   canCancel,
   onCancel,
-  onOpenFile
+  onOpenFile,
+  onError
 }: {
   projectId: string;
   run: AgentRun;
   trace: AgentTraceEvent[];
+  onLoadTrace(): void;
   queuedRuns: AgentRun[];
   canCancel: boolean;
   onCancel(): void;
   onOpenFile(path: string): void;
+  onError(error: unknown): void;
 }) {
   const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
   useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
@@ -443,7 +457,10 @@ function AgentMessage({
       <details
         className={`agent-trace-block ${run.status}`}
         open={expanded}
-        onToggle={(event) => setExpanded(event.currentTarget.open)}
+        onToggle={(event) => {
+          setExpanded(event.currentTarget.open);
+          if (event.currentTarget.open) onLoadTrace();
+        }}
         data-testid="agent-trace-disclosure"
       >
         <summary data-testid="agent-trace-summary">

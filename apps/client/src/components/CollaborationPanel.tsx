@@ -75,6 +75,7 @@ export function CollaborationPanel({
   onFollowMember,
   onOpenFile,
   onError,
+  onLoadAgentTrace,
   onCreateTeamAgent,
   onCancelAgentRun
 }: {
@@ -99,12 +100,14 @@ export function CollaborationPanel({
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
-  onCreateTeamAgent(name: string): Promise<void>;
+  onLoadAgentTrace(runId: string): void;
+  onCreateTeamAgent(name: string, description?: string): Promise<void>;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
   const [teamAgentName, setTeamAgentName] = useState("");
+  const [teamAgentDescription, setTeamAgentDescription] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
@@ -278,6 +281,8 @@ export function CollaborationPanel({
                         showCard={false}
                         onOpenFile={onOpenFile}
                         onError={onError}
+                        onLoadAgentTrace={onLoadAgentTrace}
+                        interruptedByName={members.find((candidate) => candidate.id === runsById.get(message.runId ?? "")?.interruptedByMemberId)?.displayName}
                         onCancelAgentRun={onCancelAgentRun}
                       />
                     ) : (
@@ -292,6 +297,8 @@ export function CollaborationPanel({
                             showText={false}
                             onOpenFile={onOpenFile}
                             onError={onError}
+                            onLoadAgentTrace={onLoadAgentTrace}
+                            interruptedByName={members.find((candidate) => candidate.id === runsById.get(message.runId ?? "")?.interruptedByMemberId)?.displayName}
                             onCancelAgentRun={onCancelAgentRun}
                           />
                         ) : null}
@@ -461,6 +468,7 @@ export function CollaborationPanel({
             onOpenFile={onOpenFile}
             workspaceTree={workspaceTree}
             onError={onError}
+            onLoadTrace={onLoadAgentTrace}
           />
         ) : null}
 
@@ -488,6 +496,8 @@ function ChatAgentMessage({
   showCard = true,
   onOpenFile,
   onError,
+  onLoadAgentTrace,
+  interruptedByName,
   onCancelAgentRun
 }: {
   message: ChatMessage;
@@ -498,6 +508,8 @@ function ChatAgentMessage({
   showCard?: boolean;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
+  onLoadAgentTrace(runId: string): void;
+  interruptedByName?: string;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -526,7 +538,9 @@ function ChatAgentMessage({
               ))}
             </ul>
           ) : <small>No file changes recorded.</small>}
-          <details className={`chat-agent-trace ${run.status}`} open={active}>
+          <details className={`chat-agent-trace ${run.status}`} open={active} onToggle={(event) => {
+            if (event.currentTarget.open) onLoadAgentTrace(run.id);
+          }}>
             <summary>
               <span><strong>{active ? "Agent is working" : "Work trace"}</strong><small>{presentation.visible.length} actions</small></span>
               <span>{active ? "Live" : "Open"}</span>
