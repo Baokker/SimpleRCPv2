@@ -23,6 +23,10 @@ export function resolveGuardLlmMode(stored: GuardPolicy | undefined, configured:
   return stored?.llmMode ?? configured ?? "suggest";
 }
 
+export function effectiveGuardLlmMode(mode: GuardLlmMode, configured: boolean): GuardLlmMode {
+  return configured ? mode : "off";
+}
+
 export function approvalTimeoutForMode(_mode: GuardLlmMode, requestedTimeout: number | null | undefined, _configuredTimeout: number): number | null | undefined {
   return requestedTimeout;
 }
@@ -129,17 +133,18 @@ export function createGuardService(options: {
     }
     const initial = await makeDecision(request);
     let decision = initial.decision;
-    if (decision.action === "ask" && initial.policy.llmMode !== "off") {
+    const llmMode = effectiveGuardLlmMode(initial.policy.llmMode, Boolean(options.llm?.baseUrl && options.llm.apiKey));
+    if (decision.action === "ask" && llmMode !== "off") {
       if (options.llm?.baseUrl && options.llm.apiKey) {
         publishActivity({
           type: "guard_llm_judging",
           memberId: request.memberId,
-          payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, mode: initial.policy.llmMode }
+          payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, mode: llmMode }
         });
       }
-      const model = await judgeGuardRequest({ request, decision, mode: initial.policy.llmMode, ...options.llm });
+      const model = await judgeGuardRequest({ request, decision, mode: llmMode, ...options.llm });
       if (model) {
-        decision = applyLlmJudgment(decision, initial.policy.llmMode, request.source, model);
+        decision = applyLlmJudgment(decision, llmMode, request.source, model);
       } else {
         decision = { ...decision, llmUnavailable: true };
         publishActivity({
@@ -150,7 +155,7 @@ export function createGuardService(options: {
             runId: request.agentRunId,
             command: request.command,
             paths: request.paths,
-            mode: initial.policy.llmMode,
+            mode: llmMode,
             reason: "The model did not return a valid judgment; human approval is still required"
           }
         });
