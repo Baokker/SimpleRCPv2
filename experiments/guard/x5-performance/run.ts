@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { ensureRuntimeDirectory, evaluate, loadDataset, makeRunId, mean, percentile, projectRoot, standardDeviation, writeRun, workspaceRoot, type RawRow } from "../lib/common.js";
+import { serviceMeasurements, snapshotMeasurements } from "./service-benchmark.js";
 
 async function measureDecide() {
   const items = await loadDataset("D4");
@@ -48,14 +49,20 @@ async function measureSnapshots() {
 }
 
 async function main() {
+  const startedAt = new Date().toISOString();
+  const temporaryRoot = await fs.mkdtemp("/tmp/simplercp-x5-");
+  process.env.SIMPLERCP_DATA_DIR = path.join(temporaryRoot,"data");
+  process.env.SIMPLERCP_TERMINAL_HOME = path.join(temporaryRoot,"home");
+  await fs.mkdir(process.env.SIMPLERCP_TERMINAL_HOME,{recursive:true});
   await ensureRuntimeDirectory();
   const decideStats = await measureDecide();
-  const snapshotStats = await measureSnapshots();
-  const rows = decideStats.rows;
+  const snapshotStats = await snapshotMeasurements(temporaryRoot);
+  const services = await serviceMeasurements(temporaryRoot);
+  const rows = [...decideStats.rows,...snapshotStats.raw,...services.raw];
   const runDirectory = path.join(projectRoot, "experiments/guard/results/X5", makeRunId("x5"));
-  const summary = { rowCount: rows.length, decide: { terminal: decideStats.terminal, agent: decideStats.agent }, snapshots: snapshotStats, endpointLatency: { status: "未完成", reason: "本轮未启动 pnpm dev:demo 的真实 WebSocket 客户端测量" }, concurrency: { status: "未完成", reason: "本轮未启动 pnpm dev:demo 的真实 WebSocket 客户端并发测量" }, oldE3Comparison: { status: "未完成", reason: "旧 E3 硬件与平台记录缺少可比原始分布" } };
-  await writeRun(runDirectory, rows, summary, { experiment: "X5", decideSamples: 1000, snapshotRepeats: 5 });
-  await fs.writeFile(path.join(runDirectory, "summary.md"), `# X5 性能实验\n\n决策延迟与快照开销已完成，真实 WebSocket 端到端延迟、并发测量和旧 E3 分布对照未完成，原因见 summary.json。\n`);
+  const summary = { rowCount: rows.length, decide: { terminal: decideStats.terminal, agent: decideStats.agent }, snapshots: snapshotStats.points, services: services.results, endpointLatency: { status: "已完成", boundary: "真实 WebSocket 发送到真实 SharedTerminal.write 调用" }, concurrency: { status: "已完成", members: [2,5,10,20] }, agentPermissionLatency: { status: "部分完成", boundary: "GuardService.submit 的真实 Agent source 请求，不包含 OpenCode 网络回复；真实 asked 到 replied 分布由 X2 trace 补充" }, oldE3Comparison: { status: "描述性对照", reason: "硬件与平台不同，不能解释为性能改善的因果证据" } };
+  await writeRun(runDirectory, rows as RawRow[], summary, { experiment: "X5", decideSamples: 1000, snapshotRepeats: 5, dataDir: temporaryRoot, startedAt, endedAt: new Date().toISOString(), server: "createApp + attachRealtimeServer，同 pnpm dev:demo 服务端入口" });
+  await fs.writeFile(path.join(runDirectory, "summary.md"), `# X5 性能实验\n\n真实 WebSocket 端到端与并发测试、真实 SnapshotStore 目录快照已完成，全部样本见 raw.jsonl。\n`);
   process.stdout.write(`${runDirectory}\n`);
 }
 

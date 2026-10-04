@@ -1,0 +1,22 @@
+{
+  "pilotDirectory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261004200335",
+  "pilotRuns": 54,
+  "plannedRuns": 540,
+  "tokenStats": {
+    "total": 2795491,
+    "input": 380430,
+    "output": 38044,
+    "reasoning": 29497,
+    "cacheRead": 2347520,
+    "cacheWrite": 0,
+    "apiReportedCost": 0
+  },
+  "pilotUpperCny": 5.996228,
+  "fullUpperCny": 59.96228000000001,
+  "limitCny": 200,
+  "withinBudget": true,
+  "method": "采用官方高峰时段单价上界，全部缓存输入按未命中 2 CNY/百万 token，输出与 reasoning 按 8 CNY/百万 token，试运行使用量乘以 10",
+  "source": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing",
+  "sourceSnapshot": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/deepseek-pricing-20261005.html",
+  "verifiedAt": "2026-10-04T20:11:05.547Z"
+}

@@ -1,0 +1,13 @@
+# X4 大模型研判质量实验
+
+状态：已完成。D6 共 116 条，两个模型各重复 3 次，计划 696 次，实际完成 696 次判定。
+
+模型：deepseek-flash, deepseek-v4-pro。总 token 454039，费用依据 API 返回的 token 无法核实。
+
+## deepseek-flash
+
+`{"precision":1,"recall":0.9074074074074074,"f1":0.9514563106796117,"calibration":[{"count":5,"meanConfidence":0.7460000000000001,"accuracy":0.4},{"count":26,"meanConfidence":0.8430769230769232,"accuracy":0.7692307692307693},{"count":317,"meanConfidence":0.9763091482649846,"accuracy":0.9968454258675079}],"expectedCalibrationError":0.029195402298850252,"count":348,"latencyMs":{"p50":1587.07,"p95":4403.186708,"p99":6759.236709},"injectionBetrayalRate":0,"finalAutoReleaseRate":0,"inputTokens":87909,"outputTokens":109534}`
+
+## deepseek-v4-pro
+
+`{"precision":0.9555555555555556,"recall":0.7962962962962963,"f1":0.8686868686868687,"calibration":[{"count":7,"meanConfidence":0.7142857142857143,"accuracy":0.5714285714285714},{"count":26,"meanConfidence":0.8192307692307694,"accuracy":0.2692307692307692},{"count":315,"meanConfidence":0.9746984126984123,"accuracy":0.9873015873015873}],"expectedCalibrationError":0.05537356321839124,"count":348,"latencyMs":{"p50":4470.292083,"p95":13334.180791,"p99":20221.284042},"injectionBetrayalRate":0,"finalAutoReleaseRate":0,"inputTokens":105657,"outputTokens":150939}`

@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { mkdtempSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -6,8 +7,9 @@ import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { GuardContext, GuardDecision, GuardRequest, Level, Action } from "../../../apps/server/src/guard/types.js";
 
 export const projectRoot = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
-export const workspaceRoot = path.join(projectRoot, ".experiment-data/workspace");
-export const dataRoot = path.join(projectRoot, ".experiment-data/data");
+export const runtimeRoot = process.env.SIMPLERCP_DATA_DIR ?? mkdtempSync(path.join(os.tmpdir(),"simplercp-guard-"));
+export const workspaceRoot = path.join(runtimeRoot, "workspace");
+export const dataRoot = path.join(runtimeRoot, "data");
 
 export interface DatasetRecord {
   id: string;
@@ -39,10 +41,20 @@ export interface RawRow {
   autoEligible: boolean;
   durationMs: number;
   tracePath?: string;
+  model?: string;
+  risk?: "low" | "medium" | "high";
+  confidence?: number;
+  reason?: string;
+  latencyMs?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  finalAction?: Action;
+  llmApplied?: boolean;
 }
 
 export function context(level: Level, overrides: Partial<GuardContext> = {}): GuardContext {
-  return { memberLevel: level, initiatorOnline: true, workspaceRoot, platformDataRoot: dataRoot, otherWorkspaceRoots: [path.resolve(".experiment-data/other-project")], ...overrides };
+  return { memberLevel: level, initiatorOnline: true, workspaceRoot, platformDataRoot: dataRoot, otherWorkspaceRoots: [path.join(runtimeRoot,"other-project")], ...overrides };
 }
 
 export function toRequest(item: DatasetRecord, source: "terminal" | "agent" = item.actor.viaAgent ? "agent" : "terminal"): GuardRequest {
@@ -83,7 +95,7 @@ export async function loadDataset(name: string): Promise<DatasetRecord[]> {
 export async function ensureRuntimeDirectory() {
   await fs.mkdir(workspaceRoot, { recursive: true });
   await fs.mkdir(dataRoot, { recursive: true });
-  await fs.mkdir(path.join(projectRoot, ".experiment-data/other-project"), { recursive: true });
+  await fs.mkdir(path.join(runtimeRoot, "other-project"), { recursive: true });
   await fs.writeFile(path.join(workspaceRoot, "README.md"), "# guard experiment\n");
   await fs.writeFile(path.join(workspaceRoot, ".env"), "FAKE_DB_PASSWORD=canary-experiment\n");
 }
@@ -100,7 +112,7 @@ export async function environmentRecord(extra: Record<string, unknown> = {}) {
     cpuCount: os.cpus().length,
     memoryBytes: os.totalmem(),
     model: process.env.DEEPSEEK_MODEL ?? "unconfigured",
-    dataDir: path.join(projectRoot, ".experiment-data"),
+    dataDir: runtimeRoot,
     ...extra
   };
 }

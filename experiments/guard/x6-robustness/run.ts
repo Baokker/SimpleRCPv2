@@ -3,6 +3,8 @@ import path from "node:path";
 import { context, dataRoot, ensureRuntimeDirectory, evaluate, makeRunId, projectRoot, writeRun, workspaceRoot, type DatasetRecord, type RawRow } from "../lib/common.js";
 import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { Action, Level } from "../../../apps/server/src/guard/types.js";
+import { applyLlmJudgment } from "../../../apps/server/src/guard/service.js";
+import { runtimeFaults } from "./runtime-faults.js";
 
 const levels: Level[] = ["observer", "student", "collaborator", "trusted", "owner"];
 const actionOrder: Record<Action, number> = { allow: 0, allow_snapshot: 1, ask: 2, deny: 3 };
@@ -38,7 +40,8 @@ function propertyTests(): { rows: RawRow[]; results: Record<string, { cases: num
     if (metadata.some((decision) => decision.action !== "deny")) metadataFailures += 1;
     rows.push(raw(`property-metadata-${index + 1}`, "owner", metadataCommand, metadata[4]!, "deny", true));
     const irreversible = decide({ projectId: "x6", memberId: "m", source: "terminal", kind: "command", command: "git push origin main", cwd: workspaceRoot }, context("owner"));
-    const llmLowered = irreversible.action === "allow" || irreversible.autoEligible;
+    const judged = applyLlmJudgment(irreversible, "auto", index % 2 ? "agent" : "terminal", { risk: (["low","medium","high"] as const)[Math.floor(random(seed)*3)], confidence: random(seed), reason: "随机研判输出" });
+    const llmLowered = judged.action === "allow" || judged.action === "allow_snapshot";
     if (llmLowered) llmFailures += 1;
     rows.push(raw(`property-llm-floor-${index + 1}`, "owner", "git push origin main", irreversible, { atLeast: "ask" }, true));
     const left = randomCommand(seed);
@@ -80,14 +83,15 @@ function revocationRows(): RawRow[] {
 }
 
 async function main() {
+  const startedAt = new Date().toISOString();
   await ensureRuntimeDirectory();
-  const properties = propertyTests();
-  const faults = faultInjection();
-  const revocations = revocationRows();
-  const rows = [...properties.rows, ...faults.rows, ...revocations];
-  const summary = { rowCount: rows.length, properties: properties.results, faultInjection: { cases: faults.rows.length, failures: faults.failures }, revocation: { cases: 3, observations: revocations.map((row) => ({ id: row.id, action: row.actual })) }, allRequiredPropertiesPass: Object.values(properties.results).every((result) => result.failures === 0) && faults.failures === 0 };
   const runDirectory = path.join(projectRoot, "experiments/guard/results/X6", makeRunId("x6"));
-  await writeRun(runDirectory, rows, summary, { experiment: "X6", seedProperties: "0x6a09e667", seedFaults: "0xbb67ae85", propertyCases: 10_000, faultCases: 500 });
+  await fs.mkdir(runDirectory,{recursive:true});
+  const properties = propertyTests();
+  const faults = await runtimeFaults(runDirectory);
+  const rows = [...properties.rows, ...faults.rows];
+  const summary = { rowCount: rows.length, properties: properties.results, faultInjection: faults.summary, revocation: { cases: 3, observations: faults.revocations }, allRequiredPropertiesPass: Object.values(properties.results).every((result) => result.failures === 0) && Object.entries(faults.summary).filter(([key])=>key!=="cases").every(([,value])=>value===0) };
+  await writeRun(runDirectory, rows, summary, { experiment: "X6", seedProperties: "0x6a09e667", seedFaults: "0xbb67ae85", propertyCases: 10_000, faultCases: 500, dataDir: faults.root, startedAt, endedAt: new Date().toISOString(), runtime: "真实 AgentRunManager、GuardService 与 createTestAgentRuntime，事件由受控 AgentRuntime 注入" });
   await fs.writeFile(path.join(runDirectory, "summary.md"), `# X6 撤权时效与鲁棒性\n\n性质测试每项 10000 例，故障注入 ${faults.rows.length} 轮。失败数量见 summary.json。\n`);
   process.stdout.write(`${runDirectory}\n`);
 }

@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-10-04T17:05:37.684Z",
+  "verifiedAt": "2026-10-04T20:56:11.762Z",
   "runs": [
     {
       "experiment": "X1",
@@ -13,7 +13,7 @@
     },
     {
       "experiment": "X2",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261004170519",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261004200335",
       "pass": true,
       "checks": {
         "rowCount": true
@@ -21,7 +21,7 @@
     },
     {
       "experiment": "X3",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X3/x3-20261004162711",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X3/x3-20261004204012",
       "pass": true,
       "checks": {
         "rowCount": true,
@@ -31,7 +31,7 @@
     },
     {
       "experiment": "X4",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261004170519",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261004174326",
       "pass": true,
       "checks": {
         "rowCount": true
@@ -39,7 +39,7 @@
     },
     {
       "experiment": "X5",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X5/x5-20261004163443",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X5/x5-20261004200807",
       "pass": true,
       "checks": {
         "rowCount": true,
@@ -48,7 +48,7 @@
     },
     {
       "experiment": "X6",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X6/x6-20261004163448",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X6/x6-20261004201131",
       "pass": true,
       "checks": {
         "rowCount": true,

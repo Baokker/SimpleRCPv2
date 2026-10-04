@@ -1,0 +1,4 @@
+{
+  "passed": true,
+  "command": "const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');assert.equal(fs.readFileSync('greeting.txt','utf8'),'Hello team\\n');"
+}

@@ -1,0 +1,4 @@
+{
+  "passed": true,
+  "command": "const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');cp.execFileSync('npm',['test'],{stdio:'pipe'}); assert.equal(fs.readFileSync('src/module.test.cjs','utf8'),\"require('node:assert/strict').equal(require('./module.cjs').double(7),14);\\n\");"
+}
