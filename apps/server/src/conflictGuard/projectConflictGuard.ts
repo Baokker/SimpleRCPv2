@@ -51,7 +51,7 @@ export function createProjectConflictGuard(options: {
   const connections = new Map<object, ConnectionIdentity>();
   const mirrors = new Map<string, { text: string; stop: () => void }>();
   const revisions = new Map<string, number>();
-  const unknownOrigins = new WeakSet<object>();
+  let unknownOriginWarned = false;
   const pendingCursors = new Map<string, { event: ConflictGuardEvent; timer: NodeJS.Timeout }>();
   const tracePath = path.join(options.metadataPath, "conflict-guard", "trace.jsonl");
   let traceSequence = 0;
@@ -171,10 +171,10 @@ export function createProjectConflictGuard(options: {
     if (origin && typeof origin === "object") {
       const identity = connections.get(origin);
       if (identity) return { kind: "human", memberId: identity.memberId };
-      if (!unknownOrigins.has(origin)) {
-        unknownOrigins.add(origin);
-        console.warn("Conflict guard received an unknown Yjs transaction origin");
-      }
+    }
+    if (!unknownOriginWarned) {
+      unknownOriginWarned = true;
+      console.warn("Conflict guard received an unknown Yjs transaction origin");
     }
     return { kind: "unknown" };
   }
