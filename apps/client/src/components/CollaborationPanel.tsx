@@ -494,7 +494,7 @@ export function CollaborationPanel({
                     <strong>{approval.request.memberId === member?.id ? "Confirm your own command" : `${requester?.displayName ?? approval.request.memberId} (${requesterRole}) wants to run:`}</strong>
                     {approval.request.agentHandle ? <span>via @{approval.request.agentHandle}</span> : approval.request.source === "agent" ? <span>via {requester?.displayName ?? "member"}'s agent</span> : null}
                     <code>{approval.request.command ?? approval.request.paths?.join(", ")}</code>
-                    <small>{reason}{remaining !== undefined ? ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
+                    <small title={approval.decision.matchedRules.join(", ")}>{reason}{remaining !== undefined ? ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
                     {llm ? (
                       <div className="guard-llm-result">
                         <strong>Model judgment: {llm.risk}</strong>
@@ -843,7 +843,18 @@ function humanGuardReason(rules: string[]) {
     "hard.control-character": "Control characters are blocked",
     "agent.default": "Agent requests require owner approval"
   };
-  return rules.map((rule) => labels[rule] ?? rule).join("; ");
+  return rules.map((rule) => {
+    if (labels[rule]) return labels[rule];
+    const roleRule = rule.match(/^role\.(observer|student|collaborator|trusted)\.(.+)$/);
+    if (roleRule) {
+      const level = roleRule[1]![0]!.toUpperCase() + roleRule[1]!.slice(1);
+      const capability = roleRule[2]!.replaceAll("-", " ");
+      return `${level}s need approval to use ${capability}`;
+    }
+    if (rule === "hard.owner.irreversible-external") return "Owner operations affecting external systems require approval";
+    if (rule === "hard.git-context") return "Git commands that change the project context require review";
+    return rule;
+  }).join("; ");
 }
 
 function guardActionText(actor: string, payload: Record<string, unknown>) {
@@ -851,7 +862,9 @@ function guardActionText(actor: string, payload: Record<string, unknown>) {
   if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
     return `${actor}'s request was automatically ${payload.action === "deny" ? "rejected" : "approved"} by the model`;
   }
-  return `${actor}'s terminal or Agent request was ${stringValue(payload.action) ?? "checked"}`;
+  const action = stringValue(payload.action);
+  const text = action === "deny" ? "blocked" : action === "allow_snapshot" ? "allowed with snapshot" : action === "ask" ? "sent for approval" : action === "allow" ? "allowed" : "checked";
+  return `${actor}'s terminal or Agent request was ${text}`;
 }
 
 function formatGuardActionDetail(payload: Record<string, unknown>) {

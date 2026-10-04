@@ -252,6 +252,11 @@ function formatGuardPending(message: Extract<TerminalServerMessage, { type: "gua
 }
 
 function friendlyGuardReason(reason: string) {
-  const labels: Record<string, string> = { "hard.control-character": "command contains control characters", "hard.cwd": "changing the terminal directory is blocked", "hard.metadata": "project metadata is protected", "hard.outside": "the path is outside this workspace", "hard.protected": "the path is protected", "hard.dynamic": "dynamic shell syntax needs review" };
-  return reason.split(", ").map((rule) => labels[rule] ?? rule).join(", ");
+  const labels: Record<string, string> = { "hard.control-character": "command contains control characters", "hard.cwd": "changing the terminal directory is blocked", "hard.metadata": "project metadata is protected", "hard.outside": "the path is outside this workspace", "hard.protected": "the path is protected", "hard.dynamic": "dynamic shell syntax needs review", "hard.owner.irreversible-external": "owner operations affecting external systems require approval", "hard.git-context": "git commands that change the project context require review" };
+  return reason.split(", ").map((rule) => {
+    if (labels[rule]) return labels[rule];
+    const roleRule = rule.match(/^role\.(observer|student|collaborator|trusted)\.(.+)$/);
+    if (roleRule) return `${roleRule[1]![0]!.toUpperCase()}${roleRule[1]!.slice(1)}s need approval to use ${roleRule[2]!.replaceAll("-", " ")}`;
+    return rule;
+  }).join(", ");
 }
