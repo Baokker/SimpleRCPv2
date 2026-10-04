@@ -1,9 +1,10 @@
 import { createProjectRuntime, type ProjectRuntime } from "./projectRuntime.js";
 import type { ProjectRegistry } from "./projects.js";
+import type { ProjectConflictGuardConfig } from "./conflictGuard/projectConflictGuard.js";
 
 export function createProjectRuntimeManager(
   registry: ProjectRegistry,
-  options: { terminalEnabled?: boolean } = {}
+  options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[] } = {}
 ) {
   const runtimes = new Map<string, ProjectRuntime>();
   const projectDisposingListeners = new Set<(projectId: string) => void>();

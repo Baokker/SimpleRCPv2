@@ -8,13 +8,19 @@ export interface CollaborativeDocumentStoreOptions {
   projectId?: string;
   persistDelayMs?: number;
   onPersisted?(filePath: string): void;
+  onDocumentPrepared?(name: string, document: Y.Doc, filePath: string): void;
+  onDocumentRetired?(filePath: string): void;
+  onDocumentReleased?(filePath: string): void;
 }
 
 export function createCollaborativeDocumentStore({
   workspaceRoot,
   projectId,
   persistDelayMs = 300,
-  onPersisted
+  onPersisted,
+  onDocumentPrepared,
+  onDocumentRetired,
+  onDocumentReleased
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
   const persistedContents = new Map<string, string>();
@@ -62,6 +68,7 @@ export function createCollaborativeDocumentStore({
         schedulePersist(name, document);
       }
     });
+    onDocumentPrepared?.(name, document, filePath);
     return document;
   }
 
@@ -133,6 +140,7 @@ export function createCollaborativeDocumentStore({
         await persistDocument(name, document);
       })
     );
+    onDocumentRetired?.(filePath);
   }
 
   async function reloadPath(filePath: string) {
@@ -172,6 +180,7 @@ export function createCollaborativeDocumentStore({
       if (timer) clearTimeout(timer);
       persistTimers.delete(name);
     }
+    onDocumentRetired?.(filePath);
   }
 
   function release(name: string) {
@@ -180,6 +189,7 @@ export function createCollaborativeDocumentStore({
     persistTimers.delete(name);
     initialized.delete(name);
     persistedContents.delete(name);
+    onDocumentReleased?.(parseDocumentName(name).filePath);
   }
 
   function getRevision(filePath: string) {

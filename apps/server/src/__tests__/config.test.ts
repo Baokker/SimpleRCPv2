@@ -14,6 +14,14 @@ describe("server config", () => {
       demoProjectRoot: "/srv/simplercp/demo/workspace",
       terminalEnabled: true,
       fakeAgentRuntime: false,
+      conflictGuard: {
+        mode: "off",
+        idleMs: 1_500,
+        cursorLeaveLines: 3,
+        maxBatchDurationMs: 5_000,
+        activeIdleMs: 600_000,
+        cursorDebounceMs: 200
+      },
       agent: {
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
@@ -46,6 +54,14 @@ describe("server config", () => {
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
       fakeAgentRuntime: false,
+      conflictGuard: {
+        mode: "off",
+        idleMs: 1_500,
+        cursorLeaveLines: 3,
+        maxBatchDurationMs: 5_000,
+        activeIdleMs: 600_000,
+        cursorDebounceMs: 200
+      },
       agent: {
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
@@ -60,6 +76,12 @@ describe("server config", () => {
     expect(() =>
       loadConfig({ SIMPLERCP_DATA_DIR: "runtime-data" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_DATA_DIR must be an absolute path");
+  });
+
+  it("rejects an invalid conflict guard mode", () => {
+    expect(() => loadConfig({ CONFLICT_GUARD: "invalid" })).toThrow(
+      "CONFLICT_GUARD must be off, observe, rules, or full"
+    );
   });
 
   it("rejects an invalid terminal setting", () => {

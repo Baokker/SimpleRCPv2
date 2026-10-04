@@ -13,6 +13,7 @@ import { registerAgentRoutes } from "./routes/agentRoutes.js";
 import { registerCollaborationRoutes } from "./routes/collaborationRoutes.js";
 import { registerProjectRoutes } from "./routes/projectRoutes.js";
 import { registerWorkspaceRoutes } from "./routes/workspaceRoutes.js";
+import { registerConflictGuardRoutes } from "./routes/conflictGuardRoutes.js";
 import { createMemberStore, createIdentityMiddleware } from "./auth/identity.js";
 import { requireIdentity } from "./auth/permissions.js";
 
@@ -25,8 +26,13 @@ export async function createApp(config: ServerConfig) {
   });
   const members = createMemberStore({ projects: () => registry.listProjectsSync() });
   const runtimeManager = createProjectRuntimeManager(registry, {
-    terminalEnabled: config.terminalEnabled !== false
+    terminalEnabled: config.terminalEnabled !== false,
+    conflictGuard: config.conflictGuard,
+    sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value))
   });
+  if (config.conflictGuard?.mode === "rules" || config.conflictGuard?.mode === "full") {
+    console.warn(`CONFLICT_GUARD=${config.conflictGuard.mode} currently uses observe behavior`);
+  }
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
     defaultModel: config.agent?.model ?? "deepseek-chat",
@@ -72,7 +78,8 @@ export async function createApp(config: ServerConfig) {
     const publicRequest = (req.method === "GET" && ["/", "/participants"].includes(req.path))
       || (req.method === "POST" && req.path === "/members")
       || (req.method === "DELETE" && req.path === "/");
-    if (publicRequest || ["import", "import-zip"].includes(req.params.projectId)) {
+    const conflictGuardRequest = req.path.startsWith("/conflict-guard/");
+    if (publicRequest || conflictGuardRequest || ["import", "import-zip"].includes(req.params.projectId)) {
       next();
       return;
     }
@@ -94,6 +101,7 @@ export async function createApp(config: ServerConfig) {
   registerProjectRoutes(app, { agentRuns, registry, runtimeManager });
   registerCollaborationRoutes(app, runtimeManager, members, chatAgentBridge);
   registerWorkspaceRoutes(app, runtimeManager);
+  registerConflictGuardRoutes(app, runtimeManager);
 
   app.use(
     (

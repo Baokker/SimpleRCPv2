@@ -1,4 +1,5 @@
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { createChatStore } from "./chat.js";
 import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import { createEventLog } from "./eventLog.js";
@@ -7,10 +8,11 @@ import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import type { ChatMessage, WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
+import { createProjectConflictGuard, type ProjectConflictGuardConfig } from "./conflictGuard/projectConflictGuard.js";
 
 export function createProjectRuntime(
   project: ProjectRecord,
-  options: { terminalEnabled?: boolean } = {}
+  options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[] } = {}
 ) {
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
@@ -26,12 +28,24 @@ export function createProjectRuntime(
     expiresAt: number;
   }> = [];
   const fileSavedListeners = new Set<(path: string) => void>();
+  const conflictGuard = options.conflictGuard
+    ? createProjectConflictGuard({
+        projectId: project.id,
+        metadataPath: projectRoot,
+        config: options.conflictGuard,
+        gitCommit: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+        sensitiveValues: options.sensitiveValues
+      })
+    : undefined;
   const documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
     projectId: project.id,
     onPersisted(path) {
       for (const listener of fileSavedListeners) listener(path);
-    }
+    },
+    onDocumentPrepared: (name, document, filePath) => conflictGuard?.documentPrepared(name, document, filePath),
+    onDocumentRetired: (filePath) => conflictGuard?.retirePath(filePath),
+    onDocumentReleased: (filePath) => conflictGuard?.releaseDocument(filePath)
   });
   const terminal = createSharedTerminal({
     workspaceRoot: project.workspacePath,
@@ -126,6 +140,7 @@ export function createProjectRuntime(
     events,
     rooms,
     chat,
+    conflictGuard,
     documents,
     terminal,
     room,
@@ -163,6 +178,8 @@ export function createProjectRuntime(
       await events.awaitIdle();
       terminal.dispose();
       await watcher.close();
+      conflictGuard?.dispose();
+      await conflictGuard?.waitForTrace();
     }
   };
 }

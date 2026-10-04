@@ -10,6 +10,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@simplercp/conflict-guard": "workspace:*",
     "@opencode-ai/sdk": "1.18.31",
     "@simplercp/shared": "workspace:*",
     "chokidar": "^5.0.0",

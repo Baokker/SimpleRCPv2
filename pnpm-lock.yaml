@@ -69,6 +69,9 @@ importers:
       '@opencode-ai/sdk':
         specifier: 1.18.31
         version: 1.18.31
+      '@simplercp/conflict-guard':
+        specifier: workspace:*
+        version: link:../../packages/conflict-guard
       '@simplercp/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -142,6 +145,19 @@ importers:
       yazl:
         specifier: ^3.3.1
         version: 3.3.1
+
+  packages/conflict-guard:
+    dependencies:
+      yjs:
+        specifier: ^13.6.31
+        version: 13.6.31
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.41
+      vitest:
+        specifier: ^1.4.0
+        version: 1.6.1(@types/node@20.19.41)
 
   packages/shared: {}
 

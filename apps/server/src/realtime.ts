@@ -27,12 +27,14 @@ interface SocketIdentity {
 export interface RealtimeContext {
   events: EventLog;
   rooms: RoomStore;
+  onCursorChange?(input: Extract<ClientMessage, { type: "cursor_change" }>): void;
 }
 
 export function handleRealtimeMessage({
   events,
   rooms,
-  message
+  message,
+  onCursorChange
 }: RealtimeContext & { message: ClientMessage }): {
   broadcast: ServerMessage;
 } {
@@ -81,6 +83,7 @@ export function handleRealtimeMessage({
   }
 
   if (message.type === "cursor_change") {
+    onCursorChange?.(message);
     return {
       broadcast: {
         type: "cursor_change",
@@ -310,7 +313,15 @@ export function attachRealtimeServer(
         void runtime.documents.prepareDocument(documentName).then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
             documentProjects.set(webSocket, projectId);
-            webSocket.on("close", () => documentProjects.delete(webSocket));
+            runtime.conflictGuard?.registerConnection(webSocket, {
+              projectId,
+              memberId: identity.memberId,
+              connectedAt: Date.now()
+            });
+            webSocket.on("close", () => {
+              documentProjects.delete(webSocket);
+              runtime.conflictGuard?.unregisterConnection(webSocket);
+            });
             setupWSConnection(webSocket, request, { docName: documentName });
           });
         }).catch(() => socket.destroy());
@@ -386,7 +397,14 @@ export function attachRealtimeServer(
         const { broadcast } = handleRealtimeMessage({
           events: runtime.events,
           rooms: runtime.rooms,
-          message: bound
+          message: bound,
+          onCursorChange: (cursor) => runtime.conflictGuard?.cursorChanged({
+            memberId: identity.memberId,
+            path: cursor.path,
+            position: cursor.position,
+            selection: cursor.selection,
+            at: Date.now()
+          })
         });
         broadcastToProject(projectSockets, projectId, broadcast);
       } catch (error) {

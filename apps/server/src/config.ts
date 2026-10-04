@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ProjectConflictGuardConfig } from "./conflictGuard/projectConflictGuard.js";
 
 const defaultRepositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -12,6 +13,7 @@ export interface ServerConfig {
   demoProjectRoot: string;
   terminalEnabled?: boolean;
   fakeAgentRuntime?: boolean;
+  conflictGuard?: ProjectConflictGuardConfig;
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -67,6 +69,10 @@ export function loadConfig(
     "SIMPLERCP_FAKE_AGENT_RUNTIME",
     false
   );
+  const conflictGuardMode = env.CONFLICT_GUARD ?? "off";
+  if (!(["off", "observe", "rules", "full"] as const).includes(conflictGuardMode as never)) {
+    throw new Error("CONFLICT_GUARD must be off, observe, rules, or full");
+  }
   const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
     ? undefined
     : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -85,6 +91,14 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
+    conflictGuard: {
+      mode: conflictGuardMode as ProjectConflictGuardConfig["mode"],
+      idleMs: 1_500,
+      cursorLeaveLines: 3,
+      maxBatchDurationMs: 5_000,
+      activeIdleMs: 600_000,
+      cursorDebounceMs: 200
+    },
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
