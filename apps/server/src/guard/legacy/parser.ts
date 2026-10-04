@@ -117,7 +117,7 @@ function extractRedirections(command: string, cwd: string) {
       index += 1;
       continue;
     }
-    if (!quote && (index === 0 || /\s/.test(command[index - 1]!))) {
+    if (!quote) {
       const operator = command.slice(index).match(/^(?:\d+)?(?:&>|>>|2>|>\|?|>)/)?.[0];
       if (operator) {
         let targetStart = index + operator.length;

@@ -101,6 +101,13 @@ describe("guard decisions", () => {
     expect(command("student", "echo hi > ../p2/x").action).toBe("ask");
   });
 
+  it("checks redirection targets when the operator touches the preceding token", () => {
+    expect(command("observer", "cat src/a.ts>src/b.ts").action).toBe("deny");
+    expect(command("student", "echo hi>..''/p2/x").action).toBe("ask");
+    expect(command("student", "echo hi>/tmp/x").action).toBe("ask");
+    expect(command("student", "echo hi>note.txt").action).toBe("allow_snapshot");
+  });
+
   it("requires review before git can change its project context", () => {
     const result = command("collaborator", "git -C .. clean -fdx");
     expect(result.action).toBe("ask");
