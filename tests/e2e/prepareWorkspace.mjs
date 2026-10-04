@@ -15,6 +15,12 @@ const dataDir = fileURLToPath(
 await fs.rm(dataDir, { recursive: true, force: true });
 
 await fs.cp(source, target, { recursive: true });
+if ((process.env.KNOWLEDGE ?? "off") !== "off") {
+  await fs.copyFile(
+    path.resolve(here, "../../demo/workspace/src/projectStatus.js"),
+    path.join(target, "src", "projectStatus.js")
+  );
+}
 await fs.mkdir(path.join(dataDir, "projects", "demo"), { recursive: true });
 const timestamp = new Date().toISOString();
 const project = {

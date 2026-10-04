@@ -44,7 +44,7 @@ export function KnowledgePanel({
   memberId?: string;
   onCreate(input: CardInput): Promise<void>;
   onUpdate(id: string, input: CardInput): Promise<void>;
-  onConfirm(id: string, edited?: boolean, durationMs?: number): Promise<void>;
+  onConfirm(id: string, edited?: boolean, durationMs?: number, patch?: CardInput): Promise<void>;
   onArchive(id: string): Promise<void>;
   onReanchor(id: string, anchorIndex: number, selection: Selection["selection"]): Promise<void>;
   onGenerateDemo(): Promise<void>;
@@ -173,11 +173,10 @@ export function KnowledgePanel({
     }
     try {
       if (editingCard) {
-        await onUpdate(editingCard.id, input);
         if (editingCard.status === "draft") {
           const edited = input.title !== editingCard.title || input.summary !== editingCard.summary || input.content !== editingCard.content || input.type !== editingCard.type || input.scope !== editingCard.scope || input.tags.join(",") !== editingCard.tags.join(",") || selectedAnchors.length > 0 || input.authorMemberId !== editingCard.provenance?.author.memberId;
-          await onConfirm(editingCard.id, edited, Date.now() - openedAt.current);
-        }
+          await onConfirm(editingCard.id, edited, Date.now() - openedAt.current, input);
+        } else await onUpdate(editingCard.id, input);
       }
       else await onCreate(input);
       closeForm();
@@ -289,7 +288,7 @@ export function KnowledgePanel({
         </ol>
       ) : view === "timeline" ? (
         <ol className="knowledge-list">
-          {timeline.map((item, index) => <li key={`${item.card.id}-${item.kind}-${item.at}-${index}`} className="knowledge-timeline-item"><time>{new Date(item.at).toLocaleString()}</time><span>{item.label}</span></li>)}
+          {timeline.map((item, index) => <li key={`${item.card.id}-${item.kind}-${item.at}-${index}`} className="knowledge-timeline-item"><time dateTime={new Date(item.at).toISOString()}>{new Date(item.at).toLocaleString()}</time><span>{item.label}</span></li>)}
         </ol>
       ) : (
         <ol className="knowledge-list">

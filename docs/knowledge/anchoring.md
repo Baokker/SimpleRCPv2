@@ -24,3 +24,7 @@ Yjs 相对位置使用 JSON 形式保存：`type` 保存文本类型名，`item`
 ## 并发编辑
 
 两个客户端共用同一个 Y.Doc。一个客户端在锚点前插入多行，另一个客户端在锚点内部修改字符时，Yjs 相对位置跟随结构变化，服务端仍能得到正确范围。内部字符变化由相似度阈值检查，变化过大时转入文本策略或 `needsReview`。
+
+编辑器的代码背景与 gutter 图标提供相同的 hover 内容，包含打开卡片操作。属主或确认人可以从 `needsReview` 的 hover 使用当前非空选区重新锚定。执行 Pin 会显示 Collaboration 面板并切换知识标签。编辑器销毁时同时释放知识命令。
+
+客户端使用 Monaco 0.52.2，其 gutter hover renderer 支持执行 Markdown command 链接，并兼容现有 `y-monaco` 的导入路径。每个编辑器实例使用独立的 command id，hover 只允许执行打开卡片与重新锚定命令，卡片文字经过 Markdown 转义。

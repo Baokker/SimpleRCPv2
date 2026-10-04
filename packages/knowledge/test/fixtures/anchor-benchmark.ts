@@ -5,7 +5,8 @@
 // ******************************************************************************
 
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { KnowledgeAnchor } from '../../src/schema.js';
 import { assessAnchorReviewHint } from '../../src/anchor-review.js';
@@ -670,22 +671,8 @@ function findCorpusCandidates(input: Omit<FrozenAnchorSample, 'id' | 'selectionS
 }
 
 function listRepositoryFiles(root: string): string[] {
-    const files: string[] = [];
-    const visit = (directory: string): void => {
-        for (const entry of readdirSync(directory, { withFileTypes: true })) {
-            if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'lib' || entry.name === 'out' || entry.name === 'dist') {
-                continue;
-            }
-            const absolute = path.join(directory, entry.name);
-            if (entry.isDirectory()) {
-                visit(absolute);
-            } else if (entry.isFile()) {
-                files.push(absolute);
-            }
-        }
-    };
-    visit(root);
-    return files.sort();
+    const tracked = execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8' });
+    return tracked.split('\0').filter(Boolean).map(file => path.join(root, file)).sort();
 }
 
 function classifyCorpusFile(sourceFile: string): FrozenAnchorSample['category'] | undefined {

@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { isKnowledgeCard, normalizeWorkspaceRelativePath } from './schema.js';
 import type { KnowledgeCard, KnowledgeCardStatus, KnowledgeCardType } from './schema.js';
 import { resolveNow } from './clock.js';
@@ -59,7 +59,9 @@ async function buildIndex(options: EnsureKnowledgeIndexOptions & { cards: Knowle
     }
     const index: KnowledgeIndex = { schemaVersion: 3, workspaceRoot: sourceId, workspaceHash, embeddingModel: model, updatedAt: now, entries };
     await fs.mkdir(indexDir, { recursive: true });
-    await fs.writeFile(indexPath, JSON.stringify(index, undefined, 2), 'utf8');
+    const nextPath = `${indexPath}.${randomUUID()}.next`;
+    await fs.writeFile(nextPath, JSON.stringify(index, undefined, 2), { encoding: 'utf8', mode: 0o600 });
+    await fs.rename(nextPath, indexPath);
     lastIndexCacheKey = cacheKey;
     lastIndexCache = index;
     return index;
@@ -151,6 +153,8 @@ function hashIndexedCardContent(cards: KnowledgeCard[]): string {
         id: card.id,
         type: card.type,
         status: card.status,
+        scope: card.scope,
+        ownerMemberId: card.ownerMemberId,
         tags: card.tags.slice(0, 64),
         files: extractCardFiles(card),
         embeddingText: buildEmbeddingText(card)

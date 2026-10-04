@@ -252,6 +252,11 @@ function WorkspacePage({
     "Saved"
   );
   const [collaborationVisible, setCollaborationVisible] = useState(true);
+  useEffect(() => {
+    const openKnowledge = () => setCollaborationVisible(true);
+    window.addEventListener("knowledge-open-card", openKnowledge);
+    return () => window.removeEventListener("knowledge-open-card", openKnowledge);
+  }, []);
   const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
   const [workspaceWidth, setWorkspaceWidth] = useState(() => readLayoutDimension(WORKSPACE_WIDTH_KEY, 252, 180, 420));
   const [collaborationWidth, setCollaborationWidth] = useState(() => readLayoutDimension(COLLABORATION_WIDTH_KEY, 380, 280, 560));
@@ -780,8 +785,8 @@ function WorkspacePage({
     await refreshKnowledgeState();
   }
 
-  async function confirmKnowledge(id: string, edited?: boolean, durationMs?: number) {
-    await confirmKnowledgeCard(projectId, id, edited, durationMs);
+  async function confirmKnowledge(id: string, edited?: boolean, durationMs?: number, patch?: import("./types").KnowledgeCardInput) {
+    await confirmKnowledgeCard(projectId, id, edited, durationMs, patch);
     await refreshKnowledgeState();
   }
 
@@ -1031,6 +1036,7 @@ function WorkspacePage({
           onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
           onPinKnowledge={pinKnowledge}
+          onReanchorKnowledge={(id, index, selection) => reanchorKnowledge(id, index, selection).catch(showWorkspaceError)}
           knowledgeEnabled={knowledgeEnabled}
           knowledgeResolutions={knowledgeResolutions}
           knowledgeCards={knowledgeCards}

@@ -41,7 +41,7 @@ describe("knowledge API", () => {
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(path.join(workspace, "README.md"), "# Demo\n\nKeep this line.\n");
     await fs.mkdir(path.join(workspace, "src"), { recursive: true });
-    await fs.writeFile(path.join(workspace, "src", "projectStatus.js"), "export function createProjectStatus(tasks) { return { taskCount: tasks.length, completedCount: tasks.filter((task) => task.completed).length, nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\" }; }\n");
+    await fs.copyFile(new URL("../../../../demo/workspace/src/projectStatus.js", import.meta.url), path.join(workspace, "src", "projectStatus.js"));
     const app = await createApp({
       port: 0,
       host: "127.0.0.1",
@@ -111,11 +111,37 @@ describe("knowledge API", () => {
       review: { confirmedBy: [] },
       evolution: [{ at: Date.now(), action: "created", by: { peerId: first, name: "Ada" } }]
     }));
-    const confirmed = await fetch(`${origin}/api/projects/demo/knowledge/cards/draft-card/confirm`, { method: "POST", headers: headers(second), body: JSON.stringify({ edited: true }) });
+    const confirmed = await fetch(`${origin}/api/projects/demo/knowledge/cards/draft-card/confirm`, { method: "POST", headers: headers(second), body: JSON.stringify({ patch: { title: "Keep the line", summary: "A shared decision", authorMemberId: first } }) });
     expect(confirmed.status).toBe(200);
-    expect((await confirmed.json() as { card: { status: string; review?: { confirmedBy: string[]; editedBeforeConfirm?: boolean } } }).card).toMatchObject({ status: "reviewed", review: { confirmedBy: [second], editedBeforeConfirm: true } });
+    expect((await confirmed.json() as { card: { status: string; review?: { confirmedBy: string[]; editedBeforeConfirm?: boolean } } }).card).toMatchObject({ status: "reviewed", review: { confirmedBy: [second], editedBeforeConfirm: false } });
     const hiddenDraftConfirmation = await fetch(`${origin}/api/projects/demo/knowledge/cards/personal-draft-card/confirm`, { method: "POST", headers: headers(second), body: JSON.stringify({ edited: true }) });
     expect(hiddenDraftConfirmation.status).toBe(404);
+
+    const chat = await fetch(`${origin}/api/projects/demo/chat`, { method: "POST", headers: headers(first), body: JSON.stringify({ text: "README.md Keep this line as our shared decision." }) });
+    expect(chat.status).toBe(200);
+    const chatMessage = (await chat.json() as { message: { id: string } }).message;
+    const fromChat = await fetch(`${origin}/api/projects/demo/knowledge/from-chat`, { method: "POST", headers: headers(first), body: JSON.stringify({ messageIds: [chatMessage.id] }) });
+    expect(fromChat.status).toBe(201);
+    const suggestion = (await fromChat.json() as { suggestion: { id: string } }).suggestion;
+    const accepted = await fetch(`${origin}/api/projects/demo/knowledge/inbox/${suggestion.id}/accept`, { method: "POST", headers: headers(first), body: "{}" });
+    expect(accepted.status).toBe(200);
+    const acceptedCard = (await accepted.json() as { card: { id: string; status: string; ownerMemberId: string } }).card;
+    expect(acceptedCard).toMatchObject({ status: "draft", ownerMemberId: first });
+    const rejectedEdit = await fetch(`${origin}/api/projects/demo/knowledge/cards/${acceptedCard.id}`, { method: "PATCH", headers: headers(second), body: JSON.stringify({ title: "Unauthorized edit" }) });
+    expect(rejectedEdit.status).toBe(400);
+    for (const patch of [{ title: "" }, { authorMemberId: "missing-member" }, []]) {
+      const rejectedConfirmation = await fetch(`${origin}/api/projects/demo/knowledge/cards/${acceptedCard.id}/confirm`, { method: "POST", headers: headers(second), body: JSON.stringify({ edited: true, patch }) });
+      expect(rejectedConfirmation.status).toBe(400);
+      const unchanged = await fetch(`${origin}/api/projects/demo/knowledge/cards/${acceptedCard.id}`, { headers: headers(first) }).then(response => response.json()) as { card: typeof acceptedCard };
+      expect(unchanged.card).toEqual(acceptedCard);
+    }
+    const editedConfirmation = await fetch(`${origin}/api/projects/demo/knowledge/cards/${acceptedCard.id}/confirm`, {
+      method: "POST", headers: headers(second), body: JSON.stringify({ durationMs: 750, patch: { title: "Reviewed shared decision", summary: "Keep this line after review", authorMemberId: first, authorName: "Untrusted name", ownerMemberId: second } })
+    });
+    expect(editedConfirmation.status).toBe(200);
+    expect((await editedConfirmation.json() as { card: unknown }).card).toMatchObject({ title: "Reviewed shared decision", summary: "Keep this line after review", ownerMemberId: first, status: "reviewed", provenance: { author: { memberId: first, displayName: "Ada" } }, review: { confirmedBy: [second], editedBeforeConfirm: true } });
+    const confirmerEdit = await fetch(`${origin}/api/projects/demo/knowledge/cards/${acceptedCard.id}`, { method: "PATCH", headers: headers(second), body: JSON.stringify({ content: "Confirmed member can edit." }) });
+    expect(confirmerEdit.status).toBe(200);
 
     const secondCards = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { headers: headers(second) }).then((response) => response.json()) as { cards: Array<{ id: string }> };
     expect(secondCards.cards.map((card) => card.id)).toContain(teamCard.id);
@@ -137,8 +163,9 @@ describe("knowledge API", () => {
     });
     expect(archived.status).toBe(200);
     expect((await archived.json() as { card: { status: string; evolution: Array<{ action: string; note?: string }> } }).card).toMatchObject({ status: "archived" });
-    const events = await fetch(`${origin}/api/projects/demo/events`, { headers: headers(first) }).then((response) => response.json()) as { events: Array<{ type: string; payload?: { cardId?: string } }> };
+    const events = await fetch(`${origin}/api/projects/demo/events`, { headers: headers(first) }).then((response) => response.json()) as { events: Array<{ type: string; payload?: { cardId?: string; editedBeforeConfirm?: boolean; durationMs?: number } }> };
     expect(events.events.filter((event) => event.payload?.cardId === teamCard.id).map((event) => event.type)).toEqual(expect.arrayContaining(["knowledge_card_created", "knowledge_card_updated", "knowledge_card_archived"]));
+    expect(events.events.find(event => event.type === "knowledge_review_completed" && event.payload?.cardId === acceptedCard.id)?.payload).toMatchObject({ editedBeforeConfirm: true, durationMs: 750 });
 
     const resolved = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: headers(first) }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; strategy?: string; status: string }> };
     expect(resolved.resolutions.find((item) => item.cardId === teamCard.id)).toMatchObject({ status: "ok", strategy: "range" });
@@ -149,10 +176,13 @@ describe("knowledge API", () => {
 
     const demo = await fetch(`${origin}/api/projects/demo/knowledge/demo`, { method: "POST", headers: headers(first), body: "{}" });
     expect(demo.status).toBe(201);
-    const demoCards = (await demo.json() as { cards: Array<{ id: string; content: string; anchors: Array<{ file: { workspaceRelativePath: string } }> }> }).cards;
+    const demoCards = (await demo.json() as { cards: Array<{ id: string; type: string; title: string; summary: string; content: string; tags: string[]; evolution: Array<{ note?: string }>; anchors: Array<{ file: { workspaceRelativePath: string } }> }> }).cards;
     expect(demoCards).toHaveLength(6);
     expect(demoCards[0]).toMatchObject({ anchors: [{ file: { workspaceRelativePath: "src/projectStatus.js" } }] });
     expect(demoCards.some((card) => card.content.includes("createProjectStatus"))).toBe(true);
+    expect(demoCards.find(card => card.type === "decision")).toMatchObject({ title: "集中计算任务状态", summary: "createProjectStatus 计算任务数量、完成数量与下一项任务。" });
+    expect(demoCards.find(card => card.type === "risk")?.summary).toContain("nextTask");
+    expect(demoCards.every(card => card.tags.includes("project-status") && !/timeout|protocol|eager synchronization/i.test(JSON.stringify(card)))).toBe(true);
     const demoCard = await fetch(`${origin}/api/projects/demo/knowledge/cards/${demoCards[0]!.id}`, { headers: headers(first) }).then((response) => response.json()) as { card: typeof demoCards[number] };
     expect(demoCard.card).toEqual(demoCards[0]);
   });

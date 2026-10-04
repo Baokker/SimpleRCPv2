@@ -29,4 +29,4 @@ v3 保留 v2 的内容、锚点、演化字段，新增 `superseded` 状态、`p
 
 ## 检索与注入
 
-`searchKnowledgeCards` 接受显式 `cards[]` 或调用方传入的 `cardsDirectory`，先尝试调用方提供的向量客户端，失败时使用旧词法分数与活动文件加分。目录中的 v1/v2 卡片会在建立索引时迁移为 v3。`buildKnowledgeContext` 默认只保留 `isReusable` 卡片，并按旧类型优先级和字符预算生成结构化文本与命中明细。
+`searchKnowledgeCards` 接受显式 `cards[]` 或调用方传入的 `cardsDirectory`。提供向量客户端时使用向量检索，服务错误直接报告；未提供时使用词法分数与活动文件加分。目录中的 v1/v2 卡片会在建立索引时迁移为 v3，作用域与属主变化会更新缓存。`buildKnowledgeContext` 在排序与 `topK` 筛选前应用 `isReusable` 或自定义过滤函数，再按类型优先级和字符预算生成结构化文本与命中明细。总预算包含标题、摘要、标签、文件路径、正文和格式字符，超过预算的卡片跳过。

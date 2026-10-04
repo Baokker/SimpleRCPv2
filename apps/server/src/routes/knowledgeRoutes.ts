@@ -30,6 +30,14 @@ export function registerKnowledgeRoutes(
     return service;
   }
 
+  async function validateDraftAuthor(projectId: string, patch: Record<string, unknown>) {
+    if (patch.authorMemberId === undefined) return;
+    if (typeof patch.authorMemberId !== "string") throw new Error("Draft author must be a project member");
+    const author = await members.getMember(projectId, patch.authorMemberId);
+    if (!author) throw new Error("Draft author must be a project member");
+    patch.authorName = author.displayName;
+  }
+
   app.get("/api/projects/:projectId/knowledge/cards", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res);
@@ -80,12 +88,7 @@ export function registerKnowledgeRoutes(
       const service = serviceFor(req.params.projectId, res);
       if (!service) return;
       const patch = { ...(req.body ?? {}) } as Record<string, unknown>;
-      if (patch.authorMemberId !== undefined) {
-        if (typeof patch.authorMemberId !== "string") throw new Error("Draft author must be a project member");
-        const author = await members.getMember(req.params.projectId, patch.authorMemberId);
-        if (!author) throw new Error("Draft author must be a project member");
-        patch.authorName = author.displayName;
-      }
+      await validateDraftAuthor(req.params.projectId, patch);
       const card = await service.update(identity, req.params.id, patch);
       res.json({ card });
     } catch (error) { next(error); }
@@ -99,7 +102,11 @@ export function registerKnowledgeRoutes(
       if (!service) return;
       const durationMs = req.body?.durationMs;
       if (durationMs !== undefined && (typeof durationMs !== "number" || !Number.isFinite(durationMs) || durationMs < 0)) throw new Error("Review duration is invalid");
-      const card = await service.confirm(identity, req.params.id, { edited: req.body?.edited === true, durationMs });
+      const patchInput = req.body?.patch;
+      if (patchInput !== undefined && (patchInput === null || typeof patchInput !== "object" || Array.isArray(patchInput))) throw new Error("Confirmation patch must be an object");
+      const patch = patchInput === undefined ? undefined : { ...patchInput } as Record<string, unknown>;
+      if (patch) await validateDraftAuthor(req.params.projectId, patch);
+      const card = await service.confirm(identity, req.params.id, { edited: req.body?.edited === true, durationMs, patch });
       res.json({ card });
     } catch (error) { next(error); }
   });

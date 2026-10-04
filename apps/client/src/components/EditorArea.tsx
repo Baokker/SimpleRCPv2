@@ -47,6 +47,7 @@ export function EditorArea({
   onLocalEdit,
   onCursorChange,
   onPinKnowledge,
+  onReanchorKnowledge,
   knowledgeEnabled,
   knowledgeResolutions,
   knowledgeCards
@@ -69,6 +70,7 @@ export function EditorArea({
     selection: EditorSelection
   ): void;
   onPinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): void;
+  onReanchorKnowledge(id: string, anchorIndex: number, selection: EditorSelection): Promise<void>;
   knowledgeEnabled: boolean;
   knowledgeResolutions: KnowledgeAnchorResolution[];
   knowledgeCards: KnowledgeCard[];
@@ -77,6 +79,8 @@ export function EditorArea({
   const monacoRef = useRef<typeof Monaco | null>(null);
   const decorationIdsRef = useRef<string[]>([]);
   const knowledgeDecorationIdsRef = useRef<string[]>([]);
+  const knowledgeStateRef = useRef({ cards: knowledgeCards, resolutions: knowledgeResolutions, onReanchor: onReanchorKnowledge });
+  knowledgeStateRef.current = { cards: knowledgeCards, resolutions: knowledgeResolutions, onReanchor: onReanchorKnowledge };
   const [editorVersion, setEditorVersion] = useState(0);
   const activeFile = openFiles.find((file) => file.path === activePath);
 
@@ -104,17 +108,27 @@ export function EditorArea({
       .map((resolution) => {
         const card = cards.get(resolution.cardId)!;
         const range = resolution.range!;
+        const canManage = card.ownerMemberId === memberId || card.review?.confirmedBy.includes(memberId);
+        const openCommand = `${editor.getId()}:knowledge.openCard`;
+        const reanchorCommand = `${editor.getId()}:knowledge.reanchor`;
+        const openLink = `command:${openCommand}?${encodeURIComponent(JSON.stringify([card.id]))}`;
+        const reanchorLink = `command:${reanchorCommand}?${encodeURIComponent(JSON.stringify([{ cardId: card.id, anchorIndex: resolution.anchorIndex }]))}`;
+        const hoverMessage = {
+          value: `**${card.type} · ${escapeKnowledgeMarkdown(card.title)}**\n\n${escapeKnowledgeMarkdown(card.summary)}\n\n${escapeKnowledgeMarkdown(card.provenance?.author.displayName ?? "")}\n\n[打开卡片](${openLink})${resolution.status === "needsReview" && canManage ? `\n\n[用当前选区重新锚定](${reanchorLink})` : ""}`,
+          isTrusted: { enabledCommands: [openCommand, reanchorCommand] }
+        };
         return {
           range: new monaco.Range(range.startLine, range.startColumn, range.endLine, range.endColumn),
           options: {
             className: resolution.status === "needsReview" ? "knowledge-anchor-review" : "knowledge-anchor-highlight",
             glyphMarginClassName: resolution.status === "needsReview" ? "knowledge-glyph knowledge-glyph-review" : `knowledge-glyph knowledge-glyph-${card.type}`,
-            hoverMessage: { value: `**${card.type} · ${card.title}**\n\n${card.summary}\n\n${card.provenance?.author.displayName ?? ""}\n\n打开卡片${resolution.status === "needsReview" ? "\n\n选择新的代码范围后，在知识面板中点击“用当前选区重新锚定”。" : ""}` }
+            hoverMessage,
+            glyphMarginHoverMessage: hoverMessage
           }
         };
       });
     knowledgeDecorationIdsRef.current = editor.deltaDecorations(knowledgeDecorationIdsRef.current, decorations);
-  }, [activeFile, editorVersion, knowledgeCards, knowledgeResolutions]);
+  }, [activeFile, editorVersion, knowledgeCards, knowledgeResolutions, memberId]);
 
   return (
     <div className="editor-area">
@@ -179,7 +193,31 @@ export function EditorArea({
                 );
               });
               if (knowledgeEnabled) {
-                editor.addAction({
+                const knowledgeActions: Monaco.IDisposable[] = [];
+                knowledgeActions.push(editor.addAction({
+                  id: "knowledge.openCard",
+                  label: "打开知识卡片",
+                  run: (_editor, cardId: string) => {
+                    if (knowledgeStateRef.current.cards.some(card => card.id === cardId)) window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: cardId }));
+                  }
+                }));
+                knowledgeActions.push(editor.addAction({
+                  id: "knowledge.reanchor",
+                  label: "用当前选区重新锚定",
+                  run: async (_editor, input?: { cardId: string; anchorIndex: number }) => {
+                    if (!input) return;
+                    const { cardId, anchorIndex } = input;
+                    const state = knowledgeStateRef.current;
+                    const card = state.cards.find(item => item.id === cardId);
+                    const selection = editor.getSelection();
+                    const resolution = state.resolutions.find(item => item.cardId === cardId && item.anchorIndex === anchorIndex);
+                    if (!card || !selection || selection.isEmpty() || resolution?.status !== "needsReview") return;
+                    if (card.ownerMemberId !== memberId && !card.review?.confirmedBy.includes(memberId)) return;
+                    if (card.anchors[anchorIndex]?.file.workspaceRelativePath !== activeFile.path) return;
+                    await state.onReanchor(cardId, anchorIndex, selection);
+                  }
+                }));
+                knowledgeActions.push(editor.addAction({
                   id: "knowledge.pin",
                   label: "Pin 为知识卡片",
                   contextMenuGroupId: "navigation",
@@ -195,7 +233,8 @@ export function EditorArea({
                       endColumn: selection.endColumn
                     });
                   }
-                });
+                }));
+                editor.onDidDispose(() => { for (const action of knowledgeActions) action.dispose(); });
               }
             }}
           />
@@ -205,6 +244,10 @@ export function EditorArea({
       </div>
     </div>
   );
+}
+
+function escapeKnowledgeMarkdown(value: string) {
+  return value.replace(/[\\`*_{}\[\]()<>#+\-.!|]/g, "\\$&");
 }
 
 function CollaborativeEditor({

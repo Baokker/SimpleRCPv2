@@ -435,56 +435,66 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     });
   }
 
+  async function applyPatch(cardBeforeUpdate: KnowledgeCard, patch: Record<string, unknown>, actor: KnowledgeActor) {
+    const card = { ...cardBeforeUpdate };
+    if (patch.type !== undefined) {
+      if (!["decision", "constraint", "risk", "context", "negative", "tutorial"].includes(String(patch.type))) throw new Error("Card type is invalid");
+      card.type = patch.type as KnowledgeCardType;
+    }
+    for (const key of ["title", "summary", "content"] as const) {
+      if (patch[key] !== undefined) {
+        if (typeof patch[key] !== "string" || (key !== "content" && !patch[key].trim())) throw new Error(`Card ${key} is invalid`);
+        card[key] = key === "content" ? patch[key] : patch[key].trim();
+      }
+    }
+    if (patch.tags !== undefined) {
+      if (!Array.isArray(patch.tags) || patch.tags.some((tag) => typeof tag !== "string")) throw new Error("Card tags are invalid");
+      card.tags = patch.tags;
+    }
+    if (patch.scope !== undefined) {
+      if (patch.scope !== "personal" && patch.scope !== "team") throw new Error("Card scope must be personal or team");
+      card.scope = patch.scope;
+    }
+    if (card.scope !== "personal" && card.scope !== "team") throw new Error("Card scope must be personal or team");
+    if (patch.anchors !== undefined) {
+      card.anchors = [];
+      for (const input of anchorInputs(patch.anchors)) card.anchors.push(await anchorFromInput(input));
+    }
+    if (patch.authorMemberId !== undefined) {
+      if (card.status !== "draft" || typeof patch.authorMemberId !== "string" || !patch.authorMemberId) throw new Error("Only draft authors can be changed");
+      card.provenance = { ...card.provenance!, author: { kind: "human", memberId: patch.authorMemberId, displayName: typeof patch.authorName === "string" ? patch.authorName : patch.authorMemberId } };
+    }
+    const now = Date.now();
+    const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: typeof patch.note === "string" ? patch.note : undefined };
+    return { ...card, updatedAt: now, evolution: [...card.evolution, evolution] };
+  }
+
   async function update(actor: KnowledgeActor, id: string, patch: Record<string, unknown>) {
     return enqueue(async () => {
       const stored = await readCard(id);
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (!canEdit(stored.card, actor)) throw new Error("Knowledge card can only be edited by its owner or confirmer");
-      const card = { ...stored.card };
-      if (patch.type !== undefined) {
-        if (!['decision', 'constraint', 'risk', 'context', 'negative', 'tutorial'].includes(String(patch.type))) throw new Error("Card type is invalid");
-        card.type = patch.type as KnowledgeCardType;
-      }
-      for (const key of ["title", "summary", "content"] as const) {
-        if (patch[key] !== undefined) {
-          if (typeof patch[key] !== "string" || (key !== "content" && !patch[key].trim())) throw new Error(`Card ${key} is invalid`);
-          card[key] = key === "content" ? patch[key] : patch[key].trim();
-        }
-      }
-      if (patch.tags !== undefined) {
-        if (!Array.isArray(patch.tags) || patch.tags.some((tag) => typeof tag !== "string")) throw new Error("Card tags are invalid");
-        card.tags = patch.tags;
-      }
-      if (patch.scope !== undefined) {
-        if (patch.scope !== "personal" && patch.scope !== "team") throw new Error("Card scope must be personal or team");
-        card.scope = patch.scope;
-      }
-      if (card.scope !== "personal" && card.scope !== "team") throw new Error("Card scope must be personal or team");
-      if (patch.anchors !== undefined) {
-        card.anchors = [];
-        for (const input of anchorInputs(patch.anchors)) card.anchors.push(await anchorFromInput(input));
-      }
-      if (patch.authorMemberId !== undefined) {
-        if (card.status !== "draft" || typeof patch.authorMemberId !== "string" || !patch.authorMemberId) throw new Error("Only draft authors can be changed");
-        card.provenance = { ...card.provenance!, author: { kind: "human", memberId: patch.authorMemberId, displayName: typeof patch.authorName === "string" ? patch.authorName : patch.authorMemberId } };
-      }
-      const now = Date.now();
-      const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: typeof patch.note === "string" ? patch.note : undefined };
-      const updated: KnowledgeCard = { ...card, updatedAt: now, evolution: [...card.evolution, evolution] };
+      const updated = await applyPatch(stored.card, patch, actor);
       await saveCard(updated);
       event(updated.id, "knowledge_card_updated", actor);
       return updated;
     });
   }
 
-  async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean; durationMs?: number }) {
+  async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean; durationMs?: number; patch?: Record<string, unknown> }) {
     return enqueue(async () => {
       const stored = await readCard(id);
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
-      const confirmed = confirmCard(stored.card, { memberId: actor.memberId, now: () => Date.now(), edited: input.edited, memberKind: "human" });
+      if (stored.card.status !== "draft") throw new Error("Only draft knowledge cards can be confirmed");
+      const card = input.patch === undefined ? stored.card : await applyPatch(stored.card, input.patch, actor);
+      const edited = input.edited === true
+        || (["type", "title", "summary", "content", "tags", "scope", "anchors"] as const).some(key => JSON.stringify(stored.card[key]) !== JSON.stringify(card[key]))
+        || JSON.stringify(stored.card.provenance?.author) !== JSON.stringify(card.provenance?.author);
+      const confirmed = confirmCard(card, { memberId: actor.memberId, now: () => Date.now(), edited, memberKind: "human" });
       await saveCard(confirmed);
+      if (input.patch !== undefined) event(confirmed.id, "knowledge_card_updated", actor);
       event(confirmed.id, "knowledge_card_confirmed", actor);
-      options.events.append({ type: "knowledge_review_completed", roomId: options.roomId, memberId: actor.memberId, payload: { cardId: id, editedBeforeConfirm: input.edited === true, durationMs: input.durationMs } });
+      options.events.append({ type: "knowledge_review_completed", roomId: options.roomId, memberId: actor.memberId, payload: { cardId: id, editedBeforeConfirm: edited, durationMs: input.durationMs } });
       return confirmed;
     });
   }
@@ -542,15 +552,15 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
 
   function personalizeDemoCards(cards: KnowledgeCard[], file: string) {
     if (file !== "src/projectStatus.js") return cards;
-    const contentByType: Record<KnowledgeCardType, string> = {
-      decision: "Keep createProjectStatus as the single place that derives taskCount, completedCount, and nextTask from the task list. formatProjectStatus should consume that result for terminal output.",
-      constraint: "Tasks passed to createProjectStatus use a boolean completed field. Keep the task shape stable so the completed count and next task remain deterministic.",
-      risk: "The nextTask expression intentionally uses the first incomplete task and falls back to All tasks complete. Changing that order changes the status shown to collaborators.",
-      context: "This file is the demo workspace status model. It turns a small task list into a summary object before the command line formatter renders the result.",
-      negative: "Do not calculate the formatted output directly from the task list. That would duplicate the status rules and make createProjectStatus and formatProjectStatus diverge.",
-      tutorial: "Read createProjectStatus first to understand the derived fields, then read formatProjectStatus to see how those fields become the four line terminal report."
+    const templates: Record<KnowledgeCardType, Pick<KnowledgeCard, "title" | "summary" | "content">> = {
+      decision: { title: "集中计算任务状态", summary: "createProjectStatus 计算任务数量、完成数量与下一项任务。", content: "createProjectStatus 从 tasks 计算 taskCount、completedCount 和 nextTask。formatProjectStatus 使用这个结果生成终端输出，任务状态规则集中在 createProjectStatus 中。" },
+      constraint: { title: "保持任务字段含义", summary: "tasks 的 completed 表示完成状态，title 用于下一项任务的显示。", content: "createProjectStatus 使用 completed 筛选已完成任务，再读取首个未完成任务的 title。调用方应提供含有 boolean completed 和文本 title 的任务对象，并保持这两个字段的含义。" },
+      risk: { title: "注意下一项任务的顺序", summary: "nextTask 使用第一个未完成任务，任务顺序会影响显示结果。", content: "tasks.find 返回第一个未完成任务。当这个任务没有 title，或者全部任务已完成时，nextTask 显示 All tasks complete。修改任务顺序或字段时需要核对这个显示结果。" },
+      context: { title: "任务状态模块的用途", summary: "projectStatus.js 将任务列表转换为状态对象和四行终端文本。", content: "Demo 工作区使用 createProjectStatus 生成任务数量、完成数量和下一项任务，再由 formatProjectStatus 输出工作区名称、Tasks、Completed 和 Next 四行文本。" },
+      negative: { title: "保持状态计算与文本格式的职责", summary: "formatProjectStatus 接收状态对象，重复计算任务状态会增加维护成本。", content: "formatProjectStatus 已经通过 status.taskCount、status.completedCount 和 status.nextTask 格式化输出。维护这个接口可以让任务计算规则集中在 createProjectStatus 中，减少规则重复。" },
+      tutorial: { title: "阅读任务状态代码", summary: "从 createProjectStatus 的返回字段开始，继续阅读 formatProjectStatus。", content: "阅读 tasks.length、filter 和 find 如何生成三个状态字段，再查看 formatProjectStatus 如何把它们写入数组并通过 join 生成四行文本。可以运行 Demo 工作区的测试核对任务完成和未完成时的结果。" }
     };
-    return cards.map((card) => ({ ...card, content: contentByType[card.type] ?? card.content }));
+    return cards.map(card => ({ ...card, ...templates[card.type], tags: ["demo", card.type, "project-status"], evolution: card.evolution.map(entry => ({ ...entry, note: "Demo 工作区任务状态导览。" })) }));
   }
 
   return {

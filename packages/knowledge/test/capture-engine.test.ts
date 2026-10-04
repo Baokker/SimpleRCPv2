@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AuthorshipIndex, VirtualCaptureClock, createCaptureEngine, replayEvents, NotificationPolicy, inferCoOccurrence, defaultCaptureEngineConfig, isCaptureEvent, extractKnowledgeCardDraft, type CaptureEvent, type CaptureSuggestion } from "../src/index.js";
+import { AuthorshipIndex, VirtualCaptureClock, createCaptureEngine, replayEvents, NotificationPolicy, inferCoOccurrence, defaultCaptureEngineConfig, isCaptureEvent, isCaptureSuggestion, extractKnowledgeCardDraft, type CaptureEvent, type CaptureSuggestion } from "../src/index.js";
 
 function session() {
   const clock = new VirtualCaptureClock();
@@ -93,6 +93,80 @@ describe("checkpoint capture", () => {
       const s = session(); s.open('{"dependencies":{"alpha":"1"}}', "package.json"); s.edit(after, "Ada", 0, "package.json"); s.clock.advanceTo(30_000); expect(s.suggestions).toEqual([]);
     }
   });
+  it("compares completed dependencies with the last valid checkpoint after incomplete JSON", () => {
+    const s = session();
+    s.open('{"dependencies":{"alpha":"1"}}', "package.json");
+    s.edit('{"dependencies":', "Ada", 1, "package.json");
+    s.clock.advanceTo(30_001);
+    expect(s.suggestions).toEqual([]);
+    s.edit('{"dependencies":{"beta":"1"}}', "Ada", 31_000, "package.json");
+    s.clock.advanceTo(61_000);
+    expect(s.suggestions).toMatchObject([{ triggerType: "dependency.changed", evidence: { added: ["beta"], removed: ["alpha"] } }]);
+    expect(s.suggestions.every(isCaptureSuggestion)).toBe(true);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it("keeps unchanged dependency names quiet after an incomplete checkpoint", () => {
+    const s = session();
+    s.open('{"dependencies":{"alpha":"1"}}', "package.json");
+    s.edit('{"dependencies":', "Ada", 1, "package.json");
+    s.clock.advanceTo(30_001);
+    s.edit('{"dependencies":{"alpha":"2"}}', "Ada", 31_000, "package.json");
+    s.clock.advanceTo(61_000);
+    expect(s.suggestions).toEqual([]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it.each([false, true])("captures completed external dependencies after incomplete JSON with hasDocument=%s", hasDocument => {
+    const s = session();
+    const initial = '{"dependencies":{"alpha":"1"}}';
+    const incomplete = '{"dependencies":';
+    const completed = '{"dependencies":{"beta":"1"}}';
+    s.open(initial, "package.json");
+    s.feed({ type: "fileExternal", file: "package.json", change: "change", textBefore: initial, textAfter: incomplete, hasDocument }, 1);
+    expect(s.suggestions).toEqual([]);
+    s.feed({ type: "fileExternal", file: "package.json", change: "change", textBefore: incomplete, textAfter: completed, hasDocument }, 2);
+    expect(s.suggestions).toMatchObject([{ triggerType: "dependency.changed", actors: { memberIds: [] }, evidence: { source: "filesystem", added: ["beta"], removed: ["alpha"] } }]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it.each([false, true])("keeps unchanged external dependency names quiet after incomplete JSON with hasDocument=%s", hasDocument => {
+    const s = session();
+    const initial = '{"dependencies":{"alpha":"1"}}';
+    const incomplete = '{"dependencies":';
+    s.open(initial, "package.json");
+    s.feed({ type: "fileExternal", file: "package.json", change: "change", textBefore: initial, textAfter: incomplete, hasDocument }, 1);
+    s.feed({ type: "fileExternal", file: "package.json", change: "change", textBefore: incomplete, textAfter: '{"dependencies":{"alpha":"2"}}', hasDocument }, 2);
+    expect(s.suggestions).toEqual([]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it.each(["switchFile", "leave", "docRetired"])("preserves a valid dependency baseline through %s after incomplete editing", action => {
+    const s = session();
+    s.open('{"dependencies":{"alpha":"1"}}', "package.json");
+    s.edit('{"dependencies":', "Ada", 1, "package.json");
+    if (action === "docRetired") {
+      s.feed({ type: "docRetired", file: "package.json" }, 2);
+      s.feed({ type: "docOpen", file: "package.json", text: '{"dependencies":' }, 3);
+    } else s.feed({ type: "memberPresence", memberId: "Ada", action, previousFile: "package.json", file: "a.ts" }, 2);
+    s.edit('{"dependencies":{"beta":"1"}}', "Ada", 4, "package.json");
+    s.clock.advanceTo(30_004);
+    expect(s.suggestions).toMatchObject([{ triggerType: "dependency.changed", actors: { memberIds: ["Ada"] }, evidence: { added: ["beta"], removed: ["alpha"] } }]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it("keeps each member's valid dependency checkpoint independent", () => {
+    const s = session();
+    const incomplete = '{"dependencies":';
+    const completed = '{"dependencies":{"beta":"1"}}';
+    s.open('{"dependencies":{"alpha":"1"}}', "package.json");
+    s.edit(incomplete, "Ada", 1, "package.json");
+    s.clock.advanceTo(30_001);
+    s.feed({ type: "edit", file: "package.json", actor: "Bob", ops: [{ start: incomplete.length, deleteCount: 0, insertText: '{"beta":"1"}}' }], textAfter: completed }, 31_000);
+    s.clock.advanceTo(61_000);
+    s.feed({ type: "edit", file: "package.json", actor: "Ada", ops: [{ start: completed.length - 2, deleteCount: 0, insertText: ',"gamma":"1"' }], textAfter: '{"dependencies":{"beta":"1","gamma":"1"}}' }, 62_000);
+    s.clock.advanceTo(92_000);
+    expect(s.suggestions).toMatchObject([
+      { triggerType: "dependency.changed", actors: { memberIds: ["Bob"] }, evidence: { added: ["beta"], removed: ["alpha"] } },
+      { triggerType: "dependency.changed", actors: { memberIds: ["Ada"] }, evidence: { added: ["beta", "gamma"], removed: ["alpha"] } }
+    ]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
 });
 
 describe("edit and chat sequence capture", () => {
@@ -145,6 +219,40 @@ describe("co-occurrence inference and notifications", () => {
     messages[0]!.text = "b.ts `beta`";
     expect(inferCoOccurrence(options)[0]?.file).toBe("b.ts");
   });
+  it("ignores cursor and deletion ranges entirely beyond the current file", () => {
+    const messages = [{ schemaVersion: 1 as const, type: "chat" as const, at: 100, seq: 1, messageId: "1", authorId: "Ada", kind: "member" as const, text: "a.ts" }];
+    const anchors = inferCoOccurrence({
+      messages, from: 0, to: 1000, weights: defaultCaptureEngineConfig.weights, texts: new Map([["a.ts", "short\nfile"]]),
+      activities: [
+        { type: "cursor", actor: "Ada", file: "a.ts", at: 0, startLine: 45, endLine: 45 },
+        { type: "edit", actor: "Ada", file: "a.ts", at: 1, startLine: 45, endLine: 60, chars: 100 }
+      ]
+    });
+    expect(anchors).toEqual([]);
+  });
+  it("bounds deletion candidates after a file shrinks and replays valid suggestions", () => {
+    const s = session();
+    s.open(Array(50).fill("line").join("\n"));
+    s.feed({ type: "cursor", memberId: "Ada", file: "a.ts", position: { line: 44, character: 0 }, selection: { startLine: 44, startCharacter: 0, endLine: 44, endCharacter: 0 } }, 1);
+    s.edit("short\nfile", "Ada", 2);
+    for (let i = 0; i < 11; i++) s.feed({ type: "chat", messageId: String(i), authorId: "Ada", kind: "member", text: "讨论 a.ts" }, i + 3);
+    s.clock.advanceTo(60_013);
+    expect(s.suggestions).toMatchObject([{ triggerType: "chat.dense", suggestedAnchors: [{ file: "a.ts", startLine: 1, endLine: 2 }] }]);
+    expect(s.suggestions[0]!.suggestedAnchors).toHaveLength(1);
+    expect(s.suggestions.every(isCaptureSuggestion)).toBe(true);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it("limits selected discussion inference to its time window regardless of message order", () => {
+    const s = session();
+    s.open("function target() {}", "a.ts");
+    s.feed({ type: "docOpen", file: "b.ts", text: "" });
+    s.feed({ type: "cursor", memberId: "Ada", file: "a.ts", position: { line: 0, character: 0 }, selection: { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 } }, 50_000);
+    const messages = [150_000, 200_000].map((at, i) => ({ schemaVersion: 1 as const, type: "chat" as const, seq: i + 1, at, messageId: String(i), authorId: "Ada", kind: "member" as const, text: "讨论 target" }));
+    const anchors = s.engine.infer(messages, 260_000);
+    s.feed({ type: "edit", file: "b.ts", actor: "Ada", ops: [{ start: 0, deleteCount: 0, insertText: "unrelated".repeat(100) }] }, 261_000);
+    expect(s.engine.infer(messages, 300_000)).toEqual(anchors);
+    expect(s.engine.infer([...messages].reverse(), 300_000)).toEqual(anchors);
+  });
   it("defers intense editing and caps popups at four per hour", () => {
     const policy = new NotificationPolicy();
     for (let i = 0; i < 8; i++) policy.record("Ada", "edit", i);
@@ -162,6 +270,54 @@ describe("co-occurrence inference and notifications", () => {
     s.feed({ type: "memberPresence", memberId: "Ada", action: "leave" }, 101);
     const message = { schemaVersion: 1 as const, type: "chat" as const, at: 1, seq: 1, messageId: "m", authorId: "Ada", kind: "member" as const, text: "讨论" };
     expect(s.engine.infer([message], 100_000)[0]?.score).toBeCloseTo(2.1);
+  });
+  it("retains ongoing cursor dwell across the history window and replays discussion anchors", () => {
+    const s = session();
+    const historyMs = defaultCaptureEngineConfig.historyMs;
+    s.open("function target() {}", "a.ts");
+    s.feed({ type: "cursor", memberId: "Ada", file: "a.ts", position: { line: 0, character: 0 }, selection: { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 } }, 1);
+    s.feed({ type: "docOpen", file: "b.ts", text: "" }, historyMs + 2);
+    for (let i = 0; i < 11; i++) s.feed({ type: "chat", messageId: String(i), authorId: "Ada", kind: "member", text: "讨论" }, historyMs + 3 + i);
+    s.clock.advanceTo(historyMs + 60_013);
+    expect(s.suggestions).toMatchObject([{ triggerType: "chat.dense", suggestedAnchors: [{ file: "a.ts", startLine: 1, endLine: 1, score: 182.01 }] }]);
+    expect(s.suggestions.every(isCaptureSuggestion)).toBe(true);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it.each(["leave", "switchFile"])("keeps an old %s as the boundary ending cursor dwell", action => {
+    const s = session();
+    const historyMs = defaultCaptureEngineConfig.historyMs;
+    s.open("function target() {}", "a.ts");
+    s.feed({ type: "cursor", memberId: "Ada", file: "a.ts", position: { line: 0, character: 0 }, selection: { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 } }, 1);
+    s.feed({ type: "memberPresence", memberId: "Ada", action, previousFile: "a.ts", file: "b.ts" }, 101);
+    for (let i = 0; i < 11; i++) s.feed({ type: "chat", messageId: String(i), authorId: "Ada", kind: "member", text: "讨论 a.ts" }, historyMs + 200 + i);
+    s.clock.advanceTo(historyMs + 60_210);
+    expect(s.suggestions).toMatchObject([{ triggerType: "chat.dense", suggestedAnchors: [] }]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it("retains only the last old cursor and counts dwell until a recent cursor", () => {
+    const s = session();
+    const historyMs = defaultCaptureEngineConfig.historyMs;
+    s.open("function alpha() {}", "a.ts");
+    s.feed({ type: "docOpen", file: "b.ts", text: "function beta() {}" });
+    s.feed({ type: "docOpen", file: "c.ts", text: "function gamma() {}" });
+    s.feed({ type: "cursor", memberId: "Ada", file: "a.ts", position: { line: 0, character: 0 }, selection: { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 } }, 1);
+    s.feed({ type: "cursor", memberId: "Ada", file: "b.ts", position: { line: 0, character: 0 }, selection: { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 } }, 100);
+    for (let i = 0; i < 11; i++) s.feed({ type: "chat", messageId: String(i), authorId: "Ada", kind: "member", text: "讨论" }, historyMs + 300 + i);
+    s.feed({ type: "cursor", memberId: "Ada", file: "c.ts", position: { line: 0, character: 0 }, selection: { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 } }, historyMs + 500);
+    s.clock.advanceTo(historyMs + 60_310);
+    expect(s.suggestions).toMatchObject([{ triggerType: "chat.dense", suggestedAnchors: [{ file: "b.ts", score: 122.2 }, { file: "c.ts", score: 61.81 }] }]);
+    expect(s.suggestions[0]!.suggestedAnchors).toHaveLength(2);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
+  });
+  it("removes old editing evidence outside the history window", () => {
+    const s = session();
+    const historyMs = defaultCaptureEngineConfig.historyMs;
+    s.open("");
+    s.edit("function target() {}", "Ada", 1);
+    for (let i = 0; i < 11; i++) s.feed({ type: "chat", messageId: String(i), authorId: "Ada", kind: "member", text: "讨论 a.ts" }, historyMs + 200 + i);
+    s.clock.advanceTo(historyMs + 60_210);
+    expect(s.suggestions).toMatchObject([{ triggerType: "chat.dense", suggestedAnchors: [] }]);
+    expect(replayEvents(s.events)).toEqual(s.suggestions);
   });
 });
 

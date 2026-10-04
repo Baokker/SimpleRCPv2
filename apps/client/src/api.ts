@@ -18,6 +18,7 @@ import type {
 import type {
   KnowledgeAnchorResolution,
   KnowledgeCard,
+  KnowledgeCardInput,
   KnowledgeCardType,
   KnowledgeGuideItem,
   KnowledgeScope,
@@ -375,11 +376,11 @@ export async function updateKnowledgeCard(projectId: string, id: string, patch: 
   });
 }
 
-export async function confirmKnowledgeCard(projectId: string, id: string, edited = false, durationMs?: number) {
+export async function confirmKnowledgeCard(projectId: string, id: string, edited = false, durationMs?: number, patch?: KnowledgeCardInput) {
   return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/confirm`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ edited, durationMs })
+    body: JSON.stringify({ edited, durationMs, patch })
   });
 }
 

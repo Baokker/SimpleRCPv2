@@ -11,11 +11,16 @@ export function inferCoOccurrence(options: {
   const activities = options.activities.filter(activity => speakers.has(activity.actor) && activity.at <= options.to);
   const add = (activity: CaptureActivity, score: number, reason: string) => {
     if (score <= 0) return;
-    const first = Math.floor((activity.startLine - 1) / 20);
-    const last = Math.floor((activity.endLine - 1) / 20);
+    const text = options.texts.get(activity.file);
+    if (text === undefined) return;
+    const maxLine = text.split("\n").length;
+    const startLine = Math.max(1, activity.startLine);
+    const endLine = Math.min(activity.endLine, maxLine);
+    if (startLine > endLine) return;
+    const first = Math.floor((startLine - 1) / 20);
+    const last = Math.floor((endLine - 1) / 20);
     for (let segment = first; segment <= last; segment++) {
       const key = `${activity.file}:${segment}`;
-      const maxLine = options.texts.get(activity.file)?.split("\n").length ?? (segment + 1) * 20;
       const item = candidates.get(key) ?? { file: activity.file, startLine: segment * 20 + 1, endLine: Math.min((segment + 1) * 20, maxLine), score: 0, reasons: [], speakers: new Set<string>() };
       item.score += score / (last - first + 1);
       item.speakers.add(activity.actor);

@@ -140,7 +140,7 @@ export function CollaborationPanel({
   knowledgeCurrentSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
   onCreateKnowledgeCard(input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }): Promise<void>;
   onUpdateKnowledgeCard(id: string, input: import("../types").KnowledgeCardInput): Promise<void>;
-  onConfirmKnowledgeCard(id: string, edited?: boolean, durationMs?: number): Promise<void>;
+  onConfirmKnowledgeCard(id: string, edited?: boolean, durationMs?: number, patch?: import("../types").KnowledgeCardInput): Promise<void>;
   onArchiveKnowledgeCard(id: string): Promise<void>;
   onReanchorKnowledgeCard(id: string, anchorIndex: number, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): Promise<void>;
   onClearKnowledgePinSelection(): void;
@@ -155,6 +155,9 @@ export function CollaborationPanel({
   const [selectedChatMessages, setSelectedChatMessages] = useState<string[]>([]);
   const [chatKnowledgeVersion, setChatKnowledgeVersion] = useState(0);
   const [focusedKnowledgeCardId, setFocusedKnowledgeCardId] = useState<string>();
+  useEffect(() => {
+    if (knowledgePinSelection) setActiveTab("knowledge");
+  }, [knowledgePinSelection]);
   useEffect(() => {
     const open = (event: Event) => { setFocusedKnowledgeCardId((event as CustomEvent<string>).detail); setActiveTab("knowledge"); };
     window.addEventListener("knowledge-open-card", open);

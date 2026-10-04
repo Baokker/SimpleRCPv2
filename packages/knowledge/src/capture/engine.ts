@@ -39,9 +39,10 @@ export const defaultCaptureEngineConfig: CaptureEngineConfig = {
   weights: { dwell: 1, edits: 0.02, speakers: 2, textMatch: 3 }
 };
 export type CaptureConfigInput = Partial<Omit<CaptureEngineConfig, "weights">> & { weights?: Partial<CaptureEngineConfig["weights"]> };
-interface CheckpointState { baseline: string; lastEditAt: number; timer?: number; dirty: boolean; }
+interface CheckpointState { baseline: string; dependencyBaseline?: string; lastEditAt: number; timer?: number; dirty: boolean; }
 interface FileState {
   text: string;
+  dependencyBaseline?: string;
   checkpoints: Map<string, CheckpointState>;
   rollbacks: Array<{ at: number; hash: string; before: string; after: string; removedChars: number; deletedLines: number; actor: string }>;
 }
@@ -90,9 +91,13 @@ export function createCaptureEngine(options: {
   function stateFor(file: string, initial: string): FileState {
     const existing = files.get(file);
     if (existing) return existing;
-    const state = { text: initial, checkpoints: new Map<string, CheckpointState>(), rollbacks: [] };
+    const state: FileState = { text: initial, checkpoints: new Map<string, CheckpointState>(), rollbacks: [] };
+    updateDependencyBaseline(file, state, initial);
     files.set(file, state);
     return state;
+  }
+  function updateDependencyBaseline(file: string, state: FileState, text: string) {
+    if (isPackage(file) && dependencyNames(text) !== undefined) state.dependencyBaseline = text;
   }
   function timer(at: number, callback: () => void) {
     const id = options.clock.schedule(at, () => { timers.delete(id); callback(); });
@@ -130,7 +135,10 @@ export function createCaptureEngine(options: {
         emit("magicNumber.added", at, [actor], { file, added, diff, usage: added.map(item => ({ number: item.number, occurrences: findUsages(item.number, file) })) }, "constraint", anchor);
       }
     }
-    if (isPackage(file)) dependencies(file, before, after, actor, at, anchor);
+    if (isPackage(file)) {
+      dependencies(file, member.dependencyBaseline ?? before, after, actor, at, anchor);
+      if (dependencyNames(after) !== undefined) member.dependencyBaseline = after;
+    }
     options.onCheckpoint?.({ file, actor, at, before, after });
   }
   function dependencies(file: string, before: string, after: string, actor: string, at: number, anchors: SuggestedAnchor[]) {
@@ -184,7 +192,12 @@ export function createCaptureEngine(options: {
         state.rollbacks = state.rollbacks.filter(item => item !== rollback);
       }
       if (removedChars - insertedChars > config.rollbackMinChars || deletedLines > config.rollbackMinLines) state.rollbacks.push({ at: event.at, hash: sha(before), before, after, removedChars: removedChars - insertedChars, deletedLines, actor: event.actor });
-      const member = state.checkpoints.get(event.actor) ?? { baseline: before, lastEditAt: event.at, dirty: false };
+      const member = state.checkpoints.get(event.actor) ?? {
+        baseline: before,
+        dependencyBaseline: isPackage(event.file) && dependencyNames(before) !== undefined ? before : state.dependencyBaseline,
+        lastEditAt: event.at,
+        dirty: false
+      };
       member.lastEditAt = event.at;
       member.dirty = true;
       cancel(member.timer);
@@ -193,6 +206,7 @@ export function createCaptureEngine(options: {
       for (const op of event.ops) activities.push({ type: "edit", actor: event.actor, file: event.file, at: event.at, startLine: lineAt(before, op.start), endLine: lineAt(before, op.start + op.deleteCount) + (op.insertText.match(/\n/g)?.length ?? 0), chars: op.deleteCount + op.insertText.length });
     }
     state.text = after;
+    updateDependencyBaseline(event.file, state, after);
   }
 
   function process(event: CaptureEvent) {
@@ -200,6 +214,7 @@ export function createCaptureEngine(options: {
     if (event.type === "docOpen") {
       const state = stateFor(event.file, event.text);
       if (state.text !== event.text) { state.text = event.text; authorship.retire(event.file); }
+      updateDependencyBaseline(event.file, state, event.text);
     } else if (event.type === "edit") edit(event);
     else if (event.type === "cursor") activities.push({ type: "cursor", actor: event.memberId, file: event.file, at: event.at, startLine: event.position.line + 1, endLine: event.selection.endLine + 1 });
     else if (event.type === "chat" && event.kind === "member" && !seenChatIds.has(event.messageId)) {
@@ -219,7 +234,11 @@ export function createCaptureEngine(options: {
       }
       const before = event.textBefore ?? state.text;
       if (event.textAfter !== undefined) {
-        if (isPackage(event.file)) dependencies(event.file, before, event.textAfter, "filesystem", event.at, rangeAnchor(event.file, event.textAfter, 0, event.textAfter.length));
+        if (isPackage(event.file)) {
+          const baseline = dependencyNames(before) !== undefined ? before : state.dependencyBaseline ?? before;
+          dependencies(event.file, baseline, event.textAfter, "filesystem", event.at, rangeAnchor(event.file, event.textAfter, 0, event.textAfter.length));
+          updateDependencyBaseline(event.file, state, event.textAfter);
+        }
         if (!event.hasDocument) state.text = event.textAfter;
       }
     } else if (event.type === "memberPresence" && event.action !== "join") {
@@ -232,12 +251,20 @@ export function createCaptureEngine(options: {
       state?.checkpoints.clear();
     }
     const cutoff = event.at - config.historyMs;
-    while (activities[0] && activities[0].at < cutoff) activities.shift();
+    let expiredCount = 0;
+    const dwellBoundaries = new Map<string, CaptureActivity>();
+    while (activities[expiredCount] && activities[expiredCount]!.at < cutoff) {
+      const activity = activities[expiredCount++]!;
+      if (activity.type !== "edit") dwellBoundaries.set(activity.actor, activity);
+    }
+    if (expiredCount) activities.splice(0, expiredCount, ...[...dwellBoundaries.values()].sort((a, b) => a.at - b.at));
     while (chats[0] && chats[0].at < cutoff) seenChatIds.delete(chats.shift()!.messageId);
     for (const [key, at] of cooldowns) if (at < cutoff) cooldowns.delete(key);
   }
   function infer(messages: CaptureChatEvent[], endAt: number) {
-    return inferCoOccurrence({ messages, activities, texts: new Map([...files].map(([file, state]) => [file, state.text])), from: (messages[0]?.at ?? endAt) - config.chatBeforeMs, to: endAt, weights: config.weights });
+    const firstAt = messages.length ? Math.min(...messages.map(message => message.at)) : endAt;
+    const lastAt = messages.length ? Math.max(...messages.map(message => message.at)) : endAt;
+    return inferCoOccurrence({ messages, activities, texts: new Map([...files].map(([file, state]) => [file, state.text])), from: firstAt - config.chatBeforeMs, to: Math.min(endAt, lastAt + config.chatAfterMs), weights: config.weights });
   }
   return { process, infer, config, dispose() { for (const id of timers) cancel(id); files.clear(); activities.length = 0; chats.length = 0; } };
 }

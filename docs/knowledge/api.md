@@ -10,7 +10,7 @@
 | `GET` | `/cards/:id` | `{ card }`。个人卡片与 `proposedTeam` 卡片只对属主可见。 |
 | `POST` | `/cards` | 创建手动卡片。字段包括 `type`、`title`、`summary`、`content`、`tags`、`scope`，锚点使用 `{ file, selection }`。手动卡片直接进入 `reviewed`。 |
 | `PATCH` | `/cards/:id` | 修改卡片字段与锚点。属主或确认人可以修改。草稿可带 `authorMemberId`、`authorName`，修改作者；候选锚点可使用 `{ file, startLine, endLine }`。 |
-| `POST` | `/cards/:id/confirm` | 确认草稿。body 可带 `edited` 布尔值及非负的 `durationMs`。 |
+| `POST` | `/cards/:id/confirm` | 确认可见草稿。body 可带 `edited`、非负的 `durationMs` 与可选 `patch`；修改与确认在一次原子保存中完成。 |
 | `POST` | `/cards/:id/archive` | 归档卡片。body 可带 `reason`。 |
 | `POST` | `/cards/:id/anchors/:index` | 使用 body 中的 `selection` 重选锚点。 |
 | `POST` | `/demo` | 在 Demo 工作区真实文件上生成六张示例卡片。 |
@@ -37,6 +37,8 @@
 同一建议同时执行接受、AI 草稿、丢弃或合并时，处理中请求返回 `409`；已经处理的建议也返回 `409`。项目成员可以通过“全部建议”处理条目。卡片仍按作用域规则读取，编辑权限仍要求属主或确认人。
 
 草稿 `provenance.origin` 为 `human-human`；覆写草稿的作者默认为改写者，聊天草稿的作者默认为发言最多的成员。确认者与作者可以不同，属主是接受建议的成员。候选锚点由确认者选择并生成阶段二的完整锚点。
+
+确认请求的 `patch` 使用普通编辑接口的字段规则，作者必须属于当前项目，显示名称由服务端查询。可见团队草稿可以由其他成员提交修改并确认，属主保持原值，确认者加入 `confirmedBy`。字段校验失败时草稿保持原值；普通 `PATCH` 继续要求属主或既有确认人。实际内容、类型、标签、作用域、锚点或作者变化会记录 `editedBeforeConfirm: true`。
 
 ## 视图接口
 

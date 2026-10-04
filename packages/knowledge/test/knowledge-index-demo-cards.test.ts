@@ -8,10 +8,73 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { createDemoKnowledgeCards } from '../src/demo-cards.js';
-import { searchKnowledgeCards } from '../src/knowledge-index.js';
-import { buildKnowledgeContext } from '../src/knowledge-inject.js';
+import { ensureKnowledgeIndex, searchKnowledgeCards } from '../src/knowledge-index.js';
+import { buildKnowledgeContext, pickCardsWithinBudget } from '../src/knowledge-inject.js';
 
 describe('knowledge-index demo cards retrieval', () => {
+    test('refreshes cached scope and ownership without changing card text', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const root = await fs.mkdtemp(path.join(artifactRoot, 'scope-cache-'));
+        try {
+            const [card] = createDemoKnowledgeCards({ selectedText: 'const value = 1;', now: 1_000 });
+            const options = { cards: [{ ...card, scope: 'team' as const, ownerMemberId: 'Ada' }], indexDir: root, now: () => 1_000 };
+            await ensureKnowledgeIndex(options);
+            const updated = await ensureKnowledgeIndex({ ...options, cards: [{ ...options.cards[0], scope: 'personal', ownerMemberId: 'Bob' }] });
+            expect(updated.entries[0]).toMatchObject({ scope: 'personal', ownerMemberId: 'Bob' });
+        } finally {
+            await fs.rm(root, { recursive: true, force: true });
+        }
+    });
+
+    test('selects reusable cards before limiting retrieval results', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const root = await fs.mkdtemp(path.join(artifactRoot, 'reusable-top-k-'));
+        try {
+            const [card] = createDemoKnowledgeCards({ selectedText: 'const value = 1;', now: 1_000 });
+            const cards = [
+                { ...card, id: 'private', title: 'timeout retry policy', summary: 'timeout retry policy', content: 'timeout retry policy', scope: 'personal' as const, ownerMemberId: 'Bob' },
+                { ...card, id: 'draft', title: 'timeout retry policy', summary: 'timeout retry policy', content: 'timeout retry policy', status: 'draft' as const, scope: 'team' as const },
+                { ...card, id: 'shared', title: 'timeout', summary: 'timeout', content: 'timeout', scope: 'team' as const }
+            ];
+            const result = await buildKnowledgeContext({ cards, query: 'timeout retry policy', viewerMemberId: 'Ada', topK: 1, indexDir: root });
+            expect(result.cards.map(item => item.id)).toEqual(['shared']);
+        } finally {
+            await fs.rm(root, { recursive: true, force: true });
+        }
+    });
+
+    test('keeps rendered knowledge text within the total character budget', () => {
+        const result = { cardId: 'card-1', score: 1, mode: 'lexical' as const, type: 'risk' as const, status: 'reviewed' as const, title: 'timeout '.repeat(100), summary: 'retry '.repeat(100), tags: ['policy'.repeat(100)], files: ['src/config.ts'], excerpt: 'content' };
+        expect(pickCardsWithinBudget([result], 800, 100)).toEqual({ text: '', cards: [] });
+        const bounded = pickCardsWithinBudget([result, { ...result, cardId: 'card-2' }], 800, 2_000);
+        expect(bounded.cards).toHaveLength(1);
+        expect(bounded.text.length).toBeLessThanOrEqual(2_000);
+    });
+
+    test('keeps the index readable during concurrent builds of different visible card sets', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const root = await fs.mkdtemp(path.join(artifactRoot, 'concurrent-index-'));
+        try {
+            const [card] = createDemoKnowledgeCards({ selectedText: 'const value = 1;', now: 1_000 });
+            const large = Array.from({ length: 100 }, (_, index) => ({ ...card, id: `large-${index}`, content: 'timeout policy '.repeat(800) }));
+            for (let round = 0; round < 5; round++) {
+                await Promise.all([
+                    ensureKnowledgeIndex({ workspaceId: 'concurrent', cards: large, indexDir: root, forceRebuild: true }),
+                    ensureKnowledgeIndex({ workspaceId: 'concurrent', cards: [card], indexDir: root, forceRebuild: true })
+                ]);
+                const [filename] = await fs.readdir(root);
+                const persisted = JSON.parse(await fs.readFile(path.join(root, filename), 'utf8'));
+                expect(persisted.schemaVersion).toBe(3);
+                expect([1, 100]).toContain(persisted.entries.length);
+            }
+        } finally {
+            await fs.rm(root, { recursive: true, force: true });
+        }
+    });
+
     test('requires an explicit index directory', async () => {
         const cards = createDemoKnowledgeCards({
             workspaceFolderName: 'demo',

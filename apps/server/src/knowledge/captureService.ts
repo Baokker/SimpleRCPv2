@@ -180,7 +180,10 @@ export function createCaptureService(options: CaptureServiceOptions) {
     for (const actor of actors) notify(actor, { type: "knowledge_suggestion", suggestionId: suggestion.id }, suggestion.createdAt);
     return suggestion;
   }
-  async function save(suggestion: CaptureSuggestion) { await writeJsonFileAtomically(path.join(inbox, `${suggestion.id}.json`), suggestion); }
+  async function save(suggestion: CaptureSuggestion) {
+    if (!isCaptureSuggestion(suggestion)) throw new Error("Invalid knowledge suggestion");
+    await writeJsonFileAtomically(path.join(inbox, `${suggestion.id}.json`), suggestion);
+  }
   function notify(memberId: string, message: Extract<ServerMessage, { type: "knowledge_suggestion" | "knowledge_risk_warning" }>, at: number) {
     if (message.type === "knowledge_suggestion") {
       const suggestion = suggestions.get(message.suggestionId);
