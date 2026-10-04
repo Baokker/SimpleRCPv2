@@ -12,7 +12,7 @@ describe('OpenAI compatible client', () => {
         const server = createServer((request, response) => { const chunks: Buffer[] = []; request.on('data', chunk => chunks.push(chunk)); request.on('end', () => { requests.push({ path: request.url ?? '', body: JSON.parse(Buffer.concat(chunks).toString('utf8')) }); response.setHeader('content-type', 'application/json'); response.end(request.url?.endsWith('/embeddings') ? JSON.stringify({ data: [{ embedding: [1, 0] }] }) : JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }], usage: { prompt_tokens: 2, completion_tokens: 3, total_tokens: 5 } })); }); });
         const port = await listen(server);
         try {
-            const client = createOpenAICompatibleClient({ baseUrl: `http://127.0.0.1:${port}/v1`, model: 'deepseek-chat', apiKey: 'test-key' });
+            const client = createOpenAICompatibleClient({ baseUrl: `http://127.0.0.1:${port}/v1`, model: 'deepseek-chat', embeddingModel: 'text-embedding-v4', apiKey: 'test-key' });
             const completion = await client.complete({ model: 'deepseek-chat', messages: [{ role: 'user', content: 'hello' }], responseFormat: { type: 'json_object' } });
             const vectors = await client.embed?.(['hello']);
             expect(completion.text).toBe('{"ok":true}');
@@ -21,6 +21,11 @@ describe('OpenAI compatible client', () => {
             expect(requests[0]?.body.response_format).toEqual({ type: 'json_object' });
             expect(requests[1]?.path).toBe('/v1/embeddings');
         } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+    });
+
+    test('leaves embedding unavailable when no embedding model is configured', () => {
+        const client = createOpenAICompatibleClient({ baseUrl: 'http://127.0.0.1:1/v1', model: 'deepseek-chat' });
+        expect(client.embed).toBeUndefined();
     });
 
     test('fails on HTTP errors and timeout', async () => {

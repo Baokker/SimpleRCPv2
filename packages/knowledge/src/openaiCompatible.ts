@@ -1,6 +1,6 @@
 import type { LlmClient, LlmUsage } from './client.js';
 
-export interface OpenAICompatibleOptions { baseUrl: string; apiKey?: string; model: string; timeoutMs?: number; fetch?: typeof fetch; }
+export interface OpenAICompatibleOptions { baseUrl: string; apiKey?: string; model: string; embeddingModel?: string; timeoutMs?: number; fetch?: typeof fetch; }
 
 export function createOpenAICompatibleClient(options: OpenAICompatibleOptions): LlmClient {
     const baseUrl = options.baseUrl.replace(/\/+$/, '');
@@ -20,14 +20,17 @@ export function createOpenAICompatibleClient(options: OpenAICompatibleOptions): 
             return { text, usage: normalizeUsage(body.usage) };
         }
     };
-    client.embed = async texts => {
-        const body = await requestJson(`${baseUrl}/embeddings`, { model: options.model, input: texts }, options, options.timeoutMs, requestFetch);
-        if (!Array.isArray(body.data)) throw new Error('OpenAI compatible embedding response did not contain data');
-        return body.data.map((item: { embedding?: unknown }) => {
-            if (!Array.isArray(item.embedding) || item.embedding.some(value => typeof value !== 'number')) throw new Error('Invalid embedding vector');
-            return item.embedding as number[];
-        });
-    };
+    const embeddingModel = options.embeddingModel?.trim();
+    if (embeddingModel) {
+        client.embed = async texts => {
+            const body = await requestJson(`${baseUrl}/embeddings`, { model: embeddingModel, input: texts }, options, options.timeoutMs, requestFetch);
+            if (!Array.isArray(body.data)) throw new Error('OpenAI compatible embedding response did not contain data');
+            return body.data.map((item: { embedding?: unknown }) => {
+                if (!Array.isArray(item.embedding) || item.embedding.some(value => typeof value !== 'number')) throw new Error('Invalid embedding vector');
+                return item.embedding as number[];
+            });
+        };
+    }
     return client;
 }
 

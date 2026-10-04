@@ -19,7 +19,7 @@
 
 ## 时钟与模型
 
-需要时间的函数接收 `now()` 或使用 `Clock`，测试可以传入虚拟时间。系统时钟只集中在 `src/clock.ts`。模型调用使用 `LlmClient`：`createOpenAICompatibleClient` 通过 `fetch` 调用 `/chat/completions` 和 `/embeddings`，调用方提供 `baseUrl`、`apiKey`、`model` 与超时。
+需要时间的函数接收 `now()` 或使用 `Clock`，测试可以传入虚拟时间。系统时钟只集中在 `src/clock.ts`。模型调用使用 `LlmClient`：`createOpenAICompatibleClient` 通过 `fetch` 调用 `/chat/completions`，调用方提供 `baseUrl`、`apiKey`、`model` 与超时；传入 `embeddingModel` 后才提供 `/embeddings`。
 
 ## schema v3
 

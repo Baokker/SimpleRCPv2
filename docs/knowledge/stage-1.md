@@ -14,7 +14,7 @@
 
 ## 验证结果
 
-`pnpm --filter @simplercp/knowledge build` 通过；知识包 18 个测试文件、66 项测试通过。`pnpm --filter @simplercp/knowledge bench:deterministic` 通过并生成六组摘要。全仓库 `pnpm build` 通过。服务端配置测试 6 项通过。根 `pnpm test` 与 e2e 的当前环境限制延续基线，需在能够启动 `node-pty` 的 Node 版本重新执行完整回归。
+`pnpm --filter @simplercp/knowledge build` 通过；知识包 18 个测试文件、67 项测试通过。`pnpm --filter @simplercp/knowledge bench:deterministic` 通过并生成六组摘要。全仓库 `pnpm build` 通过。服务端配置测试 6 项通过。根 `pnpm test` 与 e2e 的当前环境限制延续基线，需在能够启动 `node-pty` 的 Node 版本重新执行完整回归。
 
 ## 阶段 2 接口建议
 
