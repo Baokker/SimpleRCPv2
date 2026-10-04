@@ -35,6 +35,7 @@ export function TerminalPanel({
   onControlState?(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "off"): void;
 }) {
   const terminalRef = useRef<SharedTerminalHandle>(null);
+  const commandInputRef = useRef<HTMLInputElement>(null);
   const [connectionState, setConnectionState] = useState("Connecting");
   const [command, setCommand] = useState("");
   const [controlHolder, setControlHolder] = useState<string | null>(null);
@@ -58,6 +59,10 @@ export function TerminalPanel({
     setStatus("");
     setSnapshotId(undefined);
   }, [connectionState, controlled]);
+
+  useEffect(() => {
+    if (!controlled && guardMode !== "off" && canRun && connectionState === "Connected") commandInputRef.current?.focus();
+  }, [canRun, connectionState, controlled, guardMode]);
 
   async function undoSnapshot() {
     if (!snapshotId) return;
@@ -127,7 +132,7 @@ export function TerminalPanel({
       {controlled ? <div className="terminal-control-state">Interactive control until {controlExpiresAt ? new Date(controlExpiresAt).toLocaleTimeString() : "soon"}</div> : null}
       {!controlled && guardMode !== "off" ? (
         <form className="terminal-command-box" onSubmit={(event) => { event.preventDefault(); const text = command.trim(); if (!text) return; setHistory((current) => [...current.filter((item) => item !== text), text].slice(-50)); setHistoryIndex(-1); setStatus(""); setSnapshotId(undefined); terminalRef.current?.submitCommand(text); setCommand(""); }}>
-          <input aria-label="Terminal command" value={command} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return; event.preventDefault(); const next = event.key === "ArrowUp" ? Math.min(history.length, historyIndex + 1) : Math.max(-1, historyIndex - 1); setHistoryIndex(next); setCommand(next < 0 ? "" : history[history.length - 1 - next] ?? ""); }} placeholder="Submit a terminal command" disabled={!canRun || connectionState !== "Connected"} />
+          <input ref={commandInputRef} aria-label="Terminal command" value={command} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return; event.preventDefault(); const next = event.key === "ArrowUp" ? Math.min(history.length, historyIndex + 1) : Math.max(-1, historyIndex - 1); setHistoryIndex(next); setCommand(next < 0 ? "" : history[history.length - 1 - next] ?? ""); }} placeholder="Submit a terminal command" disabled={!canRun || connectionState !== "Connected"} />
           <button type="submit" disabled={!command.trim() || !canRun || connectionState !== "Connected"}><Send size={14} /> Send</button>
         </form>
       ) : null}
