@@ -9,11 +9,14 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
   const characterization = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
   let action: GuardDecision["action"] = "allow";
   const matchedRules = new Set<string>();
-  if (request.kind === "command" && /[\u0000-\u001f\u007f-\u009f]/.test(request.command ?? "")) {
+  const controlCharacterPattern = request.source === "terminal"
+    ? /[\u0000-\u001f\u007f-\u009f]/
+    : /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/;
+  if (request.kind === "command" && controlCharacterPattern.test(request.command ?? "")) {
     action = "deny";
     matchedRules.add("hard.control-character");
   }
-  if (request.kind === "command" && /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(request.command?.trim() ?? "")) {
+  if (request.source === "terminal" && request.kind === "command" && /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(request.command?.trim() ?? "")) {
     action = "deny";
     matchedRules.add("hard.cwd");
   }

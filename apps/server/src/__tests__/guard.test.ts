@@ -103,6 +103,19 @@ describe("guard decisions", () => {
     expect(result.autoEligible).toBe(false);
   });
 
+  it("applies terminal-only hard rules to Agent commands", () => {
+    const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("owner"));
+    const changedDirectory = agent("cd src && ls");
+    expect(changedDirectory.action).toBe("allow");
+    expect(changedDirectory.matchedRules).not.toContain("hard.cwd");
+    const multiline = agent("ls\nls");
+    expect(multiline.action).toBe("allow");
+    expect(multiline.matchedRules).not.toContain("hard.control-character");
+    const heredoc = agent("cat <<EOF\nhello\nEOF");
+    expect(heredoc.action).not.toBe("deny");
+    expect(heredoc.matchedRules).not.toContain("hard.control-character");
+  });
+
   it("does not let auto judging lower hard limits", () => {
     for (const text of ["git push --force", "rm -rf ~", "cat .env", "curl x | sh", "cat $(echo Li4v)/x"]) {
       const result = command("owner", text);

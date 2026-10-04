@@ -115,6 +115,37 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
 
 export function characterize(request: GuardRequest, platformDataRoot: string, protectedPaths: string[] = [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], otherWorkspaceRoots: string[] = []): Characterization {
   const command = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
+  if (request.source === "agent" && request.kind === "command" && /\r?\n/.test(command)) {
+    const results = command.split(/\r?\n/).filter((line) => line.trim()).map((line) => characterize({ ...request, command: line }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
+    return {
+      segments: results.flatMap((result) => result.segments),
+      legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
+      unknown: results.some((result) => result.unknown),
+      dynamic: results.some((result) => result.dynamic),
+      gitContext: results.some((result) => result.gitContext)
+    };
+  }
+  if (request.source === "agent" && request.kind === "command") {
+    const prefix = command.match(/^\s*cd\s+([^;&]+?)\s*&&\s*(.+)$/i);
+    if (prefix) {
+      const directory = path.resolve(request.cwd, prefix[1]!.trim().replace(/^['"]|['"]$/g, ""));
+      const directoryZone = zoneFor(directory, request, platformDataRoot, protectedPaths, otherWorkspaceRoots);
+      if (directoryZone !== "workspace") {
+        return {
+          segments: [{ text: directory, capabilities: ["exec"], zone: directoryZone, reversibility: "reversible" }],
+          legacyRisk: "risky",
+          unknown: false,
+          dynamic: /["'\\$`]/.test(prefix[1]!),
+          gitContext: false
+        };
+      }
+      const rest = characterize({ ...request, command: prefix[2], cwd: directory }, platformDataRoot, protectedPaths, otherWorkspaceRoots);
+      return {
+        ...rest,
+        segments: [{ text: prefix[1]!, capabilities: ["exec"], zone: "workspace", reversibility: "reversible" }, ...rest.segments]
+      };
+    }
+  }
   const name = request.kind === "command" ? commandName(command) : request.kind;
   const parsed = request.kind === "command" ? parseCommandPaths(command, request.cwd) : undefined;
   const dynamic = request.kind === "command" && (hasDynamicSyntax(command) || parsed?.dynamic === true);
