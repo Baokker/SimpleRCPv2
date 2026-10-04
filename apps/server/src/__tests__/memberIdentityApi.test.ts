@@ -135,6 +135,15 @@ describe("member identity API", () => {
     });
     expect(result).toMatchObject({ approved: false, decision: { action: "ask", outcome: "timeout" } });
     expect(runtime.guard.pending()).toHaveLength(0);
+    const nextResult = await runtime.guard.submit({
+      projectId: "demo",
+      memberId: student.member.id,
+      source: "terminal",
+      kind: "command",
+      command: "ls",
+      cwd: runtime.project.workspacePath
+    });
+    expect(nextResult).toMatchObject({ approved: true, decision: { action: "allow", outcome: "allowed" } });
   });
 
   it("keeps ordinary commands available and lets controlled users reach normal review", async () => {
