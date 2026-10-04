@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { getKnowledgeInbox, getKnowledgeSuggestion, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, resolveKnowledgeSuggestion } from "../api";
 import type {
   KnowledgeCard,
   KnowledgeCardType,
@@ -8,11 +9,12 @@ import type {
   KnowledgeAnchorResolution
 } from "../types";
 
-type View = "current" | "all" | "guide" | "timeline";
+type View = "current" | "all" | "guide" | "timeline" | "inbox";
 type Selection = { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
-type CardInput = { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; scope: KnowledgeScope };
+type CardInput = import("../types").KnowledgeCardInput;
 
 export function KnowledgePanel({
+  projectId, members, refreshVersion, focusCardId, onRefresh,
   cards,
   guide,
   timeline,
@@ -30,6 +32,8 @@ export function KnowledgePanel({
   onOpenAnchor,
   onClearPinSelection
 }: {
+  projectId: string; members: import("../types").RoomMember[]; refreshVersion: number; onRefresh(): Promise<void>;
+  focusCardId?: string;
   cards: KnowledgeCard[];
   guide: KnowledgeGuideItem[];
   timeline: KnowledgeTimelineItem[];
@@ -40,7 +44,7 @@ export function KnowledgePanel({
   memberId?: string;
   onCreate(input: CardInput): Promise<void>;
   onUpdate(id: string, input: CardInput): Promise<void>;
-  onConfirm(id: string): Promise<void>;
+  onConfirm(id: string, edited?: boolean, durationMs?: number): Promise<void>;
   onArchive(id: string): Promise<void>;
   onReanchor(id: string, anchorIndex: number, selection: Selection["selection"]): Promise<void>;
   onGenerateDemo(): Promise<void>;
@@ -60,6 +64,47 @@ export function KnowledgePanel({
   const [tags, setTags] = useState("");
   const [type, setType] = useState<KnowledgeCardType>("decision");
   const [scope, setScope] = useState<KnowledgeScope>("team");
+  const [suggestions, setSuggestions] = useState<import("../types").KnowledgeSuggestion[]>([]);
+  const [warnings, setWarnings] = useState<import("../types").KnowledgeRiskWarning[]>([]);
+  const [allSuggestions, setAllSuggestions] = useState(false);
+  const [draftEvidence, setDraftEvidence] = useState<import("../types").KnowledgeSuggestion>();
+  const [selectedAnchors, setSelectedAnchors] = useState<number[]>([]);
+  const [authorMemberId, setAuthorMemberId] = useState("");
+  const [mergeCardId, setMergeCardId] = useState("");
+  const openedAt = useRef(0);
+
+  useEffect(() => {
+    let active = true;
+    void getKnowledgeInbox(projectId, allSuggestions).then(result => { if (active) { setSuggestions(result.suggestions); setWarnings(result.warnings); } }).catch(error => { if (active) setFormError(String(error)); });
+    return () => { active = false; };
+  }, [projectId, allSuggestions, refreshVersion, cards]);
+
+  useEffect(() => {
+    if (view !== "inbox" || !memberId) return;
+    const ids = suggestions.filter(item => !item.seenBy?.includes(memberId)).map(item => item.id).slice(0, 100);
+    if (!ids.length) return;
+    void markKnowledgeSuggestionsRead(projectId, ids).catch(error => setFormError(String(error)));
+  }, [projectId, view, memberId, suggestions]);
+  useEffect(() => {
+    if (view !== "inbox") return;
+    const ids = warnings.filter(item => !item.seen).map(item => item.id).slice(0, 100);
+    if (ids.length) void markKnowledgeWarningsRead(projectId, ids).catch(error => setFormError(String(error)));
+  }, [projectId, view, warnings]);
+
+  useEffect(() => {
+    const suggestionId = editingCard?.status === "draft" ? editingCard.provenance?.trigger?.suggestionId : undefined;
+    if (!suggestionId) return;
+    let active = true;
+    void getKnowledgeSuggestion(projectId, suggestionId).then(result => { if (active) setDraftEvidence(result.suggestion); }).catch(error => { if (active) setFormError(String(error)); });
+    return () => { active = false; };
+  }, [projectId, editingCard?.id]);
+
+  useEffect(() => {
+    const open = (event: Event) => { const id = (event as CustomEvent<string>).detail; setExpanded(id); setView("all"); };
+    window.addEventListener("knowledge-open-card", open);
+    return () => window.removeEventListener("knowledge-open-card", open);
+  }, []);
+  useEffect(() => { if (focusCardId) { setExpanded(focusCardId); setView("all"); } }, [focusCardId]);
 
   useEffect(() => {
     if (!pinSelection) return;
@@ -73,6 +118,8 @@ export function KnowledgePanel({
 
   function openCreate() {
     setEditingCard(undefined);
+    setDraftEvidence(undefined);
+    setSelectedAnchors([]);
     setTitle("");
     setSummary("");
     setContent("");
@@ -85,6 +132,8 @@ export function KnowledgePanel({
 
   function openEdit(card: KnowledgeCard) {
     setEditingCard(card);
+    setDraftEvidence(undefined);
+    setSelectedAnchors([]);
     setTitle(card.title);
     setSummary(card.summary);
     setContent(card.content);
@@ -93,11 +142,15 @@ export function KnowledgePanel({
     setScope(card.scope === "personal" ? "personal" : "team");
     setFormError(undefined);
     setFormOpen(true);
+    openedAt.current = Date.now();
+    setAuthorMemberId(card.provenance?.author.memberId ?? memberId ?? "");
   }
 
   function closeForm() {
     setFormOpen(false);
     setEditingCard(undefined);
+    setDraftEvidence(undefined);
+    setSelectedAnchors([]);
     onClearPinSelection();
   }
 
@@ -113,8 +166,19 @@ export function KnowledgePanel({
       tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
       scope: scope === "personal" ? "personal" : "team"
     };
+    if (editingCard?.status === "draft") {
+      input.authorMemberId = authorMemberId;
+      input.authorName = members.find(member => member.id === authorMemberId)?.displayName ?? authorMemberId;
+      if (draftEvidence) input.anchors = selectedAnchors.map(index => draftEvidence.suggestedAnchors![index]!);
+    }
     try {
-      if (editingCard) await onUpdate(editingCard.id, input);
+      if (editingCard) {
+        await onUpdate(editingCard.id, input);
+        if (editingCard.status === "draft") {
+          const edited = input.title !== editingCard.title || input.summary !== editingCard.summary || input.content !== editingCard.content || input.type !== editingCard.type || input.scope !== editingCard.scope || input.tags.join(",") !== editingCard.tags.join(",") || selectedAnchors.length > 0 || input.authorMemberId !== editingCard.provenance?.author.memberId;
+          await onConfirm(editingCard.id, edited, Date.now() - openedAt.current);
+        }
+      }
       else await onCreate(input);
       closeForm();
     } catch (error) {
@@ -125,15 +189,19 @@ export function KnowledgePanel({
   }
 
   async function confirm(card: KnowledgeCard) {
-    setActionCardId(card.id);
-    setFormError(undefined);
+    openEdit(card);
+  }
+
+  async function resolveSuggestion(suggestion: import("../types").KnowledgeSuggestion, action: "accept" | "ai-draft" | "discard" | "merge") {
+    if (actionCardId) return;
+    setActionCardId(suggestion.id); setFormError(undefined);
     try {
-      await onConfirm(card.id);
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setActionCardId(undefined);
-    }
+      const result = await resolveKnowledgeSuggestion(projectId, suggestion.id, action, mergeCardId || suggestion.dedupe?.cardId);
+      setSuggestions(items => items.filter(item => item.id !== suggestion.id));
+      await onRefresh();
+      if (result.card && action !== "merge") { openEdit(result.card); setDraftEvidence(result.suggestion ?? suggestion); setSelectedAnchors([]); }
+    } catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setActionCardId(undefined); }
   }
 
   async function archive(card: KnowledgeCard) {
@@ -182,9 +250,9 @@ export function KnowledgePanel({
   return (
     <section className="knowledge-panel" data-testid="knowledge-panel">
       <div className="knowledge-toolbar">
-        {(["current", "all", "guide", "timeline"] as View[]).map((candidate) => (
+        {(["inbox", "current", "all", "guide", "timeline"] as View[]).map((candidate) => (
           <button type="button" key={candidate} className={view === candidate ? "active" : ""} onClick={() => setView(candidate)}>
-            {candidate === "current" ? "当前文件" : candidate === "all" ? "全部卡片" : candidate === "guide" ? "导览" : "时间线"}
+            {candidate === "inbox" ? "Inbox" : candidate === "current" ? "当前文件" : candidate === "all" ? "全部卡片" : candidate === "guide" ? "导览" : "时间线"}
           </button>
         ))}
       </div>
@@ -193,7 +261,29 @@ export function KnowledgePanel({
         <button type="button" onClick={() => void onGenerateDemo()}>生成 Demo</button>
       </div>
       {formError ? <p className="knowledge-error" role="alert">{formError}</p> : null}
-      {view === "guide" ? (
+      {view === "inbox" ? <div data-testid="knowledge-inbox">
+        {warnings.map(warning => <article className="knowledge-suggestion" key={warning.id} data-testid="knowledge-inbox-warning">
+          <strong>风险提醒 · {warning.file}</strong><time>{new Date(warning.createdAt).toLocaleString()}</time>
+          <p>{cards.find(card => card.id === warning.cardId)?.title}</p>
+          <button onClick={() => { setExpanded(warning.cardId); setView("all"); }}>打开卡片</button>
+        </article>)}
+        <label><input type="checkbox" checked={allSuggestions} onChange={event => setAllSuggestions(event.target.checked)} />全部建议</label>
+        <select aria-label="合并到已有卡片" value={mergeCardId} onChange={event => setMergeCardId(event.target.value)}><option value="">选择已确认卡片</option>{cards.filter(card => card.status === "reviewed").map(card => <option key={card.id} value={card.id}>{card.title}</option>)}</select>
+        <ol className="knowledge-list">{suggestions.length === 0 ? <li>暂无捕获建议</li> : suggestions.map(suggestion => <li className="knowledge-suggestion" key={suggestion.id} data-testid={`suggestion-${suggestion.triggerType}`}>
+          <strong>{suggestion.triggerType}</strong><time>{new Date(suggestion.createdAt).toLocaleString()}</time>
+          <p>{suggestion.actors.memberIds.map(id => members.find(member => member.id === id)?.displayName ?? id).join("、")}</p>
+          <p>{suggestion.suggestedSummary}</p>
+          {suggestion.dedupe ? <p>可能是已有卡片的补充或复现</p> : null}
+          {suggestion.suggestedAnchors?.map((anchor, index) => <button key={index} onClick={() => onOpenAnchor(anchor.file, { startLine: anchor.startLine, startColumn: 1, endLine: anchor.endLine, endColumn: 1 })}>{anchor.file}:{anchor.startLine}–{anchor.endLine}</button>)}
+          <details><summary>原始证据</summary><pre>{JSON.stringify(suggestion.evidence, null, 2)}</pre></details>
+          <div className="knowledge-actions">
+            <button disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "accept")}>接受</button>
+            <button disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "ai-draft")}>AI 草稿</button>
+            <button disabled={Boolean(actionCardId) || (!mergeCardId && !suggestion.dedupe)} onClick={() => void resolveSuggestion(suggestion, "merge")}>合并到已有卡片</button>
+            <button disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "discard")}>丢弃</button>
+          </div>
+        </li>)}</ol>
+      </div> : view === "guide" ? (
         <ol className="knowledge-list">
           {guide.map((item) => renderCard(item.card))}
         </ol>
@@ -209,6 +299,11 @@ export function KnowledgePanel({
       {formOpen ? (
         <div className="knowledge-editor" role="dialog" aria-label="知识卡片编辑器">
           <h3>{editingCard ? "编辑知识卡片" : "知识卡片"}</h3>
+          {draftEvidence ? <aside className="knowledge-draft-evidence">
+            <details open><summary>原始证据</summary><pre>{JSON.stringify(draftEvidence.evidence, null, 2)}</pre></details>
+            <strong>建议锚点</strong>{draftEvidence.suggestedAnchors?.map((anchor, index) => <label key={index}><input type="checkbox" checked={selectedAnchors.includes(index)} onChange={event => setSelectedAnchors(items => event.target.checked ? [...items, index] : items.filter(item => item !== index))} />{anchor.file}:{anchor.startLine}–{anchor.endLine} · {anchor.reasons.join("、")}</label>)}
+          </aside> : null}
+          {editingCard?.status === "draft" ? <select value={authorMemberId} onChange={event => setAuthorMemberId(event.target.value)} aria-label="卡片作者">{members.map(member => <option key={member.id} value={member.id}>{member.displayName}</option>)}</select> : null}
           {editingCard ? (
             <div className="knowledge-editor-anchors">
               <small>锚点列表</small>
@@ -226,7 +321,7 @@ export function KnowledgePanel({
           <textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder="正文 Markdown" />
           <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="标签，用逗号分隔" />
           <select value={scope === "personal" ? "personal" : "team"} onChange={(event) => setScope(event.target.value as KnowledgeScope)} aria-label="作用域"><option value="team">团队</option><option value="personal">个人</option></select>
-          <div><button type="button" onClick={closeForm}>取消</button><button type="button" disabled={saving || !title.trim() || !summary.trim()} onClick={() => void submit()}>保存</button></div>
+          <div><button type="button" onClick={closeForm}>取消</button><button type="button" disabled={saving || !title.trim() || !summary.trim()} onClick={() => void submit()}>{editingCard?.status === "draft" ? "确认并保存" : "保存"}</button></div>
         </div>
       ) : null}
     </section>

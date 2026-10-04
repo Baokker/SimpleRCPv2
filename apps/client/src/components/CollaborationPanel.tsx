@@ -16,10 +16,10 @@ import {
   Trash2,
   Users
 } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
 import { KnowledgePanel } from "./KnowledgePanel";
-import { downloadAgentTrace } from "../api";
+import { downloadAgentTrace, captureKnowledgeFromChat } from "../api";
 import { presentTrace } from "../agentTracePresentation";
 import type {
   AgentRun,
@@ -85,6 +85,8 @@ export function CollaborationPanel({
   onCreateTeamAgent,
   onCancelAgentRun,
   knowledgeEnabled,
+  knowledgeRefreshVersion,
+  knowledgeUnread,
   activePath,
   knowledgeCards,
   knowledgeResolutions,
@@ -98,7 +100,8 @@ export function CollaborationPanel({
   onArchiveKnowledgeCard,
   onReanchorKnowledgeCard,
   onClearKnowledgePinSelection,
-  onGenerateKnowledgeDemo
+  onGenerateKnowledgeDemo,
+  onRefreshKnowledge
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -126,6 +129,8 @@ export function CollaborationPanel({
   onCreateTeamAgent(name: string, description?: string): Promise<void>;
   onCancelAgentRun(runId: string): Promise<void>;
   knowledgeEnabled: boolean;
+  knowledgeRefreshVersion: number;
+  knowledgeUnread: number;
   activePath?: string;
   knowledgeCards: KnowledgeCard[];
   knowledgeResolutions: KnowledgeAnchorResolution[];
@@ -134,18 +139,27 @@ export function CollaborationPanel({
   knowledgePinSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
   knowledgeCurrentSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
   onCreateKnowledgeCard(input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }): Promise<void>;
-  onUpdateKnowledgeCard(id: string, input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }): Promise<void>;
-  onConfirmKnowledgeCard(id: string): Promise<void>;
+  onUpdateKnowledgeCard(id: string, input: import("../types").KnowledgeCardInput): Promise<void>;
+  onConfirmKnowledgeCard(id: string, edited?: boolean, durationMs?: number): Promise<void>;
   onArchiveKnowledgeCard(id: string): Promise<void>;
   onReanchorKnowledgeCard(id: string, anchorIndex: number, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): Promise<void>;
   onClearKnowledgePinSelection(): void;
   onGenerateKnowledgeDemo(): Promise<void>;
+  onRefreshKnowledge(): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
   const [teamAgentName, setTeamAgentName] = useState("");
   const [teamAgentDescription, setTeamAgentDescription] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
+  const [selectedChatMessages, setSelectedChatMessages] = useState<string[]>([]);
+  const [chatKnowledgeVersion, setChatKnowledgeVersion] = useState(0);
+  const [focusedKnowledgeCardId, setFocusedKnowledgeCardId] = useState<string>();
+  useEffect(() => {
+    const open = (event: Event) => { setFocusedKnowledgeCardId((event as CustomEvent<string>).detail); setActiveTab("knowledge"); };
+    window.addEventListener("knowledge-open-card", open);
+    return () => window.removeEventListener("knowledge-open-card", open);
+  }, []);
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
   const previousMessageCountRef = useRef(chatMessages.length);
@@ -236,7 +250,7 @@ export function CollaborationPanel({
             onClick={() => setActiveTab("knowledge")}
             data-testid="collab-tab-knowledge"
           >
-            Knowledge
+            Knowledge {knowledgeUnread ? <span data-testid="knowledge-unread">{knowledgeUnread}</span> : null}
           </button>
         ) : null}
         <button
@@ -252,6 +266,11 @@ export function CollaborationPanel({
       <div className="collab-tab-body">
         {activeTab === "knowledge" && knowledgeEnabled ? (
           <KnowledgePanel
+            projectId={projectId}
+            members={members}
+            refreshVersion={knowledgeRefreshVersion + chatKnowledgeVersion}
+            focusCardId={focusedKnowledgeCardId}
+            onRefresh={onRefreshKnowledge}
             cards={knowledgeCards}
             guide={knowledgeGuide}
             timeline={knowledgeTimeline}
@@ -272,6 +291,7 @@ export function CollaborationPanel({
         ) : null}
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
+            {knowledgeEnabled ? <button type="button" disabled={!selectedChatMessages.length} onClick={() => void captureKnowledgeFromChat(projectId, selectedChatMessages).then(() => { setSelectedChatMessages([]); setChatKnowledgeVersion(version => version + 1); setActiveTab("knowledge"); }).catch(onError)}>从这些消息创建知识</button> : null}
             <div className="team-agent-bar" data-testid="team-agent-bar">
               <strong>Team Agents</strong>
               {teamAgents.map((agent) => {
@@ -337,6 +357,7 @@ export function CollaborationPanel({
               ) : (
                 chatMessages.map((message) => (
                   <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}`}>
+                    {knowledgeEnabled && (message.kind ?? "member") === "member" ? <input type="checkbox" aria-label={`选择消息 ${message.authorName} ${message.text}`} checked={selectedChatMessages.includes(message.id)} onChange={event => setSelectedChatMessages(ids => event.target.checked ? [...ids, message.id] : ids.filter(id => id !== message.id))} /> : null}
                     <span>
                       <strong>
                         {message.kind === "agent" ? <Bot size={13} /> : null}

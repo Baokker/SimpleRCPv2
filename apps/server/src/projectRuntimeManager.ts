@@ -3,7 +3,7 @@ import type { ProjectRegistry } from "./projects.js";
 
 export function createProjectRuntimeManager(
   registry: ProjectRegistry,
-  options: { terminalEnabled?: boolean; knowledgeMode?: string } = {}
+  options: import("./projectRuntime.js").ProjectRuntimeOptions = {}
 ) {
   const runtimes = new Map<string, ProjectRuntime>();
   const projectDisposingListeners = new Set<(projectId: string) => void>();

@@ -6,12 +6,18 @@ import { getProjectMetadataPath, type ProjectRecord } from "./projects.js";
 import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import { createKnowledgeService } from "./knowledge/knowledgeService.js";
-import type { ChatMessage, WorkspaceChange } from "./types.js";
+import { createCaptureService } from "./knowledge/captureService.js";
+import type { CaptureConfigInput } from "@simplercp/knowledge";
+import type { ChatMessage, WorkspaceChange, ServerMessage } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
+export interface ProjectRuntimeOptions {
+  terminalEnabled?: boolean; knowledgeMode?: string; knowledgeRecordEvents?: boolean;
+  captureConfig?: CaptureConfigInput; llm?: { apiKey?: string; baseUrl: string; model: string };
+}
 export function createProjectRuntime(
   project: ProjectRecord,
-  options: { terminalEnabled?: boolean; knowledgeMode?: string } = {}
+  options: ProjectRuntimeOptions = {}
 ) {
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
@@ -28,6 +34,7 @@ export function createProjectRuntime(
   }> = [];
   const fileSavedListeners = new Set<(path: string) => void>();
   const knowledgeChangedListeners = new Set<(change: { cardId: string; action: string }) => void>();
+  const knowledgeNotificationListeners = new Set<(memberId: string, message: ServerMessage) => void>();
   const documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
     projectId: project.id,
@@ -53,6 +60,12 @@ export function createProjectRuntime(
       }
     })
     : undefined;
+  const capture = knowledge ? createCaptureService({
+    projectId: project.id, roomId: room.id, workspaceRoot: project.workspacePath, metadataRoot: projectRoot,
+    knowledge, documents, chat, events, recordEvents: options.knowledgeRecordEvents, config: options.captureConfig, llm: options.llm,
+    memberName(memberId) { return rooms.getMember(room.id, memberId)?.displayName ?? memberId; },
+    onNotify(memberId, message) { for (const listener of knowledgeNotificationListeners) listener(memberId, message); }
+  }) : undefined;
   const terminalListeners = new Set<(data: string) => void>();
   const inputWindows = new Map<string, { count: number; timer: ReturnType<typeof setTimeout> }>();
   function flushInput(memberId: string) {
@@ -74,6 +87,7 @@ export function createProjectRuntime(
     for (const listener of terminalListeners) listener(data);
   });
   const watcher = watchWorkspace(project.workspacePath, async (change) => {
+    await capture?.external(change);
     if (change.type === "change" || change.type === "add") {
       await documents.reloadPath(change.path);
     }
@@ -144,6 +158,7 @@ export function createProjectRuntime(
     documents,
     terminal,
     knowledge,
+    capture,
     room,
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
       workspaceListeners.add(listener);
@@ -166,6 +181,10 @@ export function createProjectRuntime(
       knowledgeChangedListeners.add(listener);
       return () => knowledgeChangedListeners.delete(listener);
     },
+    onKnowledgeNotification(listener: (memberId: string, message: ServerMessage) => void) {
+      knowledgeNotificationListeners.add(listener);
+      return () => knowledgeNotificationListeners.delete(listener);
+    },
     onTerminalData(listener: (data: string) => void) {
       terminalListeners.add(listener);
       return () => terminalListeners.delete(listener);
@@ -175,11 +194,13 @@ export function createProjectRuntime(
       suppressedWorkspaceChanges = [];
       fileSavedListeners.clear();
       knowledgeChangedListeners.clear();
+      knowledgeNotificationListeners.clear();
       terminalListeners.clear();
       removeTerminalListener();
       removeTerminalInputListener();
       for (const memberId of inputWindows.keys()) flushInput(memberId);
       await documents.awaitIdle();
+      await capture?.dispose();
       await knowledge?.awaitIdle();
       await chat.awaitIdle();
       await events.awaitIdle();

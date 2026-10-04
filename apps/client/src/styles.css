@@ -2968,3 +2968,9 @@ button.activity-entry:hover strong {
   content: "⚠";
   color: #e5b85c;
 }
+.knowledge-suggestion { padding: 12px; border-bottom: 1px solid var(--border-main); }
+.knowledge-suggestion time { display: block; font-size: 11px; opacity: .7; }
+.knowledge-suggestion pre, .knowledge-draft-evidence pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; font-size: 11px; }
+.knowledge-draft-evidence { border: 1px solid var(--border-main); padding: 8px; }
+.knowledge-draft-evidence label { display: block; font-size: 12px; }
+.knowledge-warning { position: fixed; bottom: 40px; right: 24px; z-index: 50; padding: 12px; background: var(--background-control-alt); border: 1px solid #c68b26; border-radius: 6px; display: flex; gap: 8px; }

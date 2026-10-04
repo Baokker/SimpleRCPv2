@@ -23,6 +23,8 @@ export function createCollaborativeDocumentStore({
   const retired = new Set<string>();
   const revisions = new Map<string, number>();
   const documentEpochs = new WeakMap<Y.Doc, string>();
+  const preparedListeners = new Set<(file: string, document: Y.Doc) => void>();
+  const retiredListeners = new Set<(file: string) => void>();
 
   async function getDocument(roomId: string, filePath: string) {
     return prepareDocument(documentName(roomId, filePath, projectId));
@@ -65,6 +67,7 @@ export function createCollaborativeDocumentStore({
         schedulePersist(name, document);
       }
     });
+    for (const listener of preparedListeners) listener(filePath, document);
     return document;
   }
 
@@ -134,6 +137,7 @@ export function createCollaborativeDocumentStore({
         persistTimers.delete(name);
         const document = await loading;
         await persistDocument(name, document);
+        for (const listener of retiredListeners) listener(parseDocumentName(name).filePath);
       })
     );
   }
@@ -174,6 +178,7 @@ export function createCollaborativeDocumentStore({
       const timer = persistTimers.get(name);
       if (timer) clearTimeout(timer);
       persistTimers.delete(name);
+      for (const listener of retiredListeners) listener(activePath);
     }
   }
 
@@ -216,7 +221,15 @@ export function createCollaborativeDocumentStore({
     getPreparedDocument,
     getDocumentEpoch,
     getRevision,
-    getRevisions
+    getRevisions,
+    onPrepared(listener: (file: string, document: Y.Doc) => void) {
+      preparedListeners.add(listener);
+      return () => preparedListeners.delete(listener);
+    },
+    onRetired(listener: (file: string) => void) {
+      retiredListeners.add(listener);
+      return () => retiredListeners.delete(listener);
+    }
   };
 }
 

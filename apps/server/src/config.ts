@@ -13,6 +13,8 @@ export interface ServerConfig {
   terminalEnabled?: boolean;
   fakeAgentRuntime?: boolean;
   knowledge?: KnowledgeMode;
+  knowledgeRecordEvents?: boolean;
+  captureConfig?: import("@simplercp/knowledge").CaptureConfigInput;
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -90,6 +92,7 @@ export function loadConfig(
     terminalEnabled,
     fakeAgentRuntime,
     knowledge,
+    ...(knowledge !== "off" ? { knowledgeRecordEvents: readBoolean(env.KNOWLEDGE_RECORD_EVENTS, "KNOWLEDGE_RECORD_EVENTS", true) } : {}),
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),

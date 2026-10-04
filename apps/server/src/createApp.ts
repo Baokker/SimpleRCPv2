@@ -27,7 +27,10 @@ export async function createApp(config: ServerConfig) {
   const members = createMemberStore({ projects: () => registry.listProjectsSync() });
   const runtimeManager = createProjectRuntimeManager(registry, {
     terminalEnabled: config.terminalEnabled !== false,
-    knowledgeMode: config.knowledge ?? "off"
+    knowledgeMode: config.knowledge ?? "off",
+    knowledgeRecordEvents: config.knowledgeRecordEvents,
+    captureConfig: config.captureConfig,
+    llm: config.agent
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
@@ -109,7 +112,8 @@ export async function createApp(config: ServerConfig) {
       res: express.Response,
       _next: express.NextFunction
     ) => {
-      const status = error.message === "Project not found" || (error as Error & { statusCode?: number }).statusCode === 404 ? 404 : 400;
+      const statusCode = (error as Error & { statusCode?: number }).statusCode;
+      const status = error.message === "Project not found" || statusCode === 404 ? 404 : statusCode === 409 ? 409 : 400;
       res.status(status).json({ error: error.message });
     }
   );

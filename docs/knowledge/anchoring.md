@@ -19,7 +19,7 @@ Yjs 相对位置使用 JSON 形式保存：`type` 保存文本类型名，`item`
 
 ## y-websocket 回收结论
 
-当前依赖为 `y-websocket 2.1.0`。`bin/utils.cjs` 的 `closeConn` 在连接从 `doc.conns` 移除后检查连接数量；最后一个连接关闭时调用 `persistence.writeState(doc.name, doc)`，随后调用 `doc.destroy()` 并从模块级 `docs` Map 删除文档。SimpleRCPv2 的持久化回调先刷新文本并释放文档记录。因此服务端重启或最后连接断开后的文档重建都会产生新的 `docEpoch`，旧相对位置不能跨文档实例直接使用。
+当前依赖为 `y-websocket 2.1.0`。`bin/utils.cjs` 的 `closeConn` 在连接从 `doc.conns` 移除后检查连接数量；最后一个连接关闭时调用 `persistence.writeState(doc.name, doc)`，立即从模块级 `docs` Map 删除文档，等待 `writeState` 完成后调用 `doc.destroy()`。SimpleRCPv2 的持久化回调刷新文本并释放文档记录。因此服务端重启或最后连接断开后的文档重建都会产生新的 `docEpoch`，旧相对位置不能跨文档实例直接使用。
 
 ## 并发编辑
 

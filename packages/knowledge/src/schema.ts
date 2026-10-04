@@ -172,10 +172,17 @@ function isTextPosition(value: unknown): value is TextPosition { return !!value 
 function isRelativeTextPosition(value: unknown): value is RelativeTextPosition { return !!value && typeof value === 'object' && typeof (value as RelativeTextPosition).type === 'string' && ((value as RelativeTextPosition).item === undefined || typeof (value as RelativeTextPosition).item === 'string') && ((value as RelativeTextPosition).assoc === undefined || typeof (value as RelativeTextPosition).assoc === 'number'); }
 
 function isCaptureTriggerType(value: unknown): value is CaptureTriggerType {
-    return value === 'chat.dense' || value === 'todo.cleared' || value === 'magicNumber.added' || value === 'packageJson.dependencySwitch' || value === 'diagnostics.fixed' || value === 'rollback.detected';
+    return value === 'chat.dense' || value === 'todo.cleared' || value === 'magicNumber.added' || value === 'packageJson.dependencySwitch' || value === 'dependency.changed' || value === 'diagnostics.fixed' || value === 'rollback.detected' || value === 'edit.overwritten';
 }
 
-export type CaptureTriggerType = 'chat.dense' | 'todo.cleared' | 'magicNumber.added' | 'packageJson.dependencySwitch' | 'diagnostics.fixed' | 'rollback.detected';
+export type CaptureTriggerType = 'chat.dense' | 'todo.cleared' | 'magicNumber.added' | 'packageJson.dependencySwitch' | 'dependency.changed' | 'diagnostics.fixed' | 'rollback.detected' | 'edit.overwritten';
+
+export interface SuggestedAnchor { file: string; startLine: number; endLine: number; score: number; reasons: string[]; }
+function isSuggestedAnchor(value: unknown): value is SuggestedAnchor {
+    if (!value || typeof value !== 'object') return false;
+    const anchor = value as SuggestedAnchor;
+    return typeof anchor.file === 'string' && !!anchor.file && Number.isInteger(anchor.startLine) && anchor.startLine >= 1 && Number.isInteger(anchor.endLine) && anchor.endLine >= anchor.startLine && isFiniteNumber(anchor.score) && anchor.score >= 0 && Array.isArray(anchor.reasons) && anchor.reasons.every(reason => typeof reason === 'string');
+}
 
 export interface CaptureSuggestion {
     id: string;
@@ -186,15 +193,23 @@ export interface CaptureSuggestion {
     suggestedType?: KnowledgeCardType;
     suggestedTitle?: string;
     suggestedSummary?: string;
-    suggestedAnchors?: KnowledgeAnchor[];
+    suggestedAnchors?: Array<KnowledgeAnchor | SuggestedAnchor>;
     evidence: Record<string, unknown>;
     confidence?: number;
     dedupe?: { cardId: string; score: number };
+    state?: 'open' | 'accepted' | 'discarded' | 'merged';
+    resolvedAt?: number;
+    resolvedBy?: string;
+    draftCardId?: string;
+    seenBy?: string[];
+    ai?: { model?: string; durationMs?: number; totalTokens?: number; fallback: boolean };
 }
 
 export function isCaptureSuggestion(value: unknown): value is CaptureSuggestion {
     if (!value || typeof value !== 'object') return false;
     const v = value as Partial<CaptureSuggestion>;
     const validType = v.suggestedType === undefined || ['decision', 'constraint', 'risk', 'context', 'negative', 'tutorial'].includes(v.suggestedType);
-    return typeof v.id === 'string' && !!v.id && isCaptureTriggerType(v.triggerType) && isFiniteNumber(v.createdAt) && isKnowledgeOrigin(v.origin) && !!v.actors && Array.isArray(v.actors.memberIds) && v.actors.memberIds.every(id => typeof id === 'string') && Array.isArray(v.actors.runIds) && v.actors.runIds.every(id => typeof id === 'string') && !!v.evidence && typeof v.evidence === 'object' && !Array.isArray(v.evidence) && validType && (v.suggestedTitle === undefined || typeof v.suggestedTitle === 'string') && (v.suggestedSummary === undefined || typeof v.suggestedSummary === 'string') && (v.suggestedAnchors === undefined || (Array.isArray(v.suggestedAnchors) && v.suggestedAnchors.every(anchor => isKnowledgeAnchor(anchor)))) && (v.confidence === undefined || (isFiniteNumber(v.confidence) && v.confidence >= 0 && v.confidence <= 1)) && (v.dedupe === undefined || (!!v.dedupe && typeof v.dedupe.cardId === 'string' && !!v.dedupe.cardId && isFiniteNumber(v.dedupe.score) && v.dedupe.score >= 0 && v.dedupe.score <= 1));
+    if (v.state !== undefined && !['open', 'accepted', 'discarded', 'merged'].includes(v.state)) return false;
+    if (v.seenBy !== undefined && (!Array.isArray(v.seenBy) || v.seenBy.some(id => typeof id !== 'string'))) return false;
+    return typeof v.id === 'string' && !!v.id && isCaptureTriggerType(v.triggerType) && isFiniteNumber(v.createdAt) && isKnowledgeOrigin(v.origin) && !!v.actors && Array.isArray(v.actors.memberIds) && v.actors.memberIds.every(id => typeof id === 'string') && Array.isArray(v.actors.runIds) && v.actors.runIds.every(id => typeof id === 'string') && !!v.evidence && typeof v.evidence === 'object' && !Array.isArray(v.evidence) && validType && (v.suggestedTitle === undefined || typeof v.suggestedTitle === 'string') && (v.suggestedSummary === undefined || typeof v.suggestedSummary === 'string') && (v.suggestedAnchors === undefined || (Array.isArray(v.suggestedAnchors) && v.suggestedAnchors.every(anchor => isKnowledgeAnchor(anchor) || isSuggestedAnchor(anchor)))) && (v.confidence === undefined || (isFiniteNumber(v.confidence) && v.confidence >= 0 && v.confidence <= 1)) && (v.dedupe === undefined || (!!v.dedupe && typeof v.dedupe.cardId === 'string' && !!v.dedupe.cardId && isFiniteNumber(v.dedupe.score) && v.dedupe.score >= 0 && v.dedupe.score <= 1));
 }

@@ -265,6 +265,8 @@ export type ClientMessage =
     };
 
 export type ServerMessage =
+  | { type: "knowledge_suggestion"; suggestionId: string; popup?: boolean }
+  | { type: "knowledge_risk_warning"; cardId: string; file: string; popup?: boolean; warningId?: string }
   | {
       type: "presence";
       roomId: string;

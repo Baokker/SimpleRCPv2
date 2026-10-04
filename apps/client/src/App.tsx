@@ -27,7 +27,9 @@ import {
   updateKnowledgeCard,
   confirmKnowledgeCard,
   archiveKnowledgeCard,
-  reanchorKnowledgeCard
+  reanchorKnowledgeCard,
+  getKnowledgeInbox,
+  markKnowledgeWarningsRead
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
@@ -213,6 +215,9 @@ function WorkspacePage({
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
   const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>([]);
+  const [knowledgeRefreshVersion, setKnowledgeRefreshVersion] = useState(0);
+  const [knowledgeUnread, setKnowledgeUnread] = useState(0);
+  const [knowledgeWarning, setKnowledgeWarning] = useState<{ cardId: string; file: string; warningId?: string }>();
   const [knowledgeResolutions, setKnowledgeResolutions] = useState<KnowledgeAnchorResolution[]>([]);
   const [knowledgeGuide, setKnowledgeGuide] = useState<KnowledgeGuideItem[]>([]);
   const [knowledgeTimeline, setKnowledgeTimeline] = useState<KnowledgeTimelineItem[]>([]);
@@ -402,6 +407,16 @@ function WorkspacePage({
           }
           if (message.type === "knowledge_changed") {
             scheduleKnowledgeRefresh();
+          }
+          if (message.type === "knowledge_suggestion") {
+            setKnowledgeRefreshVersion(version => version + 1);
+            void getKnowledgeInbox(projectId).then(result => setKnowledgeUnread(result.suggestions.filter(item => !item.seenBy?.includes(joined.member.id)).length + result.warnings.filter(item => !item.seen).length)).catch(showWorkspaceError);
+            if (message.popup) showWorkspaceNotice("有新的知识捕获建议，请查看 Inbox。");
+          }
+          if (message.type === "knowledge_risk_warning") {
+            setKnowledgeRefreshVersion(version => version + 1);
+            void getKnowledgeInbox(projectId).then(result => setKnowledgeUnread(result.suggestions.filter(item => !item.seenBy?.includes(joined.member.id)).length + result.warnings.filter(item => !item.seen).length)).catch(showWorkspaceError);
+            if (message.popup) setKnowledgeWarning({ cardId: message.cardId, file: message.file, warningId: message.warningId });
           }
           if (message.type === "agent_run_updated") {
             setAgentRuns((current) => {
@@ -641,17 +656,19 @@ function WorkspacePage({
     if (!knowledgeEnabled) return;
     const path = activeKnowledgePathRef.current;
     const requestVersion = ++knowledgeRequestVersionRef.current;
-    const [cards, fileCards, guide, timeline] = await Promise.all([
+    const [cards, fileCards, guide, timeline, inbox] = await Promise.all([
       getKnowledgeCards(projectId),
       path ? getKnowledgeCards(projectId, path) : Promise.resolve({ cards: [], resolutions: [] }),
       getKnowledgeGuide(projectId, path),
-      getKnowledgeTimeline(projectId, path)
+      getKnowledgeTimeline(projectId, path),
+      getKnowledgeInbox(projectId)
     ]);
     if (requestVersion !== knowledgeRequestVersionRef.current || path !== activeKnowledgePathRef.current) return;
     setKnowledgeCards(cards.cards);
     setKnowledgeResolutions(fileCards.resolutions);
     setKnowledgeGuide(guide.items);
     setKnowledgeTimeline(timeline.items);
+    setKnowledgeUnread(inbox.suggestions.filter(item => !member?.id || !item.seenBy?.includes(member.id)).length + inbox.warnings.filter(item => !item.seen).length);
   }
 
   async function openFile(path: string) {
@@ -758,13 +775,13 @@ function WorkspacePage({
     scheduleKnowledgeRefresh();
   }
 
-  async function updateKnowledge(id: string, input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }) {
-    await updateKnowledgeCard(projectId, id, input);
+  async function updateKnowledge(id: string, input: import("./types").KnowledgeCardInput) {
+    await updateKnowledgeCard(projectId, id, { ...input });
     await refreshKnowledgeState();
   }
 
-  async function confirmKnowledge(id: string) {
-    await confirmKnowledgeCard(projectId, id);
+  async function confirmKnowledge(id: string, edited?: boolean, durationMs?: number) {
+    await confirmKnowledgeCard(projectId, id, edited, durationMs);
     await refreshKnowledgeState();
   }
 
@@ -1055,6 +1072,8 @@ function WorkspacePage({
           }}
           knowledgeEnabled={knowledgeEnabled}
           activePath={activePath}
+          knowledgeRefreshVersion={knowledgeRefreshVersion}
+          knowledgeUnread={knowledgeUnread}
           knowledgeCards={knowledgeCards}
           knowledgeResolutions={knowledgeResolutions}
           knowledgeGuide={knowledgeGuide}
@@ -1064,6 +1083,7 @@ function WorkspacePage({
           onCreateKnowledgeCard={savePinnedKnowledge}
           onUpdateKnowledgeCard={updateKnowledge}
           onConfirmKnowledgeCard={confirmKnowledge}
+          onRefreshKnowledge={refreshKnowledgeState}
           onArchiveKnowledgeCard={archiveKnowledge}
           onReanchorKnowledgeCard={reanchorKnowledge}
           onClearKnowledgePinSelection={() => setKnowledgePinSelection(undefined)}
@@ -1073,6 +1093,11 @@ function WorkspacePage({
           }}
         />
       </aside>
+      {knowledgeWarning ? <div className="knowledge-warning" role="status" data-testid="knowledge-risk-warning">
+        <span>风险提醒：{knowledgeCards.find(card => card.id === knowledgeWarning.cardId)?.title ?? knowledgeWarning.file}</span>
+        <button onClick={() => { const card = knowledgeCards.find(candidate => candidate.id === knowledgeWarning.cardId); if (card) window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id })); if (knowledgeWarning.warningId) void markKnowledgeWarningsRead(projectId, [knowledgeWarning.warningId]).catch(showWorkspaceError); setKnowledgeWarning(undefined); }}>打开卡片</button>
+        <button onClick={() => setKnowledgeWarning(undefined)}>关闭</button>
+      </div> : null}
       {terminalEnabled ? (
         <section className="terminal-pane" hidden={!terminalVisible}>
           <TerminalPanel

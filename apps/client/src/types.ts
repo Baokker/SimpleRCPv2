@@ -70,7 +70,7 @@ export interface KnowledgeCard {
   updatedAt: number;
   scope?: KnowledgeScope;
   ownerMemberId?: string;
-  provenance?: { origin: string; author: { kind: string; memberId?: string; displayName?: string } };
+  provenance?: { origin: string; author: { kind: string; memberId?: string; displayName?: string }; trigger?: { type: string; suggestionId?: string } };
   review?: { confirmedBy: string[]; confirmedAt?: number };
   anchors: KnowledgeAnchor[];
   evolution: Array<{ at: number; action: string; note?: string }>;
@@ -96,4 +96,18 @@ export interface KnowledgeTimelineItem {
   at: number;
   label: string;
   evolution?: { at: number; action: string; note?: string };
+}
+
+export interface SuggestedKnowledgeAnchor { file: string; startLine: number; endLine: number; score: number; reasons: string[]; }
+export interface KnowledgeRiskWarning { id: string; cardId: string; file: string; createdAt: number; seen: boolean; }
+export interface KnowledgeSuggestion {
+  id: string; triggerType: string; createdAt: number; state?: string;
+  actors: { memberIds: string[]; runIds: string[] }; evidence: Record<string, unknown>;
+  suggestedSummary?: string; suggestedAnchors?: SuggestedKnowledgeAnchor[];
+  dedupe?: { cardId: string; score: number };
+  seenBy?: string[];
+}
+export interface KnowledgeCardInput {
+  type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team";
+  anchors?: SuggestedKnowledgeAnchor[]; authorMemberId?: string; authorName?: string;
 }

@@ -32,7 +32,13 @@ const durableEventTypes = new Set([
   "knowledge_card_created",
   "knowledge_card_updated",
   "knowledge_card_confirmed",
-  "knowledge_card_archived"
+  "knowledge_card_archived",
+  "knowledge_suggestion_created",
+  "knowledge_suggestion_resolved",
+  "knowledge_notification",
+  "knowledge_warning_read",
+  "knowledge_review_completed",
+  "mirror_resync"
 ]);
 
 export function createEventLog(storagePath?: string) {

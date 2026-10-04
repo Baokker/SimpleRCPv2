@@ -367,7 +367,7 @@ export async function createKnowledgeCard(projectId: string, input: {
   });
 }
 
-export async function updateKnowledgeCard(projectId: string, id: string, patch: Partial<KnowledgeCard> & { note?: string }) {
+export async function updateKnowledgeCard(projectId: string, id: string, patch: Record<string, unknown>) {
   return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -375,11 +375,11 @@ export async function updateKnowledgeCard(projectId: string, id: string, patch: 
   });
 }
 
-export async function confirmKnowledgeCard(projectId: string, id: string, edited = false) {
+export async function confirmKnowledgeCard(projectId: string, id: string, edited = false, durationMs?: number) {
   return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/confirm`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ edited })
+    body: JSON.stringify({ edited, durationMs })
   });
 }
 
@@ -424,6 +424,25 @@ export async function generateKnowledgeDemo(projectId: string) {
 
 function projectPath(projectId: string) {
   return `/api/projects/${encodeURIComponent(projectId)}`;
+}
+
+export function getKnowledgeInbox(projectId: string, all = false) {
+  return request<{ suggestions: import("./types").KnowledgeSuggestion[]; warnings: import("./types").KnowledgeRiskWarning[] }>(`${projectPath(projectId)}/knowledge/inbox${all ? "?view=all" : ""}`);
+}
+export function getKnowledgeSuggestion(projectId: string, id: string) {
+  return request<{ suggestion: import("./types").KnowledgeSuggestion }>(`${projectPath(projectId)}/knowledge/inbox/${encodeURIComponent(id)}`);
+}
+export function markKnowledgeSuggestionsRead(projectId: string, ids: string[]) {
+  return request<{ ok: boolean }>(`${projectPath(projectId)}/knowledge/inbox/read`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }) });
+}
+export function markKnowledgeWarningsRead(projectId: string, ids: string[]) {
+  return request<{ ok: boolean }>(`${projectPath(projectId)}/knowledge/inbox/warnings/read`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }) });
+}
+export function resolveKnowledgeSuggestion(projectId: string, id: string, action: "accept" | "ai-draft" | "discard" | "merge", cardId?: string) {
+  return request<{ card?: KnowledgeCard; suggestion?: import("./types").KnowledgeSuggestion }>(`${projectPath(projectId)}/knowledge/inbox/${encodeURIComponent(id)}/${action}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cardId }) });
+}
+export function captureKnowledgeFromChat(projectId: string, messageIds: string[]) {
+  return request<{ suggestion: import("./types").KnowledgeSuggestion }>(`${projectPath(projectId)}/knowledge/from-chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageIds }) });
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

@@ -8,6 +8,9 @@
     ".": { "types": "./dist/src/index.d.ts", "default": "./dist/src/index.js" },
     "./schema": { "types": "./dist/src/schema.d.ts", "default": "./dist/src/schema.js" },
     "./capture/triggerPolicy": { "types": "./dist/src/capture/triggerPolicy.d.ts", "default": "./dist/src/capture/triggerPolicy.js" },
+    "./capture/engine": { "types": "./dist/src/capture/engine.d.ts", "default": "./dist/src/capture/engine.js" },
+    "./capture/events": { "types": "./dist/src/capture/events.d.ts", "default": "./dist/src/capture/events.js" },
+    "./capture/authorship": { "types": "./dist/src/capture/authorship.d.ts", "default": "./dist/src/capture/authorship.js" },
     "./anchor/resolver": { "types": "./dist/src/anchor/resolver.d.ts", "default": "./dist/src/anchor/resolver.js" },
     "./anchor/review": { "types": "./dist/src/anchor/review.d.ts", "default": "./dist/src/anchor/review.js" },
     "./views/guide": { "types": "./dist/src/views/guide.d.ts", "default": "./dist/src/views/guide.js" },
@@ -23,6 +26,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
+    "replay": "tsx src/capture/replayCli.ts",
     "bench:anchor": "tsx test/fixtures/run-anchor-benchmark-cli.ts",
     "bench:retrieval-stress": "tsx bench/run-deterministic.ts --only retrieval-stress",
     "bench:scale": "tsx bench/run-deterministic.ts --only knowledge-scale",
@@ -32,5 +36,6 @@
     "bench:deterministic": "tsx bench/run-deterministic.ts",
     "bench:capture-quality:llm": "node --env-file=../../.env --import tsx bench/run-capture-quality-llm.ts"
   },
-  "devDependencies": { "@types/node": "^20.11.0", "tsx": "^4.7.0", "typescript": "^5.4.0", "vitest": "^1.4.0" }
+  "dependencies": { "typescript": "^5.4.0" },
+  "devDependencies": { "@types/node": "^20.11.0", "tsx": "^4.7.0", "vitest": "^1.4.0" }
 }

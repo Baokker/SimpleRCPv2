@@ -258,12 +258,16 @@ export function attachRealtimeServer(
         action: change.action
       });
     });
+    const removeKnowledgeNotification = runtime.onKnowledgeNotification((memberId, message) => {
+      for (const socket of projectSockets.get(runtime.project.id) ?? []) if (identities.get(socket)?.memberId === memberId && socket.readyState === socket.OPEN) socket.send(JSON.stringify(message));
+    });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,
       removeFileSavedListener,
       removeTerminalListener,
       removeChatListener,
-      removeKnowledgeListener
+      removeKnowledgeListener,
+      removeKnowledgeNotification
     ]);
   }
 
@@ -316,10 +320,11 @@ export function attachRealtimeServer(
         ensureRuntimeSubscriptions(runtime);
         const { roomId } = parseDocumentName(documentName);
         if (!runtime.rooms.getMember(roomId, identity.memberId)) { socket.destroy(); return; }
-        void runtime.documents.prepareDocument(documentName).then(() => {
+        void Promise.resolve(runtime.capture?.ready).then(() => runtime.documents.prepareDocument(documentName)).then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
             documentProjects.set(webSocket, projectId);
-            webSocket.on("close", () => documentProjects.delete(webSocket));
+            runtime.capture?.attribution.bind(webSocket, { projectId, memberId: identity.memberId });
+            webSocket.on("close", () => { documentProjects.delete(webSocket); runtime.capture?.attribution.unbind(webSocket); });
             setupWSConnection(webSocket, request, { docName: documentName });
           });
         }).catch(() => socket.destroy());
@@ -369,6 +374,7 @@ export function attachRealtimeServer(
         runtime.rooms.markOffline(identity.roomId, identity.memberId);
       }
       runtime.rooms.cleanupStaleMembers(identity.roomId);
+      if (!runtime.rooms.getMember(identity.roomId, identity.memberId)?.online) void runtime.capture?.feed({ type: "memberPresence", memberId: identity.memberId, action: "leave" });
       broadcastToProject(projectSockets, projectId, {
         type: "presence",
         roomId: identity.roomId,
@@ -392,6 +398,10 @@ export function attachRealtimeServer(
         } else {
           runtime.rooms.markOnline(identity.roomId, identity.memberId);
         }
+        const previousFile = runtime.rooms.getMember(identity.roomId, identity.memberId)?.currentFile;
+        if (bound.type === "ready") void runtime.capture?.feed({ type: "memberPresence", memberId: identity.memberId, action: "join" });
+        if (bound.type === "open_file") void runtime.capture?.feed({ type: "memberPresence", memberId: identity.memberId, action: "switchFile", file: bound.path, previousFile });
+        if (bound.type === "cursor_change") runtime.capture?.cursor({ type: "cursor", memberId: identity.memberId, file: bound.path, position: { line: bound.position.lineNumber - 1, character: bound.position.column - 1 }, selection: { startLine: bound.selection.startLineNumber - 1, startCharacter: bound.selection.startColumn - 1, endLine: bound.selection.endLineNumber - 1, endCharacter: bound.selection.endColumn - 1 } });
         const { broadcast } = handleRealtimeMessage({
           events: runtime.events,
           rooms: runtime.rooms,

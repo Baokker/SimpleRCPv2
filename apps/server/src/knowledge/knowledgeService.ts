@@ -21,6 +21,7 @@ import {
   type KnowledgeEvolutionEntry,
   type KnowledgeScope,
   type RelativeTextPosition,
+  type KnowledgeProvenance,
   type TextRange
 } from "@simplercp/knowledge";
 import type { Identity } from "../auth/identity.js";
@@ -236,21 +237,28 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     return anchor;
   }
 
-  async function anchorFromInput(input: { file: string; selection: KnowledgeAnchorSelection }) {
+  async function anchorFromInput(input: { file: string; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }) {
     const current = await currentDocument(input.file);
-    return createAnchor(input.file, current.text, toTextRange(input.selection), current.document, current.epoch);
+    if (input.selection) return createAnchor(input.file, current.text, toTextRange(input.selection), current.document, current.epoch);
+    if (!Number.isInteger(input.startLine) || !Number.isInteger(input.endLine) || input.startLine! < 1 || input.endLine! < input.startLine!) throw new Error("Suggested anchor range is invalid");
+    const lines = current.text.split("\n");
+    if (input.startLine! > lines.length) throw new Error("Suggested anchor needs reselection");
+    const endLine = Math.min(input.endLine!, lines.length) - 1;
+    return createAnchor(input.file, current.text, { start: { line: input.startLine! - 1, character: 0 }, end: { line: endLine, character: lines[endLine]!.replace(/\r$/, "").length } }, current.document, current.epoch);
   }
 
   function anchorInputs(value: unknown) {
-    if (value === undefined) return [] as Array<{ file: string; selection: KnowledgeAnchorSelection }>;
+    if (value === undefined) return [] as Array<{ file: string; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }>;
     if (!Array.isArray(value)) throw new Error("Card anchors must be an array");
     return value.map((input, index) => {
-      if (!input || typeof input !== "object" || typeof (input as { file?: unknown }).file !== "string" || !(input as { selection?: unknown }).selection) {
+      if (!input || typeof input !== "object" || typeof (input as { file?: unknown }).file !== "string") {
         throw new Error(`Card anchor ${index} is invalid`);
       }
       return {
         file: (input as { file: string }).file,
-        selection: (input as { selection: KnowledgeAnchorSelection }).selection
+        selection: (input as { selection?: KnowledgeAnchorSelection }).selection,
+        startLine: (input as { startLine?: number }).startLine,
+        endLine: (input as { endLine?: number }).endLine
       };
     });
   }
@@ -456,6 +464,10 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         card.anchors = [];
         for (const input of anchorInputs(patch.anchors)) card.anchors.push(await anchorFromInput(input));
       }
+      if (patch.authorMemberId !== undefined) {
+        if (card.status !== "draft" || typeof patch.authorMemberId !== "string" || !patch.authorMemberId) throw new Error("Only draft authors can be changed");
+        card.provenance = { ...card.provenance!, author: { kind: "human", memberId: patch.authorMemberId, displayName: typeof patch.authorName === "string" ? patch.authorName : patch.authorMemberId } };
+      }
       const now = Date.now();
       const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: typeof patch.note === "string" ? patch.note : undefined };
       const updated: KnowledgeCard = { ...card, updatedAt: now, evolution: [...card.evolution, evolution] };
@@ -465,13 +477,14 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     });
   }
 
-  async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean }) {
+  async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean; durationMs?: number }) {
     return enqueue(async () => {
       const stored = await readCard(id);
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       const confirmed = confirmCard(stored.card, { memberId: actor.memberId, now: () => Date.now(), edited: input.edited, memberKind: "human" });
       await saveCard(confirmed);
       event(confirmed.id, "knowledge_card_confirmed", actor);
+      options.events.append({ type: "knowledge_review_completed", roomId: options.roomId, memberId: actor.memberId, payload: { cardId: id, editedBeforeConfirm: input.edited === true, durationMs: input.durationMs } });
       return confirmed;
     });
   }
@@ -544,6 +557,34 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     list,
     get,
     create,
+    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; provenance: KnowledgeProvenance; source: "ai" | "event"; anchors?: Array<{ file: string; selection: KnowledgeAnchorSelection }> }) {
+      return enqueue(async () => {
+        const now = Date.now();
+        const anchors: KnowledgeAnchor[] = [];
+        for (const input of draft.anchors ?? []) anchors.push(await anchorFromInput(input));
+        const card: KnowledgeCard = {
+          ...draft, schemaVersion: LatestSchemaVersion, id: crypto.randomUUID(), status: "draft", createdAt: now, updatedAt: now,
+          metadata: { createdBy: { peerId: actor.memberId, name: actor.displayName }, roomId: options.roomId, relatedChatMessageIds: draft.provenance.evidenceRefs.chatMessageIds },
+          scope: "team", ownerMemberId: actor.memberId, review: { confirmedBy: [] }, anchors,
+          evolution: [{ at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName } }]
+        };
+        await saveCard(card);
+        event(card.id, "knowledge_card_created", actor);
+        return card;
+      });
+    },
+    recordRecurrence(actor: KnowledgeActor, id: string, suggestionId: string) {
+      return enqueue(async () => {
+        const card = await get(actor, id);
+        if (!card || card.status !== "reviewed") throw new KnowledgeCardNotFoundError("Reviewed knowledge card not found");
+        if (card.evolution.some(entry => entry.action === "recurrence" && entry.note === suggestionId)) return card;
+        const now = Date.now();
+        const updated: KnowledgeCard = { ...card, updatedAt: now, usage: { injectedCount: 0, toolHitCount: 0, ...card.usage, recurrenceCount: (card.usage?.recurrenceCount ?? 0) + 1 }, evolution: [...card.evolution, { at: now, action: "recurrence", by: { peerId: actor.memberId, name: actor.displayName }, note: suggestionId }] };
+        await saveCard(updated);
+        event(id, "knowledge_card_updated", actor);
+        return updated;
+      });
+    },
     update,
     confirm,
     archive,
