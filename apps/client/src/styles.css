@@ -2557,6 +2557,12 @@ button.activity-entry:hover strong {
   font-weight: 400;
 }
 
+.terminal-control-badge {
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .terminal-controls .terminal-reconnect {
   border: 0;
   padding: 0 4px;

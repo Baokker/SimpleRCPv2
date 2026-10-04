@@ -14,6 +14,7 @@ export function TerminalPanel({
   theme,
   canRun,
   memberId,
+  controlHolderName,
   isOwner,
   rolesLoaded,
   guardSettings,
@@ -25,6 +26,7 @@ export function TerminalPanel({
   theme: ThemeMode;
   canRun: boolean;
   memberId: string;
+  controlHolderName?: string;
   isOwner?: boolean;
   rolesLoaded?: boolean;
   guardSettings?: GuardSettings;
@@ -43,7 +45,14 @@ export function TerminalPanel({
   const [snapshotId, setSnapshotId] = useState<string>();
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [controlClock, setControlClock] = useState(() => Date.now());
   const controlled = controlHolder === memberId;
+
+  useEffect(() => {
+    if (!controlHolder) return;
+    const timer = window.setInterval(() => setControlClock(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [controlHolder]);
 
   useEffect(() => {
     setStatus("");
@@ -77,6 +86,7 @@ export function TerminalPanel({
       <div className="panel-header terminal-header">
         <span>Terminal</span>
         <div className="terminal-controls">
+          {controlHolder ? <span className="terminal-control-badge">{controlHolderName ?? (controlled ? "You" : "Collaborator")} has control · {formatControlRemaining(controlExpiresAt, controlClock)}</span> : null}
           <span className="terminal-state" data-testid="terminal-state">
             Shared · {connectionState}
           </span>
@@ -151,4 +161,10 @@ export function TerminalPanel({
       </div>
     </div>
   );
+}
+
+function formatControlRemaining(expiresAt: string | undefined, now: number) {
+  if (!expiresAt) return "soon";
+  const seconds = Math.max(0, Math.ceil((Date.parse(expiresAt) - now) / 1_000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }

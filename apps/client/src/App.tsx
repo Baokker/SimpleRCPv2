@@ -1022,6 +1022,7 @@ function WorkspacePage({
             theme={theme}
             canRun={Boolean(member)}
             memberId={member?.id ?? ""}
+            controlHolderName={members.find((candidate) => candidate.id === terminalControl.holderMemberId)?.displayName}
             isOwner={scenarioRoles?.some((role) => role.role === member?.profileRole && role.level === "owner") ?? false}
             rolesLoaded={Boolean(scenarioRoles)}
             guardSettings={guardSettings}
