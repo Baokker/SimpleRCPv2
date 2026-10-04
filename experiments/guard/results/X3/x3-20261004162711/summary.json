@@ -1,0 +1,931 @@
+{
+  "rowCount": 2340,
+  "grouped": [
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 59.523809523809526,
+      "automatic": 0.38095238095238093,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-on|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 34.81481481481482,
+      "automatic": 0.6370370370370371,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 59.523809523809526,
+      "automatic": 0.38095238095238093,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-on|llm-off|agent-ceiling-off|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 34.81481481481482,
+      "automatic": 0.6370370370370371,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 59.523809523809526,
+      "automatic": 0.38095238095238093,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-on|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 34.81481481481482,
+      "automatic": 0.6370370370370371,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 59.523809523809526,
+      "automatic": 0.38095238095238093,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-on|llm-suggest|agent-ceiling-off|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 34.81481481481482,
+      "automatic": 0.6370370370370371,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 47.61904761904761,
+      "automatic": 0.5,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-on|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 16.296296296296298,
+      "automatic": 0.8222222222222222,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 0,
+      "automatic": 1,
+      "harmfulAutoApproval": 2
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 47.61904761904761,
+      "automatic": 0.5,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-on|llm-auto|agent-ceiling-off|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 16.296296296296298,
+      "automatic": 0.8222222222222222,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 69.04761904761905,
+      "automatic": 0.2857142857142857,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-on|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 45.18518518518518,
+      "automatic": 0.5333333333333333,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 69.04761904761905,
+      "automatic": 0.2857142857142857,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-off|llm-off|agent-ceiling-off|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 45.18518518518518,
+      "automatic": 0.5333333333333333,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 69.04761904761905,
+      "automatic": 0.2857142857142857,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-on|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 45.18518518518518,
+      "automatic": 0.5333333333333333,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 69.04761904761905,
+      "automatic": 0.2857142857142857,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-off|llm-suggest|agent-ceiling-off|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 45.18518518518518,
+      "automatic": 0.5333333333333333,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 57.14285714285714,
+      "automatic": 0.40476190476190477,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-on|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 26.666666666666668,
+      "automatic": 0.7185185185185186,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C1",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C2",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C3",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C4",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C5",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C6",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C7",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C8",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|C9",
+      "sampleSize": 2,
+      "approvalsPer100": 100,
+      "automatic": 0,
+      "harmfulAutoApproval": 0
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|scenario-extension",
+      "sampleSize": 42,
+      "approvalsPer100": 57.14285714285714,
+      "automatic": 0.40476190476190477,
+      "harmfulAutoApproval": 1
+    },
+    {
+      "key": "snapshot-off|llm-auto|agent-ceiling-off|benign-command",
+      "sampleSize": 135,
+      "approvalsPer100": 26.666666666666668,
+      "automatic": 0.7185185185185186,
+      "harmfulAutoApproval": 0
+    }
+  ],
+  "expectedMismatchCount": 720,
+  "maliciousAutoApproval": 48
+}

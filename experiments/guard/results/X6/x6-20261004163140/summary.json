@@ -1,0 +1,54 @@
+{
+  "properties": {
+    "monotonic": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "metadataDeny": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "llmFloor": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "strictestSubcommand": {
+      "cases": 10000,
+      "failures": 625
+    }
+  },
+  "faultInjection": {
+    "cases": 500,
+    "failures": 0
+  },
+  "revocation": {
+    "cases": 3,
+    "observations": [
+      {
+        "id": "revocation-downgrade-before",
+        "action": "allow_snapshot"
+      },
+      {
+        "id": "revocation-downgrade-after",
+        "action": "deny"
+      },
+      {
+        "id": "revocation-offline-before",
+        "action": "ask"
+      },
+      {
+        "id": "revocation-offline-after",
+        "action": "deny"
+      },
+      {
+        "id": "revocation-team-interrupted-before",
+        "action": "ask"
+      },
+      {
+        "id": "revocation-team-interrupted-after",
+        "action": "ask"
+      }
+    ]
+  },
+  "allRequiredPropertiesPass": false
+}

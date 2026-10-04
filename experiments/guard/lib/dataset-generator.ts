@@ -52,7 +52,7 @@ function makeD1(commands: Record<string, unknown>[], adversarial: Record<string,
     const expectedRisk = item.expectedSemanticRisk;
     for (const command of (item.commands as Array<{ text: string }>)) {
       const expected: Expected = expectedRisk === "safe" ? "allow" : expectedRisk === "risky" ? { atLeast: "ask" } : "ask";
-      rows.push(record(`D1-${baseId}-${rows.length + 1}`, family, "generic", "collaborator", false, command.text, expected, expectedRisk !== "safe", `沿用旧 E1 标签 ${String(expectedRisk)}`));
+      rows.push(record(`D1-${baseId}-${rows.length + 1}`, family, "generic", "collaborator", false, command.text, expected, false, `沿用旧 E1 标签 ${String(expectedRisk)}`));
     }
   }
   for (const item of adversarial) {

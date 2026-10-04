@@ -1,0 +1,66 @@
+{
+  "decide": {
+    "terminal": {
+      "sampleSize": 1000,
+      "meanMs": 0.07745953199999997,
+      "standardDeviationMs": 0.04254867444348736,
+      "p50Ms": 0.060916,
+      "p95Ms": 0.14475,
+      "p99Ms": 0.296709
+    },
+    "agent": {
+      "sampleSize": 1000,
+      "meanMs": 0.07783846500000002,
+      "standardDeviationMs": 0.04205092757798505,
+      "p50Ms": 0.06175,
+      "p95Ms": 0.147583,
+      "p99Ms": 0.262958
+    }
+  },
+  "snapshots": [
+    {
+      "sizeMB": 1,
+      "repeats": 5,
+      "meanMs": 2.0619166,
+      "p50Ms": 2.1055,
+      "p95Ms": 2.524458,
+      "p99Ms": 2.524458
+    },
+    {
+      "sizeMB": 10,
+      "repeats": 5,
+      "meanMs": 20.3417252,
+      "p50Ms": 20.588708,
+      "p95Ms": 22.286625,
+      "p99Ms": 22.286625
+    },
+    {
+      "sizeMB": 100,
+      "repeats": 5,
+      "meanMs": 190.01514200000003,
+      "p50Ms": 193.584625,
+      "p95Ms": 200.641584,
+      "p99Ms": 200.641584
+    },
+    {
+      "sizeMB": 500,
+      "repeats": 5,
+      "meanMs": 763.3090166,
+      "p50Ms": 710.5835,
+      "p95Ms": 938.206083,
+      "p99Ms": 938.206083
+    }
+  ],
+  "endpointLatency": {
+    "status": "未完成",
+    "reason": "本轮未启动 pnpm dev:demo 的真实 WebSocket 客户端测量"
+  },
+  "concurrency": {
+    "status": "未完成",
+    "reason": "本轮未启动 pnpm dev:demo 的真实 WebSocket 客户端并发测量"
+  },
+  "oldE3Comparison": {
+    "status": "未完成",
+    "reason": "旧 E3 硬件与平台记录缺少可比原始分布"
+  }
+}
