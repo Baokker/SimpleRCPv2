@@ -7,7 +7,6 @@ export * from './anchor-resolver.js';
 export * from './demo-cards.js';
 export * from './hash.js';
 export * from './knowledge-views.js';
-export * from './workspace-layout.js';
 export * from './capture-trigger-policy.js';
 export * from './client.js';
 export * from './openaiCompatible.js';

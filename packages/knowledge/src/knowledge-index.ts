@@ -10,7 +10,7 @@ export type KnowledgeSearchMode = 'vector' | 'lexical';
 export interface EmbeddingsConfig { client?: { embed(texts: string[]): Promise<number[][]> }; timeoutMs?: number; model?: string; }
 export interface KnowledgeIndexEntry { cardId: string; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; embeddingTextHash: string; embeddingText: string; vector?: number[]; }
 export interface KnowledgeIndex { schemaVersion: 3; workspaceRoot: string; workspaceHash: string; embeddingModel: string; updatedAt: number; entries: KnowledgeIndexEntry[]; }
-export interface EnsureKnowledgeIndexOptions { workspaceRoot?: string; workspaceId?: string; cards?: KnowledgeCard[]; cardsDirectory?: string; embeddings?: EmbeddingsConfig; indexDir?: string; forceRebuild?: boolean; now?: () => number; }
+export interface EnsureKnowledgeIndexOptions { workspaceRoot?: string; workspaceId?: string; cards?: unknown[]; cardsDirectory?: string; embeddings?: EmbeddingsConfig; indexDir: string; forceRebuild?: boolean; now?: () => number; }
 export interface KnowledgeSearchFilters { types?: KnowledgeCardType[]; statuses?: KnowledgeCardStatus[]; }
 export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; viewerMemberId?: string; }
 export interface KnowledgeSearchResult { cardId: string; score: number; mode: KnowledgeSearchMode; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; excerpt: string; }
@@ -22,12 +22,11 @@ const indexBuildLocks = new Map<string, Promise<KnowledgeIndex>>();
 let lastIndexCacheKey: string | undefined;
 let lastIndexCache: KnowledgeIndex | undefined;
 
-export async function ensureKnowledgeIndex(options: EnsureKnowledgeIndexOptions = {}): Promise<KnowledgeIndex> {
+export async function ensureKnowledgeIndex(options: EnsureKnowledgeIndexOptions): Promise<KnowledgeIndex> {
     const sourceId = resolveSourceId(options);
-    const root = options.workspaceRoot ? path.resolve(options.workspaceRoot) : undefined;
     const model = options.embeddings?.model?.trim() || DEFAULT_EMBEDDINGS_MODEL;
     const indexDir = resolveIndexDir(options.indexDir);
-    const cards = await readKnowledgeCards(options, root);
+    const cards = await loadKnowledgeCards(options);
     const cardsHash = hashIndexedCardContent(cards);
     const workspaceHash = sha256Hex(sourceId);
     const cacheKey = `${workspaceHash}::${model}::${indexDir}::${cardsHash}`;
@@ -35,12 +34,12 @@ export async function ensureKnowledgeIndex(options: EnsureKnowledgeIndexOptions 
     if (!options.forceRebuild && lastIndexCacheKey === cacheKey && lastIndexCache && now - lastIndexCache.updatedAt >= 0 && now - lastIndexCache.updatedAt < INDEX_TTL_MS) return lastIndexCache;
     const existing = indexBuildLocks.get(cacheKey);
     if (existing) return existing;
-    const lock = buildIndex({ ...options, workspaceRoot: root, cards }, sourceId, workspaceHash, model, indexDir, now, cacheKey).finally(() => indexBuildLocks.delete(cacheKey));
+    const lock = buildIndex({ ...options, cards }, sourceId, workspaceHash, model, indexDir, now, cacheKey).finally(() => indexBuildLocks.delete(cacheKey));
     indexBuildLocks.set(cacheKey, lock);
     return lock;
 }
 
-async function buildIndex(options: EnsureKnowledgeIndexOptions, sourceId: string, workspaceHash: string, model: string, indexDir: string, now: number, cacheKey: string): Promise<KnowledgeIndex> {
+async function buildIndex(options: EnsureKnowledgeIndexOptions & { cards: KnowledgeCard[] }, sourceId: string, workspaceHash: string, model: string, indexDir: string, now: number, cacheKey: string): Promise<KnowledgeIndex> {
     const indexPath = path.join(indexDir, `${workspaceHash}-schema3-${sanitizeFilename(model)}.json`);
     const previous = options.forceRebuild ? undefined : await readIndexFile(indexPath);
     const previousById = new Map((previous?.entries ?? []).map(entry => [entry.cardId, entry]));
@@ -52,13 +51,11 @@ async function buildIndex(options: EnsureKnowledgeIndexOptions, sourceId: string
         entries.push(entry);
     }
     if (options.embeddings?.client && entries.some(entry => !entry.vector)) {
-        try {
-            const vectors = await options.embeddings.client.embed(entries.filter(entry => !entry.vector).map(entry => entry.embeddingText));
-            let cursor = 0;
-            for (const entry of entries) if (!entry.vector) entry.vector = vectors[cursor++] ?? undefined;
-        } catch {
-            // 向量检索失败时使用词法分数。
-        }
+        const vectors = await options.embeddings.client.embed(entries.filter(entry => !entry.vector).map(entry => entry.embeddingText));
+        const missingEntries = entries.filter(entry => !entry.vector);
+        if (vectors.length !== missingEntries.length) throw new Error(`Embedding client returned ${vectors.length} vectors for ${missingEntries.length} texts`);
+        let cursor = 0;
+        for (const entry of entries) if (!entry.vector) entry.vector = vectors[cursor++] ?? undefined;
     }
     const index: KnowledgeIndex = { schemaVersion: 3, workspaceRoot: sourceId, workspaceHash, embeddingModel: model, updatedAt: now, entries };
     await fs.mkdir(indexDir, { recursive: true });
@@ -77,33 +74,137 @@ export async function searchKnowledgeCards(options: SearchKnowledgeCardsOptions)
     const queryText = buildQueryText(query, String(options.selectionText ?? '').trim(), activeFiles[0]);
     const topK = clampInt(options.topK ?? 5, 1, 25);
     if (options.embeddings?.client && entries.some(entry => Array.isArray(entry.vector) && entry.vector.length)) {
-        try {
-            const queryVector = (await options.embeddings.client.embed([queryText]))[0];
-            if (queryVector?.length) return entries.filter(entry => entry.vector?.length === queryVector.length).map(entry => ({ entry, score: cosineSimilarity(queryVector, entry.vector!) + activeFileBoost(entry, activeFiles) })).sort((a, b) => b.score - a.score).slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'vector'));
-        } catch {
-            // 向量检索失败时保留确定性的词法检索。
-        }
+        const queryVector = (await options.embeddings.client.embed([queryText]))[0];
+        if (!queryVector?.length) throw new Error('Embedding client returned an empty query vector');
+        return entries.filter(entry => entry.vector?.length === queryVector.length).map(entry => ({ entry, score: cosineSimilarity(queryVector, entry.vector!) + activeFileBoost(entry, activeFiles) })).sort((a, b) => b.score - a.score).slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'vector'));
     }
     const tokens = tokenize(queryText);
     return entries.map(entry => ({ entry, score: lexicalScore(tokens, entry.embeddingText, entry.files, activeFiles) })).filter(item => item.score > 0).sort((a, b) => b.score - a.score).slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'lexical'));
 }
 
 function resolveSourceId(options: EnsureKnowledgeIndexOptions): string { return options.workspaceId?.trim() || (options.workspaceRoot ? path.resolve(options.workspaceRoot) : options.cards ? 'cards:in-memory' : process.cwd()); }
-function resolveIndexDir(explicit?: string): string { return path.resolve(explicit?.trim() || path.join(process.cwd(), '.knowledge-index')); }
-async function readKnowledgeCards(options: EnsureKnowledgeIndexOptions, _root?: string): Promise<KnowledgeCard[]> { if (options.cards) return options.cards.filter(isKnowledgeCard); if (!options.cardsDirectory) return []; return readWorkspaceKnowledgeCards(path.resolve(options.cardsDirectory), options.now); }
-async function readWorkspaceKnowledgeCards(cardsDir: string, now?: () => number): Promise<KnowledgeCard[]> { let names: string[]; try { names = await fs.readdir(cardsDir); } catch { return []; } const cards: KnowledgeCard[] = []; for (const name of names.filter(item => item.toLowerCase().startsWith('card-') && item.toLowerCase().endsWith('.json'))) { try { const parsed = JSON.parse(await fs.readFile(path.join(cardsDir, name), 'utf8')) as Record<string, unknown>; const candidate = parsed.schemaVersion === 1 || parsed.schemaVersion === 2 ? migrateKnowledgeCard(parsed, now) : parsed; if (isKnowledgeCard(candidate)) cards.push(candidate); } catch { /* 忽略无效卡片文件。 */ } } return cards; }
-async function readIndexFile(filePath: string): Promise<KnowledgeIndex | undefined> { try { const parsed = JSON.parse(await fs.readFile(filePath, 'utf8')) as KnowledgeIndex; return parsed?.schemaVersion === 3 && Array.isArray(parsed.entries) ? parsed : undefined; } catch { return undefined; } }
-function buildEmbeddingText(card: KnowledgeCard): string { const files = extractCardFiles(card).join(' '); return [`type:${card.type}`, `status:${card.status}`, card.title, card.summary, card.tags.join(' '), files, card.content].join('\n').slice(0, MAX_EMBEDDING_TEXT_CHARS); }
+function resolveIndexDir(explicit: string): string {
+    const value = String(explicit ?? '').trim();
+    if (!value) throw new Error('indexDir is required when building a knowledge index');
+    return path.resolve(value);
+}
+export async function loadKnowledgeCards(options: EnsureKnowledgeIndexOptions): Promise<KnowledgeCard[]> {
+    if (options.cards) return options.cards.flatMap(card => normalizeCard(card, options.now));
+    if (!options.cardsDirectory) return [];
+    return readWorkspaceKnowledgeCards(path.resolve(options.cardsDirectory), options.now);
+}
+async function readWorkspaceKnowledgeCards(cardsDir: string, now?: () => number): Promise<KnowledgeCard[]> {
+    let names: string[];
+    try {
+        names = await fs.readdir(cardsDir);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+        throw error;
+    }
+    const cards: KnowledgeCard[] = [];
+    for (const name of names.filter(item => item.toLowerCase().startsWith('card-') && item.toLowerCase().endsWith('.json'))) {
+        const text = await fs.readFile(path.join(cardsDir, name), 'utf8');
+        cards.push(...normalizeCard(JSON.parse(text) as unknown, now));
+    }
+    return cards;
+}
+function normalizeCard(value: unknown, now?: () => number): KnowledgeCard[] {
+    if (isKnowledgeCard(value)) return [value];
+    if (value && typeof value === 'object' && (((value as Record<string, unknown>).schemaVersion === 1) || ((value as Record<string, unknown>).schemaVersion === 2))) {
+        const migrated = migrateKnowledgeCard(value, now);
+        if (!isKnowledgeCard(migrated)) throw new Error('Migrated knowledge card failed schema validation');
+        return [migrated];
+    }
+    throw new Error('Knowledge card failed schema validation');
+}
+async function readIndexFile(filePath: string): Promise<KnowledgeIndex | undefined> {
+    let text: string;
+    try {
+        text = await fs.readFile(filePath, 'utf8');
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw error;
+    }
+    const parsed = JSON.parse(text) as KnowledgeIndex;
+    return parsed?.schemaVersion === 3 && Array.isArray(parsed.entries) ? parsed : undefined;
+}
+function buildEmbeddingText(card: KnowledgeCard): string {
+    const parts: string[] = [];
+    const add = (label: string, value: string) => {
+        const normalized = String(value ?? '').trim();
+        if (normalized) parts.push(`${label}: ${normalized}`);
+    };
+    add('title', card.title);
+    add('summary', card.summary);
+    if (card.tags.length) add('tags', card.tags.slice(0, 32).join(', '));
+    if (card.content.trim()) parts.push(`\n---\n${card.content.trim()}`);
+    const files = extractCardFiles(card);
+    if (files.length) add('files', files.join(', '));
+    const firstSnapshot = card.anchors[0]?.snapshot.text ?? '';
+    const snapshot = firstSnapshot.length > 2_000 ? firstSnapshot.slice(0, 2_000) : firstSnapshot;
+    if (snapshot.trim()) parts.push(`\n---\n${snapshot.trim()}`);
+    return parts.join('\n').trim().slice(0, MAX_EMBEDDING_TEXT_CHARS);
+}
 function extractCardFiles(card: KnowledgeCard): string[] { return [...new Set(card.anchors.map(anchor => normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath)).filter(Boolean))]; }
-function hashIndexedCardContent(cards: KnowledgeCard[]): string { return sha256Hex(cards.map(card => `${card.id}:${card.updatedAt}:${card.title}:${card.summary}:${card.content}:${card.status}`).sort().join('\n')); }
+function hashIndexedCardContent(cards: KnowledgeCard[]): string {
+    return sha256Hex(JSON.stringify(cards.map(card => ({
+        id: card.id,
+        type: card.type,
+        status: card.status,
+        tags: card.tags.slice(0, 64),
+        files: extractCardFiles(card),
+        embeddingText: buildEmbeddingText(card)
+    }))));
+}
 function sha256Hex(value: string): string { return createHash('sha256').update(value).digest('hex'); }
 function sanitizeFilename(value: string): string { return value.replace(/[^A-Za-z0-9_.-]+/g, '_'); }
 function applyFilters(entries: KnowledgeIndexEntry[], filters?: KnowledgeSearchFilters): KnowledgeIndexEntry[] { return entries.filter(entry => (!filters?.types?.length || filters.types.includes(entry.type)) && (!filters?.statuses?.length || filters.statuses.includes(entry.status))); }
-function normalizeActiveFileCandidates(activeFile?: string): string[] { const value = normalizeWorkspaceRelativePath(activeFile ?? ''); return value ? [value] : []; }
-function buildQueryText(query: string, selectionText: string, activeFile?: string): string { return [query, selectionText, activeFile].filter(Boolean).join('\n'); }
-function tokenize(value: string): string[] { return (value.toLowerCase().match(/[\p{L}\p{N}_-]+/gu) ?? []).filter(Boolean); }
-function lexicalScore(queryTokens: string[], text: string, files: string[], activeFiles: string[]): number { const haystack = text.toLowerCase(); const exactTokens = new Set(tokenize(haystack)); let score = 0; for (const token of queryTokens) if (token.length >= 2 && haystack.includes(token)) score += exactTokens.has(token) ? (token.length >= 6 ? 0.25 : 0.16) + 0.03 : 0.05; if (queryTokens[0] && exactTokens.has(queryTokens[0])) score += 0.1; score += activeFileBoost({ files } as KnowledgeIndexEntry, activeFiles); return Math.min(1.2, score); }
-function activeFileBoost(entry: Pick<KnowledgeIndexEntry, 'files'>, activeFiles: string[]): number { return activeFiles.some(file => entry.files.includes(file)) ? 0.2 : 0; }
+function normalizeActiveFileCandidates(activeFile?: string): string[] {
+    const value = String(activeFile ?? '').trim();
+    if (!value) return [];
+    const normalized = normalizeWorkspaceRelativePath(value);
+    const candidates = new Set<string>();
+    if (normalized) candidates.add(normalized);
+    const parts = normalized.split('/').filter(Boolean);
+    if (parts.length >= 2) candidates.add(parts.slice(1).join('/'));
+    return [...candidates].filter(Boolean);
+}
+function buildQueryText(query: string, selectionText: string, activeFile?: string): string {
+    const parts = [query];
+    if (activeFile) parts.push(`activeFile: ${activeFile}`);
+    if (selectionText) parts.push(`selection:\n${selectionText.slice(0, 1_200)}`);
+    return parts.join('\n');
+}
+function tokenize(value: string): string[] {
+    const raw = String(value ?? '').toLowerCase();
+    const tokens = raw.split(/[^a-z0-9_\u4e00-\u9fa5]+/g).map(token => token.trim()).filter(Boolean);
+    return tokens.length > 64 ? tokens.slice(0, 64) : tokens;
+}
+function lexicalScore(queryTokens: string[], text: string, files: string[], activeFiles: string[]): number {
+    const haystack = text.toLowerCase();
+    if (!haystack) return 0;
+    const exactTokens = new Set(tokenize(haystack));
+    let score = 0;
+    for (const token of queryTokens) {
+        if (token.length < 2) continue;
+        if (haystack.includes(token)) {
+            score += token.length >= 6 ? 0.25 : 0.16;
+            if (exactTokens.has(token)) score += 0.03;
+        }
+    }
+    if (queryTokens[0] && exactTokens.has(queryTokens[0])) score += 0.1;
+    score += activeFileBoost({ files }, activeFiles);
+    return Math.min(1.2, score);
+}
+function activeFileBoost(entry: Pick<KnowledgeIndexEntry, 'files'>, activeFiles: string[]): number {
+    for (const file of entry.files) {
+        const normalized = normalizeWorkspaceRelativePath(file);
+        if (!normalized) continue;
+        if (activeFiles.includes(normalized)) return 0.06;
+        for (const candidate of activeFiles) if (candidate && normalized.endsWith(`/${candidate}`)) return 0.04;
+    }
+    return 0;
+}
 function cosineSimilarity(a: number[], b: number[]): number { let dot = 0; let aa = 0; let bb = 0; for (let i = 0; i < a.length; i++) { const av = a[i] ?? 0; const bv = b[i] ?? 0; dot += av * bv; aa += av * av; bb += bv * bv; } return aa && bb ? dot / Math.sqrt(aa * bb) : 0; }
-function toResult(entry: KnowledgeIndexEntry, score: number, mode: KnowledgeSearchMode): KnowledgeSearchResult { return { cardId: entry.cardId, score, mode, type: entry.type, status: entry.status, scope: entry.scope, ownerMemberId: entry.ownerMemberId, title: entry.title, summary: entry.summary, tags: entry.tags, files: entry.files, excerpt: entry.embeddingText.slice(0, 2_000) }; }
+function toResult(entry: KnowledgeIndexEntry, score: number, mode: KnowledgeSearchMode): KnowledgeSearchResult { return { cardId: entry.cardId, score, mode, type: entry.type, status: entry.status, scope: entry.scope, ownerMemberId: entry.ownerMemberId, title: entry.title, summary: entry.summary, tags: entry.tags, files: entry.files, excerpt: entry.embeddingText.slice(0, 800) }; }
 function clampInt(value: number, min: number, max: number): number { const n = Math.floor(Number(value)); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : min; }

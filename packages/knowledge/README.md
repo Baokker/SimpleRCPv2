@@ -2,6 +2,8 @@
 
 `@simplercp/knowledge` 提供 SimpleRCPv2 第 5 章使用的过程性知识卡片纯 TypeScript 能力。包不依赖 Express、ws、Yjs、文件系统固定目录或 LLM SDK；需要文件时由调用方传入目录，需要模型时由调用方传入 `LlmClient`。
 
+检索接口的 `cardsDirectory` 和 `indexDir` 都由调用方提供。`indexDir` 用于保存 schema v3 索引文件，缺少该参数时接口会直接抛出错误。目录中的旧 v1/v2 卡片和显式传入的旧卡片都会在进入索引前迁移，并通过 schema 守卫校验。
+
 ## 目录对应关系
 
 | 旧原型文件 | 新包文件 |
@@ -11,7 +13,7 @@
 | `anchor-resolver.ts`、`anchor-review.ts` | `src/anchor/*` |
 | `knowledge-views.ts` | `src/views/*` |
 | `demo-cards.ts` | `src/demo/demoCards.ts` |
-| `hash.ts`、`workspace-layout.ts` | `src/util/hash.ts` 与根模块 |
+| `hash.ts` | `src/util/hash.ts` 与根模块 |
 | `knowledge-extract.ts`、`knowledge-prompt.ts` | `src/extract/*` |
 | `knowledge-refine.ts`、`knowledge-refine-prompt.ts` | `src/extract/*` |
 | `knowledge-index.ts` | `src/retrieval/index.ts` |

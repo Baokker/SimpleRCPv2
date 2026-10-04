@@ -4,11 +4,13 @@ export interface ConfirmCardOptions {
     memberId: string;
     now: () => number;
     edited?: boolean;
+    memberKind?: 'human' | 'agent';
 }
 
 export function confirmCard(card: KnowledgeCard, options: ConfirmCardOptions): KnowledgeCard {
     if (!options.memberId.trim()) throw new Error('memberId is required to confirm a knowledge card');
-    if (card.provenance?.author.kind === 'agent' && !options.memberId.trim()) throw new Error('Agent-authored cards require a human confirmer');
+    if (card.status !== 'draft') throw new Error('Only draft knowledge cards can be confirmed');
+    if (card.provenance?.author.kind === 'agent' && (options.memberKind ?? 'human') !== 'human') throw new Error('Agent-authored cards require a human confirmer');
     const at = options.now();
     const entry: KnowledgeEvolutionEntry = { at, action: 'confirmed', by: { peerId: options.memberId } };
     return {

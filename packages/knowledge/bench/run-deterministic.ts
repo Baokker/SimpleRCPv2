@@ -9,19 +9,32 @@ import { runKnowledgeStatusGateBenchmark, statusGateCorpus, summarizeKnowledgeSt
 
 const resultRoot = path.resolve('bench/results');
 await fs.mkdir(resultRoot, { recursive: true });
+const selected = new Set<string>();
+const argumentsList = process.argv.slice(2);
+for (let index = 0; index < argumentsList.length; index++) {
+    if (argumentsList[index] !== '--only') throw new Error(`Unknown benchmark argument: ${argumentsList[index]}`);
+    const name = argumentsList[index + 1];
+    if (!name) throw new Error('--only requires an experiment name');
+    selected.add(name);
+    index++;
+}
+const shouldRun = (name: string) => selected.size === 0 || selected.has(name);
 
-const corpus = collectFrozenAnchorCorpus(path.resolve('../..'));
-const anchorCases = createAnchorBenchmarkCases(corpus);
-const anchorSummary = summarizeAnchorBenchmark(anchorCases, runAnchorBenchmarkCases(anchorCases, { timingIterations: 5, warmupIterations: 1 }));
-await writeResult('anchor', anchorSummary);
+if (shouldRun('anchor')) {
+    const corpus = collectFrozenAnchorCorpus(path.resolve('../..'));
+    const anchorCases = createAnchorBenchmarkCases(corpus);
+    const anchorSummary = summarizeAnchorBenchmark(anchorCases, runAnchorBenchmarkCases(anchorCases, { timingIterations: 5, warmupIterations: 1 }));
+    await writeResult('anchor', anchorSummary);
+}
 
-const retrievalSummary = summarizeRetrievalStress(await runRetrievalStressBenchmark());
-await writeResult('retrieval-stress', retrievalSummary);
-await writeResult('knowledge-scale', await runKnowledgeScaleBenchmark([10, 50, 100, 500]));
-await writeResult('knowledge-cache', await runKnowledgeCacheBenchmark(20, 3));
-await writeResult('capture-quality', summarizeTriggerCases());
-const statusSummary = summarizeKnowledgeStatusGate(await runKnowledgeStatusGateBenchmark(statusGateCorpus()));
-await writeResult('status-gate', statusSummary);
+if (shouldRun('retrieval-stress')) await writeResult('retrieval-stress', summarizeRetrievalStress(await runRetrievalStressBenchmark()));
+if (shouldRun('knowledge-scale')) await writeResult('knowledge-scale', await runKnowledgeScaleBenchmark());
+if (shouldRun('knowledge-cache')) await writeResult('knowledge-cache', await runKnowledgeCacheBenchmark(20, 3));
+if (shouldRun('capture-quality')) await writeResult('capture-quality', summarizeTriggerCases());
+if (shouldRun('status-gate')) {
+    const statusSummary = summarizeKnowledgeStatusGate(await runKnowledgeStatusGateBenchmark(statusGateCorpus()));
+    await writeResult('status-gate', statusSummary);
+}
 
 async function writeResult(name: string, summary: unknown): Promise<void> {
     const directory = path.join(resultRoot, name);

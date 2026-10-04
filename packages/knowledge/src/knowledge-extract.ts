@@ -55,7 +55,7 @@ export async function extractKnowledgeCardDraft(
 
     const baseUserMessage: { role: 'user'; content: string } = {
         role: 'user',
-        content: `KNOWLEDGE EXTRACTION INPUT (JSON):\n${safeJsonStringify(payload, 24_000)}`
+        content: `KNOWLEDGE EXTRACTION INPUT (JSON):\n${stringifyJsonWithinLimit(payload, 24_000)}`
     };
 
     let lastText = '';
@@ -106,9 +106,7 @@ export async function extractKnowledgeCardDraft(
 
 export function parseKnowledgeCardDraftFromText(text: string): Partial<KnowledgeCardDraftV2> {
     const jsonText = extractFirstJsonObject(text);
-    if (!jsonText) {
-        return {};
-    }
+    if (!jsonText) return {};
     try {
         const parsed = JSON.parse(jsonText) as unknown;
         if (!parsed || typeof parsed !== 'object') {
@@ -122,55 +120,16 @@ export function parseKnowledgeCardDraftFromText(text: string): Partial<Knowledge
 
 export function extractFirstJsonObject(text: string): string | undefined {
     const raw = String(text ?? '').trim();
-    if (!raw) {
+    if (!raw) return undefined;
+    const match = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    const candidate = (match?.[1] ?? raw).trim();
+    if (!candidate.startsWith('{') || !candidate.endsWith('}')) return undefined;
+    try {
+        const parsed = JSON.parse(candidate) as unknown;
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? candidate : undefined;
+    } catch {
         return undefined;
     }
-
-    const withoutFences = raw
-        .replace(/^\s*```(?:json)?\s*/i, '')
-        .replace(/\s*```\s*$/i, '')
-        .trim();
-
-    const start = withoutFences.indexOf('{');
-    if (start === -1) {
-        return undefined;
-    }
-
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-    for (let i = start; i < withoutFences.length; i++) {
-        const ch = withoutFences[i];
-        if (inString) {
-            if (escaped) {
-                escaped = false;
-                continue;
-            }
-            if (ch === '\\\\') {
-                escaped = true;
-                continue;
-            }
-            if (ch === '"') {
-                inString = false;
-            }
-            continue;
-        }
-        if (ch === '"') {
-            inString = true;
-            continue;
-        }
-        if (ch === '{') {
-            depth++;
-            continue;
-        }
-        if (ch === '}') {
-            depth--;
-            if (depth === 0) {
-                return withoutFences.slice(start, i + 1);
-            }
-        }
-    }
-    return undefined;
 }
 
 function normalizeDraft(parsed: Partial<KnowledgeCardDraftV2>, input: KnowledgeExtractionInput): KnowledgeCardDraftV2 {
@@ -260,7 +219,7 @@ function ensureGroundedSections(
         }
         lines.push('');
         lines.push('```json');
-        lines.push(safeJsonStringify(evidence ?? {}, 4000));
+        lines.push(stringifyJsonWithinLimit(evidence ?? {}, 4000));
         lines.push('```');
     }
 
@@ -322,6 +281,8 @@ function filterResolvableCitations(citations: string[], input: KnowledgeExtracti
         projectHints: input.projectHints ?? {},
         evidence: input.evidence ?? {}
     };
+    const resolvable = new Set<string>();
+    collectCitationPaths(root, '', resolvable);
     const out: string[] = [];
     for (const c of citations) {
         let path = String(c ?? '').trim();
@@ -337,24 +298,22 @@ function filterResolvableCitations(citations: string[], input: KnowledgeExtracti
         if (path.startsWith('payload.')) {
             path = path.slice('payload.'.length);
         }
-        if (!(
-            path === 'evidence' ||
-            path === 'anchors' ||
-            path === 'projectHints' ||
-            path.startsWith('evidence.') ||
-            path.startsWith('anchors[') ||
-            path.startsWith('anchors.') ||
-            path.startsWith('projectHints.') ||
-            path.startsWith('triggerType')
-        )) {
-            continue;
-        }
-        const resolved = resolveJsonPath(root as any, path);
-        if (typeof resolved !== 'undefined') {
-            out.push(path);
-        }
+        if (resolvable.has(path)) out.push(path);
     }
     return out.slice(0, 24);
+}
+
+function collectCitationPaths(value: unknown, prefix: string, paths: Set<string>): void {
+    if (prefix) paths.add(prefix);
+    if (Array.isArray(value)) {
+        value.forEach((item, index) => collectCitationPaths(item, `${prefix}[${index}]`, paths));
+        return;
+    }
+    if (!value || typeof value !== 'object') return;
+    for (const [key, child] of Object.entries(value)) {
+        const next = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? (prefix ? `${prefix}.${key}` : key) : `${prefix}[${JSON.stringify(key)}]`;
+        collectCitationPaths(child, next, paths);
+    }
 }
 
 function defaultEvidenceCitations(input: KnowledgeExtractionInput): string[] {
@@ -417,100 +376,6 @@ function defaultEvidenceCitations(input: KnowledgeExtractionInput): string[] {
     }
     const filtered = filterResolvableCitations(candidates, input);
     return filtered.length ? filtered : ['evidence'];
-}
-
-function resolveJsonPath(root: any, path: string): unknown {
-    // Supports a small JSONPath-like subset:
-    // - dot: evidence.todo.before
-    // - brackets: [0], ['key'], ["key"]
-    // Returns undefined when not resolvable.
-    let cur: any = root;
-    let i = 0;
-    const s = String(path ?? '').trim();
-    const readIdentifier = (): string => {
-        let start = i;
-        while (i < s.length) {
-            const ch = s[i] ?? '';
-            if (!/[A-Za-z0-9_$]/.test(ch)) {
-                break;
-            }
-            i++;
-        }
-        return s.slice(start, i);
-    };
-    const skipDot = () => {
-        if (s[i] === '.') {
-            i++;
-        }
-    };
-
-    while (i < s.length) {
-        skipDot();
-        if (s[i] === '[') {
-            i++;
-            while (i < s.length && /\s/.test(s[i] ?? '')) {
-                i++;
-            }
-            if (i >= s.length) {
-                return undefined;
-            }
-            if (s[i] === '"' || s[i] === "'") {
-                const quote = s[i++];
-                let key = '';
-                let escaped = false;
-                while (i < s.length) {
-                    const ch = s[i++];
-                    if (escaped) {
-                        key += ch;
-                        escaped = false;
-                        continue;
-                    }
-                    if (ch === '\\\\') {
-                        escaped = true;
-                        continue;
-                    }
-                    if (ch === quote) {
-                        break;
-                    }
-                    key += ch;
-                }
-                while (i < s.length && s[i] !== ']') {
-                    i++;
-                }
-                if (s[i] !== ']') {
-                    return undefined;
-                }
-                i++;
-                cur = cur?.[key];
-                continue;
-            }
-            // number index
-            let numText = '';
-            while (i < s.length && /[0-9]/.test(s[i] ?? '')) {
-                numText += s[i++];
-            }
-            while (i < s.length && s[i] !== ']') {
-                i++;
-            }
-            if (s[i] !== ']') {
-                return undefined;
-            }
-            i++;
-            const idx = Number(numText);
-            if (!Number.isFinite(idx)) {
-                return undefined;
-            }
-            cur = cur?.[idx];
-            continue;
-        }
-
-        const id = readIdentifier();
-        if (!id) {
-            return undefined;
-        }
-        cur = cur?.[id];
-    }
-    return cur;
 }
 
 function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): KnowledgeCardDraftV2 {
@@ -771,13 +636,9 @@ function normalizeConfidence(value: unknown): number {
     return Math.max(0, Math.min(1, n));
 }
 
-function safeJsonStringify(value: unknown, maxChars: number): string {
-    let text = '';
-    try {
-        text = JSON.stringify(value, undefined, 2);
-    } catch {
-        text = '{}';
-    }
+function stringifyJsonWithinLimit(value: unknown, maxChars: number): string {
+    const serialized = JSON.stringify(value, undefined, 2);
+    const text = typeof serialized === 'string' ? serialized : '';
     if (text.length <= maxChars) {
         return text;
     }

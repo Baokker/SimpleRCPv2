@@ -30,4 +30,9 @@ describe('knowledge lifecycle', () => {
         expect(original.evolution).toHaveLength(1);
         expect(result.evolution).toHaveLength(2);
     });
+
+    test('rejects confirmation from an Agent and non-draft cards', () => {
+        expect(() => confirmCard(card(), { memberId: 'agent-1', memberKind: 'agent', now: () => 20 })).toThrow('human confirmer');
+        expect(() => confirmCard(card({ status: 'reviewed' }), { memberId: 'm2', now: () => 20 })).toThrow('Only draft');
+    });
 });

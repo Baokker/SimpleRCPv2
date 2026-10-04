@@ -9,8 +9,19 @@ import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { createDemoKnowledgeCards } from '../src/demo-cards.js';
 import { searchKnowledgeCards } from '../src/knowledge-index.js';
+import { buildKnowledgeContext } from '../src/knowledge-inject.js';
 
 describe('knowledge-index demo cards retrieval', () => {
+    test('requires an explicit index directory', async () => {
+        const cards = createDemoKnowledgeCards({
+            workspaceFolderName: 'demo',
+            workspaceRelativePath: 'src/index.ts',
+            selectedText: 'const value = 1;',
+            now: 1_000
+        });
+        await expect(searchKnowledgeCards({ cards, query: 'project knowledge' })).rejects.toThrow('indexDir is required');
+    });
+
     test('RAG lexical fallback retrieves generated demo cards from workspace JSON', async () => {
         const artifactRoot = path.join(process.cwd(), '.test-artifacts');
         await fs.mkdir(artifactRoot, { recursive: true });
@@ -90,5 +101,59 @@ describe('knowledge-index demo cards retrieval', () => {
             now: () => 10
         });
         expect(results[0]?.cardId).toBe('legacy-card');
+    });
+
+    test('migrates legacy cards supplied explicitly', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const workspaceRoot = await fs.mkdtemp(path.join(artifactRoot, 'legacy-explicit-card-'));
+        const legacy = {
+            schemaVersion: 2,
+            id: 'legacy-explicit',
+            type: 'context',
+            title: 'Explicit legacy context',
+            summary: 'Explicit legacy summary',
+            content: 'Explicit legacy content',
+            source: 'event',
+            status: 'reviewed',
+            tags: [],
+            createdAt: 1,
+            updatedAt: 1,
+            metadata: { createdBy: { peerId: 'member-1' } },
+            anchors: [],
+            evolution: []
+        };
+        const results = await searchKnowledgeCards({
+            workspaceRoot,
+            cards: [legacy as never],
+            query: 'explicit legacy context',
+            indexDir: path.join(workspaceRoot, '.index')
+        });
+        expect(results[0]?.cardId).toBe('legacy-explicit');
+    });
+
+    test('applies a custom filter to cards loaded from a directory', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const workspaceRoot = await fs.mkdtemp(path.join(artifactRoot, 'directory-filter-'));
+        const cardsDir = path.join(workspaceRoot, 'cards');
+        const indexDir = path.join(workspaceRoot, 'index');
+        await fs.mkdir(cardsDir, { recursive: true });
+        const cards = createDemoKnowledgeCards({
+            workspaceFolderName: 'demo',
+            workspaceRelativePath: 'src/filter.ts',
+            selectedText: 'const value = 1;',
+            now: 1_000
+        });
+        await Promise.all(cards.map(card => fs.writeFile(path.join(cardsDir, `card-${card.id}.json`), JSON.stringify(card), 'utf8')));
+        const result = await buildKnowledgeContext({
+            workspaceRoot,
+            cardsDirectory: cardsDir,
+            query: 'eager synchronization rejected noisy updates',
+            indexDir,
+            filter: card => card.id === 'demo-negative',
+            maxTotalChars: 2_000
+        });
+        expect(result.cards.map(card => card.id)).toEqual(['demo-negative']);
     });
 });

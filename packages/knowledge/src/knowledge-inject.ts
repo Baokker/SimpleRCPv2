@@ -1,4 +1,4 @@
-import { searchKnowledgeCards } from './knowledge-index.js';
+import { loadKnowledgeCards, searchKnowledgeCards } from './knowledge-index.js';
 import type { KnowledgeSearchResult, SearchKnowledgeCardsOptions } from './knowledge-index.js';
 import { isReusable } from './lifecycle.js';
 import type { KnowledgeCard } from './schema.js';
@@ -9,9 +9,10 @@ export interface BuildKnowledgeContextOptions extends Omit<SearchKnowledgeCardsO
 
 export async function buildKnowledgeContext(options: BuildKnowledgeContextOptions): Promise<KnowledgeInjectionResult> {
     const results = await searchKnowledgeCards(options);
-    const cards = options.cards ?? [];
+    const cards = await loadKnowledgeCards(options);
     const reusable = options.filter ?? ((card: KnowledgeCard) => isReusable(card, { viewerMemberId: options.viewerMemberId }));
-    const allowed = cards.length ? new Set(cards.filter(reusable).map(card => card.id)) : undefined;
+    const hasCardSource = options.cards !== undefined || options.cardsDirectory !== undefined;
+    const allowed = hasCardSource ? new Set(cards.filter(reusable).map(card => card.id)) : undefined;
     const filtered = allowed ? results.filter(result => allowed.has(result.cardId)) : results.filter(result => result.status === 'reviewed' && (result.scope === 'team' || (!!options.viewerMemberId && result.ownerMemberId === options.viewerMemberId)));
     return pickCardsWithinBudget(filtered, options.maxCharsPerCard ?? 800, options.maxTotalChars ?? 5_000);
 }

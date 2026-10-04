@@ -115,6 +115,11 @@ apps/
     vitest.config.ts
 
 packages/
+  knowledge/
+    src/
+    test/
+    bench/
+    package.json
   shared/
     src/
     package.json
@@ -144,6 +149,7 @@ tests/
 - `apps/server/`：Express 与 WebSocket 服务，负责项目注册、代码保存、Room、Yjs 文档、终端、文件监听和 OpenCode 进程。
 - `apps/server/src/agent/`：Agent 设置、OpenCode runtime、任务队列、工作区变化与 trace 存储。
 - `packages/shared/`：客户端与服务端共同使用的项目、协作、Agent 和 WebSocket TypeScript 类型。
+- `packages/knowledge/`：过程性知识卡片 schema、迁移、锚点、抽取、检索、注入和确定性实验。
 - `demo/workspace/`：首次启动时导入的数据示例项目。
 - `docs/product/`：基线需求、开发计划、已知问题和后续改进方向。
 - `docs/research/`：Agent runtime、文档同步和并行 Agent 等调研记录。
@@ -202,6 +208,7 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `DEEPSEEK_API_KEY`：DeepSeek API Key，Agent 任务需要该变量。
 - `DEEPSEEK_BASE_URL`：OpenAI-compatible API 地址，默认值为 `https://api.deepseek.com/v1`。
 - `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-chat`。
+- `KNOWLEDGE`：过程性知识功能模式，可选 `off`、`capture`、`inject`、`full`，默认值为 `off`。当前阶段只解析配置并在服务端启动日志中打印模式。
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 
@@ -261,6 +268,13 @@ pnpm test:e2e:terminal-disabled
 
 ```bash
 pnpm build
+```
+
+单独运行过程性知识包的测试和确定性实验：
+
+```bash
+pnpm --filter @simplercp/knowledge test
+pnpm --filter @simplercp/knowledge bench:deterministic
 ```
 
 ## 相关文档

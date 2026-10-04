@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     collectFrozenAnchorCorpus,
     compareAnchorBenchmarkResults,
@@ -19,9 +20,9 @@ import {
 } from './anchor-benchmark.js';
 import { writeAnchorBenchmarkArtifacts } from './anchor-benchmark-report.js';
 
-const repoRoot = process.cwd();
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 const args = parseArgs(process.argv.slice(2));
-const outputRoot = path.resolve(repoRoot, args.output ?? '../experiment_artifacts/anchor_benchmark');
+const outputRoot = path.resolve(repoRoot, args.output ?? 'packages/knowledge/bench/results/anchor-cli');
 const timingIterations = args.iterations ? Number(args.iterations) : 200;
 const corpusPath = path.join(outputRoot, 'corpus.json');
 
