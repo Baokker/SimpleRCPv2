@@ -546,7 +546,7 @@ function runMemberName(run: AgentRun, members: RoomMember[]) {
 function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds: Set<string | undefined>) {
   if (run.interruptedByRunId) return "Interrupted";
   if (run.status !== "queued") return titleCase(run.status);
-  if (activeSessionIds.has(run.sessionId) || queuedRuns.some((candidate) => candidate.id !== run.id && candidate.sessionId === run.sessionId)) {
+  if (activeSessionIds.has(run.sessionId) || queuedRuns.some((candidate) => candidate.id !== run.id && candidate.sessionId === run.sessionId && candidate.createdAt < run.createdAt)) {
     return "Waiting for the previous task in this session";
   }
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;

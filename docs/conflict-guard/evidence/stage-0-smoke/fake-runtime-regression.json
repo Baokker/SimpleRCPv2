@@ -1,0 +1,30 @@
+{
+  "source": "apps/server/src/__tests__/agentConcurrency.test.ts",
+  "testCount": 12,
+  "passed": 12,
+  "scenarios": {
+    "independentRuns": "completed",
+    "sameSession": "queued-then-completed",
+    "cancel": { "cancelledFile": "cancelled.ts", "attribution": "tool" },
+    "failureIsolation": "independent-run-completed",
+    "agentOverlap": "only-overlapping-runs-recorded",
+    "memberEdit": "concurrent_change-recorded",
+    "modelSwitch": "new-fake-model-recorded",
+    "workspacePreparation": "personal-run-started-after-preparation",
+    "teamInterruption": "previous-run-cancelled-next-run-completed"
+  },
+  "toolEventShape": {
+    "type": "message.part.updated",
+    "properties": {
+      "part": {
+        "sessionID": "fake-session-redacted",
+        "messageID": "fake-message-redacted",
+        "id": "fake-write-redacted",
+        "type": "tool",
+        "tool": "write",
+        "state": { "status": "completed", "input": { "filePath": "alpha.ts" } }
+      }
+    }
+  },
+  "secrets": "none"
+}

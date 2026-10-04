@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { AgentRuntime } from "./agentRuntime.js";
 
-export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, realKeyConfigured: boolean): AgentRuntime {
+export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, realKeyConfigured: boolean, getConfiguredModel?: () => string): AgentRuntime {
   const modes = new Map<string, "real" | "fake">();
   const runtimeFor = (sessionId: string) => modes.get(sessionId) === "fake" ? fake : real;
 
@@ -14,7 +14,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
       };
     },
     async prepareWorkspace(workspacePath) {
-      return real.prepareWorkspace?.(workspacePath) ?? false;
+      return fake.prepareWorkspace?.(workspacePath) ?? false;
     },
     async prepareRun(input) {
       modes.set(input.sessionId, /fake-(?:delay|write|reply)=/.test(input.runPrompt) ? "fake" : "real");
@@ -40,12 +40,10 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
     async dispose() {
       await Promise.all([real.dispose(), fake.dispose()]);
     },
-    setActiveRunCount(count: number) {
-      real.setActiveRunCount?.(count);
-      fake.setActiveRunCount?.(count);
-    },
+    acquireRun() { return () => {}; },
+    setActiveRunCount() {},
     getCurrentModel() {
-      return real.getCurrentModel?.() ?? fake.getCurrentModel?.() ?? "fake-agent";
+      return getConfiguredModel?.() ?? real.getCurrentModel?.() ?? fake.getCurrentModel?.() ?? "fake-agent";
     }
   };
 }
@@ -69,6 +67,17 @@ export function createFakeAgentRuntime(): AgentRuntime {
       nextSessionId += 1;
       return { id: `fake-session-${nextSessionId}` };
     },
+    async prepareWorkspace(workspacePath) {
+      const gitPath = path.join(workspacePath, ".git");
+      try {
+        await fs.stat(gitPath);
+        return false;
+      } catch (error) {
+        if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
+        await fs.mkdir(gitPath, { recursive: true });
+        return true;
+      }
+    },
     async run(input) {
       const controller = new AbortController();
       abortControllers.set(input.sessionId, controller);
@@ -86,10 +95,12 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
         await fs.mkdir(path.dirname(absolutePath), { recursive: true });
         await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
-        await emit("tool.completed", {
+        await emit("message.part.updated", {
           part: {
+            sessionID: input.sessionId,
+            messageID: `fake-message-${input.sessionId}`,
+            id: `fake-write-${input.sessionId}`,
             type: "tool",
-            callID: `fake-write-${input.sessionId}`,
             tool: "write",
             state: {
               status: "completed",
@@ -101,6 +112,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
       const delayMs = Number([...input.prompt.matchAll(/fake-delay=(\d+)/g)].at(-1)?.[1] ?? 0);
       try {
         await wait(delayMs, controller.signal);
+        if (/fake-fail(?:\s|$)/.test(input.prompt)) throw new Error("Fake Agent failure");
       } finally {
         if (abortControllers.get(input.sessionId) === controller) {
           abortControllers.delete(input.sessionId);

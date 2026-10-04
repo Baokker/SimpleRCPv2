@@ -11,12 +11,13 @@ describe("Agent concurrency with fake runtime", () => {
   let server: http.Server;
   let origin: string;
   let memberId: string;
+  let app: Awaited<ReturnType<typeof createApp>>;
 
   beforeEach(async () => {
     root = await createTestWorkspace("agent-concurrency-");
     const demoRoot = path.join(root, "demo", "workspace");
     await fs.mkdir(demoRoot, { recursive: true });
-    const app = await createApp({
+    app = await createApp({
       port: 0,
       host: "127.0.0.1",
       publicOrigin: "http://127.0.0.1:5173",
@@ -40,6 +41,8 @@ describe("Agent concurrency with fake runtime", () => {
   });
 
   afterEach(async () => {
+    await app.locals.agentRuns.dispose();
+    await app.locals.runtimeManager.dispose();
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await fs.rm(root, { recursive: true, force: true });
   });
@@ -47,9 +50,30 @@ describe("Agent concurrency with fake runtime", () => {
   it("starts two sessions and fills the next slot when one finishes", async () => {
     const runs = await Promise.all([300, 300, 300].map((delay) => createRun(`fake-delay=${delay}`)));
     await waitFor(() => getRuns().then((items) => items.filter((run) => run.status === "running").length === 2));
+    const firstRunning = (await getRuns()).filter((run) => run.status === "running");
+    expect(firstRunning).toHaveLength(2);
+    expect(firstRunning.every((run) => run.startedAt)).toBe(true);
     expect((await getRuns()).filter((run) => run.status === "queued")).toHaveLength(1);
+    const finishedBeforeRefill = firstRunning[0]!;
+    const queuedRun = runs[2]!;
+    await waitFor(async () => {
+      const items = await getRuns();
+      return items.some((run) => run.id === finishedBeforeRefill.id && run.status === "completed") &&
+        items.some((run) => run.id === queuedRun.id && run.status === "running");
+    });
+    const refilled = (await getRuns()).find((run) => run.id === queuedRun.id)!;
+    const finishedRecord = (await getRuns()).find((run) => run.id === finishedBeforeRefill.id)!;
+    expect(new Date(refilled.startedAt!).getTime()).toBeLessThanOrEqual(
+      new Date(finishedRecord.finishedAt!).getTime() + 100
+    );
     await waitFor(async () => (await getRuns()).every((run) => run.status === "completed"));
-    expect(runs).toHaveLength(3);
+    const completed = (await getRuns()).filter((run) => runs.some((created) => created.id === run.id));
+    expect(completed).toHaveLength(3);
+    expect(completed.every((run) => new Date(run.startedAt!).getTime() < new Date(run.finishedAt!).getTime())).toBe(true);
+    const initial = completed.filter((run) => firstRunning.some((running) => running.id === run.id));
+    expect(initial).toHaveLength(2);
+    expect(new Date(initial[0]!.startedAt!).getTime()).toBeLessThan(new Date(initial[1]!.finishedAt!).getTime());
+    expect(new Date(initial[1]!.startedAt!).getTime()).toBeLessThan(new Date(initial[0]!.finishedAt!).getTime());
   });
 
   it("serializes the same session and records tool attribution", async () => {
@@ -59,12 +83,170 @@ describe("Agent concurrency with fake runtime", () => {
       body: JSON.stringify({ title: "Shared session" })
     });
     const session = (await sessionResponse.json() as { session: { id: string } }).session;
-    await createRun("fake-delay=250 fake-write=one.ts", session.id);
-    await createRun("fake-delay=250 fake-write=two.ts", session.id);
+    const first = await createRun("fake-delay=250 fake-write=one.ts", session.id);
+    const second = await createRun("fake-delay=250 fake-write=two.ts", session.id);
+    const independent = await createRun("fake-delay=250 fake-write=independent.ts");
+    await waitFor(async () => {
+      const items = await getRuns();
+      return items.find((run) => run.id === first.id)?.status === "running" &&
+        items.find((run) => run.id === second.id)?.status === "queued" &&
+        items.find((run) => run.id === independent.id)?.status === "running";
+    });
     await waitFor(async () => (await getRuns()).every((run) => run.status === "completed"));
     const completed = await getRuns();
-    expect(completed.filter((run) => run.sessionId === session.id)).toHaveLength(2);
+    expect(completed.filter((run) => run.id === second.id && run.startedAt && run.finishedAt).every((run) =>
+      new Date(run.startedAt!).getTime() >= new Date(completed.find((item) => item.id === first.id)!.finishedAt!).getTime()
+    )).toBe(true);
+    expect(completed.find((run) => run.id === independent.id)?.status).toBe("completed");
     expect(completed.flatMap((run) => run.fileChanges ?? []).map((change) => change.attribution)).toContain("tool");
+  });
+
+  it("attributes simultaneous writes to their own files", async () => {
+    const created = await Promise.all([
+      createRun("fake-delay=250 fake-write=alpha.ts"),
+      createRun("fake-delay=250 fake-write=beta.ts")
+    ]);
+    await waitFor(async () => (await getRuns()).filter((run) => created.some((item) => item.id === run.id)).every((run) => run.status === "completed"));
+    const completed = (await getRuns()).filter((run) => created.some((item) => item.id === run.id));
+    expect(completed.map((run) => run.fileChanges?.map((change) => ({ file: change.file, attribution: change.attribution })))).toEqual(expect.arrayContaining([
+      [{ file: "alpha.ts", attribution: "tool" }],
+      [{ file: "beta.ts", attribution: "tool" }]
+    ]));
+  });
+
+  it("records overlap only for runs that actually overlap", async () => {
+    const [first, second] = await Promise.all([
+      createRun("fake-delay=250 fake-write=shared.ts"),
+      createRun("fake-delay=250 fake-write=shared.ts")
+    ]);
+    await waitFor(async () => (await getRuns()).filter((run) => [first.id, second.id].includes(run.id)).every((run) => run.status === "completed"));
+    const overlappingTrace = await Promise.all([first.id, second.id].map((runId) => getTrace(runId)));
+    expect(overlappingTrace.every((events) => events.some((event) => event.type === "agent_overlap"))).toBe(true);
+
+    const later = await createRun("fake-delay=10 fake-write=shared.ts");
+    await waitFor(async () => (await getRuns()).some((run) => run.id === later.id && run.status === "completed"));
+    const laterTrace = await getTrace(later.id);
+    expect(laterTrace.some((event) => event.type === "agent_overlap")).toBe(false);
+  });
+
+  it("keeps a concurrent member edit in the Agent record", async () => {
+    const runtime = app.locals.runtimeManager.get("demo");
+    await fs.writeFile(path.join(runtime.project.workspacePath, "member.ts"), "base\n", "utf8");
+    const document = await runtime.documents.getDocument(runtime.room.id, "member.ts");
+    const run = await createRun("fake-delay=350 fake-write=member.ts");
+    await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && item.status === "running"));
+    document.getText("content").insert(0, "member edit\n");
+    await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && item.status === "completed"));
+    const trace = await getTrace(run.id);
+    expect(trace.some((event) => event.type === "concurrent_change")).toBe(true);
+  });
+
+  it("cancels one active run while the other completes", async () => {
+    const [cancelled, completed] = await Promise.all([
+      createRun("fake-delay=500 fake-write=cancelled.ts"),
+      createRun("fake-delay=180 fake-write=completed.ts")
+    ]);
+    await waitFor(async () => (await getRuns()).some((run) => run.id === cancelled.id && run.status === "running"));
+    await waitFor(async () => (await getTrace(cancelled.id)).some((event) => event.type === "agent_write"));
+    const response = await fetch(`${origin}/api/projects/demo/agent/runs/${cancelled.id}/cancel`, { method: "POST", headers: { "X-SimpleRCP-Member": memberId } });
+    expect(response.status).toBe(200);
+    await waitFor(async () => (await getRuns()).filter((run) => [cancelled.id, completed.id].includes(run.id)).every((run) => ["cancelled", "completed"].includes(run.status)) && Boolean((await getRuns()).find((run) => run.id === cancelled.id)?.fileChanges));
+    const runs = (await getRuns()).filter((run) => [cancelled.id, completed.id].includes(run.id));
+    expect(runs.find((run) => run.id === cancelled.id)?.status).toBe("cancelled");
+    expect(runs.find((run) => run.id === completed.id)?.status).toBe("completed");
+    expect(runs.find((run) => run.id === cancelled.id)?.fileChanges).toEqual(expect.arrayContaining([expect.objectContaining({ file: "cancelled.ts", attribution: "tool" })]));
+  });
+
+  it("keeps an independent run completed when another run fails", async () => {
+    const [failed, completed] = await Promise.all([
+      createRun("fake-delay=100 fake-fail"),
+      createRun("fake-delay=180 fake-write=survivor.ts")
+    ]);
+    await waitFor(async () => (await getRuns()).filter((run) => [failed.id, completed.id].includes(run.id)).every((run) => ["failed", "completed"].includes(run.status)));
+    const runs = (await getRuns()).filter((run) => [failed.id, completed.id].includes(run.id));
+    expect(runs.find((run) => run.id === failed.id)?.status).toBe("failed");
+    expect(runs.find((run) => run.id === completed.id)?.status).toBe("completed");
+  });
+
+  it("runs three independent sessions together when the limit is three", async () => {
+    const isolated = await startFakeServer(3);
+    try {
+      const created = await Promise.all([100, 140, 180].map((delay) => isolated.createRun(`fake-delay=${delay}`)));
+      await isolated.waitFor(() => isolated.getRuns().then((runs) => created.every((createdRun) => runs.find((run) => run.id === createdRun.id)?.status === "running")));
+      const running = await isolated.getRuns();
+      const active = created.map((createdRun) => running.find((run) => run.id === createdRun.id)!);
+      expect(active).toHaveLength(3);
+      expect(new Set(active.map((run) => run.status))).toEqual(new Set(["running"]));
+      expect(active.every((run) => run.startedAt)).toBe(true);
+      expect(active.every((run) => active.some((other) => other.id !== run.id &&
+        new Date(run.startedAt!).getTime() < new Date(other.finishedAt ?? "9999-12-31T23:59:59.999Z").getTime()
+      ))).toBe(true);
+      await isolated.waitFor(() => isolated.getRuns().then((runs) => created.every((createdRun) => runs.find((run) => run.id === createdRun.id)?.status === "completed")));
+      const finished = await isolated.getRuns();
+      const completed = finished.filter((run) => created.some((createdRun) => createdRun.id === run.id));
+      expect(completed.every((run) => run.finishedAt)).toBe(true);
+      expect(completed.every((run) => completed.some((other) => other.id !== run.id &&
+        new Date(run.startedAt!).getTime() < new Date(other.finishedAt!).getTime()
+      ))).toBe(true);
+    } finally {
+      await isolated.close();
+    }
+  });
+
+  it("keeps strict FIFO order when the limit is one", async () => {
+    const isolated = await startFakeServer(1);
+    try {
+      const created = await Promise.all([10, 20, 30].map((delay) => isolated.createRun(`fake-delay=${delay}`)));
+      await isolated.waitFor(() => isolated.getRuns().then((runs) => created.every((createdRun) => runs.find((run) => run.id === createdRun.id)?.status === "completed")));
+      const finished = (await isolated.getRuns()).filter((run) => created.some((createdRun) => createdRun.id === run.id));
+      expect(finished.map((run) => run.id).sort((left, right) => (finished.find((run) => run.id === left)?.startedAt ?? "").localeCompare(finished.find((run) => run.id === right)?.startedAt ?? ""))).toEqual(created.map((run) => run.id));
+    } finally {
+      await isolated.close();
+    }
+  });
+
+  it("records the updated model on a run created after a switch", async () => {
+    const first = await createRun("fake-delay=180");
+    await waitFor(async () => (await getRuns()).some((run) => run.id === first.id && run.status === "running"));
+    await app.locals.agentSettings.update({ provider: "deepseek", model: "new-fake-model", enabled: true });
+    const second = await createRun("fake-delay=10");
+    await waitFor(async () => (await getRuns()).filter((run) => [first.id, second.id].includes(run.id)).every((run) => run.status === "completed"));
+    const runs = (await getRuns()).filter((run) => [first.id, second.id].includes(run.id));
+    expect(runs.find((run) => run.id === second.id)?.model).toBe("new-fake-model");
+  });
+
+  it("releases workspace preparation before the team run finishes", async () => {
+    await fs.rm(path.join(app.locals.runtimeManager.get("demo").project.workspacePath, ".git"), { recursive: true, force: true });
+    const agent = await app.locals.agentRuns.createTeamAgent({ projectId: "demo", memberId, name: "Build helper" });
+    const teamRun = await app.locals.agentRuns.createRun({ projectId: "demo", memberId, prompt: "fake-delay=250", sessionId: agent.id });
+    const personalRun = await createRun("fake-delay=10");
+    await waitFor(async () => (await getRuns()).some((run) => run.id === teamRun.id && run.status === "running"));
+    await waitFor(async () => (await getRuns()).some((run) => run.id === personalRun.id && run.status === "running"));
+    expect((await getRuns()).find((run) => run.id === personalRun.id)?.status).toBe("running");
+    await waitFor(async () => (await getRuns()).filter((run) => [teamRun.id, personalRun.id].includes(run.id)).every((run) => run.status === "completed"));
+  });
+
+  it("interrupts the previous team Agent task when the same handle is mentioned again", async () => {
+    const firstResponse = await fetch(`${origin}/api/projects/demo/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "X-SimpleRCP-Member": memberId },
+      body: JSON.stringify({ text: "@agent fake-delay=400 fake-write=team-one.ts" })
+    });
+    expect(firstResponse.status).toBe(200);
+    await waitFor(async () => (await getRuns()).some((run) => run.status === "running"));
+    const secondResponse = await fetch(`${origin}/api/projects/demo/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "X-SimpleRCP-Member": memberId },
+      body: JSON.stringify({ text: "@agent fake-delay=10 fake-write=team-two.ts" })
+    });
+    expect(secondResponse.status).toBe(200);
+    await waitFor(async () => {
+      const runs = await getRuns();
+      return runs.filter((run) => run.sessionId && run.source === "chat").some((run) => run.status === "cancelled") && runs.filter((run) => run.sessionId && run.source === "chat").some((run) => run.status === "completed");
+    });
+    const teamRuns = (await getRuns()).filter((run) => run.source === "chat");
+    expect(teamRuns.some((run) => run.status === "cancelled" && run.interruptedByRunId)).toBe(true);
+    expect(teamRuns.some((run) => run.status === "completed")).toBe(true);
   });
 
   async function createRun(prompt: string, sessionId?: string) {
@@ -81,7 +263,12 @@ describe("Agent concurrency with fake runtime", () => {
     const response = await fetch(`${origin}/api/projects/demo/agent/runs`, {
       headers: { "X-SimpleRCP-Member": memberId }
     });
-    return (await response.json() as { runs: Array<{ id: string; status: string; sessionId?: string; fileChanges?: Array<{ attribution?: string }> }> }).runs;
+    return (await response.json() as { runs: Array<{ id: string; status: string; source?: string; sessionId?: string; model?: string; startedAt?: string; finishedAt?: string; interruptedByRunId?: string; fileChanges?: Array<{ file?: string; attribution?: string }> }> }).runs;
+  }
+
+  async function getTrace(runId: string) {
+    const response = await fetch(`${origin}/api/projects/demo/agent/runs/${runId}/trace`, { headers: { "X-SimpleRCP-Member": memberId } });
+    return (await response.json() as { events: Array<{ type: string }> }).events;
   }
 
   async function waitFor(predicate: () => Promise<boolean>) {
@@ -91,5 +278,52 @@ describe("Agent concurrency with fake runtime", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
     throw new Error("Timed out waiting for Agent runs");
+  }
+
+  async function startFakeServer(maxConcurrentRuns: number) {
+    const isolatedRoot = await createTestWorkspace(`agent-concurrency-limit-${maxConcurrentRuns}-`);
+    const isolatedDemoRoot = path.join(isolatedRoot, "demo", "workspace");
+    await fs.mkdir(isolatedDemoRoot, { recursive: true });
+    const isolatedApp = await createApp({
+      port: 0,
+      host: "127.0.0.1",
+      publicOrigin: "http://127.0.0.1:5173",
+      dataDir: path.join(isolatedRoot, "data"),
+      demoProjectRoot: isolatedDemoRoot,
+      fakeAgentRuntime: true,
+      agent: { baseUrl: "https://api.deepseek.com/v1", model: "fake-agent", maxConcurrentRuns, runTimeoutMs: 10_000 }
+    });
+    const isolatedServer = http.createServer(isolatedApp);
+    await new Promise<void>((resolve) => isolatedServer.listen(0, "127.0.0.1", resolve));
+    const address = isolatedServer.address();
+    if (!address || typeof address === "string") throw new Error("Server did not start");
+    const isolatedOrigin = `http://127.0.0.1:${address.port}`;
+    const isolatedMember = await joinMember(isolatedOrigin, "demo", { name: "Limit tester" });
+    const headers = { "content-type": "application/json", "X-SimpleRCP-Member": isolatedMember.member.id };
+    return {
+      async createRun(prompt: string) {
+        const response = await fetch(`${isolatedOrigin}/api/projects/demo/agent/runs`, { method: "POST", headers, body: JSON.stringify({ prompt }) });
+        expect(response.status).toBe(202);
+        return (await response.json() as { run: { id: string } }).run;
+      },
+      async getRuns() {
+        const response = await fetch(`${isolatedOrigin}/api/projects/demo/agent/runs`, { headers });
+        return (await response.json() as { runs: Array<{ id: string; status: string; startedAt?: string; finishedAt?: string }> }).runs;
+      },
+      async waitFor(predicate: () => Promise<boolean>) {
+        const deadline = Date.now() + 5_000;
+        while (Date.now() < deadline) {
+          if (await predicate()) return;
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        throw new Error("Timed out waiting for isolated Agent runs");
+      },
+      async close() {
+        await isolatedApp.locals.agentRuns.dispose();
+        await isolatedApp.locals.runtimeManager.dispose();
+        await new Promise<void>((resolve, reject) => isolatedServer.close((error) => error ? reject(error) : resolve()));
+        await fs.rm(isolatedRoot, { recursive: true, force: true });
+      }
+    };
   }
 });

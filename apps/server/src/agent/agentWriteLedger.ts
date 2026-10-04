@@ -7,7 +7,8 @@ export interface AgentWriteEntry {
   toolCallId: string;
   file: string;
   completedAt: string;
-  contentHash: string;
+  contentHash: string | null;
+  readError?: string;
 }
 
 export function createAgentWriteLedger() {
@@ -19,26 +20,37 @@ export function createAgentWriteLedger() {
     workspacePath: string,
     data: Record<string, unknown>
   ) {
-    const write = extractWrite(data);
-    if (!write) return undefined;
-    const absolutePath = path.resolve(workspacePath, write.file);
+    const writes = extractWrites(data);
+    if (writes.length === 0) return undefined;
     const root = path.resolve(workspacePath);
-    if (absolutePath !== root && !absolutePath.startsWith(`${root}${path.sep}`)) return undefined;
-    const file = path.relative(root, absolutePath).split(path.sep).join("/");
-    const content = await fs.readFile(absolutePath);
-    const entry: AgentWriteEntry = {
-      runId,
-      toolCallId: write.toolCallId,
-      file,
-      completedAt: new Date().toISOString(),
-      contentHash: crypto.createHash("sha256").update(content).digest("hex")
-    };
+    const entries: AgentWriteEntry[] = [];
+    for (const write of writes) {
+      const absolutePath = path.resolve(workspacePath, write.file);
+      if (absolutePath === root || !absolutePath.startsWith(`${root}${path.sep}`)) continue;
+      const file = path.relative(root, absolutePath).split(path.sep).join("/");
+      let content: Buffer | undefined;
+      let readError: string | undefined;
+      try {
+        content = await fs.readFile(absolutePath);
+      } catch (error) {
+        readError = error instanceof Error ? error.message : "Unable to read written file";
+      }
+      entries.push({
+        runId,
+        toolCallId: `${write.toolCallId}:${file}`,
+        file,
+        completedAt: new Date().toISOString(),
+        contentHash: content ? crypto.createHash("sha256").update(content).digest("hex") : null,
+        ...(readError ? { readError } : {})
+      });
+    }
+    if (entries.length === 0) return undefined;
     const projectEntries = entriesByProject.get(projectId) ?? new Map<string, AgentWriteEntry[]>();
     const runEntries = projectEntries.get(runId) ?? [];
-    if (!runEntries.some((candidate) => candidate.toolCallId === entry.toolCallId)) runEntries.push(entry);
+    for (const entry of entries) if (!runEntries.some((candidate) => candidate.toolCallId === entry.toolCallId)) runEntries.push(entry);
     projectEntries.set(runId, runEntries);
     entriesByProject.set(projectId, projectEntries);
-    return entry;
+    return entries;
   }
 
   function list(projectId: string, runId: string) {
@@ -51,22 +63,41 @@ export function createAgentWriteLedger() {
     );
   }
 
-  return { record, list, listProject };
+  function clear(projectId: string, runId: string) {
+    const projectEntries = entriesByProject.get(projectId);
+    projectEntries?.delete(runId);
+    if (projectEntries && projectEntries.size === 0) entriesByProject.delete(projectId);
+  }
+
+  return { record, list, listProject, clear };
 }
 
-function extractWrite(data: Record<string, unknown>) {
+function extractWrites(data: Record<string, unknown>) {
   const part = findToolPart(data);
-  if (!part) return undefined;
+  if (!part) return [];
   const tool = String(part.tool ?? "").toLowerCase();
-  if (!new Set(["edit", "write", "patch", "apply_patch", "multiedit"]).has(tool)) return undefined;
+  if (!new Set(["edit", "write", "patch", "apply_patch", "multiedit"]).has(tool)) return [];
   const state = part.state && typeof part.state === "object" ? part.state as Record<string, unknown> : undefined;
-  if (state && state.status !== "completed" && state.status !== "success") return undefined;
+  if (state && state.status !== "completed" && state.status !== "success") return [];
   const input = state?.input && typeof state.input === "object" ? state.input as Record<string, unknown> : undefined;
   const file = input?.filePath ?? input?.path ?? part.filePath ?? part.path;
-  if (typeof file !== "string" || !file.trim()) return undefined;
+  const patchText = input?.patchText ?? part.patchText;
   const toolCallId = part.callID ?? part.toolCallId ?? part.id;
-  if (typeof toolCallId !== "string" || !toolCallId) return undefined;
-  return { toolCallId, file };
+  if (typeof toolCallId !== "string" || !toolCallId) return [];
+  if (tool === "apply_patch" && typeof patchText === "string") {
+    return parsePatchFiles(patchText).map((file) => ({ toolCallId, file }));
+  }
+  if (typeof file !== "string" || !file.trim()) return [];
+  return [{ toolCallId, file }];
+}
+
+function parsePatchFiles(patchText: string) {
+  const files: string[] = [];
+  for (const line of patchText.split("\n")) {
+    const match = line.match(/^\*\*\* (?:Update|Add|Delete|Move to) File:\s*(.+?)\s*$/);
+    if (match && !files.includes(match[1]!)) files.push(match[1]!);
+  }
+  return files;
 }
 
 function findToolPart(value: unknown): Record<string, unknown> | undefined {

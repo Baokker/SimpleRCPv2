@@ -1,0 +1,109 @@
+{
+  "source": "Playwright CLI with two browser contexts and the development server",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "runtimeVersion": "1.18.31",
+  "workspace": ".test-workspaces/e2e-data/workspaces/demo",
+  "secrets": "none",
+  "scenarios": {
+    "differentFiles": {
+      "runs": [
+        {
+          "id": "vuXsFgn3-100",
+          "member": "Alice",
+          "file": "src/alice-agent.ts",
+          "startedAt": "2026-10-04T16:40:19.907Z",
+          "finishedAt": "2026-10-04T16:40:23.620Z",
+          "fileChanges": [{ "file": "src/alice-agent.ts", "attribution": "tool" }],
+          "concurrentRunIds": []
+        },
+        {
+          "id": "tSK_5UAjJfrC",
+          "member": "Bob",
+          "file": "src/bob-agent.ts",
+          "startedAt": "2026-10-04T16:40:23.110Z",
+          "finishedAt": "2026-10-04T16:40:25.700Z",
+          "fileChanges": [{ "file": "src/bob-agent.ts", "attribution": "tool" }],
+          "concurrentRunIds": ["vuXsFgn3-100"]
+        }
+      ],
+      "finalFiles": {
+        "src/alice-agent.ts": "export function aliceAgentMarker(): string {\n  return \"alice\";\n}\n",
+        "src/bob-agent.ts": "export function bobAgentMarker(): string {\n  return \"bob\";\n}\n"
+      }
+    },
+    "sameFileDifferentFunctions": {
+      "runs": [
+        {
+          "id": "pAnKqUT_3Llg",
+          "member": "Alice",
+          "file": "src/shared-agent.ts",
+          "startedAt": "2026-10-04T16:46:21.022Z",
+          "finishedAt": "2026-10-04T16:46:35.320Z",
+          "overlappingRunIds": ["-GomhlQOnV6l"],
+          "agentOverlap": {
+            "otherRunId": "-GomhlQOnV6l",
+            "thisCompletedAt": "2026-10-04T16:46:23.307Z",
+            "otherCompletedAt": "2026-10-04T16:46:25.476Z"
+          },
+          "fileChanges": [{ "file": "src/shared-agent.ts", "attribution": "tool" }]
+        },
+        {
+          "id": "-GomhlQOnV6l",
+          "member": "Bob",
+          "file": "src/shared-agent.ts",
+          "startedAt": "2026-10-04T16:46:23.134Z",
+          "finishedAt": "2026-10-04T16:46:37.600Z",
+          "overlappingRunIds": ["pAnKqUT_3Llg"],
+          "agentOverlap": {
+            "otherRunId": "pAnKqUT_3Llg",
+            "thisCompletedAt": "2026-10-04T16:46:25.476Z",
+            "otherCompletedAt": "2026-10-04T16:46:23.307Z"
+          },
+          "fileChanges": [{ "file": "src/shared-agent.ts", "attribution": "tool" }]
+        }
+      ],
+      "finalFile": "export function sharedBase(): string {\n  return \"base\";\n}\n\nexport function aliceSharedMarker(): string {\n  return \"alice\";\n}\n\nexport function bobSharedMarker(): string {\n  return \"bob\";\n}\n\nexport function aliceOverlapMarker(): string {\n  return \"alice-overlap\";\n}\n\nexport function bobOverlapMarker(): string {\n  return \"bob-overlap\";\n}\n"
+    },
+    "memberEditDuringAgent": {
+      "run": {
+        "id": "2uLRvXX5g3PC",
+        "member": "Concurrent Member",
+        "file": "src/hello.ts",
+        "startedAt": "2026-10-04T16:50:20.458Z",
+        "finishedAt": "2026-10-04T16:50:27.119Z",
+        "fileChanges": [{ "file": "src/hello.ts", "attribution": "tool" }]
+      },
+      "concurrentChange": {
+        "type": "concurrent_change",
+        "data": {
+          "path": "src/hello.ts",
+          "previousRevision": 0,
+          "currentRevision": 1
+        }
+      },
+      "finalFileObserved": "agent replaced this file"
+    }
+  },
+  "rawToolEvent": {
+    "type": "message.part.updated",
+    "properties": {
+      "part": {
+        "sessionID": "ses_ef82d2943ffeO07JKw865cavec",
+        "messageID": "msg_107d2e8b9001GC0Zk1htnmDwlH",
+        "id": "prt_107d2ec0a001dDAIy8VdrWwfze",
+        "type": "tool",
+        "tool": "write",
+        "callID": "call_00_nG384wiMeGQGb7SF9Qqm1306",
+        "state": {
+          "status": "completed",
+          "input": {
+            "filePath": ".../.test-workspaces/e2e-data/workspaces/demo/src/hello.ts",
+            "content": "agent replaced this file"
+          },
+          "output": "Wrote file successfully."
+        }
+      }
+    }
+  }
+}

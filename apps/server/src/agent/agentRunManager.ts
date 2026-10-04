@@ -32,6 +32,10 @@ import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
 import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
 import { createAgentWriteLedger, type AgentWriteLedger } from "./agentWriteLedger.js";
+import {
+  createAgentScheduler,
+  type AgentSchedulerQueue
+} from "./agentScheduler.js";
 
 interface AgentRunManagerOptions {
   members: MemberStore;
@@ -47,16 +51,6 @@ interface AgentRunManagerOptions {
     projectId: string,
     input: Omit<EventRecord, "id" | "timestamp">
   ) => EventRecord;
-}
-
-interface ProjectQueue {
-  runIds: string[];
-  processing: boolean;
-  completion?: Promise<void>;
-  activeRunIds: Set<string>;
-  activeSessionIds: Set<string>;
-  runningPromises: Set<Promise<void>>;
-  workspacePreparing: boolean;
 }
 
 interface ActiveRun {
@@ -94,14 +88,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const stores = new Map<string, AgentRunStore>();
   const sessionStores = new Map<string, AgentSessionStore>();
   const traces = new Map<string, TraceStore>();
-  const queues = new Map<string, ProjectQueue>();
+  const queues = new Map<string, AgentSchedulerQueue>();
   const activeRuns = new Map<string, ActiveRun>();
   const writeLedger: AgentWriteLedger = createAgentWriteLedger();
   const runConcurrentIds = new Map<string, Set<string>>();
+  const runOverlapIds = new Map<string, Set<string>>();
+  const cancelRequested = new Set<string>();
   const recordedOverlaps = new Set<string>();
   const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
   let disposing = false;
+  let scheduler: ReturnType<typeof createAgentScheduler>;
 
   function getStore(projectId: string) {
     const existing = stores.get(projectId);
@@ -139,13 +136,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   function getQueue(projectId: string) {
     const existing = queues.get(projectId);
     if (existing) return existing;
-    const queue: ProjectQueue = {
+    const queue: AgentSchedulerQueue = {
       runIds: [],
       processing: false,
       activeRunIds: new Set(),
       activeSessionIds: new Set(),
       runningPromises: new Set(),
-      workspacePreparing: false
+      workspacePreparing: false,
+      rescanRequested: false,
+      closing: false
     };
     queues.set(projectId, queue);
     return queue;
@@ -226,40 +225,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     );
   }
 
-  async function processQueue(projectId: string) {
-    const queue = getQueue(projectId);
-    if (queue.processing) return queue.completion;
-    queue.processing = true;
-    queue.completion = (async () => {
-      while (!disposing && queue.activeRunIds.size < options.maxConcurrentRuns) {
-        const candidate = await findRunnableRun(projectId, queue);
-        if (!candidate) break;
-        const { runId, sessionId, requiresWorkspacePreparation } = candidate;
-        queue.runIds = queue.runIds.filter((queuedRunId) => queuedRunId !== runId);
-        queue.activeRunIds.add(runId);
-        queue.activeSessionIds.add(sessionId);
-        if (requiresWorkspacePreparation) queue.workspacePreparing = true;
-        runConcurrentIds.set(runId, new Set([...queue.activeRunIds].filter((id) => id !== runId)));
-        options.runtime.setActiveRunCount?.(queue.activeRunIds.size);
-        let runningPromise: Promise<void>;
-        runningPromise = executeRun(projectId, runId).finally(() => {
-          queue.activeRunIds.delete(runId);
-          queue.activeSessionIds.delete(sessionId);
-          if (requiresWorkspacePreparation) queue.workspacePreparing = false;
-          runConcurrentIds.delete(runId);
-          queue.runningPromises.delete(runningPromise);
-          options.runtime.setActiveRunCount?.(queue.activeRunIds.size);
-          void processQueue(projectId);
-        });
-        queue.runningPromises.add(runningPromise);
-      }
-    })().finally(() => {
-      queue.processing = false;
-    });
-    return queue.completion;
+  function processQueue(projectId: string) {
+    return scheduler.processQueue(projectId);
   }
 
-  async function findRunnableRun(projectId: string, queue: ProjectQueue) {
+  async function findRunnableRun(projectId: string, queue: AgentSchedulerQueue) {
     if (queue.workspacePreparing) return undefined;
     const store = getStore(projectId);
     let workspaceNeedsPreparation = false;
@@ -353,7 +323,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   ) {
     const entries = writeLedger.list(projectId, runId);
     const toolFiles = new Set(entries.map((entry) => entry.file));
-    const result = (changes ?? []).map((change) => ({
+    const overlapFiles = new Set(
+      [...concurrentRunIds].flatMap((otherRunId) => writeLedger.list(projectId, otherRunId).map((entry) => entry.file))
+    );
+    const result = (changes ?? []).filter((change) => toolFiles.has(change.file) || !overlapFiles.has(change.file)).map((change) => ({
       ...change,
       attribution: toolFiles.has(change.file)
         ? "tool" as const
@@ -382,8 +355,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const ownEntries = writeLedger.list(projectId, runId);
     if (ownEntries.length === 0) return;
     const ownFiles = new Set(ownEntries.map((entry) => entry.file));
-    for (const [otherRunId, entries] of writeLedger.listProject(projectId)) {
-      if (otherRunId === runId) continue;
+    for (const otherRunId of runOverlapIds.get(runId) ?? []) {
+      const entries = writeLedger.list(projectId, otherRunId);
       for (const other of entries) {
         if (!ownFiles.has(other.file)) continue;
         const own = ownEntries.find((entry) => entry.file === other.file);
@@ -415,12 +388,29 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     }
   }
 
+  function cleanupOverlapEntries(projectId: string, runId: string) {
+    const overlapIds = runOverlapIds.get(runId) ?? new Set<string>();
+    const allFinished = [...overlapIds].every((otherRunId) => !activeRuns.has(otherRunId));
+    if (!allFinished) return;
+    writeLedger.clear(projectId, runId);
+    runOverlapIds.delete(runId);
+    for (const otherRunId of overlapIds) {
+      writeLedger.clear(projectId, otherRunId);
+      runOverlapIds.delete(otherRunId);
+    }
+  }
+
   async function executeRun(projectId: string, runId: string) {
     const store = getStore(projectId);
     const current = await store.get(runId);
     if (!current || current.status !== "queued") return;
+    if (cancelRequested.delete(runId)) return;
+    let workspacePathForRun: string | undefined;
+    let runtimeSessionIdForRun: string | undefined;
+    let workspaceBeforeForRun: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
+      workspacePathForRun = projectRuntime.project.workspacePath;
       await projectRuntime.documents.awaitIdle();
       const session = current.sessionId
         ? await getSessionStore(projectId).get(current.sessionId)
@@ -429,6 +419,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const workspacePrepared = session.scope === "team"
         ? await options.runtime.prepareWorkspace?.(projectRuntime.project.workspacePath)
         : false;
+      if (workspacePrepared) {
+        getQueue(projectId).workspacePreparing = false;
+        void processQueue(projectId);
+      }
       if (workspacePrepared) {
         const sessions = await getSessionStore(projectId).list();
         const affectedSessionIds = new Set(
@@ -462,9 +456,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const workspaceBefore = await createAgentWorkspaceSnapshot(
         projectRuntime.project.workspacePath
       );
+      workspaceBeforeForRun = workspaceBefore;
       const revisionsBefore = projectRuntime.documents.getRevisions();
       const startedAt = new Date().toISOString();
       const concurrentRunIds = [...(runConcurrentIds.get(runId) ?? [])];
+      const beforeRunning = await store.get(runId);
+      if (!beforeRunning || beforeRunning.status === "cancelled") return;
       let run = await updateRun(projectId, runId, {
         status: "running",
         startedAt,
@@ -497,6 +494,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } else {
         await getSessionStore(projectId).update(run.sessionId!, { lastRunId: run.id });
       }
+      runtimeSessionIdForRun = runtimeSessionId;
 
       appendActivity(projectId, {
         type: "agent_task_started",
@@ -515,6 +513,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         workspacePath: projectRuntime.project.workspacePath,
         runtimeSessionId
       });
+      const cancellationAfterActivation = await store.get(runId);
+      if (cancellationAfterActivation?.status === "cancelled" || cancelRequested.delete(runId)) {
+        await options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId });
+        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
+        return;
+      }
 
       const previousRun = run.interruptsRunId
         ? await store.get(run.interruptsRunId)
@@ -544,14 +548,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: `opencode.${event.type}`,
             data: event.data
           });
-          const entry = await writeLedger.record(
+          const entries = await writeLedger.record(
             projectId,
             runId,
             projectRuntime.project.workspacePath,
             event.data
           );
-          if (entry) {
-            await appendTrace(projectId, runId, {
+          if (entries) {
+            for (const entry of entries) await appendTrace(projectId, runId, {
               type: "agent_write",
               summary: `${entry.file} written by Agent tool`,
               data: { ...entry }
@@ -665,11 +669,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
       await appendTrace(projectId, runId, {
         type: "run_completed",
-        summary: "Agent run completed"
+        summary: "Agent run completed",
+        data: { overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }
       });
     } catch (error) {
       const latest = await store.get(runId);
-      if (latest?.status === "cancelled") return;
+      if (latest?.status === "cancelled") {
+        if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun) await recordCancelledFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun);
+        return;
+      }
+      if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun) await recordCancelledFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun);
       const message = error instanceof Error ? error.message : "Agent run failed";
       await updateRun(projectId, runId, {
         status: "failed",
@@ -703,12 +712,32 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       }
       await appendTrace(projectId, runId, {
         type: "run_failed",
-        summary: message
+        summary: message,
+        data: { overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }
       });
     } finally {
       activeRuns.delete(runId);
     }
   }
+
+  scheduler = createAgentScheduler({
+    maxConcurrentRuns: options.maxConcurrentRuns,
+    isClosing: () => disposing,
+    getQueue,
+    findRunnableRun,
+    executeRun,
+    onRunStart({ projectId, runId, overlappingRunIds }) {
+      runConcurrentIds.set(runId, new Set(overlappingRunIds));
+      runOverlapIds.set(runId, new Set(overlappingRunIds));
+      for (const otherRunId of overlappingRunIds) runOverlapIds.get(otherRunId)?.add(runId);
+      const releaseRuntimeRun = options.runtime.acquireRun?.() ?? (() => {});
+      return () => {
+        runConcurrentIds.delete(runId);
+        releaseRuntimeRun();
+        cleanupOverlapEntries(projectId, runId);
+      };
+    }
+  });
 
   return {
     async initialize() {
@@ -945,6 +974,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
       const queue = getQueue(projectId);
       queue.runIds = queue.runIds.filter((queuedRunId) => queuedRunId !== runId);
+      if (!activeRuns.has(runId)) cancelRequested.add(runId);
       const cancelled = await updateRun(projectId, runId, {
         status: "cancelled",
         finishedAt: new Date().toISOString(),
@@ -954,7 +984,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       await appendTrace(projectId, runId, {
         type: interruptedBy ? "run_interrupted" : "run_cancelled",
         summary: interruptedBy ? "Agent run interrupted" : "Agent run cancelled",
-        data: interruptedBy ? { interruptedByRunId: interruptedBy.runId, interruptedByMemberId: interruptedBy.memberId } : undefined
+        data: {
+          ...(interruptedBy ? { interruptedByRunId: interruptedBy.runId, interruptedByMemberId: interruptedBy.memberId } : {}),
+          overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])]
+        }
       });
       appendActivity(projectId, {
         type: "agent_task_cancelled",
@@ -996,6 +1029,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       );
       const activeIds = new Set(active.map((run) => run.id));
       const queue = getQueue(projectId);
+      queue.closing = true;
       queue.runIds = queue.runIds.filter((runId) => !activeIds.has(runId));
 
       for (const run of active) {
@@ -1046,6 +1080,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     },
     async dispose() {
       disposing = true;
+      for (const queue of queues.values()) queue.closing = true;
       await Promise.all(
         [...activeRuns.values()].map((active) =>
           options.runtime.cancel({

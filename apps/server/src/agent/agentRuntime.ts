@@ -35,6 +35,7 @@ export interface AgentRuntime {
     listener: (event: AgentRuntimeEvent) => void | Promise<void>
   ): Promise<() => Promise<void>>;
   dispose(): Promise<void>;
+  acquireRun?(): () => void;
   setActiveRunCount?(count: number): void;
   getCurrentModel?(): string;
 }

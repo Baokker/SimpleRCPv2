@@ -25,25 +25,30 @@ export function createOpenCodeRuntime(
   let process = createProcess();
   let processModel = options.getSettings().model;
   let activeRunCount = 0;
+  let modelChangePromise: Promise<void> | undefined;
 
-  function createProcess() {
-    const settings = options.getSettings();
+  function createProcess(model = options.getSettings().model) {
     return createOpenCodeProcess({
       port: options.port,
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
-      model: settings.model
+      model
     });
   }
 
   async function ensureCurrentProcess() {
+    if (modelChangePromise) await modelChangePromise;
     const model = options.getSettings().model;
-    if (model !== processModel) {
-      if (activeRunCount > 0) return process;
-      await process.dispose();
-      process = createProcess();
-      processModel = model;
+    if (model === processModel || activeRunCount > 0) return process;
+    if (!modelChangePromise) {
+      const targetModel = model;
+      modelChangePromise = (async () => {
+        await process.dispose();
+        processModel = targetModel;
+        process = createProcess(targetModel);
+      })().finally(() => { modelChangePromise = undefined; });
     }
+    await modelChangePromise;
     return process;
   }
 
@@ -64,10 +69,20 @@ export function createOpenCodeRuntime(
   }
 
   return {
+    acquireRun() {
+      activeRunCount += 1;
+      let released = false;
+      return () => {
+        if (released) return;
+        released = true;
+        activeRunCount = Math.max(0, activeRunCount - 1);
+        if (activeRunCount === 0 && options.getSettings().model !== processModel) void ensureCurrentProcess().catch((error) => console.warn(`OpenCode model switch failed: ${error instanceof Error ? error.message : "Unknown error"}`));
+      };
+    },
     setActiveRunCount(count: number) {
       activeRunCount = count;
       if (activeRunCount === 0 && options.getSettings().model !== processModel) {
-        void ensureCurrentProcess();
+        void ensureCurrentProcess().catch((error) => console.warn(`OpenCode model switch failed: ${error instanceof Error ? error.message : "Unknown error"}`));
       }
     },
     getCurrentModel() {
@@ -146,8 +161,7 @@ export function createOpenCodeRuntime(
       const response = await client.session.diff(
         {
           directory: input.workspacePath,
-          sessionID: input.sessionId,
-          messageID: input.messageId
+          sessionID: input.sessionId
         },
         { throwOnError: true }
       );
@@ -183,10 +197,14 @@ export function createOpenCodeRuntime(
       const completion = (async () => {
         for await (const event of subscription.stream) {
           if (!eventBelongsToSession(event, input.sessionId)) continue;
-          await listener({
-            type: event.type,
-            data: event.properties as Record<string, unknown>
-          });
+          try {
+            await listener({
+              type: event.type,
+              data: event.properties as Record<string, unknown>
+            });
+          } catch (error) {
+            console.warn(`OpenCode event listener failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+          }
         }
       })();
       return async () => {
