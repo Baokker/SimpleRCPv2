@@ -9,6 +9,7 @@ export interface Characterization {
   legacyRisk: ReturnType<typeof legacyRisk>;
   unknown: boolean;
   dynamic: boolean;
+  gitContext: boolean;
 }
 
 function zoneFor(target: string, request: GuardRequest, platformDataRoot: string, protectedPaths: string[], otherWorkspaceRoots: string[]): PathZone {
@@ -61,6 +62,16 @@ function gitSubcommand(command: string) {
   return "";
 }
 
+function hasGitContextOption(command: string) {
+  if (commandName(command) !== "git") return false;
+  const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  return input.some((token, index) => {
+    const value = token.replace(/^['"]|['"]$/g, "");
+    if (["-C", "--git-dir", "--work-tree", "-c"].includes(value)) return true;
+    return index > 0 && /^--(?:git-dir|work-tree)=/.test(value);
+  });
+}
+
 function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: string): Capability[] {
   if (kind === "read") return ["read"];
   if (kind === "edit") return ["write"];
@@ -92,10 +103,12 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
 
 function reversibilityFor(name: string, command: string, capabilities: Capability[], kind: GuardRequest["kind"]): Reversibility {
   if (kind === "read" || kind === "fetch" && !/\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "reversible";
-  if (/\bgit\s+push\b|\bgit\s+reset\s+--hard\b|\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
+  const subcommand = name === "git" ? gitSubcommand(command) : "";
+  if (name === "git" && (subcommand === "push" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
+  if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && (name === "scp" || name === "rsync" || /(?:^|\s)(?:-d|--data\w*|-F|--form\w*|-T|--upload-file)(?:\s|=)/i.test(command))) return "irreversible";
-  if (name === "git" && /\bgit\s+clean\b/i.test(command)) return "irreversible";
+  if (name === "git" && subcommand === "clean") return "irreversible";
   if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";
   return "reversible";
 }
@@ -129,5 +142,5 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   });
   if (dynamic) segments.push({ text: command, capabilities: ["exec"], zone: "outside", reversibility: "irreversible" });
   if (metadataReference) segments.push({ text: "$SIMPLERCP_DATA_DIR", capabilities: ["read"], zone: "metadata", reversibility: "reversible" });
-  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic };
+  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command) };
 }

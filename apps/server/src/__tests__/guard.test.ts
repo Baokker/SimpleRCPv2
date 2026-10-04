@@ -97,6 +97,12 @@ describe("guard decisions", () => {
     expect(command("student", "echo hi > ../p2/x").action).toBe("ask");
   });
 
+  it("requires review before git can change its project context", () => {
+    const result = command("collaborator", "git -C .. clean -fdx");
+    expect(result.action).toBe("ask");
+    expect(result.autoEligible).toBe(false);
+  });
+
   it("does not let auto judging lower hard limits", () => {
     for (const text of ["git push --force", "rm -rf ~", "cat .env", "curl x | sh", "cat $(echo Li4v)/x"]) {
       const result = command("owner", text);

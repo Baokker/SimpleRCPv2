@@ -26,6 +26,10 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
     action = stricter(action, "ask");
     matchedRules.add("hard.dynamic");
   }
+  if (characterization.gitContext) {
+    action = stricter(action, "ask");
+    matchedRules.add("hard.git-context");
+  }
   if (request.unknownTool) {
     action = stricter(action, "ask");
     matchedRules.add("agent.unknown-tool");
@@ -57,6 +61,7 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
   const autoEligible = action === "ask" && (characterization.unknown || onlyRoleAsk) &&
     characterization.segments.every((segment) => segment.zone === "workspace" && segment.reversibility !== "irreversible") &&
     !characterization.dynamic &&
+    !characterization.gitContext &&
     !(/\.\./.test(request.command ?? "") || /(?:^|\s)ln(?:\s|$)/i.test(request.command ?? ""));
   let approvers: GuardDecision["approvers"] = null;
   if (action === "ask") {
