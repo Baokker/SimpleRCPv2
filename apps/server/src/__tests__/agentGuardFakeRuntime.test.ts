@@ -136,8 +136,9 @@ describe("Agent Guard fake runtime permissions", () => {
       body: JSON.stringify({ approve: true })
     });
     expect(approvalResponse.status).toBe(200);
+    const origin = running.origin;
     await vi.waitFor(async () => {
-      const response = await fetch(`${running.origin}/api/projects/demo/agent/runs/${run.id}`, { headers: headers(memberId) });
+      const response = await fetch(`${origin}/api/projects/demo/agent/runs/${run.id}`, { headers: headers(memberId) });
       expect((await response.json() as { run: { status: string } }).run.status).toBe("failed");
     }, { timeout: 5_000 });
   }, 30_000);
