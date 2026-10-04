@@ -1,0 +1,6 @@
+{
+  "name": "conflict-shop",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --experimental-transform-types --test test/*.test.mjs" }
+}
