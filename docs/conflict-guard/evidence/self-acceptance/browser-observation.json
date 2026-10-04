@@ -1,0 +1,257 @@
+{
+  "source": "Playwright CLI with two independent browser sessions and keyboard editing",
+  "commit": "0cd88f697e01bd8b774db85dcaeeeb90d2fe2b63",
+  "mode": "observe",
+  "elapsedMs": 170929,
+  "batchCounts": {
+    "84385647-c90e-4213-8780-e1a6f88274be": 3,
+    "0b3f1742-a048-4d76-9799-913a0d2e19b8": 3
+  },
+  "batches": [
+    {
+      "id": "guard-1",
+      "memberId": "84385647-c90e-4213-8780-e1a6f88274be",
+      "file": "src/index.js",
+      "ranges": [
+        {
+          "start": 0,
+          "end": 22
+        }
+      ],
+      "lines": [
+        {
+          "start": 1,
+          "end": 2
+        }
+      ],
+      "closeReason": "idle"
+    },
+    {
+      "id": "guard-2",
+      "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8",
+      "file": "src/index.js",
+      "ranges": [
+        {
+          "start": 22,
+          "end": 42
+        }
+      ],
+      "lines": [
+        {
+          "start": 2,
+          "end": 3
+        }
+      ],
+      "closeReason": "idle"
+    },
+    {
+      "id": "guard-3",
+      "memberId": "84385647-c90e-4213-8780-e1a6f88274be",
+      "file": "src/index.js",
+      "ranges": [
+        {
+          "start": 42,
+          "end": 64
+        }
+      ],
+      "lines": [
+        {
+          "start": 3,
+          "end": 4
+        }
+      ],
+      "closeReason": "idle"
+    },
+    {
+      "id": "guard-4",
+      "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8",
+      "file": "src/index.js",
+      "ranges": [
+        {
+          "start": 64,
+          "end": 84
+        }
+      ],
+      "lines": [
+        {
+          "start": 4,
+          "end": 5
+        }
+      ],
+      "closeReason": "idle"
+    },
+    {
+      "id": "guard-5",
+      "memberId": "84385647-c90e-4213-8780-e1a6f88274be",
+      "file": "src/index.js",
+      "ranges": [
+        {
+          "start": 84,
+          "end": 106
+        }
+      ],
+      "lines": [
+        {
+          "start": 5,
+          "end": 6
+        }
+      ],
+      "closeReason": "idle"
+    },
+    {
+      "id": "guard-6",
+      "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8",
+      "file": "src/index.js",
+      "ranges": [
+        {
+          "start": 106,
+          "end": 126
+        }
+      ],
+      "lines": [
+        {
+          "start": 6,
+          "end": 7
+        }
+      ],
+      "closeReason": "idle"
+    }
+  ],
+  "state": {
+    "mode": "observe",
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "84385647-c90e-4213-8780-e1a6f88274be"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/index.js",
+            "ranges": [
+              {
+                "start": 0,
+                "end": 22
+              },
+              {
+                "start": 42,
+                "end": 64
+              },
+              {
+                "start": 84,
+                "end": 106
+              }
+            ],
+            "firstTouchedAt": 1791138560427,
+            "lastTouchedAt": 1791138730039,
+            "lines": [
+              {
+                "start": 1,
+                "end": 2
+              },
+              {
+                "start": 3,
+                "end": 4
+              },
+              {
+                "start": 5,
+                "end": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/index.js",
+            "ranges": [
+              {
+                "start": 22,
+                "end": 42
+              },
+              {
+                "start": 64,
+                "end": 84
+              },
+              {
+                "start": 106,
+                "end": 126
+              }
+            ],
+            "firstTouchedAt": 1791138561964,
+            "lastTouchedAt": 1791138731356,
+            "lines": [
+              {
+                "start": 2,
+                "end": 3
+              },
+              {
+                "start": 4,
+                "end": 5
+              },
+              {
+                "start": 6,
+                "end": 7
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "cursors": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "84385647-c90e-4213-8780-e1a6f88274be"
+        },
+        "file": "src/index.js",
+        "lineNumber": 7,
+        "column": 20,
+        "selection": {
+          "startLineNumber": 7,
+          "startColumn": 20,
+          "endLineNumber": 7,
+          "endColumn": 20,
+          "selectionStartLineNumber": 7,
+          "selectionStartColumn": 20,
+          "positionLineNumber": 7,
+          "positionColumn": 20
+        },
+        "at": 1791138731361
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8"
+        },
+        "file": "src/index.js",
+        "lineNumber": 7,
+        "column": 20,
+        "selection": {
+          "startLineNumber": 7,
+          "startColumn": 20,
+          "endLineNumber": 7,
+          "endColumn": 20,
+          "selectionStartLineNumber": 7,
+          "selectionStartColumn": 20,
+          "positionLineNumber": 7,
+          "positionColumn": 20
+        },
+        "at": 1791138731356
+      }
+    ]
+  },
+  "finalText": "\n// Acceptance Alice 1\n// Acceptance Bob 1\n// Acceptance Alice 2\n// Acceptance Bob 2\n// Acceptance Alice 3\n// Acceptance Bob 3import { createProjectStatus, formatProjectStatus } from \"./projectStatus.js\";\n\nconst status = createProjectStatus([\n  { title: \"Open the workspace\", completed: true },\n  { title: \"Edit a file together\", completed: false },\n  { title: \"Run the shared terminal\", completed: false }\n]);\n\nconsole.log(formatProjectStatus(status));\n",
+  "validation": {
+    "valid": true,
+    "redactedFiles": [],
+    "skippedFiles": []
+  }
+}

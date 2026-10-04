@@ -1,0 +1,10 @@
+
+> @simplercp/server@0.1.0 dev /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+> tsx watch src/index.ts
+
+SimpleRCPv2 server listening on http://127.0.0.1:4201
+Open http://127.0.0.1:5173
+Project data: /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/observe-acceptance
+/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/server@0.1.0 dev: `tsx watch src/index.ts`
+Exit status 15

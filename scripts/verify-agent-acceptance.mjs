@@ -95,6 +95,7 @@ try {
   await new Promise((resolve) => timeoutServer.listen(0, "127.0.0.1", resolve));
   const timeoutAddress = timeoutServer.address();
   assert(timeoutAddress && typeof timeoutAddress !== "string");
+  let timeoutDocument;
   try {
     const response = await fetch(`http://127.0.0.1:${timeoutAddress.port}/api/projects/demo/members`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Timeout member" }) });
     assert.equal(response.status, 200);
@@ -102,8 +103,8 @@ try {
     const timeoutRun = await timeoutApp.locals.agentRuns.createRun({ projectId: "demo", memberId: timeoutMember, prompt: "Use write to create timeout.ts containing exactly export const timeout = true; Then use bash to run sleep 20. After sleep, reply done. Do not edit other files." });
     await waitFor(async () => (await timeoutApp.locals.agentRuns.listTrace("demo", timeoutRun.id)).some((event) => event.type === "agent_write"));
     const timeoutRuntime = timeoutApp.locals.runtimeManager.get("demo");
-    const document = await timeoutRuntime.documents.getDocument(timeoutRuntime.room.id, "timeout.ts");
-    document.getText("content").insert(0, "// member update\n");
+    timeoutDocument = await timeoutRuntime.documents.getDocument(timeoutRuntime.room.id, "timeout.ts");
+    timeoutDocument.getText("content").insert(0, "// member update\n");
     await waitFor(async () => (await timeoutApp.locals.agentRuns.getRun("demo", timeoutRun.id)).status === "failed");
     const timeoutRecord = await timeoutApp.locals.agentRuns.getRun("demo", timeoutRun.id);
     const timeoutTrace = await timeoutApp.locals.agentRuns.listTrace("demo", timeoutRun.id);
@@ -115,6 +116,7 @@ try {
     await timeoutApp.locals.agentRuns.dispose();
     await timeoutApp.locals.agentRuntime.dispose();
     await timeoutApp.locals.runtimeManager.dispose();
+    timeoutDocument?.destroy();
     await new Promise((resolve, reject) => timeoutServer.close((error) => error ? reject(error) : resolve()));
   }
 

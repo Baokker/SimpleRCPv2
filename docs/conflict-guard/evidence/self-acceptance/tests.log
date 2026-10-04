@@ -1,0 +1,80 @@
+
+> simple-rcp-v2@0.1.0 test /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2
+> pnpm --filter @simplercp/conflict-guard test && pnpm --filter @simplercp/server test && pnpm test:demo
+
+
+> @simplercp/conflict-guard@0.1.0 test /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+> vitest run
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+
+ ✓ src/trace/trace.test.ts  (8 tests) 9ms
+ ✓ src/tracking/tracker.test.ts  (12 tests) 7ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  02:23:39
+   Duration  307ms (transform 108ms, setup 0ms, collect 165ms, tests 16ms, environment 0ms, prepare 138ms)
+
+
+> @simplercp/server@0.1.0 test /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+> vitest run
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+ ✓ src/__tests__/agentRunApi.integration.test.ts  (7 tests) 20924ms
+ ✓ src/__tests__/agentConcurrency.test.ts  (12 tests) 3831ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardApi.integration.test.ts  (7 tests) 2199ms
+ ✓ src/__tests__/agentSessionApi.test.ts  (3 tests) 106ms
+ ✓ src/__tests__/memberIdentityApi.test.ts  (6 tests) 1167ms
+ ✓ src/__tests__/projects.test.ts  (9 tests) 64ms
+ ✓ src/__tests__/teamAgentApi.test.ts  (3 tests) 122ms
+ ✓ src/__tests__/workspace.test.ts  (11 tests) 29ms
+ ✓ src/__tests__/chat.test.ts  (3 tests) 127ms
+ ✓ src/__tests__/collaborativeDocuments.test.ts  (7 tests) 22ms
+ ✓ src/__tests__/storageMigration.test.ts  (3 tests) 37ms
+ ✓ src/__tests__/projectApi.test.ts  (2 tests) 65ms
+ ✓ src/__tests__/chatAgentBridge.test.ts  (2 tests) 9ms
+ ✓ src/__tests__/config.test.ts  (7 tests) 3ms
+ ✓ src/__tests__/rooms.test.ts  (6 tests) 19ms
+ ✓ src/__tests__/foundation.test.ts  (4 tests) 14ms
+ ✓ src/__tests__/realtime.test.ts  (3 tests) 13ms
+ ✓ src/__tests__/agentWriteLedger.test.ts  (2 tests) 8ms
+ ✓ src/__tests__/openCodeRuntime.integration.test.ts  (2 tests) 5144ms
+ ✓ src/__tests__/agentSettingsApi.test.ts  (2 tests) 55ms
+ ✓ src/__tests__/sharedTerminal.test.ts  (3 tests) 63ms
+ ✓ src/__tests__/agentSessionStore.test.ts  (2 tests) 12ms
+ ✓ src/__tests__/openCodeStatus.test.ts  (1 test) 749ms
+ ✓ src/__tests__/conflictGuardOff.test.ts  (1 test) 49ms
+ ✓ src/__tests__/agentRunSelection.test.ts  (3 tests) 7ms
+ ✓ src/__tests__/agentRunSupport.test.ts  (2 tests) 4ms
+ ✓ src/__tests__/agentRunStore.test.ts  (1 test) 9ms
+ ✓ src/__tests__/agentSettingsStore.test.ts  (1 test) 5ms
+ ✓ src/__tests__/teamAgentSupport.test.ts  (3 tests) 4ms
+ ✓ src/__tests__/openCodeWorkspace.test.ts  (1 test) 5ms
+ ✓ src/__tests__/processEnv.test.ts  (1 test) 2ms
+
+ Test Files  31 passed (31)
+      Tests  120 passed (120)
+   Start at  02:23:40
+   Duration  40.75s (transform 362ms, setup 0ms, collect 2.16s, tests 34.87s, environment 3ms, prepare 1.46s)
+
+
+> simple-rcp-v2@0.1.0 test:demo /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2
+> node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs
+
+✔ demo command starts SimpleRCPv2 with the bundled workspace (2170.783083ms)
+✔ bundled demo workspace passes its own tests (430.372333ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2251.641792

@@ -1,23 +1,44 @@
 # 阶段 0：Agent 并发运行
 
-更新时间：2026-10-05
+更新时间：2026-10-05。Agent 代码提交：`11d2947`；本次验收的产品代码提交：`0cd88f6`。
 
-阶段 0的调度器按项目限制活动 run，并按 session 保持互斥。OpenCode 运行时使用全局 `acquireRun()` 引用计数，跨项目的活动 run 归零后才执行模型进程切换。团队 Agent 初始化工作区时暂时占用初始化资格；初始化返回后立即释放该资格并重新扫描队列。
+## 调度与归属
 
-每个 run 维护完整的重叠集合。工具完成事件进入写入台账，台账记录相对路径、完成时间和 SHA-256 内容哈希。`apply_patch` 从 `patchText` 中提取 Update、Add、Delete 和 Move 目标文件。结束时只保留本 run 台账文件及无重叠台账的快照文件；其他重叠 run 已记录的文件从本 run 的 `fileChanges` 中移除。无法归属的同期修改标记为 `ambiguous` 并写入 `unattributed_change`。历史 run 不参与 `agent_overlap` 判断，重叠集合全部结束后清理台账。
+每个项目限制活动 run 数量，同一 session 的 run 按顺序执行。OpenCode 使用全局 `acquireRun()` 引用计数，跨项目的活动 run 全部结束后执行模型进程切换。等待切换的 `getClient` 和 `createSession` 共用一个 Promise。团队 Agent 的工作区初始化资格在 `prepareWorkspace` 完成后释放，队列随即重新扫描。
 
-取消、失败、超时和完成路径都执行结束时归属。取消发生在 runtime 启动前时也会记录当时可见的文件变化。调度器处理取消竞态、队列重新扫描、项目关闭和服务关闭，并在事件监听器异常时继续读取 OpenCode 事件流。
+每个 run 保存启动时的 `concurrentRunIds` 和整个运行期间的 `overlappingRunIds`。写入台账记录工具完成事件的相对路径、时间和 SHA-256。`apply_patch` 使用 OpenCode 提供的 `state.metadata.files`，读取 `filePath` 和 `movePath`。文件已经删除或移动时记录 `contentHash: null`；其他文件系统错误直接传播。
 
-## 测试结果
+完成、取消、失败和超时共用 `recordFinishedFileChanges`。本 run 台账中的文件使用 `tool`；仅在其他重叠 run 台账中的文件从本 run 的 `fileChanges` 中移除。其余快照差异在没有重叠 run 且没有成员修改同一文件时使用 `exclusive`，存在同期活动时使用 `ambiguous` 并记录 `unattributed_change`。同一文件多次写入只产生一个文件结果。成员 revision 增加时记录 `concurrent_change`；真实重叠 run 写入同一路径时，双方记录 `agent_overlap`。
 
-`apps/server/src/__tests__/agentConcurrency.test.ts` 包含原提示词要求的 12 个场景，最近一次运行结果为 12 项通过。`@simplercp/conflict-guard` 测试为 2 个文件、16 项通过；服务端测试为 29 个文件、114 项通过；`pnpm -r build`、`pnpm test:demo`、`CONFLICT_GUARD=observe pnpm test:collab` 和 `CONFLICT_GUARD=off pnpm test:collab` 均通过。
+重叠关系关联的全部 run 结束后清理台账。项目关闭阻止继续调度，服务关闭清理全部调度状态。无效 session 的等待任务进入 failed。OpenCode 事件监听和模型切换中的错误直接传播。AgentPanel 顶部显示运行中任务，当前会话的对话仅包含该会话的 run；等待原因只检查更早创建的同会话任务。
 
-`session.diff` 核实脚本使用工作区快照和工具台账作为主要归属来源，并且在异常退出时释放 runtime。脚本调用 `session.diff` 时不传消息编号；实际输出保存在 `evidence/stage-0-session-diff.json`，文档只依据该文件记录结论。
+## 自动测试
 
-## 证据
+以下命令在 `0cd88f6` 产品代码上执行，原始输出位于 [self-acceptance](evidence/self-acceptance/README.md)。
 
-- `evidence/stage-0-session-diff.json`：两个 session 修改不同文件和同一文件的核实输出，内容不含密钥。
-- `evidence/stage-0-smoke/deepseek-browser.json`：两个浏览器上下文使用 DeepSeek 完成三个真实场景，包含最终文件、run 归属、`agent_overlap`、`concurrent_change` 和工具完成事件原文。
-- `evidence/stage-0-smoke/fake-runtime-regression.json`：假 runtime 的 12 个并发场景与工具事件结构记录。
+| 命令 | 结果 | 原始输出 |
+| --- | --- | --- |
+| `pnpm -r build` | 全部构建通过 | `self-acceptance/build.log` |
+| `pnpm test` | conflict-guard 20 项；服务端 31 个文件、120 项；演示 2 项通过 | `self-acceptance/tests.log` |
+| `CONFLICT_GUARD=off pnpm test:collab` | 2 项通过 | `self-acceptance/collab-off.log` |
+| `CONFLICT_GUARD=observe pnpm test:collab` | 2 项通过 | `self-acceptance/collab-observe.log` |
 
-共享目录中的 bash 或其他外部命令仍然只能通过工作区快照和同期活动标记为 `exclusive` 或 `ambiguous`。系统记录事实，不执行锁定、合并或撤回。
+`agentConcurrency.test.ts` 的 12 项测试覆盖并发上限 3、上限 2 后补充运行任务、同会话顺序、上限 1 的 FIFO、取消、失败、不同文件归属、同文件重叠与历史 run、成员编辑、模型记录、工作区初始化、团队 Agent 再次被提及。跨项目进程与模型切换使用下面的真实 runtime 场景补充核验。`agentRunSelection.test.ts` 的 3 项测试覆盖缺少 session、已移除 session 和关联 run 的台账清理；`agentWriteLedger.test.ts` 的 2 项测试覆盖 OpenCode metadata、删除与移动路径、重叠文件过滤和文件去重。
+
+## 真实 OpenCode 与 DeepSeek 验收
+
+命令：`pnpm --filter @simplercp/server exec tsx ../../scripts/verify-agent-acceptance.mjs`。配置通过 dotenv 从本地 `.env` 读取，OpenCode 为 1.18.31，`SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3`，`CONFLICT_GUARD=off`，关闭 terminal，使用独立 `.test-workspaces/agent-real-acceptance-*` 数据目录。原始 run、trace 和进程编号位于 `self-acceptance/agent-real.json`，命令输出位于 `self-acceptance/agent-real.log`。
+
+| 场景 | 实际结果 |
+| --- | --- |
+| `laterStartEarlierFinish` | 后启动的 run 提前完成；双方结果各自只有 `a.ts` 或 `b.ts`，均为 `tool`；早启动 run 的完成记录包含另一个 run 的完整重叠编号 |
+| `crossProjectModelChange` | 两个项目有活动 run 时保存新模型；其中一个项目结束后 OpenCode 进程编号保持相同，另一个项目正常完成；活动数量归零后的新 run 使用 `deepseek-v4-pro` 并完成 |
+| `timeoutAttribution` | Agent 写入 `timeout.ts` 后成员修改该 Yjs 文件；9000 毫秒超时产生 failed，文件仍为 `tool`，trace 包含 `concurrent_change` |
+
+当前 DeepSeek 配置提供 `edit`、`write` 和 `bash`，本次请求 `apply_patch` 得到工具不可用的回复，记录在 `observations.applyPatchAvailability`。`apply_patch` 的 Update、Add、Delete 和 `*** Move to:` 字段依据已安装 OpenCode 1.18.31 源码及 metadata 单元测试核验。
+
+## 浏览器与 session.diff 证据
+
+`stage-0-smoke/deepseek-browser.json` 保存两个独立浏览器会话在 DeepSeek `deepseek-flash`、OpenCode 1.18.31 下的三个场景。不同文件场景保留双方文件，同一文件场景保留双方函数，两者均记录工具归属；同文件双方的 `agent_overlap` 指向对方。成员并发编辑场景记录 `concurrent_change`，最终内容为 Agent 写入的 `agent replaced this file`，成员内容被覆盖。该阶段负责记录修改与归属，文件内容仍由共享工作区的写入顺序决定。
+
+核实命令：`pnpm --filter @simplercp/server exec tsx ../../scripts/verify-opencode-concurrent-diff.mjs`。脚本使用 dotenv 配置、独立 `.scratch/verify-opencode-concurrent-diff/` 工作区，并在结束时释放 runtime。调用 `session.diff` 时省略 `messageID`；[stage-0-session-diff.json](evidence/stage-0-session-diff.json) 中不同文件和同文件的四次调用均返回空数组。该记录未包含运行时提交编号，能够证明这次调用的返回值，session 隔离语义仍未获得运行证据。文件归属依照工具台账、工作区快照和重叠集合判定，`session.diff` 返回的内容参与候选文件合并。

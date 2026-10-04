@@ -1,0 +1,103 @@
+{
+  "mode": "observe",
+  "changeSets": [
+    {
+      "actor": {
+        "kind": "human",
+        "memberId": "84385647-c90e-4213-8780-e1a6f88274be"
+      },
+      "status": "settled",
+      "files": [
+        {
+          "file": "src/index.js",
+          "ranges": [
+            {
+              "start": 0,
+              "end": 22
+            },
+            {
+              "start": 42,
+              "end": 64
+            },
+            {
+              "start": 84,
+              "end": 106
+            }
+          ],
+          "firstTouchedAt": 1791138560427,
+          "lastTouchedAt": 1791138730039
+        }
+      ]
+    },
+    {
+      "actor": {
+        "kind": "human",
+        "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8"
+      },
+      "status": "settled",
+      "files": [
+        {
+          "file": "src/index.js",
+          "ranges": [
+            {
+              "start": 22,
+              "end": 42
+            },
+            {
+              "start": 64,
+              "end": 84
+            },
+            {
+              "start": 106,
+              "end": 126
+            }
+          ],
+          "firstTouchedAt": 1791138561964,
+          "lastTouchedAt": 1791138731356
+        }
+      ]
+    }
+  ],
+  "cursors": [
+    {
+      "actor": {
+        "kind": "human",
+        "memberId": "84385647-c90e-4213-8780-e1a6f88274be"
+      },
+      "file": "src/index.js",
+      "lineNumber": 7,
+      "column": 20,
+      "selection": {
+        "startLineNumber": 7,
+        "startColumn": 20,
+        "endLineNumber": 7,
+        "endColumn": 20,
+        "selectionStartLineNumber": 7,
+        "selectionStartColumn": 20,
+        "positionLineNumber": 7,
+        "positionColumn": 20
+      },
+      "at": 1791138731361
+    },
+    {
+      "actor": {
+        "kind": "human",
+        "memberId": "0b3f1742-a048-4d76-9799-913a0d2e19b8"
+      },
+      "file": "src/index.js",
+      "lineNumber": 7,
+      "column": 20,
+      "selection": {
+        "startLineNumber": 7,
+        "startColumn": 20,
+        "endLineNumber": 7,
+        "endColumn": 20,
+        "selectionStartLineNumber": 7,
+        "selectionStartColumn": 20,
+        "positionLineNumber": 7,
+        "positionColumn": 20
+      },
+      "at": 1791138731356
+    }
+  ]
+}
