@@ -127,8 +127,10 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   }
   if (request.source === "agent" && request.kind === "command") {
     const prefix = command.match(/^\s*cd\s+([^;&]+?)\s*&&\s*(.+)$/i);
-    if (prefix) {
-      const directory = path.resolve(request.cwd, prefix[1]!.trim().replace(/^['"]|['"]$/g, ""));
+    const rawDirectory = prefix?.[1]?.trim();
+    const unsafePrefix = rawDirectory !== undefined && (/["'\\$`]/.test(rawDirectory) || /^[~-]/.test(rawDirectory));
+    if (prefix && !unsafePrefix) {
+      const directory = path.resolve(request.cwd, rawDirectory!.replace(/^['"]|['"]$/g, ""));
       const directoryZone = zoneFor(directory, request, platformDataRoot, protectedPaths, otherWorkspaceRoots);
       if (directoryZone !== "workspace") {
         return {

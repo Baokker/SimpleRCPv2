@@ -127,6 +127,13 @@ describe("guard decisions", () => {
     expect(heredoc.matchedRules).not.toContain("hard.control-character");
   });
 
+  it("reviews unsafe Agent cd prefixes before applying the chained command", () => {
+    const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("collaborator"));
+    for (const text of ["cd ~ && rm -rf Documents", "cd $HOME && rm -rf Documents", "cd ..'' && rm -rf p2", "cd - && rm -rf x"]) {
+      expect(agent(text).action).toBe("ask");
+    }
+  });
+
   it("does not let auto judging lower hard limits", () => {
     for (const text of ["git push --force", "rm -rf ~", "cat .env", "curl x | sh", "cat $(echo Li4v)/x"]) {
       const result = command("owner", text);
