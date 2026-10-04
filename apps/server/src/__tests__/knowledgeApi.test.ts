@@ -50,7 +50,6 @@ describe("knowledge API", () => {
       demoProjectRoot: workspace,
       terminalEnabled: false,
       knowledge: "capture",
-      fakeAgentRuntime: true,
       agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" }
     });
     const server = http.createServer(app);
@@ -103,13 +102,26 @@ describe("knowledge API", () => {
       review: { confirmedBy: [] },
       evolution: [{ at: Date.now(), action: "created", by: { peerId: first, name: "Ada" } }]
     }));
+    await fs.writeFile(path.join(projectMetadata, "knowledge", "cards", "personal-draft-card.json"), JSON.stringify({
+      ...draftValue.card,
+      id: "personal-draft-card",
+      status: "draft",
+      scope: "personal",
+      ownerMemberId: first,
+      review: { confirmedBy: [] },
+      evolution: [{ at: Date.now(), action: "created", by: { peerId: first, name: "Ada" } }]
+    }));
     const confirmed = await fetch(`${origin}/api/projects/demo/knowledge/cards/draft-card/confirm`, { method: "POST", headers: headers(second), body: JSON.stringify({ edited: true }) });
     expect(confirmed.status).toBe(200);
     expect((await confirmed.json() as { card: { status: string; review?: { confirmedBy: string[]; editedBeforeConfirm?: boolean } } }).card).toMatchObject({ status: "reviewed", review: { confirmedBy: [second], editedBeforeConfirm: true } });
+    const hiddenDraftConfirmation = await fetch(`${origin}/api/projects/demo/knowledge/cards/personal-draft-card/confirm`, { method: "POST", headers: headers(second), body: JSON.stringify({ edited: true }) });
+    expect(hiddenDraftConfirmation.status).toBe(404);
 
     const secondCards = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { headers: headers(second) }).then((response) => response.json()) as { cards: Array<{ id: string }> };
     expect(secondCards.cards.map((card) => card.id)).toContain(teamCard.id);
     expect(secondCards.cards.map((card) => card.id)).not.toContain(personalCard.id);
+    const hiddenPersonal = await fetch(`${origin}/api/projects/demo/knowledge/cards/${personalCard.id}`, { headers: headers(second) });
+    expect(hiddenPersonal.status).toBe(404);
 
     const updated = await fetch(`${origin}/api/projects/demo/knowledge/cards/${teamCard.id}`, {
       method: "PATCH",
@@ -133,14 +145,16 @@ describe("knowledge API", () => {
     const project = app.locals.registry.getProject("demo") as { workspacePath: string };
     await fs.writeFile(path.join(project.workspacePath, "README.md"), "# Demo\n\nChanged entirely.\n");
     const deleted = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: headers(first) }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; status: string }> };
-    expect(deleted.resolutions.find((item) => item.cardId === teamCard.id)?.status).toBe("needsReview");
+    expect(deleted.resolutions.find((item) => item.cardId === teamCard.id)).toMatchObject({ status: "needsReview", range: { startLine: 3, startColumn: 1, endLine: 3, endColumn: 1 } });
 
     const demo = await fetch(`${origin}/api/projects/demo/knowledge/demo`, { method: "POST", headers: headers(first), body: "{}" });
     expect(demo.status).toBe(201);
-    const demoCards = (await demo.json() as { cards: Array<{ content: string; anchors: Array<{ file: { workspaceRelativePath: string } }> }> }).cards;
+    const demoCards = (await demo.json() as { cards: Array<{ id: string; content: string; anchors: Array<{ file: { workspaceRelativePath: string } }> }> }).cards;
     expect(demoCards).toHaveLength(6);
     expect(demoCards[0]).toMatchObject({ anchors: [{ file: { workspaceRelativePath: "src/projectStatus.js" } }] });
     expect(demoCards.some((card) => card.content.includes("createProjectStatus"))).toBe(true);
+    const demoCard = await fetch(`${origin}/api/projects/demo/knowledge/cards/${demoCards[0]!.id}`, { headers: headers(first) }).then((response) => response.json()) as { card: typeof demoCards[number] };
+    expect(demoCard.card).toEqual(demoCards[0]);
   });
 
   it("returns 404 for every knowledge route when the feature is disabled", async () => {
@@ -148,7 +162,7 @@ describe("knowledge API", () => {
     const workspace = path.join(root, "source");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(path.join(workspace, "README.md"), "# Demo\n");
-    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: workspace, terminalEnabled: false, knowledge: "off", fakeAgentRuntime: true, agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" } });
+    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: workspace, terminalEnabled: false, knowledge: "off", agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" } });
     const server = http.createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
@@ -164,7 +178,7 @@ describe("knowledge API", () => {
     const workspace = path.join(root, "source");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(path.join(workspace, "README.md"), "before\nanchor line\nafter\n");
-    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: workspace, terminalEnabled: false, knowledge: "capture", fakeAgentRuntime: true, agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" } });
+    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: workspace, terminalEnabled: false, knowledge: "capture", agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" } });
     const server = http.createServer(app);
     const realtime = attachRealtimeServer(server, app.locals.runtimeManager, app.locals.agentRuns, { members: app.locals.members });
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -192,7 +206,7 @@ describe("knowledge API", () => {
     const workspace = path.join(root, "source");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(path.join(workspace, "README.md"), "before\nanchor line\nafter\n");
-    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: workspace, terminalEnabled: false, knowledge: "capture", fakeAgentRuntime: true, agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" } });
+    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: workspace, terminalEnabled: false, knowledge: "capture", agent: { baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" } });
     const server = http.createServer(app);
     const realtime = attachRealtimeServer(server, app.locals.runtimeManager, app.locals.agentRuns, { members: app.locals.members });
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));

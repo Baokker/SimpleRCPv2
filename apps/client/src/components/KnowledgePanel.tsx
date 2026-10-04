@@ -67,7 +67,7 @@ export function KnowledgePanel({
   }, [pinSelection]);
 
   const currentCards = activePath
-    ? cards.filter((card) => card.anchors.some((anchor) => anchor.file.workspaceRelativePath === activePath))
+    ? cards.filter((card) => card.anchors.some((anchor) => normalizeKnowledgePath(anchor.file.workspaceRelativePath) === normalizeKnowledgePath(activePath)))
     : cards;
   const visibleCards = view === "current" ? currentCards : view === "all" ? cards : [];
 
@@ -274,7 +274,7 @@ function KnowledgeCardItem({
           <p>{card.content}</p>
           {card.anchors.length === 0 ? <small>无代码锚点</small> : card.anchors.map((anchor, index) => {
             const resolution = resolutions.find((candidate) => candidate.anchorIndex === index);
-            const canReanchor = currentSelection?.file === anchor.file.workspaceRelativePath && resolution?.status === "needsReview" && canManage;
+            const canReanchor = currentSelection && normalizeKnowledgePath(currentSelection.file) === normalizeKnowledgePath(anchor.file.workspaceRelativePath) && resolution?.status === "needsReview" && canManage;
             return (
               <div className="knowledge-anchor-row" key={anchor.anchorId}>
                 <button type="button" onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath, resolution?.range)}>⌖ {anchor.file.workspaceRelativePath}</button>
@@ -292,4 +292,8 @@ function KnowledgeCardItem({
       ) : null}
     </li>
   );
+}
+
+function normalizeKnowledgePath(value: string) {
+  return value.replace(/\\/g, "/").replace(/^\/+/, "");
 }

@@ -102,7 +102,7 @@ async function readWorkspaceKnowledgeCards(cardsDir: string, now?: () => number)
         throw error;
     }
     const cards: KnowledgeCard[] = [];
-    for (const name of names.filter(item => item.toLowerCase().startsWith('card-') && item.toLowerCase().endsWith('.json'))) {
+    for (const name of names.filter(item => item.toLowerCase().endsWith('.json'))) {
         const text = await fs.readFile(path.join(cardsDir, name), 'utf8');
         cards.push(...normalizeCard(JSON.parse(text) as unknown, now));
     }

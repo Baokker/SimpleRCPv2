@@ -7,7 +7,7 @@
 | 方法 | 路径 | 返回内容 |
 | --- | --- | --- |
 | `GET` | `/cards?file=&type=&status=&scope=` | `{ cards, resolutions }`。`file` 存在时只返回锚定该文件的卡片，并附带解析结果。 |
-| `GET` | `/cards/:id` | `{ card }`。个人卡片与待确认团队卡片只对属主可见。 |
+| `GET` | `/cards/:id` | `{ card }`。个人卡片与 `proposedTeam` 卡片只对属主可见。 |
 | `POST` | `/cards` | 创建手动卡片。字段包括 `type`、`title`、`summary`、`content`、`tags`、`scope`，锚点使用 `{ file, selection }`。手动卡片直接进入 `reviewed`。 |
 | `PATCH` | `/cards/:id` | 修改卡片字段与锚点。属主或确认人可以修改。 |
 | `POST` | `/cards/:id/confirm` | 确认草稿。body 可带 `edited` 布尔值。 |

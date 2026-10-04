@@ -2957,6 +2957,13 @@ button.activity-entry:hover strong {
   font-size: 10px;
 }
 
+.knowledge-glyph-decision::before { content: "✓"; }
+.knowledge-glyph-constraint::before { content: "■"; }
+.knowledge-glyph-risk::before { content: "!"; }
+.knowledge-glyph-context::before { content: "i"; }
+.knowledge-glyph-negative::before { content: "×"; }
+.knowledge-glyph-tutorial::before { content: "?"; }
+
 .knowledge-glyph-review::before {
   content: "⚠";
   color: #e5b85c;

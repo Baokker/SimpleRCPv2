@@ -47,6 +47,7 @@ export function EditorArea({
   onLocalEdit,
   onCursorChange,
   onPinKnowledge,
+  knowledgeEnabled,
   knowledgeResolutions,
   knowledgeCards
 }: {
@@ -68,6 +69,7 @@ export function EditorArea({
     selection: EditorSelection
   ): void;
   onPinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): void;
+  knowledgeEnabled: boolean;
   knowledgeResolutions: KnowledgeAnchorResolution[];
   knowledgeCards: KnowledgeCard[];
 }) {
@@ -107,7 +109,7 @@ export function EditorArea({
           options: {
             className: resolution.status === "needsReview" ? "knowledge-anchor-review" : "knowledge-anchor-highlight",
             glyphMarginClassName: resolution.status === "needsReview" ? "knowledge-glyph knowledge-glyph-review" : `knowledge-glyph knowledge-glyph-${card.type}`,
-            hoverMessage: { value: `**${card.type} · ${card.title}**\n\n${card.summary}\n\n${card.provenance?.author.displayName ?? ""}${resolution.status === "needsReview" ? "\n\n选择新的代码范围后，在知识面板中点击“用当前选区重新锚定”。" : ""}` }
+            hoverMessage: { value: `**${card.type} · ${card.title}**\n\n${card.summary}\n\n${card.provenance?.author.displayName ?? ""}\n\n打开卡片${resolution.status === "needsReview" ? "\n\n选择新的代码范围后，在知识面板中点击“用当前选区重新锚定”。" : ""}` }
           }
         };
       });
@@ -156,6 +158,7 @@ export function EditorArea({
             roomId={roomId}
             memberId={memberId}
             canEdit={canEdit}
+            knowledgeEnabled={knowledgeEnabled}
             theme={theme}
             onLocalEdit={onLocalEdit}
             onPinKnowledge={onPinKnowledge}
@@ -164,6 +167,7 @@ export function EditorArea({
               monacoRef.current = monaco;
               window.__simplercpMonaco = monaco;
               decorationIdsRef.current = [];
+              knowledgeDecorationIdsRef.current = [];
               setEditorVersion((version) => version + 1);
               window.__simplercpEditors ??= {};
               window.__simplercpEditors[activeFile.path] = editor;
@@ -174,23 +178,25 @@ export function EditorArea({
                   event.selection
                 );
               });
-              editor.addAction({
-                id: "knowledge.pin",
-                label: "Pin 为知识卡片",
-                contextMenuGroupId: "navigation",
-                contextMenuOrder: 1,
-                keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyK],
-                run: () => {
-                  const selection = editor.getSelection();
-                  if (!selection || selection.isEmpty()) return;
-                  onPinKnowledge(activeFile.path, {
-                    startLineNumber: selection.startLineNumber,
-                    startColumn: selection.startColumn,
-                    endLineNumber: selection.endLineNumber,
-                    endColumn: selection.endColumn
-                  });
-                }
-              });
+              if (knowledgeEnabled) {
+                editor.addAction({
+                  id: "knowledge.pin",
+                  label: "Pin 为知识卡片",
+                  contextMenuGroupId: "navigation",
+                  contextMenuOrder: 1,
+                  keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyK],
+                  run: () => {
+                    const selection = editor.getSelection();
+                    if (!selection || selection.isEmpty()) return;
+                    onPinKnowledge(activeFile.path, {
+                      startLineNumber: selection.startLineNumber,
+                      startColumn: selection.startColumn,
+                      endLineNumber: selection.endLineNumber,
+                      endColumn: selection.endColumn
+                    });
+                  }
+                });
+              }
             }}
           />
         ) : (
@@ -207,6 +213,7 @@ function CollaborativeEditor({
   roomId,
   memberId,
   canEdit,
+  knowledgeEnabled,
   theme,
   onLocalEdit,
   onPinKnowledge,
@@ -217,6 +224,7 @@ function CollaborativeEditor({
   roomId: string;
   memberId: string;
   canEdit: boolean;
+  knowledgeEnabled: boolean;
   theme: ThemeMode;
   onLocalEdit(path: string, change: FileEditChange): void;
   onPinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): void;
@@ -263,6 +271,7 @@ function CollaborativeEditor({
         theme={theme === "dark" ? "vs-dark" : "vs"}
         options={{
           minimap: { enabled: false },
+          glyphMargin: knowledgeEnabled,
           fontSize: 13,
           wordWrap: "on",
           scrollBeyondLastLine: false,

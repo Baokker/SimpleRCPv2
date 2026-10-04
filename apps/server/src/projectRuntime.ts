@@ -180,6 +180,7 @@ export function createProjectRuntime(
       removeTerminalInputListener();
       for (const memberId of inputWindows.keys()) flushInput(memberId);
       await documents.awaitIdle();
+      await knowledge?.awaitIdle();
       await chat.awaitIdle();
       await events.awaitIdle();
       terminal.dispose();

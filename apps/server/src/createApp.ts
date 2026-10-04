@@ -109,7 +109,7 @@ export async function createApp(config: ServerConfig) {
       res: express.Response,
       _next: express.NextFunction
     ) => {
-      const status = error.message === "Project not found" ? 404 : 400;
+      const status = error.message === "Project not found" || (error as Error & { statusCode?: number }).statusCode === 404 ? 404 : 400;
       res.status(status).json({ error: error.message });
     }
   );

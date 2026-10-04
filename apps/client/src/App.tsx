@@ -218,6 +218,9 @@ function WorkspacePage({
   const [knowledgeTimeline, setKnowledgeTimeline] = useState<KnowledgeTimelineItem[]>([]);
   const [knowledgePinSelection, setKnowledgePinSelection] = useState<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>();
   const [knowledgeCurrentSelection, setKnowledgeCurrentSelection] = useState<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>();
+  const activeKnowledgePathRef = useRef(activePath);
+  activeKnowledgePathRef.current = activePath;
+  const knowledgeRequestVersionRef = useRef(0);
   const loadedAgentTraceIdsRef = useRef(new Set<string>());
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
@@ -318,6 +321,7 @@ function WorkspacePage({
             clearWorkspaceError();
             void refreshSharedState().catch(showWorkspaceError);
             void refreshWorkspaceTree().catch(showWorkspaceError);
+            scheduleKnowledgeRefresh();
           }
         },
         onProjectDeleted() {
@@ -425,6 +429,7 @@ function WorkspacePage({
     void boot().catch(showWorkspaceError);
     return () => {
       mounted = false;
+      knowledgeRequestVersionRef.current += 1;
       flushAllFileEdits();
       const connection = connectionRef.current;
       if (connection) {
@@ -504,8 +509,11 @@ function WorkspacePage({
       setKnowledgeResolutions([]);
       setKnowledgeGuide([]);
       setKnowledgeTimeline([]);
+      setKnowledgeCurrentSelection(undefined);
       return;
     }
+    setKnowledgeResolutions([]);
+    setKnowledgeCurrentSelection(undefined);
     void refreshKnowledgeState().catch(showWorkspaceError);
   }, [activePath, knowledgeEnabled, member?.id]);
 
@@ -631,12 +639,15 @@ function WorkspacePage({
 
   async function refreshKnowledgeState() {
     if (!knowledgeEnabled) return;
+    const path = activeKnowledgePathRef.current;
+    const requestVersion = ++knowledgeRequestVersionRef.current;
     const [cards, fileCards, guide, timeline] = await Promise.all([
       getKnowledgeCards(projectId),
-      activePath ? getKnowledgeCards(projectId, activePath) : Promise.resolve({ cards: [], resolutions: [] }),
-      getKnowledgeGuide(projectId, activePath),
-      getKnowledgeTimeline(projectId, activePath)
+      path ? getKnowledgeCards(projectId, path) : Promise.resolve({ cards: [], resolutions: [] }),
+      getKnowledgeGuide(projectId, path),
+      getKnowledgeTimeline(projectId, path)
     ]);
+    if (requestVersion !== knowledgeRequestVersionRef.current || path !== activeKnowledgePathRef.current) return;
     setKnowledgeCards(cards.cards);
     setKnowledgeResolutions(fileCards.resolutions);
     setKnowledgeGuide(guide.items);
@@ -734,6 +745,8 @@ function WorkspacePage({
   }
 
   function pinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }) {
+    if (!knowledgeEnabled) return;
+    setCollaborationVisible(true);
     setKnowledgePinSelection({ file, selection });
     setKnowledgeCurrentSelection({ file, selection });
   }
@@ -768,9 +781,14 @@ function WorkspacePage({
   async function openKnowledgeAnchor(path: string, range?: { startLine: number; startColumn: number; endLine: number; endColumn: number }) {
     await openFile(path);
     if (!range) return;
-    window.requestAnimationFrame(() => {
+    const normalizedPath = path.replace(/\\/g, "/").replace(/^\/+/, "");
+    const reveal = (attempt: number) => {
       const editor = window.__simplercpEditors?.[path];
-      if (!editor) return;
+      const modelPath = editor?.getModel()?.uri.path.replace(/^\/+/, "");
+      if (!editor || !modelPath || (modelPath !== normalizedPath && !modelPath.endsWith(`/${normalizedPath}`))) {
+        if (attempt < 30) window.requestAnimationFrame(() => reveal(attempt + 1));
+        return;
+      }
       const selection = {
         startLineNumber: range.startLine,
         startColumn: range.startColumn,
@@ -779,7 +797,8 @@ function WorkspacePage({
       };
       editor.setSelection(selection);
       editor.revealRangeInCenter(selection);
-    });
+    };
+    window.requestAnimationFrame(() => reveal(0));
   }
 
   async function sendChat() {
@@ -995,6 +1014,7 @@ function WorkspacePage({
           onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
           onPinKnowledge={pinKnowledge}
+          knowledgeEnabled={knowledgeEnabled}
           knowledgeResolutions={knowledgeResolutions}
           knowledgeCards={knowledgeCards}
         />

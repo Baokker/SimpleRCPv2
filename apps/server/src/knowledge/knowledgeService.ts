@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
+import diff from "fast-diff";
 import type * as Y from "yjs";
 import {
   LatestSchemaVersion,
@@ -83,6 +84,10 @@ interface RelativePositionJson {
 
 const ANCHOR_SIMILARITY_THRESHOLD = 0.65;
 
+class KnowledgeCardNotFoundError extends Error {
+  readonly statusCode = 404;
+}
+
 export function createKnowledgeService(options: KnowledgeServiceOptions) {
   const cardsDirectory = path.join(options.metadataRoot, "knowledge", "cards");
   const inboxDirectory = path.join(options.metadataRoot, "knowledge", "inbox");
@@ -122,6 +127,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   async function saveCard(card: KnowledgeCard) {
+    if (!isKnowledgeCard(card)) throw new Error("Knowledge card is invalid");
     await ensureDirectories();
     await writeJsonFileAtomically(cardFilePath(card.id), card);
   }
@@ -197,7 +203,10 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       tname: position.type,
       assoc: position.assoc
     };
-    if (Number.isInteger(client) && Number.isInteger(clock)) json.item = new YRuntime.ID(client as number, clock as number) as unknown as { client: number; clock: number };
+    if (position.item !== undefined) {
+      if (!/^\d+:\d+$/.test(position.item) || !Number.isSafeInteger(client) || !Number.isSafeInteger(clock)) throw new Error("Knowledge relative position is invalid");
+      json.item = new YRuntime.ID(client as number, clock as number) as unknown as { client: number; clock: number };
+    }
     return YRuntime.createRelativePositionFromJSON(json);
   }
 
@@ -268,27 +277,11 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   function similarity(left: string, right: string) {
     if (left === right) return 1;
     if (!left || !right) return 0;
-    const rows = Math.min(left.length, 5_000);
-    const columns = Math.min(right.length, 5_000);
-    let previous = new Uint16Array(columns + 1);
-    let current = new Uint16Array(columns + 1);
-    for (let column = 0; column <= columns; column += 1) previous[column] = column;
-    for (let row = 1; row <= rows; row += 1) {
-      current[0] = row;
-      for (let column = 1; column <= columns; column += 1) {
-        const leftCharacter = left[row - 1];
-        const rightCharacter = right[column - 1];
-        const cost = leftCharacter === rightCharacter ? 0 : 1;
-        current[column] = Math.min(current[column - 1]! + 1, previous[column]! + 1, previous[column - 1]! + cost);
-      }
-      const swap = previous;
-      previous = current;
-      current = swap;
-    }
-    return 1 - previous[columns]! / Math.max(left.length, right.length);
+    const unchanged = diff(left, right).reduce((length, [operation, value]) => length + (operation === diff.EQUAL ? value.length : 0), 0);
+    return unchanged / Math.max(left.length, right.length);
   }
 
-  async function resolveOne(card: KnowledgeCard, anchorIndex: number, anchor: KnowledgeAnchor, text: string, document?: Y.Doc, epoch?: string): Promise<KnowledgeAnchorResolution> {
+  function resolveOne(card: KnowledgeCard, anchorIndex: number, anchor: KnowledgeAnchor, text: string, document?: Y.Doc, epoch?: string): KnowledgeAnchorResolution {
     if (document && epoch && anchor.yjsRelative?.docEpoch === epoch) {
       try {
         const start = YRuntime.createAbsolutePositionFromRelativePosition(decodeRelative(anchor.yjsRelative.start), document);
@@ -302,14 +295,23 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
             return { cardId: card.id, anchorIndex, range: toEditorRange(text, startOffset, endOffset), status: "ok", strategy: "yjs", confidence };
           }
         }
-      } catch {
-        // 无效的相对位置交给后续文本策略处理。
+      } catch (error) {
+        if (!(error instanceof Error)) throw error;
       }
     }
 
     const resolved = resolveKnowledgeAnchorInText(text, anchor);
     if (!resolved || resolved.confidence < ANCHOR_SIMILARITY_THRESHOLD) {
-      return { cardId: card.id, anchorIndex, status: "needsReview", confidence: resolved?.confidence ?? 0 };
+      const lines = text.split("\n");
+      const line = Math.min(anchor.rangeAtCapture?.start.line ?? 0, lines.length - 1);
+      const column = Math.min(anchor.rangeAtCapture?.start.character ?? 0, lines[line]!.replace(/\r$/, "").length);
+      return {
+        cardId: card.id,
+        anchorIndex,
+        range: { startLine: line + 1, startColumn: column + 1, endLine: line + 1, endColumn: column + 1 },
+        status: "needsReview",
+        confidence: resolved?.confidence ?? 0
+      };
     }
     const captured = anchor.rangeAtCapture ? offsetsFromRange(text, anchor.rangeAtCapture) : undefined;
     const strategy = captured && captured.startOffset === resolved.startOffset && captured.endOffset === resolved.endOffset
@@ -340,23 +342,27 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   async function resolveCards(viewer: Identity | KnowledgeActor, file: string) {
-    const normalized = normalizeWorkspaceRelativePath(file);
-    const current = await currentDocument(normalized);
-    const cards = await list(viewer, { file: normalized });
-    const resolutions: KnowledgeAnchorResolution[] = [];
-    for (const card of cards) {
-      let changed = false;
-      for (let index = 0; index < card.anchors.length; index += 1) {
-        const anchor = card.anchors[index]!;
-        if (normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) !== normalized) continue;
-        const before = JSON.stringify(anchor.yjsRelative);
-        const result = await resolveOne(card, index, anchor, current.text, current.document, current.epoch);
-        if (before !== JSON.stringify(anchor.yjsRelative)) changed = true;
-        resolutions.push(result);
+    return enqueue(async () => {
+      const normalized = normalizeWorkspaceRelativePath(file);
+      const cards = await list(viewer, { file: normalized });
+      const current = await currentDocument(normalized);
+      const resolutions: KnowledgeAnchorResolution[] = [];
+      const refreshedCards: KnowledgeCard[] = [];
+      for (const card of cards) {
+        let changed = false;
+        for (let index = 0; index < card.anchors.length; index += 1) {
+          const anchor = card.anchors[index]!;
+          if (normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) !== normalized) continue;
+          const before = JSON.stringify(anchor.yjsRelative);
+          const result = resolveOne(card, index, anchor, current.text, current.document, current.epoch);
+          if (before !== JSON.stringify(anchor.yjsRelative)) changed = true;
+          resolutions.push(result);
+        }
+        if (changed) refreshedCards.push(card);
       }
-      if (changed) await saveCard(card);
-    }
-    return resolutions;
+      for (const card of refreshedCards) await saveCard(card);
+      return resolutions;
+    });
   }
 
   async function list(viewer: Identity | KnowledgeActor, filter: KnowledgeListFilter = {}) {
@@ -381,9 +387,11 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     return enqueue(async () => {
       const type = draft.type as KnowledgeCardType;
       if (!["decision", "constraint", "risk", "context", "negative", "tutorial"].includes(type)) throw new Error("Card type is invalid");
-      const title = String(draft.title ?? "").trim();
-      const summary = String(draft.summary ?? "").trim();
-      const content = String(draft.content ?? "");
+      if (typeof draft.title !== "string" || typeof draft.summary !== "string" || (draft.content !== undefined && typeof draft.content !== "string")) throw new Error("Card title, summary and content must be text");
+      if (draft.tags !== undefined && (!Array.isArray(draft.tags) || draft.tags.some((tag) => typeof tag !== "string"))) throw new Error("Card tags are invalid");
+      const title = draft.title.trim();
+      const summary = draft.summary.trim();
+      const content = draft.content ?? "";
       if (!title || !summary) throw new Error("Card title and summary are required");
       const scope = draft.scope === "personal" ? "personal" : draft.scope === "team" ? "team" : undefined;
       if (!scope) throw new Error("Card scope must be personal or team");
@@ -399,7 +407,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         content,
         source: "manual",
         status: "reviewed",
-        tags: Array.isArray(draft.tags) ? draft.tags.filter((tag): tag is string => typeof tag === "string") : [],
+        tags: draft.tags as string[] | undefined ?? [],
         createdAt: now,
         updatedAt: now,
         metadata: { createdBy: { peerId: actor.memberId, name: actor.displayName }, roomId: options.roomId },
@@ -422,7 +430,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   async function update(actor: KnowledgeActor, id: string, patch: Record<string, unknown>) {
     return enqueue(async () => {
       const stored = await readCard(id);
-      if (!stored) throw new Error("Knowledge card not found");
+      if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (!canEdit(stored.card, actor)) throw new Error("Knowledge card can only be edited by its owner or confirmer");
       const card = { ...stored.card };
       if (patch.type !== undefined) {
@@ -439,7 +447,10 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         if (!Array.isArray(patch.tags) || patch.tags.some((tag) => typeof tag !== "string")) throw new Error("Card tags are invalid");
         card.tags = patch.tags;
       }
-      if (patch.scope !== undefined) card.scope = patch.scope as KnowledgeScope;
+      if (patch.scope !== undefined) {
+        if (patch.scope !== "personal" && patch.scope !== "team") throw new Error("Card scope must be personal or team");
+        card.scope = patch.scope;
+      }
       if (card.scope !== "personal" && card.scope !== "team") throw new Error("Card scope must be personal or team");
       if (patch.anchors !== undefined) {
         card.anchors = [];
@@ -457,7 +468,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean }) {
     return enqueue(async () => {
       const stored = await readCard(id);
-      if (!stored) throw new Error("Knowledge card not found");
+      if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       const confirmed = confirmCard(stored.card, { memberId: actor.memberId, now: () => Date.now(), edited: input.edited, memberKind: "human" });
       await saveCard(confirmed);
       event(confirmed.id, "knowledge_card_confirmed", actor);
@@ -468,7 +479,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   async function archive(actor: KnowledgeActor, id: string, reason?: string) {
     return enqueue(async () => {
       const stored = await readCard(id);
-      if (!stored) throw new Error("Knowledge card not found");
+      if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (!canEdit(stored.card, actor)) throw new Error("Knowledge card can only be archived by its owner or confirmer");
       const now = Date.now();
       const archived: KnowledgeCard = { ...stored.card, status: "archived", updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: "archived", by: { peerId: actor.memberId, name: actor.displayName }, note: reason }] };
@@ -481,7 +492,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   async function reanchor(actor: KnowledgeActor, id: string, anchorIndex: number, selection: KnowledgeAnchorSelection) {
     return enqueue(async () => {
       const stored = await readCard(id);
-      if (!stored) throw new Error("Knowledge card not found");
+      if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (!canEdit(stored.card, actor)) throw new Error("Knowledge anchor can only be changed by its owner or confirmer");
       const current = stored.card.anchors[anchorIndex];
       if (!current) throw new Error("Knowledge anchor not found");
@@ -504,13 +515,15 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     const selectedText = loaded.status === "text" ? loaded.content.slice(0, 800) : "Demo workspace knowledge anchor";
     const cards = personalizeDemoCards(createDemoKnowledgeCards({ workspaceRelativePath: file, selectedText }), file);
     return enqueue(async () => {
+      const persisted: KnowledgeCard[] = [];
       for (const source of cards) {
         const now = Date.now();
         const card: KnowledgeCard = { ...source, ownerMemberId: actor.memberId, metadata: { createdBy: { peerId: actor.memberId, name: actor.displayName }, roomId: options.roomId }, provenance: { ...source.provenance!, author: { kind: "human", memberId: actor.memberId, displayName: actor.displayName }, origin: "manual", evidenceRefs: {} }, review: { confirmedBy: [actor.memberId], confirmedAt: now }, evolution: source.evolution.map((entry) => ({ ...entry, by: { peerId: actor.memberId, name: actor.displayName } })) };
         await saveCard(card);
         event(card.id, "knowledge_card_created", actor);
+        persisted.push(card);
       }
-      return cards.map((card) => ({ ...card, ownerMemberId: actor.memberId }));
+      return persisted;
     });
   }
 
@@ -539,6 +552,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     resolveAnchors: resolveCards,
     guide: async (viewer: Identity | KnowledgeActor, file?: string) => buildKnowledgeGuideItems(await list(viewer), file),
     timeline: async (viewer: Identity | KnowledgeActor, file?: string) => buildKnowledgeTimelineItems(await list(viewer), file),
+    async awaitIdle() { await operations; },
     async initialize() { await ensureDirectories(); }
   };
 }
