@@ -16,6 +16,7 @@ import type {
 } from "./types.js";
 import type { MemberStore, Identity } from "./auth/identity.js";
 import { can } from "./auth/permissions.js";
+import { interactiveCommandName } from "./sharedTerminal.js";
 
 interface SocketIdentity {
   projectId: string;
@@ -23,6 +24,8 @@ interface SocketIdentity {
   memberId: string;
   connectionId?: string;
 }
+
+const commandInFlight = new WeakMap<object, Set<string>>();
 
 export interface RealtimeContext {
   events: EventLog;
@@ -266,8 +269,8 @@ export function attachRealtimeServer(
     const removeGuardActivityListener = runtime.guard.onActivity((event) => {
       broadcastToProject(projectSockets, runtime.project.id, { type: "event", event });
     });
-    const removeGuardResolutionListener = runtime.guard.onResolution((approvalId, approved) => {
-      broadcastToProject(projectSockets, runtime.project.id, { type: "guard_approval_resolved", approvalId, approved });
+    const removeGuardResolutionListener = runtime.guard.onResolution((approvalId, outcome) => {
+      broadcastToProject(projectSockets, runtime.project.id, { type: "guard_approval_resolved", approvalId, approved: outcome === "approved", outcome });
     });
     const removeChatListener = runtime.onChatMessage((message) => {
       broadcastToProject(projectSockets, runtime.project.id, {
@@ -501,7 +504,7 @@ async function handleTerminalMessage(
     return;
   }
   if (message.type === "restart") {
-    if (runtime.guard.mode() !== "off" && !runtime.guard.isOwner(memberId)) {
+    if (runtime.guard.mode() !== "off" && !(await runtime.guard.isOwner(memberId))) {
       sendTerminalMessage(socket, { type: "terminal_error", message: "Owner permission is required" });
       return;
     }
@@ -511,6 +514,10 @@ async function handleTerminalMessage(
   if (message.type === "input") {
     if (message.data.length > 10_000) {
       sendTerminalMessage(socket, { type: "terminal_error", message: "Terminal input exceeds the 10000 character limit" });
+      return;
+    }
+    if (runtime.guard.mode() === "off" && !can(identity, "terminal:input", { projectId: runtime.project.id })) {
+      sendTerminalMessage(socket, { type: "guard_decision", action: "deny", outcome: "denied", reason: "Terminal input is not permitted", command: message.data });
       return;
     }
     if (runtime.guard.mode() !== "off" && !runtime.guard.isController(memberId)) {
@@ -524,9 +531,28 @@ async function handleTerminalMessage(
     sendTerminalMessage(socket, { type: "terminal_error", message: "Command exceeds the 10000 character limit" });
     return;
   }
+  const interactiveName = interactiveCommandName(message.text);
+  if (interactiveName && runtime.guard.mode() !== "off" && !runtime.guard.isController(memberId)) {
+    sendTerminalMessage(socket, {
+      type: "guard_decision",
+      action: "deny",
+      outcome: "denied",
+      reason: `Interactive control is required before starting ${interactiveName}`,
+      command: message.text
+    });
+    return;
+  }
+  const activeCommands = commandInFlight.get(runtime) ?? new Set<string>();
+  if (activeCommands.has(memberId)) {
+    sendTerminalMessage(socket, { type: "guard_decision", action: "deny", outcome: "busy", reason: "Another command from this member is waiting", command: message.text });
+    return;
+  }
+  activeCommands.add(memberId);
+  commandInFlight.set(runtime, activeCommands);
   const foreground = runtime.terminal.foregroundProcess();
   if (foreground && !runtime.terminal.isShellProcess(foreground)) {
-    sendTerminalMessage(socket, { type: "guard_decision", action: "deny", reason: "终端正忙" });
+    activeCommands.delete(memberId);
+    sendTerminalMessage(socket, { type: "guard_decision", action: "deny", outcome: "busy", reason: "Terminal is busy; wait for the running program to finish", command: message.text });
     return;
   }
   const request = {
@@ -539,22 +565,48 @@ async function handleTerminalMessage(
   };
   const pendingListener = runtime.guard.onPending((approval) => {
     if (approval.request.memberId === memberId && approval.request.source === "terminal") {
-      sendTerminalMessage(socket, { type: "guard_pending", requestId: approval.id });
+      sendTerminalMessage(socket, { type: "guard_pending", requestId: approval.id, noApprover: approval.noApprover, expiresAt: approval.expiresAt, command: approval.request.command, llmUnavailable: approval.decision.llmUnavailable, llm: approval.decision.llm });
     }
   });
   try {
     const result = await runtime.guard.submit(request);
     const decision = result.decision;
     if (!result.approved) {
-      sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, reason: decision.matchedRules.join(", ") || "审批已拒绝" });
+      sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome: decision.outcome === "timeout" ? "timeout" : "rejected", reason: decision.outcome === "timeout" ? "Approval timed out" : describeGuardRules(decision.matchedRules) || "Request was rejected", approverName: decision.approverName, command: message.text });
       return;
     }
-    if (decision.action === "allow_snapshot") await runtime.guard.createSnapshot(request);
+    let snapshotId: string | undefined;
+    if (decision.action === "allow_snapshot") snapshotId = (await runtime.guard.createSnapshot(request)).id;
+    const afterApproval = runtime.terminal.foregroundProcess();
+    if (afterApproval && !runtime.terminal.isShellProcess(afterApproval)) {
+      sendTerminalMessage(socket, { type: "guard_decision", action: "deny", outcome: "busy", reason: "Terminal became busy while the request was waiting", command: message.text });
+      return;
+    }
     runtime.terminal.write(`${message.text}\r`, memberId, false);
-    sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, reason: decision.matchedRules.join(", ") || "已允许" });
+    const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "timeout" | "allowed" | "denied" | "busy";
+    sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome, reason: describeGuardRules(decision.matchedRules) || "Request was allowed", approverName: decision.approverName, snapshotId, command: message.text });
   } finally {
     pendingListener();
+    activeCommands.delete(memberId);
   }
+}
+
+function describeGuardRules(rules: string[]) {
+  const labels: Record<string, string> = {
+    "hard.control-character": "Command contains control characters",
+    "hard.cwd": "Changing the terminal directory is blocked",
+    "hard.metadata": "Project metadata is protected",
+    "hard.outside": "The path is outside this workspace",
+    "hard.protected": "The path is protected",
+    "hard.dynamic": "Dynamic shell syntax needs review",
+    "hard.interactive-control": "Interactive control is required before starting this command",
+    "hard.nonowner.irreversible": "This irreversible operation requires approval",
+    "hard.legacy-dangerous": "This dangerous command requires approval",
+    "agent.default": "Agent request requires approval",
+    "agent.run-cancelled": "The Agent run was cancelled",
+    "guard.run-cancelled": "The Agent run was cancelled"
+  };
+  return rules.map((rule) => labels[rule] ?? rule).join(", ");
 }
 
 function sendTerminalMessage(socket: WebSocket, message: TerminalServerMessage) {

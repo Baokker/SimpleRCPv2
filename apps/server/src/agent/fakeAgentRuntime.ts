@@ -6,6 +6,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
   const modes = new Map<string, "real" | "fake">();
   const permissionModes = new Map<string, AgentRuntime>();
   const runtimeFor = (sessionId: string) => modes.get(sessionId) === "fake" ? fake : real;
+  const usesFake = (value: string) => /fake-(?:delay|write|reply|permission)=/.test(value);
 
   return {
     async status() {
@@ -18,10 +19,10 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
       return real.prepareWorkspace?.(workspacePath) ?? false;
     },
     async prepareRun(input) {
-      modes.set(input.sessionId, /fake-(?:delay|write|reply)=/.test(input.runPrompt) ? "fake" : "real");
+      modes.set(input.sessionId, usesFake(input.runPrompt) ? "fake" : "real");
     },
     async createSession(input) {
-      const mode = /fake-(?:delay|write|reply)=/.test(input.title) ? "fake" : "real";
+      const mode = usesFake(input.title) ? "fake" : "real";
       const session = await (mode === "fake" ? fake : real).createSession(input);
       modes.set(session.id, mode);
       return session;
@@ -45,7 +46,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
       return runtime.subscribe(input, async (event) => {
         if (event.type === "permission.asked" || event.type === "permission.v2.asked") {
           const envelope = event.data as { id?: unknown; data?: { id?: unknown } };
-          const requestId = event.type === "permission.v2.asked" ? envelope.data?.id : envelope.id;
+          const requestId = envelope.id ?? envelope.data?.id;
           if (typeof requestId === "string") permissionModes.set(requestId, runtime);
         }
         await listener(event);
@@ -61,6 +62,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
 export function createFakeAgentRuntime(): AgentRuntime {
   const abortControllers = new Map<string, AbortController>();
   const listeners = new Map<string, Set<(event: { type: string; data: Record<string, unknown> }) => void | Promise<void>>>();
+  const permissionWaiters = new Map<string, { resolve: (reply: "once" | "reject") => void; reply404: boolean }>();
   let nextSessionId = 0;
 
   return {
@@ -86,6 +88,21 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
       };
       await emit("fake.started", { prompt: input.prompt });
+      const permissionMarker = input.prompt.match(/fake-permission=(bash|edit|v2|sub-session)/)?.[1];
+      if (permissionMarker) {
+        const requestId = `fake-permission-${input.sessionId}`;
+        const permission = permissionMarker === "edit" ? "edit" : "bash";
+        const metadata = permissionMarker === "edit"
+          ? { filepath: "src/fake-agent.ts", files: [{ movePath: ".env" }] }
+          : { command: "rm fake-agent.txt" };
+        const eventType = permissionMarker === "v2" ? "permission.v2.asked" : "permission.asked";
+        const sessionID = permissionMarker === "sub-session" ? "sub-session" : input.sessionId;
+        const reply = new Promise<"once" | "reject">((resolve) => {
+          permissionWaiters.set(requestId, { resolve, reply404: input.prompt.includes("fake-reply-404") });
+        });
+        await emit(eventType, { id: requestId, permission, sessionID, metadata });
+        if (await reply === "reject") throw new Error("Fake Agent permission was rejected");
+      }
       const writePath = [...input.prompt.matchAll(/fake-write=([^\s]+)/g)].at(-1)?.[1];
       if (writePath) {
         const absolutePath = path.resolve(input.workspacePath, writePath);
@@ -111,7 +128,13 @@ export function createFakeAgentRuntime(): AgentRuntime {
     async getDiff() {
       return [];
     },
-    async replyPermission() {},
+    async replyPermission(input) {
+      const pending = permissionWaiters.get(input.requestId);
+      if (!pending) throw new Error("Fake permission request not found");
+      permissionWaiters.delete(input.requestId);
+      pending.resolve(input.reply);
+      if (pending.reply404) throw new Error("Permission endpoint returned 404");
+    },
     async cancel(input) {
       abortControllers.get(input.sessionId)?.abort();
     },
@@ -127,6 +150,8 @@ export function createFakeAgentRuntime(): AgentRuntime {
     async dispose() {
       for (const controller of abortControllers.values()) controller.abort();
       abortControllers.clear();
+      for (const pending of permissionWaiters.values()) pending.resolve("reject");
+      permissionWaiters.clear();
       listeners.clear();
     }
   };

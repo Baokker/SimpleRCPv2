@@ -8,7 +8,7 @@ import type { TerminalClientMessage, TerminalServerMessage } from "../types";
 export interface SharedTerminalHandle {
   restart(): void;
   reconnect(): void;
-  submitCommand(text: string): void;
+  submitCommand(text: string): boolean;
 }
 
 export const SharedTerminal = forwardRef<
@@ -20,10 +20,11 @@ export const SharedTerminal = forwardRef<
     theme: ThemeMode;
     onControl(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "off"): void;
     onStatus(message: string): void;
+    onSnapshot(snapshotId: string): void;
     onConnectionState(state: "Connecting" | "Connected" | "Reconnecting" | "Offline"): void;
   }
 >(function SharedTerminal(
-  { projectId, memberId, canInput, theme, onConnectionState, onControl, onStatus },
+  { projectId, memberId, canInput, theme, onConnectionState, onControl, onStatus, onSnapshot },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,8 +32,8 @@ export const SharedTerminal = forwardRef<
   const terminalRef = useRef<Terminal>();
   const canInputRef = useRef(canInput);
   const reconnectRef = useRef<() => void>();
-  const callbacksRef = useRef({ onConnectionState, onControl, onStatus });
-  callbacksRef.current = { onConnectionState, onControl, onStatus };
+  const callbacksRef = useRef({ onConnectionState, onControl, onStatus, onSnapshot });
+  callbacksRef.current = { onConnectionState, onControl, onStatus, onSnapshot };
 
   useEffect(() => {
     canInputRef.current = canInput;
@@ -59,7 +60,10 @@ export const SharedTerminal = forwardRef<
     ,submitCommand(text: string) {
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(JSON.stringify({ type: "command", text } satisfies TerminalClientMessage));
+        return true;
       }
+      callbacksRef.current.onStatus("Not connected");
+      return false;
     }
   }));
 
@@ -130,10 +134,13 @@ export const SharedTerminal = forwardRef<
           terminal.write(message.data);
         } else if (message.type === "control") {
           callbacksRef.current.onControl(message.holderMemberId, message.expiresAt, message.mode);
+          callbacksRef.current.onStatus("");
         } else if (message.type === "guard_pending") {
-          callbacksRef.current.onStatus("Waiting for approval");
+          callbacksRef.current.onStatus(formatGuardPending(message));
         } else if (message.type === "guard_decision") {
-          callbacksRef.current.onStatus(`${message.action}: ${message.reason}`);
+          const command = message.command ? `: ${message.command}` : "";
+          if (message.snapshotId) callbacksRef.current.onSnapshot(message.snapshotId);
+          callbacksRef.current.onStatus(formatGuardDecision(message, command));
         } else {
           terminal.write(`\r\n\x1b[31m${message.message}\x1b[0m\r\n`);
           callbacksRef.current.onStatus(message.message);
@@ -217,4 +224,34 @@ function terminalTheme(theme: ThemeMode) {
         cursor: "#2563eb",
         selectionBackground: "#bfdbfe"
       };
+}
+
+function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "guard_decision" }>, command: string) {
+  if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `Previous command is waiting for approval in Team — approve or reject it before sending another command${command}`;
+  if (message.outcome === "busy") return `Terminal busy — wait for the running program to finish${command}`;
+  if (message.outcome === "timeout") return `⏱ No response before the approval deadline — not run${command}`;
+  if (message.outcome === "rejected") return `✕ Rejected${message.approverName ? ` by ${message.approverName}` : ""}: ${friendlyGuardReason(message.reason)}${command}`;
+  if (message.outcome === "denied") {
+    const reason = friendlyGuardReason(message.reason);
+    const controlHint = message.reason.startsWith("Interactive control is required")
+      ? ". Open Team → People and choose Take control before retrying"
+      : "";
+    return `✕ Blocked: ${reason}${controlHint}${command}`;
+  }
+  if (message.action === "allow_snapshot") return `✓ Ran with snapshot${command}`;
+  if (message.outcome === "approved") return `✓ Approved${message.approverName ? ` by ${message.approverName}` : ""} — running${command}`;
+  if (message.action === "allow") return `✓ Ran${command}`;
+  return `${message.reason}${command}`;
+}
+
+function formatGuardPending(message: Extract<TerminalServerMessage, { type: "guard_pending" }>) {
+  const waiting = message.noApprover ? "No owner online — waiting for an owner to join" : "Waiting for human approval";
+  if (message.llmUnavailable) return `Model judgment unavailable — ${waiting}`;
+  if (!message.llm) return waiting;
+  return `Model suggestion: ${message.llm.risk} (${Math.round(message.llm.confidence * 100)}% confidence) — ${message.llm.reason}. ${waiting}`;
+}
+
+function friendlyGuardReason(reason: string) {
+  const labels: Record<string, string> = { "hard.control-character": "command contains control characters", "hard.cwd": "changing the terminal directory is blocked", "hard.metadata": "project metadata is protected", "hard.outside": "the path is outside this workspace", "hard.protected": "the path is protected", "hard.dynamic": "dynamic shell syntax needs review" };
+  return reason.split(", ").map((rule) => labels[rule] ?? rule).join(", ");
 }

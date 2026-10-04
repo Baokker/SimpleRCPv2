@@ -104,4 +104,38 @@ describe("multi-member multi-agent scenarios", () => {
     expect(result.action).toBe("deny");
     expect(result.matchedRules).toContain("agent.initiator-offline");
   });
+
+  it("publishes a resolution when a pending approval times out or is cancelled", async () => {
+    const approvals = createApprovalQueue(10);
+    const resolutions: Array<{ id: string; outcome: string }> = [];
+    approvals.onResolution((id, outcome) => resolutions.push({ id, outcome }));
+    const request: GuardRequest = { ...base, source: "agent", agentRunId: "run-resolution", kind: "command", command: "rm config.js" };
+    const pending = approvals.enqueue(request, check("student", "agent", { kind: "command", command: "rm config.js" }), ["owner"]);
+    await expect(pending.result).resolves.toBe(false);
+    expect(resolutions).toEqual([{ id: pending.id, outcome: "timeout" }]);
+    approvals.clear();
+  });
+
+  it("reports explicit rejection separately from timeout", async () => {
+    const approvals = createApprovalQueue(10_000);
+    const resolutions: string[] = [];
+    approvals.onResolution((_id, outcome) => resolutions.push(outcome));
+    const request: GuardRequest = { ...base, source: "terminal", kind: "command", command: "rm config.js" };
+    const pending = approvals.enqueue(request, check("student", "terminal", { kind: "command", command: "rm config.js" }), ["owner"]);
+    expect(approvals.reject(pending.id, "owner")).toBe(true);
+    await expect(pending.result).resolves.toBe(false);
+    await expect(pending.outcome).resolves.toBe("rejected");
+    expect(resolutions).toEqual(["rejected"]);
+  });
+
+  it("keeps suggestion approvals pending without an automatic timeout", async () => {
+    const approvals = createApprovalQueue(10);
+    const request: GuardRequest = { ...base, source: "terminal", kind: "command", command: "curl www.baidu.com" };
+    const pending = approvals.enqueue(request, check("student", "terminal", { kind: "command", command: "curl www.baidu.com" }), ["owner"], null);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(approvals.list()).toHaveLength(1);
+    expect(approvals.list()[0]?.expiresAt).toBeUndefined();
+    expect(approvals.reject(pending.id, "owner")).toBe(true);
+    await expect(pending.outcome).resolves.toBe("rejected");
+  });
 });

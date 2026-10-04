@@ -1,9 +1,25 @@
 import fs from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
-import { createSharedTerminal } from "../sharedTerminal.js";
+import { createSharedTerminal, interactiveCommandName } from "../sharedTerminal.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 
 describe("shared terminal", () => {
+  it.each([
+    ["vim", "vim"],
+    ["/usr/bin/vi file.txt", "vi"],
+    ["env EDITOR=vim vim file.txt", "vim"],
+    ["python3", "python3"]
+  ])("identifies interactive command %s", (command, expected) => {
+    expect(interactiveCommandName(command)).toBe(expected);
+  });
+
+  it.each(["ls", "cat README.md", "printf 'vim\\n'", "env FOO=bar ls"]) (
+    "does not classify ordinary command %s as interactive",
+    (command) => {
+      expect(interactiveCommandName(command)).toBeUndefined();
+    }
+  );
+
   it("stays inactive when disabled", async () => {
     const root = await createTestWorkspace("disabled-terminal-");
     const terminal = createSharedTerminal({

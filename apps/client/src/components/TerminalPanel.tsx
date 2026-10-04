@@ -1,6 +1,7 @@
 import { RotateCcw, ShieldCheck } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
+import { restoreGuardSnapshot } from "../api";
 import type { ThemeMode } from "../theme";
 import type { GuardLlmMode, GuardSettings } from "../types";
 import {
@@ -14,6 +15,7 @@ export function TerminalPanel({
   canRun,
   memberId,
   isOwner,
+  rolesLoaded,
   guardSettings,
   onLlmModeChange,
   onError,
@@ -24,6 +26,7 @@ export function TerminalPanel({
   canRun: boolean;
   memberId: string;
   isOwner?: boolean;
+  rolesLoaded?: boolean;
   guardSettings?: GuardSettings;
   onLlmModeChange(mode: GuardLlmMode): Promise<void>;
   onError(error: unknown): void;
@@ -37,7 +40,26 @@ export function TerminalPanel({
   const [status, setStatus] = useState("");
   const [guardMode, setGuardMode] = useState<"full" | "human-only" | "off">("full");
   const [savingReviewMode, setSavingReviewMode] = useState(false);
+  const [snapshotId, setSnapshotId] = useState<string>();
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const controlled = controlHolder === memberId;
+
+  useEffect(() => {
+    setStatus("");
+    setSnapshotId(undefined);
+  }, [connectionState, controlled]);
+
+  async function undoSnapshot() {
+    if (!snapshotId) return;
+    try {
+      await restoreGuardSnapshot(projectId, snapshotId);
+      setStatus("✓ Snapshot restored");
+      setSnapshotId(undefined);
+    } catch (error) {
+      onError(error);
+    }
+  }
 
   async function changeReviewMode(mode: GuardLlmMode) {
     setSavingReviewMode(true);
@@ -89,16 +111,17 @@ export function TerminalPanel({
           onConnectionState={setConnectionState}
           onControl={(holder, expiresAt, mode) => { setControlHolder(holder); setControlExpiresAt(expiresAt); if (mode) setGuardMode(mode); onControlState?.(holder, expiresAt, mode); }}
           onStatus={setStatus}
+          onSnapshot={setSnapshotId}
         />
       </div>
       {controlled ? <div className="terminal-control-state">Interactive control until {controlExpiresAt ? new Date(controlExpiresAt).toLocaleTimeString() : "soon"}</div> : null}
       {!controlled && guardMode !== "off" ? (
-        <form className="terminal-command-box" onSubmit={(event) => { event.preventDefault(); const text = command.trim(); if (!text) return; terminalRef.current?.submitCommand(text); setCommand(""); }}>
-          <input value={command} onChange={(event) => setCommand(event.target.value)} placeholder="Submit a terminal command" disabled={!canRun || connectionState !== "Connected"} />
+        <form className="terminal-command-box" onSubmit={(event) => { event.preventDefault(); const text = command.trim(); if (!text) return; setHistory((current) => [...current.filter((item) => item !== text), text].slice(-50)); setHistoryIndex(-1); setStatus(""); setSnapshotId(undefined); terminalRef.current?.submitCommand(text); setCommand(""); }}>
+          <input aria-label="Terminal command" value={command} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return; event.preventDefault(); const next = event.key === "ArrowUp" ? Math.min(history.length, historyIndex + 1) : Math.max(-1, historyIndex - 1); setHistoryIndex(next); setCommand(next < 0 ? "" : history[history.length - 1 - next] ?? ""); }} placeholder="Submit a terminal command" disabled={!canRun || connectionState !== "Connected"} />
           <button type="submit" disabled={!command.trim() || !canRun || connectionState !== "Connected"}><Send size={14} /> Send</button>
         </form>
       ) : null}
-      {status ? <small className="terminal-guard-status">{status}</small> : null}
+      {status ? <small className="terminal-guard-status" role="status" aria-live="polite">{status}{snapshotId ? <button type="button" onClick={() => void undoSnapshot()}>Undo</button> : null}</small> : null}
       <div className="terminal-review-bar" data-testid="terminal-review-bar">
         <label className="terminal-review-choice">
           <ShieldCheck size={14} aria-hidden="true" />
@@ -106,13 +129,13 @@ export function TerminalPanel({
           <select
             aria-label="Request review mode"
             data-testid="guard-llm-mode"
-            value={guardSettings?.llmMode ?? "suggest"}
-            disabled={!guardSettings || !isOwner || savingReviewMode || connectionState !== "Connected" || guardMode === "off"}
+            value={guardSettings && !guardSettings.llmConfigured ? "off" : guardSettings?.llmMode ?? "suggest"}
+            disabled={!guardSettings || !rolesLoaded || !isOwner || savingReviewMode || connectionState !== "Connected" || guardMode === "off"}
             onChange={(event) => void changeReviewMode(event.target.value as GuardLlmMode)}
           >
-            <option value="off">Manual review</option>
-            <option value="suggest">Model suggestion</option>
-            <option value="auto">Model auto review</option>
+            <option value="off">{guardSettings && !guardSettings.llmConfigured ? "Manual (model unavailable)" : "Manual review"}</option>
+            <option value="suggest" disabled={Boolean(guardSettings && !guardSettings.llmConfigured)}>Model suggestion</option>
+            <option value="auto" disabled={Boolean(guardSettings && !guardSettings.llmConfigured)}>Model auto review</option>
           </select>
         </label>
         <span className="terminal-review-description" role="status">

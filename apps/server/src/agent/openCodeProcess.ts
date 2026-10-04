@@ -96,7 +96,18 @@ function resolveOpenCodeExecutable() {
 }
 
 export function openCodeConfig(options: OpenCodeProcessOptions): Config {
-  const guarded = (options.guardMode ?? process.env.SIMPLERCP_GUARD_MODE ?? "full") === "full";
+  const guardMode = options.guardMode ?? process.env.SIMPLERCP_GUARD_MODE ?? "full";
+  const guarded = guardMode !== "off";
+  const permission = {
+    ...(guardMode === "full" ? { read: { "*": "allow", "*.env": "ask", "*.env.*": "ask", ".env*": "ask", "*.pem": "ask", "*.key": "ask", "*.git/config": "ask", "*.git/hooks/*": "ask" } } : {}),
+    edit: guarded ? "ask" : "allow",
+    bash: guarded ? "ask" : "allow",
+    webfetch: guarded ? "ask" : "allow",
+    websearch: guarded ? "ask" : "allow",
+    task: guarded ? "deny" : "allow",
+    doom_loop: "allow",
+    external_directory: "deny"
+  } as NonNullable<Config["permission"]>;
   return {
     autoupdate: false,
     share: "disabled",
@@ -119,14 +130,7 @@ export function openCodeConfig(options: OpenCodeProcessOptions): Config {
         }
       }
     },
-    permission: {
-      read: guarded ? { "*": "allow", ".env*": "ask", "*.pem": "ask", "*.key": "ask", ".git/config": "ask", ".git/hooks/**": "ask" } : "allow",
-      edit: guarded ? "ask" : "allow",
-      bash: guarded ? "ask" : "allow",
-      webfetch: guarded ? "ask" : "allow",
-      doom_loop: "allow",
-      external_directory: "deny"
-    }
+    permission
   };
 }
 

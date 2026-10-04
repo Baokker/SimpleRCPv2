@@ -8,6 +8,7 @@ interface SnapshotManifest {
   createdAt: string;
   memberId: string;
   command?: string;
+  scope: "paths" | "workspace";
   files: Array<{ path: string; hash: string; size: number }>;
 }
 
@@ -31,11 +32,15 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
     return path.join(snapshotsRoot, id);
   }
   return {
-    async create(input: { memberId: string; command?: string }) {
+    async create(input: { memberId: string; command?: string; paths?: string[] }) {
       const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
       const directory = snapshotDirectory(id);
-      const files = await collectFiles(workspaceRoot);
-      const manifest: SnapshotManifest = { id, createdAt: new Date().toISOString(), memberId: input.memberId, command: input.command, files: [] };
+      const selections = input.paths?.length ? input.paths : undefined;
+      const selected = selections
+        ? await collectSelectedFiles(workspaceRoot, selections)
+        : { files: await collectFiles(workspaceRoot), missing: [] };
+      const files = selected.files;
+      const manifest: SnapshotManifest = { id, createdAt: new Date().toISOString(), memberId: input.memberId, command: input.command, scope: selections ? "paths" : "workspace", files: [] };
       for (const relative of files) {
         const bytes = await fs.readFile(path.join(workspaceRoot, relative));
         const hash = crypto.createHash("sha256").update(bytes).digest("hex");
@@ -44,6 +49,7 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
         await fs.writeFile(destination, bytes);
         manifest.files.push({ path: relative, hash, size: bytes.byteLength });
       }
+      for (const relative of selected.missing) manifest.files.push({ path: relative, hash: "", size: 0 });
       await fs.mkdir(directory, { recursive: true });
       await fs.writeFile(path.join(directory, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
       const existing = (await fs.readdir(snapshotsRoot).catch((error: NodeJS.ErrnoException) => error.code === "ENOENT" ? [] : (() => { throw error; })()))
@@ -60,6 +66,10 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
       for (const file of manifest.files) {
         const source = path.join(directory, file.path);
         const destination = path.join(workspaceRoot, file.path);
+        if (!file.hash) {
+          await fs.rm(destination, { recursive: true, force: true });
+          continue;
+        }
         await fs.mkdir(path.dirname(destination), { recursive: true });
         await fs.copyFile(source, destination);
       }
@@ -76,4 +86,26 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
       return manifests.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
     }
   };
+}
+
+async function collectSelectedFiles(root: string, selections: string[]) {
+  const rootPath = path.resolve(root);
+  const files: string[] = [];
+  const missing: string[] = [];
+  for (const selection of selections) {
+    const absolute = path.resolve(rootPath, selection);
+    if (absolute !== rootPath && !absolute.startsWith(`${rootPath}${path.sep}`)) throw new Error("Snapshot path must stay inside the workspace");
+    const relative = path.relative(rootPath, absolute);
+    const stats = await fs.stat(absolute).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return undefined;
+      throw error;
+    });
+    if (!stats) {
+      missing.push(relative.split(path.sep).join(path.posix.sep));
+      continue;
+    }
+    if (stats.isDirectory()) files.push(...await collectFiles(rootPath, relative));
+    else if (stats.isFile()) files.push(relative.split(path.sep).join(path.posix.sep));
+  }
+  return { files: [...new Set(files)], missing: [...new Set(missing)] };
 }

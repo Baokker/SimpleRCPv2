@@ -156,12 +156,14 @@ export function registerCollaborationRoutes(
     } catch (error) { next(error); }
   });
 
-  app.get("/api/projects/:projectId/guard/approvals", (req, res, next) => {
+  app.get("/api/projects/:projectId/guard/approvals", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res);
       if (!identity) return;
       const runtime = runtimeManager.get(req.params.projectId);
-      res.json({ approvals: runtime.guard.pending().filter((approval) => approval.approverIds.includes(identity.memberId)) });
+      const member = await members.getMember(req.params.projectId, identity.memberId);
+      const isOwner = roleLevel(member?.role) === "owner";
+      res.json({ approvals: runtime.guard.pending().filter((approval) => approval.approverIds.includes(identity.memberId) || (approval.decision.approvers === "owners" && isOwner)) });
     } catch (error) { next(error); }
   });
 
@@ -176,19 +178,18 @@ export function registerCollaborationRoutes(
         ? await runtime.guard.approve(req.params.approvalId, identity.memberId)
         : await runtime.guard.reject(req.params.approvalId, identity.memberId);
       if (!accepted) { res.status(403).json({ error: "Approval is unavailable or the member is no longer authorized" }); return; }
-      runtime.guard.publishResolution(req.params.approvalId, approve);
       res.json({ accepted: true });
     } catch (error) { next(error); }
   });
 
-  app.post("/api/projects/:projectId/terminal/control", (req, res, next) => {
+  app.post("/api/projects/:projectId/terminal/control", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res);
       if (!identity) return;
       const runtime = runtimeManager.get(req.params.projectId);
       const holderMemberId = req.body?.holderMemberId;
       if (holderMemberId !== null && typeof holderMemberId !== "string") { res.status(400).json({ error: "holderMemberId must be a string or null" }); return; }
-      runtime.guard.setControl(holderMemberId, identity.memberId);
+      await runtime.guard.setControl(holderMemberId, identity.memberId);
       res.json(runtime.guard.controlState());
     } catch (error) { next(error); }
   });

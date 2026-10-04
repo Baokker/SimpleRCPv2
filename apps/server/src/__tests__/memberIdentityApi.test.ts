@@ -94,6 +94,61 @@ describe("member identity API", () => {
       terminal.terminate();
     }
   });
+
+  it("rejects interactive commands before they can occupy the shared terminal", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("interactive-command-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 100 });
+    const student = await joinMember(running.origin, "demo", { name: "Student", role: "student" });
+    const terminal = new WebSocket(`${running.origin.replace("http", "ws")}/terminal?projectId=demo&memberId=${student.member.id}`);
+    try {
+      await opened(terminal);
+      terminal.send(JSON.stringify({ type: "command", text: "vim" }));
+      await expect(nextMessageMatching(terminal, (message) => message.type === "guard_decision" && message.command === "vim")).resolves.toMatchObject({
+        type: "guard_decision",
+        action: "deny",
+        outcome: "denied",
+        reason: "Interactive control is required before starting vim",
+        command: "vim"
+      });
+      expect(running.app.locals.runtimeManager.get("demo").terminal.isShellProcess(running.app.locals.runtimeManager.get("demo").terminal.foregroundProcess()!)).toBe(true);
+    } finally {
+      terminal.terminate();
+    }
+  });
+
+  it("keeps ordinary commands available and lets controlled users reach normal review", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("interactive-command-control-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 1_000 });
+    const student = await joinMember(running.origin, "demo", { name: "Student", role: "student" });
+    const studentTerminal = new WebSocket(`${running.origin.replace("http", "ws")}/terminal?projectId=demo&memberId=${student.member.id}`);
+    try {
+      await opened(studentTerminal);
+      await vi.waitFor(() => {
+        const terminal = running.app.locals.runtimeManager.get("demo").terminal;
+        const foreground = terminal.foregroundProcess();
+        expect(foreground && terminal.isShellProcess(foreground)).toBe(true);
+      }, { timeout: 2_000 });
+      studentTerminal.send(JSON.stringify({ type: "command", text: "ls" }));
+      await expect(nextMessageMatching(studentTerminal, (message) => message.type === "guard_decision" && message.command === "ls")).resolves.toMatchObject({ type: "guard_decision", action: "allow", outcome: "allowed", command: "ls" });
+    } finally {
+      studentTerminal.terminate();
+    }
+
+    const owner = await joinMember(running.origin, "demo", { name: "Teacher", role: "teacher" });
+    await running.app.locals.runtimeManager.get("demo").guard.setControl(owner.member.id, owner.member.id);
+    const ownerTerminal = new WebSocket(`${running.origin.replace("http", "ws")}/terminal?projectId=demo&memberId=${owner.member.id}`);
+    try {
+      await opened(ownerTerminal);
+      ownerTerminal.send(JSON.stringify({ type: "command", text: "vim" }));
+      await expect(nextMessageMatching(ownerTerminal, (message) => message.type === "guard_decision" && message.command === "vim")).resolves.toMatchObject({ type: "guard_decision", action: "allow", outcome: "allowed", command: "vim" });
+    } finally {
+      ownerTerminal.terminate();
+    }
+  });
 });
 
 function opened(socket: WebSocket) {
@@ -110,11 +165,25 @@ function nextMessage(socket: WebSocket) {
   });
 }
 
-async function startServer(directory: string) {
+function nextMessageMatching(socket: WebSocket, predicate: (message: Record<string, unknown>) => boolean) {
+  return new Promise<Record<string, unknown>>((resolve, reject) => {
+    const onMessage = (data: WebSocket.RawData) => {
+      const message = JSON.parse(data.toString()) as Record<string, unknown>;
+      if (predicate(message)) {
+        socket.off("message", onMessage);
+        resolve(message);
+      }
+    };
+    socket.on("message", onMessage);
+    socket.once("error", reject);
+  });
+}
+
+async function startServer(directory: string, options: { guardMode?: "full" | "human-only" | "off"; guardLlmMode?: "off" | "suggest" | "auto"; guardApprovalTimeoutMs?: number } = {}) {
   const source = path.join(directory, "source");
   await fs.mkdir(source);
   await fs.writeFile(path.join(source, "README.md"), "# Member test\n");
-  const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(directory, "data"), demoProjectRoot: source });
+  const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(directory, "data"), demoProjectRoot: source, ...options });
   const server = http.createServer(app);
   const realtime = attachRealtimeServer(server, app.locals.runtimeManager, app.locals.agentRuns, { members: app.locals.members });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));

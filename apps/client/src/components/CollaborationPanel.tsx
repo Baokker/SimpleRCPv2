@@ -31,7 +31,7 @@ import type {
   WorkspaceNode
 } from "../types";
 import { formatTime } from "../format";
-import { getGuardRoles, setTerminalControl, updateMyRole, replyGuardApproval, type GuardScenarioRole } from "../api";
+import { setTerminalControl, updateMyRole, replyGuardApproval, type GuardScenarioRole } from "../api";
 import type { GuardApproval } from "../types";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project";
@@ -78,6 +78,7 @@ export function CollaborationPanel({
   onOpenFile,
   onError,
   guardApprovals = [],
+  scenarioRoles = [],
   unreadApprovalCount = 0,
   llmJudging = false,
   onApprovalSeen,
@@ -110,9 +111,10 @@ export function CollaborationPanel({
   onOpenFile(path: string): void;
   onError(error: unknown): void;
   guardApprovals?: GuardApproval[];
+  scenarioRoles?: GuardScenarioRole[];
   unreadApprovalCount?: number;
   llmJudging?: boolean;
-  onApprovalSeen?(): void;
+  onApprovalSeen?(approvalId: string): void;
   onApprovalResolved?(): void;
   controlHolderMemberId?: string | null;
   onControlState?(holderMemberId: string | null): void;
@@ -125,15 +127,30 @@ export function CollaborationPanel({
   const [teamAgentName, setTeamAgentName] = useState("");
   const [teamAgentDescription, setTeamAgentDescription] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
-  const [scenarioRoles, setScenarioRoles] = useState<GuardScenarioRole[]>([]);
-  useEffect(() => { void getGuardRoles().then((result) => setScenarioRoles(result.scenarios)); }, []);
+  const [replyingApprovalId, setReplyingApprovalId] = useState<string>();
+  const [clock, setClock] = useState(() => Date.now());
   function selectTab(tab: CollaborationTab) {
     setActiveTab(tab);
-    if (tab === "team") onApprovalSeen?.();
+  }
+  function changeRole(role: string) {
+    const selected = scenarioRoles.find((entry) => entry.role === role);
+    if (selected?.level === "owner" && !owner && !window.confirm("Set your role to owner? This grants project control and approval rights.")) return;
+    void updateMyRole(projectId, role).catch(onError);
   }
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
   const previousMessageCountRef = useRef(chatMessages.length);
+  const owner = scenarioRoles.some((role) => role.role === member?.profileRole && role.level === "owner");
+  const visibleApprovals = useMemo(() => guardApprovals.filter((approval) => approval.noApprover && approval.request.memberId === member?.id || approval.approverIds.includes(member?.id ?? "") || (owner && approval.decision.approvers === "owners")), [guardApprovals, member?.id, owner]);
+  useEffect(() => {
+    if (activeTab !== "team") return;
+    for (const approval of visibleApprovals) onApprovalSeen?.(approval.id);
+  }, [activeTab, onApprovalSeen, visibleApprovals]);
+  useEffect(() => {
+    if (visibleApprovals.length === 0) return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [visibleApprovals.length]);
   const activityItems = useMemo(
     () =>
       events
@@ -417,7 +434,7 @@ export function CollaborationPanel({
                         <i className={candidate.online ? "status-dot online" : "status-dot"} />
                         <strong>{candidate.displayName}</strong>
                         {candidate.id === member?.id ? (
-                          <label className="member-role-editor"><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => void updateMyRole(projectId, event.target.value).catch(onError)}><option value="">Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role}>{entry.role} ({entry.level})</option>)}</optgroup>)}</select></label>
+                          <label className="member-role-editor"><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => changeRole(event.target.value)}><option value="">Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role}>{entry.role} ({entry.level})</option>)}</optgroup>)}</select></label>
                         ) : <em>{candidate.profileRole || "unassigned"}</em>}
                         {candidate.id !== member?.id ? candidate.profileRole ? <em>({scenarioRoles.find((role) => role.role === candidate.profileRole)?.level ?? "collaborator"})</em> : <em>(collaborator)</em> : null}
                         {candidate.connectionCount > 1 ? (
@@ -450,9 +467,9 @@ export function CollaborationPanel({
                             )}
                           </button>
                         ) : null}
-                        {member && scenarioRoles.some((role) => role.role === (member.profileRole ?? "") && role.level === "owner") ? (
+                        {member && scenarioRoles.some((role) => role.role === (member.profileRole ?? "") && role.level === "owner") && (candidate.online || candidate.id === member.id) && (!controlHolderMemberId || controlHolderMemberId === candidate.id || candidate.id === member.id) ? (
                           <button type="button" className="member-control" onClick={() => void setTerminalControl(projectId, controlHolderMemberId === candidate.id ? null : candidate.id).then((state) => onControlState?.(state.holderMemberId)).catch(onError)}>
-                            {controlHolderMemberId === candidate.id ? "Revoke control" : "Grant interactive control"}
+                            {controlHolderMemberId === candidate.id ? "Revoke control" : candidate.id === member.id ? "Take control" : "Grant interactive control"}
                           </button>
                         ) : null}
                       </span>
@@ -466,14 +483,18 @@ export function CollaborationPanel({
                 })}
               </ul>
               {llmJudging ? <div className="guard-llm-status" role="status"><span className="guard-llm-spinner" />The model is reviewing a guarded request…</div> : null}
-              {guardApprovals.filter((approval) => approval.approverIds.includes(member?.id ?? "")).map((approval) => {
+              {visibleApprovals.map((approval) => {
                 const llm = approval.decision.llm;
+                const requester = members.find((candidate) => candidate.id === approval.request.memberId);
+                const requesterRole = scenarioRoles.find((role) => role.role === requester?.profileRole)?.level ?? "collaborator";
+                const remaining = approval.expiresAt ? Math.max(0, Math.ceil((Date.parse(approval.expiresAt) - clock) / 1000)) : undefined;
+                const reason = humanGuardReason(approval.decision.matchedRules);
                 return (
                   <div key={approval.id} className="guard-approval-card">
-                    <strong>{approval.request.agentHandle ? `@${approval.request.agentHandle} approval` : `${approval.request.source} approval`}</strong>
-                    <span>Triggered by {members.find((candidate) => candidate.id === approval.request.memberId)?.displayName ?? approval.request.memberId}</span>
+                    <strong>{approval.request.memberId === member?.id ? "Confirm your own command" : `${requester?.displayName ?? approval.request.memberId} (${requesterRole}) wants to run:`}</strong>
+                    {approval.request.agentHandle ? <span>via @{approval.request.agentHandle}</span> : approval.request.source === "agent" ? <span>via {requester?.displayName ?? "member"}'s agent</span> : null}
                     <code>{approval.request.command ?? approval.request.paths?.join(", ")}</code>
-                    <small>{approval.decision.matchedRules.join(", ")}</small>
+                    <small>{reason}{remaining !== undefined ? ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
                     {llm ? (
                       <div className="guard-llm-result">
                         <strong>Model judgment: {llm.risk}</strong>
@@ -481,8 +502,9 @@ export function CollaborationPanel({
                         <p>{llm.reason}</p>
                         <small>{llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : llm.mode === "auto" && llm.risk === "high" ? "Model recommends rejection; human approval remains required" : "Human approval remains required"}</small>
                       </div>
-                    ) : <div className="guard-llm-status">Model judgment unavailable</div>}
-                    {llm?.applied ? <small className="guard-llm-resolved">Resolved automatically by the model</small> : <div><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError)}>Approve</button><button type="button" onClick={() => void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError)}>Reject</button></div>}
+                    ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">Model judgment unavailable. This request is waiting for human approval.</div> : null}
+                    {approval.noApprover ? <small>No owner online — ask a teacher or lead to join.</small> : null}
+                    {llm?.applied ? <small className="guard-llm-resolved">Resolved automatically by the model</small> : <div><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>{approval.request.memberId === member?.id ? "Run anyway" : "Approve"}</button><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>{approval.request.memberId === member?.id ? "Cancel" : "Reject"}</button></div>}
                   </div>
                 );
               })}
@@ -684,8 +706,12 @@ function formatActivity(
       return item(event, "general", `${actor}'s request is being reviewed by the model`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
+    case "guard_llm_unavailable":
+      return item(event, "general", `${actor}'s request could not be judged by the model`, {
+        detail: stringValue(payload.reason) ?? "Human approval is still required"
+      });
     case "guard_approval":
-      return item(event, "general", `${actor}'s request was ${payload.approved ? "approved" : "rejected"}`, {
+      return item(event, "general", `${actor}'s request was ${payload.outcome === "timeout" ? "expired" : payload.approved ? "approved" : "rejected"}`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
     case "terminal_control_granted":
@@ -805,6 +831,19 @@ function ActivityIcon({ kind }: { kind: ActivityKind }) {
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
+}
+
+function humanGuardReason(rules: string[]) {
+  const labels: Record<string, string> = {
+    "hard.outside": "The path is outside this workspace",
+    "hard.metadata": "Project metadata is protected",
+    "hard.protected": "The path is protected",
+    "hard.dynamic": "Dynamic shell syntax needs review",
+    "hard.cwd": "Changing the terminal directory is blocked",
+    "hard.control-character": "Control characters are blocked",
+    "agent.default": "Agent requests require owner approval"
+  };
+  return rules.map((rule) => labels[rule] ?? rule).join("; ");
 }
 
 function guardActionText(actor: string, payload: Record<string, unknown>) {

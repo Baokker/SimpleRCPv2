@@ -251,7 +251,35 @@ node
 pwd
 ```
 
-预期结果：第二个请求收到 `guard_decision`，动作是 `deny`，理由为 `终端正忙`。前台程序退出后，例如在 Node REPL 输入 `.exit`，命令模式恢复。
+预期结果：第二个请求收到 `guard_decision`，动作是 `deny`，理由为 `Terminal is busy; wait for the running program to finish`。前台程序退出后，例如在 Node REPL 输入 `.exit`，命令模式恢复。
+
+### Vim、Vi 和其他交互程序
+
+`vim`、`vi`、`nvim`、`nano`、`less`、`more`、`top`、`htop`、`watch`、`node`、`python` 等程序需要连续接收原始按键。Guard 启用时，成员必须先获得 interactive control，命令才会写入共享 PTY。
+
+使用没有 control 的 `Student Bob` 窗口提交：
+
+```bash
+vim README.md
+```
+
+预期结果：
+
+- Vim 不会启动，工作区保持可操作。
+- 终端状态提示 `Interactive control is required before starting vim`。
+- 终端状态还会提示打开 `Team → People` 并选择 `Take control`。
+- 共享终端的前台进程仍然是 shell，其他成员可以继续提交 `ls`、`pwd` 等普通命令。
+
+在 `Owner Alice` 窗口的 `Team → People` 中点击 `Take control`，再次提交 `vim README.md`。此时 Vim 可以正常接收键盘输入。退出 Vim 后，owner 可以点击 `Revoke control`，终端恢复命令模式。
+
+可以使用以下命令验证带路径和环境变量前缀的识别：
+
+```bash
+/usr/bin/vi README.md
+env EDITOR=vim vim README.md
+```
+
+每个命令在没有 control 时都应在启动前被拒绝。
 
 ## 验证交互控制
 
@@ -466,9 +494,9 @@ Agent 的审批卡片 `source` 为 `agent`。审批数据中的 `request.agentRu
 SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS=5000
 ```
 
-重新启动服务端。再次创建一个 `ask` 请求，五秒内不点击审批按钮。
+重新启动服务端。将模式设置为 `off` 或 `auto`，再次创建一个 `ask` 请求，五秒内不点击审批按钮。
 
-预期结果：请求自动拒绝，终端收到拒绝结果，`guard-audit.jsonl` 中有 `result` 为 `rejected` 的记录。验证结束后恢复 `120000`，避免后续验证等待时间过短。
+预期结果：请求等待五秒后自动结束，终端收到超时结果，审批结果显示为 `timeout`，`guard-audit.jsonl` 中有 `result` 为 `timeout` 的记录。`suggest` 模式下使用相同命令时，请求会持续保留到 owner 点击 `Approve` 或 `Reject`。验证结束后恢复 `120000`，避免后续验证等待时间过短。
 
 ## 验证快照和恢复
 
@@ -516,6 +544,24 @@ curl -X POST \
 ```
 
 预期结果：`guard-restore.txt` 内容恢复为 `before`。恢复只覆盖快照中存在的文件，快照创建后新增的文件会继续保留。发起成员可以恢复自己的快照，owner 可以恢复项目中的快照，其他成员会收到权限错误。
+
+### 恢复执行前不存在的目标
+
+删除验证文件后，先确认工作区中不存在该文件：
+
+```bash
+rm -f guard-created-by-command.txt
+```
+
+使用 `student` 提交下面的命令：
+
+```bash
+touch guard-created-by-command.txt
+```
+
+命令进入 `allow_snapshot` 后，等待文件创建完成。该快照的 `manifest.json` 中应包含 `guard-created-by-command.txt`，并且该条目的 `hash` 为空字符串。随后保留当前文件，再通过快照恢复接口恢复这个快照。
+
+预期结果：`guard-created-by-command.txt` 被删除。这个结果表示恢复操作会清理命令执行前不存在、执行后新建的目标；快照清单之外、在快照创建后新增的文件会继续保留。
 
 ## 验证 Agent 权限继承
 
@@ -576,7 +622,7 @@ Delete guard-agent-check.txt and report whether it was removed.
 }
 ```
 
-`SIMPLERCP_GUARD_LLM_MODE` 是服务启动时的默认模式，也可以在共享终端底部的 `Request review` 选择器中修改当前项目策略。选项含义如下：
+`SIMPLERCP_GUARD_LLM_MODE` 是没有项目策略时的服务启动默认模式。项目已经保存 `guard-policy.json` 后，以项目策略为准；共享终端底部的 `Request review` 选择器会更新当前项目策略。选项含义如下：
 
 | 选择项 | 行为 |
 | --- | --- |
@@ -584,7 +630,7 @@ Delete guard-agent-check.txt and report whether it was removed.
 | `Model suggestion` | 调用模型展示风险、置信度和理由，最终等待人员处理 |
 | `Model auto review` | 满足自动判断条件的低风险请求自动批准，高风险请求自动拒绝，其余请求等待人员处理 |
 
-共享终端底部的选择器只有 owner 可以修改，其他成员可以查看当前模式。`.env` 需要重新启动服务端才会读取新的默认值；界面选择会立即作用于后续请求。
+共享终端底部的选择器只有 owner 可以修改，其他成员可以查看当前模式。`.env` 需要重新启动服务端才会读取新的默认值。已经通过界面或 API 保存过模式的项目，需要通过界面或 API 修改项目策略；修改会立即作用于后续请求。`suggest` 模式的审批会持续等待人工处理，不受 `SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS` 限制；`off` 和 `auto` 产生的人工审批仍使用该时限。
 
 修改策略需要在线 owner。先从浏览器加入项目的成员文件或项目元数据中取得 `<OWNER_MEMBER_ID>`，再执行：
 
@@ -638,6 +684,7 @@ curl \
 - `decision.llm` 包含 `mode`、`risk`、`confidence`、`reason` 和 `applied`。
 - `applied` 为 `false`。
 - 审批卡片仍然需要人工点击 `Approve` 或 `Reject`。
+- 终端状态会显示模型的风险、置信度和理由，并继续等待人工审批。
 
 ### `auto` 模式
 
@@ -796,7 +843,7 @@ tail -n 10 .simplercp-data/projects/<PROJECT_ID>/guard-audit.jsonl
 | G-11 | Agent 离线 | 审批等待时关闭发起成员 | `agent.initiator-offline` |  | 审计、run 状态 |
 | G-12 | LLM suggest | 设置 `llmMode=suggest` | 返回模型字段，仍需人工审批 |  | approvals API、审计 |
 | G-13 | LLM auto | 设置 `llmMode=auto` | 仅满足阈值的请求自动放行 |  | terminal 状态、审计 |
-| G-14 | 审批超时 | 设置 5000 毫秒并等待 | 自动拒绝 |  | 审计 `result` |
+| G-14 | 审批超时 | `off` 或 `auto` 设置 5000 毫秒并等待 | 自动结束并记录 `timeout` |  | 审计 `result` |
 | G-15 | 快照恢复 | 修改后恢复快照 | 快照文件内容恢复 |  | 文件内容、manifest |
 
 ## 失败定位

@@ -280,6 +280,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         ? await getSessionStore(projectId).get(current.sessionId)
         : undefined;
       if (!session) throw new Error("Agent session not found");
+      const currentSession = session;
       const workspacePrepared = session.scope === "team"
         ? await options.runtime.prepareWorkspace?.(projectRuntime.project.workspacePath)
         : false;
@@ -385,65 +386,87 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runPrompt: run.prompt
       });
 
-      const stopEvents = await options.runtime.subscribe(
-        {
-          workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId
-        },
-        async (event) => {
-          await appendTrace(projectId, runId, {
-            type: `opencode.${event.type}`,
-            data: event.data
-          });
-          const permissionEvent = event.type === "permission.asked" || event.type === "permission.v2.asked";
-          if (!permissionEvent) return;
-          const envelope = event.data as {
-            data?: Record<string, unknown>;
-          };
-          const data = (event.type === "permission.v2.asked" ? envelope.data : envelope) as {
-            id?: unknown;
-            sessionID?: unknown;
-            permission?: unknown;
-            action?: unknown;
-            patterns?: unknown;
-            resources?: unknown;
-            metadata?: Record<string, unknown>;
-          };
-          if (typeof data.id !== "string") throw new Error("OpenCode permission request id is missing");
-          const permission = typeof data.permission === "string" ? data.permission : typeof data.action === "string" ? data.action : "";
-          const rawPatterns = Array.isArray(data.patterns) ? data.patterns : data.resources;
-          const patterns = Array.isArray(rawPatterns)
-            ? rawPatterns.filter((value): value is string => typeof value === "string")
-            : [];
-          const metadata = data.metadata ?? {};
-          const supported = ["bash", "edit", "read", "webfetch"].includes(permission);
-          const commandValue = metadata.command ?? metadata.description ?? patterns[0];
-          const request = {
-            projectId,
-            memberId: run.initiatorMemberId ?? run.memberId,
-            source: "agent" as const,
-            agentRunId: run.id,
-            sessionScope: session.scope ?? "personal",
-            agentHandle: session.handle,
-            kind: permission === "edit" ? "edit" as const : permission === "read" ? "read" as const : permission === "webfetch" ? "fetch" as const : "command" as const,
-            command: permission === "bash" ? String(commandValue ?? "") : undefined,
-            paths: permission === "edit" || permission === "read" ? patterns : undefined,
-            url: permission === "webfetch" ? String(metadata.url ?? patterns[0] ?? "") : undefined,
-            cwd: projectRuntime.project.workspacePath,
-            unknownTool: !supported
-          };
+      const permissionTasks = new Set<Promise<void>>();
+      const handledPermissionIds = new Set<string>();
+      async function handlePermissionEvent(event: { type: string; data: Record<string, unknown> }) {
+        const properties = event.data;
+        const data = properties;
+        const requestId = typeof data.id === "string" ? data.id : typeof data.requestID === "string" ? data.requestID : undefined;
+        if (!requestId || handledPermissionIds.has(requestId)) return;
+        handledPermissionIds.add(requestId);
+        const permission = typeof data.permission === "string" ? data.permission : typeof data.action === "string" ? data.action : "";
+        const rawPatterns = Array.isArray(data.patterns) ? data.patterns : data.resources;
+        const patterns = Array.isArray(rawPatterns)
+          ? rawPatterns.filter((value): value is string => typeof value === "string")
+          : [];
+        const rawMetadata = data.metadata;
+        const metadata = rawMetadata && typeof rawMetadata === "object" ? rawMetadata as Record<string, unknown> : {};
+        const fileMetadata = Array.isArray(metadata.files) ? metadata.files : [];
+        const movePaths = fileMetadata.flatMap((value) => {
+          if (!value || typeof value !== "object") return [];
+          const movePath = (value as Record<string, unknown>).movePath;
+          return typeof movePath === "string" ? [movePath] : [];
+        });
+        const editPath = typeof metadata.filepath === "string" ? [metadata.filepath] : [];
+        const allPaths = [...patterns, ...movePaths, ...editPath];
+        const supported = ["bash", "edit", "read", "webfetch", "websearch"].includes(permission);
+        const commandValue = metadata.command ?? metadata.description ?? patterns[0];
+        const request = {
+          projectId,
+          memberId: run.initiatorMemberId ?? run.memberId,
+          source: "agent" as const,
+          agentRunId: run.id,
+          sessionScope: currentSession.scope ?? "personal",
+          agentHandle: currentSession.handle,
+          kind: permission === "edit" ? "edit" as const : permission === "read" ? "read" as const : permission === "webfetch" || permission === "websearch" ? "fetch" as const : "command" as const,
+          command: permission === "bash" ? String(commandValue ?? "") : undefined,
+          paths: permission === "edit" || permission === "read" ? allPaths : undefined,
+          url: permission === "webfetch" || permission === "websearch" ? String(metadata.url ?? patterns[0] ?? "") : undefined,
+          cwd: projectRuntime.project.workspacePath,
+          unknownTool: !supported
+        };
+        try {
           const permissionResult = await projectRuntime.guard.submit(request, {
             timeoutMs: Math.min(projectRuntime.guard.approvalTimeoutMs(), Math.max(1, Math.floor(options.runTimeoutMs / 2)))
           });
           if (permissionResult.approved && permissionResult.decision.action === "allow_snapshot") {
             await projectRuntime.guard.createSnapshot(request);
           }
-          await options.runtime.replyPermission({
-            workspacePath: projectRuntime.project.workspacePath,
-            requestId: data.id,
-            reply: permissionResult.approved ? "once" : "reject",
-            message: permissionResult.approved ? undefined : permissionResult.decision.matchedRules.join(", ") || "Permission denied by project guard"
-          });
+          try {
+            await options.runtime.replyPermission({
+              workspacePath: projectRuntime.project.workspacePath,
+              requestId,
+              reply: permissionResult.approved ? "once" : "reject",
+              message: permissionResult.approved ? undefined : permissionResult.decision.matchedRules.join(", ") || "Permission denied by project guard"
+            });
+          } catch (error) {
+            await appendTrace(projectId, runId, { type: "permission_reply_failed", summary: error instanceof Error ? error.message : "Permission reply failed" });
+          }
+        } catch (error) {
+          await appendTrace(projectId, runId, { type: "permission_failed", summary: error instanceof Error ? error.message : "Permission handling failed" });
+          try {
+            await options.runtime.replyPermission({ workspacePath: projectRuntime.project.workspacePath, requestId, reply: "reject", message: "Permission handling failed" });
+          } catch {
+            // Permission endpoints can disappear when a run or session ends.
+          }
+        }
+      }
+
+      const stopEvents = await options.runtime.subscribe(
+        {
+          workspacePath: projectRuntime.project.workspacePath,
+          sessionId: runtimeSessionId
+        },
+        (event) => {
+          void appendTrace(projectId, runId, {
+            type: `opencode.${event.type}`,
+            data: event.data
+          }).catch((error) => appendTrace(projectId, runId, { type: "trace_failed", summary: error instanceof Error ? error.message : "Trace append failed" }));
+          const permissionEvent = event.type === "permission.asked" || event.type === "permission.v2.asked";
+          if (!permissionEvent) return;
+          const task = handlePermissionEvent(event);
+          permissionTasks.add(task);
+          void task.then(() => permissionTasks.delete(task), () => permissionTasks.delete(task));
         }
       );
 

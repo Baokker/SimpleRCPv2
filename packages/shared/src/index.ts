@@ -314,6 +314,7 @@ export type ServerMessage =
       type: "guard_approval_resolved";
       approvalId: string;
       approved: boolean;
+      outcome?: "approved" | "rejected" | "timeout" | "cancelled";
     }
   | {
       type: "member_role_updated";
@@ -348,10 +349,17 @@ export interface GuardApproval {
     action: "allow" | "allow_snapshot" | "ask" | "deny";
     segments: Array<{ text: string; capabilities: string[]; zone: string; reversibility: string }>;
     matchedRules: string[];
+    approvers?: "owners" | "initiator" | "self" | null;
+    outcome?: "allowed" | "approved" | "rejected" | "timeout" | "denied" | "busy";
+    command?: string;
+    approverName?: string;
+    llmUnavailable?: boolean;
     llm?: { mode: "off" | "suggest" | "auto"; risk: string; confidence: number; reason: string; applied: boolean };
   };
   createdAt: string;
+  expiresAt?: string;
   approverIds: string[];
+  noApprover?: boolean;
 }
 
 export type GuardLlmMode = "off" | "suggest" | "auto";
@@ -373,6 +381,6 @@ export type TerminalServerMessage =
   | { type: "terminal_snapshot"; data: string }
   | { type: "terminal_output"; data: string }
   | { type: "terminal_error"; message: string }
-  | { type: "guard_decision"; requestId?: string; action: string; reason: string }
-  | { type: "guard_pending"; requestId: string }
+  | { type: "guard_decision"; requestId?: string; action: string; reason: string; outcome?: "allowed" | "approved" | "rejected" | "timeout" | "denied" | "busy"; approverName?: string; snapshotId?: string; command?: string }
+  | { type: "guard_pending"; requestId: string; noApprover?: boolean; expiresAt?: string; command?: string; llmUnavailable?: boolean; llm?: { mode: "off" | "suggest" | "auto"; risk: string; confidence: number; reason: string; applied: boolean } }
   | { type: "control"; holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" };

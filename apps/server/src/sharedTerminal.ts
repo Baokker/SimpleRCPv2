@@ -4,6 +4,45 @@ import { terminalEnv } from "./processEnv.js";
 
 const MAX_SCROLLBACK_CHARS = 100_000;
 
+const INTERACTIVE_COMMANDS = new Set([
+  "vim",
+  "vi",
+  "nvim",
+  "vimdiff",
+  "nano",
+  "emacs",
+  "less",
+  "more",
+  "top",
+  "htop",
+  "watch",
+  "node",
+  "python",
+  "python3",
+  "ipython",
+  "ruby",
+  "irb",
+  "php",
+  "deno",
+  "lua",
+  "mysql",
+  "psql"
+]);
+
+export function interactiveCommandName(command: string) {
+  const tokens = command.trim().match(/"[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'|\S+/g) ?? [];
+  let index = 0;
+  while (index < tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=.*$/.test(tokens[index]!)) index += 1;
+  if (tokens[index] === "env") {
+    index += 1;
+    while (index < tokens.length && (tokens[index]!.startsWith("-") || /^[A-Za-z_][A-Za-z0-9_]*=.*$/.test(tokens[index]!))) index += 1;
+  }
+  const token = tokens[index];
+  if (!token) return undefined;
+  const name = token.replace(/^['"]|['"]$/g, "").replace(/^.*[\\/]/, "").toLowerCase();
+  return INTERACTIVE_COMMANDS.has(name) ? name : undefined;
+}
+
 export function createSharedTerminal({
   workspaceRoot,
   shell = process.env.SIMPLERCP_SHELL || process.env.SHELL || "/bin/sh",

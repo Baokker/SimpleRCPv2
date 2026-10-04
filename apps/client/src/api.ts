@@ -59,6 +59,10 @@ export async function listGuardApprovals(projectId: string) {
   return request<{ approvals: import("@simplercp/shared").GuardApproval[] }>(`${projectPath(projectId)}/guard/approvals`);
 }
 
+export async function restoreGuardSnapshot(projectId: string, snapshotId: string) {
+  return request<{ manifest: { id: string } }>(`${projectPath(projectId)}/guard/snapshots/${encodeURIComponent(snapshotId)}/restore`, { method: "POST" });
+}
+
 export async function getGuardSettings(projectId: string) {
   return request<GuardSettings>(`${projectPath(projectId)}/guard/settings`);
 }

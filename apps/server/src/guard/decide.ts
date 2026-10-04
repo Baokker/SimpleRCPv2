@@ -9,6 +9,14 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
   const characterization = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
   let action: GuardDecision["action"] = "allow";
   const matchedRules = new Set<string>();
+  if (request.kind === "command" && /[\u0000-\u001f\u007f-\u009f]/.test(request.command ?? "")) {
+    action = "deny";
+    matchedRules.add("hard.control-character");
+  }
+  if (request.kind === "command" && /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(request.command?.trim() ?? "")) {
+    action = "deny";
+    matchedRules.add("hard.cwd");
+  }
   for (const segment of characterization.segments) {
     const result = segmentAction(segment, level);
     action = stricter(action, result.action);
@@ -26,6 +34,10 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
     action = stricter(action, "ask");
     matchedRules.add("classify.unknown");
   }
+  if (characterization.legacyRisk === "dangerous" && characterization.segments.every((segment) => segment.capabilities.every((capability) => capability === "exec"))) {
+    action = stricter(action, "ask");
+    matchedRules.add("hard.legacy-dangerous");
+  }
   const humanAction = action;
   let agentOnlyAsk = false;
   if (request.source === "agent") {
@@ -34,7 +46,6 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
       matchedRules.add("agent.initiator-offline");
     }
     const agentCap = characterization.segments.some((segment) => segment.reversibility === "irreversible") ||
-      characterization.segments.some((segment) => segment.capabilities.includes("network") && segment.capabilities.includes("exec")) ||
       Boolean(request.command && /\|/.test(request.command) && /\b(curl|wget|ssh|scp)\b/i.test(request.command));
     if (agentCap) {
       agentOnlyAsk = true;
@@ -45,7 +56,8 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
   const onlyRoleAsk = action === "ask" && ![...matchedRules].some((rule) => rule.startsWith("hard.") || rule.startsWith("agent.") || rule === "classify.unknown");
   const autoEligible = action === "ask" && (characterization.unknown || onlyRoleAsk) &&
     characterization.segments.every((segment) => segment.zone === "workspace" && segment.reversibility !== "irreversible") &&
-    !characterization.dynamic;
+    !characterization.dynamic &&
+    !(/\.\./.test(request.command ?? "") || /(?:^|\s)ln(?:\s|$)/i.test(request.command ?? ""));
   let approvers: GuardDecision["approvers"] = null;
   if (action === "ask") {
     approvers = request.source === "agent" && agentOnlyAsk

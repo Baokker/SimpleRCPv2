@@ -71,6 +71,27 @@ export function parseCommandPaths(command: string, cwd: string): ParsedOperation
       ? { commandName: name, action: name.startsWith("c") ? "write" : "move", targets: [target(cwd, values[0]!, "source"), target(cwd, values[1]!, "destination")] }
       : undefined;
   }
+  if (["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
+    const uploadTargets: ParsedTarget[] = [];
+    for (let index = 1; index < input.length; index += 1) {
+      const token = unquote(input[index]!);
+      const lower = token.toLowerCase();
+      const takesValue = lower === "-d" || lower.startsWith("--data") || lower === "-f" || lower.startsWith("--form") || lower === "-t" || lower === "--upload-file";
+      if (takesValue) {
+        const value = unquote(input[index + 1] ?? "");
+        if (value.startsWith("@")) uploadTargets.push(target(cwd, value.slice(1), "source"));
+        index += 1;
+        continue;
+      }
+      if (token.startsWith("@")) uploadTargets.push(target(cwd, token.slice(1), "source"));
+    }
+    return uploadTargets.length ? { commandName: name, action: "write", targets: uploadTargets } : undefined;
+  }
+  const redirects = [...command.matchAll(/(?:^|\s)(?:\d*)>>?\s*("[^"]*"|'[^']*'|\S+)/g)]
+    .map((match) => match[1])
+    .filter((value): value is string => Boolean(value))
+    .map((value) => target(cwd, value, "destination"));
+  if (redirects.length) return { commandName: name, action: "write", targets: redirects };
   return undefined;
 }
 
@@ -85,7 +106,7 @@ export function hasDynamicSyntax(command: string) {
       if (quote !== "single") return true;
     }
     if (quote) continue;
-    if (character !== undefined && "|;&<>*?[]{}()\n\r".includes(character)) return true;
+    if (character !== undefined && "|;&<*?[]{}()\n\r".includes(character)) return true;
   }
   const input = tokens(command).map(unquote);
   const executable = path.basename(input[0] ?? "").toLowerCase();
@@ -97,5 +118,7 @@ export function hasDynamicSyntax(command: string) {
   if (executable === "env" && input.length > 1) return true;
   const first = input[0] ?? "";
   if (first.includes("/") && !["/bin/", "/usr/bin/", "/sbin/", "/usr/sbin/"].some((prefix) => first.startsWith(prefix) && first.slice(prefix.length) && !first.slice(prefix.length).includes("/"))) return true;
-  return input.slice(1).some((value) => value.includes("../") || (value.startsWith("~") && !value.startsWith("~/"))) || (!parseCommandPaths(command, process.cwd()) && input.slice(1).some((value) => value.startsWith("/") || value.startsWith("./") || value.startsWith("~/")));
+  const pathCommands = new Set(["cd", "chdir", "pushd", "set-location", "sl", "rm", "del", "erase", "rd", "rmdir", "remove-item", "cat", "type", "gc", "get-content", "head", "tail", "less", "more", "grep", "rg", "find", "ls", "dir", "get-childitem", "gci", "mkdir", "md", "touch", "tee", "new-item", "ni", "set-content", "add-content", "mv", "move", "move-item", "mi", "ren", "rename-item", "cp", "copy", "copy-item", "ci"]);
+  const pathTokenHasEscapes = pathCommands.has(executable) && input.slice(1).some((value) => /["'\\]/.test(value));
+  return pathTokenHasEscapes || input.slice(1).some((value) => value.includes("../") || (value.startsWith("~") && !value.startsWith("~/"))) || (!parseCommandPaths(command, process.cwd()) && input.slice(1).some((value) => value.startsWith("/") || value.startsWith("./") || value.startsWith("~/")));
 }

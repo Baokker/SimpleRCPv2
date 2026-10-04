@@ -52,9 +52,9 @@ export function normalizeStoredRole(raw: string | undefined | null): string {
 }
 
 export function getOnlineOwners(
-  members: Array<{ id: string; online: boolean; profileRole?: string }>
+  members: Array<{ id: string; online: boolean; role?: string; profileRole?: string }>
 ) {
   return members.filter(
-    (member) => member.online && roleLevel(member.profileRole) === "owner"
+    (member) => member.online && roleLevel(member.role ?? member.profileRole) === "owner"
   );
 }

@@ -192,7 +192,7 @@ function WorkspacePage({
   const displayName = identity.displayName;
   const [member, setMember] = useState<RoomMember | null>(null);
   const [members, setMembers] = useState<RoomMember[]>([]);
-  const [scenarioRoles, setScenarioRoles] = useState<Awaited<ReturnType<typeof getGuardRoles>>["scenarios"]>([]);
+  const [scenarioRoles, setScenarioRoles] = useState<Awaited<ReturnType<typeof getGuardRoles>>["scenarios"]>();
   const [guardApprovals, setGuardApprovals] = useState<GuardApproval[]>([]);
   const [guardSettings, setGuardSettings] = useState<GuardSettings>();
   const [terminalControl, setTerminalControl] = useState<{ holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" }>({ holderMemberId: null });
@@ -237,6 +237,7 @@ function WorkspacePage({
   const [unseenApprovalIds, setUnseenApprovalIds] = useState<Set<string>>(() => new Set());
   const [guardNotice, setGuardNotice] = useState<{ title: string; detail: string; tone: "approval" | "model" }>();
   const [llmJudging, setLlmJudging] = useState(false);
+  const guardApprovalsRef = useRef<GuardApproval[]>([]);
   const socketRef = useRef<ClientSocket | null>(null);
   const membersRef = useRef<RoomMember[]>([]);
   const connectionRef = useRef<{ roomId: string; connectionId: string } | null>(
@@ -254,7 +255,7 @@ function WorkspacePage({
   );
 
   useEffect(() => {
-    void getGuardRoles().then((result) => setScenarioRoles(result.scenarios));
+    void getGuardRoles().then((result) => setScenarioRoles(result.scenarios)).catch(showWorkspaceError);
   }, []);
 
   useEffect(() => {
@@ -294,6 +295,7 @@ function WorkspacePage({
       setChatMessages(messages);
       setGuardSettings(settings);
       void listGuardApprovals(projectId).then((result) => {
+        guardApprovalsRef.current = result.approvals;
         setGuardApprovals(result.approvals);
         setUnseenApprovalIds(new Set(result.approvals.filter((approval) => approval.approverIds.includes(joined.member.id)).map((approval) => approval.id)));
       });
@@ -351,15 +353,17 @@ function WorkspacePage({
             );
           }
           if (message.type === "guard_approval") {
-            setGuardApprovals((current) => current.some((approval) => approval.id === message.approval.id) ? current : [...current, message.approval]);
+            guardApprovalsRef.current = guardApprovalsRef.current.some((approval) => approval.id === message.approval.id) ? guardApprovalsRef.current : [...guardApprovalsRef.current, message.approval];
+            setGuardApprovals(guardApprovalsRef.current);
             setLlmJudging(false);
-            if (message.approval.approverIds.includes(joined.member.id)) {
+            if (message.approval.noApprover || message.approval.approverIds.includes(joined.member.id)) {
               setUnseenApprovalIds((current) => new Set(current).add(message.approval.id));
-              setGuardNotice({ title: "Approval required in Team", detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "A guarded request is waiting", tone: "approval" });
+              setGuardNotice({ title: message.approval.noApprover ? "No owner is online" : "Approval required in Team", detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "A guarded request is waiting", tone: "approval" });
             }
           }
           if (message.type === "guard_approval_resolved") {
-            setGuardApprovals((current) => current.filter((approval) => approval.id !== message.approvalId));
+            guardApprovalsRef.current = guardApprovalsRef.current.filter((approval) => approval.id !== message.approvalId);
+            setGuardApprovals(guardApprovalsRef.current);
             setUnseenApprovalIds((current) => {
               const next = new Set(current);
               next.delete(message.approvalId);
@@ -410,16 +414,24 @@ function WorkspacePage({
               setLlmJudging(true);
               setGuardNotice({ title: "The model is reviewing a guarded request", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "Review in progress"), tone: "model" });
             }
+            if (message.event.type === "guard_llm_unavailable") {
+              setLlmJudging(false);
+              setGuardNotice({ title: "Model judgment unavailable", detail: String(message.event.payload?.reason ?? "Human approval is still required"), tone: "model" });
+            }
             if (message.event.type === "guard_action") {
               setLlmJudging(false);
               const llm = message.event.payload?.llm;
               if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
-                setGuardApprovals((current) => current.filter((approval) => !approvalMatchesGuardAction(approval, message.event)));
+                const resolvedApprovalIds = new Set(
+                  guardApprovalsRef.current
+                    .filter((approval) => approvalMatchesGuardAction(approval, message.event))
+                    .map((approval) => approval.id)
+                );
+                guardApprovalsRef.current = guardApprovalsRef.current.filter((approval) => !approvalMatchesGuardAction(approval, message.event));
+                setGuardApprovals(guardApprovalsRef.current);
                 setUnseenApprovalIds((current) => {
                   const next = new Set(current);
-                  for (const approval of guardApprovals) {
-                    if (approvalMatchesGuardAction(approval, message.event)) next.delete(approval.id);
-                  }
+                  for (const approvalId of resolvedApprovalIds) next.delete(approvalId);
                   return next;
                 });
                 const model = llm as Record<string, unknown>;
@@ -488,10 +500,10 @@ function WorkspacePage({
     window.localStorage.setItem(TERMINAL_HEIGHT_KEY, String(terminalHeight));
   }, [terminalHeight]);
   useEffect(() => {
-    if (!guardNotice) return;
-    const timer = window.setTimeout(() => setGuardNotice(undefined), 7_000);
-    return () => window.clearTimeout(timer);
-  }, [guardNotice]);
+    const original = document.title.replace(/^\(\d+\)\s*/, "");
+    document.title = unseenApprovalIds.size > 0 ? `(${unseenApprovalIds.size}) ${original}` : original;
+    return () => { document.title = original; };
+  }, [unseenApprovalIds]);
 
   function startResize(target: ResizeTarget, event: ReactPointerEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -971,10 +983,11 @@ function WorkspacePage({
           workspaceTree={tree}
           roomId={roomId}
           guardApprovals={guardApprovals}
+          scenarioRoles={scenarioRoles ?? []}
           unreadApprovalCount={unseenApprovalIds.size}
           llmJudging={llmJudging}
-          onApprovalSeen={() => setUnseenApprovalIds(new Set())}
-          onApprovalResolved={() => void listGuardApprovals(projectId).then((result) => setGuardApprovals(result.approvals)).catch(showWorkspaceError)}
+          onApprovalSeen={(approvalId) => setUnseenApprovalIds((current) => { const next = new Set(current); next.delete(approvalId); return next; })}
+          onApprovalResolved={() => void listGuardApprovals(projectId).then((result) => { guardApprovalsRef.current = result.approvals; setGuardApprovals(result.approvals); }).catch(showWorkspaceError)}
           controlHolderMemberId={terminalControl.holderMemberId}
           onControlState={(holderMemberId: string | null) => setTerminalControl((current) => ({ ...current, holderMemberId }))}
           agentRefreshVersion={agentRefreshVersion}
@@ -1001,7 +1014,8 @@ function WorkspacePage({
             theme={theme}
             canRun={Boolean(member)}
             memberId={member?.id ?? ""}
-            isOwner={scenarioRoles.some((role) => role.role === member?.profileRole && role.level === "owner")}
+            isOwner={scenarioRoles?.some((role) => role.role === member?.profileRole && role.level === "owner") ?? false}
+            rolesLoaded={Boolean(scenarioRoles)}
             guardSettings={guardSettings}
             onLlmModeChange={async (mode) => {
               const settings = await updateGuardLlmMode(projectId, mode);

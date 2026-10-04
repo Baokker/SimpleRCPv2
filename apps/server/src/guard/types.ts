@@ -45,6 +45,12 @@ export interface GuardDecision {
   unknown: boolean;
   autoEligible: boolean;
   approvers: "owners" | "initiator" | "self" | null;
+  outcome?: "allowed" | "approved" | "rejected" | "timeout" | "denied" | "busy";
+  approverName?: string;
+  snapshotId?: string;
+  command?: string;
+  noApprover?: boolean;
+  llmUnavailable?: boolean;
   llm?: {
     mode: "off" | "suggest" | "auto";
     risk: string;

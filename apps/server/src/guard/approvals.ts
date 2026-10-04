@@ -1,46 +1,64 @@
 import { nanoid } from "nanoid";
 import type { GuardDecision, GuardRequest } from "./types.js";
 
+export type ApprovalOutcome = "approved" | "rejected" | "timeout" | "cancelled";
+
 export interface PendingApproval {
   id: string;
   request: GuardRequest;
   decision: GuardDecision;
   createdAt: string;
+  expiresAt?: string;
   approverIds: string[];
+  noApprover?: boolean;
   resolve: (approved: boolean) => void;
-  timer: ReturnType<typeof setTimeout>;
+  resolveOutcome: (outcome: ApprovalOutcome) => void;
+  resolveApprover: (memberId: string | undefined) => void;
+  timer?: ReturnType<typeof setTimeout>;
 }
 
 export function createApprovalQueue(timeoutMs = 120_000) {
   const pending = new Map<string, PendingApproval>();
-  const listeners = new Set<(approval: Omit<PendingApproval, "resolve" | "timer">) => void>();
-  function enqueue(request: GuardRequest, decision: GuardDecision, approverIds: string[], requestTimeoutMs = timeoutMs) {
+  const listeners = new Set<(approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void>();
+  const resolutionListeners = new Set<(id: string, outcome: ApprovalOutcome) => void>();
+  function enqueue(request: GuardRequest, decision: GuardDecision, approverIds: string[], requestTimeoutMs: number | null | undefined = undefined, noApprover = false) {
     let resolve!: (approved: boolean) => void;
+    let resolveOutcome!: (outcome: ApprovalOutcome) => void;
+    let resolveApprover!: (memberId: string | undefined) => void;
     const result = new Promise<boolean>((nextResolve) => { resolve = nextResolve; });
+    const outcome = new Promise<ApprovalOutcome>((nextResolve) => { resolveOutcome = nextResolve; });
+    const approver = new Promise<string | undefined>((nextResolve) => { resolveApprover = nextResolve; });
     const id = nanoid(12);
-    const timer = setTimeout(() => finish(id, false), requestTimeoutMs);
-    const item: PendingApproval = { id, request, decision, createdAt: new Date().toISOString(), approverIds, resolve, timer };
+    const createdAt = new Date().toISOString();
+    const effectiveTimeoutMs = requestTimeoutMs === undefined ? timeoutMs : requestTimeoutMs;
+    const timer = effectiveTimeoutMs === null ? undefined : setTimeout(() => finish(id, "timeout"), effectiveTimeoutMs);
+    const expiresAt = effectiveTimeoutMs === null ? undefined : new Date(Date.parse(createdAt) + effectiveTimeoutMs).toISOString();
+    const item: PendingApproval = { id, request, decision, createdAt, expiresAt, approverIds, noApprover, resolve, resolveOutcome, resolveApprover, timer };
     pending.set(id, item);
-    const { resolve: _resolve, timer: _timer, ...publicItem } = item;
+    const { resolve: _resolve, resolveOutcome: _resolveOutcome, resolveApprover: _resolveApprover, timer: _timer, ...publicItem } = item;
     for (const listener of listeners) listener(publicItem);
-    return { id, result };
+    return { id, result, outcome, approver };
   }
-  function finish(id: string, approved: boolean, approverId?: string) {
+  function finish(id: string, outcome: ApprovalOutcome, approverId?: string) {
     const item = pending.get(id);
     if (!item) return false;
-    if (approverId && !item.approverIds.includes(approverId)) return false;
-    clearTimeout(item.timer);
+    if (approverId && item.approverIds.length > 0 && !item.approverIds.includes(approverId)) return false;
+    if (item.timer) clearTimeout(item.timer);
     pending.delete(id);
-    item.resolve(approved);
+    item.resolve(outcome === "approved");
+    item.resolveOutcome(outcome);
+    item.resolveApprover(approverId);
+    for (const listener of resolutionListeners) listener(id, outcome);
     return true;
   }
   return {
     enqueue,
-    approve(id: string, memberId: string) { return finish(id, true, memberId); },
-    reject(id: string, memberId: string) { return finish(id, false, memberId); },
-    cancelForRun(runId: string) { for (const item of pending.values()) if (item.request.agentRunId === runId) finish(item.id, false); },
-    list() { return [...pending.values()].map(({ resolve: _resolve, timer: _timer, ...item }) => item); },
-    onPending(listener: (approval: Omit<PendingApproval, "resolve" | "timer">) => void) { listeners.add(listener); return () => listeners.delete(listener); },
-    clear() { for (const item of pending.values()) finish(item.id, false); }
+    approve(id: string, memberId: string) { return finish(id, "approved", memberId); },
+    reject(id: string, memberId: string) { return finish(id, "rejected", memberId); },
+    cancelForRun(runId: string) { for (const item of pending.values()) if (item.request.agentRunId === runId) finish(item.id, "cancelled"); },
+    list() { return [...pending.values()].map(({ resolve: _resolve, resolveOutcome: _resolveOutcome, resolveApprover: _resolveApprover, timer: _timer, ...item }) => item); },
+    onPending(listener: (approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void) { listeners.add(listener); return () => listeners.delete(listener); },
+    onResolution(listener: (id: string, outcome: ApprovalOutcome) => void) { resolutionListeners.add(listener); return () => resolutionListeners.delete(listener); },
+    clear() { for (const item of pending.values()) finish(item.id, "cancelled"); }
   };
 }

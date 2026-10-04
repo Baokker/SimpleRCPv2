@@ -186,7 +186,9 @@ export function createOpenCodeRuntime(
             data: event.properties as Record<string, unknown>
           });
         }
-      })();
+      })().catch((error) => {
+        if (!controller.signal.aborted) console.error("OpenCode event subscription failed", error);
+      });
       return async () => {
         controller.abort();
         await completion.catch((error) => {

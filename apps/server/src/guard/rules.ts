@@ -26,7 +26,7 @@ export function segmentAction(segment: GuardSegment, level: Level): { action: Ac
   if (segment.zone === "protected") { action = stricter(action, "ask"); rules.push("hard.protected"); }
   if (segment.reversibility === "irreversible") {
     if (level === "owner") {
-      if (segment.capabilities.some((capability) => ["network", "privilege", "install"].includes(capability))) {
+      if (segment.capabilities.some((capability) => ["network", "privilege", "install", "delete"].includes(capability))) {
         action = stricter(action, "ask");
         rules.push("hard.owner.irreversible-external");
       }
