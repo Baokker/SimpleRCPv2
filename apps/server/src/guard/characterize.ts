@@ -150,7 +150,8 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   }
   const name = request.kind === "command" ? commandName(command) : request.kind;
   const parsed = request.kind === "command" ? parseCommandPaths(command, request.cwd) : undefined;
-  const dynamic = request.kind === "command" && (hasDynamicSyntax(command) || parsed?.dynamic === true);
+  const agentPipe = request.source === "agent" && /\|/.test(command) && /\b(curl|wget|ssh|scp)\b/i.test(command);
+  const dynamic = request.kind === "command" && !agentPipe && (hasDynamicSyntax(command) || parsed?.dynamic === true);
   const targetItems = parsed?.targets ?? request.paths?.map((target) => ({ raw: target, resolvedPath: path.resolve(request.cwd, target), role: "target" as const })) ?? [];
   const metadataReference = request.kind === "command" && command.includes("$SIMPLERCP_DATA_DIR");
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
@@ -159,11 +160,13 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   if (parsed?.action === "write" && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     capabilities = baseCapabilities.includes("exec") ? ["write"] : [...baseCapabilities, "write"];
   }
-  const reversibility = reversibilityFor(name, command, capabilities, request.kind);
+  const reversibility = agentPipe ? "reversible" : reversibilityFor(name, command, capabilities, request.kind);
   const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
     const segmentCapabilities = item.role === "destination" ? ["write"] as Capability[] : capabilities;
-    const segmentReversibility = legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
+    const segmentReversibility = agentPipe
+      ? "reversible" as const
+      : legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
       ? "irreversible" as const
       : reversibilityFor(name, command, segmentCapabilities, request.kind);
     return {
