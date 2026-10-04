@@ -190,6 +190,10 @@ export function createGuardService(options: {
     const approverIds = decision.approvers === "initiator" || decision.approvers === "self" ? [request.memberId] : owners.map((member) => member.id);
     const noApprover = decision.approvers === "owners" && owners.length === 0;
     decision.noApprover = noApprover;
+    if (request.agentRunId && cancelledRunIds.has(request.agentRunId)) {
+      const cancelledDecision = { ...decision, action: "deny" as const, outcome: "denied" as const, matchedRules: [...decision.matchedRules, "guard.run-cancelled"] };
+      return { request, decision: cancelledDecision, approved: false };
+    }
     const pendingTimeout = approvalTimeoutForMode(initial.policy.llmMode, input.timeoutMs, options.approvalTimeoutMs ?? 120_000);
     const pending = approvals.enqueue(request, decision, approverIds, pendingTimeout, noApprover);
     const pendingItem = approvals.list().find((item) => item.id === pending.id);

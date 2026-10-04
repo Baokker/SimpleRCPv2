@@ -79,6 +79,23 @@ describe("Agent Guard fake runtime permissions", () => {
     await waitForNoApproval(running.origin, ownerId, approval.id);
   }, 30_000);
 
+  it("does not enqueue a permission request after an Agent run is cancelled", async () => {
+    running = await startServer();
+    const memberId = await joinMember(running.origin, "student", "student-before-permission");
+    const run = await createRun(running.origin, memberId, "fake-permission=bash fake-delay=1000 fake-reply=never");
+    await waitForRun(running.origin, memberId, run.id, "running");
+    const response = await fetch(`${running.origin}/api/projects/demo/agent/runs/${run.id}/cancel`, {
+      method: "POST",
+      headers: headers(memberId),
+      body: JSON.stringify({ memberId })
+    });
+    expect(response.status).toBe(200);
+    await expect(waitForRun(running.origin, memberId, run.id, "cancelled")).resolves.toMatchObject({ status: "cancelled" });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const approvalsResponse = await fetch(`${running.origin}/api/projects/demo/guard/approvals`, { headers: headers(memberId) });
+    expect((await approvalsResponse.json() as { approvals: unknown[] }).approvals).toHaveLength(0);
+  }, 30_000);
+
   it("lets an owner who joins after enqueue approve the pending request", async () => {
     running = await startServer();
     const memberId = await joinMember(running.origin, "student", "student");

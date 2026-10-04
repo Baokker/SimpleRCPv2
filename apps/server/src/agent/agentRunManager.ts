@@ -609,6 +609,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         summary: message
       });
     } finally {
+      options.runtimeManager.find(projectId)?.guard.cancelRun(runId);
       activeRuns.delete(runId);
     }
   }
