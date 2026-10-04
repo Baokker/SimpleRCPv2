@@ -16,9 +16,11 @@ import {
   Trash2,
   Users
 } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
-import { downloadAgentTrace } from "../api";
+import { downloadAgentTrace, getServerInfo, getConflictGuardState } from "../api";
+import { ConflictGuardPanel } from "./ConflictGuardPanel";
+import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
 import type {
   AgentRun,
@@ -32,7 +34,7 @@ import type {
 } from "../types";
 import { formatTime } from "../format";
 
-type CollaborationTab = "chat" | "agent" | "team" | "project";
+type CollaborationTab = "chat" | "agent" | "team" | "project" | "conflict";
 type ActivityKind =
   | "join"
   | "leave"
@@ -74,6 +76,7 @@ export function CollaborationPanel({
   followingMemberId,
   onFollowMember,
   onOpenFile,
+  onOpenSymbol,
   onError,
   onLoadAgentTrace,
   onCreateTeamAgent,
@@ -99,12 +102,32 @@ export function CollaborationPanel({
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
+  onOpenSymbol(file: string, line: number): void;
   onError(error: unknown): void;
   onLoadAgentTrace(runId: string): void;
   onCreateTeamAgent(name: string, description?: string): Promise<void>;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
+  const [conflictState, setConflictState] = useState<ConflictGuardState>();
+  const errorHandler = useRef(onError);
+  errorHandler.current = onError;
+  useEffect(() => {
+    if (!member) return;
+    let active = true;
+    let timer: number | undefined;
+    async function refresh() {
+      const state = await getConflictGuardState(projectId);
+      if (!active) return;
+      setConflictState(state);
+      timer = window.setTimeout(() => { void refresh().catch((error) => errorHandler.current(error)); }, 1_000);
+    }
+    void getServerInfo().then((info) => {
+      if (!active || info.features.conflictGuard === "off") return;
+      return refresh();
+    }).catch((error) => errorHandler.current(error));
+    return () => { active = false; if (timer !== undefined) window.clearTimeout(timer); };
+  }, [projectId, member?.id]);
   const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
   const [teamAgentName, setTeamAgentName] = useState("");
   const [teamAgentDescription, setTeamAgentDescription] = useState("");
@@ -200,9 +223,11 @@ export function CollaborationPanel({
           <Users size={14} />
           Team
         </button>
+        {conflictState ? <button className={activeTab === "conflict" ? "active" : ""} onClick={() => setActiveTab("conflict")} data-testid="collab-tab-conflict">冲突预防</button> : null}
       </nav>
 
       <div className="collab-tab-body">
+        {activeTab === "conflict" && conflictState ? <ConflictGuardPanel state={conflictState} projectId={projectId} members={members} onOpenSymbol={onOpenSymbol} onError={onError} /> : null}
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
             <div className="team-agent-bar" data-testid="team-agent-bar">

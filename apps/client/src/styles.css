@@ -1386,6 +1386,16 @@ body[data-resizing="terminal"] {
   text-transform: uppercase;
 }
 
+.collab-section.conflict-guard-panel { display: block; overflow: auto; }
+.conflict-guard-panel h3 { margin: 12px 0 8px; }
+.conflict-symbol-list { padding: 0; list-style: none; }
+.conflict-symbol-list li { margin: 8px 0; }
+.conflict-symbol-list button, .conflict-candidate > button { text-align: left; overflow-wrap: anywhere; }
+.conflict-symbol-list small, .conflict-candidate > small { display: block; margin-top: 4px; color: var(--text-label); }
+.conflict-candidate { margin-bottom: 12px; }
+.conflict-pair-texts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 8px; }
+.conflict-pair-texts pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow: auto; }
+
 .collab-section {
   display: flex;
   flex: 1;

@@ -43,7 +43,8 @@ export function EditorArea({
   onSelectFile,
   onCloseFile,
   onLocalEdit,
-  onCursorChange
+  onCursorChange,
+  navigationTarget
 }: {
   openFiles: OpenFile[];
   activePath?: string;
@@ -54,6 +55,7 @@ export function EditorArea({
   theme: ThemeMode;
   remoteCursors: RemoteCursor[];
   saveState: "Saved" | "Saving" | "Sync failed";
+  navigationTarget?: { path: string; lineNumber: number; sequence: number };
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
   onLocalEdit(path: string, change: FileEditChange): void;
@@ -67,7 +69,20 @@ export function EditorArea({
   const monacoRef = useRef<typeof Monaco | null>(null);
   const decorationIdsRef = useRef<string[]>([]);
   const [editorVersion, setEditorVersion] = useState(0);
+  const appliedNavigation = useRef<number>();
   const activeFile = openFiles.find((file) => file.path === activePath);
+
+  useEffect(() => {
+    if (!navigationTarget || navigationTarget.path !== activePath || appliedNavigation.current === navigationTarget.sequence) return;
+    const editor = window.__simplercpEditors?.[navigationTarget.path];
+    const model = editor?.getModel();
+    if (!editor || !model || !window.__simplercpYjsSynced?.[navigationTarget.path]) return;
+    const lineNumber = Math.min(navigationTarget.lineNumber, model.getLineCount());
+    editor.setPosition({ lineNumber, column: model.getLineFirstNonWhitespaceColumn(lineNumber) || 1 });
+    editor.revealLineInCenter(navigationTarget.lineNumber);
+    editor.focus();
+    appliedNavigation.current = navigationTarget.sequence;
+  }, [activePath, editorVersion, navigationTarget]);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -127,6 +142,7 @@ export function EditorArea({
             canEdit={canEdit}
             theme={theme}
             onLocalEdit={onLocalEdit}
+            onReady={() => setEditorVersion((version) => version + 1)}
             onMount={(editor, monaco) => {
               editorRef.current = editor;
               monacoRef.current = monaco;
@@ -160,7 +176,8 @@ function CollaborativeEditor({
   canEdit,
   theme,
   onLocalEdit,
-  onMount
+  onMount,
+  onReady
 }: {
   file: OpenFile;
   projectId: string;
@@ -169,6 +186,7 @@ function CollaborativeEditor({
   canEdit: boolean;
   theme: ThemeMode;
   onLocalEdit(path: string, change: FileEditChange): void;
+  onReady(): void;
   onMount(
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco
@@ -288,6 +306,7 @@ function CollaborativeEditor({
             window.__simplercpYjsSynced ??= {};
             window.__simplercpYjsSynced[file.path] = true;
             setConnectionStatus("ready");
+            onReady();
           };
           provider.on("sync", (synced) => void bindWhenSynced(synced));
           provider.on(

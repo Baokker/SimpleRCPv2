@@ -16,6 +16,7 @@ import type {
   WorkspaceNode
 } from "./types";
 import { activeMemberId, rememberMember, storedMemberId } from "./memberIdentity";
+import type { ConflictGuardState, ConflictGuardSymbol } from "./conflictGuardTypes";
 
 export interface ServerInfo {
   ok: boolean;
@@ -23,11 +24,20 @@ export interface ServerInfo {
   publicOrigin: string;
   features: {
     terminal: boolean;
+    conflictGuard: string;
   };
 }
 
 export function getServerInfo() {
   return request<ServerInfo>("/api/health");
+}
+
+export function getConflictGuardState(projectId: string) {
+  return request<ConflictGuardState>(`${projectPath(projectId)}/conflict-guard/state`);
+}
+
+export function getConflictGuardSymbol(projectId: string, key: string) {
+  return request<ConflictGuardSymbol>(`${projectPath(projectId)}/conflict-guard/symbol?key=${encodeURIComponent(key)}`);
 }
 
 export async function getAgentSettings() {

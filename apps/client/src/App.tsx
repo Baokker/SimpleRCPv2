@@ -190,6 +190,7 @@ function WorkspacePage({
   const [tree, setTree] = useState<WorkspaceNode[]>([]);
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activePath, setActivePath] = useState<string>();
+  const [symbolNavigation, setSymbolNavigation] = useState<{ path: string; lineNumber: number; sequence: number }>();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [teamAgents, setTeamAgents] = useState<AgentSession[]>([]);
@@ -867,6 +868,7 @@ function WorkspacePage({
           theme={theme}
           remoteCursors={remoteCursors}
           saveState={saveState}
+          navigationTarget={symbolNavigation}
           onSelectFile={selectFile}
           onCloseFile={closeFile}
           onLocalEdit={reportFileEdit}
@@ -896,6 +898,9 @@ function WorkspacePage({
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
           onError={showWorkspaceError}
+          onOpenSymbol={(path, lineNumber) => {
+            void openFile(path).then(() => setSymbolNavigation((previous) => ({ path, lineNumber, sequence: (previous?.sequence ?? 0) + 1 }))).catch(showWorkspaceError);
+          }}
           onLoadAgentTrace={(runId) => void loadAgentTrace(runId).catch(showWorkspaceError)}
           onCreateTeamAgent={async (name, description) => {
             const response = await createTeamAgent(projectId, { name, description });
