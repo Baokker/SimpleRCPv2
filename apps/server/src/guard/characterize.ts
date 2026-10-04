@@ -103,9 +103,9 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
 export function characterize(request: GuardRequest, platformDataRoot: string, protectedPaths: string[] = [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], otherWorkspaceRoots: string[] = []): Characterization {
   const command = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
   const name = request.kind === "command" ? commandName(command) : request.kind;
-  const dynamic = request.kind === "command" && hasDynamicSyntax(command);
   const parsed = request.kind === "command" ? parseCommandPaths(command, request.cwd) : undefined;
-  const targets = parsed?.targets.map((item) => item.resolvedPath) ?? request.paths?.map((target) => path.resolve(request.cwd, target)) ?? [];
+  const dynamic = request.kind === "command" && (hasDynamicSyntax(command) || parsed?.dynamic === true);
+  const targetItems = parsed?.targets ?? request.paths?.map((target) => ({ raw: target, resolvedPath: path.resolve(request.cwd, target), role: "target" as const })) ?? [];
   const metadataReference = request.kind === "command" && command.includes("$SIMPLERCP_DATA_DIR");
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
   let capabilities: Capability[] = baseCapabilities;
@@ -115,13 +115,18 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   }
   const reversibility = reversibilityFor(name, command, capabilities, request.kind);
   const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
-  const segmentReversibility = legacy === "dangerous" && capabilities.every((capability) => capability === "exec") ? "irreversible" : reversibility;
-  const segments: GuardSegment[] = (targets.length ? targets : [request.cwd]).map((target, index) => ({
-    text: index === 0 ? command : target,
-    capabilities,
-    zone: zoneFor(target, request, platformDataRoot, protectedPaths, otherWorkspaceRoots),
-    reversibility: segmentReversibility
-  }));
+  const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
+    const segmentCapabilities = item.role === "destination" ? ["write"] as Capability[] : capabilities;
+    const segmentReversibility = legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
+      ? "irreversible" as const
+      : reversibilityFor(name, command, segmentCapabilities, request.kind);
+    return {
+      text: index === 0 ? command : item.resolvedPath,
+      capabilities: segmentCapabilities,
+      zone: zoneFor(item.resolvedPath, request, platformDataRoot, protectedPaths, otherWorkspaceRoots),
+      reversibility: segmentReversibility
+    };
+  });
   if (dynamic) segments.push({ text: command, capabilities: ["exec"], zone: "outside", reversibility: "irreversible" });
   if (metadataReference) segments.push({ text: "$SIMPLERCP_DATA_DIR", capabilities: ["read"], zone: "metadata", reversibility: "reversible" });
   return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic };

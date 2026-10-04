@@ -11,6 +11,7 @@ export interface ParsedOperation {
   commandName: string;
   action: "navigate" | "delete" | "read" | "write" | "move";
   targets: ParsedTarget[];
+  dynamic?: boolean;
 }
 
 function tokens(command: string) {
@@ -51,27 +52,24 @@ function positional(input: string[]) {
 }
 
 export function parseCommandPaths(command: string, cwd: string): ParsedOperation | undefined {
-  const input = tokens(command);
+  const redirections = extractRedirections(command, cwd);
+  const input = tokens(redirections.command);
   const name = (input[0] ?? "").replace(/^.*\//, "").replace(/^['\"]|['\"]$/g, "").toLowerCase();
   const values = positional(input);
+  let operation: ParsedOperation | undefined;
   if (["cd", "chdir", "pushd", "set-location", "sl"].includes(name)) {
-    return { commandName: name, action: "navigate", targets: [target(cwd, values[0] ?? "~", "location")] };
-  }
-  if (["rm", "del", "erase", "rd", "rmdir", "remove-item"].includes(name)) {
-    return values.length ? { commandName: name, action: "delete", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
-  }
-  if (["cat", "type", "gc", "get-content", "head", "tail", "less", "more", "grep", "rg", "find", "ls", "dir", "get-childitem", "gci"].includes(name)) {
-    return values.length ? { commandName: name, action: "read", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
-  }
-  if (["mkdir", "md", "touch", "tee", "new-item", "ni", "set-content", "add-content"].includes(name)) {
-    return values.length ? { commandName: name, action: "write", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
-  }
-  if (["mv", "move", "move-item", "mi", "ren", "rename-item", "cp", "copy", "copy-item", "ci"].includes(name)) {
-    return values.length >= 2
+    operation = { commandName: name, action: "navigate", targets: [target(cwd, values[0] ?? "~", "location")] };
+  } else if (["rm", "del", "erase", "rd", "rmdir", "remove-item"].includes(name)) {
+    operation = values.length ? { commandName: name, action: "delete", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
+  } else if (["cat", "type", "gc", "get-content", "head", "tail", "less", "more", "grep", "rg", "find", "ls", "dir", "get-childitem", "gci"].includes(name)) {
+    operation = values.length ? { commandName: name, action: "read", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
+  } else if (["mkdir", "md", "touch", "tee", "new-item", "ni", "set-content", "add-content"].includes(name)) {
+    operation = values.length ? { commandName: name, action: "write", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
+  } else if (["mv", "move", "move-item", "mi", "ren", "rename-item", "cp", "copy", "copy-item", "ci"].includes(name)) {
+    operation = values.length >= 2
       ? { commandName: name, action: name.startsWith("c") ? "write" : "move", targets: [target(cwd, values[0]!, "source"), target(cwd, values[1]!, "destination")] }
       : undefined;
-  }
-  if (["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
+  } else if (["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     const uploadTargets: ParsedTarget[] = [];
     for (let index = 1; index < input.length; index += 1) {
       const token = unquote(input[index]!);
@@ -85,14 +83,68 @@ export function parseCommandPaths(command: string, cwd: string): ParsedOperation
       }
       if (token.startsWith("@")) uploadTargets.push(target(cwd, token.slice(1), "source"));
     }
-    return uploadTargets.length ? { commandName: name, action: "write", targets: uploadTargets } : undefined;
+    operation = uploadTargets.length ? { commandName: name, action: "write", targets: uploadTargets } : undefined;
   }
-  const redirects = [...command.matchAll(/(?:^|\s)(?:\d*)>>?\s*("[^"]*"|'[^']*'|\S+)/g)]
-    .map((match) => match[1])
-    .filter((value): value is string => Boolean(value))
-    .map((value) => target(cwd, value, "destination"));
-  if (redirects.length) return { commandName: name, action: "write", targets: redirects };
-  return undefined;
+  if (redirections.targets.length) {
+    operation = operation
+      ? { ...operation, targets: [...operation.targets, ...redirections.targets], dynamic: operation.dynamic || redirections.dynamic }
+      : { commandName: name, action: "write", targets: redirections.targets, dynamic: redirections.dynamic };
+  }
+  return operation;
+}
+
+function extractRedirections(command: string, cwd: string) {
+  const targets: ParsedTarget[] = [];
+  let dynamic = false;
+  let stripped = "";
+  let quote: "single" | "double" | undefined;
+  for (let index = 0; index < command.length;) {
+    const character = command[index]!;
+    if (character === "\\" && quote !== "single") {
+      stripped += command.slice(index, index + 2);
+      index += 2;
+      continue;
+    }
+    if (character === "'" && quote !== "double") {
+      quote = quote === "single" ? undefined : "single";
+      stripped += character;
+      index += 1;
+      continue;
+    }
+    if (character === '"' && quote !== "single") {
+      quote = quote === "double" ? undefined : "double";
+      stripped += character;
+      index += 1;
+      continue;
+    }
+    if (!quote && (index === 0 || /\s/.test(command[index - 1]!))) {
+      const operator = command.slice(index).match(/^(?:\d+)?(?:&>|>>|2>|>\|?|>)/)?.[0];
+      if (operator) {
+        let targetStart = index + operator.length;
+        while (/\s/.test(command[targetStart] ?? "")) targetStart += 1;
+        let targetEnd = targetStart;
+        if (command[targetStart] === "'" || command[targetStart] === '"') {
+          const delimiter = command[targetStart]!;
+          targetEnd += 1;
+          while (targetEnd < command.length && command[targetEnd] !== delimiter) targetEnd += 1;
+          if (targetEnd < command.length) targetEnd += 1;
+        } else {
+          while (targetEnd < command.length && !/\s/.test(command[targetEnd]!)) targetEnd += 1;
+        }
+        const raw = command.slice(targetStart, targetEnd);
+        if (raw) {
+          targets.push(target(cwd, raw, "destination"));
+          dynamic ||= /["'\\$`]/.test(raw);
+        }
+        stripped += " ".repeat(Math.max(1, targetEnd - index));
+        index = targetEnd;
+        continue;
+      }
+    }
+    stripped += character;
+    index += 1;
+  }
+  return { command: stripped, targets, dynamic };
 }
 
 export function hasDynamicSyntax(command: string) {
