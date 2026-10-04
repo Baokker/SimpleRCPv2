@@ -13,7 +13,7 @@
 
 ## 测试结果
 
-`@simplercp/conflict-guard` 测试通过：2 个测试文件、7 项测试。服务端排除 `openCodeRuntime.integration.test.ts` 后通过：27 个测试文件、95 项测试；冲突防护新增集成测试与 `off` 测试通过：3 项测试。`pnpm -r build` 通过，演示测试通过 2 项，`CONFLICT_GUARD=off pnpm test:collab` 与 `CONFLICT_GUARD=observe pnpm test:collab` 均通过 2 项。
+`@simplercp/conflict-guard` 测试通过：2 个测试文件、7 项测试。服务端测试通过：28 个测试文件、97 项测试；冲突防护新增集成测试与 `off` 测试通过：3 项测试。`pnpm -r build` 通过，演示测试通过 2 项，`CONFLICT_GUARD=off pnpm test:collab` 与 `CONFLICT_GUARD=observe pnpm test:collab` 均通过 2 项。
 
 ## 手动验证观察
 
