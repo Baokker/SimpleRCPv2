@@ -1,15 +1,18 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import http from "node:http";
+import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
 import { chromium, expect } from "@playwright/test";
-import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
 import WebSocket from "ws";
 import { createApp } from "../src/createApp.js";
 import { attachRealtimeServer } from "../src/realtime.js";
 import { loadConfig } from "../src/config.js";
 import type { ProjectRuntime } from "../src/projectRuntime.js";
+
+const require = createRequire(import.meta.url);
+const Y = require("yjs") as typeof import("yjs");
+const { WebsocketProvider } = require("y-websocket") as typeof import("y-websocket");
 
 const config = loadConfig();
 if (!config.agent?.apiKey) throw new Error("DeepSeek credentials are required for this verification");
@@ -24,8 +27,8 @@ const realtime = attachRealtimeServer(server, app.locals.runtimeManager, app.loc
 await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
 const port = (server.address() as { port: number }).port;
 const origin = `http://127.0.0.1:${port}`;
-const providers: WebsocketProvider[] = [];
-const docs: Y.Doc[] = [];
+const providers: Array<InstanceType<typeof WebsocketProvider>> = [];
+const docs: Array<InstanceType<typeof Y.Doc>> = [];
 const clientPort = 5185;
 const clientEnvironment = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.includes("API_KEY")));
 const client = spawn("pnpm", ["--filter", "@simplercp/client", "exec", "vite", "--host", "127.0.0.1", "--port", String(clientPort), "--strictPort"], {

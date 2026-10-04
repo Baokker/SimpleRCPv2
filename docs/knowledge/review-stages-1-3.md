@@ -36,11 +36,11 @@
 | `pnpm test:e2e:knowledge` | 10 项通过 | `artifacts/review-e2e-knowledge-final.log` |
 | replay CLI | `edit.overwritten` 和 `chat.dense` 各一条 | `artifacts/review-replayed-suggestions.jsonl`、`review-replay-counts.json` |
 
-服务端六项捕获集成测试使用真实 WebSocket、Yjs 和 HTTP 接口。录制会话持续 120,011 ms，包含 65 条事件；线上与回放生成的建议类型、时间、actors 和候选锚点逐项相同，`comparison.json` 中的 `matched` 为 `true`。记录位于 `artifacts/knowledge-stage3-session/`。
+服务端六项捕获集成测试使用真实 WebSocket、Yjs 和 HTTP 接口。录制会话持续约 120 秒，包含 65 条事件；线上与回放生成的建议类型、时间、actors 和候选锚点逐项相同，`comparison.json` 中的 `matched` 为 `true`。记录位于 `artifacts/knowledge-stage3-session/`。
 
 知识包的捕获测试共 49 项。锚点基准语料从 Git 跟踪文件中采集，测试临时文件与生成目录不参与语料选择。
 
-最终差异通过 `git diff --check`。已配置凭据检查覆盖 Git 跟踪文件与本次验证日志，共 293 个文件，文本匹配数量为零；检查结果保存在 `artifacts/review-credential-check.json`。
+最终差异通过 `git diff --check`。已配置凭据检查覆盖 Git 跟踪文件与本次验证日志，共 297 个文件，文本匹配数量为零；检查结果保存在 `artifacts/review-credential-check.json`。
 
 知识浏览器回归覆盖真实 Demo 的六类分组、hover 打开卡片与显示隐藏面板、双浏览器范围跟随、gutter 当前选区重新锚定、导览顺序、时间线事件及时间顺序、个人可见性、默认 Chat 中的 Pin、双方 Inbox 与跨成员确认、风险提醒、聊天多选。
 
@@ -55,6 +55,17 @@
 | `FV-11-pin-editor.png` | 选区 Pin 打开的编辑器。 |
 | `S3-1-overwrite-inbox-ada.png`、`S3-2-confirmed-team-card.png` | 覆写建议及跨成员确认结果。 |
 | `S3-3-FV-11-risk-warning.png`、`S3-4-selected-chat.png` | 风险提醒与选中聊天创建的建议。 |
+
+## Node 协作运行时验证
+
+捕获测试与模型验收脚本通过 `createRequire` 加载 CommonJS 版本的 Yjs 和 `WebsocketProvider`。服务端文档、知识锚点与 Node 客户端共用相同的模块实例。捕获测试在真实连接同步完成后校验服务端文档为同一个 `Y.Doc` 构造函数的实例。
+
+| 验证 | 结果 | 记录 |
+| --- | --- | --- |
+| `pnpm build` | 全部包通过 | `artifacts/review-yjs-build.log` |
+| 协作文档、知识接口、捕获测试 | 3 个文件、17 项通过 | `artifacts/review-yjs-after.log` |
+| 模型验收脚本严格类型检查 | 通过，继承服务端配置并包含浏览器回调的 DOM 类型 | `artifacts/review-yjs-script-types.log` |
+| 真实会话与回放 | 65 条事件，类型、时间、actors、候选锚点一致；CLI 输出两条建议 | `artifacts/knowledge-stage3-session/comparison.json`、`review-yjs-replay-counts.json` |
 
 ## 保留边界
 

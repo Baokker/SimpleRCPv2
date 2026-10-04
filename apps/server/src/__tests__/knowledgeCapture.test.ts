@@ -1,16 +1,20 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import http from "node:http";
+import { createRequire } from "node:module";
 import { afterEach, describe, expect, it } from "vitest";
-import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
 import WebSocket from "ws";
 import { replayEvents, type CaptureEvent, type CaptureSuggestion } from "@simplercp/knowledge";
 import { createApp } from "../createApp.js";
 import { attachRealtimeServer } from "../realtime.js";
 import { getProjectMetadataPath } from "../projects.js";
+import { documentName } from "../collaborativeDocuments.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 import type { ProjectRuntime } from "../projectRuntime.js";
+
+const require = createRequire(import.meta.url);
+const Y = require("yjs") as typeof import("yjs");
+const { WebsocketProvider } = require("y-websocket") as typeof import("y-websocket");
 
 const cleanup: Array<() => Promise<void>> = [];
 async function waitUntil(predicate: () => boolean | Promise<boolean>) {
@@ -35,8 +39,8 @@ async function start(knowledge: "capture" | "off" = "capture") {
   const port = (server.address() as { port: number }).port;
   const origin = `http://127.0.0.1:${port}`;
   const sockets: WebSocket[] = [];
-  const providers: WebsocketProvider[] = [];
-  const docs: Y.Doc[] = [];
+  const providers: Array<InstanceType<typeof WebsocketProvider>> = [];
+  const docs: Array<InstanceType<typeof Y.Doc>> = [];
   cleanup.push(async () => {
     for (const provider of providers) provider.destroy();
     for (const doc of docs) doc.destroy();
@@ -57,6 +61,8 @@ async function start(knowledge: "capture" | "off" = "capture") {
     const provider = new WebsocketProvider(`ws://127.0.0.1:${port}/yjs/demo`, `${runtime.room.id}:${file}`, doc, { params: { memberId }, WebSocketPolyfill: WebSocket as unknown as typeof globalThis.WebSocket, disableBc: true });
     providers.push(provider);
     await waitUntil(() => provider.synced);
+    const serverDocument = await runtime.documents.getPreparedDocument(documentName(runtime.room.id, file, "demo"));
+    expect(serverDocument).toBeInstanceOf(Y.Doc);
     return doc.getText("content");
   }
   async function presence(memberId: string) {
@@ -175,7 +181,7 @@ describe("knowledge capture with real collaboration", () => {
     const [a, b] = await Promise.all([s.presence(ada), s.presence(bob)]);
     const risk = await s.runtime.knowledge!.create({ memberId: ada, displayName: "Ada" }, { type: "risk", title: "package.json alpha dependency compatibility", summary: "package.json alpha beta dependencies require compatibility checks", content: "package.json alpha beta dependencies require compatibility checks", scope: "personal", tags: ["alpha", "beta", "dependencies"] });
     const first = await s.connection(ada, "package.json"); const second = await s.connection(bob, "package.json");
-    const replace = (text: Y.Text, value: string) => text.doc!.transact(() => { text.delete(0, text.length); text.insert(0, value); });
+    const replace = (text: InstanceType<typeof Y.Text>, value: string) => text.doc!.transact(() => { text.delete(0, text.length); text.insert(0, value); });
     replace(first, '{"dependencies":{"alpha":"1"}}');
     await waitUntil(() => a.messages.some(message => message.type === "knowledge_risk_warning" && message.cardId === risk.id));
     await waitUntil(() => second.toString().includes("alpha"));

@@ -4,6 +4,7 @@
 
 - `packages/knowledge/src/capture/` 新增规范化事件、注入时钟、编辑区间归属、捕获引擎、共现推断、通知策略及 replay CLI。六类自动触发共享线上与离线计算代码，全部阈值通过配置对象提供。
 - `apps/server/src/knowledge/attribution.ts` 维护 WebSocket 身份映射与 Y.Text 镜像，使用真实 `transaction.origin` 识别成员、文件系统和未知来源。原有 Yjs 接收与文本持久化流程继续负责协作文档。
+- Node 侧捕获测试与模型验收脚本通过 CommonJS 入口加载 Yjs 和 `WebsocketProvider`，与服务端文档工具、知识锚点服务共用同一套 `Doc` 构造函数。
 - `captureService.ts` 接收文档、光标、聊天、文件变化与成员状态，录制事件，保存 Inbox，检索重复知识和风险卡片，处理草稿、确认前证据、复现、未读状态及提示限制。模型凭据只用于服务端 HTTP 客户端。
 - `projectRuntime.ts`、`realtime.ts`、`collaborativeDocuments.ts`、`config.ts` 和 `createApp.ts` 接入捕获生命周期。`KNOWLEDGE=off` 不创建捕获服务、不注册捕获观察者、不生成 knowledge 文件，接口返回 `404`。
 - `knowledgeService.ts` 和 `knowledgeRoutes.ts` 增加草稿创建、候选范围锚点、草稿作者修改、复现记录、确认耗时和 Inbox REST。并发处理同一建议返回 `409`，一条建议只生成一张草稿。
@@ -86,5 +87,4 @@ Playwright 直接保存网页内容，截图之前使用 DOM 断言核对场景�
 - 数字触发使用 TypeScript scanner 判断字面量与注释；数字的领域含义和多文件引用之间的语义关系由草稿与人工确认补充。引用搜索采用文本匹配，不提供 AST 符号关联。
 - 录制文件和已知文件文本会随项目会话增长；归属、活动、聊天及恢复候选按窗口清理，长期实验记录需要在运行结束后保存或归档。
 - `KNOWLEDGE_RECORD_EVENTS=false` 保留 Inbox 持久化，重新启动时不能恢复未录制的触发历史。已录制项目继续使用相同 `capture-config.json`；更改实验配置需要使用新的录制目录。
-- 运行时加载 y-websocket CommonJS 与 Yjs ESM 时仍输出重复加载提示；真实连接、归属、锚点和回放测试均通过。
 - 模型生成质量需要成员核对，当前真实模型观察只包含上述两个会话建议；K1 实验质量指标需要独立的标注数据集。
