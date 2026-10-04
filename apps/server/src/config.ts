@@ -21,6 +21,7 @@ export interface ServerConfig {
     model: string;
     openCodePort?: number;
     runTimeoutMs?: number;
+    maxConcurrentRuns?: number;
   };
 }
 
@@ -58,6 +59,10 @@ export function loadConfig(
   const runTimeoutMs = Number(env.SIMPLERCP_AGENT_RUN_TIMEOUT_MS ?? 600_000);
   if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 1) {
     throw new Error("SIMPLERCP_AGENT_RUN_TIMEOUT_MS must be a positive integer");
+  }
+  const maxConcurrentRuns = Number(env.SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS ?? 3);
+  if (!Number.isInteger(maxConcurrentRuns) || maxConcurrentRuns < 1) {
+    throw new Error("SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS must be a positive integer");
   }
   const terminalEnabled = readBoolean(
     env.SIMPLERCP_TERMINAL_ENABLED,
@@ -104,7 +109,8 @@ export function loadConfig(
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,
-      runTimeoutMs
+      runTimeoutMs,
+      maxConcurrentRuns
     }
   };
   return config;

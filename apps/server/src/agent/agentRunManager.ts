@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import type {
   AgentRun,
@@ -30,6 +31,7 @@ import {
 import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
 import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
+import { createAgentWriteLedger, type AgentWriteLedger } from "./agentWriteLedger.js";
 
 interface AgentRunManagerOptions {
   members: MemberStore;
@@ -40,6 +42,7 @@ interface AgentRunManagerOptions {
   apiKey?: string;
   sensitiveValues?: string[];
   runTimeoutMs: number;
+  maxConcurrentRuns: number;
   appendActivity?: (
     projectId: string,
     input: Omit<EventRecord, "id" | "timestamp">
@@ -50,6 +53,10 @@ interface ProjectQueue {
   runIds: string[];
   processing: boolean;
   completion?: Promise<void>;
+  activeRunIds: Set<string>;
+  activeSessionIds: Set<string>;
+  runningPromises: Set<Promise<void>>;
+  workspacePreparing: boolean;
 }
 
 interface ActiveRun {
@@ -89,6 +96,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const traces = new Map<string, TraceStore>();
   const queues = new Map<string, ProjectQueue>();
   const activeRuns = new Map<string, ActiveRun>();
+  const writeLedger: AgentWriteLedger = createAgentWriteLedger();
+  const runConcurrentIds = new Map<string, Set<string>>();
+  const recordedOverlaps = new Set<string>();
   const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
   let disposing = false;
@@ -129,7 +139,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   function getQueue(projectId: string) {
     const existing = queues.get(projectId);
     if (existing) return existing;
-    const queue: ProjectQueue = { runIds: [], processing: false };
+    const queue: ProjectQueue = {
+      runIds: [],
+      processing: false,
+      activeRunIds: new Set(),
+      activeSessionIds: new Set(),
+      runningPromises: new Set(),
+      workspacePreparing: false
+    };
     queues.set(projectId, queue);
     return queue;
   }
@@ -214,15 +231,64 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (queue.processing) return queue.completion;
     queue.processing = true;
     queue.completion = (async () => {
-      while (queue.runIds.length > 0 && !disposing) {
-        const runId = queue.runIds.shift();
-        if (!runId) continue;
-        await executeRun(projectId, runId);
+      while (!disposing && queue.activeRunIds.size < options.maxConcurrentRuns) {
+        const candidate = await findRunnableRun(projectId, queue);
+        if (!candidate) break;
+        const { runId, sessionId, requiresWorkspacePreparation } = candidate;
+        queue.runIds = queue.runIds.filter((queuedRunId) => queuedRunId !== runId);
+        queue.activeRunIds.add(runId);
+        queue.activeSessionIds.add(sessionId);
+        if (requiresWorkspacePreparation) queue.workspacePreparing = true;
+        runConcurrentIds.set(runId, new Set([...queue.activeRunIds].filter((id) => id !== runId)));
+        options.runtime.setActiveRunCount?.(queue.activeRunIds.size);
+        let runningPromise: Promise<void>;
+        runningPromise = executeRun(projectId, runId).finally(() => {
+          queue.activeRunIds.delete(runId);
+          queue.activeSessionIds.delete(sessionId);
+          if (requiresWorkspacePreparation) queue.workspacePreparing = false;
+          runConcurrentIds.delete(runId);
+          queue.runningPromises.delete(runningPromise);
+          options.runtime.setActiveRunCount?.(queue.activeRunIds.size);
+          void processQueue(projectId);
+        });
+        queue.runningPromises.add(runningPromise);
       }
     })().finally(() => {
       queue.processing = false;
     });
     return queue.completion;
+  }
+
+  async function findRunnableRun(projectId: string, queue: ProjectQueue) {
+    if (queue.workspacePreparing) return undefined;
+    const store = getStore(projectId);
+    let workspaceNeedsPreparation = false;
+    for (const runId of queue.runIds) {
+      const run = await store.get(runId);
+      if (!run || run.status !== "queued" || !run.sessionId) continue;
+      const session = await getSessionStore(projectId).get(run.sessionId);
+      if (!session || queue.activeSessionIds.has(session.id)) continue;
+      if (session.scope === "team" && !workspaceNeedsPreparation) {
+        const project = options.runtimeManager.get(projectId).project;
+        workspaceNeedsPreparation = await workspaceRepositoryMissing(project.workspacePath);
+        if (workspaceNeedsPreparation) {
+          if (queue.activeRunIds.size > 0) return undefined;
+          return { runId, sessionId: session.id, requiresWorkspacePreparation: true };
+        }
+      }
+      return { runId, sessionId: session.id, requiresWorkspacePreparation: false };
+    }
+    return undefined;
+  }
+
+  async function workspaceRepositoryMissing(workspacePath: string) {
+    try {
+      await fs.stat(path.join(workspacePath, ".git"));
+      return false;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+      throw error;
+    }
   }
 
   async function recordCancelledFileChanges(
@@ -258,7 +324,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         summary: `Runtime diff failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
       });
     }
-    const fileChanges = mergeFileChanges(workspaceChanges, runtimeChanges);
+    const fileChanges = await attributeFileChanges(
+      projectId,
+      runId,
+      mergeFileChanges(workspaceChanges, runtimeChanges),
+      new Set([
+        ...(runConcurrentIds.get(runId) ?? []),
+        ...[...getQueue(projectId).activeRunIds].filter((id) => id !== runId)
+      ])
+    );
+    await recordAgentOverlaps(projectId, runId);
     await updateRun(projectId, runId, { fileChanges });
     if (fileChanges.length > 0) {
       await appendTrace(projectId, runId, {
@@ -266,6 +341,77 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed before cancellation`,
         data: { files: fileChanges }
       });
+    }
+  }
+
+  async function attributeFileChanges(
+    projectId: string,
+    runId: string,
+    changes: AgentRun["fileChanges"],
+    concurrentRunIds: Set<string>,
+    memberChangedFiles = new Set<string>()
+  ) {
+    const entries = writeLedger.list(projectId, runId);
+    const toolFiles = new Set(entries.map((entry) => entry.file));
+    const result = (changes ?? []).map((change) => ({
+      ...change,
+      attribution: toolFiles.has(change.file)
+        ? "tool" as const
+        : concurrentRunIds.size > 0 || memberChangedFiles.has(change.file)
+          ? "ambiguous" as const
+          : "exclusive" as const
+    }));
+    const knownFiles = new Set(result.map((change) => change.file));
+    for (const entry of entries) {
+      if (!knownFiles.has(entry.file)) {
+        result.push({ file: entry.file, additions: 0, deletions: 0, status: "modified", attribution: "tool" });
+      }
+    }
+    for (const change of result) {
+      if (change.attribution !== "ambiguous") continue;
+      await appendTrace(projectId, runId, {
+        type: "unattributed_change",
+        summary: `${change.file} changed while other activity was present`,
+        data: { file: change.file, concurrentRunIds: [...concurrentRunIds] }
+      });
+    }
+    return result;
+  }
+
+  async function recordAgentOverlaps(projectId: string, runId: string) {
+    const ownEntries = writeLedger.list(projectId, runId);
+    if (ownEntries.length === 0) return;
+    const ownFiles = new Set(ownEntries.map((entry) => entry.file));
+    for (const [otherRunId, entries] of writeLedger.listProject(projectId)) {
+      if (otherRunId === runId) continue;
+      for (const other of entries) {
+        if (!ownFiles.has(other.file)) continue;
+        const own = ownEntries.find((entry) => entry.file === other.file);
+        if (!own) continue;
+        const overlapKey = [runId, otherRunId].sort().join(":") + `:${other.file}`;
+        if (recordedOverlaps.has(overlapKey)) continue;
+        recordedOverlaps.add(overlapKey);
+        await appendTrace(projectId, runId, {
+          type: "agent_overlap",
+          summary: `${other.file} was written by another Agent run`,
+          data: {
+            file: other.file,
+            otherRunId,
+            thisCompletedAt: own.completedAt,
+            otherCompletedAt: other.completedAt
+          }
+        });
+        await appendTrace(projectId, otherRunId, {
+          type: "agent_overlap",
+          summary: `${other.file} was written by another Agent run`,
+          data: {
+            file: other.file,
+            otherRunId: runId,
+            thisCompletedAt: other.completedAt,
+            otherCompletedAt: own.completedAt
+          }
+        });
+      }
     }
   }
 
@@ -318,14 +464,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       );
       const revisionsBefore = projectRuntime.documents.getRevisions();
       const startedAt = new Date().toISOString();
+      const concurrentRunIds = [...(runConcurrentIds.get(runId) ?? [])];
       let run = await updateRun(projectId, runId, {
         status: "running",
-        startedAt
+        startedAt,
+        model: options.runtime.getCurrentModel?.() ?? current.model
       });
       if (workspacePrepared && run.runtimeSessionId) run = await updateRun(projectId, runId, { runtimeSessionId: undefined });
       await appendTrace(projectId, runId, {
         type: "run_started",
-        summary: "Agent run started"
+        summary: "Agent run started",
+        data: { concurrentRunIds }
       });
 
       let runtimeSessionId = workspacePrepared ? undefined : run.runtimeSessionId ?? session.runtimeSessionId;
@@ -395,6 +544,19 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: `opencode.${event.type}`,
             data: event.data
           });
+          const entry = await writeLedger.record(
+            projectId,
+            runId,
+            projectRuntime.project.workspacePath,
+            event.data
+          );
+          if (entry) {
+            await appendTrace(projectId, runId, {
+              type: "agent_write",
+              summary: `${entry.file} written by Agent tool`,
+              data: { ...entry }
+            });
+          }
         }
       );
 
@@ -429,14 +591,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const workspaceAfter = await createAgentWorkspaceSnapshot(
         projectRuntime.project.workspacePath
       );
-      const fileChanges = mergeFileChanges(
+      let fileChanges = mergeFileChanges(
         compareAgentWorkspaceSnapshots(workspaceBefore, workspaceAfter),
         runtimeFileChanges
       );
+      const memberChangedFiles = new Set<string>();
       for (const change of fileChanges) {
         const previousRevision = revisionsBefore.get(change.file) ?? 0;
         const currentRevision = projectRuntime.documents.getRevision(change.file);
         if (currentRevision <= previousRevision) continue;
+        memberChangedFiles.add(change.file);
         await appendTrace(projectId, runId, {
           type: "concurrent_change",
           summary: `${change.file} was edited by a member while the Agent was running`,
@@ -447,6 +611,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           }
         });
       }
+      fileChanges = await attributeFileChanges(
+        projectId,
+        runId,
+        fileChanges,
+        new Set([
+          ...concurrentRunIds,
+          ...[...getQueue(projectId).activeRunIds].filter((id) => id !== runId)
+        ]),
+        memberChangedFiles
+      );
+      await recordAgentOverlaps(projectId, runId);
       if (fileChanges.length > 0) {
         await appendTrace(projectId, runId, {
           type: "file_changes",
@@ -810,7 +985,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       return (
         activeRuns.size > 0 ||
         [...queues.values()].some(
-          (queue) => queue.processing || queue.runIds.length > 0
+          (queue) => queue.processing || queue.activeRunIds.size > 0 || queue.runIds.length > 0
         )
       );
     },
@@ -859,6 +1034,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         })
       );
       if (queue.completion) await queue.completion;
+      while (queue.runningPromises.size > 0) {
+        await Promise.all([...queue.runningPromises]);
+      }
       queues.delete(projectId);
       stores.delete(projectId);
       for (const key of traces.keys()) {
@@ -881,6 +1059,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           .map((queue) => queue.completion)
           .filter((completion): completion is Promise<void> => Boolean(completion))
       );
+      while ([...queues.values()].some((queue) => queue.runningPromises.size > 0)) {
+        await Promise.all(
+          [...queues.values()].flatMap((queue) => [...queue.runningPromises])
+        );
+      }
       listeners.clear();
     }
   };

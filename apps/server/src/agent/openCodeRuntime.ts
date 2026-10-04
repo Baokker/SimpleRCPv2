@@ -24,6 +24,7 @@ export function createOpenCodeRuntime(
 ): AgentRuntime {
   let process = createProcess();
   let processModel = options.getSettings().model;
+  let activeRunCount = 0;
 
   function createProcess() {
     const settings = options.getSettings();
@@ -38,6 +39,7 @@ export function createOpenCodeRuntime(
   async function ensureCurrentProcess() {
     const model = options.getSettings().model;
     if (model !== processModel) {
+      if (activeRunCount > 0) return process;
       await process.dispose();
       process = createProcess();
       processModel = model;
@@ -62,6 +64,15 @@ export function createOpenCodeRuntime(
   }
 
   return {
+    setActiveRunCount(count: number) {
+      activeRunCount = count;
+      if (activeRunCount === 0 && options.getSettings().model !== processModel) {
+        void ensureCurrentProcess();
+      }
+    },
+    getCurrentModel() {
+      return processModel;
+    },
     async prepareWorkspace(workspacePath: string) {
       return ensureWorkspaceRepository(workspacePath);
     },
@@ -72,7 +83,8 @@ export function createOpenCodeRuntime(
           runtime: "opencode",
           state: "disabled",
           model: settings.model,
-          apiKeyConfigured: settings.apiKeyConfigured
+          apiKeyConfigured: settings.apiKeyConfigured,
+          ...(settings.model !== processModel && activeRunCount > 0 ? { modelChangePending: true } : {})
         };
       }
       const current = await ensureCurrentProcess();
@@ -82,7 +94,8 @@ export function createOpenCodeRuntime(
         state: "ready",
         version: running.version,
         model: settings.model,
-        apiKeyConfigured: settings.apiKeyConfigured
+        apiKeyConfigured: settings.apiKeyConfigured,
+        ...(settings.model !== processModel && activeRunCount > 0 ? { modelChangePending: true } : {})
       };
     },
     async createSession(input) {
@@ -94,7 +107,7 @@ export function createOpenCodeRuntime(
           title: input.title,
           agent: "build",
           model: {
-            id: settings.model,
+            id: processModel,
             providerID: OPEN_CODE_PROVIDER_ID
           }
         },
@@ -112,7 +125,7 @@ export function createOpenCodeRuntime(
           agent: "build",
           model: {
             providerID: OPEN_CODE_PROVIDER_ID,
-            modelID: settings.model
+            modelID: processModel
           },
           parts: [{ type: "text", text: input.prompt }]
         },

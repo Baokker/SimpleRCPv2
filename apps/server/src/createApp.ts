@@ -56,6 +56,7 @@ export async function createApp(config: ServerConfig) {
     apiKey: config.agent?.apiKey,
     sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value)),
     runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000,
+    maxConcurrentRuns: config.agent?.maxConcurrentRuns ?? 3,
     appendActivity(projectId, input) {
       return runtimeManager.get(projectId).events.append(input);
     }

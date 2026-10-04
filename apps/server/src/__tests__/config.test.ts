@@ -27,7 +27,8 @@ describe("server config", () => {
         baseUrl: "https://api.deepseek.com/v1",
         model: "deepseek-chat",
         openCodePort: 4096,
-        runTimeoutMs: 600_000
+        runTimeoutMs: 600_000,
+        maxConcurrentRuns: 3
       }
     });
   });
@@ -67,7 +68,8 @@ describe("server config", () => {
         baseUrl: "https://models.example.com/v1",
         model: "DeepSeek-V4-Flash",
         openCodePort: 4096,
-        runTimeoutMs: 600_000
+        runTimeoutMs: 600_000,
+        maxConcurrentRuns: 3
       }
     });
   });
@@ -88,6 +90,11 @@ describe("server config", () => {
     expect(() =>
       loadConfig({ SIMPLERCP_TERMINAL_ENABLED: "disabled" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
+  });
+
+  it("rejects an invalid Agent concurrency limit", () => {
+    expect(() => loadConfig({ SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS: "0" }, "/srv/simplercp"))
+      .toThrow("SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS must be a positive integer");
   });
 
   it("uses defaults for blank optional paths and validates workspace and import paths", () => {
