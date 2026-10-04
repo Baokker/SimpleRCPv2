@@ -34,6 +34,20 @@ describe("range transformation", () => {
     expect(transformRanges([{ start: 5, end: 10 }], [{ from: 3, deleted: "123", inserted: "" }])).toEqual([{ start: 3, end: 7 }]);
     expect(transformRanges([{ start: 5, end: 10 }], [{ from: 3, deleted: "123456789", inserted: "" }])).toEqual([{ start: 3, end: 3 }]);
   });
+
+  it("handles deletions at both range boundaries", () => {
+    expect(transformRanges([{ start: 5, end: 10 }], [{ from: 2, deleted: "abc", inserted: "" }])).toEqual([{ start: 2, end: 7 }]);
+    expect(transformRanges([{ start: 5, end: 10 }], [{ from: 5, deleted: "abc", inserted: "" }])).toEqual([{ start: 5, end: 7 }]);
+    expect(transformRanges([{ start: 5, end: 10 }], [{ from: 10, deleted: "abc", inserted: "" }])).toEqual([{ start: 5, end: 10 }]);
+  });
+
+  it("transforms replacements and accumulates offsets across one transaction", () => {
+    expect(transformRanges([{ start: 5, end: 10 }], [{ from: 6, deleted: "ab", inserted: "WXYZ" }])).toEqual([{ start: 5, end: 12 }]);
+    expect(transformRanges([{ start: 10, end: 20 }], [
+      { from: 2, deleted: "", inserted: "abc" },
+      { from: 15, deleted: "123", inserted: "Z" }
+    ])).toEqual([{ start: 13, end: 21 }]);
+  });
 });
 
 describe("tracker", () => {
@@ -82,6 +96,31 @@ describe("tracker", () => {
     clock.advance(600_000);
     expect(tracker.getActiveChangeSets()).toHaveLength(0);
     expect(events.filter((event) => event === "change_set_closed")).toHaveLength(1);
+  });
+
+  it("closes the previous file batch when the cursor switches files", () => {
+    const clock = new FakeClock();
+    const tracker = new ConflictGuardTracker({ clock, cursorLeaveLines: 3 });
+    const closed: Array<{ file: string; reason: string }> = [];
+    tracker.onEvent((event) => {
+      if (event.type === "batch_closed") closed.push({ file: event.batch.file, reason: event.batch.closeReason });
+    });
+    tracker.openDocument("a.ts", "hello");
+    tracker.openDocument("b.ts", "world");
+    tracker.edit(edit("a.ts", { kind: "human", memberId: "alice" }, 0, "", "A", "Ahello", 0));
+    tracker.cursorChanged({ actor: { kind: "human", memberId: "alice" }, file: "b.ts", lineNumber: 1, column: 1, at: 1 });
+    expect(closed).toEqual([{ file: "a.ts", reason: "cursor-left" }]);
+  });
+
+  it("reports exact ranges for alternating edits by two actors", () => {
+    const clock = new FakeClock();
+    const tracker = new ConflictGuardTracker({ clock });
+    tracker.openDocument("a.ts", "0123456789");
+    tracker.edit(edit("a.ts", { kind: "human", memberId: "alice" }, 1, "", "A", "0A123456789", 0));
+    tracker.edit({ file: "a.ts", origin: { kind: "human", memberId: "bob" }, at: 1, revisionAfter: 2, ops: [{ from: 9, deleted: "", inserted: "B" }], textBefore: "0A123456789", textAfter: "0A12345678B9" });
+    const sets = tracker.getActiveChangeSets();
+    expect(sets.find((set) => set.actor.kind === "human" && set.actor.memberId === "alice")?.files.get("a.ts")?.ranges).toEqual([{ start: 1, end: 2 }]);
+    expect(sets.find((set) => set.actor.kind === "human" && set.actor.memberId === "bob")?.files.get("a.ts")?.ranges).toEqual([{ start: 9, end: 10 }]);
   });
 
   it("keeps a zero length range for a pure deletion", () => {

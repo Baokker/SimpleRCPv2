@@ -1,0 +1,19 @@
+{
+  "source": "apps/server/src/__tests__/conflictGuardApi.integration.test.ts",
+  "mode": "observe",
+  "cases": {
+    "lineRanges": {
+      "alice": [{ "start": 0, "end": 1 }],
+      "bob": [{ "start": 64, "end": 65 }],
+      "bobAfterThreeLineInsertion": [{ "start": 67, "end": 68 }]
+    },
+    "externalReload": {
+      "origin": "filesystem",
+      "batchOpenedForFilesystem": false,
+      "traceValidation": "passed"
+    },
+    "cursorFailure": "broadcast-preserved",
+    "serviceRestart": "full-trace-validation-passed"
+  },
+  "secrets": "none"
+}

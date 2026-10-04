@@ -1,0 +1,31 @@
+{
+  "source": "Playwright CLI with two independent browser sessions and the development server",
+  "mode": "observe",
+  "file": "src/index.js",
+  "members": {
+    "alice": "a7a44381-0495-4f20-ab04-bdeb9082b579",
+    "bob": "e0dd3b90-029a-4317-86e2-7f1d5a8b7b30"
+  },
+  "batches": [
+    { "id": "guard-1", "member": "alice", "ranges": [{ "start": 328, "end": 346 }] },
+    { "id": "guard-2", "member": "bob", "ranges": [{ "start": 346, "end": 362 }] },
+    { "id": "guard-3", "member": "alice", "ranges": [{ "start": 362, "end": 380 }] },
+    { "id": "guard-4", "member": "bob", "ranges": [{ "start": 380, "end": 396 }] }
+  ],
+  "state": {
+    "aliceRanges": [{ "start": 328, "end": 346 }, { "start": 362, "end": 380 }],
+    "bobRanges": [{ "start": 346, "end": 362 }, { "start": 380, "end": 396 }],
+    "aliceStatus": "settled",
+    "bobStatus": "settled",
+    "cursorCount": 0
+  },
+  "finalText": "import { createProjectStatus, formatProjectStatus } from \"./projectStatus.js\";\n\nconst status = createProjectStatus([\n  { title: \"Open the workspace\", completed: true },\n  { title: \"Edit a file together\", completed: false },\n  { title: \"Run the shared terminal\", completed: false }\n]);\n\nconsole.log(formatProjectStatus(status));\n\n// Stage1 Alice 1\n// Stage1 Bob 1\n// Stage1 Alice 2\n// Stage1 Bob 2",
+  "trace": {
+    "eventCount": 16,
+    "eventTypes": ["session_start", "doc_open", "edit", "change_set_opened", "batch_opened", "batch_closed", "edit", "change_set_opened", "batch_opened", "batch_closed", "edit", "batch_opened", "batch_closed", "edit", "batch_opened", "batch_closed"],
+    "validation": { "valid": true, "redactedFiles": [], "skippedFiles": [] }
+  },
+  "rawState": "browser-state.json",
+  "rawTrace": "browser-trace.jsonl",
+  "secrets": "none"
+}

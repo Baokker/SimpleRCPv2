@@ -1,28 +1,15 @@
 # 阶段 1：语义冲突预防地基
 
-## 改动内容
+更新时间：2026-10-05
 
-- 新增 `@simplercp/conflict-guard` 包，提供来源编辑模型、范围变换、编辑批次、活跃变更集和轨迹回放校验。
-- 服务端接入 `CONFLICT_GUARD=off|observe|rules|full`。当前 `rules` 和 `full` 使用 observe 行为并写启动提示；`off` 不创建追踪器、不监听 Yjs、不创建轨迹文件。
-- 文档准备时建立文本镜像并监听 Y.Text 事务。WebSocket 连接映射到成员，`FILESYSTEM_ORIGIN` 记录为 filesystem，未知事务来源记录警告。
-- 增加光标记录、批次结束计时、活跃变更集完成 API、状态查询和轨迹下载 API。
+`@simplercp/conflict-guard` 提供来源编辑模型、字符范围变换、编辑批次、活跃变更集、内存光标和轨迹回放校验。服务端接入 `CONFLICT_GUARD=off|observe|rules|full`；`off` 不创建 tracker、不取 Git 提交号、不监听 Yjs，也不创建轨迹文件。`rules` 和 `full` 当前复用 observe 行为并写启动提示。
 
-## 范围变换实现
+文本镜像发生不一致时，服务端更新镜像和 tracker，并写入包含替换全文的 `mirror_resync` 事件。回放校验把该事件作为文件的新起点，继续检查后续 edit。观察器、光标回调和轨迹写入都在边界处记录错误并继续协作路径。敏感文件 `.env`、`.env.*`、`*.pem` 和 `*.key` 只写 `doc_open` 的跳过记录；其他文件只按服务端已知的精确密钥值脱敏，普通代码字符串不会触发替换。脱敏文件在后续事件中标记 `redacted: true`，校验结果列出 `redactedFiles`；敏感文件列出 `skippedFiles`。
 
-使用基于字符位置的纯函数 `transformRanges`。插入操作按范围起点和终点处理，删除操作把被删除区域内的边界收缩到删除起点，再应用长度差。这个实现不依赖 Y.RelativePosition，便于阶段 4 使用虚拟时钟回放，也能直接对 trace 中的 `ops` 重放。
+变更集在首个文件加入后发出 `change_set_opened`，文件因空闲或停用移出时发出 `change_set_file_closed`。只有参与者没有任何打开批次时，变更集才变为 `settled`。光标在服务端内存中保留每个成员最近一次位置，状态接口返回这些光标；写入轨迹的光标事件按 200 毫秒窗口节流。轨迹序列跨服务会话继续递增，`validateTrace` 按多个 `session_start` 继续校验整份文件。
 
 ## 测试结果
 
-`@simplercp/conflict-guard` 测试通过：2 个测试文件、7 项测试。服务端测试通过：28 个测试文件、97 项测试；冲突防护新增集成测试与 `off` 测试通过：3 项测试。`pnpm -r build` 通过，演示测试通过 2 项，`CONFLICT_GUARD=off pnpm test:collab` 与 `CONFLICT_GUARD=observe pnpm test:collab` 均通过 2 项。
+包内范围、批次、光标和轨迹回放测试共 16 项通过。服务端冲突防护集成测试共 5 项通过，覆盖具体范围、文件系统回灌、敏感模式和服务重启后的整份轨迹校验；实时消息测试覆盖光标回调异常时仍广播。
 
-## 手动验证观察
-
-真实 WebSocket 集成测试使用 Node `WebsocketProvider` 验证两名成员归属、文件系统回灌、范围更新和轨迹回放。两种开关模式的浏览器协作回归均通过；长时间双浏览器编辑观察仍属于后续实验记录，接口已经提供 state 与 trace 读取能力。
-
-## 阶段 2 接口建议
-
-阶段 2 可以在 `batch_closed` 事件上挂载符号解析。`FileChange.symbols` 已保留扩展字段，`TrackedRange` 继续使用当前文本坐标；符号索引可以把范围映射到符号后写入批次扩展字段，服务端 API 不需要改变。
-
-## 遗留问题
-
-Yjs 连接 origin 依赖 y-websocket 当前实现，升级 y-websocket 后需要重新验证。未知来源记录为 `unknown`，Agent 来源留给阶段 6。浏览器双成员手动长时间验证仍需要在开发服务器上执行。
+真实浏览器双上下文观察原始记录位于 `evidence/stage-1-manual/`。两名成员通过 Playwright CLI 加入同一 demo 项目，交替编辑 `src/index.js`；记录包含 state 返回的批次范围、最终文件内容、轨迹下载和 `validateTraceDetailed` 的校验结果。`observe-integration.json` 是服务端集成测试的独立记录。

@@ -9,12 +9,23 @@ export interface TraceEvent {
   [key: string]: unknown;
 }
 
+export interface TraceValidationResult {
+  valid: true;
+  redactedFiles: string[];
+  skippedFiles: string[];
+}
+
 export function readTrace(lines: string | string[]) {
   const source = Array.isArray(lines) ? lines : lines.split("\n");
   return source.filter((line) => line.trim().length > 0).map((line) => JSON.parse(line) as TraceEvent);
 }
 
 export function validateTrace(events: TraceEvent[]) {
+  validateTraceDetailed(events);
+  return true;
+}
+
+export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResult {
   if (events.length === 0) throw new Error("Trace is empty");
   let expectedSequence = 1;
   let hasSession = false;
@@ -22,17 +33,31 @@ export function validateTrace(events: TraceEvent[]) {
   const retired = new Set<string>();
   const openBatches = new Set<string>();
   const openChangeSets = new Set<string>();
+  const redactedFiles = new Set<string>();
+  const skippedFiles = new Set<string>();
   for (const event of events) {
     if (event.schema !== 1) throw new Error("Unsupported trace schema");
     if (event.seq !== expectedSequence++) throw new Error("Trace sequence is not contiguous");
     if (!Number.isFinite(event.at)) throw new Error("Trace timestamp is invalid");
     if (event.type === "session_start") {
+      texts.clear();
+      retired.clear();
+      openBatches.clear();
+      openChangeSets.clear();
+      redactedFiles.clear();
+      skippedFiles.clear();
       hasSession = true;
       continue;
     }
     if (event.type === "doc_open") {
+      if (event.skipped === "sensitive") {
+        if (typeof event.file !== "string") throw new Error("doc_open is incomplete");
+        skippedFiles.add(event.file);
+        continue;
+      }
       if (typeof event.file !== "string" || typeof event.text !== "string" || typeof event.textHash !== "string") throw new Error("doc_open is incomplete");
-      if (hashText(event.text) !== event.textHash) throw new Error("doc_open text hash does not match");
+      if (!event.redacted && hashText(event.text) !== event.textHash) throw new Error("doc_open text hash does not match");
+      if (event.redacted) redactedFiles.add(event.file);
       texts.set(event.file, event.text);
       retired.delete(event.file);
       continue;
@@ -43,10 +68,12 @@ export function validateTrace(events: TraceEvent[]) {
       continue;
     }
     if (event.type === "mirror_resync") {
-      if (typeof event.file !== "string" || typeof event.previousTextHash !== "string" || typeof event.textHash !== "string") throw new Error("mirror_resync is incomplete");
+      if (typeof event.file !== "string" || typeof event.previousTextHash !== "string" || typeof event.textHash !== "string" || typeof event.text !== "string") throw new Error("mirror_resync is incomplete");
       const text = texts.get(event.file);
-      if (text === undefined || hashText(text) !== event.previousTextHash) throw new Error("mirror_resync previous text does not match");
-      throw new Error("mirror_resync cannot be replayed without replacement text");
+      if (text === undefined || (!redactedFiles.has(event.file) && hashText(text) !== event.previousTextHash)) throw new Error("mirror_resync previous text does not match");
+      if (event.redacted) redactedFiles.add(event.file);
+      if (!event.redacted && hashText(event.text) !== event.textHash) throw new Error("mirror_resync text hash does not match");
+      texts.set(event.file, event.text);
       continue;
     }
     if (event.type === "edit") {
@@ -54,7 +81,7 @@ export function validateTrace(events: TraceEvent[]) {
       if (typeof file !== "string" || retired.has(file) || !Array.isArray(event.ops)) throw new Error("edit has no active document state");
       const current = texts.get(file);
       if (current === undefined) throw new Error("edit has no document state");
-      texts.set(file, applyOps(current, event.ops as TextEditOp[]));
+      if (!redactedFiles.has(file) && !event.redacted) texts.set(file, applyOps(current, event.ops as TextEditOp[]));
       continue;
     }
     if (event.type === "batch_opened") {
@@ -65,7 +92,7 @@ export function validateTrace(events: TraceEvent[]) {
     if (event.type === "batch_closed") {
       if (typeof event.id !== "string" || !openBatches.delete(event.id) || typeof event.file !== "string" || typeof event.textAfterHash !== "string") throw new Error("batch_closed is incomplete");
       const text = texts.get(event.file);
-      if (text === undefined || hashText(text) !== event.textAfterHash) throw new Error("batch_closed text hash does not match replayed document");
+      if (!redactedFiles.has(event.file) && !event.redacted && (text === undefined || hashText(text) !== event.textAfterHash)) throw new Error("batch_closed text hash does not match replayed document");
       continue;
     }
     if (event.type === "change_set_opened") {
@@ -79,6 +106,10 @@ export function validateTrace(events: TraceEvent[]) {
       if (!event.actor || !Array.isArray(event.files) || !openChangeSets.delete(actorKey(event.actor))) throw new Error("change_set_closed is incomplete");
       continue;
     }
+    if (event.type === "change_set_file_closed") {
+      if (!event.actor || typeof event.file !== "string") throw new Error("change_set_file_closed is incomplete");
+      continue;
+    }
     if (event.type === "cursor") {
       if (typeof event.memberId !== "string" || typeof event.file !== "string" || !event.position) throw new Error("cursor is incomplete");
       continue;
@@ -87,14 +118,15 @@ export function validateTrace(events: TraceEvent[]) {
   }
   if (!hasSession) throw new Error("Trace has no session_start");
   if (openBatches.size > 0) throw new Error("Trace has unclosed batches");
-  return true;
+  return { valid: true, redactedFiles: [...redactedFiles], skippedFiles: [...skippedFiles] };
 }
 
-export function traceEventFromConflictEvent(event: ConflictGuardEvent, sensitiveValues: string[] = []): Record<string, unknown> {
-  if (event.type === "edit") return { type: "edit", at: event.edit.at, file: event.edit.file, origin: redact(event.edit.origin, sensitiveValues), ops: redact(event.edit.ops, sensitiveValues), revisionAfter: event.edit.revisionAfter };
+export function traceEventFromConflictEvent(event: ConflictGuardEvent, sensitiveValues: string[] = [], redacted = false): Record<string, unknown> {
+  if (event.type === "edit") return { type: "edit", at: event.edit.at, file: event.edit.file, origin: redact(event.edit.origin, sensitiveValues), ops: redact(event.edit.ops, sensitiveValues), revisionAfter: event.edit.revisionAfter, ...(redacted ? { redacted: true } : {}) };
   if (event.type === "cursor") return { type: "cursor", at: event.cursor.at, memberId: event.cursor.actor.memberId, file: event.cursor.file, position: { lineNumber: event.cursor.lineNumber, column: event.cursor.column }, selection: event.cursor.selection };
-  if (event.type === "batch_closed") return { type: "batch_closed", id: event.batch.id, actor: event.batch.actor, file: event.batch.file, startedAt: event.batch.startedAt, endedAt: event.batch.endedAt, closeReason: event.batch.closeReason, ranges: event.batch.ranges, textBeforeHash: hashText(redact(event.batch.textBefore, sensitiveValues) as string), textAfterHash: hashText(redact(event.batch.textAfter, sensitiveValues) as string) };
+  if (event.type === "batch_closed") return { type: "batch_closed", at: event.batch.endedAt, id: event.batch.id, actor: event.batch.actor, file: event.batch.file, startedAt: event.batch.startedAt, endedAt: event.batch.endedAt, closeReason: event.batch.closeReason, ranges: event.batch.ranges, textBeforeHash: hashText(redact(event.batch.textBefore, sensitiveValues) as string), textAfterHash: hashText(redact(event.batch.textAfter, sensitiveValues) as string), ...(redacted ? { redacted: true } : {}) };
   if (event.type === "batch_opened") return { type: "batch_opened", id: event.batch.id, actor: event.batch.actor, file: event.batch.file, startedAt: event.batch.startedAt, ranges: event.batch.ranges };
+  if (event.type === "change_set_file_closed") return { type: "change_set_file_closed", actor: event.actor, file: event.file, reason: event.reason };
   const files = [...event.changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt }));
   return { type: event.type, actor: event.changeSet.actor, files };
 }
@@ -126,7 +158,7 @@ function redact(value: unknown, sensitiveValues: string[]): unknown {
   if (typeof value === "string") {
     let result = value;
     for (const sensitive of sensitiveValues.filter(Boolean).sort((left, right) => right.length - left.length)) result = result.split(sensitive).join("[REDACTED]");
-    return result.replace(/sk-[A-Za-z0-9_-]{16,}/g, "[REDACTED]");
+    return result;
   }
   if (Array.isArray(value)) return value.map((entry) => redact(entry, sensitiveValues));
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, redact(entry, sensitiveValues)]));

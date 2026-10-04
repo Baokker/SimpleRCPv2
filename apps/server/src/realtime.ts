@@ -83,7 +83,11 @@ export function handleRealtimeMessage({
   }
 
   if (message.type === "cursor_change") {
-    onCursorChange?.(message);
+    try {
+      onCursorChange?.(message);
+    } catch (error) {
+      console.warn(`Cursor tracking failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
     return {
       broadcast: {
         type: "cursor_change",

@@ -73,5 +73,6 @@ export type ConflictGuardEvent =
   | { type: "batch_opened"; batch: EditBatch }
   | { type: "batch_closed"; batch: EditBatch }
   | { type: "change_set_opened"; changeSet: ActiveChangeSet }
+  | { type: "change_set_file_closed"; actor: ActorRef; file: string; reason: "idle" | "file-retired" }
   | { type: "change_set_closed"; changeSet: ActiveChangeSet }
   | { type: "cursor"; cursor: CursorChange };

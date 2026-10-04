@@ -56,6 +56,7 @@ export function createProjectConflictGuard(options: {
   const tracePath = path.join(options.metadataPath, "conflict-guard", "trace.jsonl");
   let traceSequence = 0;
   let traceOperations: Promise<void> = initializeTraceSequence();
+  const redactedFiles = new Set<string>();
 
   async function initializeTraceSequence() {
     try {
@@ -97,7 +98,10 @@ export function createProjectConflictGuard(options: {
     if (event.type === "cursor") {
       const memberId = event.cursor.actor.memberId;
       const pending = pendingCursors.get(memberId);
-      if (pending) clearTimeout(pending.timer);
+      if (pending) {
+        pending.event = event;
+        return;
+      }
       const timer = setTimeout(() => {
         pendingCursors.delete(memberId);
         void appendTrace(traceEvent(event));
@@ -110,7 +114,10 @@ export function createProjectConflictGuard(options: {
   });
 
   function traceEvent(event: ConflictGuardEvent) {
-    return traceEventFromConflictEvent(event, options.sensitiveValues ?? []);
+    const file = event.type === "edit" || event.type === "cursor" || event.type === "batch_opened" || event.type === "batch_closed"
+      ? event.type === "cursor" ? event.cursor.file : event.type === "edit" ? event.edit.file : event.batch.file
+      : undefined;
+    return traceEventFromConflictEvent(event, options.sensitiveValues ?? [], file ? redactedFiles.has(file) : false);
   }
 
   function flushPendingCursors() {
@@ -123,43 +130,60 @@ export function createProjectConflictGuard(options: {
 
   function documentPrepared(name: string, document: Y.Doc, file: string) {
     if (mirrors.has(file)) return;
+    if (isSensitiveFile(file)) {
+      void appendTrace({ type: "doc_open", file, skipped: "sensitive" });
+      return;
+    }
     const text = document.getText("content");
     const initial = text.toString();
     tracker.openDocument(file, initial);
     revisions.set(file, 0);
-    const safeInitial = redact(initial, options.sensitiveValues ?? []) as string;
-    void appendTrace({ type: "doc_open", file, textHash: hashText(safeInitial), text: safeInitial });
+    const safeInitial = redactText(initial, options.sensitiveValues ?? []);
+    if (safeInitial.changed) redactedFiles.add(file);
+    void appendTrace({ type: "doc_open", file, textHash: hashText(safeInitial.value), text: safeInitial.value, ...(safeInitial.changed ? { redacted: true } : {}) });
     const observer = (event: Y.YTextEvent) => {
-      const mirror = mirrors.get(file);
-      if (!mirror) return;
-      const before = mirror.text;
-      const ops: TextEditOp[] = [];
-      let from = 0;
-      for (const delta of event.delta) {
-        if (typeof delta.retain === "number") from += delta.retain;
-        if (typeof delta.insert === "string") ops.push({ from, deleted: "", inserted: delta.insert });
-        if (typeof delta.delete === "number") {
-          ops.push({ from, deleted: before.slice(from, from + delta.delete), inserted: "" });
-          from += delta.delete;
-        }
-      }
-      const after = text.toString();
-      let projected: string;
       try {
-        projected = applyOps(before, ops);
-      } catch {
-        projected = "";
-      }
-      if (projected !== after) {
+        const mirror = mirrors.get(file);
+        if (!mirror) return;
+        const before = mirror.text;
+        const ops: TextEditOp[] = [];
+        let from = 0;
+        for (const delta of event.delta) {
+          if (typeof delta.retain === "number") from += delta.retain;
+          if (typeof delta.insert === "string") ops.push({ from, deleted: "", inserted: delta.insert });
+          if (typeof delta.delete === "number") {
+            ops.push({ from, deleted: before.slice(from, from + delta.delete), inserted: "" });
+            from += delta.delete;
+          }
+        }
+        const after = text.toString();
+        let projected: string;
+        try {
+          projected = applyOps(before, ops);
+        } catch {
+          projected = "";
+        }
+        if (projected !== after) {
+          const safeBefore = redactText(before, options.sensitiveValues ?? []);
+          const safeAfter = redactText(after, options.sensitiveValues ?? []);
+          if (safeBefore.changed || safeAfter.changed) redactedFiles.add(file);
+          mirror.text = after;
+          tracker.openDocument(file, after);
+          void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(safeBefore.value), textHash: hashText(safeAfter.value), text: safeAfter.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
+          return;
+        }
+        const origin = actorForOrigin(event.transaction.origin);
+        const revisionAfter = (revisions.get(file) ?? 0) + 1;
+        revisions.set(file, revisionAfter);
+        try {
+          tracker.edit({ file, origin, at: clock.now(), ops, revisionAfter, textBefore: before, textAfter: after });
+        } catch (error) {
+          console.warn(`Conflict guard edit tracking failed for ${file}: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
         mirror.text = after;
-        void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(redact(before, options.sensitiveValues ?? []) as string), textHash: hashText(redact(after, options.sensitiveValues ?? []) as string) });
-        return;
+      } catch (error) {
+        console.warn(`Conflict guard observer failed for ${file}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
-      const origin = actorForOrigin(event.transaction.origin);
-      const revisionAfter = (revisions.get(file) ?? 0) + 1;
-      revisions.set(file, revisionAfter);
-      tracker.edit({ file, origin, at: clock.now(), ops, revisionAfter, textBefore: before, textAfter: after });
-      mirror.text = after;
     };
     text.observe(observer);
     mirrors.set(file, { text: initial, stop: () => text.unobserve(observer) });
@@ -183,7 +207,11 @@ export function createProjectConflictGuard(options: {
   function unregisterConnection(socket: object) { connections.delete(socket); }
 
   function cursorChanged(input: { memberId: string; path: string; position: { lineNumber: number; column: number }; selection?: CursorChange["selection"]; at?: number }) {
-    tracker.cursorChanged({ actor: { kind: "human", memberId: input.memberId }, file: input.path, lineNumber: input.position.lineNumber, column: input.position.column, selection: input.selection, at: input.at ?? clock.now() });
+    try {
+      tracker.cursorChanged({ actor: { kind: "human", memberId: input.memberId }, file: input.path, lineNumber: input.position.lineNumber, column: input.position.column, selection: input.selection, at: input.at ?? clock.now() });
+    } catch (error) {
+      console.warn(`Conflict guard cursor tracking failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
   }
 
   function retirePath(file: string) {
@@ -208,7 +236,10 @@ export function createProjectConflictGuard(options: {
   }
 
   function state() {
-    return tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) }));
+    return {
+      changeSets: tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) })),
+      cursors: tracker.getLatestCursors()
+    };
   }
 
   async function waitForTrace() {
@@ -244,11 +275,21 @@ function redact(value: unknown, sensitiveValues: string[]): unknown {
   if (typeof value === "string") {
     let result = value;
     for (const sensitive of sensitiveValues.filter(Boolean).sort((left, right) => right.length - left.length)) result = result.split(sensitive).join("[REDACTED]");
-    return result.replace(/sk-[A-Za-z0-9_-]{16,}/g, "[REDACTED]");
+    return result;
   }
   if (Array.isArray(value)) return value.map((entry) => redact(entry, sensitiveValues));
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, redact(entry, sensitiveValues)]));
   return value;
+}
+
+function redactText(value: string, sensitiveValues: string[]) {
+  let result = value;
+  for (const sensitive of sensitiveValues.filter(Boolean).sort((left, right) => right.length - left.length)) result = result.split(sensitive).join("[REDACTED]");
+  return { value: result, changed: result !== value };
+}
+
+function isSensitiveFile(file: string) {
+  return /(^|\/)\.env(?:\.[^/]*)?$/.test(file) || /\.(?:pem|key)$/i.test(file);
 }
 
 function applyOps(text: string, ops: TextEditOp[]) {

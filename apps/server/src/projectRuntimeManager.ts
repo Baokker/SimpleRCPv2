@@ -4,7 +4,7 @@ import type { ProjectConflictGuardConfig } from "./conflictGuard/projectConflict
 
 export function createProjectRuntimeManager(
   registry: ProjectRegistry,
-  options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[] } = {}
+  options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[]; gitCommit?: string } = {}
 ) {
   const runtimes = new Map<string, ProjectRuntime>();
   const projectDisposingListeners = new Set<(projectId: string) => void>();

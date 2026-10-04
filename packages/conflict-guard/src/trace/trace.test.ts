@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { readTrace, validateTrace } from "./trace.js";
+import { readTrace, traceEventFromConflictEvent, validateTrace, validateTraceDetailed } from "./trace.js";
 
 describe("trace replay", () => {
   it("replays a complete trace and rejects missing or unordered events", () => {
@@ -17,5 +17,72 @@ describe("trace replay", () => {
     expect(readTrace(events.map((event) => JSON.stringify(event)))).toEqual(events);
     expect(() => validateTrace(events.map((event, index) => ({ ...event, seq: index + 2 })))).toThrow("contiguous");
     expect(() => validateTrace(events.slice(0, 4))).toThrow("unclosed batches");
+  });
+
+  it("keeps ordinary code intact and reports redacted files separately", () => {
+    const ordinary = "task-list-container-wrapper";
+    const ordinaryHash = createHash("sha256").update(ordinary).digest("hex");
+    const redacted = "[REDACTED]";
+    const events = [
+      { schema: 1 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 1 as const, seq: 2, at: 0, type: "doc_open", file: "ordinary.ts", text: ordinary, textHash: ordinaryHash },
+      { schema: 1 as const, seq: 3, at: 1, type: "edit", file: "ordinary.ts", ops: [{ from: ordinary.length, deleted: "", inserted: "!" }] },
+      { schema: 1 as const, seq: 4, at: 2, type: "doc_open", file: "secret.ts", text: redacted, textHash: createHash("sha256").update(redacted).digest("hex"), redacted: true },
+      { schema: 1 as const, seq: 5, at: 3, type: "edit", file: "secret.ts", ops: [{ from: 0, deleted: "", inserted: redacted }], redacted: true }
+    ];
+    expect(validateTrace(events)).toBe(true);
+    expect(validateTraceDetailed(events)).toEqual({ valid: true, redactedFiles: ["secret.ts"], skippedFiles: [] });
+  });
+
+  it("replays a mirror resynchronization", () => {
+    const initial = "old";
+    const replacement = "new";
+    const events = [
+      { schema: 1 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 1 as const, seq: 2, at: 0, type: "doc_open", file: "a.ts", text: initial, textHash: createHash("sha256").update(initial).digest("hex") },
+      { schema: 1 as const, seq: 3, at: 1, type: "mirror_resync", file: "a.ts", previousTextHash: createHash("sha256").update(initial).digest("hex"), textHash: createHash("sha256").update(replacement).digest("hex"), text: replacement },
+      { schema: 1 as const, seq: 4, at: 2, type: "edit", file: "a.ts", ops: [{ from: 3, deleted: "", inserted: "!" }] }
+    ];
+    expect(validateTrace(events)).toBe(true);
+  });
+
+  it("reports sensitive documents as skipped", () => {
+    const events = [
+      { schema: 1 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 1 as const, seq: 2, at: 0, type: "doc_open", file: ".env", skipped: "sensitive" }
+    ];
+    expect(validateTraceDetailed(events)).toEqual({ valid: true, redactedFiles: [], skippedFiles: [".env"] });
+  });
+
+  it("rejects a reordered batch trace and tampered edit content", () => {
+    const hash = createHash("sha256").update("hello brave").digest("hex");
+    const ordered = [
+      { schema: 1 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 1 as const, seq: 2, at: 0, type: "doc_open", file: "a.ts", text: "hello", textHash: createHash("sha256").update("hello").digest("hex") },
+      { schema: 1 as const, seq: 3, at: 1, type: "batch_opened", id: "batch-1", file: "a.ts" },
+      { schema: 1 as const, seq: 4, at: 2, type: "edit", file: "a.ts", ops: [{ from: 5, deleted: "", inserted: " brave" }] },
+      { schema: 1 as const, seq: 5, at: 3, type: "batch_closed", id: "batch-1", file: "a.ts", textAfterHash: hash }
+    ];
+    expect(validateTrace(ordered)).toBe(true);
+    expect(() => validateTrace([ordered[0]!, ordered[1]!, ordered[2]!, { ...ordered[4]!, seq: 4 }, { ...ordered[3]!, seq: 5 }])).toThrow("batch_closed");
+    const tampered = ordered.map((event) => event.type === "edit" ? { ...event, ops: [{ from: 5, deleted: "", inserted: " evil" }] } : event);
+    expect(() => validateTrace(tampered)).toThrow("text hash");
+  });
+
+  it("redacts configured values without changing ordinary identifiers", () => {
+    const event = {
+      type: "edit" as const,
+      edit: {
+        file: "a.ts",
+        origin: { kind: "human" as const, memberId: "alice" },
+        at: 0,
+        revisionAfter: 1,
+        ops: [{ from: 0, deleted: "", inserted: "task-list-container-wrapper KEY_VALUE" }],
+        textBefore: "",
+        textAfter: "task-list-container-wrapper KEY_VALUE"
+      }
+    };
+    const result = traceEventFromConflictEvent(event, ["KEY_VALUE"]);
+    expect(result).toMatchObject({ ops: [{ inserted: "task-list-container-wrapper [REDACTED]" }] });
   });
 });

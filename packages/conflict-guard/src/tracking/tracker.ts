@@ -45,6 +45,7 @@ interface ActiveState {
 export class ConflictGuardTracker {
   private readonly files = new Map<string, FileState>();
   private readonly active = new Map<string, ActiveState>();
+  private readonly latestCursors = new Map<string, CursorChange>();
   private readonly listeners = new Set<(event: ConflictGuardEvent) => void>();
   private sequence = 0;
   private readonly idleMs: number;
@@ -81,10 +82,10 @@ export class ConflictGuardTracker {
       const actorKey = actorKeyOf(edit.origin);
       let activeState = this.active.get(actorKey);
       let change = activeState?.changeSet.files.get(edit.file);
+      const created = !activeState;
       if (!activeState) {
         activeState = { changeSet: { actor: { ...edit.origin }, files: new Map(), status: "editing" }, fileTimers: new Map() };
         this.active.set(actorKey, activeState);
-        this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(activeState.changeSet) });
       }
       if (!change) {
         change = {
@@ -100,6 +101,7 @@ export class ConflictGuardTracker {
         change.ranges = mergeRanges([...change.ranges, ...rangesForOps(edit.ops)]);
         change.lastTouchedAt = edit.at;
       }
+      if (created) this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(activeState.changeSet) });
       this.resetActiveTimer(actorKey, edit.file);
 
       const existing = state.batches.get(actorKey);
@@ -130,6 +132,7 @@ export class ConflictGuardTracker {
 
   cursorChanged(cursor: CursorChange) {
     const actorKey = actorKeyOf(cursor.actor);
+    this.latestCursors.set(cursor.actor.memberId, { ...cursor, actor: { ...cursor.actor } });
     for (const [file, state] of this.files) {
       if (file !== cursor.file && state.batches.has(actorKey)) this.closeBatch(file, actorKey, "cursor-left");
     }
@@ -151,7 +154,7 @@ export class ConflictGuardTracker {
     const state = this.files.get(file);
     if (!state) return;
     for (const key of state.batches.keys()) this.closeBatch(file, key, "file-retired");
-    for (const [key, activeState] of this.active) if (activeState.changeSet.files.has(file)) this.removeActiveFile(key, file);
+    for (const [key, activeState] of this.active) if (activeState.changeSet.files.has(file)) this.removeActiveFile(key, file, "file-retired");
     this.files.delete(file);
   }
 
@@ -171,6 +174,10 @@ export class ConflictGuardTracker {
     return [...this.active.values()].map(({ changeSet }) => snapshotChangeSet(changeSet));
   }
 
+  getLatestCursors() {
+    return [...this.latestCursors.values()].map((cursor) => ({ ...cursor, actor: { ...cursor.actor }, selection: cursor.selection ? { ...cursor.selection } : undefined }));
+  }
+
   onEvent(listener: (event: ConflictGuardEvent) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -180,45 +187,47 @@ export class ConflictGuardTracker {
     const state = this.files.get(file);
     const batch = state?.batches.get(key);
     if (!state || !batch) return;
-    if (batch.idleTimer) this.options.clock.clearTimeout(batch.idleTimer);
+    if (batch.idleTimer !== undefined) this.options.clock.clearTimeout(batch.idleTimer);
     batch.idleTimer = this.options.clock.setTimeout(() => this.closeBatch(file, key, "idle"), this.idleMs);
-    if (!batch.maxTimer) batch.maxTimer = this.options.clock.setTimeout(() => this.closeBatch(file, key, "max-duration"), this.maxBatchDurationMs);
+    if (batch.maxTimer === undefined) batch.maxTimer = this.options.clock.setTimeout(() => this.closeBatch(file, key, "max-duration"), this.maxBatchDurationMs);
   }
 
   private resetActiveTimer(key: string, file: string) {
     const activeState = this.active.get(key);
     if (!activeState) return;
     const old = activeState.fileTimers.get(file);
-    if (old) this.options.clock.clearTimeout(old);
-    activeState.fileTimers.set(file, this.options.clock.setTimeout(() => this.removeActiveFile(key, file), this.activeIdleMs));
+    if (old !== undefined) this.options.clock.clearTimeout(old);
+    activeState.fileTimers.set(file, this.options.clock.setTimeout(() => this.removeActiveFile(key, file, "idle"), this.activeIdleMs));
   }
 
   private closeBatch(file: string, key: string, reason: BatchCloseReason) {
     const state = this.files.get(file);
     const current = state?.batches.get(key);
     if (!state || !current) return;
-    if (current.idleTimer) this.options.clock.clearTimeout(current.idleTimer);
-    if (current.maxTimer) this.options.clock.clearTimeout(current.maxTimer);
+    if (current.idleTimer !== undefined) this.options.clock.clearTimeout(current.idleTimer);
+    if (current.maxTimer !== undefined) this.options.clock.clearTimeout(current.maxTimer);
     state.batches.delete(key);
     const batch = { ...current.batch, endedAt: this.options.clock.now(), closeReason: reason, textAfter: state.text, ranges: current.batch.ranges.map((range) => ({ ...range })) };
     this.emit({ type: "batch_closed", batch });
     const activeState = this.active.get(key);
-    if (activeState) activeState.changeSet.status = "settled";
+    if (activeState && ![...this.files.values()].some((candidate) => [...candidate.batches.values()].some((item) => actorKeyOf(item.batch.actor) === key))) activeState.changeSet.status = "settled";
   }
 
-  private removeActiveFile(key: string, file: string) {
+  private removeActiveFile(key: string, file: string, reason: "idle" | "file-retired") {
     const activeState = this.active.get(key);
     if (!activeState || !activeState.changeSet.files.has(file)) return;
     const timer = activeState.fileTimers.get(file);
-    if (timer) this.options.clock.clearTimeout(timer);
+    if (timer !== undefined) this.options.clock.clearTimeout(timer);
     activeState.fileTimers.delete(file);
     if (activeState.changeSet.files.size === 1) {
+      this.emit({ type: "change_set_file_closed", actor: activeState.changeSet.actor, file, reason });
       activeState.changeSet.status = "closed";
       this.active.delete(key);
       this.emit({ type: "change_set_closed", changeSet: snapshotChangeSet(activeState.changeSet) });
       return;
     }
     activeState.changeSet.files.delete(file);
+    this.emit({ type: "change_set_file_closed", actor: activeState.changeSet.actor, file, reason });
   }
 
   private closeActive(key: string) {

@@ -1,5 +1,4 @@
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import { createChatStore } from "./chat.js";
 import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
 import { createEventLog } from "./eventLog.js";
@@ -12,7 +11,7 @@ import { createProjectConflictGuard, type ProjectConflictGuardConfig } from "./c
 
 export function createProjectRuntime(
   project: ProjectRecord,
-  options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[] } = {}
+  options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[]; gitCommit?: string } = {}
 ) {
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
@@ -33,7 +32,7 @@ export function createProjectRuntime(
         projectId: project.id,
         metadataPath: projectRoot,
         config: options.conflictGuard,
-        gitCommit: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+        gitCommit: options.gitCommit,
         sensitiveValues: options.sensitiveValues
       })
     : undefined;

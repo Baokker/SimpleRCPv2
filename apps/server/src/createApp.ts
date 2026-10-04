@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { createAgentRunManager } from "./agent/agentRunManager.js";
 import { createChatAgentBridge } from "./agent/chatAgentBridge.js";
 import { createAgentSettingsStore } from "./agent/agentSettingsStore.js";
@@ -18,6 +19,7 @@ import { createMemberStore, createIdentityMiddleware } from "./auth/identity.js"
 import { requireIdentity } from "./auth/permissions.js";
 
 export async function createApp(config: ServerConfig) {
+  const gitCommit = config.conflictGuard?.mode !== "off" ? readGitCommit() : undefined;
   const registry = await createProjectRegistry({
     dataDir: config.dataDir,
     workspacesDir: config.workspacesDir ?? path.join(config.dataDir, "workspaces"),
@@ -28,6 +30,7 @@ export async function createApp(config: ServerConfig) {
   const runtimeManager = createProjectRuntimeManager(registry, {
     terminalEnabled: config.terminalEnabled !== false,
     conflictGuard: config.conflictGuard,
+    gitCommit,
     sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value))
   });
   if (config.conflictGuard?.mode === "rules" || config.conflictGuard?.mode === "full") {
@@ -45,7 +48,7 @@ export async function createApp(config: ServerConfig) {
     getSettings: () => agentSettings.get()
   });
   const agentRuntime = config.fakeAgentRuntime
-    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime(), Boolean(config.agent?.apiKey))
+    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime(), Boolean(config.agent?.apiKey), () => agentSettings.get().model)
     : openCodeRuntime;
   const agentRuns = createAgentRunManager({
     members,
@@ -117,4 +120,12 @@ export async function createApp(config: ServerConfig) {
   );
 
   return app;
+}
+
+function readGitCommit() {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() || "unknown";
+  } catch {
+    return "unknown";
+  }
 }

@@ -23,7 +23,7 @@ describe("conflict guard off", () => {
     if (!address || typeof address === "string") throw new Error("Server did not start");
     try {
       const response = await fetch(`http://127.0.0.1:${address.port}/api/projects/demo/conflict-guard/state`);
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(401);
       expect(app.locals.runtimeManager.get("demo").conflictGuard).toBeUndefined();
       await app.locals.runtimeManager.dispose();
       await expect(fs.stat(path.join(root, "data", "projects", "demo", "conflict-guard", "trace.jsonl"))).rejects.toThrow();
