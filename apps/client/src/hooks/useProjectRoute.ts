@@ -9,6 +9,7 @@ interface ProjectRouteState {
   roomId: string;
   participants: ProjectParticipant[];
   terminalEnabled: boolean;
+  knowledgeEnabled: boolean;
   identity?: ProjectIdentity;
   loading: boolean;
   error: string;
@@ -19,6 +20,7 @@ export function useProjectRoute(projectId: string) {
     roomId: "",
     participants: [],
     terminalEnabled: true,
+    knowledgeEnabled: false,
     loading: true,
     error: ""
   });
@@ -40,6 +42,7 @@ export function useProjectRoute(projectId: string) {
           roomId: result.roomId,
           participants,
           terminalEnabled: serverInfo.features.terminal,
+          knowledgeEnabled: Boolean(serverInfo.features.knowledge),
           identity: queryName
             ? {
                 memberId,

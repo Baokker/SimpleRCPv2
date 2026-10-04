@@ -44,3 +44,56 @@ export interface RemoteCursor {
   position: CursorPosition;
   selection: EditorSelection;
 }
+
+export type KnowledgeCardType = "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial";
+export type KnowledgeCardStatus = "draft" | "reviewed" | "needsReview" | "archived" | "orphaned" | "superseded";
+export type KnowledgeScope = "personal" | "proposedTeam" | "team";
+
+export interface KnowledgeAnchor {
+  anchorId: string;
+  file: { workspaceRelativePath: string };
+  associationLevel: "block" | "symbol" | "file";
+  snapshot: { text: string; sha256?: string };
+  rangeAtCapture?: { start: { line: number; character: number }; end: { line: number; character: number } };
+}
+
+export interface KnowledgeCard {
+  schemaVersion: number;
+  id: string;
+  type: KnowledgeCardType;
+  title: string;
+  summary: string;
+  content: string;
+  status: KnowledgeCardStatus;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+  scope?: KnowledgeScope;
+  ownerMemberId?: string;
+  provenance?: { origin: string; author: { kind: string; memberId?: string; displayName?: string } };
+  review?: { confirmedBy: string[]; confirmedAt?: number };
+  anchors: KnowledgeAnchor[];
+  evolution: Array<{ at: number; action: string; note?: string }>;
+}
+
+export interface KnowledgeAnchorResolution {
+  cardId: string;
+  anchorIndex: number;
+  range?: { startLine: number; startColumn: number; endLine: number; endColumn: number };
+  status: "ok" | "moved" | "needsReview";
+  strategy?: "yjs" | "range" | "snapshot" | "fingerprint";
+  confidence: number;
+}
+
+export interface KnowledgeGuideItem {
+  card: KnowledgeCard;
+  isCurrentFile: boolean;
+}
+
+export interface KnowledgeTimelineItem {
+  card: KnowledgeCard;
+  kind: "created" | "updated" | "evolution";
+  at: number;
+  label: string;
+  evolution?: { at: number; action: string; note?: string };
+}

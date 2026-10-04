@@ -15,6 +15,14 @@ import type {
   WorkspaceFileLoadResult,
   WorkspaceNode
 } from "./types";
+import type {
+  KnowledgeAnchorResolution,
+  KnowledgeCard,
+  KnowledgeCardType,
+  KnowledgeGuideItem,
+  KnowledgeScope,
+  KnowledgeTimelineItem
+} from "./types";
 import { activeMemberId, rememberMember, storedMemberId } from "./memberIdentity";
 
 export interface ServerInfo {
@@ -23,6 +31,8 @@ export interface ServerInfo {
   publicOrigin: string;
   features: {
     terminal: boolean;
+    knowledge?: boolean;
+    knowledgeMode?: "off" | "capture" | "inject" | "full";
   };
 }
 
@@ -331,6 +341,84 @@ export async function sendChatMessage(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: input.text })
+  });
+}
+
+export async function getKnowledgeCards(projectId: string, file?: string) {
+  const query = file ? `?file=${encodeURIComponent(file)}` : "";
+  return request<{ cards: KnowledgeCard[]; resolutions: KnowledgeAnchorResolution[] }>(
+    `${projectPath(projectId)}/knowledge/cards${query}`
+  );
+}
+
+export async function createKnowledgeCard(projectId: string, input: {
+  type: KnowledgeCardType;
+  title: string;
+  summary: string;
+  content: string;
+  tags: string[];
+  scope: KnowledgeScope;
+  anchors?: Array<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>;
+}) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+export async function updateKnowledgeCard(projectId: string, id: string, patch: Partial<KnowledgeCard> & { note?: string }) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch)
+  });
+}
+
+export async function confirmKnowledgeCard(projectId: string, id: string, edited = false) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ edited })
+  });
+}
+
+export async function archiveKnowledgeCard(projectId: string, id: string, reason?: string) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/archive`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason })
+  });
+}
+
+export async function reanchorKnowledgeCard(
+  projectId: string,
+  id: string,
+  anchorIndex: number,
+  selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }
+) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/anchors/${anchorIndex}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ selection })
+  });
+}
+
+export async function getKnowledgeGuide(projectId: string, file?: string) {
+  const query = file ? `?file=${encodeURIComponent(file)}` : "";
+  return request<{ items: KnowledgeGuideItem[] }>(`${projectPath(projectId)}/knowledge/guide${query}`);
+}
+
+export async function getKnowledgeTimeline(projectId: string, file?: string) {
+  const query = file ? `?file=${encodeURIComponent(file)}` : "";
+  return request<{ items: KnowledgeTimelineItem[] }>(`${projectPath(projectId)}/knowledge/timeline${query}`);
+}
+
+export async function generateKnowledgeDemo(projectId: string) {
+  return request<{ cards: KnowledgeCard[] }>(`${projectPath(projectId)}/knowledge/demo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
   });
 }
 

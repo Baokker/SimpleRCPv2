@@ -1,4 +1,5 @@
 import { getYDoc } from "y-websocket/bin/utils";
+import crypto from "node:crypto";
 import type * as Y from "yjs";
 import { applyTextDelta, FILESYSTEM_ORIGIN } from "./textDelta.js";
 import { readWorkspaceFile, writeWorkspaceFile } from "./workspace.js";
@@ -21,6 +22,7 @@ export function createCollaborativeDocumentStore({
   const persistTimers = new Map<string, NodeJS.Timeout>();
   const retired = new Set<string>();
   const revisions = new Map<string, number>();
+  const documentEpochs = new WeakMap<Y.Doc, string>();
 
   async function getDocument(roomId: string, filePath: string) {
     return prepareDocument(documentName(roomId, filePath, projectId));
@@ -51,6 +53,7 @@ export function createCollaborativeDocumentStore({
     }
 
     const document = getYDoc(name);
+    documentEpochs.set(document, crypto.randomUUID());
     const text = document.getText("content");
     if (text.length === 0 && result.content) {
       text.insert(0, result.content);
@@ -182,6 +185,16 @@ export function createCollaborativeDocumentStore({
     persistedContents.delete(name);
   }
 
+  async function getPreparedDocument(name: string) {
+    const loading = initialized.get(name);
+    if (!loading) return undefined;
+    return loading;
+  }
+
+  function getDocumentEpoch(document: Y.Doc) {
+    return documentEpochs.get(document);
+  }
+
   function getRevision(filePath: string) {
     return revisions.get(filePath) ?? 0;
   }
@@ -200,6 +213,8 @@ export function createCollaborativeDocumentStore({
     reloadPath,
     dropPath,
     release,
+    getPreparedDocument,
+    getDocumentEpoch,
     getRevision,
     getRevisions
   };

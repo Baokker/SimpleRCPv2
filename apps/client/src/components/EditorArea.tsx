@@ -11,7 +11,9 @@ import type {
   CursorPosition,
   EditorSelection,
   FileEditChange,
-  RemoteCursor
+  RemoteCursor,
+  KnowledgeCard,
+  KnowledgeAnchorResolution
 } from "../types";
 import type { ThemeMode } from "../theme";
 
@@ -43,7 +45,10 @@ export function EditorArea({
   onSelectFile,
   onCloseFile,
   onLocalEdit,
-  onCursorChange
+  onCursorChange,
+  onPinKnowledge,
+  knowledgeResolutions,
+  knowledgeCards
 }: {
   openFiles: OpenFile[];
   activePath?: string;
@@ -62,10 +67,14 @@ export function EditorArea({
     position: CursorPosition,
     selection: EditorSelection
   ): void;
+  onPinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): void;
+  knowledgeResolutions: KnowledgeAnchorResolution[];
+  knowledgeCards: KnowledgeCard[];
 }) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const decorationIdsRef = useRef<string[]>([]);
+  const knowledgeDecorationIdsRef = useRef<string[]>([]);
   const [editorVersion, setEditorVersion] = useState(0);
   const activeFile = openFiles.find((file) => file.path === activePath);
 
@@ -82,6 +91,28 @@ export function EditorArea({
       decorations
     );
   }, [activeFile, editorVersion, remoteCursors]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco || !activeFile) return;
+    const cards = new Map(knowledgeCards.map((card) => [card.id, card]));
+    const decorations = knowledgeResolutions
+      .filter((resolution) => resolution.range && cards.has(resolution.cardId))
+      .map((resolution) => {
+        const card = cards.get(resolution.cardId)!;
+        const range = resolution.range!;
+        return {
+          range: new monaco.Range(range.startLine, range.startColumn, range.endLine, range.endColumn),
+          options: {
+            className: resolution.status === "needsReview" ? "knowledge-anchor-review" : "knowledge-anchor-highlight",
+            glyphMarginClassName: resolution.status === "needsReview" ? "knowledge-glyph knowledge-glyph-review" : `knowledge-glyph knowledge-glyph-${card.type}`,
+            hoverMessage: { value: `**${card.type} · ${card.title}**\n\n${card.summary}\n\n${card.provenance?.author.displayName ?? ""}${resolution.status === "needsReview" ? "\n\n选择新的代码范围后，在知识面板中点击“用当前选区重新锚定”。" : ""}` }
+          }
+        };
+      });
+    knowledgeDecorationIdsRef.current = editor.deltaDecorations(knowledgeDecorationIdsRef.current, decorations);
+  }, [activeFile, editorVersion, knowledgeCards, knowledgeResolutions]);
 
   return (
     <div className="editor-area">
@@ -127,6 +158,7 @@ export function EditorArea({
             canEdit={canEdit}
             theme={theme}
             onLocalEdit={onLocalEdit}
+            onPinKnowledge={onPinKnowledge}
             onMount={(editor, monaco) => {
               editorRef.current = editor;
               monacoRef.current = monaco;
@@ -141,6 +173,23 @@ export function EditorArea({
                   event.selection.getPosition(),
                   event.selection
                 );
+              });
+              editor.addAction({
+                id: "knowledge.pin",
+                label: "Pin 为知识卡片",
+                contextMenuGroupId: "navigation",
+                contextMenuOrder: 1,
+                keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyK],
+                run: () => {
+                  const selection = editor.getSelection();
+                  if (!selection || selection.isEmpty()) return;
+                  onPinKnowledge(activeFile.path, {
+                    startLineNumber: selection.startLineNumber,
+                    startColumn: selection.startColumn,
+                    endLineNumber: selection.endLineNumber,
+                    endColumn: selection.endColumn
+                  });
+                }
               });
             }}
           />
@@ -160,6 +209,7 @@ function CollaborativeEditor({
   canEdit,
   theme,
   onLocalEdit,
+  onPinKnowledge,
   onMount
 }: {
   file: OpenFile;
@@ -169,6 +219,7 @@ function CollaborativeEditor({
   canEdit: boolean;
   theme: ThemeMode;
   onLocalEdit(path: string, change: FileEditChange): void;
+  onPinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): void;
   onMount(
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco

@@ -315,6 +315,12 @@ export type ServerMessage =
       type: "team_agents_changed";
       projectId: string;
       agents: AgentSession[];
+    }
+  | {
+      type: "knowledge_changed";
+      projectId: string;
+      cardId: string;
+      action: string;
     };
 
 export type TerminalClientMessage =

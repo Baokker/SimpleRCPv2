@@ -5,12 +5,13 @@ import { createEventLog } from "./eventLog.js";
 import { getProjectMetadataPath, type ProjectRecord } from "./projects.js";
 import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
+import { createKnowledgeService } from "./knowledge/knowledgeService.js";
 import type { ChatMessage, WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
 export function createProjectRuntime(
   project: ProjectRecord,
-  options: { terminalEnabled?: boolean } = {}
+  options: { terminalEnabled?: boolean; knowledgeMode?: string } = {}
 ) {
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
@@ -26,6 +27,7 @@ export function createProjectRuntime(
     expiresAt: number;
   }> = [];
   const fileSavedListeners = new Set<(path: string) => void>();
+  const knowledgeChangedListeners = new Set<(change: { cardId: string; action: string }) => void>();
   const documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
     projectId: project.id,
@@ -38,6 +40,19 @@ export function createProjectRuntime(
     enabled: options.terminalEnabled !== false
   });
   const room = rooms.createRoom(project.workspacePath, project.name);
+  const knowledge = options.knowledgeMode && options.knowledgeMode !== "off"
+    ? createKnowledgeService({
+      projectId: project.id,
+      roomId: room.id,
+      workspaceRoot: project.workspacePath,
+      metadataRoot: projectRoot,
+      documents,
+      events,
+      onChanged(change) {
+        for (const listener of knowledgeChangedListeners) listener(change);
+      }
+    })
+    : undefined;
   const terminalListeners = new Set<(data: string) => void>();
   const inputWindows = new Map<string, { count: number; timer: ReturnType<typeof setTimeout> }>();
   function flushInput(memberId: string) {
@@ -128,6 +143,7 @@ export function createProjectRuntime(
     chat,
     documents,
     terminal,
+    knowledge,
     room,
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
       workspaceListeners.add(listener);
@@ -146,6 +162,10 @@ export function createProjectRuntime(
       fileSavedListeners.add(listener);
       return () => fileSavedListeners.delete(listener);
     },
+    onKnowledgeChanged(listener: (change: { cardId: string; action: string }) => void) {
+      knowledgeChangedListeners.add(listener);
+      return () => knowledgeChangedListeners.delete(listener);
+    },
     onTerminalData(listener: (data: string) => void) {
       terminalListeners.add(listener);
       return () => terminalListeners.delete(listener);
@@ -154,6 +174,7 @@ export function createProjectRuntime(
       workspaceListeners.clear();
       suppressedWorkspaceChanges = [];
       fileSavedListeners.clear();
+      knowledgeChangedListeners.clear();
       terminalListeners.clear();
       removeTerminalListener();
       removeTerminalInputListener();

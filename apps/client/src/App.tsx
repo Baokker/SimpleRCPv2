@@ -18,7 +18,16 @@ import {
   readWorkspaceFile,
   renameWorkspacePath,
   sendChatMessage,
-  sendConnectionOffline
+  sendConnectionOffline,
+  getKnowledgeCards,
+  getKnowledgeGuide,
+  getKnowledgeTimeline,
+  createKnowledgeCard,
+  generateKnowledgeDemo,
+  updateKnowledgeCard,
+  confirmKnowledgeCard,
+  archiveKnowledgeCard,
+  reanchorKnowledgeCard
 } from "./api";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
@@ -67,7 +76,11 @@ import type {
   RoomMember,
   ProjectRecord,
   WorkspaceChange,
-  WorkspaceNode
+  WorkspaceNode,
+  KnowledgeAnchorResolution,
+  KnowledgeCard,
+  KnowledgeGuideItem,
+  KnowledgeTimelineItem
 } from "./types";
 
 type ResizeTarget = "workspace" | "collaboration" | "terminal";
@@ -118,6 +131,7 @@ function ProjectRoute({
     roomId,
     participants,
     terminalEnabled,
+    knowledgeEnabled,
     identity,
     loading,
     error,
@@ -162,6 +176,7 @@ function ProjectRoute({
       roomId={roomId}
       identity={identity}
       terminalEnabled={terminalEnabled}
+      knowledgeEnabled={knowledgeEnabled}
       theme={theme}
       onToggleTheme={onToggleTheme}
     />
@@ -173,6 +188,7 @@ function WorkspacePage({
   roomId,
   identity,
   terminalEnabled,
+  knowledgeEnabled,
   theme,
   onToggleTheme
 }: {
@@ -180,6 +196,7 @@ function WorkspacePage({
   roomId: string;
   identity: ProjectIdentity;
   terminalEnabled: boolean;
+  knowledgeEnabled: boolean;
   theme: ThemeMode;
   onToggleTheme(): void;
 }) {
@@ -195,6 +212,12 @@ function WorkspacePage({
   const [teamAgents, setTeamAgents] = useState<AgentSession[]>([]);
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
+  const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>([]);
+  const [knowledgeResolutions, setKnowledgeResolutions] = useState<KnowledgeAnchorResolution[]>([]);
+  const [knowledgeGuide, setKnowledgeGuide] = useState<KnowledgeGuideItem[]>([]);
+  const [knowledgeTimeline, setKnowledgeTimeline] = useState<KnowledgeTimelineItem[]>([]);
+  const [knowledgePinSelection, setKnowledgePinSelection] = useState<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>();
+  const [knowledgeCurrentSelection, setKnowledgeCurrentSelection] = useState<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>();
   const loadedAgentTraceIdsRef = useRef(new Set<string>());
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
@@ -236,6 +259,7 @@ function WorkspacePage({
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
   const agentRefreshTimerRef = useRef<number>();
+  const knowledgeRefreshTimerRef = useRef<number>();
   const remoteCursors = useMemo(
     () => Object.values(remoteCursorMap),
     [remoteCursorMap]
@@ -370,6 +394,10 @@ function WorkspacePage({
           if (message.type === "file_saved") {
             pendingSavePathsRef.current.delete(message.path);
             if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
+            if (knowledgeEnabled) scheduleKnowledgeRefresh();
+          }
+          if (message.type === "knowledge_changed") {
+            scheduleKnowledgeRefresh();
           }
           if (message.type === "agent_run_updated") {
             setAgentRuns((current) => {
@@ -408,6 +436,9 @@ function WorkspacePage({
       }
       if (agentRefreshTimerRef.current) {
         window.clearTimeout(agentRefreshTimerRef.current);
+      }
+      if (knowledgeRefreshTimerRef.current) {
+        window.clearTimeout(knowledgeRefreshTimerRef.current);
       }
     };
   }, [displayName, identity.role, projectId, roomId]);
@@ -466,6 +497,17 @@ function WorkspacePage({
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
+
+  useEffect(() => {
+    if (!knowledgeEnabled || !member) {
+      setKnowledgeCards([]);
+      setKnowledgeResolutions([]);
+      setKnowledgeGuide([]);
+      setKnowledgeTimeline([]);
+      return;
+    }
+    void refreshKnowledgeState().catch(showWorkspaceError);
+  }, [activePath, knowledgeEnabled, member?.id]);
 
   useEffect(() => {
     if (!followingMemberId) return;
@@ -578,6 +620,29 @@ function WorkspacePage({
     }, 150);
   }
 
+  function scheduleKnowledgeRefresh() {
+    if (!knowledgeEnabled) return;
+    if (knowledgeRefreshTimerRef.current) window.clearTimeout(knowledgeRefreshTimerRef.current);
+    knowledgeRefreshTimerRef.current = window.setTimeout(() => {
+      knowledgeRefreshTimerRef.current = undefined;
+      void refreshKnowledgeState().catch(showWorkspaceError);
+    }, 180);
+  }
+
+  async function refreshKnowledgeState() {
+    if (!knowledgeEnabled) return;
+    const [cards, fileCards, guide, timeline] = await Promise.all([
+      getKnowledgeCards(projectId),
+      activePath ? getKnowledgeCards(projectId, activePath) : Promise.resolve({ cards: [], resolutions: [] }),
+      getKnowledgeGuide(projectId, activePath),
+      getKnowledgeTimeline(projectId, activePath)
+    ]);
+    setKnowledgeCards(cards.cards);
+    setKnowledgeResolutions(fileCards.resolutions);
+    setKnowledgeGuide(guide.items);
+    setKnowledgeTimeline(timeline.items);
+  }
+
   async function openFile(path: string) {
     if (activePath && activePath !== path) flushFileEdit(activePath);
     if (!openFiles.some((file) => file.path === path)) {
@@ -656,7 +721,65 @@ function WorkspacePage({
     position: CursorPosition,
     selection: EditorSelection
   ) {
+    setKnowledgeCurrentSelection({
+      file: path,
+      selection: {
+        startLineNumber: selection.startLineNumber,
+        startColumn: selection.startColumn,
+        endLineNumber: selection.endLineNumber,
+        endColumn: selection.endColumn
+      }
+    });
     socketRef.current?.sendCursorChange(path, position, selection);
+  }
+
+  function pinKnowledge(file: string, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }) {
+    setKnowledgePinSelection({ file, selection });
+    setKnowledgeCurrentSelection({ file, selection });
+  }
+
+  async function savePinnedKnowledge(input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }) {
+    const result = await createKnowledgeCard(projectId, { ...input, anchors: knowledgePinSelection ? [knowledgePinSelection] : undefined });
+    setKnowledgeCards((current) => [result.card, ...current]);
+    setKnowledgePinSelection(undefined);
+    scheduleKnowledgeRefresh();
+  }
+
+  async function updateKnowledge(id: string, input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }) {
+    await updateKnowledgeCard(projectId, id, input);
+    await refreshKnowledgeState();
+  }
+
+  async function confirmKnowledge(id: string) {
+    await confirmKnowledgeCard(projectId, id);
+    await refreshKnowledgeState();
+  }
+
+  async function archiveKnowledge(id: string) {
+    await archiveKnowledgeCard(projectId, id);
+    await refreshKnowledgeState();
+  }
+
+  async function reanchorKnowledge(id: string, anchorIndex: number, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }) {
+    await reanchorKnowledgeCard(projectId, id, anchorIndex, selection);
+    await refreshKnowledgeState();
+  }
+
+  async function openKnowledgeAnchor(path: string, range?: { startLine: number; startColumn: number; endLine: number; endColumn: number }) {
+    await openFile(path);
+    if (!range) return;
+    window.requestAnimationFrame(() => {
+      const editor = window.__simplercpEditors?.[path];
+      if (!editor) return;
+      const selection = {
+        startLineNumber: range.startLine,
+        startColumn: range.startColumn,
+        endLineNumber: range.endLine,
+        endColumn: range.endColumn
+      };
+      editor.setSelection(selection);
+      editor.revealRangeInCenter(selection);
+    });
   }
 
   async function sendChat() {
@@ -871,6 +994,9 @@ function WorkspacePage({
           onCloseFile={closeFile}
           onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
+          onPinKnowledge={pinKnowledge}
+          knowledgeResolutions={knowledgeResolutions}
+          knowledgeCards={knowledgeCards}
         />
       </section>
       <aside className="collab-pane" hidden={!collaborationVisible}>
@@ -895,6 +1021,7 @@ function WorkspacePage({
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}
+          onOpenKnowledgeAnchor={(path, range) => void openKnowledgeAnchor(path, range).catch(showWorkspaceError)}
           onError={showWorkspaceError}
           onLoadAgentTrace={(runId) => void loadAgentTrace(runId).catch(showWorkspaceError)}
           onCreateTeamAgent={async (name, description) => {
@@ -905,6 +1032,24 @@ function WorkspacePage({
             const response = await cancelAgentRun(projectId, runId);
             setAgentRuns((current) => current.map((run) => run.id === runId ? response.run : run));
             void refreshAgentState().catch(showWorkspaceError);
+          }}
+          knowledgeEnabled={knowledgeEnabled}
+          activePath={activePath}
+          knowledgeCards={knowledgeCards}
+          knowledgeResolutions={knowledgeResolutions}
+          knowledgeGuide={knowledgeGuide}
+          knowledgeTimeline={knowledgeTimeline}
+          knowledgePinSelection={knowledgePinSelection}
+          knowledgeCurrentSelection={knowledgeCurrentSelection}
+          onCreateKnowledgeCard={savePinnedKnowledge}
+          onUpdateKnowledgeCard={updateKnowledge}
+          onConfirmKnowledgeCard={confirmKnowledge}
+          onArchiveKnowledgeCard={archiveKnowledge}
+          onReanchorKnowledgeCard={reanchorKnowledge}
+          onClearKnowledgePinSelection={() => setKnowledgePinSelection(undefined)}
+          onGenerateKnowledgeDemo={async () => {
+            await generateKnowledgeDemo(projectId);
+            await refreshKnowledgeState();
           }}
         />
       </aside>

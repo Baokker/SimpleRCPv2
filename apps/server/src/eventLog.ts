@@ -28,7 +28,11 @@ const durableEventTypes = new Set([
   "agent_task_started",
   "agent_task_completed",
   "agent_task_failed",
-  "agent_task_cancelled"
+  "agent_task_cancelled",
+  "knowledge_card_created",
+  "knowledge_card_updated",
+  "knowledge_card_confirmed",
+  "knowledge_card_archived"
 ]);
 
 export function createEventLog(storagePath?: string) {

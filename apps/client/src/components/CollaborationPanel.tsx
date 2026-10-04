@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
+import { KnowledgePanel } from "./KnowledgePanel";
 import { downloadAgentTrace } from "../api";
 import { presentTrace } from "../agentTracePresentation";
 import type {
@@ -28,11 +29,15 @@ import type {
   EventRecord,
   RemoteCursor,
   RoomMember,
-  WorkspaceNode
+  WorkspaceNode,
+  KnowledgeCard,
+  KnowledgeAnchorResolution,
+  KnowledgeGuideItem,
+  KnowledgeTimelineItem
 } from "../types";
 import { formatTime } from "../format";
 
-type CollaborationTab = "chat" | "agent" | "team" | "project";
+type CollaborationTab = "chat" | "agent" | "team" | "project" | "knowledge";
 type ActivityKind =
   | "join"
   | "leave"
@@ -74,10 +79,26 @@ export function CollaborationPanel({
   followingMemberId,
   onFollowMember,
   onOpenFile,
+  onOpenKnowledgeAnchor,
   onError,
   onLoadAgentTrace,
   onCreateTeamAgent,
-  onCancelAgentRun
+  onCancelAgentRun,
+  knowledgeEnabled,
+  activePath,
+  knowledgeCards,
+  knowledgeResolutions,
+  knowledgeGuide,
+  knowledgeTimeline,
+  knowledgePinSelection,
+  knowledgeCurrentSelection,
+  onCreateKnowledgeCard,
+  onUpdateKnowledgeCard,
+  onConfirmKnowledgeCard,
+  onArchiveKnowledgeCard,
+  onReanchorKnowledgeCard,
+  onClearKnowledgePinSelection,
+  onGenerateKnowledgeDemo
 }: {
   members: RoomMember[];
   events: EventRecord[];
@@ -99,10 +120,26 @@ export function CollaborationPanel({
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
+  onOpenKnowledgeAnchor(path: string, range?: { startLine: number; startColumn: number; endLine: number; endColumn: number }): void;
   onError(error: unknown): void;
   onLoadAgentTrace(runId: string): void;
   onCreateTeamAgent(name: string, description?: string): Promise<void>;
   onCancelAgentRun(runId: string): Promise<void>;
+  knowledgeEnabled: boolean;
+  activePath?: string;
+  knowledgeCards: KnowledgeCard[];
+  knowledgeResolutions: KnowledgeAnchorResolution[];
+  knowledgeGuide: KnowledgeGuideItem[];
+  knowledgeTimeline: KnowledgeTimelineItem[];
+  knowledgePinSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
+  knowledgeCurrentSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
+  onCreateKnowledgeCard(input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }): Promise<void>;
+  onUpdateKnowledgeCard(id: string, input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }): Promise<void>;
+  onConfirmKnowledgeCard(id: string): Promise<void>;
+  onArchiveKnowledgeCard(id: string): Promise<void>;
+  onReanchorKnowledgeCard(id: string, anchorIndex: number, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): Promise<void>;
+  onClearKnowledgePinSelection(): void;
+  onGenerateKnowledgeDemo(): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
@@ -192,6 +229,16 @@ export function CollaborationPanel({
           <Settings2 size={14} />
           Project
         </button>
+        {knowledgeEnabled ? (
+          <button
+            type="button"
+            className={activeTab === "knowledge" ? "active" : ""}
+            onClick={() => setActiveTab("knowledge")}
+            data-testid="collab-tab-knowledge"
+          >
+            Knowledge
+          </button>
+        ) : null}
         <button
           className={activeTab === "team" ? "active" : ""}
           onClick={() => setActiveTab("team")}
@@ -203,6 +250,26 @@ export function CollaborationPanel({
       </nav>
 
       <div className="collab-tab-body">
+        {activeTab === "knowledge" && knowledgeEnabled ? (
+          <KnowledgePanel
+            cards={knowledgeCards}
+            guide={knowledgeGuide}
+            timeline={knowledgeTimeline}
+            resolutions={knowledgeResolutions}
+            activePath={activePath}
+            pinSelection={knowledgePinSelection}
+            currentSelection={knowledgeCurrentSelection}
+            memberId={member?.id}
+            onCreate={onCreateKnowledgeCard}
+            onUpdate={onUpdateKnowledgeCard}
+            onConfirm={onConfirmKnowledgeCard}
+            onArchive={onArchiveKnowledgeCard}
+            onReanchor={onReanchorKnowledgeCard}
+            onGenerateDemo={onGenerateKnowledgeDemo}
+            onOpenAnchor={onOpenKnowledgeAnchor}
+            onClearPinSelection={onClearKnowledgePinSelection}
+          />
+        ) : null}
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
             <div className="team-agent-bar" data-testid="team-agent-bar">

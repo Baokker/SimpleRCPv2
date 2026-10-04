@@ -2,7 +2,11 @@ export const LatestSchemaVersion = 3 as const;
 
 export type TextPosition = { line: number; character: number };
 export type TextRange = { start: TextPosition; end: TextPosition };
-export type RelativeTextPosition = { type: string; item?: string; assoc?: number };
+export type RelativeTextPosition = {
+    type: string;
+    item?: string;
+    assoc?: number;
+};
 
 export type KnowledgeCardType = 'decision' | 'constraint' | 'risk' | 'context' | 'negative' | 'tutorial';
 export type KnowledgeSource = 'manual' | 'event' | 'ai';
@@ -25,7 +29,7 @@ export interface KnowledgeAnchor {
     file: { workspaceFolderName?: string; workspaceRelativePath: string };
     associationLevel: KnowledgeAssociationLevel;
     rangeAtCapture?: TextRange;
-    yjsRelative?: { start: RelativeTextPosition; end: RelativeTextPosition };
+    yjsRelative?: { start: RelativeTextPosition; end: RelativeTextPosition; docEpoch?: string };
     semantic?: { path: Array<{ name: string; kind: number }>; name: string; kind: number };
     snapshot: { text: string; truncated?: boolean; sha256?: string };
     fingerprint?: { prefix: string; suffix: string; landmarkLines: string[] };
@@ -157,7 +161,7 @@ function isKnowledgeAnchor(value: unknown): value is KnowledgeAnchor {
     if (!['block', 'symbol', 'file'].includes(anchor.associationLevel) || !anchor.snapshot || typeof anchor.snapshot.text !== 'string') return false;
     if (anchor.file.workspaceFolderName !== undefined && typeof anchor.file.workspaceFolderName !== 'string') return false;
     if (anchor.rangeAtCapture && (!isTextPosition(anchor.rangeAtCapture.start) || !isTextPosition(anchor.rangeAtCapture.end))) return false;
-    if (anchor.yjsRelative && (!isRelativeTextPosition(anchor.yjsRelative.start) || !isRelativeTextPosition(anchor.yjsRelative.end))) return false;
+    if (anchor.yjsRelative && (!isRelativeTextPosition(anchor.yjsRelative.start) || !isRelativeTextPosition(anchor.yjsRelative.end) || (anchor.yjsRelative.docEpoch !== undefined && typeof anchor.yjsRelative.docEpoch !== 'string'))) return false;
     if (anchor.semantic && (!Array.isArray(anchor.semantic.path) || typeof anchor.semantic.name !== 'string' || typeof anchor.semantic.kind !== 'number' || anchor.semantic.path.some(item => !item || typeof item.name !== 'string' || typeof item.kind !== 'number'))) return false;
     if (anchor.snapshot.truncated !== undefined && typeof anchor.snapshot.truncated !== 'boolean') return false;
     if (anchor.snapshot.sha256 !== undefined && typeof anchor.snapshot.sha256 !== 'string') return false;

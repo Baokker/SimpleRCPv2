@@ -250,11 +250,20 @@ export function attachRealtimeServer(
         message
       });
     });
+    const removeKnowledgeListener = runtime.onKnowledgeChanged((change) => {
+      broadcastToProject(projectSockets, runtime.project.id, {
+        type: "knowledge_changed",
+        projectId: runtime.project.id,
+        cardId: change.cardId,
+        action: change.action
+      });
+    });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,
       removeFileSavedListener,
       removeTerminalListener,
-      removeChatListener
+      removeChatListener,
+      removeKnowledgeListener
     ]);
   }
 

@@ -7,6 +7,7 @@ const dataDir = fileURLToPath(
 const serverPort = 4100;
 const clientPort = 5174;
 const terminalEnabled = process.env.SIMPLERCP_TERMINAL_ENABLED ?? "true";
+const knowledgeMode = process.env.KNOWLEDGE ?? "off";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -21,7 +22,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_DATA_DIR=${JSON.stringify(dataDir)} SIMPLERCP_SHELL=/bin/sh SIMPLERCP_TERMINAL_ENABLED=${terminalEnabled} SIMPLERCP_FAKE_AGENT_RUNTIME=true pnpm --filter @simplercp/server dev`,
+      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} KNOWLEDGE=${knowledgeMode} SIMPLERCP_DATA_DIR=${JSON.stringify(dataDir)} SIMPLERCP_SHELL=/bin/sh SIMPLERCP_TERMINAL_ENABLED=${terminalEnabled} SIMPLERCP_FAKE_AGENT_RUNTIME=true pnpm --filter @simplercp/server dev`,
       url: `http://127.0.0.1:${serverPort}/api/health`,
       reuseExistingServer: false,
       timeout: 30_000

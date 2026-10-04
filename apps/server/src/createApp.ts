@@ -13,6 +13,7 @@ import { registerAgentRoutes } from "./routes/agentRoutes.js";
 import { registerCollaborationRoutes } from "./routes/collaborationRoutes.js";
 import { registerProjectRoutes } from "./routes/projectRoutes.js";
 import { registerWorkspaceRoutes } from "./routes/workspaceRoutes.js";
+import { registerKnowledgeRoutes } from "./routes/knowledgeRoutes.js";
 import { createMemberStore, createIdentityMiddleware } from "./auth/identity.js";
 import { requireIdentity } from "./auth/permissions.js";
 
@@ -25,7 +26,8 @@ export async function createApp(config: ServerConfig) {
   });
   const members = createMemberStore({ projects: () => registry.listProjectsSync() });
   const runtimeManager = createProjectRuntimeManager(registry, {
-    terminalEnabled: config.terminalEnabled !== false
+    terminalEnabled: config.terminalEnabled !== false,
+    knowledgeMode: config.knowledge ?? "off"
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
@@ -72,7 +74,8 @@ export async function createApp(config: ServerConfig) {
     const publicRequest = (req.method === "GET" && ["/", "/participants"].includes(req.path))
       || (req.method === "POST" && req.path === "/members")
       || (req.method === "DELETE" && req.path === "/");
-    if (publicRequest || ["import", "import-zip"].includes(req.params.projectId)) {
+    const knowledgeDisabled = (config.knowledge ?? "off") === "off" && (req.path.includes("knowledge") || req.originalUrl.includes("/knowledge"));
+    if (publicRequest || ["import", "import-zip"].includes(req.params.projectId) || knowledgeDisabled) {
       next();
       return;
     }
@@ -85,7 +88,10 @@ export async function createApp(config: ServerConfig) {
       dataDir: config.dataDir,
       publicOrigin: config.publicOrigin,
       features: {
-        terminal: config.terminalEnabled !== false
+        terminal: config.terminalEnabled !== false,
+        ...((config.knowledge ?? "off") !== "off"
+          ? { knowledge: true, knowledgeMode: config.knowledge }
+          : {})
       }
     });
   });
@@ -94,6 +100,7 @@ export async function createApp(config: ServerConfig) {
   registerProjectRoutes(app, { agentRuns, registry, runtimeManager });
   registerCollaborationRoutes(app, runtimeManager, members, chatAgentBridge);
   registerWorkspaceRoutes(app, runtimeManager);
+  registerKnowledgeRoutes(app, runtimeManager, members, (config.knowledge ?? "off") !== "off");
 
   app.use(
     (
