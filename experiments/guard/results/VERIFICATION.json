@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-10-04T16:55:52.636Z",
+  "verifiedAt": "2026-10-04T17:05:37.684Z",
   "runs": [
     {
       "experiment": "X1",
@@ -13,7 +13,7 @@
     },
     {
       "experiment": "X2",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261004163249",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261004170519",
       "pass": true,
       "checks": {
         "rowCount": true
@@ -31,7 +31,7 @@
     },
     {
       "experiment": "X4",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261004163249",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261004170519",
       "pass": true,
       "checks": {
         "rowCount": true

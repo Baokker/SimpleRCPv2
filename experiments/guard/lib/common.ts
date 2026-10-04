@@ -100,7 +100,7 @@ export async function environmentRecord(extra: Record<string, unknown> = {}) {
     cpuCount: os.cpus().length,
     memoryBytes: os.totalmem(),
     model: process.env.DEEPSEEK_MODEL ?? "unconfigured",
-    dataDir: path.resolve(".experiment-data"),
+    dataDir: path.join(projectRoot, ".experiment-data"),
     ...extra
   };
 }

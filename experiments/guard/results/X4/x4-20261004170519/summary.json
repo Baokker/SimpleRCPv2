@@ -1,0 +1,19 @@
+{
+  "status": "未完成",
+  "reason": "未配置模型 Key，无法完成至少两个模型、每条三次的在线判官实验。",
+  "datasetCount": 116,
+  "models": [],
+  "repeats": 3,
+  "completedJudgments": 0,
+  "plannedJudgments": 696,
+  "metrics": {
+    "precision": null,
+    "recall": null,
+    "f1": null,
+    "calibration": null,
+    "injectionBetrayalRate": null,
+    "finalAutoReleaseRate": null,
+    "latencyMs": null,
+    "costCny": 0
+  }
+}
