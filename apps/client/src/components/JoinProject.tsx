@@ -110,9 +110,9 @@ export function JoinProject({
           >
             <option value="">Unassigned (collaborator)</option>
             {groupRoles(scenarioRoles).map(([scenario, entries]) => (
-              <optgroup key={scenario} label={scenario}>
+              <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>
                 {entries.map((entry) => (
-                  <option key={entry.role} value={entry.role}>{entry.role} ({entry.level})</option>
+                  <option key={entry.role} value={entry.role}>{entry.displayName} — {entry.level}</option>
                 ))}
               </optgroup>
             ))}

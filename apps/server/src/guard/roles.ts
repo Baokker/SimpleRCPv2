@@ -10,30 +10,32 @@ export const LEVELS: Level[] = [
 
 export interface ScenarioRole {
   scenario: string;
+  scenarioDisplayName: string;
   role: string;
   label: string;
+  displayName: string;
   level: Level;
 }
 
 export const SCENARIOS: ScenarioRole[] = [
-  { scenario: "教学与实验课", role: "teacher", label: "教师", level: "owner" },
-  { scenario: "教学与实验课", role: "ta", label: "助教", level: "trusted" },
-  { scenario: "教学与实验课", role: "student", label: "学生", level: "student" },
-  { scenario: "教学与实验课", role: "auditor", label: "审计员", level: "observer" },
-  { scenario: "团队协作开发", role: "lead", label: "负责人", level: "owner" },
-  { scenario: "团队协作开发", role: "maintainer", label: "维护者", level: "trusted" },
-  { scenario: "团队协作开发", role: "developer", label: "开发者", level: "collaborator" },
-  { scenario: "团队协作开发", role: "newcomer", label: "新成员", level: "student" },
-  { scenario: "团队协作开发", role: "viewer", label: "查看者", level: "observer" },
-  { scenario: "技术面试与考核", role: "interviewer", label: "面试官", level: "owner" },
-  { scenario: "技术面试与考核", role: "candidate", label: "候选人", level: "student" },
-  { scenario: "外部贡献与黑客松", role: "host", label: "主办者", level: "owner" },
-  { scenario: "外部贡献与黑客松", role: "mentor", label: "导师", level: "trusted" },
-  { scenario: "外部贡献与黑客松", role: "contributor", label: "贡献者", level: "student" },
-  { scenario: "运维故障排查", role: "commander", label: "指挥员", level: "owner" },
-  { scenario: "运维故障排查", role: "oncall", label: "值班员", level: "trusted" },
-  { scenario: "运维故障排查", role: "responder", label: "响应员", level: "collaborator" },
-  { scenario: "运维故障排查", role: "stakeholder", label: "相关人员", level: "observer" }
+  { scenario: "教学与实验课", scenarioDisplayName: "Teaching", role: "teacher", label: "教师", displayName: "Teacher", level: "owner" },
+  { scenario: "教学与实验课", scenarioDisplayName: "Teaching", role: "ta", label: "助教", displayName: "Teaching assistant", level: "trusted" },
+  { scenario: "教学与实验课", scenarioDisplayName: "Teaching", role: "student", label: "学生", displayName: "Student", level: "student" },
+  { scenario: "教学与实验课", scenarioDisplayName: "Teaching", role: "auditor", label: "审计员", displayName: "Auditor", level: "observer" },
+  { scenario: "团队协作开发", scenarioDisplayName: "Team development", role: "lead", label: "负责人", displayName: "Lead", level: "owner" },
+  { scenario: "团队协作开发", scenarioDisplayName: "Team development", role: "maintainer", label: "维护者", displayName: "Maintainer", level: "trusted" },
+  { scenario: "团队协作开发", scenarioDisplayName: "Team development", role: "developer", label: "开发者", displayName: "Developer", level: "collaborator" },
+  { scenario: "团队协作开发", scenarioDisplayName: "Team development", role: "newcomer", label: "新成员", displayName: "Newcomer", level: "student" },
+  { scenario: "团队协作开发", scenarioDisplayName: "Team development", role: "viewer", label: "查看者", displayName: "Viewer", level: "observer" },
+  { scenario: "技术面试与考核", scenarioDisplayName: "Technical interview", role: "interviewer", label: "面试官", displayName: "Interviewer", level: "owner" },
+  { scenario: "技术面试与考核", scenarioDisplayName: "Technical interview", role: "candidate", label: "候选人", displayName: "Candidate", level: "student" },
+  { scenario: "外部贡献与黑客松", scenarioDisplayName: "Open contribution", role: "host", label: "主办者", displayName: "Host", level: "owner" },
+  { scenario: "外部贡献与黑客松", scenarioDisplayName: "Open contribution", role: "mentor", label: "导师", displayName: "Mentor", level: "trusted" },
+  { scenario: "外部贡献与黑客松", scenarioDisplayName: "Open contribution", role: "contributor", label: "贡献者", displayName: "Contributor", level: "student" },
+  { scenario: "运维故障排查", scenarioDisplayName: "Incident response", role: "commander", label: "指挥员", displayName: "Commander", level: "owner" },
+  { scenario: "运维故障排查", scenarioDisplayName: "Incident response", role: "oncall", label: "值班员", displayName: "On-call", level: "trusted" },
+  { scenario: "运维故障排查", scenarioDisplayName: "Incident response", role: "responder", label: "响应员", displayName: "Responder", level: "collaborator" },
+  { scenario: "运维故障排查", scenarioDisplayName: "Incident response", role: "stakeholder", label: "相关人员", displayName: "Stakeholder", level: "observer" }
 ];
 
 const roleMap = new Map<string, Level>([

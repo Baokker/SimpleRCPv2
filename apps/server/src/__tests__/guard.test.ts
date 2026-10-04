@@ -18,7 +18,11 @@ const command = (memberLevel: GuardContext["memberLevel"], text: string, overrid
 
 describe("guard roles", () => {
   it("maps every scenario role and direct level name", () => {
-    for (const entry of SCENARIOS) expect(roleLevel(entry.role)).toBe(entry.level);
+    for (const entry of SCENARIOS) {
+      expect(roleLevel(entry.role)).toBe(entry.level);
+      expect(entry.scenarioDisplayName).toBeTruthy();
+      expect(entry.displayName).toBeTruthy();
+    }
     expect(roleLevel("OWNER")).toBe("owner");
     expect(roleLevel(" ")).toBe("collaborator");
     expect(roleLevel("unrecognised")).toBe("collaborator");

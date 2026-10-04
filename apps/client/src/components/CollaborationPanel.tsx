@@ -434,8 +434,8 @@ export function CollaborationPanel({
                         <i className={candidate.online ? "status-dot online" : "status-dot"} />
                         <strong>{candidate.displayName}</strong>
                         {candidate.id === member?.id ? (
-                          <label className="member-role-editor"><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => changeRole(event.target.value)}><option value="">Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role}>{entry.role} ({entry.level})</option>)}</optgroup>)}</select></label>
-                        ) : <em>{candidate.profileRole || "unassigned"}</em>}
+                          <label className="member-role-editor"><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => changeRole(event.target.value)}><option value="">Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role}>{entry.displayName} — {entry.level}</option>)}</optgroup>)}</select></label>
+                        ) : <em>{scenarioRoles.find((role) => role.role === candidate.profileRole)?.displayName ?? candidate.profileRole ?? "Unassigned"}</em>}
                         {candidate.id !== member?.id ? candidate.profileRole ? <em>({scenarioRoles.find((role) => role.role === candidate.profileRole)?.level ?? "collaborator"})</em> : <em>(collaborator)</em> : null}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>

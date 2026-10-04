@@ -30,8 +30,10 @@ export interface ServerInfo {
 
 export interface GuardScenarioRole {
   scenario: string;
+  scenarioDisplayName: string;
   role: string;
   label: string;
+  displayName: string;
   level: "observer" | "student" | "collaborator" | "trusted" | "owner";
 }
 
