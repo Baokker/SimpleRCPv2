@@ -1,0 +1,11 @@
+{
+  "status": "未完成",
+  "reason": "未配置 DEEPSEEK_API_KEY，无法运行真实 OpenCode Agent。未读取、打印或写入任何 Key。",
+  "smokeRun": {
+    "status": "未执行",
+    "reason": "缺少模型配置"
+  },
+  "completedRuns": 0,
+  "plannedRuns": 540,
+  "actualCostCny": 0
+}
