@@ -90,8 +90,14 @@ export const SharedTerminal = forwardRef<
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const endpoint = `${protocol}://${window.location.host}/terminal?projectId=${encodeURIComponent(projectId)}&memberId=${encodeURIComponent(memberId)}`;
     let reconnectTimer: number | undefined;
+    let pendingTimer: number | undefined;
     let reconnectAttempt = 0;
     let disposed = false;
+
+    function clearPendingTimer() {
+      if (pendingTimer !== undefined) window.clearInterval(pendingTimer);
+      pendingTimer = undefined;
+    }
 
     function sendResize() {
       const activeSocket = socketRef.current;
@@ -133,15 +139,21 @@ export const SharedTerminal = forwardRef<
         } else if (message.type === "terminal_output") {
           terminal.write(message.data);
         } else if (message.type === "control") {
+          clearPendingTimer();
           callbacksRef.current.onControl(message.holderMemberId, message.expiresAt, message.mode);
           callbacksRef.current.onStatus("");
         } else if (message.type === "guard_pending") {
-          callbacksRef.current.onStatus(formatGuardPending(message));
+          clearPendingTimer();
+          const updatePendingStatus = () => callbacksRef.current.onStatus(formatGuardPending(message, Date.now()));
+          updatePendingStatus();
+          if (message.expiresAt) pendingTimer = window.setInterval(updatePendingStatus, 1_000);
         } else if (message.type === "guard_decision") {
+          clearPendingTimer();
           const command = message.command ? `: ${message.command}` : "";
           if (message.snapshotId) callbacksRef.current.onSnapshot(message.snapshotId);
           callbacksRef.current.onStatus(formatGuardDecision(message, command));
         } else {
+          clearPendingTimer();
           terminal.write(`\r\n\x1b[31m${message.message}\x1b[0m\r\n`);
           callbacksRef.current.onStatus(message.message);
         }
@@ -190,6 +202,7 @@ export const SharedTerminal = forwardRef<
     return () => {
       disposed = true;
       if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      clearPendingTimer();
       resizeObserver.disconnect();
       dataSubscription.dispose();
       resizeSubscription.dispose();
@@ -244,11 +257,13 @@ function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "gu
   return `${message.reason}${command}`;
 }
 
-function formatGuardPending(message: Extract<TerminalServerMessage, { type: "guard_pending" }>) {
+function formatGuardPending(message: Extract<TerminalServerMessage, { type: "guard_pending" }>, now = Date.now()) {
   const waiting = message.noApprover ? "No owner online — waiting for an owner to join" : "Waiting for human approval";
   if (message.llmUnavailable) return `Model judgment unavailable — ${waiting}`;
-  if (!message.llm) return waiting;
-  return `Model suggestion: ${message.llm.risk} (${Math.round(message.llm.confidence * 100)}% confidence) — ${message.llm.reason}. ${waiting}`;
+  const remaining = message.expiresAt ? Math.max(0, Math.ceil((Date.parse(message.expiresAt) - now) / 1000)) : undefined;
+  const countdown = remaining === undefined ? "" : ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
+  if (!message.llm) return `${waiting}${countdown}`;
+  return `Model suggestion: ${message.llm.risk} (${Math.round(message.llm.confidence * 100)}% confidence) — ${message.llm.reason}. ${waiting}${countdown}`;
 }
 
 function friendlyGuardReason(reason: string) {
