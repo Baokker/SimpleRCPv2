@@ -1,6 +1,6 @@
 import { getYDoc } from "y-websocket/bin/utils";
 import type * as Y from "yjs";
-import { FILESYSTEM_ORIGIN } from "./textDelta.js";
+import { applyTextDelta, FILESYSTEM_ORIGIN } from "./textDelta.js";
 import { readWorkspaceFile, writeWorkspaceFile } from "./workspace.js";
 
 export interface CollaborativeDocumentStoreOptions {
@@ -161,13 +161,10 @@ export function createCollaborativeDocumentStore({
         const text = document.getText("content");
         const previousContent = persistedContents.get(name) ?? text.toString();
         if (previousContent === result.content) return;
-        const currentContent = text.toString();
-        const mergedContent = mergeReloadContent(previousContent, currentContent, result.content);
         document.transact(() => {
-          if (text.length > 0) text.delete(0, text.length);
-          if (mergedContent.length > 0) text.insert(0, mergedContent);
+          applyTextDelta(text, previousContent, result.content);
         }, FILESYSTEM_ORIGIN);
-        persistedContents.set(name, mergedContent);
+        persistedContents.set(name, result.content);
       })
     );
   }
@@ -216,17 +213,6 @@ export function createCollaborativeDocumentStore({
     getRevision,
     getRevisions
   };
-}
-
-function mergeReloadContent(previousContent: string, currentContent: string, nextContent: string) {
-  if (currentContent === previousContent) return nextContent;
-  if (currentContent.startsWith(previousContent)) {
-    return `${nextContent}${currentContent.slice(previousContent.length)}`;
-  }
-  if (currentContent.endsWith(previousContent)) {
-    return `${currentContent.slice(0, -previousContent.length)}${nextContent}`;
-  }
-  return nextContent;
 }
 
 export type CollaborativeDocumentStore = ReturnType<

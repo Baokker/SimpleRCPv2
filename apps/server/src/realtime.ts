@@ -27,14 +27,12 @@ interface SocketIdentity {
 export interface RealtimeContext {
   events: EventLog;
   rooms: RoomStore;
-  onCursorChange?(input: Extract<ClientMessage, { type: "cursor_change" }>): void;
 }
 
 export function handleRealtimeMessage({
   events,
   rooms,
-  message,
-  onCursorChange
+  message
 }: RealtimeContext & { message: ClientMessage }): {
   broadcast: ServerMessage;
 } {
@@ -83,11 +81,6 @@ export function handleRealtimeMessage({
   }
 
   if (message.type === "cursor_change") {
-    try {
-      onCursorChange?.(message);
-    } catch (error) {
-      console.warn(`Cursor tracking failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
     return {
       broadcast: {
         type: "cursor_change",
@@ -401,16 +394,18 @@ export function attachRealtimeServer(
         const { broadcast } = handleRealtimeMessage({
           events: runtime.events,
           rooms: runtime.rooms,
-          message: bound,
-          onCursorChange: (cursor) => runtime.conflictGuard?.cursorChanged({
-            memberId: identity.memberId,
-            path: cursor.path,
-            position: cursor.position,
-            selection: cursor.selection,
-            at: Date.now()
-          })
+          message: bound
         });
         broadcastToProject(projectSockets, projectId, broadcast);
+        if (bound.type === "cursor_change") {
+          runtime.conflictGuard?.cursorChanged({
+            memberId: identity.memberId,
+            path: bound.path,
+            position: bound.position,
+            selection: bound.selection,
+            at: Date.now()
+          });
+        }
       } catch (error) {
         socket.send(
           JSON.stringify({

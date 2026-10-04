@@ -40,15 +40,11 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
     if (event.seq !== expectedSequence++) throw new Error("Trace sequence is not contiguous");
     if (!Number.isFinite(event.at)) throw new Error("Trace timestamp is invalid");
     if (event.type === "session_start") {
-      texts.clear();
-      retired.clear();
-      openBatches.clear();
-      openChangeSets.clear();
-      redactedFiles.clear();
-      skippedFiles.clear();
       hasSession = true;
       continue;
     }
+    if (!hasSession) throw new Error("Trace has no session_start");
+    if (event.redacted && typeof event.file === "string") redactedFiles.add(event.file);
     if (event.type === "doc_open") {
       if (event.skipped === "sensitive") {
         if (typeof event.file !== "string") throw new Error("doc_open is incomplete");
@@ -125,7 +121,7 @@ export function traceEventFromConflictEvent(event: ConflictGuardEvent, sensitive
   if (event.type === "edit") return { type: "edit", at: event.edit.at, file: event.edit.file, origin: redact(event.edit.origin, sensitiveValues), ops: redact(event.edit.ops, sensitiveValues), revisionAfter: event.edit.revisionAfter, ...(redacted ? { redacted: true } : {}) };
   if (event.type === "cursor") return { type: "cursor", at: event.cursor.at, memberId: event.cursor.actor.memberId, file: event.cursor.file, position: { lineNumber: event.cursor.lineNumber, column: event.cursor.column }, selection: event.cursor.selection };
   if (event.type === "batch_closed") return { type: "batch_closed", at: event.batch.endedAt, id: event.batch.id, actor: event.batch.actor, file: event.batch.file, startedAt: event.batch.startedAt, endedAt: event.batch.endedAt, closeReason: event.batch.closeReason, ranges: event.batch.ranges, textBeforeHash: hashText(redact(event.batch.textBefore, sensitiveValues) as string), textAfterHash: hashText(redact(event.batch.textAfter, sensitiveValues) as string), ...(redacted ? { redacted: true } : {}) };
-  if (event.type === "batch_opened") return { type: "batch_opened", id: event.batch.id, actor: event.batch.actor, file: event.batch.file, startedAt: event.batch.startedAt, ranges: event.batch.ranges };
+  if (event.type === "batch_opened") return { type: "batch_opened", id: event.batch.id, actor: event.batch.actor, file: event.batch.file, startedAt: event.batch.startedAt, ranges: event.batch.ranges, ...(redacted ? { redacted: true } : {}) };
   if (event.type === "change_set_file_closed") return { type: "change_set_file_closed", actor: event.actor, file: event.file, reason: event.reason };
   const files = [...event.changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt }));
   return { type: event.type, actor: event.changeSet.actor, files };

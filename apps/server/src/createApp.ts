@@ -19,7 +19,8 @@ import { createMemberStore, createIdentityMiddleware } from "./auth/identity.js"
 import { requireIdentity } from "./auth/permissions.js";
 
 export async function createApp(config: ServerConfig) {
-  const gitCommit = config.conflictGuard?.mode !== "off" ? readGitCommit() : undefined;
+  const gitCommit = config.conflictGuard && config.conflictGuard.mode !== "off" ? readGitCommit() : undefined;
+  const sensitiveValues = [...new Set([config.agent?.apiKey, ...(config.sensitiveValues ?? [])].filter((value): value is string => Boolean(value)))];
   const registry = await createProjectRegistry({
     dataDir: config.dataDir,
     workspacesDir: config.workspacesDir ?? path.join(config.dataDir, "workspaces"),
@@ -31,7 +32,7 @@ export async function createApp(config: ServerConfig) {
     terminalEnabled: config.terminalEnabled !== false,
     conflictGuard: config.conflictGuard,
     gitCommit,
-    sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value))
+    sensitiveValues
   });
   if (config.conflictGuard?.mode === "rules" || config.conflictGuard?.mode === "full") {
     console.warn(`CONFLICT_GUARD=${config.conflictGuard.mode} currently uses observe behavior`);
@@ -57,7 +58,7 @@ export async function createApp(config: ServerConfig) {
     runtimeManager,
     getSettings: () => agentSettings.get(),
     apiKey: config.agent?.apiKey,
-    sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value)),
+    sensitiveValues,
     runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000,
     maxConcurrentRuns: config.agent?.maxConcurrentRuns ?? 3,
     appendActivity(projectId, input) {
@@ -123,9 +124,7 @@ export async function createApp(config: ServerConfig) {
 }
 
 function readGitCommit() {
-  try {
-    return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() || "unknown";
-  } catch {
-    return "unknown";
-  }
+  const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  if (!commit) throw new Error("Git commit is empty");
+  return commit;
 }

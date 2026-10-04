@@ -33,7 +33,8 @@ export function createProjectRuntime(
         metadataPath: projectRoot,
         config: options.conflictGuard,
         gitCommit: options.gitCommit,
-        sensitiveValues: options.sensitiveValues
+        sensitiveValues: options.sensitiveValues,
+        getRevision: (file) => documents.getRevision(file)
       })
     : undefined;
   const documents = createCollaborativeDocumentStore({

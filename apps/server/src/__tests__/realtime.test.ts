@@ -130,25 +130,4 @@ describe("realtime message handling", () => {
     expect(events.list()).toHaveLength(eventCountBeforeCursorMove);
   });
 
-  it("keeps cursor broadcasts when tracking the cursor throws", () => {
-    const events = createEventLog();
-    const rooms = createRoomStore(events);
-    const room = rooms.createRoom("workspace");
-    const member = rooms.joinRoom(room.id, { name: "Ada", participantId: "user-ada", connectionId: "tab-a" });
-    const result = handleRealtimeMessage({
-      events,
-      rooms,
-      onCursorChange() { throw new Error("cursor tracker unavailable"); },
-      message: {
-        type: "cursor_change",
-        roomId: room.id,
-        memberId: member.id,
-        connectionId: "tab-a",
-        path: "src/hello.ts",
-        position: { lineNumber: 1, column: 1 },
-        selection: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 }
-      }
-    });
-    expect(result.broadcast).toMatchObject({ type: "cursor_change", memberId: member.id, path: "src/hello.ts" });
-  });
 });

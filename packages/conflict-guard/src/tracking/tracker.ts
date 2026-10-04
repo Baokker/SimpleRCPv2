@@ -63,6 +63,7 @@ export class ConflictGuardTracker {
   }
 
   openDocument(file: string, text: string) {
+    if (this.files.has(file)) this.retireFile(file);
     this.files.set(file, { text, batches: new Map() });
   }
 
@@ -87,6 +88,7 @@ export class ConflictGuardTracker {
         activeState = { changeSet: { actor: { ...edit.origin }, files: new Map(), status: "editing" }, fileTimers: new Map() };
         this.active.set(actorKey, activeState);
       }
+      activeState.changeSet.status = "editing";
       if (!change) {
         change = {
           file: edit.file,
@@ -97,7 +99,6 @@ export class ConflictGuardTracker {
         };
         activeState.changeSet.files.set(edit.file, change);
       } else {
-        activeState.changeSet.status = "editing";
         change.ranges = mergeRanges([...change.ranges, ...rangesForOps(edit.ops)]);
         change.lastTouchedAt = edit.at;
       }

@@ -51,6 +51,34 @@ describe("range transformation", () => {
 });
 
 describe("tracker", () => {
+  it("returns to editing when a settled actor starts editing another file", () => {
+    const clock = new FakeClock();
+    const tracker = new ConflictGuardTracker({ clock });
+    tracker.openDocument("a.ts", "a");
+    tracker.openDocument("b.ts", "b");
+    tracker.edit(edit("a.ts", { kind: "human", memberId: "alice" }, 1, "", "A", "aA", 0));
+    clock.advance(1_500);
+    expect(tracker.getActiveChangeSets()[0]?.status).toBe("settled");
+    tracker.edit(edit("b.ts", { kind: "human", memberId: "alice" }, 1, "", "B", "bB", clock.now()));
+    expect(tracker.getActiveChangeSets()[0]?.status).toBe("editing");
+    tracker.flush();
+  });
+
+  it("closes existing batches when a document receives a new replay baseline", () => {
+    const clock = new FakeClock();
+    const tracker = new ConflictGuardTracker({ clock });
+    const closed: string[] = [];
+    tracker.onEvent((event) => { if (event.type === "batch_closed") closed.push(event.batch.file); });
+    tracker.openDocument("a.ts", "a");
+    tracker.edit(edit("a.ts", { kind: "human", memberId: "alice" }, 1, "", "A", "aA", 0));
+    tracker.openDocument("a.ts", "new");
+    expect(closed).toEqual(["a.ts"]);
+    expect(tracker.getActiveChangeSets()).toEqual([]);
+    tracker.edit(edit("a.ts", { kind: "human", memberId: "alice" }, 3, "", "!", "new!", 1));
+    expect(tracker.getActiveChangeSets()[0]?.files.get("a.ts")?.ranges).toEqual([{ start: 3, end: 4 }]);
+    tracker.flush();
+  });
+
   it("closes batches by idle, cursor distance and maximum duration", () => {
     const clock = new FakeClock();
     const tracker = new ConflictGuardTracker({ clock, createId: (() => { let id = 0; return () => `batch-${++id}`; })() });

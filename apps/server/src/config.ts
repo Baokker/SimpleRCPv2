@@ -13,6 +13,7 @@ export interface ServerConfig {
   demoProjectRoot: string;
   terminalEnabled?: boolean;
   fakeAgentRuntime?: boolean;
+  sensitiveValues?: string[];
   conflictGuard?: ProjectConflictGuardConfig;
   importRoots?: string[];
   agent?: {
@@ -96,6 +97,7 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
+    sensitiveValues: [env.DEEPSEEK_API_KEY, env.TYPESAFE_API_KEY].filter((value): value is string => Boolean(value)),
     conflictGuard: {
       mode: conflictGuardMode as ProjectConflictGuardConfig["mode"],
       idleMs: 1_500,

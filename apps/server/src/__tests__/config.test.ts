@@ -14,6 +14,7 @@ describe("server config", () => {
       demoProjectRoot: "/srv/simplercp/demo/workspace",
       terminalEnabled: true,
       fakeAgentRuntime: false,
+      sensitiveValues: [],
       conflictGuard: {
         mode: "off",
         idleMs: 1_500,
@@ -55,6 +56,7 @@ describe("server config", () => {
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
       fakeAgentRuntime: false,
+      sensitiveValues: ["configured-key"],
       conflictGuard: {
         mode: "off",
         idleMs: 1_500,

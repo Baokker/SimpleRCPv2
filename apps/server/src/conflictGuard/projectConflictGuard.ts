@@ -9,6 +9,7 @@ import {
   type CursorChange,
   type TextEditOp,
   traceEventFromConflictEvent,
+  readTrace,
   type ActorRef
 } from "@simplercp/conflict-guard";
 import { FILESYSTEM_ORIGIN } from "../textDelta.js";
@@ -34,6 +35,7 @@ export function createProjectConflictGuard(options: {
   config: ProjectConflictGuardConfig;
   gitCommit?: string;
   sensitiveValues?: string[];
+  getRevision(file: string): number;
 }) {
   if (options.config.mode === "off") return undefined;
   const clock: ConflictGuardClock = {
@@ -50,7 +52,6 @@ export function createProjectConflictGuard(options: {
   });
   const connections = new Map<object, ConnectionIdentity>();
   const mirrors = new Map<string, { text: string; stop: () => void }>();
-  const revisions = new Map<string, number>();
   let unknownOriginWarned = false;
   const pendingCursors = new Map<string, { event: ConflictGuardEvent; timer: NodeJS.Timeout }>();
   const tracePath = path.join(options.metadataPath, "conflict-guard", "trace.jsonl");
@@ -59,24 +60,24 @@ export function createProjectConflictGuard(options: {
   const redactedFiles = new Set<string>();
 
   async function initializeTraceSequence() {
-    try {
-      const source = await fs.readFile(tracePath, "utf8");
-      const lines = source.split("\n").filter(Boolean);
-      const last = lines.length > 0 ? JSON.parse(lines.at(-1)!) as { seq?: unknown } : undefined;
-      if (last && typeof last.seq === "number" && Number.isInteger(last.seq) && last.seq > 0) traceSequence = last.seq;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") console.warn("Conflict guard trace initialization failed", error);
-    }
+    await fs.mkdir(path.dirname(tracePath), { recursive: true });
+    await fs.appendFile(tracePath, "", "utf8");
+    const source = await fs.readFile(tracePath, "utf8");
+    const events = readTrace(source);
+    for (const event of events) if (event.redacted && typeof event.file === "string") redactedFiles.add(event.file);
+    const last = events.at(-1);
+    if (!last) return;
+    if (typeof last.seq !== "number" || !Number.isInteger(last.seq) || last.seq < 1) throw new Error("Conflict guard trace sequence is invalid");
+    traceSequence = last.seq;
   }
 
   const appendTrace = (event: Record<string, unknown>) => {
     traceOperations = traceOperations.then(async () => {
       const clean = redact(event, options.sensitiveValues ?? []) as Record<string, unknown>;
+      if (typeof clean.file === "string" && redactedFiles.has(clean.file)) clean.redacted = true;
       const record = { schema: 1, seq: ++traceSequence, at: clock.now(), ...clean };
       await fs.mkdir(path.dirname(tracePath), { recursive: true });
       await fs.appendFile(tracePath, `${JSON.stringify(record)}\n`, "utf8");
-    }).catch((error) => {
-      console.warn("Conflict guard trace write failed", error);
     });
     return traceOperations;
   };
@@ -103,8 +104,9 @@ export function createProjectConflictGuard(options: {
         return;
       }
       const timer = setTimeout(() => {
+        const latest = pendingCursors.get(memberId);
         pendingCursors.delete(memberId);
-        void appendTrace(traceEvent(event));
+        if (latest) void appendTrace(traceEvent(latest.event));
       }, options.config.cursorDebounceMs);
       pendingCursors.set(memberId, { event, timer });
       return;
@@ -116,8 +118,10 @@ export function createProjectConflictGuard(options: {
   function traceEvent(event: ConflictGuardEvent) {
     const file = event.type === "edit" || event.type === "cursor" || event.type === "batch_opened" || event.type === "batch_closed"
       ? event.type === "cursor" ? event.cursor.file : event.type === "edit" ? event.edit.file : event.batch.file
-      : undefined;
-    return traceEventFromConflictEvent(event, options.sensitiveValues ?? [], file ? redactedFiles.has(file) : false);
+      : event.type === "change_set_file_closed" ? event.file : undefined;
+    const record = traceEventFromConflictEvent(event, options.sensitiveValues ?? [], file ? redactedFiles.has(file) : false);
+    if (file && redactedFiles.has(file)) record.redacted = true;
+    return record;
   }
 
   function flushPendingCursors() {
@@ -137,53 +141,38 @@ export function createProjectConflictGuard(options: {
     const text = document.getText("content");
     const initial = text.toString();
     tracker.openDocument(file, initial);
-    revisions.set(file, 0);
     const safeInitial = redactText(initial, options.sensitiveValues ?? []);
     if (safeInitial.changed) redactedFiles.add(file);
-    void appendTrace({ type: "doc_open", file, textHash: hashText(safeInitial.value), text: safeInitial.value, ...(safeInitial.changed ? { redacted: true } : {}) });
+    void appendTrace({ type: "doc_open", file, textHash: hashText(safeInitial.value), text: safeInitial.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
     const observer = (event: Y.YTextEvent) => {
-      try {
-        const mirror = mirrors.get(file);
-        if (!mirror) return;
-        const before = mirror.text;
-        const ops: TextEditOp[] = [];
-        let from = 0;
-        for (const delta of event.delta) {
-          if (typeof delta.retain === "number") from += delta.retain;
-          if (typeof delta.insert === "string") ops.push({ from, deleted: "", inserted: delta.insert });
-          if (typeof delta.delete === "number") {
-            ops.push({ from, deleted: before.slice(from, from + delta.delete), inserted: "" });
-            from += delta.delete;
-          }
+      const mirror = mirrors.get(file);
+      if (!mirror) return;
+      const before = mirror.text;
+      const ops: TextEditOp[] = [];
+      let from = 0;
+      for (const delta of event.delta) {
+        if (typeof delta.retain === "number") from += delta.retain;
+        if (typeof delta.insert === "string") ops.push({ from, deleted: "", inserted: delta.insert });
+        if (typeof delta.delete === "number") {
+          ops.push({ from, deleted: before.slice(from, from + delta.delete), inserted: "" });
+          from += delta.delete;
         }
-        const after = text.toString();
-        let projected: string;
-        try {
-          projected = applyOps(before, ops);
-        } catch {
-          projected = "";
-        }
-        if (projected !== after) {
-          const safeBefore = redactText(before, options.sensitiveValues ?? []);
-          const safeAfter = redactText(after, options.sensitiveValues ?? []);
-          if (safeBefore.changed || safeAfter.changed) redactedFiles.add(file);
-          mirror.text = after;
-          tracker.openDocument(file, after);
-          void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(safeBefore.value), textHash: hashText(safeAfter.value), text: safeAfter.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
-          return;
-        }
-        const origin = actorForOrigin(event.transaction.origin);
-        const revisionAfter = (revisions.get(file) ?? 0) + 1;
-        revisions.set(file, revisionAfter);
-        try {
-          tracker.edit({ file, origin, at: clock.now(), ops, revisionAfter, textBefore: before, textAfter: after });
-        } catch (error) {
-          console.warn(`Conflict guard edit tracking failed for ${file}: ${error instanceof Error ? error.message : "Unknown error"}`);
-        }
-        mirror.text = after;
-      } catch (error) {
-        console.warn(`Conflict guard observer failed for ${file}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
+      const after = text.toString();
+      const safeBefore = redactText(before, options.sensitiveValues ?? []);
+      const safeAfter = redactText(after, options.sensitiveValues ?? []);
+      if (safeBefore.changed || safeAfter.changed) redactedFiles.add(file);
+      if (applyOps(before, ops) !== after) {
+        tracker.openDocument(file, after);
+        mirror.text = after;
+        void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(safeBefore.value), textHash: hashText(safeAfter.value), text: safeAfter.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
+        return;
+      }
+      const origin = actorForOrigin(event.transaction.origin);
+      // Y.Text observer 在 document update 事件之前执行。
+      const revisionAfter = options.getRevision(file) + (origin.kind === "filesystem" ? 0 : 1);
+      tracker.edit({ file, origin, at: clock.now(), ops, revisionAfter, textBefore: before, textAfter: after });
+      mirror.text = after;
     };
     text.observe(observer);
     mirrors.set(file, { text: initial, stop: () => text.unobserve(observer) });
@@ -207,11 +196,8 @@ export function createProjectConflictGuard(options: {
   function unregisterConnection(socket: object) { connections.delete(socket); }
 
   function cursorChanged(input: { memberId: string; path: string; position: { lineNumber: number; column: number }; selection?: CursorChange["selection"]; at?: number }) {
-    try {
-      tracker.cursorChanged({ actor: { kind: "human", memberId: input.memberId }, file: input.path, lineNumber: input.position.lineNumber, column: input.position.column, selection: input.selection, at: input.at ?? clock.now() });
-    } catch (error) {
-      console.warn(`Conflict guard cursor tracking failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
+    if (typeof input.path !== "string" || !input.position || !Number.isInteger(input.position.lineNumber) || !Number.isInteger(input.position.column) || input.position.lineNumber < 1 || input.position.column < 1) return;
+    tracker.cursorChanged({ actor: { kind: "human", memberId: input.memberId }, file: input.path, lineNumber: input.position.lineNumber, column: input.position.column, selection: input.selection, at: input.at ?? clock.now() });
   }
 
   function retirePath(file: string) {
@@ -219,7 +205,6 @@ export function createProjectConflictGuard(options: {
       if (name === file || name.startsWith(`${file}/`)) {
         mirror.stop();
         mirrors.delete(name);
-        revisions.delete(name);
         tracker.retireFile(name);
         void appendTrace({ type: "doc_retired", file: name });
       }
@@ -231,7 +216,6 @@ export function createProjectConflictGuard(options: {
     if (!mirror) return;
     mirror.stop();
     mirrors.delete(file);
-    revisions.delete(file);
     tracker.releaseDocument(file);
   }
 
@@ -283,8 +267,7 @@ function redact(value: unknown, sensitiveValues: string[]): unknown {
 }
 
 function redactText(value: string, sensitiveValues: string[]) {
-  let result = value;
-  for (const sensitive of sensitiveValues.filter(Boolean).sort((left, right) => right.length - left.length)) result = result.split(sensitive).join("[REDACTED]");
+  const result = redact(value, sensitiveValues) as string;
   return { value: result, changed: result !== value };
 }
 

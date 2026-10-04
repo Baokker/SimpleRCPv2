@@ -3,6 +3,31 @@ import { describe, expect, it } from "vitest";
 import { readTrace, traceEventFromConflictEvent, validateTrace, validateTraceDetailed } from "./trace.js";
 
 describe("trace replay", () => {
+  it("keeps document, batch and redaction state across session boundaries", () => {
+    const hash = (value: string) => createHash("sha256").update(value).digest("hex");
+    const events = [
+      { schema: 1 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 1 as const, seq: 2, at: 0, type: "doc_open", file: "a.ts", text: "a", textHash: hash("a") },
+      { schema: 1 as const, seq: 3, at: 0, type: "batch_opened", file: "a.ts", id: "first" },
+      { schema: 1 as const, seq: 4, at: 0, type: "doc_open", file: "secret.ts", text: "[REDACTED]", textHash: hash("[REDACTED]"), redacted: true },
+      { schema: 1 as const, seq: 5, at: 0, type: "doc_open", file: ".env", skipped: "sensitive" },
+      { schema: 1 as const, seq: 6, at: 1, type: "session_start" },
+      { schema: 1 as const, seq: 7, at: 2, type: "edit", file: "a.ts", ops: [{ from: 1, deleted: "", inserted: "b" }] },
+      { schema: 1 as const, seq: 8, at: 3, type: "batch_closed", file: "a.ts", id: "first", textAfterHash: hash("ab") }
+    ];
+    expect(validateTraceDetailed(events)).toEqual({ valid: true, redactedFiles: ["secret.ts"], skippedFiles: [".env"] });
+    expect(() => validateTrace(events.slice(0, 6))).toThrow("unclosed batches");
+  });
+
+  it("reports a file first redacted during an edit", () => {
+    const events = [
+      { schema: 1 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 1 as const, seq: 2, at: 0, type: "doc_open", file: "a.ts", text: "", textHash: createHash("sha256").update("").digest("hex") },
+      { schema: 1 as const, seq: 3, at: 1, type: "edit", file: "a.ts", ops: [{ from: 0, deleted: "", inserted: "[REDACTED]" }], redacted: true }
+    ];
+    expect(validateTraceDetailed(events).redactedFiles).toEqual(["a.ts"]);
+  });
+
   it("replays a complete trace and rejects missing or unordered events", () => {
     const text = "hello";
     const hash = createHash("sha256").update("hello brave").digest("hex");
