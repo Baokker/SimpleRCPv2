@@ -182,6 +182,16 @@ export function registerCollaborationRoutes(
     } catch (error) { next(error); }
   });
 
+  app.delete("/api/projects/:projectId/guard/approvals/:approvalId", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const accepted = await runtimeManager.get(req.params.projectId).guard.withdraw(req.params.approvalId, identity.memberId);
+      if (!accepted) { res.status(403).json({ error: "Only the request initiator can withdraw this approval" }); return; }
+      res.json({ accepted: true });
+    } catch (error) { next(error); }
+  });
+
   app.post("/api/projects/:projectId/terminal/control", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res);

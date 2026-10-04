@@ -55,6 +55,10 @@ export async function replyGuardApproval(projectId: string, approvalId: string, 
   });
 }
 
+export async function withdrawGuardApproval(projectId: string, approvalId: string) {
+  return request<{ accepted: boolean }>(`${projectPath(projectId)}/guard/approvals/${encodeURIComponent(approvalId)}`, { method: "DELETE" });
+}
+
 export async function listGuardApprovals(projectId: string) {
   return request<{ approvals: import("@simplercp/shared").GuardApproval[] }>(`${projectPath(projectId)}/guard/approvals`);
 }

@@ -55,6 +55,7 @@ export function createApprovalQueue(timeoutMs = 120_000) {
     enqueue,
     approve(id: string, memberId: string) { return finish(id, "approved", memberId); },
     reject(id: string, memberId: string) { return finish(id, "rejected", memberId); },
+    withdraw(id: string) { return finish(id, "rejected"); },
     cancelForRun(runId: string) { for (const item of pending.values()) if (item.request.agentRunId === runId) finish(item.id, "cancelled"); },
     list() { return [...pending.values()].map(({ resolve: _resolve, resolveOutcome: _resolveOutcome, resolveApprover: _resolveApprover, timer: _timer, ...item }) => item); },
     onPending(listener: (approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void) { listeners.add(listener); return () => listeners.delete(listener); },

@@ -31,7 +31,7 @@ import type {
   WorkspaceNode
 } from "../types";
 import { formatTime } from "../format";
-import { setTerminalControl, updateMyRole, replyGuardApproval, type GuardScenarioRole } from "../api";
+import { setTerminalControl, updateMyRole, replyGuardApproval, withdrawGuardApproval, type GuardScenarioRole } from "../api";
 import type { GuardApproval } from "../types";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project";
@@ -504,7 +504,7 @@ export function CollaborationPanel({
                       </div>
                     ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">Model judgment unavailable. This request is waiting for human approval.</div> : null}
                     {approval.noApprover ? <small>No owner online — ask a teacher or lead to join.</small> : null}
-                    {llm?.applied ? <small className="guard-llm-resolved">Resolved automatically by the model</small> : <div><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>{approval.request.memberId === member?.id ? "Run anyway" : "Approve"}</button><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>{approval.request.memberId === member?.id ? "Cancel" : "Reject"}</button></div>}
+                    {llm?.applied ? <small className="guard-llm-resolved">Resolved automatically by the model</small> : approval.request.memberId === member?.id ? <button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void withdrawGuardApproval(projectId, approval.id).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Withdraw request</button> : <div><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Approve</button><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Reject</button></div>}
                   </div>
                 );
               })}

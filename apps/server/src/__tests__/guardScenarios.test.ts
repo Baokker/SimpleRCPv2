@@ -128,6 +128,15 @@ describe("multi-member multi-agent scenarios", () => {
     expect(resolutions).toEqual(["rejected"]);
   });
 
+  it("lets the request initiator withdraw a pending approval as rejected", async () => {
+    const approvals = createApprovalQueue(10_000);
+    const request: GuardRequest = { ...base, source: "terminal", kind: "command", command: "rm config.js" };
+    const pending = approvals.enqueue(request, check("student", "terminal", { kind: "command", command: "rm config.js" }), [], null, true);
+    expect(approvals.withdraw(pending.id)).toBe(true);
+    await expect(pending.outcome).resolves.toBe("rejected");
+    expect(approvals.list()).toHaveLength(0);
+  });
+
   it("keeps suggestion approvals pending without an automatic timeout", async () => {
     const approvals = createApprovalQueue(10);
     const request: GuardRequest = { ...base, source: "terminal", kind: "command", command: "curl www.baidu.com" };

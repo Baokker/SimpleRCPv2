@@ -265,6 +265,10 @@ export function createGuardService(options: {
         : current.online && current.level === "owner";
       return authorized && approvals.reject(id, memberId);
     },
+    async withdraw(id: string, memberId: string) {
+      const item = approvals.list().find((candidate) => candidate.id === id);
+      return Boolean(item && item.request.memberId === memberId && approvals.withdraw(id));
+    },
     cancelRun(runId: string) { cancelledRunIds.add(runId); approvals.cancelForRun(runId); },
     pending() { return approvals.list(); },
     onPending(listener: (approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void) { pendingListeners.add(listener); return () => pendingListeners.delete(listener); },
