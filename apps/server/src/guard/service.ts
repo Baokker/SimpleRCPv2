@@ -254,7 +254,10 @@ export function createGuardService(options: {
       const authorized = item.decision.approvers === "initiator" || item.decision.approvers === "self"
         ? item.request.memberId === memberId && current.online
         : current.online && current.level === "owner";
-      return authorized && approvals.approve(id, memberId);
+      if (!authorized) return false;
+      const refreshed = await makeDecision(item.request);
+      if (refreshed.decision.action === "deny") return approvals.reject(id, memberId);
+      return approvals.approve(id, memberId);
     },
     async reject(id: string, memberId: string) {
       const item = approvals.list().find((candidate) => candidate.id === id);

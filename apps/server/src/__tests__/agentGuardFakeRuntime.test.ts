@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WebSocket from "ws";
 import { attachRealtimeServer } from "../realtime.js";
 import { createApp } from "../createApp.js";
@@ -38,13 +38,35 @@ describe("Agent Guard fake runtime permissions", () => {
       ["sub-session", "opencode.permission.asked"]
     ] as const) {
       const run = await createRun(running.origin, memberId, `fake-permission=${marker} fake-reply=${marker}-done`);
-      const approval = await waitForApproval(running.origin, ownerId, run.id);
-      await approve(running.origin, ownerId, approval.id);
+      const approval = marker === "sub-session" ? undefined : await waitForApproval(running.origin, ownerId, run.id);
+      if (marker === "edit") expect(approval).toMatchObject({ request: { paths: expect.arrayContaining([".env"]) }, decision: { matchedRules: expect.arrayContaining(["hard.protected"]) } });
+      if (approval) await approve(running.origin, ownerId, approval.id);
       const completed = await waitForRun(running.origin, memberId, run.id, "completed");
       expect(completed.output).toContain(`${marker}-done`);
       const trace = await readTrace(running.origin, memberId, run.id);
-      expect(trace.some((event) => event.type === expectedTraceType)).toBe(true);
+      expect(trace.some((event) => event.type === expectedTraceType)).toBe(marker !== "sub-session");
     }
+  }, 30_000);
+
+  it("uses the triggering student role for a team session with no session member id", async () => {
+    running = await startServer();
+    const memberId = await joinMember(running.origin, "student", "team-student");
+    const ownerId = await joinMember(running.origin, "teacher", "team-teacher");
+    const agentsResponse = await fetch(`${running.origin}/api/projects/demo/team-agents`, { headers: headers(memberId) });
+    const agents = (await agentsResponse.json() as { agents: Array<{ id: string; handle?: string; memberId: string }> }).agents;
+    const teamAgent = agents.find((agent) => agent.handle === "agent");
+    expect(teamAgent).toMatchObject({ memberId: "" });
+    const runResponse = await fetch(`${running.origin}/api/projects/demo/agent/sessions/${teamAgent!.id}/runs`, {
+      method: "POST",
+      headers: headers(memberId),
+      body: JSON.stringify({ prompt: "fake-permission=bash fake-reply=team-student-done" })
+    });
+    expect(runResponse.status).toBe(202);
+    const run = (await runResponse.json() as { run: { id: string } }).run;
+    const approval = await waitForApproval(running.origin, ownerId, run.id);
+    expect(approval).toMatchObject({ request: { memberId }, decision: { matchedRules: expect.arrayContaining(["role.student.delete"]) } });
+    await approve(running.origin, ownerId, approval.id);
+    await expect(waitForRun(running.origin, memberId, run.id, "completed")).resolves.toMatchObject({ output: expect.stringContaining("team-student-done") });
   }, 30_000);
 
   it("keeps a run alive when the permission reply endpoint returns 404", async () => {
@@ -94,6 +116,30 @@ describe("Agent Guard fake runtime permissions", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     const approvalsResponse = await fetch(`${running.origin}/api/projects/demo/guard/approvals`, { headers: headers(memberId) });
     expect((await approvalsResponse.json() as { approvals: unknown[] }).approvals).toHaveLength(0);
+  }, 30_000);
+
+  it("rechecks the initiator role before approving a pending Agent request", async () => {
+    running = await startServer();
+    const memberId = await joinMember(running.origin, "student", "student-role-change");
+    const ownerId = await joinMember(running.origin, "teacher", "teacher-role-change");
+    const run = await createRun(running.origin, memberId, "fake-permission=bash fake-reply=role-change-done");
+    const approval = await waitForApproval(running.origin, ownerId, run.id);
+    const roleResponse = await fetch(`${running.origin}/api/projects/demo/me`, {
+      method: "PATCH",
+      headers: headers(memberId),
+      body: JSON.stringify({ role: "observer" })
+    });
+    expect(roleResponse.status).toBe(200);
+    const approvalResponse = await fetch(`${running.origin}/api/projects/demo/guard/approvals/${approval.id}`, {
+      method: "POST",
+      headers: headers(ownerId),
+      body: JSON.stringify({ approve: true })
+    });
+    expect(approvalResponse.status).toBe(200);
+    await vi.waitFor(async () => {
+      const response = await fetch(`${running.origin}/api/projects/demo/agent/runs/${run.id}`, { headers: headers(memberId) });
+      expect((await response.json() as { run: { status: string } }).run.status).toBe("failed");
+    }, { timeout: 5_000 });
   }, 30_000);
 
   it("lets an owner who joins after enqueue approve the pending request", async () => {

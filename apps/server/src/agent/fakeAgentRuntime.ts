@@ -44,6 +44,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
     subscribe(input, listener) {
       const runtime = runtimeFor(input.sessionId);
       return runtime.subscribe(input, async (event) => {
+        if (!eventBelongsToSession(event, input.sessionId)) return;
         if (event.type === "permission.asked" || event.type === "permission.v2.asked") {
           const envelope = event.data as { id?: unknown; data?: { id?: unknown } };
           const requestId = envelope.id ?? envelope.data?.id;
@@ -57,6 +58,21 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
       permissionModes.clear();
     }
   };
+}
+
+function eventBelongsToSession(event: { data: unknown }, sessionId: string) {
+  const properties = event.data as {
+    sessionID?: unknown;
+    info?: { sessionID?: unknown };
+    part?: { sessionID?: unknown };
+    data?: { sessionID?: unknown };
+  };
+  return (
+    properties.sessionID === sessionId ||
+    properties.info?.sessionID === sessionId ||
+    properties.part?.sessionID === sessionId ||
+    properties.data?.sessionID === sessionId
+  );
 }
 
 export function createFakeAgentRuntime(): AgentRuntime {
@@ -101,7 +117,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
           permissionWaiters.set(requestId, { resolve, reply404: input.prompt.includes("fake-reply-404") });
         });
         await emit(eventType, { id: requestId, permission, sessionID, metadata });
-        if (await reply === "reject") throw new Error("Fake Agent permission was rejected");
+        if (sessionID === input.sessionId && await reply === "reject") throw new Error("Fake Agent permission was rejected");
       }
       const writePath = [...input.prompt.matchAll(/fake-write=([^\s]+)/g)].at(-1)?.[1];
       if (writePath) {
