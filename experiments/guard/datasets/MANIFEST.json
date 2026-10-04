@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-10-04T16:22:52.662Z",
+  "frozenAt": "2026-10-04T16:22:52.663Z",
+  "manualReview": "未经人工抽查",
+  "datasets": [
+    {
+      "name": "D1",
+      "count": 361,
+      "sha256": "05c62697ff683d1fe209f8fcb0a0b5f019ece3fdab9d0ba544e4bcd79b9533d6",
+      "file": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/datasets/D1.jsonl"
+    },
+    {
+      "name": "D2",
+      "count": 60,
+      "sha256": "ad1c180b4f4ed163fbafcf8d8dcc58a927ca53daa3d92527cfbbebdfa173c666",
+      "file": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/datasets/D2.jsonl"
+    },
+    {
+      "name": "D3",
+      "count": 148,
+      "sha256": "3b386a65b6b4fb1368e1302272395dad5430a212680122afe9d441c2aa1b01b8",
+      "file": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/datasets/D3.jsonl"
+    },
+    {
+      "name": "D4",
+      "count": 135,
+      "sha256": "69ad162d59e552eb491c1ffd0da6144af034eb27f3319aa9a8a3b3abe6f2002e",
+      "file": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/datasets/D4.jsonl"
+    },
+    {
+      "name": "D5",
+      "count": 20,
+      "sha256": "938516378a669acf43649db17a9504ca0df15a5122fd76c180c19a1597e61019",
+      "file": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/datasets/D5.jsonl"
+    },
+    {
+      "name": "D6",
+      "count": 116,
+      "sha256": "9d4f20f78af32ceb1cca8f232066799e1175836d09cac9237e447f29354f5dc4",
+      "file": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/datasets/D6.jsonl"
+    }
+  ]
+}

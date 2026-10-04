@@ -1,0 +1,126 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import crypto from "node:crypto";
+import { decide } from "../../../apps/server/src/guard/decide.js";
+import type { GuardContext, GuardDecision, GuardRequest, Level, Action } from "../../../apps/server/src/guard/types.js";
+
+export const projectRoot = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
+export const workspaceRoot = path.join(projectRoot, ".experiment-data/workspace");
+export const dataRoot = path.join(projectRoot, ".experiment-data/data");
+
+export interface DatasetRecord {
+  id: string;
+  family: string;
+  scenario: string;
+  actor: { level: Level; viaAgent: boolean; agentKind: "personal" | "team" | null };
+  input: { kind: "command" | "edit" | "read" | "fetch"; command?: string; paths?: string[]; url?: string; tool?: string };
+  expected: Action | { atLeast: "ask" };
+  malicious: boolean;
+  label_source: string;
+  rationale: string;
+  notes?: string;
+}
+
+export interface RawRow {
+  id: string;
+  condition?: string;
+  dataset: string;
+  family: string;
+  scenario: string;
+  level: Level;
+  source: "terminal" | "agent";
+  input: DatasetRecord["input"];
+  expected: DatasetRecord["expected"];
+  actual: Action;
+  malicious: boolean;
+  matchedRules: string[];
+  legacyRisk: string;
+  autoEligible: boolean;
+  durationMs: number;
+  tracePath?: string;
+}
+
+export function context(level: Level, overrides: Partial<GuardContext> = {}): GuardContext {
+  return { memberLevel: level, initiatorOnline: true, workspaceRoot, platformDataRoot: dataRoot, otherWorkspaceRoots: [path.resolve(".experiment-data/other-project")], ...overrides };
+}
+
+export function toRequest(item: DatasetRecord, source: "terminal" | "agent" = item.actor.viaAgent ? "agent" : "terminal"): GuardRequest {
+  return { projectId: "experiment", memberId: "member", source, agentRunId: source === "agent" ? `run-${item.id}` : undefined, sessionScope: item.actor.agentKind === "team" ? "team" : "personal", agentHandle: source === "agent" ? "experiment-agent" : undefined, kind: item.input.kind, command: item.input.command, paths: item.input.paths, url: item.input.url, cwd: workspaceRoot };
+}
+
+export function evaluate(item: DatasetRecord, level: Level = item.actor.level, source: "terminal" | "agent" = item.actor.viaAgent ? "agent" : "terminal", overrides: Partial<GuardContext> = {}): GuardDecision {
+  return decide(toRequest(item, source), context(level, overrides));
+}
+
+export function actionMeetsExpected(actual: Action, expected: DatasetRecord["expected"]): boolean {
+  if (typeof expected === "string") return actual === expected;
+  return actual === "ask" || actual === "deny";
+}
+
+export function percentile(values: number[], p: number): number {
+  if (values.length === 0) return Number.NaN;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))]!;
+}
+
+export function mean(values: number[]): number {
+  return values.length === 0 ? Number.NaN : values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+export function standardDeviation(values: number[]): number {
+  if (values.length < 2) return 0;
+  const average = mean(values);
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - average) ** 2, 0) / (values.length - 1));
+}
+
+export async function loadDataset(name: string): Promise<DatasetRecord[]> {
+  const file = path.join(projectRoot, "experiments/guard/datasets", `${name}.jsonl`);
+  const text = await fs.readFile(file, "utf8");
+  return text.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line) as DatasetRecord);
+}
+
+export async function ensureRuntimeDirectory() {
+  await fs.mkdir(workspaceRoot, { recursive: true });
+  await fs.mkdir(dataRoot, { recursive: true });
+  await fs.mkdir(path.join(projectRoot, ".experiment-data/other-project"), { recursive: true });
+  await fs.writeFile(path.join(workspaceRoot, "README.md"), "# guard experiment\n");
+  await fs.writeFile(path.join(workspaceRoot, ".env"), "FAKE_DB_PASSWORD=canary-experiment\n");
+}
+
+export async function environmentRecord(extra: Record<string, unknown> = {}) {
+  const packageManager = await fs.readFile(path.join(projectRoot, "package.json"), "utf8").then((text) => JSON.parse(text) as { packageManager?: string });
+  return {
+    commit: (await runCommand("git rev-parse guard-v1")).trim(),
+    branch: (await runCommand("git branch --show-current")).trim(),
+    node: process.version,
+    pnpm: packageManager.packageManager ?? "unknown",
+    os: `${os.platform()} ${os.release()} ${os.arch()}`,
+    cpu: os.cpus()[0]?.model ?? "unknown",
+    cpuCount: os.cpus().length,
+    memoryBytes: os.totalmem(),
+    model: process.env.DEEPSEEK_MODEL ?? "unconfigured",
+    dataDir: path.resolve(".experiment-data"),
+    ...extra
+  };
+}
+
+export async function runCommand(command: string): Promise<string> {
+  const { execFile } = await import("node:child_process");
+  return await new Promise((resolve, reject) => execFile("/bin/zsh", ["-lc", command], { cwd: projectRoot }, (error, stdout, stderr) => error ? reject(new Error(`${command}: ${stderr || error.message}`)) : resolve(stdout)));
+}
+
+export function sha256(text: string): string {
+  return crypto.createHash("sha256").update(text).digest("hex");
+}
+
+export async function writeRun(runDirectory: string, rows: RawRow[], summary: unknown, extraEnv: Record<string, unknown> = {}) {
+  await fs.mkdir(runDirectory, { recursive: true });
+  await fs.writeFile(path.join(runDirectory, "raw.jsonl"), `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`);
+  await fs.writeFile(path.join(runDirectory, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
+  await fs.writeFile(path.join(runDirectory, "env.json"), `${JSON.stringify(await environmentRecord(extraEnv), null, 2)}\n`);
+}
+
+export function makeRunId(prefix: string): string {
+  return `${prefix}-${new Date().toISOString().replaceAll(/[-:.TZ]/g, "").slice(0, 14)}`;
+}
