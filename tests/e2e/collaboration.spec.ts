@@ -75,10 +75,37 @@ test("owner can confirm a self-approval request from the Team card", async ({ pa
   await command.fill("git push origin main");
   await command.press("Enter");
   await page.getByTestId("collab-tab-team").click();
-  const card = page.locator(".guard-approval-card");
+  const card = page
+    .locator(".guard-approval-card")
+    .filter({ hasText: "Confirm your own command" });
   await expect(card).toContainText("Confirm your own command");
   await expect(card.getByRole("button", { name: "Run anyway" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Cancel" })).toBeVisible();
+  await expect(page.getByTestId("guard-notification")).toHaveCount(0);
+  await page.screenshot({
+    path: "docs/guard/screenshots-self-approval.png",
+    fullPage: true
+  });
+  await card.getByRole("button", { name: "Run anyway" }).click();
+  await expect(page.getByTestId("guard-notification")).toHaveCount(0);
+  await page.getByTestId("terminal-restart").click();
+});
+
+test("shows a blocked privilege message for sudo", async ({ page }) => {
+  await openAs(page, "Student sudo", "demo", "student");
+  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  await expect(command).toBeEnabled();
+  await page.waitForTimeout(500);
+  await command.fill("ls");
+  await command.press("Enter");
+  await expect(page.locator(".terminal-guard-status")).toContainText("Ran");
+  await command.fill("sudo ls");
+  await command.press("Enter");
+  await expect(page.locator(".terminal-guard-status")).toContainText("Blocked: Students cannot run privileged commands (sudo)");
+  await page.screenshot({
+    path: "docs/guard/screenshots-sudo.png",
+    fullPage: true
+  });
 });
 
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({

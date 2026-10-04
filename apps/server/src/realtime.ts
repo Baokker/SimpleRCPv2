@@ -572,7 +572,7 @@ async function handleTerminalMessage(
     const result = await runtime.guard.submit(request);
     const decision = result.decision;
     if (!result.approved) {
-      sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome: decision.outcome === "timeout" ? "timeout" : "rejected", reason: decision.outcome === "timeout" ? "Approval timed out" : describeGuardRules(decision.matchedRules) || "Request was rejected", approverName: decision.approverName, command: message.text });
+      sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome: decision.outcome === "timeout" ? "timeout" : decision.outcome === "withdrawn" ? "withdrawn" : decision.outcome === "denied" ? "denied" : "rejected", reason: decision.outcome === "timeout" ? "Approval timed out" : describeGuardRules(decision.matchedRules, decision.action === "deny") || "Request was rejected", approverName: decision.approverName, command: message.text });
       return;
     }
     let snapshotId: string | undefined;
@@ -583,7 +583,7 @@ async function handleTerminalMessage(
       return;
     }
     runtime.terminal.write(`${message.text}\r`, memberId, false);
-    const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "timeout" | "allowed" | "denied" | "busy";
+    const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "withdrawn" | "timeout" | "allowed" | "denied" | "busy";
     sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome, reason: describeGuardRules(decision.matchedRules) || "Request was allowed", approverName: decision.approverName, snapshotId, command: message.text });
   } finally {
     pendingListener();
@@ -591,7 +591,7 @@ async function handleTerminalMessage(
   }
 }
 
-function describeGuardRules(rules: string[]) {
+function describeGuardRules(rules: string[], blocked = false) {
   const labels: Record<string, string> = {
     "hard.control-character": "Command contains control characters",
     "hard.cwd": "Changing the terminal directory is blocked",
@@ -606,7 +606,7 @@ function describeGuardRules(rules: string[]) {
     "agent.run-cancelled": "The Agent run was cancelled",
     "guard.run-cancelled": "The Agent run was cancelled"
   };
-  return rules.map((rule) => labels[rule] ?? rule).join(", ");
+  return rules.filter((rule) => !(blocked && rule === "hard.nonowner.irreversible")).map((rule) => labels[rule] ?? rule).join(", ");
 }
 
 function sendTerminalMessage(socket: WebSocket, message: TerminalServerMessage) {

@@ -205,13 +205,13 @@ export function createGuardService(options: {
     const approverName = approverId
       ? (await options.members.getMember(options.project.id, approverId))?.displayName
       : undefined;
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: resolution === "timeout" ? "timeout" : approved ? "approved" : "rejected", durationMicros: 0, model: decision.llm });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", durationMicros: 0, model: decision.llm });
     publishActivity({
       type: "guard_approval",
       memberId: request.memberId,
       payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules }
     });
-    return { request, decision: { ...decision, outcome: resolution === "timeout" ? "timeout" : approved ? "approved" : "rejected", approverName }, approved };
+    return { request, decision: { ...decision, outcome: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", approverName }, approved };
   }
 
   async function setControl(memberId: string | null, requesterId: string) {

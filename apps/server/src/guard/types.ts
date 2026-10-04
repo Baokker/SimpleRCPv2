@@ -45,7 +45,7 @@ export interface GuardDecision {
   unknown: boolean;
   autoEligible: boolean;
   approvers: "owners" | "initiator" | "self" | null;
-  outcome?: "allowed" | "approved" | "rejected" | "timeout" | "denied" | "busy";
+  outcome?: "allowed" | "approved" | "rejected" | "withdrawn" | "timeout" | "denied" | "busy";
   approverName?: string;
   snapshotId?: string;
   command?: string;

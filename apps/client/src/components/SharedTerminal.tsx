@@ -243,9 +243,10 @@ function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "gu
   if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `Previous command is waiting for approval in Team — approve or reject it before sending another command${command}`;
   if (message.outcome === "busy") return `Terminal busy — wait for the running program to finish${command}`;
   if (message.outcome === "timeout") return `⏱ No response before the approval deadline — not run${command}`;
+  if (message.outcome === "withdrawn") return `↩ Withdrawn${command}`;
   if (message.outcome === "rejected") return `✕ Rejected${message.approverName ? ` by ${message.approverName}` : ""}: ${friendlyGuardReason(message.reason)}${command}`;
   if (message.outcome === "denied") {
-    const reason = friendlyGuardReason(message.reason);
+    const reason = friendlyGuardReason(message.reason, true);
     const controlHint = message.reason.startsWith("Interactive control is required")
       ? ". Open Team → People and choose Take control before retrying"
       : "";
@@ -266,12 +267,17 @@ function formatGuardPending(message: Extract<TerminalServerMessage, { type: "gua
   return `Model suggestion: ${message.llm.risk} (${Math.round(message.llm.confidence * 100)}% confidence) — ${message.llm.reason}. ${waiting}${countdown}`;
 }
 
-function friendlyGuardReason(reason: string) {
+function friendlyGuardReason(reason: string, denied = false) {
   const labels: Record<string, string> = { "hard.control-character": "command contains control characters", "hard.cwd": "changing the terminal directory is blocked", "hard.metadata": "project metadata is protected", "hard.outside": "the path is outside this workspace", "hard.protected": "the path is protected", "hard.dynamic": "dynamic shell syntax needs review", "hard.owner.irreversible-external": "owner operations affecting external systems require approval", "hard.git-context": "git commands that change the project context require review" };
   return reason.split(", ").map((rule) => {
     if (labels[rule]) return labels[rule];
     const roleRule = rule.match(/^role\.(observer|student|collaborator|trusted)\.(.+)$/);
-    if (roleRule) return `${roleRule[1]![0]!.toUpperCase()}${roleRule[1]!.slice(1)}s need approval to use ${roleRule[2]!.replaceAll("-", " ")}`;
+    if (roleRule) {
+      const level = `${roleRule[1]![0]!.toUpperCase()}${roleRule[1]!.slice(1)}s`;
+      const capability = roleRule[2]!.replaceAll("-", " ");
+      const labels: Record<string, string> = { privilege: "run privileged commands (sudo)", network: "access the network", delete: "delete files", process: "control processes", install: "install packages", history: "change project history", write: "write files", exec: "run commands", read: "read files" };
+      return denied ? `${level} cannot ${labels[capability] ?? capability}` : `${level} need approval to use ${labels[capability] ?? capability}`;
+    }
     return rule;
   }).join(", ");
 }

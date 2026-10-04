@@ -356,7 +356,7 @@ function WorkspacePage({
             guardApprovalsRef.current = guardApprovalsRef.current.some((approval) => approval.id === message.approval.id) ? guardApprovalsRef.current : [...guardApprovalsRef.current, message.approval];
             setGuardApprovals(guardApprovalsRef.current);
             setLlmJudging(false);
-            if (message.approval.noApprover || message.approval.approverIds.includes(joined.member.id)) {
+            if (message.approval.decision.approvers !== "self" && (message.approval.noApprover || message.approval.approverIds.includes(joined.member.id))) {
               setUnseenApprovalIds((current) => new Set(current).add(message.approval.id));
               setGuardNotice({ title: message.approval.noApprover ? "No owner is online" : "Approval required in Team", detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "A guarded request is waiting", tone: "approval" });
             }
@@ -369,6 +369,7 @@ function WorkspacePage({
               next.delete(message.approvalId);
               return next;
             });
+            setGuardNotice(undefined);
           }
           if (
             message.type === "cursor_change" &&

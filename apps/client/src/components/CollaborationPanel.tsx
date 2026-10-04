@@ -488,7 +488,7 @@ export function CollaborationPanel({
                 const requester = members.find((candidate) => candidate.id === approval.request.memberId);
                 const requesterRole = scenarioRoles.find((role) => role.role === requester?.profileRole)?.level ?? "collaborator";
                 const remaining = approval.expiresAt ? Math.max(0, Math.ceil((Date.parse(approval.expiresAt) - clock) / 1000)) : undefined;
-                const reason = humanGuardReason(approval.decision.matchedRules);
+                const reason = humanGuardReason(approval.decision.matchedRules, approval.decision.action);
                 return (
                   <div key={approval.id} className="guard-approval-card">
                     <strong>{approval.request.memberId === member?.id ? "Confirm your own command" : `${requester?.displayName ?? approval.request.memberId} (${requesterRole}) wants to run:`}</strong>
@@ -711,7 +711,7 @@ function formatActivity(
         detail: stringValue(payload.reason) ?? "Human approval is still required"
       });
     case "guard_approval":
-      return item(event, "general", `${actor}'s request was ${payload.outcome === "timeout" ? "expired" : payload.approved ? "approved" : "rejected"}`, {
+      return item(event, "general", `${actor}'s request was ${payload.outcome === "timeout" ? "expired" : payload.outcome === "withdrawn" ? "withdrawn" : payload.approved ? "approved" : "rejected"}`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
     case "terminal_control_granted":
@@ -833,7 +833,7 @@ function stringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
 }
 
-function humanGuardReason(rules: string[]) {
+function humanGuardReason(rules: string[], action?: GuardApproval["decision"]["action"]) {
   const labels: Record<string, string> = {
     "hard.outside": "The path is outside this workspace",
     "hard.metadata": "Project metadata is protected",
@@ -849,12 +849,29 @@ function humanGuardReason(rules: string[]) {
     if (roleRule) {
       const level = roleRule[1]![0]!.toUpperCase() + roleRule[1]!.slice(1);
       const capability = roleRule[2]!.replaceAll("-", " ");
-      return `${level}s need approval to use ${capability}`;
+      return action === "deny"
+        ? `${level}s cannot ${guardCapabilityText(capability)}`
+        : `${level}s need approval to use ${guardCapabilityText(capability)}`;
     }
     if (rule === "hard.owner.irreversible-external") return "Owner operations affecting external systems require approval";
     if (rule === "hard.git-context") return "Git commands that change the project context require review";
     return rule;
   }).join("; ");
+}
+
+function guardCapabilityText(capability: string) {
+  const labels: Record<string, string> = {
+    privilege: "run privileged commands (sudo)",
+    network: "access the network",
+    delete: "delete files",
+    process: "control processes",
+    install: "install packages",
+    history: "change project history",
+    write: "write files",
+    exec: "run commands",
+    read: "read files"
+  };
+  return labels[capability] ?? capability;
 }
 
 function guardActionText(actor: string, payload: Record<string, unknown>) {
