@@ -9,6 +9,9 @@ artifacts/
 .runtime-check-*/
 .env*
 !.env.example
+.knowledge-index/
+packages/knowledge/.test-artifacts/
+packages/knowledge/bench/results/*/raw/
 .DS_Store
 .superpowers/
 .claude/logs/

@@ -1,0 +1,16 @@
+{
+  "name": "@simplercp/knowledge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "bench:anchor": "tsx test/fixtures/run-anchor-benchmark-cli.ts",
+    "bench:deterministic": "tsx bench/run-deterministic.ts",
+    "bench:capture-quality:llm": "node --env-file=../../.env --import tsx bench/run-capture-quality-llm.ts"
+  },
+  "devDependencies": { "@types/node": "^20.11.0", "tsx": "^4.7.0", "typescript": "^5.4.0", "vitest": "^1.4.0" }
+}

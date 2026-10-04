@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "rootDir": ".", "outDir": "dist", "declaration": true, "declarationMap": true, "sourceMap": true, "noUnusedLocals": true, "noImplicitReturns": true },
+  "include": ["src/**/*.ts"],
+  "exclude": ["test", "bench", "dist"]
+}
