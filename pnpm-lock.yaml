@@ -69,6 +69,9 @@ importers:
       '@opencode-ai/sdk':
         specifier: 1.18.31
         version: 1.18.31
+      '@simplercp/knowledge':
+        specifier: workspace:*
+        version: link:../../packages/knowledge
       '@simplercp/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -142,6 +145,21 @@ importers:
       yazl:
         specifier: ^3.3.1
         version: 3.3.1
+
+  packages/knowledge:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.41
+      tsx:
+        specifier: ^4.7.0
+        version: 4.22.3
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.4.0
+        version: 1.6.1(@types/node@20.19.41)
 
   packages/shared: {}
 

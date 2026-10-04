@@ -23,6 +23,7 @@ server.listen(config.port, config.host, () => {
   console.log(`SimpleRCPv2 server listening on http://${config.host}:${config.port}`);
   console.log(`Open ${config.publicOrigin}`);
   console.log(`Project data: ${config.dataDir}`);
+  console.log(`Knowledge mode: ${config.knowledge ?? "off"}`);
 });
 
 let shuttingDown = false;

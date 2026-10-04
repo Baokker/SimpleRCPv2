@@ -12,6 +12,7 @@ export interface ServerConfig {
   demoProjectRoot: string;
   terminalEnabled?: boolean;
   fakeAgentRuntime?: boolean;
+  knowledge?: KnowledgeMode;
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -21,6 +22,8 @@ export interface ServerConfig {
     runTimeoutMs?: number;
   };
 }
+
+export type KnowledgeMode = "off" | "capture" | "inject" | "full";
 
 export function loadConfig(
   env: NodeJS.ProcessEnv = process.env,
@@ -67,6 +70,7 @@ export function loadConfig(
     "SIMPLERCP_FAKE_AGENT_RUNTIME",
     false
   );
+  const knowledge = readKnowledgeMode(env.KNOWLEDGE);
   const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
     ? undefined
     : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -85,6 +89,7 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
+    knowledge,
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
@@ -94,6 +99,12 @@ export function loadConfig(
     }
   };
   return config;
+}
+
+function readKnowledgeMode(value: string | undefined): KnowledgeMode {
+  const mode = value?.trim() || "off";
+  if (mode === "off" || mode === "capture" || mode === "inject" || mode === "full") return mode;
+  throw new Error("KNOWLEDGE must be one of off, capture, inject, full");
 }
 
 function readBoolean(

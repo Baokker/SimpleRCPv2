@@ -14,6 +14,7 @@ describe("server config", () => {
       demoProjectRoot: "/srv/simplercp/demo/workspace",
       terminalEnabled: true,
       fakeAgentRuntime: false,
+      knowledge: "off",
       agent: {
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
@@ -46,6 +47,7 @@ describe("server config", () => {
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
       fakeAgentRuntime: false,
+      knowledge: "off",
       agent: {
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
@@ -76,5 +78,12 @@ describe("server config", () => {
     expect(() => loadConfig({ SIMPLERCP_WORKSPACES_DIR: "relative" })).toThrow("absolute path");
     expect(() => loadConfig({ SIMPLERCP_IMPORT_ROOTS: "relative" })).toThrow("absolute paths");
     expect(loadConfig({ SIMPLERCP_IMPORT_ROOTS: "/srv/imports,/srv/examples" }).importRoots).toEqual(["/srv/imports", "/srv/examples"]);
+  });
+
+  it("parses the knowledge feature mode and rejects invalid values", () => {
+    expect(loadConfig({ KNOWLEDGE: "capture" }).knowledge).toBe("capture");
+    expect(loadConfig({ KNOWLEDGE: "inject" }).knowledge).toBe("inject");
+    expect(loadConfig({ KNOWLEDGE: "full" }).knowledge).toBe("full");
+    expect(() => loadConfig({ KNOWLEDGE: "invalid" })).toThrow("KNOWLEDGE must be one of off, capture, inject, full");
   });
 });
