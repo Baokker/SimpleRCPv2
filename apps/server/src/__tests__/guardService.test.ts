@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyLlmJudgment, resolveGuardLlmMode } from "../guard/service.js";
+import { applyLlmJudgment, approvalTimeoutForMode, resolveGuardLlmMode } from "../guard/service.js";
 import type { GuardDecision } from "../guard/types.js";
 
 const decision: GuardDecision = {
@@ -37,5 +37,10 @@ describe("guard service model mode semantics", () => {
     });
     expect(result.action).toBe("deny");
     expect(result.llm).toMatchObject({ mode: "auto", applied: true });
+  });
+
+  it("keeps the configured approval timeout in suggest mode", () => {
+    expect(approvalTimeoutForMode("suggest", 5_000, 120_000)).toBe(5_000);
+    expect(approvalTimeoutForMode("suggest", undefined, 120_000)).toBeUndefined();
   });
 });

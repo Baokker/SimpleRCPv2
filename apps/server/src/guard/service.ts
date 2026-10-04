@@ -23,6 +23,10 @@ export function resolveGuardLlmMode(stored: GuardPolicy | undefined, configured:
   return stored?.llmMode ?? configured ?? "suggest";
 }
 
+export function approvalTimeoutForMode(_mode: GuardLlmMode, requestedTimeout: number | null | undefined, _configuredTimeout: number): number | null | undefined {
+  return requestedTimeout;
+}
+
 export function applyLlmJudgment(
   decision: GuardDecision,
   mode: GuardLlmMode,
@@ -181,7 +185,7 @@ export function createGuardService(options: {
     const approverIds = decision.approvers === "initiator" || decision.approvers === "self" ? [request.memberId] : owners.map((member) => member.id);
     const noApprover = decision.approvers === "owners" && owners.length === 0;
     decision.noApprover = noApprover;
-    const pendingTimeout = initial.policy.llmMode === "suggest" ? null : input.timeoutMs;
+    const pendingTimeout = approvalTimeoutForMode(initial.policy.llmMode, input.timeoutMs, options.approvalTimeoutMs ?? 120_000);
     const pending = approvals.enqueue(request, decision, approverIds, pendingTimeout, noApprover);
     const pendingItem = approvals.list().find((item) => item.id === pending.id);
     if (!pendingItem) throw new Error("Approval was not enqueued");
