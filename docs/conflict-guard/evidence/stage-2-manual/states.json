@@ -1,0 +1,528 @@
+{
+  "relatedState": {
+    "mode": "observe",
+    "version": 3,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 21,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 1,
+        "durationMs": 11.823249999999462,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 149,
+                "end": 169
+              }
+            ],
+            "firstTouchedAt": 1791143430821,
+            "lastTouchedAt": 1791143430821
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 164
+              }
+            ],
+            "firstTouchedAt": 1791143433367,
+            "lastTouchedAt": 1791143433367
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791143430821
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "lastTouchedAt": 1791143433367
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "6deee5695d624338874b4c59d9619bd40a2b17009422ab8faf5b5b1e8a7ed851",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "status": "modified"
+        },
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ]
+        },
+        "firstSeenAt": 1791143434913,
+        "updatedAt": 1791143434913
+      }
+    ],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0
+    },
+    "cursors": []
+  },
+  "unrelatedState": {
+    "mode": "observe",
+    "version": 6,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 21,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 1,
+        "durationMs": 5.180000000000291,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 149,
+                "end": 169
+              }
+            ],
+            "firstTouchedAt": 1791143430821,
+            "lastTouchedAt": 1791143430821
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 160
+              }
+            ],
+            "firstTouchedAt": 1791143433367,
+            "lastTouchedAt": 1791143435693
+          },
+          {
+            "file": "src/report.ts",
+            "ranges": [
+              {
+                "start": 190,
+                "end": 204
+              }
+            ],
+            "firstTouchedAt": 1791143438576,
+            "lastTouchedAt": 1791143438576
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791143430821
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "symbols": [
+          {
+            "key": "src/report.ts#reportTime",
+            "file": "src/report.ts",
+            "name": "reportTime",
+            "status": "modified",
+            "startLine": 7,
+            "endLine": 9,
+            "lastTouchedAt": 1791143438576
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [],
+    "statistics": {
+      "total": 3,
+      "related": 2,
+      "unrelated": 1,
+      "unrelatedRatio": 0.3333333333333333
+    },
+    "cursors": []
+  },
+  "sameSymbolState": {
+    "mode": "observe",
+    "version": 10,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 21,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 3,
+        "durationMs": 2.0979580000002898,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/cart.ts",
+            "ranges": [
+              {
+                "start": 337,
+                "end": 363
+              }
+            ],
+            "firstTouchedAt": 1791143440444,
+            "lastTouchedAt": 1791143440444
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/cart.ts",
+            "ranges": [
+              {
+                "start": 237,
+                "end": 251
+              }
+            ],
+            "firstTouchedAt": 1791143440460,
+            "lastTouchedAt": 1791143440460
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "symbols": [
+          {
+            "key": "src/cart.ts#Cart.total",
+            "file": "src/cart.ts",
+            "name": "total",
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "lastTouchedAt": 1791143440444
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "symbols": [
+          {
+            "key": "src/cart.ts#Cart.total",
+            "file": "src/cart.ts",
+            "name": "total",
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "lastTouchedAt": 1791143440460
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "6d6f6a431b61996d6f842bb4e3f35cd1041a3e5350415c77251e29e378e6777a",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          },
+          "symbol": "src/cart.ts#Cart.total",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          },
+          "symbol": "src/cart.ts#Cart.total",
+          "status": "modified"
+        },
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791143440509,
+        "updatedAt": 1791143440509
+      }
+    ],
+    "statistics": {
+      "total": 5,
+      "related": 4,
+      "unrelated": 1,
+      "unrelatedRatio": 0.2
+    },
+    "cursors": []
+  },
+  "navigationState": {
+    "mode": "observe",
+    "version": 10,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 21,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 3,
+        "durationMs": 2.0979580000002898,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/cart.ts",
+            "ranges": [
+              {
+                "start": 337,
+                "end": 363
+              }
+            ],
+            "firstTouchedAt": 1791143440444,
+            "lastTouchedAt": 1791143440444
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/cart.ts",
+            "ranges": [
+              {
+                "start": 237,
+                "end": 251
+              }
+            ],
+            "firstTouchedAt": 1791143440460,
+            "lastTouchedAt": 1791143440460
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "symbols": [
+          {
+            "key": "src/cart.ts#Cart.total",
+            "file": "src/cart.ts",
+            "name": "total",
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "lastTouchedAt": 1791143440444
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+        },
+        "symbols": [
+          {
+            "key": "src/cart.ts#Cart.total",
+            "file": "src/cart.ts",
+            "name": "total",
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "lastTouchedAt": 1791143440460
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "6d6f6a431b61996d6f842bb4e3f35cd1041a3e5350415c77251e29e378e6777a",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          },
+          "symbol": "src/cart.ts#Cart.total",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          },
+          "symbol": "src/cart.ts#Cart.total",
+          "status": "modified"
+        },
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791143440509,
+        "updatedAt": 1791143440509
+      }
+    ],
+    "statistics": {
+      "total": 5,
+      "related": 4,
+      "unrelated": 1,
+      "unrelatedRatio": 0.2
+    },
+    "cursors": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+        },
+        "file": "src/cart.ts",
+        "lineNumber": 11,
+        "column": 3,
+        "selection": {
+          "startLineNumber": 11,
+          "startColumn": 3,
+          "endLineNumber": 11,
+          "endColumn": 3,
+          "selectionStartLineNumber": 11,
+          "selectionStartColumn": 3,
+          "positionLineNumber": 11,
+          "positionColumn": 3
+        },
+        "at": 1791143442340,
+        "symbol": "src/cart.ts#Cart.total"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+
+> @simplercp/server@0.1.0 test /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+> vitest run "src/__tests__/conflictGuardApi.integration.test.ts" "src/__tests__/conflictGuardSemantic.integration.test.ts" "src/__tests__/projectApi.test.ts"
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardApi.integration.test.ts  (7 tests) 2246ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stdout | src/__tests__/conflictGuardSemantic.integration.test.ts > 符号观察的真实协作接口 > 磁盘修改未打开的文件时更新索引，记录初次与增量耗时且不创建活跃变更
+{"semanticPerformance":{"initialMs":5.876874999999927,"incrementalSamples":30,"p95Ms":2.768833000000086}}
+
+ ✓ src/__tests__/conflictGuardSemantic.integration.test.ts  (3 tests) 772ms
+ ✓ src/__tests__/projectApi.test.ts  (2 tests) 67ms
+
+ Test Files  3 passed (3)
+      Tests  12 passed (12)
+   Start at  03:46:39
+   Duration  5.88s (transform 1.29s, setup 0ms, collect 2.44s, tests 3.08s, environment 0ms, prepare 132ms)
+

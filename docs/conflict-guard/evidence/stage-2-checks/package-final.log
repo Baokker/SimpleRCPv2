@@ -1,0 +1,18 @@
+
+> @simplercp/conflict-guard@0.1.0 test /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+> vitest run
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+
+ ✓ src/trace/trace.test.ts  (9 tests) 5ms
+ ✓ src/tracking/tracker.test.ts  (12 tests) 18ms
+ ✓ src/semantic/changes.test.ts  (3 tests) 58ms
+ ✓ src/routing/candidates.test.ts  (2 tests) 68ms
+ ✓ src/semantic/index.test.ts  (10 tests) 158ms
+
+ Test Files  5 passed (5)
+      Tests  36 passed (36)
+   Start at  03:46:35
+   Duration  1.90s (transform 1.34s, setup 0ms, collect 6.04s, tests 307ms, environment 1ms, prepare 439ms)
+

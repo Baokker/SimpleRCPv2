@@ -1,0 +1,24 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import { readTrace, validateTraceDetailed } from "../packages/conflict-guard/dist/index.js";
+
+const root = new URL("../docs/conflict-guard/evidence/stage-2-manual/", import.meta.url);
+const acceptance = JSON.parse(await fs.readFile(new URL("acceptance.json", root), "utf8"));
+const states = JSON.parse(await fs.readFile(new URL("states.json", root), "utf8"));
+const events = readTrace(await fs.readFile(new URL("trace.jsonl", root), "utf8"));
+assert.deepEqual(acceptance.checklist, Array(7).fill(true));
+assert.equal(acceptance.mode, "observe");
+assert.equal(states.relatedState.candidatePairs.length, 1);
+assert.equal(states.relatedState.candidatePairs[0].distance, 2);
+assert.equal(states.unrelatedState.candidatePairs.length, 0);
+assert.equal(states.unrelatedState.statistics.unrelated, 1);
+assert.equal(states.sameSymbolState.candidatePairs[0].distance, 0);
+assert.equal(states.sameSymbolState.statistics.total, 5);
+assert(states.navigationState.cursors.some((cursor) => cursor.symbol === "src/cart.ts#Cart.total"));
+assert.deepEqual(validateTraceDetailed(events), { valid: true, redactedFiles: [], skippedFiles: [] });
+assert(events.every((event) => event.schema === 2));
+assert.equal(events.filter((event) => event.type === "change_unit").length, 5);
+const screenshots = (await fs.readdir(root)).filter((file) => file.endsWith(".png"));
+assert.equal(screenshots.length, 8);
+for (const file of screenshots) assert((await fs.stat(new URL(file, root))).size > 0);
+console.log(JSON.stringify({ checklistPassed: 7, screenshots: screenshots.length, traceEvents: events.length, semanticUnits: 5, traceValid: true }));
