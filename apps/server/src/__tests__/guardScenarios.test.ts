@@ -137,14 +137,11 @@ describe("multi-member multi-agent scenarios", () => {
     expect(approvals.list()).toHaveLength(0);
   });
 
-  it("keeps suggestion approvals pending without an automatic timeout", async () => {
+  it("expires suggestion approvals using the configured timeout", async () => {
     const approvals = createApprovalQueue(10);
     const request: GuardRequest = { ...base, source: "terminal", kind: "command", command: "curl www.baidu.com" };
-    const pending = approvals.enqueue(request, check("student", "terminal", { kind: "command", command: "curl www.baidu.com" }), ["owner"], null);
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(approvals.list()).toHaveLength(1);
-    expect(approvals.list()[0]?.expiresAt).toBeUndefined();
-    expect(approvals.reject(pending.id, "owner")).toBe(true);
-    await expect(pending.outcome).resolves.toBe("rejected");
+    const pending = approvals.enqueue(request, check("student", "terminal", { kind: "command", command: "curl www.baidu.com" }), ["owner"]);
+    await expect(pending.outcome).resolves.toBe("timeout");
+    expect(approvals.list()).toHaveLength(0);
   });
 });

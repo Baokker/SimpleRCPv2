@@ -118,6 +118,25 @@ describe("member identity API", () => {
     }
   });
 
+  it("expires a suggest-mode approval so the terminal can accept the next command", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("suggest-timeout-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "suggest", guardApprovalTimeoutMs: 80 });
+    const student = await joinMember(running.origin, "demo", { name: "Student", role: "student" });
+    const runtime = running.app.locals.runtimeManager.get("demo");
+    const result = await runtime.guard.submit({
+      projectId: "demo",
+      memberId: student.member.id,
+      source: "terminal",
+      kind: "command",
+      command: "rm a.txt",
+      cwd: runtime.project.workspacePath
+    });
+    expect(result).toMatchObject({ approved: false, decision: { action: "ask", outcome: "timeout" } });
+    expect(runtime.guard.pending()).toHaveLength(0);
+  });
+
   it("keeps ordinary commands available and lets controlled users reach normal review", async () => {
     await running.close();
     await fs.rm(root, { recursive: true, force: true });
