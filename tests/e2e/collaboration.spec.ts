@@ -69,6 +69,18 @@ test("opening Team with a visible approval does not produce an update loop", asy
   expect(consoleErrors.filter((message) => message.includes("Maximum update depth exceeded"))).toEqual([]);
 });
 
+test("owner can confirm a self-approval request from the Team card", async ({ page }) => {
+  await openAs(page, "Teacher self approval", "demo", "teacher");
+  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  await command.fill("git push origin main");
+  await command.press("Enter");
+  await page.getByTestId("collab-tab-team").click();
+  const card = page.locator(".guard-approval-card");
+  await expect(card).toContainText("Confirm your own command");
+  await expect(card.getByRole("button", { name: "Run anyway" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Cancel" })).toBeVisible();
+});
+
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({
   browser
 }) => {
