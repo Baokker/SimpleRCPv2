@@ -97,6 +97,7 @@ export async function createApp(config: ServerConfig) {
       dataDir: config.dataDir,
       publicOrigin: config.publicOrigin,
       features: {
+        conflictGuard: config.conflictGuard?.mode ?? "off",
         terminal: config.terminalEnabled !== false
       }
     });

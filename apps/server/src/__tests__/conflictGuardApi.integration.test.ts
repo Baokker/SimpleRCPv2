@@ -285,6 +285,7 @@ function createProvider(serverOrigin: string, room: string, document: Y.Doc, mem
 }
 
 function waitForSync(provider: WebsocketProvider) {
+  if (provider.synced) return Promise.resolve();
   return new Promise<void>((resolve, reject) => {
     provider.once("sync", (synced) => { if (synced) resolve(); });
     provider.once("connection-error", reject);

@@ -41,9 +41,9 @@ describe("project API", () => {
       const health = await fetch(
         `http://127.0.0.1:${address.port}/api/health`
       ).then((response) => response.json()) as {
-        features: { terminal: boolean };
+        features: { terminal: boolean; conflictGuard: string };
       };
-      expect(health.features).toEqual({ terminal: false });
+      expect(health.features).toEqual({ terminal: false, conflictGuard: "off" });
     } finally {
       await app.locals.agentRuns.dispose();
       await app.locals.agentRuntime.dispose();

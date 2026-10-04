@@ -31,6 +31,7 @@ export function createProjectRuntime(
     ? createProjectConflictGuard({
         projectId: project.id,
         metadataPath: projectRoot,
+        workspacePath: project.workspacePath,
         config: options.conflictGuard,
         gitCommit: options.gitCommit,
         sensitiveValues: options.sensitiveValues,
@@ -79,6 +80,7 @@ export function createProjectRuntime(
     if (change.type === "unlink" || change.type === "unlinkDir") {
       documents.dropPath(change.path);
     }
+    conflictGuard?.workspaceChanged(change.path);
     if (change.type !== "change" && !isSuppressedWorkspaceChange(change)) {
       for (const listener of workspaceListeners) listener(change);
     }
@@ -155,6 +157,7 @@ export function createProjectRuntime(
       suppressWatcherDuplicates(change);
     },
     announceWorkspaceChange(change: WorkspaceChange) {
+      conflictGuard?.workspaceChanged(change.path);
       for (const listener of workspaceListeners) listener(change);
     },
     onFileSaved(listener: (path: string) => void) {

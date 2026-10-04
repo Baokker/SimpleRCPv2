@@ -10,9 +10,14 @@ import {
   type TextEditOp,
   traceEventFromConflictEvent,
   readTrace,
+  createSemanticIndex,
+  SemanticChangeTracker,
+  type EditBatch,
+  type FileChange,
   type ActorRef
 } from "@simplercp/conflict-guard";
 import { FILESYSTEM_ORIGIN } from "../textDelta.js";
+import { createWorkspaceSemanticFiles } from "./semanticFiles.js";
 
 export interface ProjectConflictGuardConfig {
   mode: "off" | "observe" | "rules" | "full";
@@ -32,6 +37,7 @@ interface ConnectionIdentity {
 export function createProjectConflictGuard(options: {
   projectId: string;
   metadataPath: string;
+  workspacePath: string;
   config: ProjectConflictGuardConfig;
   gitCommit?: string;
   sensitiveValues?: string[];
@@ -51,7 +57,15 @@ export function createProjectConflictGuard(options: {
     activeIdleMs: options.config.activeIdleMs
   });
   const connections = new Map<object, ConnectionIdentity>();
-  const mirrors = new Map<string, { text: string; stop: () => void }>();
+  const mirrors = new Map<string, { text: string; version: number; stop: () => void }>();
+  const semanticFiles = createWorkspaceSemanticFiles(options.workspacePath, (file) => mirrors.get(file));
+  const semanticIndex = createSemanticIndex({ files: semanticFiles, now: () => performance.now() });
+  let latestUpdate = semanticIndex.update();
+  let stateVersion = 1;
+  let semanticTimer: NodeJS.Timeout | undefined;
+  const changedFiles = new Set<string>();
+  const closedBatches: Array<{ batch: EditBatch; change?: FileChange }> = [];
+  const semantic = new SemanticChangeTracker({ index: semanticIndex, now: clock.now, readFile: semanticFiles.readFile });
   let unknownOriginWarned = false;
   const pendingCursors = new Map<string, { event: ConflictGuardEvent; timer: NodeJS.Timeout }>();
   const tracePath = path.join(options.metadataPath, "conflict-guard", "trace.jsonl");
@@ -75,7 +89,7 @@ export function createProjectConflictGuard(options: {
     traceOperations = traceOperations.then(async () => {
       const clean = redact(event, options.sensitiveValues ?? []) as Record<string, unknown>;
       if (typeof clean.file === "string" && redactedFiles.has(clean.file)) clean.redacted = true;
-      const record = { schema: 1, seq: ++traceSequence, at: clock.now(), ...clean };
+      const record = { schema: 2, seq: ++traceSequence, at: clock.now(), ...clean };
       await fs.mkdir(path.dirname(tracePath), { recursive: true });
       await fs.appendFile(tracePath, `${JSON.stringify(record)}\n`, "utf8");
     });
@@ -95,7 +109,32 @@ export function createProjectConflictGuard(options: {
     gitCommit: options.gitCommit
   });
 
+  const removeSemanticListener = semantic.onEvent((event) => { void appendTrace({ ...event }); });
+
+  function scheduleSemanticUpdate(file?: string) {
+    if (file) changedFiles.add(file);
+    if (semanticTimer !== undefined) return;
+    semanticTimer = setTimeout(updateSemantic, 25);
+  }
+
+  function updateSemantic() {
+    if (semanticTimer !== undefined) clearTimeout(semanticTimer);
+    semanticTimer = undefined;
+    const files = [...changedFiles];
+    changedFiles.clear();
+    if (files.length > 0) latestUpdate = semanticIndex.update(files);
+    const existingFiles = new Set(semanticFiles.listFiles());
+    semantic.update(tracker.getActiveChangeSets(), closedBatches.splice(0).filter(({ batch }) => existingFiles.has(batch.file)));
+    stateVersion += 1;
+  }
+
   const removeTrackerListener = tracker.onEvent((event) => {
+    if (event.type === "batch_closed") {
+      const change = tracker.getActiveChangeSets().find((set) => set.actor.kind === "human" && event.batch.actor.kind === "human" && set.actor.memberId === event.batch.actor.memberId)?.files.get(event.batch.file);
+      closedBatches.push({ batch: event.batch, change });
+      scheduleSemanticUpdate(event.batch.file);
+    }
+    if (event.type === "change_set_closed" || event.type === "change_set_file_closed") scheduleSemanticUpdate();
     if (event.type === "cursor") {
       const memberId = event.cursor.actor.memberId;
       const pending = pendingCursors.get(memberId);
@@ -165,6 +204,8 @@ export function createProjectConflictGuard(options: {
       if (applyOps(before, ops) !== after) {
         tracker.openDocument(file, after);
         mirror.text = after;
+        mirror.version += 1;
+        scheduleSemanticUpdate(file);
         void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(safeBefore.value), textHash: hashText(safeAfter.value), text: safeAfter.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
         return;
       }
@@ -173,9 +214,12 @@ export function createProjectConflictGuard(options: {
       const revisionAfter = options.getRevision(file) + (origin.kind === "filesystem" ? 0 : 1);
       tracker.edit({ file, origin, at: clock.now(), ops, revisionAfter, textBefore: before, textAfter: after });
       mirror.text = after;
+      mirror.version += 1;
+      changedFiles.add(file);
+      if (origin.kind === "filesystem") scheduleSemanticUpdate(file);
     };
     text.observe(observer);
-    mirrors.set(file, { text: initial, stop: () => text.unobserve(observer) });
+    mirrors.set(file, { text: initial, version: 0, stop: () => text.unobserve(observer) });
     void name;
   }
 
@@ -209,6 +253,7 @@ export function createProjectConflictGuard(options: {
         void appendTrace({ type: "doc_retired", file: name });
       }
     }
+    scheduleSemanticUpdate(file);
   }
 
   function releaseDocument(file: string) {
@@ -220,10 +265,28 @@ export function createProjectConflictGuard(options: {
   }
 
   function state() {
+    const sets = semantic.getActiveChangeSets();
     return {
+      version: stateVersion,
+      index: { ...semanticIndex.stats(), latestUpdate },
       changeSets: tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) })),
-      cursors: tracker.getLatestCursors()
+      activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, ...symbol }) => symbol) })),
+      candidatePairs: semantic.getCandidatePairs(),
+      statistics: semantic.statistics(),
+      cursors: tracker.getLatestCursors().map((cursor) => {
+        const text = mirrors.get(cursor.file)?.text;
+        const lines = text?.split("\n");
+        const start = lines ? lines.slice(0, cursor.lineNumber - 1).reduce((count, line) => count + line.length + 1, 0) + cursor.column - 1 : undefined;
+        return { ...cursor, symbol: start === undefined ? null : semanticIndex.symbolsInRange(cursor.file, start, start)[0]?.key ?? null };
+      })
     };
+  }
+
+  function symbol(key: string) {
+    const info = semanticFiles.listFiles().flatMap((file) => semanticIndex.symbolsInFile(file)).find((symbol) => symbol.key === key);
+    const changes = semantic.getActiveChangeSets().flatMap((set) => [...set.files.values()].flatMap((file) => (file.symbols ?? []).filter((symbol) => symbol.key === key).map((change) => ({ actor: set.actor, ...change }))));
+    if (!info && changes.length === 0) return undefined;
+    return { symbol: info ?? null, text: info ? semanticFiles.readFile(info.file).slice(info.start, info.end) : "", changes, outgoing: semanticIndex.outgoing(key), incoming: semanticIndex.incoming(key) };
   }
 
   async function waitForTrace() {
@@ -235,6 +298,9 @@ export function createProjectConflictGuard(options: {
     mode: options.config.mode,
     tracker,
     tracePath,
+    semanticIndex,
+    symbol,
+    workspaceChanged: (file: string) => { if (!mirrors.has(file)) scheduleSemanticUpdate(file); },
     documentPrepared,
     registerConnection,
     unregisterConnection,
@@ -247,6 +313,8 @@ export function createProjectConflictGuard(options: {
     dispose() {
       flushPendingCursors();
       tracker.flush();
+      updateSemantic();
+      removeSemanticListener();
       removeTrackerListener();
       for (const mirror of mirrors.values()) mirror.stop();
       mirrors.clear();
