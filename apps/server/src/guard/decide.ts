@@ -55,7 +55,8 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
     const agentCap = characterization.segments.some((segment) => segment.reversibility === "irreversible") ||
       Boolean(request.command && /\|/.test(request.command) && /\b(curl|wget|ssh|scp)\b/i.test(request.command));
     if (agentCap) {
-      agentOnlyAsk = humanAction !== "ask";
+      const plainPipeOnlyApproval = characterization.plainDownloadToShell && [...matchedRules].every((rule) => rule === "hard.dynamic" || rule === "hard.outside" || rule === "hard.nonowner.irreversible" || rule === "hard.owner.irreversible-external");
+      agentOnlyAsk = humanAction !== "ask" || plainPipeOnlyApproval;
       action = stricter(action, "ask");
       matchedRules.add("agent.default");
     }

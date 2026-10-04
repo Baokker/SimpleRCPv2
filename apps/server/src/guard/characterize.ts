@@ -10,6 +10,38 @@ export interface Characterization {
   unknown: boolean;
   dynamic: boolean;
   gitContext: boolean;
+  plainDownloadToShell: boolean;
+}
+
+const plainDownloadToShellPattern = /^\s*(curl|wget)\s+[^;&|<>`$()]*\|\s*(sh|bash|zsh)\s*$/i;
+
+function splitShellCommands(command: string) {
+  const parts: string[] = [];
+  let start = 0;
+  let quote: "single" | "double" | undefined;
+  for (let index = 0; index < command.length; index += 1) {
+    const character = command[index]!;
+    if (character === "\\" && quote !== "single") {
+      index += 1;
+      continue;
+    }
+    if (character === "'" && quote !== "double") {
+      quote = quote === "single" ? undefined : "single";
+      continue;
+    }
+    if (character === '"' && quote !== "single") {
+      quote = quote === "double" ? undefined : "double";
+      continue;
+    }
+    if (quote || !["|", ";", "&"].includes(character)) continue;
+    const part = command.slice(start, index).trim();
+    if (part) parts.push(part);
+    if (character === "&" && command[index + 1] === "&") index += 1;
+    start = index + 1;
+  }
+  const finalPart = command.slice(start).trim();
+  if (finalPart) parts.push(finalPart);
+  return parts.length > 1 ? parts : [];
 }
 
 function zoneFor(target: string, request: GuardRequest, platformDataRoot: string, protectedPaths: string[], otherWorkspaceRoots: string[]): PathZone {
@@ -122,7 +154,8 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
       legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
       unknown: results.some((result) => result.unknown),
       dynamic: results.some((result) => result.dynamic),
-      gitContext: results.some((result) => result.gitContext)
+      gitContext: results.some((result) => result.gitContext),
+      plainDownloadToShell: false
     };
   }
   if (request.source === "agent" && request.kind === "command") {
@@ -138,20 +171,36 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
           legacyRisk: "risky",
           unknown: false,
           dynamic: /["'\\$`]/.test(prefix[1]!),
-          gitContext: false
+          gitContext: false,
+          plainDownloadToShell: false
         };
       }
       const rest = characterize({ ...request, command: prefix[2], cwd: directory }, platformDataRoot, protectedPaths, otherWorkspaceRoots);
       return {
         ...rest,
-        segments: [{ text: prefix[1]!, capabilities: ["exec"], zone: "workspace", reversibility: "reversible" }, ...rest.segments]
+        segments: [{ text: prefix[1]!, capabilities: ["exec"], zone: "workspace", reversibility: "reversible" }, ...rest.segments],
+        plainDownloadToShell: false
+      };
+    }
+  }
+  const plainDownloadToShell = request.source === "agent" && request.kind === "command" && plainDownloadToShellPattern.test(command);
+  if (request.source === "agent" && request.kind === "command" && !plainDownloadToShell) {
+    const parts = splitShellCommands(command);
+    if (parts.length > 1) {
+      const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
+      return {
+        segments: results.flatMap((result) => result.segments),
+        legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
+        unknown: results.some((result) => result.unknown),
+        dynamic: true,
+        gitContext: results.some((result) => result.gitContext),
+        plainDownloadToShell: false
       };
     }
   }
   const name = request.kind === "command" ? commandName(command) : request.kind;
   const parsed = request.kind === "command" ? parseCommandPaths(command, request.cwd) : undefined;
-  const agentPipe = request.source === "agent" && /\|/.test(command) && /\b(curl|wget|ssh|scp)\b/i.test(command);
-  const dynamic = request.kind === "command" && !agentPipe && (hasDynamicSyntax(command) || parsed?.dynamic === true);
+  const dynamic = request.kind === "command" && (hasDynamicSyntax(command) || parsed?.dynamic === true);
   const targetItems = parsed?.targets ?? request.paths?.map((target) => ({ raw: target, resolvedPath: path.resolve(request.cwd, target), role: "target" as const })) ?? [];
   const metadataReference = request.kind === "command" && command.includes("$SIMPLERCP_DATA_DIR");
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
@@ -160,13 +209,11 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   if (parsed?.action === "write" && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     capabilities = baseCapabilities.includes("exec") ? ["write"] : [...baseCapabilities, "write"];
   }
-  const reversibility = agentPipe ? "reversible" : reversibilityFor(name, command, capabilities, request.kind);
+  const reversibility = reversibilityFor(name, command, capabilities, request.kind);
   const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
     const segmentCapabilities = item.role === "destination" ? ["write"] as Capability[] : capabilities;
-    const segmentReversibility = agentPipe
-      ? "reversible" as const
-      : legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
+    const segmentReversibility = legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
       ? "irreversible" as const
       : reversibilityFor(name, command, segmentCapabilities, request.kind);
     return {
@@ -178,5 +225,5 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   });
   if (dynamic) segments.push({ text: command, capabilities: ["exec"], zone: "outside", reversibility: "irreversible" });
   if (metadataReference) segments.push({ text: "$SIMPLERCP_DATA_DIR", capabilities: ["read"], zone: "metadata", reversibility: "reversible" });
-  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command) };
+  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command), plainDownloadToShell };
 }
