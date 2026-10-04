@@ -2,3 +2,7 @@ export * from "./model/types.js";
 export * from "./tracking/rangeTransform.js";
 export * from "./tracking/tracker.js";
 export * from "./trace/trace.js";
+export * from "./semantic/types.js";
+export * from "./semantic/index.js";
+export * from "./semantic/changes.js";
+export * from "./routing/candidates.js";

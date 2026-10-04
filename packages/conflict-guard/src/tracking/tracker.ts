@@ -10,6 +10,7 @@ import type {
   TrackedRange
 } from "../model/types.js";
 import { mergeRanges, transformRanges } from "./rangeTransform.js";
+import { deletedSymbolKeys } from "../semantic/changes.js";
 
 export interface ConflictGuardClock {
   now(): number;
@@ -102,6 +103,7 @@ export class ConflictGuardTracker {
         change.ranges = mergeRanges([...change.ranges, ...rangesForOps(edit.ops)]);
         change.lastTouchedAt = edit.at;
       }
+      change.deletedSymbolKeys = [...new Set([...(change.deletedSymbolKeys ?? []), ...deletedSymbolKeys(edit)])];
       if (created) this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(activeState.changeSet) });
       this.resetActiveTimer(actorKey, edit.file);
 

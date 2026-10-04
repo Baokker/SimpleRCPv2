@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { ConflictGuardEvent, TextEditOp } from "../model/types.js";
 
 export interface TraceEvent {
-  schema: 1;
+  schema: 1 | 2;
   seq: number;
   at: number;
   type: string;
@@ -35,12 +35,15 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
   const openChangeSets = new Set<string>();
   const redactedFiles = new Set<string>();
   const skippedFiles = new Set<string>();
+  const closedBatches = new Set<string>();
+  const candidatePairs = new Set<string>();
   for (const event of events) {
-    if (event.schema !== 1) throw new Error("Unsupported trace schema");
+    if (event.schema !== 1 && event.schema !== 2) throw new Error("Unsupported trace schema");
     if (event.seq !== expectedSequence++) throw new Error("Trace sequence is not contiguous");
     if (!Number.isFinite(event.at)) throw new Error("Trace timestamp is invalid");
     if (event.type === "session_start") {
       hasSession = true;
+      candidatePairs.clear();
       continue;
     }
     if (!hasSession) throw new Error("Trace has no session_start");
@@ -89,6 +92,28 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       if (typeof event.id !== "string" || !openBatches.delete(event.id) || typeof event.file !== "string" || typeof event.textAfterHash !== "string") throw new Error("batch_closed is incomplete");
       const text = texts.get(event.file);
       if (!redactedFiles.has(event.file) && !event.redacted && (text === undefined || hashText(text) !== event.textAfterHash)) throw new Error("batch_closed text hash does not match replayed document");
+      closedBatches.add(event.id);
+      continue;
+    }
+    if (event.type === "change_unit") {
+      if (event.schema !== 2 || !event.actor || typeof event.batchId !== "string" || !closedBatches.has(event.batchId) || !Array.isArray(event.symbols)) throw new Error("change_unit 字段不完整");
+      actorKey(event.actor);
+      for (const symbol of event.symbols as Array<Record<string, unknown>>) {
+        if (typeof symbol.key !== "string" || typeof symbol.file !== "string" || !["modified", "added", "deleted"].includes(String(symbol.status))
+          || typeof symbol.beforeHash !== "string" || !/^[a-f0-9]{64}$/.test(symbol.beforeHash) || typeof symbol.afterHash !== "string" || !/^[a-f0-9]{64}$/.test(symbol.afterHash)) throw new Error("change_unit 符号字段不完整");
+      }
+      continue;
+    }
+    if (["pair_candidate_opened", "pair_candidate_updated", "pair_candidate_closed"].includes(event.type)) {
+      const pair = event.pair as { id?: string; left?: { actor?: unknown; symbol?: string }; right?: { actor?: unknown; symbol?: string }; distance?: number; path?: { hops?: unknown[] } | null } | undefined;
+      if (event.schema !== 2 || !pair?.id || !pair.left?.symbol || !pair.right?.symbol || ![0, 1, 2].includes(pair.distance ?? -1)) throw new Error("候选对字段不完整");
+      if (actorKey(pair.left.actor) === actorKey(pair.right.actor)) throw new Error("候选对两侧参与者相同");
+      if (pair.distance === 0 ? pair.path !== null || pair.left.symbol !== pair.right.symbol : pair.path?.hops?.length !== pair.distance) throw new Error("候选对路径无效");
+      if (event.type === "pair_candidate_opened") {
+        if (candidatePairs.has(pair.id)) throw new Error("候选对已经打开");
+        candidatePairs.add(pair.id);
+      } else if (!candidatePairs.has(pair.id)) throw new Error("候选对尚未打开");
+      if (event.type === "pair_candidate_closed") candidatePairs.delete(pair.id);
       continue;
     }
     if (event.type === "change_set_opened") {

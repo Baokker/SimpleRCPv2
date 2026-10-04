@@ -1,3 +1,5 @@
+import type { SymbolChange } from "../semantic/changes.js";
+
 export type ActorRef =
   | { kind: "human"; memberId: string }
   | { kind: "agent"; runId: string; ownerId: string; teamAgent?: string }
@@ -31,7 +33,8 @@ export interface FileChange {
   ranges: TrackedRange[];
   firstTouchedAt: number;
   lastTouchedAt: number;
-  symbols?: unknown;
+  symbols?: SymbolChange[];
+  deletedSymbolKeys?: string[];
 }
 
 export type BatchCloseReason = "idle" | "cursor-left" | "max-duration" | "file-retired" | "flush";

@@ -3,6 +3,18 @@ import { describe, expect, it } from "vitest";
 import { readTrace, traceEventFromConflictEvent, validateTrace, validateTraceDetailed } from "./trace.js";
 
 describe("trace replay", () => {
+  it("schema 2 新会话可以重新建立同一候选编号", () => {
+    const pair = { id: "stable", left: { actor: { kind: "human", memberId: "alice" }, symbol: "a.ts#a" }, right: { actor: { kind: "human", memberId: "bob" }, symbol: "a.ts#a" }, distance: 0, path: null };
+    const events = [
+      { schema: 2 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 2 as const, seq: 2, at: 1, type: "pair_candidate_opened", pair },
+      { schema: 2 as const, seq: 3, at: 2, type: "session_start" },
+      { schema: 2 as const, seq: 4, at: 3, type: "pair_candidate_opened", pair },
+      { schema: 2 as const, seq: 5, at: 4, type: "pair_candidate_closed", pair }
+    ];
+    expect(validateTrace(events)).toBe(true);
+    expect(() => validateTrace([events[0]!, events[1]!, { ...events[3]!, seq: 3 }])).toThrow("已经打开");
+  });
   it("keeps document, batch and redaction state across session boundaries", () => {
     const hash = (value: string) => createHash("sha256").update(value).digest("hex");
     const events = [
