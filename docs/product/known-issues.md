@@ -131,6 +131,13 @@ OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，bash 工具会�
 # Guard 限制
 
 - 成员可以自行填写角色，当前身份系统不会验证角色的真实性。
+- exec 类命令（`make`、`npm run`、`python` 脚本、`rg --pre`、`git -c alias`）不做语义分析。
+- 网络上传只识别常见参数，`curl --data-binary`、`wget --post-file` 等参数可能漏判。
+- OpenCode 的 grep、glob、list 工具不经过守卫。
+- 交互控制持有者在提示符上留下的半行会与后续命令拼接。
+- subagent 可以通过 `task: deny` 规避，当前没有实现子会话审批。
+- human-only 模式下 OpenCode 仍会发出 ask，由服务端自动放行，与 `main` 分支行为不同。
+- initiator 在审批中途离线不会自动拒绝。
 - Monaco 编辑器内的人工编辑不经过 Guard。
 - 交互控制期间的按键直接写入 pty，不经过逐次命令判定。
 - OpenCode 的 `read` 已配置受保护路径；`grep`、`glob`、`list`、`env`、`printenv` 仍可能通过工具或进程间接读取敏感内容。
