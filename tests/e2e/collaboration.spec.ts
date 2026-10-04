@@ -266,7 +266,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(terminalCommand).toBeVisible();
   await terminalCommand.fill("ls");
   await terminalCommand.press("Enter");
-  await expect(ada.locator(".terminal-guard-status")).toContainText("allow");
+  await expect(ada.locator(".terminal-guard-status")).toContainText("Ran");
   await expect(ada.getByTestId("terminal-output")).toContainText(
     "src"
   );
