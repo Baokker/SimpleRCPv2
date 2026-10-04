@@ -93,6 +93,9 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
                 {runtime.version ? ` · v${runtime.version}` : ""}
               </dd>
             </div>
+            {runtime.modelChangePending ? (
+              <div><dt>Model</dt><dd>Change will apply after current tasks finish</dd></div>
+            ) : null}
             <div><dt>Provider</dt><dd>DeepSeek</dd></div>
             <div>
               <dt>API Key</dt>

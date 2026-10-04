@@ -84,10 +84,18 @@ export function AgentPanel({
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
     [runs, selectedSessionId]
   );
+  const displayRuns = useMemo(() => {
+    const visible = runs.filter((run) => run.sessionId === selectedSessionId || ACTIVE_STATUSES.has(run.status));
+    return visible.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  }, [runs, selectedSessionId]);
   const queuedRuns = useMemo(
     () => runs
       .filter((run) => run.status === "queued")
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
+    [runs]
+  );
+  const activeSessionIds = useMemo(
+    () => new Set(runs.filter((run) => run.status === "running").map((run) => run.sessionId)),
     [runs]
   );
   const projectFiles = contextFiles.length ? contextFiles : flattenFiles(workspaceTree);
@@ -252,6 +260,7 @@ export function AgentPanel({
         <div>
           <strong data-testid="agent-runtime-status">{runtimeLabel}</strong>
           <small>{runtime?.model ?? "Loading model"}</small>
+          {runtime?.modelChangePending ? <small>Model change will apply after current tasks finish</small> : null}
         </div>
       </header>
 
@@ -300,15 +309,16 @@ export function AgentPanel({
       ) : null}
 
       <ol className="agent-message-list" ref={transcriptRef} data-testid="agent-message-list">
-        {sessionRuns.length === 0 ? (
+        {displayRuns.length === 0 ? (
           <li className="empty-panel-state">Ask OpenCode to work on this project.</li>
-        ) : sessionRuns.map((run) => (
+        ) : displayRuns.map((run) => (
           <li key={run.id} className="agent-turn">
             <article className="agent-user-message">
               <header>
                 <strong>{runMemberName(run, members)}</strong>
-                <time>{formatTime(run.createdAt)}</time>
+                <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
               </header>
+              <small>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</small>
               <p>{run.prompt}</p>
               {run.contexts?.length ? (
                 <ul className="agent-message-contexts">
@@ -324,6 +334,7 @@ export function AgentPanel({
               trace={traces[run.id] ?? []}
               onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
+              activeSessionIds={activeSessionIds}
               canCancel={Boolean(member)}
               onCancel={() => void cancelRun(run)}
               onOpenFile={onOpenFile}
@@ -420,6 +431,7 @@ function AgentMessage({
   trace,
   onLoadTrace,
   queuedRuns,
+  activeSessionIds,
   canCancel,
   onCancel,
   onOpenFile,
@@ -430,6 +442,7 @@ function AgentMessage({
   trace: AgentTraceEvent[];
   onLoadTrace(): void;
   queuedRuns: AgentRun[];
+  activeSessionIds: Set<string | undefined>;
   canCancel: boolean;
   onCancel(): void;
   onOpenFile(path: string): void;
@@ -444,8 +457,8 @@ function AgentMessage({
       <header>
         <span className="agent-avatar"><Bot size={14} /></span>
         <div>
-          <strong>OpenCode</strong>
-          <small>{runStatusLabel(run, queuedRuns)} · {run.model}</small>
+          <strong>{run.memberName ?? "OpenCode"}</strong>
+          <small>{runStatusLabel(run, queuedRuns, activeSessionIds)} · {run.model}</small>
         </div>
         {ACTIVE_STATUSES.has(run.status) && canCancel ? (
           <button type="button" className="agent-cancel-button" onClick={onCancel} title="Cancel run">
@@ -530,11 +543,14 @@ function runMemberName(run: AgentRun, members: RoomMember[]) {
   return run.memberName ?? members.find((member) => member.id === run.memberId)?.displayName ?? "Member";
 }
 
-function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[]) {
+function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds: Set<string | undefined>) {
   if (run.interruptedByRunId) return "Interrupted";
   if (run.status !== "queued") return titleCase(run.status);
+  if (activeSessionIds.has(run.sessionId) || queuedRuns.some((candidate) => candidate.id !== run.id && candidate.sessionId === run.sessionId)) {
+    return "Waiting for the previous task in this session";
+  }
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
-  return position > 0 ? `Queued #${position}` : "Queued";
+  return position > 0 ? `Waiting for a concurrent slot · #${position}` : "Waiting for a concurrent slot";
 }
 
 function TraceStatusIcon({ status }: { status: AgentRun["status"] }) {

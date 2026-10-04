@@ -28,12 +28,8 @@ export function registerAgentRoutes(
         model?: unknown;
         enabled?: unknown;
       };
-      if (
-        agentRuns.hasActiveTasks() &&
-        (nextSettings.model !== current.model ||
-          nextSettings.enabled !== current.enabled)
-      ) {
-        throw new Error("Agent settings cannot change while tasks are active");
+      if (agentRuns.hasActiveTasks() && nextSettings.enabled !== current.enabled) {
+        throw new Error("Agent enabled setting cannot change while tasks are active");
       }
       res.json(await agentSettings.update(req.body));
     } catch (error) {

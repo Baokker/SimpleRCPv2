@@ -108,6 +108,7 @@ export interface AgentRuntimeStatus {
   version?: string;
   model: string;
   apiKeyConfigured: boolean;
+  modelChangePending?: boolean;
 }
 
 export type AgentRunStatus =
@@ -123,6 +124,7 @@ export interface AgentFileChange {
   additions: number;
   deletions: number;
   status?: "added" | "deleted" | "modified";
+  attribution?: "tool" | "exclusive" | "ambiguous" | "session_diff";
 }
 
 export interface AgentPromptContext {

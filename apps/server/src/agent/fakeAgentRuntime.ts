@@ -39,6 +39,13 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
     },
     async dispose() {
       await Promise.all([real.dispose(), fake.dispose()]);
+    },
+    setActiveRunCount(count: number) {
+      real.setActiveRunCount?.(count);
+      fake.setActiveRunCount?.(count);
+    },
+    getCurrentModel() {
+      return real.getCurrentModel?.() ?? fake.getCurrentModel?.() ?? "fake-agent";
     }
   };
 }
@@ -79,6 +86,17 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
         await fs.mkdir(path.dirname(absolutePath), { recursive: true });
         await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
+        await emit("tool.completed", {
+          part: {
+            type: "tool",
+            callID: `fake-write-${input.sessionId}`,
+            tool: "write",
+            state: {
+              status: "completed",
+              input: { filePath: absolutePath }
+            }
+          }
+        });
       }
       const delayMs = Number([...input.prompt.matchAll(/fake-delay=(\d+)/g)].at(-1)?.[1] ?? 0);
       try {
@@ -112,7 +130,9 @@ export function createFakeAgentRuntime(): AgentRuntime {
       for (const controller of abortControllers.values()) controller.abort();
       abortControllers.clear();
       listeners.clear();
-    }
+    },
+    setActiveRunCount() {},
+    getCurrentModel() { return "fake-agent"; }
   };
 }
 
