@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import fs from "node:fs/promises";
+import { statSync } from "node:fs";
 import path from "node:path";
 import type { AgentSettingsResponse } from "@simplercp/shared";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
@@ -43,8 +43,8 @@ export function createOpenCodeRuntime(
     if (!modelChangePromise) {
       const targetModel = model;
       modelChangePromise = (async () => {
-        await process.dispose();
         processModel = targetModel;
+        await process.dispose();
         process = createProcess(targetModel);
       })().finally(() => { modelChangePromise = undefined; });
     }
@@ -76,13 +76,13 @@ export function createOpenCodeRuntime(
         if (released) return;
         released = true;
         activeRunCount = Math.max(0, activeRunCount - 1);
-        if (activeRunCount === 0 && options.getSettings().model !== processModel) void ensureCurrentProcess().catch((error) => console.warn(`OpenCode model switch failed: ${error instanceof Error ? error.message : "Unknown error"}`));
+        if (activeRunCount === 0 && options.getSettings().model !== processModel) void ensureCurrentProcess();
       };
     },
     setActiveRunCount(count: number) {
       activeRunCount = count;
       if (activeRunCount === 0 && options.getSettings().model !== processModel) {
-        void ensureCurrentProcess().catch((error) => console.warn(`OpenCode model switch failed: ${error instanceof Error ? error.message : "Unknown error"}`));
+        void ensureCurrentProcess();
       }
     },
     getCurrentModel() {
@@ -197,21 +197,15 @@ export function createOpenCodeRuntime(
       const completion = (async () => {
         for await (const event of subscription.stream) {
           if (!eventBelongsToSession(event, input.sessionId)) continue;
-          try {
-            await listener({
-              type: event.type,
-              data: event.properties as Record<string, unknown>
-            });
-          } catch (error) {
-            console.warn(`OpenCode event listener failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-          }
+          await listener({
+            type: event.type,
+            data: event.properties as Record<string, unknown>
+          });
         }
       })();
       return async () => {
         controller.abort();
-        await completion.catch((error) => {
-          if (!controller.signal.aborted) throw error;
-        });
+        await completion;
       };
     },
     async dispose() {
@@ -222,12 +216,7 @@ export function createOpenCodeRuntime(
 
 export async function ensureWorkspaceRepository(workspacePath: string) {
   const gitPath = path.join(workspacePath, ".git");
-  const repositoryExists = await fs.stat(gitPath)
-    .then(() => true)
-    .catch((error: unknown) => {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT") return false;
-      throw error;
-    });
+  const repositoryExists = statSync(gitPath, { throwIfNoEntry: false });
   if (repositoryExists) return false;
   await execFileAsync("git", ["init", "--quiet", workspacePath]);
   return true;

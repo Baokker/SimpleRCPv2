@@ -16,6 +16,14 @@ export interface RunnableAgentRun {
   requiresWorkspacePreparation: boolean;
 }
 
+export function getCompletedOverlapGroup(runId: string, overlaps: Map<string, Set<string>>, activeRunIds: Set<string>) {
+  const connectedRunIds = new Set([runId]);
+  for (const connectedRunId of connectedRunIds) {
+    for (const otherRunId of overlaps.get(connectedRunId) ?? []) connectedRunIds.add(otherRunId);
+  }
+  return [...connectedRunIds].some((id) => activeRunIds.has(id)) ? [] : [...connectedRunIds];
+}
+
 interface AgentSchedulerOptions {
   maxConcurrentRuns: number;
   isClosing(): boolean;

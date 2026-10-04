@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import { statSync } from "node:fs";
 import path from "node:path";
+import type { AgentFileChange } from "@simplercp/shared";
 
 export interface AgentWriteEntry {
   runId: string;
@@ -28,13 +30,9 @@ export function createAgentWriteLedger() {
       const absolutePath = path.resolve(workspacePath, write.file);
       if (absolutePath === root || !absolutePath.startsWith(`${root}${path.sep}`)) continue;
       const file = path.relative(root, absolutePath).split(path.sep).join("/");
-      let content: Buffer | undefined;
-      let readError: string | undefined;
-      try {
-        content = await fs.readFile(absolutePath);
-      } catch (error) {
-        readError = error instanceof Error ? error.message : "Unable to read written file";
-      }
+      const fileState = statSync(absolutePath, { throwIfNoEntry: false });
+      const content = fileState ? await fs.readFile(absolutePath) : undefined;
+      const readError = content === undefined ? "Written file no longer exists" : undefined;
       entries.push({
         runId,
         toolCallId: `${write.toolCallId}:${file}`,
@@ -69,7 +67,25 @@ export function createAgentWriteLedger() {
     if (projectEntries && projectEntries.size === 0) entriesByProject.delete(projectId);
   }
 
-  return { record, list, listProject, clear };
+  function clearProject(projectId: string) { entriesByProject.delete(projectId); }
+
+  function attribute(projectId: string, runId: string, changes: AgentFileChange[], overlappingRunIds: Set<string>, memberChangedFiles: Set<string>) {
+    const entries = list(projectId, runId);
+    const toolFiles = new Set(entries.map((entry) => entry.file));
+    const overlapFiles = new Set([...overlappingRunIds].flatMap((id) => list(projectId, id).map((entry) => entry.file)));
+    const result = changes.filter((change) => toolFiles.has(change.file) || !overlapFiles.has(change.file)).map((change) => ({
+      ...change,
+      attribution: toolFiles.has(change.file) ? "tool" as const : overlappingRunIds.size > 0 || memberChangedFiles.has(change.file) ? "ambiguous" as const : "exclusive" as const
+    }));
+    const knownFiles = new Set(result.map((change) => change.file));
+    for (const entry of entries) if (!knownFiles.has(entry.file)) {
+      result.push({ file: entry.file, additions: 0, deletions: 0, status: "modified", attribution: "tool" });
+      knownFiles.add(entry.file);
+    }
+    return result;
+  }
+
+  return { record, list, listProject, clear, clearProject, attribute };
 }
 
 function extractWrites(data: Record<string, unknown>) {
@@ -81,23 +97,15 @@ function extractWrites(data: Record<string, unknown>) {
   if (state && state.status !== "completed" && state.status !== "success") return [];
   const input = state?.input && typeof state.input === "object" ? state.input as Record<string, unknown> : undefined;
   const file = input?.filePath ?? input?.path ?? part.filePath ?? part.path;
-  const patchText = input?.patchText ?? part.patchText;
   const toolCallId = part.callID ?? part.toolCallId ?? part.id;
   if (typeof toolCallId !== "string" || !toolCallId) return [];
-  if (tool === "apply_patch" && typeof patchText === "string") {
-    return parsePatchFiles(patchText).map((file) => ({ toolCallId, file }));
+  if (tool === "apply_patch") {
+    const metadata = state?.metadata as { files?: Array<{ filePath: string; movePath?: string }> } | undefined;
+    if (!Array.isArray(metadata?.files)) throw new Error("Completed apply_patch event has no file metadata");
+    return [...new Set(metadata.files.flatMap((entry) => [entry.filePath, ...(entry.movePath ? [entry.movePath] : [])]))].map((file) => ({ toolCallId, file }));
   }
   if (typeof file !== "string" || !file.trim()) return [];
   return [{ toolCallId, file }];
-}
-
-function parsePatchFiles(patchText: string) {
-  const files: string[] = [];
-  for (const line of patchText.split("\n")) {
-    const match = line.match(/^\*\*\* (?:Update|Add|Delete|Move to) File:\s*(.+?)\s*$/);
-    if (match && !files.includes(match[1]!)) files.push(match[1]!);
-  }
-  return files;
 }
 
 function findToolPart(value: unknown): Record<string, unknown> | undefined {

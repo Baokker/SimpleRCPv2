@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import type {
   AgentRun,
@@ -32,8 +31,10 @@ import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
 import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
 import { createAgentWriteLedger, type AgentWriteLedger } from "./agentWriteLedger.js";
+import { selectRunnableAgentRun } from "./agentRunSelection.js";
 import {
   createAgentScheduler,
+  getCompletedOverlapGroup,
   type AgentSchedulerQueue
 } from "./agentScheduler.js";
 
@@ -230,88 +231,51 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   }
 
   async function findRunnableRun(projectId: string, queue: AgentSchedulerQueue) {
-    if (queue.workspacePreparing) return undefined;
-    const store = getStore(projectId);
-    let workspaceNeedsPreparation = false;
-    for (const runId of queue.runIds) {
-      const run = await store.get(runId);
-      if (!run || run.status !== "queued" || !run.sessionId) continue;
-      const session = await getSessionStore(projectId).get(run.sessionId);
-      if (!session || queue.activeSessionIds.has(session.id)) continue;
-      if (session.scope === "team" && !workspaceNeedsPreparation) {
-        const project = options.runtimeManager.get(projectId).project;
-        workspaceNeedsPreparation = await workspaceRepositoryMissing(project.workspacePath);
-        if (workspaceNeedsPreparation) {
-          if (queue.activeRunIds.size > 0) return undefined;
-          return { runId, sessionId: session.id, requiresWorkspacePreparation: true };
-        }
-      }
-      return { runId, sessionId: session.id, requiresWorkspacePreparation: false };
-    }
-    return undefined;
+    return selectRunnableAgentRun({ queue, runs: getStore(projectId), sessions: getSessionStore(projectId), workspacePath: options.runtimeManager.get(projectId).project.workspacePath });
   }
 
-  async function workspaceRepositoryMissing(workspacePath: string) {
-    try {
-      await fs.stat(path.join(workspacePath, ".git"));
-      return false;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
-      throw error;
-    }
-  }
-
-  async function recordCancelledFileChanges(
+  async function recordFinishedFileChanges(
     projectId: string,
     runId: string,
     workspacePath: string,
     runtimeSessionId: string,
     workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>>,
+    revisionsBefore: Map<string, number>,
     messageId?: string
   ) {
-    let workspaceChanges: AgentRun["fileChanges"] = [];
-    let runtimeChanges: AgentRun["fileChanges"] = [];
-    try {
-      workspaceChanges = compareAgentWorkspaceSnapshots(
-        workspaceBefore,
-        await createAgentWorkspaceSnapshot(workspacePath)
-      );
-    } catch (error) {
+    const workspaceChanges = compareAgentWorkspaceSnapshots(workspaceBefore, await createAgentWorkspaceSnapshot(workspacePath));
+    const runtimeChanges = await options.runtime.getDiff({ workspacePath, sessionId: runtimeSessionId, messageId });
+    const changes = mergeFileChanges(workspaceChanges, runtimeChanges);
+    const memberChangedFiles = new Set<string>();
+    const documents = options.runtimeManager.get(projectId).documents;
+    for (const change of changes) {
+      const previousRevision = revisionsBefore.get(change.file) ?? 0;
+      const currentRevision = documents.getRevision(change.file);
+      if (currentRevision <= previousRevision) continue;
+      memberChangedFiles.add(change.file);
       await appendTrace(projectId, runId, {
-        type: "file_changes_unavailable",
-        summary: `Workspace snapshot failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
-      });
-    }
-    try {
-      runtimeChanges = await options.runtime.getDiff({
-        workspacePath,
-        sessionId: runtimeSessionId,
-        messageId
-      });
-    } catch (error) {
-      await appendTrace(projectId, runId, {
-        type: "file_changes_unavailable",
-        summary: `Runtime diff failed while recording cancelled changes: ${error instanceof Error ? error.message : "Unknown error"}`
+        type: "concurrent_change",
+        summary: `${change.file} was edited by a member while the Agent was running`,
+        data: { path: change.file, previousRevision, currentRevision }
       });
     }
     const fileChanges = await attributeFileChanges(
       projectId,
       runId,
-      mergeFileChanges(workspaceChanges, runtimeChanges),
-      new Set([
-        ...(runConcurrentIds.get(runId) ?? []),
-        ...[...getQueue(projectId).activeRunIds].filter((id) => id !== runId)
-      ])
+      changes,
+      runOverlapIds.get(runId) ?? new Set(),
+      memberChangedFiles
     );
     await recordAgentOverlaps(projectId, runId);
     await updateRun(projectId, runId, { fileChanges });
     if (fileChanges.length > 0) {
       await appendTrace(projectId, runId, {
         type: "file_changes",
-        summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed before cancellation`,
+        summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed`,
         data: { files: fileChanges }
       });
     }
+    return fileChanges;
   }
 
   async function attributeFileChanges(
@@ -321,25 +285,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     concurrentRunIds: Set<string>,
     memberChangedFiles = new Set<string>()
   ) {
-    const entries = writeLedger.list(projectId, runId);
-    const toolFiles = new Set(entries.map((entry) => entry.file));
-    const overlapFiles = new Set(
-      [...concurrentRunIds].flatMap((otherRunId) => writeLedger.list(projectId, otherRunId).map((entry) => entry.file))
-    );
-    const result = (changes ?? []).filter((change) => toolFiles.has(change.file) || !overlapFiles.has(change.file)).map((change) => ({
-      ...change,
-      attribution: toolFiles.has(change.file)
-        ? "tool" as const
-        : concurrentRunIds.size > 0 || memberChangedFiles.has(change.file)
-          ? "ambiguous" as const
-          : "exclusive" as const
-    }));
-    const knownFiles = new Set(result.map((change) => change.file));
-    for (const entry of entries) {
-      if (!knownFiles.has(entry.file)) {
-        result.push({ file: entry.file, additions: 0, deletions: 0, status: "modified", attribution: "tool" });
-      }
-    }
+    const result = writeLedger.attribute(projectId, runId, changes ?? [], concurrentRunIds, memberChangedFiles);
     for (const change of result) {
       if (change.attribution !== "ambiguous") continue;
       await appendTrace(projectId, runId, {
@@ -389,14 +335,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   }
 
   function cleanupOverlapEntries(projectId: string, runId: string) {
-    const overlapIds = runOverlapIds.get(runId) ?? new Set<string>();
-    const allFinished = [...overlapIds].every((otherRunId) => !activeRuns.has(otherRunId));
-    if (!allFinished) return;
-    writeLedger.clear(projectId, runId);
-    runOverlapIds.delete(runId);
-    for (const otherRunId of overlapIds) {
-      writeLedger.clear(projectId, otherRunId);
-      runOverlapIds.delete(otherRunId);
+    const connectedRunIds = getCompletedOverlapGroup(runId, runOverlapIds, getQueue(projectId).activeRunIds);
+    for (const id of connectedRunIds) {
+      writeLedger.clear(projectId, id);
+      runOverlapIds.delete(id);
+      for (const key of recordedOverlaps) if (key.startsWith(`${id}:`) || key.includes(`:${id}:`)) recordedOverlaps.delete(key);
     }
   }
 
@@ -408,6 +351,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let workspacePathForRun: string | undefined;
     let runtimeSessionIdForRun: string | undefined;
     let workspaceBeforeForRun: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
+    let revisionsBeforeForRun: Map<string, number> | undefined;
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       workspacePathForRun = projectRuntime.project.workspacePath;
@@ -458,6 +402,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       );
       workspaceBeforeForRun = workspaceBefore;
       const revisionsBefore = projectRuntime.documents.getRevisions();
+      revisionsBeforeForRun = revisionsBefore;
       const startedAt = new Date().toISOString();
       const concurrentRunIds = [...(runConcurrentIds.get(runId) ?? [])];
       const beforeRunning = await store.get(runId);
@@ -516,7 +461,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const cancellationAfterActivation = await store.get(runId);
       if (cancellationAfterActivation?.status === "cancelled" || cancelRequested.delete(runId)) {
         await options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId });
-        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
+        await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore);
         return;
       }
 
@@ -577,62 +522,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } catch (error) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
-          await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
+          await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore);
           return;
         }
         throw error;
       }
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
-        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, result.messageId);
+        await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore, result.messageId);
         return;
       }
-      const runtimeFileChanges = await options.runtime.getDiff({
-        workspacePath: projectRuntime.project.workspacePath,
-        sessionId: runtimeSessionId,
-        messageId: result.messageId
-      });
-      const workspaceAfter = await createAgentWorkspaceSnapshot(
-        projectRuntime.project.workspacePath
-      );
-      let fileChanges = mergeFileChanges(
-        compareAgentWorkspaceSnapshots(workspaceBefore, workspaceAfter),
-        runtimeFileChanges
-      );
-      const memberChangedFiles = new Set<string>();
-      for (const change of fileChanges) {
-        const previousRevision = revisionsBefore.get(change.file) ?? 0;
-        const currentRevision = projectRuntime.documents.getRevision(change.file);
-        if (currentRevision <= previousRevision) continue;
-        memberChangedFiles.add(change.file);
-        await appendTrace(projectId, runId, {
-          type: "concurrent_change",
-          summary: `${change.file} was edited by a member while the Agent was running`,
-          data: {
-            path: change.file,
-            previousRevision,
-            currentRevision
-          }
-        });
-      }
-      fileChanges = await attributeFileChanges(
-        projectId,
-        runId,
-        fileChanges,
-        new Set([
-          ...concurrentRunIds,
-          ...[...getQueue(projectId).activeRunIds].filter((id) => id !== runId)
-        ]),
-        memberChangedFiles
-      );
-      await recordAgentOverlaps(projectId, runId);
-      if (fileChanges.length > 0) {
-        await appendTrace(projectId, runId, {
-          type: "file_changes",
-          summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed`,
-          data: { files: fileChanges }
-        });
-      }
+      const fileChanges = await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore, result.messageId);
       await appendTrace(projectId, runId, {
         type: "assistant_message",
         summary: result.text,
@@ -675,10 +575,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     } catch (error) {
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
-        if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun) await recordCancelledFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun);
+        if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
         return;
       }
-      if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun) await recordCancelledFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun);
+      if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
       const message = error instanceof Error ? error.message : "Agent run failed";
       await updateRun(projectId, runId, {
         status: "failed",
@@ -1071,6 +971,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       while (queue.runningPromises.size > 0) {
         await Promise.all([...queue.runningPromises]);
       }
+      const projectRunIds = (await store.list()).map((run) => run.id);
+      for (const id of projectRunIds) {
+        runConcurrentIds.delete(id);
+        runOverlapIds.delete(id);
+        cancelRequested.delete(id);
+        for (const key of recordedOverlaps) if (key.startsWith(`${id}:`) || key.includes(`:${id}:`)) recordedOverlaps.delete(key);
+      }
+      writeLedger.clearProject(projectId);
       queues.delete(projectId);
       stores.delete(projectId);
       for (const key of traces.keys()) {
@@ -1099,6 +1007,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           [...queues.values()].flatMap((queue) => [...queue.runningPromises])
         );
       }
+      for (const projectId of queues.keys()) writeLedger.clearProject(projectId);
+      runConcurrentIds.clear();
+      runOverlapIds.clear();
+      recordedOverlaps.clear();
+      cancelRequested.clear();
       listeners.clear();
     }
   };

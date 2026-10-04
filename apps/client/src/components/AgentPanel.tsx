@@ -85,9 +85,10 @@ export function AgentPanel({
     [runs, selectedSessionId]
   );
   const displayRuns = useMemo(() => {
-    const visible = runs.filter((run) => run.sessionId === selectedSessionId || ACTIVE_STATUSES.has(run.status));
+    const visible = runs.filter((run) => run.sessionId === selectedSessionId);
     return visible.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
   }, [runs, selectedSessionId]);
+  const runningRuns = runs.filter((run) => run.status === "running");
   const queuedRuns = useMemo(
     () => runs
       .filter((run) => run.status === "queued")
@@ -263,6 +264,20 @@ export function AgentPanel({
           {runtime?.modelChangePending ? <small>Model change will apply after current tasks finish</small> : null}
         </div>
       </header>
+
+      {runningRuns.length > 0 ? (
+        <div className="agent-active-runs" data-testid="agent-active-runs">
+          <strong>运行中任务</strong>
+          <ul>
+            {runningRuns.map((run) => (
+              <li key={run.id}>
+                <span>{runMemberName(run, members)} · {sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span>
+                <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="agent-session-tabs" role="tablist" aria-label="Agent sessions">
         {sessions.map((session) => (

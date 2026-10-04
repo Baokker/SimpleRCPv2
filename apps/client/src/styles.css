@@ -1422,6 +1422,25 @@ body[data-resizing="terminal"] {
   padding: 8px 12px;
 }
 
+.agent-active-runs {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-main);
+  font-size: 11px;
+}
+
+.agent-active-runs ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-active-runs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .agent-runtime > div,
 .agent-run-list button > span,
 .agent-run-detail header > div:first-child {
