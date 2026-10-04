@@ -54,6 +54,21 @@ test("tabs in one browser can choose different project members", async ({
   await context.close();
 });
 
+test("opening Team with a visible approval does not produce an update loop", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  await openAs(page, "Student approval", "demo", "student");
+  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  await command.fill("rm a.txt");
+  await command.press("Enter");
+  await page.getByTestId("collab-tab-team").click();
+  await expect(page.locator(".guard-approval-card")).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(consoleErrors.filter((message) => message.includes("Maximum update depth exceeded"))).toEqual([]);
+});
+
 test("human collaborators share code, cursors, chat, activity, and terminal", async ({
   browser
 }) => {

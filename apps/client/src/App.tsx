@@ -1,5 +1,5 @@
 import { MessagesSquare, Moon, PanelBottom, PanelRight, Sun } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   createWorkspaceDirectory,
@@ -504,6 +504,14 @@ function WorkspacePage({
     document.title = unseenApprovalIds.size > 0 ? `(${unseenApprovalIds.size}) ${original}` : original;
     return () => { document.title = original; };
   }, [unseenApprovalIds]);
+  const onApprovalSeen = useCallback((approvalId: string) => {
+    setUnseenApprovalIds((current) => {
+      if (!current.has(approvalId)) return current;
+      const next = new Set(current);
+      next.delete(approvalId);
+      return next;
+    });
+  }, []);
 
   function startResize(target: ResizeTarget, event: ReactPointerEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -986,7 +994,7 @@ function WorkspacePage({
           scenarioRoles={scenarioRoles ?? []}
           unreadApprovalCount={unseenApprovalIds.size}
           llmJudging={llmJudging}
-          onApprovalSeen={(approvalId) => setUnseenApprovalIds((current) => { const next = new Set(current); next.delete(approvalId); return next; })}
+          onApprovalSeen={onApprovalSeen}
           onApprovalResolved={() => void listGuardApprovals(projectId).then((result) => { guardApprovalsRef.current = result.approvals; setGuardApprovals(result.approvals); }).catch(showWorkspaceError)}
           controlHolderMemberId={terminalControl.holderMemberId}
           onControlState={(holderMemberId: string | null) => setTerminalControl((current) => ({ ...current, holderMemberId }))}
