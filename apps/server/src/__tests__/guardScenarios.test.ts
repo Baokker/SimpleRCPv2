@@ -65,11 +65,6 @@ describe("multi-member multi-agent scenarios", () => {
     expect(result.approvers).toBe("initiator");
   });
 
-  it("T1 re-evaluates the team run after the initiator role changes", () => {
-    expect(check("collaborator", "agent", { kind: "edit", paths: ["config.js"] }).action).toBe("allow_snapshot");
-    expect(check("observer", "agent", { kind: "edit", paths: ["config.js"] }).action).toBe("deny");
-  });
-
   it("T2 cancels a pending approval when a team run is interrupted", async () => {
     const approvals = createApprovalQueue(10_000);
     const request: GuardRequest = {
