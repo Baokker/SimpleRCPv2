@@ -65,8 +65,9 @@ function zone(value: string): "metadata" | "protected" | "outside" | "workspace"
   if (/\blinked\//i.test(value)) return "metadata";
   if (/\bdangling\b/i.test(value)) return "outside";
   if (/\/platform\/data|\$SIMPLERCP_DATA_DIR|(?:\.\.[^/\s]{0,4}\/p2|other-project|projects\/other)/i.test(value)) return "metadata";
+  if (/(?:^|\s)secr\*\/\*(?=\s|$)/i.test(value)) return "protected";
   if (/(?:\.env(?:[./\s]|$)|\.pem(?:[./\s]|$)|\.key(?:[./\s]|$)|\.git\/(?:config|hooks))/i.test(value)) return "protected";
-  if (/(?:\.\.[^/\s]{0,4}\/|\/tmp\/|~(?:\/|\s|$)|\$HOME|`)/i.test(value)) return "outside";
+  if (/(?:\.\.[^/\s]{0,4}\/|\/tmp\/|(?:^|\s)~(?:[A-Za-z0-9._-]+)?(?:\/|\s|$)|\$HOME|`)/i.test(value)) return "outside";
   return "workspace";
 }
 function dynamic(command: string): boolean { return /[\x00-\x1f\x7f-\x9f]/.test(command) || /\$\(|`|\$[A-Za-z_{]|(?:^|\s)(?:bash|sh|zsh|python|python3|node|perl)\s+-(?:c|e)\b/i.test(command) || (/(?:^|\s)cd\s+[^;&|]+(?:&&|;|\|)/i.test(command) && /(?:~|\$|['"\\])/.test(command)); }

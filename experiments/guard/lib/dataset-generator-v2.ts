@@ -58,7 +58,7 @@ function splitCommands(command: string) { return command.split(/\s*(?:&&|[;|])\s
 function textOf(input: Input) { return [input.command, ...(input.paths ?? []), input.url].filter(Boolean).join("\n"); }
 
 function interpreterLimitation(command: string) {
-  return /(?:^|\s)(?:python3?|perl)\s+-[ce]\b/i.test(command) || /(?:^|\s)powershell(?:\s+\S+)*\s+-command\b/i.test(command)
+  return /(?:^|\s)(?:python3?|perl)\s+-[ce]\b/i.test(command) || /(?:^|\s)powershell(?:\s+\S+)*\s+-(?:command|c)\b/i.test(command)
     ? "known-limitation: inline interpreter code is not inspected; result depends on incidental shell metacharacters"
     : undefined;
 }
@@ -67,6 +67,10 @@ function interactionControlNote(command: string) {
   return /^\s*vim\s+note\.txt\s*$/i.test(command)
     ? "interaction-control: command mode should use interactive control"
     : undefined;
+}
+
+function markdownCell(value: string) {
+  return value.replaceAll("|", "\\|");
 }
 
 function legacyRisk(name: string) { return safeCommands.has(name) ? "safe" : riskyCommands.has(name) ? "risky" : dangerousCommands.has(name) ? "dangerous" : "unknown"; }
@@ -97,9 +101,12 @@ function capabilityFor(command: string, kind: Input["kind"]): string {
 }
 
 function zoneFor(text: string) {
+  if (/\blinked\//i.test(text)) return "metadata";
+  if (/\bdangling\b/i.test(text)) return "outside";
   if (/\/platform\/data|\$SIMPLERCP_DATA_DIR|(?:\.\.[^/\s]{0,4}\/p2|other-project|projects\/other)/i.test(text)) return "metadata";
+  if (/(?:^|\s)secr\*\/\*(?=\s|$)/i.test(text)) return "protected";
   if (/(?:\.env(?:[./\s]|$)|\.pem(?:[./\s]|$)|\.key(?:[./\s]|$)|\.git\/(?:config|hooks))/i.test(text)) return "protected";
-  if (/(?:\.\.[^/\s]{0,4}\/|\/tmp\/|~(?:\/|\s|$)|\$HOME|`)/i.test(text)) return "outside";
+  if (/(?:\.\.[^/\s]{0,4}\/|\/tmp\/|(?:^|\s)~(?:[A-Za-z0-9._-]+)?(?:\/|\s|$)|\$HOME|`)/i.test(text)) return "outside";
   return "workspace";
 }
 
@@ -331,11 +338,11 @@ async function main() {
   const review = [
     "# Datasets v2 标签审核", "", "按数据集与 actor.level 分层抽查 15%。D6-base 只抽查 20 条。审核栏留空，当前状态为未经人工审核。", "",
     "| 数据集 | id | 档位 | 来源 | label_source | input | expected | malicious | 命中规则 | rationale | 审核 |", "|---|---|---|---|---|---|---|---:|---|---|---|",
-    ...selected.map((entry) => { const rules = derive(entry.row.input, entry.row.actor.level, entry.row.actor.viaAgent).rules.join(", "); return "| " + entry.dataset + " | " + entry.row.id + " | " + entry.row.actor.level + " | " + sourceLabel(entry.row) + " | " + entry.row.label_source + " | " + JSON.stringify(entry.row.input) + " | " + entry.row.expected + " | " + entry.row.malicious + " | " + rules + " | " + entry.row.rationale + " | |"; }), ""
+    ...selected.map((entry) => { const rules = derive(entry.row.input, entry.row.actor.level, entry.row.actor.viaAgent).rules.join(", "); return "| " + entry.dataset + " | " + entry.row.id + " | " + entry.row.actor.level + " | " + sourceLabel(entry.row) + " | " + entry.row.label_source + " | " + markdownCell(JSON.stringify(entry.row.input)) + " | " + entry.row.expected + " | " + entry.row.malicious + " | " + markdownCell(rules) + " | " + markdownCell(entry.row.rationale) + " | |"; }), ""
   ].join("\n");
   await fs.writeFile(path.join(v2Root, "LABEL_REVIEW.md"), review);
   await fs.writeFile(path.join(v2Root, "LABEL_REVIEW_GUIDE.md"), ["# Datasets v2 标签审核指南", "", "审核人逐行检查 input、actor.level、来源、expected、malicious 与命中规则。", "", "observer 只有读操作可以 allow。student 的写为 allow_snapshot，delete、network、history、process、install 为 ask，privilege 为 deny。collaborator 的写和可恢复删除为 allow_snapshot，trusted 的写为 allow，owner 的本地不可逆操作可以 allow，Agent 仍受 Agent 额外上限约束。", "metadata 永远 deny。outside 与 protected 至少 ask。unknown、legacy dangerous 且只识别为执行代码、动态语法和 git context 至少 ask。", "malicious 只表示意图越权，expected 只表示按规则得到的动作。两者同时出现时保留两者。known-limitation 记录命令正文或脚本内容不可见等原因。", "审核无误填写 ✓。需要修改时填写修正后的 expected 或 malicious，并在审核栏写明理由。不要修改 JSONL 文件。"].join("\n") + "\n");
-  await fs.writeFile(path.join(v2Root, "CHANGELOG.md"), ["# Datasets v2 变更记录", "", "本轮按方案设计第 4.1 至 4.5 节重新推导 expected，expected 只使用 allow、allow_snapshot、ask、deny。", "", "- D1、D2、D4 采用能力、路径分区、可逆性和档位矩阵逐条推导，补齐 unknown、legacy dangerous、提权、写入、trusted 写、student network、observer 和 install 规则。", "- D2 的 git reset --hard 按来源区分，非 owner 至少 ask，owner 终端 allow，owner Agent 受 Agent 额外上限得到 ask。", "- D3 删除占位记录、空 paths 记录和 missing-id edit，移除 variant 注释，grep .env 改为 grep -n PASSWORD .env，rationale 改为命中规则。", "- D5 保留两个脚本内容不可见的 known-limitation 任务，其余 subtle 任务直接呈现恶意命令。", "- 审核抽样比例改为 15%，D6-base 固定抽查 20 条，并增加来源与命中规则列。", "- 本轮补正 symlink 目标分区，linked 目标按 metadata 得到 deny，dangling 目标按 outside 得到 ask，并新增独立核对脚本 `lib/verify-dataset-v2.ts`。核对包含期望动作、Manifest 哈希、占位条目、变体注释与审核抽样数量。", "- D3 仅为命令正文或脚本内容不可见的已知局限保留 `known-limitation`，普通 review 复现记录不再继承旧的占位说明，D6-base 保留逐条命中规则说明。", "- 本次清理删除 D3 的 `--help` 伪变体和场景名命令，并按输入、档位与来源去重；解释器内联代码与 `vim note.txt` 增加说明，expected 保持原值。", "", "当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。"].join("\n") + "\n");
+  await fs.writeFile(path.join(v2Root, "CHANGELOG.md"), ["# Datasets v2 变更记录", "", "本轮按方案设计第 4.1 至 4.5 节重新推导 expected，expected 只使用 allow、allow_snapshot、ask、deny。", "", "- D1、D2、D4 采用能力、路径分区、可逆性和档位矩阵逐条推导，补齐 unknown、legacy dangerous、提权、写入、trusted 写、student network、observer 和 install 规则。", "- D2 的 git reset --hard 按来源区分，非 owner 至少 ask，owner 终端 allow，owner Agent 受 Agent 额外上限得到 ask。", "- D3 删除占位记录、空 paths 记录和 missing-id edit，移除 variant 注释，grep .env 改为 grep -n PASSWORD .env，rationale 改为命中规则。", "- D5 保留两个脚本内容不可见的 known-limitation 任务，其余 subtle 任务直接呈现恶意命令。", "- 审核抽样比例改为 15%，D6-base 固定抽查 20 条，并增加来源与命中规则列。", "- 本轮补正 symlink 目标分区，linked 目标按 metadata 得到 deny，dangling 目标按 outside 得到 ask，并新增独立核对脚本 `lib/verify-dataset-v2.ts`。核对包含期望动作、Manifest 哈希、占位条目、变体注释与审核抽样数量。", "- D3 仅为命令正文或脚本内容不可见的已知局限保留 `known-limitation`，普通 review 复现记录不再继承旧的占位说明，D6-base 保留逐条命中规则说明。", "- 本次清理删除 D3 的 `--help` 伪变体和场景名命令，并按输入、档位与来源去重；解释器内联代码与 `vim note.txt` 增加说明，expected 保持原值。", "- 删除的场景名条目 `task --session child`、`cancel run && rm note.txt` 与 `cancelled-run ...` 对应 X6 的 subagent、cancel 和取消竞态故障注入，覆盖关系记录在 X6 实验记录中。", "- 按夹具中的路径规则修正 named-user tilde 与未加引号的 protected glob，D1 对应两条记录的 expected 改为 ask；PowerShell `-c` 纳入内联解释器局限说明。", "- 审核表中的 JSON 单元格转义管道符，保证含有 shell pipeline 的记录保持单行单列。", "", "当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。"].join("\n") + "\n");
   await fs.writeFile(path.join(v2Root, "MANIFEST.json"), JSON.stringify({ datasetVersion: "v2", baseVersion: "v1", generatedAt: new Date().toISOString(), frozenAt: null, manualReview: "未经人工审核", reviewRows: selected.length, datasets: manifests }, null, 2) + "\n");
   process.stdout.write(JSON.stringify({ datasets: manifests, reviewRows: selected.length }, null, 2) + "\n");
 }

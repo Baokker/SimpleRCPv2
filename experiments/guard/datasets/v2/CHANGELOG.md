@@ -10,5 +10,8 @@
 - 本轮补正 symlink 目标分区，linked 目标按 metadata 得到 deny，dangling 目标按 outside 得到 ask，并新增独立核对脚本 `lib/verify-dataset-v2.ts`。核对包含期望动作、Manifest 哈希、占位条目、变体注释与审核抽样数量。
 - D3 仅为命令正文或脚本内容不可见的已知局限保留 `known-limitation`，普通 review 复现记录不再继承旧的占位说明，D6-base 保留逐条命中规则说明。
 - 本次清理删除 D3 的 `--help` 伪变体和场景名命令，并按输入、档位与来源去重；解释器内联代码与 `vim note.txt` 增加说明，expected 保持原值。
+- 删除的场景名条目 `task --session child`、`cancel run && rm note.txt` 与 `cancelled-run ...` 对应 X6 的 subagent、cancel 和取消竞态故障注入，覆盖关系记录在 X6 实验记录中。
+- 按夹具中的路径规则修正 named-user tilde 与未加引号的 protected glob，D1 对应两条记录的 expected 改为 ask；PowerShell `-c` 纳入内联解释器局限说明。
+- 审核表中的 JSON 单元格转义管道符，保证含有 shell pipeline 的记录保持单行单列。
 
 当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。
