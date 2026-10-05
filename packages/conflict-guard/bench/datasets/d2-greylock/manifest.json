@@ -1,6 +1,7 @@
 {
   "version": "d2-greylock-v1",
   "source": "source-report.json",
+  "labels": "labels.json",
   "caseCount": 51,
   "scenarios": 6,
   "schema": 3,

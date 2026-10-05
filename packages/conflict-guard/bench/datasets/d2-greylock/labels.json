@@ -1,0 +1,410 @@
+[
+  {
+    "id": "hono-redundant-token-verification-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "hono-redundant-token-verification-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "hono-redundant-role-authorization-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "hono-redundant-role-authorization-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "hono-redundant-request-size-limit-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "consola-redundant-stream-routing-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "consola-redundant-stream-routing-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "consola-redundant-retry-budget-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "consola-redundant-retry-budget-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "consola-redundant-output-redaction-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "consola-redundant-output-redaction-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "greylock-redundant-stale-release-guards-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "greylock-redundant-stale-release-guards-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "greylock-redundant-provider-key-validation-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "greylock-redundant-provider-key-validation-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "greylock-redundant-lifecycle-ordering-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "greylock-redundant-lifecycle-ordering-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ky-retry-method-normalization-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ky-retry-method-normalization-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ky-retry-status-policy-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ky-json-schema-validation-order-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ky-json-schema-validation-order-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ofetch-retry-status-policy-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ofetch-json-body-payload-gate-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ofetch-json-body-payload-gate-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ofetch-explicit-response-type-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "ofetch-explicit-response-type-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "fastify-content-type-parser-priority-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "fastify-body-limit-default-ownership-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "fastify-body-limit-default-ownership-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "fastify-http2-chunk-size-dual-representation-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "fastify-http2-chunk-size-dual-representation-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "pino-user-option-precedence-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "pino-user-option-precedence-conflicting",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "pino-level-threshold-vs-display-label-safe",
+    "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "defu-dangerous-config-key-guard-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "defu-dangerous-config-key-guard-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "defu-config-layer-order-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "defu-config-layer-order-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "cookie-samesite-normalization-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "cookie-samesite-normalization-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "cookie-max-age-validation-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "white",
+    "reason": "equivalent-refactor",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "cookie-max-age-validation-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "query-string-empty-value-filter-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "query-string-empty-value-filter-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "query-string-array-separator-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "query-string-array-separator-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "validator-email-domain-case-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "validator-email-domain-case-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "validator-email-subaddress-safe",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "allow",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  },
+  {
+    "id": "validator-email-subaddress-conflicting",
+    "datasetId": "greylock-independent-pair-holdout-v2",
+    "label": "lock",
+    "zone": "grey",
+    "reason": "semantic-interaction-uncertain",
+    "source": "GreyLock local-routing-coverage-v2"
+  }
+]
