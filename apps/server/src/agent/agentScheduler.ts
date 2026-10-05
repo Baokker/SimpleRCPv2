@@ -37,9 +37,17 @@ interface AgentSchedulerOptions {
     requiresWorkspacePreparation: boolean;
   }): () => void;
   executeRun(projectId: string, runId: string): Promise<void>;
+  onSchedulerError?(projectId: string, error: unknown, runId?: string): Promise<void> | void;
 }
 
 export function createAgentScheduler(options: AgentSchedulerOptions) {
+  async function reportSchedulerError(projectId: string, error: unknown, runId?: string) {
+    try {
+      await options.onSchedulerError?.(projectId, error, runId);
+    } catch (reportError) {
+      console.error("Agent scheduler error reporting failed", reportError);
+    }
+  }
   async function processQueue(projectId: string): Promise<void> {
     const queue = options.getQueue(projectId);
     if (queue.processing) {
@@ -49,7 +57,15 @@ export function createAgentScheduler(options: AgentSchedulerOptions) {
     queue.processing = true;
     queue.completion = (async () => {
       while (!options.isClosing() && !queue.closing && queue.activeRunIds.size < options.maxConcurrentRuns) {
-        const candidate = await options.findRunnableRun(projectId, queue);
+        let candidate: RunnableAgentRun | undefined;
+        try {
+          candidate = await options.findRunnableRun(projectId, queue);
+        } catch (error) {
+          const runId = queue.runIds[0];
+          if (runId) queue.runIds = queue.runIds.filter((queuedRunId) => queuedRunId !== runId);
+          await reportSchedulerError(projectId, error, runId);
+          continue;
+        }
         if (!candidate) break;
         const { runId, sessionId, requiresWorkspacePreparation } = candidate;
         queue.runIds = queue.runIds.filter((queuedRunId) => queuedRunId !== runId);
@@ -57,19 +73,34 @@ export function createAgentScheduler(options: AgentSchedulerOptions) {
         queue.activeRunIds.add(runId);
         queue.activeSessionIds.add(sessionId);
         if (requiresWorkspacePreparation) queue.workspacePreparing = true;
-        const finishRun = options.onRunStart({
-          projectId,
-          runId,
-          sessionId,
-          overlappingRunIds,
-          requiresWorkspacePreparation
-        });
-        let runningPromise: Promise<void>;
-        runningPromise = options.executeRun(projectId, runId).finally(() => {
+        let finishRun: () => void;
+        try {
+          finishRun = options.onRunStart({
+            projectId,
+            runId,
+            sessionId,
+            overlappingRunIds,
+            requiresWorkspacePreparation
+          });
+        } catch (error) {
           queue.activeRunIds.delete(runId);
           queue.activeSessionIds.delete(sessionId);
           if (requiresWorkspacePreparation) queue.workspacePreparing = false;
-          finishRun();
+          await reportSchedulerError(projectId, error, runId);
+          continue;
+        }
+        let runningPromise: Promise<void>;
+        runningPromise = Promise.resolve().then(() => options.executeRun(projectId, runId)).catch(async (error) => {
+          await reportSchedulerError(projectId, error, runId);
+        }).finally(() => {
+          queue.activeRunIds.delete(runId);
+          queue.activeSessionIds.delete(sessionId);
+          if (requiresWorkspacePreparation) queue.workspacePreparing = false;
+          try {
+            finishRun();
+          } catch (error) {
+            void reportSchedulerError(projectId, error, runId);
+          }
           queue.runningPromises.delete(runningPromise);
           if (!queue.closing && !options.isClosing()) void processQueue(projectId);
         });

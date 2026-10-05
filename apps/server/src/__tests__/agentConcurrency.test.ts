@@ -122,11 +122,34 @@ describe("Agent concurrency with fake runtime", () => {
     await waitFor(async () => (await getRuns()).filter((run) => [first.id, second.id].includes(run.id)).every((run) => run.status === "completed"));
     const overlappingTrace = await Promise.all([first.id, second.id].map((runId) => getTrace(runId)));
     expect(overlappingTrace.every((events) => events.some((event) => event.type === "agent_overlap"))).toBe(true);
+    expect(overlappingTrace[0]?.find((event) => event.type === "agent_overlap")?.data?.otherRunId).toBe(second.id);
+    expect(overlappingTrace[1]?.find((event) => event.type === "agent_overlap")?.data?.otherRunId).toBe(first.id);
 
     const later = await createRun("fake-delay=10 fake-write=shared.ts");
     await waitFor(async () => (await getRuns()).some((run) => run.id === later.id && run.status === "completed"));
     const laterTrace = await getTrace(later.id);
     expect(laterTrace.some((event) => event.type === "agent_overlap")).toBe(false);
+  });
+
+  it("keeps a late short run out of the earlier run's file changes", async () => {
+    const first = await createRun("fake-delay=200 fake-write=round2-first.ts");
+    await waitFor(async () => (await getRuns()).some((run) => run.id === first.id && run.status === "running"));
+    const second = await createRun("fake-delay=50 fake-write=round2-second.ts");
+    await waitFor(async () => (await getRuns()).filter((run) => [first.id, second.id].includes(run.id)).every((run) => run.status === "completed"));
+    const firstRun = (await getRuns()).find((run) => run.id === first.id)!;
+    expect(firstRun.fileChanges?.map((change) => change.file)).toEqual(["round2-first.ts"]);
+    const firstCompleted = (await getTrace(first.id)).find((event) => event.type === "run_completed");
+    expect(firstCompleted?.data).toMatchObject({ overlappingRunIds: [second.id] });
+  });
+
+  it("keeps different delayed concurrent runs attributed to their own files", async () => {
+    const first = await createRun("fake-delay=220 fake-write=round2-own-a.ts");
+    await waitFor(async () => (await getRuns()).some((run) => run.id === first.id && run.status === "running"));
+    const second = await createRun("fake-delay=40 fake-write=round2-own-b.ts");
+    await waitFor(async () => (await getRuns()).filter((run) => [first.id, second.id].includes(run.id)).every((run) => run.status === "completed"));
+    const runs = await getRuns();
+    expect(runs.find((run) => run.id === first.id)?.fileChanges?.map((change) => change.file)).toEqual(["round2-own-a.ts"]);
+    expect(runs.find((run) => run.id === second.id)?.fileChanges?.map((change) => change.file)).toEqual(["round2-own-b.ts"]);
   });
 
   it("keeps a concurrent member edit in the Agent record", async () => {
@@ -226,6 +249,20 @@ describe("Agent concurrency with fake runtime", () => {
     await waitFor(async () => (await getRuns()).filter((run) => [teamRun.id, personalRun.id].includes(run.id)).every((run) => run.status === "completed"));
   });
 
+  it("runs another team Agent concurrently and completes both runs", async () => {
+    const firstAgent = await app.locals.agentRuns.createTeamAgent({ projectId: "demo", memberId, name: "Build helper one" });
+    const secondAgent = await app.locals.agentRuns.createTeamAgent({ projectId: "demo", memberId, name: "Build helper two" });
+    const firstRun = await app.locals.agentRuns.createRun({ projectId: "demo", memberId, prompt: "fake-delay=220", sessionId: firstAgent.id });
+    const secondRun = await app.locals.agentRuns.createRun({ projectId: "demo", memberId, prompt: "fake-delay=80", sessionId: secondAgent.id });
+    await waitFor(async () => {
+      const runs = await getRuns();
+      return runs.some((run) => run.id === firstRun.id && run.status === "running") && runs.some((run) => run.id === secondRun.id && run.status === "running");
+    });
+    const running = (await getRuns()).filter((run) => [firstRun.id, secondRun.id].includes(run.id) && run.status === "running");
+    expect(running).toHaveLength(2);
+    await waitFor(async () => (await getRuns()).filter((run) => [firstRun.id, secondRun.id].includes(run.id)).every((run) => run.status === "completed"));
+  });
+
   it("interrupts the previous team Agent task when the same handle is mentioned again", async () => {
     const firstResponse = await fetch(`${origin}/api/projects/demo/chat`, {
       method: "POST",
@@ -268,7 +305,7 @@ describe("Agent concurrency with fake runtime", () => {
 
   async function getTrace(runId: string) {
     const response = await fetch(`${origin}/api/projects/demo/agent/runs/${runId}/trace`, { headers: { "X-SimpleRCP-Member": memberId } });
-    return (await response.json() as { events: Array<{ type: string }> }).events;
+    return (await response.json() as { events: Array<{ type: string; data?: Record<string, unknown> }> }).events;
   }
 
   async function waitFor(predicate: () => Promise<boolean>) {

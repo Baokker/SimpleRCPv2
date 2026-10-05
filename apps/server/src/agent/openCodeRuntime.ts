@@ -17,18 +17,28 @@ interface OpenCodeRuntimeOptions {
   apiKey?: string;
   baseUrl: string;
   getSettings(): AgentSettingsResponse;
+  createProcess?: (options: {
+    port: number;
+    apiKey?: string;
+    baseUrl: string;
+    model: string;
+  }) => {
+    start(): Promise<{ url: string; version: string }>;
+    dispose(): Promise<void>;
+  };
 }
 
 export function createOpenCodeRuntime(
   options: OpenCodeRuntimeOptions
 ): AgentRuntime {
+  const processFactory = options.createProcess ?? createOpenCodeProcess;
   let process = createProcess();
   let processModel = options.getSettings().model;
   let activeRunCount = 0;
   let modelChangePromise: Promise<void> | undefined;
 
   function createProcess(model = options.getSettings().model) {
-    return createOpenCodeProcess({
+    return processFactory({
       port: options.port,
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
@@ -43,9 +53,9 @@ export function createOpenCodeRuntime(
     if (!modelChangePromise) {
       const targetModel = model;
       modelChangePromise = (async () => {
-        processModel = targetModel;
         await process.dispose();
         process = createProcess(targetModel);
+        processModel = targetModel;
       })().finally(() => { modelChangePromise = undefined; });
     }
     await modelChangePromise;
@@ -76,13 +86,15 @@ export function createOpenCodeRuntime(
         if (released) return;
         released = true;
         activeRunCount = Math.max(0, activeRunCount - 1);
-        if (activeRunCount === 0 && options.getSettings().model !== processModel) void ensureCurrentProcess();
+        if (activeRunCount === 0 && options.getSettings().model !== processModel) {
+          void ensureCurrentProcess().catch((error) => console.error("Agent runtime model switch failed", error));
+        }
       };
     },
     setActiveRunCount(count: number) {
       activeRunCount = count;
       if (activeRunCount === 0 && options.getSettings().model !== processModel) {
-        void ensureCurrentProcess();
+        void ensureCurrentProcess().catch((error) => console.error("Agent runtime model switch failed", error));
       }
     },
     getCurrentModel() {
@@ -187,7 +199,7 @@ export function createOpenCodeRuntime(
         { throwOnError: true }
       );
     },
-    async subscribe(input, listener) {
+    async subscribe(input, listener, onListenerError) {
       const client = await getClient(input.workspacePath);
       const controller = new AbortController();
       const subscription = await client.event.subscribe(
@@ -197,15 +209,24 @@ export function createOpenCodeRuntime(
       const completion = (async () => {
         for await (const event of subscription.stream) {
           if (!eventBelongsToSession(event, input.sessionId)) continue;
-          await listener({
-            type: event.type,
-            data: event.properties as Record<string, unknown>
-          });
+          try {
+            await listener({
+              type: event.type,
+              data: event.properties as Record<string, unknown>
+            });
+          } catch (error) {
+            console.error("Agent runtime listener failed", error);
+            try {
+              await onListenerError?.(error);
+            } catch (reportError) {
+              console.error("Agent runtime listener error reporting failed", reportError);
+            }
+          }
         }
       })();
       return async () => {
         controller.abort();
-        await completion;
+        await completion.catch((error) => console.error("Agent runtime event stream failed", error));
       };
     },
     async dispose() {

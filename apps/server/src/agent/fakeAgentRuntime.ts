@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { AgentFileChange } from "@simplercp/shared";
 import type { AgentRuntime } from "./agentRuntime.js";
 
 export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, realKeyConfigured: boolean, getConfiguredModel?: () => string): AgentRuntime {
@@ -34,8 +35,8 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
     cancel(input) {
       return runtimeFor(input.sessionId).cancel(input);
     },
-    subscribe(input, listener) {
-      return runtimeFor(input.sessionId).subscribe(input, listener);
+    subscribe(input, listener, onListenerError) {
+      return runtimeFor(input.sessionId).subscribe(input, listener, onListenerError);
     },
     async dispose() {
       await Promise.all([real.dispose(), fake.dispose()]);
@@ -51,6 +52,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
 export function createFakeAgentRuntime(): AgentRuntime {
   const abortControllers = new Map<string, AbortController>();
   const listeners = new Map<string, Set<(event: { type: string; data: Record<string, unknown> }) => void | Promise<void>>>();
+  const writtenFiles = new Set<string>();
   let nextSessionId = 0;
 
   return {
@@ -95,6 +97,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
         await fs.mkdir(path.dirname(absolutePath), { recursive: true });
         await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
+        writtenFiles.add(writePath.split(path.sep).join("/"));
         await emit("message.part.updated", {
           part: {
             sessionID: input.sessionId,
@@ -123,18 +126,29 @@ export function createFakeAgentRuntime(): AgentRuntime {
       await emit("fake.completed", { text });
       return { text, messageId: `fake-message-${input.sessionId}` };
     },
-    async getDiff() {
-      return [];
+    async getDiff(): Promise<AgentFileChange[]> {
+      return [...writtenFiles].map((file) => ({ file, additions: 0, deletions: 0, status: "modified" }));
     },
     async cancel(input) {
       abortControllers.get(input.sessionId)?.abort();
     },
-    async subscribe(input, listener) {
+    async subscribe(input, listener, onListenerError) {
       const sessionListeners = listeners.get(input.sessionId) ?? new Set();
-      sessionListeners.add(listener);
+      const safeListener = async (event: { type: string; data: Record<string, unknown> }) => {
+        try {
+          await listener(event);
+        } catch (error) {
+          try {
+            await onListenerError?.(error);
+          } catch (reportError) {
+            console.error("Fake Agent listener error reporting failed", reportError);
+          }
+        }
+      };
+      sessionListeners.add(safeListener);
       listeners.set(input.sessionId, sessionListeners);
       return async () => {
-        sessionListeners.delete(listener);
+        sessionListeners.delete(safeListener);
         if (sessionListeners.size === 0) listeners.delete(input.sessionId);
       };
     },
@@ -142,6 +156,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
       for (const controller of abortControllers.values()) controller.abort();
       abortControllers.clear();
       listeners.clear();
+      writtenFiles.clear();
     },
     setActiveRunCount() {},
     getCurrentModel() { return "fake-agent"; }

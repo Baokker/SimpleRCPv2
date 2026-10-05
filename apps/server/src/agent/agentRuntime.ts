@@ -32,7 +32,8 @@ export interface AgentRuntime {
   }): Promise<void>;
   subscribe(
     input: { workspacePath: string; sessionId: string },
-    listener: (event: AgentRuntimeEvent) => void | Promise<void>
+    listener: (event: AgentRuntimeEvent) => void | Promise<void>,
+    onListenerError?: (error: unknown) => void | Promise<void>
   ): Promise<() => Promise<void>>;
   dispose(): Promise<void>;
   acquireRun?(): () => void;
