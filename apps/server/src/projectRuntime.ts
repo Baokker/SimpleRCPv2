@@ -7,6 +7,7 @@ import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import { createKnowledgeService } from "./knowledge/knowledgeService.js";
 import { createCaptureService } from "./knowledge/captureService.js";
+import { createKnowledgeProvider } from "./knowledge/provider.js";
 import type { RiskWarningConfig } from "./knowledge/captureService.js";
 import type { CaptureConfigInput } from "@simplercp/knowledge";
 import type { ChatMessage, WorkspaceChange, ServerMessage } from "./types.js";
@@ -48,6 +49,7 @@ export function createProjectRuntime(
     enabled: options.terminalEnabled !== false
   });
   const room = rooms.createRoom(project.workspacePath, project.name);
+  let provider: ReturnType<typeof createKnowledgeProvider> | undefined;
   const knowledge = options.knowledgeMode && options.knowledgeMode !== "off"
     ? createKnowledgeService({
       projectId: project.id,
@@ -58,9 +60,24 @@ export function createProjectRuntime(
       events,
       onChanged(change) {
         for (const listener of knowledgeChangedListeners) listener(change);
+      },
+      onCardConfirmed(card) {
+        return provider?.onCardConfirmed(card);
       }
     })
     : undefined;
+  if (knowledge) {
+    provider = createKnowledgeProvider({
+      mode: options.knowledgeMode ?? "off",
+      project,
+      roomId: room.id,
+      room,
+      knowledge,
+      events,
+      metadataRoot: projectRoot,
+      workspaceRoot: project.workspacePath
+    });
+  }
   const capture = knowledge ? createCaptureService({
     projectId: project.id, roomId: room.id, workspaceRoot: project.workspacePath, metadataRoot: projectRoot,
     knowledge, documents, chat, events, recordEvents: options.knowledgeRecordEvents, config: options.captureConfig, riskWarningConfig: options.riskWarningConfig, llm: options.llm,
@@ -159,6 +176,7 @@ export function createProjectRuntime(
     documents,
     terminal,
     knowledge,
+    knowledgeProvider: provider,
     capture,
     room,
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
@@ -185,6 +203,9 @@ export function createProjectRuntime(
     onKnowledgeNotification(listener: (memberId: string, message: ServerMessage) => void) {
       knowledgeNotificationListeners.add(listener);
       return () => knowledgeNotificationListeners.delete(listener);
+    },
+    notifyKnowledge(memberId: string, message: ServerMessage) {
+      for (const listener of knowledgeNotificationListeners) listener(memberId, message);
     },
     onTerminalData(listener: (data: string) => void) {
       terminalListeners.add(listener);

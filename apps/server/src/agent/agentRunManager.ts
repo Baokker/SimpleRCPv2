@@ -89,6 +89,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const traces = new Map<string, TraceStore>();
   const queues = new Map<string, ProjectQueue>();
   const activeRuns = new Map<string, ActiveRun>();
+  const postChecks = new Set<string>();
   const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
   let disposing = false;
@@ -158,6 +159,18 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     return event;
   }
 
+  async function appendKnowledgePostCheck(projectId: string, run: AgentRun) {
+    if (postChecks.has(`${projectId}:${run.id}`)) return;
+    const provider = options.runtimeManager.find(projectId)?.knowledgeProvider;
+    if (!provider || (provider.mode !== "inject" && provider.mode !== "full")) return;
+    postChecks.add(`${projectId}:${run.id}`);
+    const postCheck = await provider.postRunCheck(run);
+    await appendTrace(projectId, run.id, {
+      type: "knowledge_post_check",
+      data: { hits: postCheck.hits }
+    });
+  }
+
   function appendActivity(
     projectId: string,
     input: Omit<EventRecord, "id" | "timestamp">
@@ -165,6 +178,30 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (!options.appendActivity) return;
     const event = options.appendActivity(projectId, input);
     emit({ type: "activity_appended", projectId, event });
+  }
+
+  function bindKnowledgeProvider(projectId: string) {
+    const runtime = options.runtimeManager.get(projectId);
+    const provider = runtime.knowledgeProvider;
+    if (!provider) return;
+    provider.bind({
+      listRuns: (id) => getStore(id).list(),
+      appendTrace: async (id, runId, event) => { await appendTrace(id, runId, event); },
+      notify: (memberId, message) => runtime.notifyKnowledge(memberId, message),
+      async createSystemMessage(run, text) {
+        const session = run.sessionId ? await getSessionStore(projectId).get(run.sessionId) : undefined;
+        if (!session || session.scope !== "team") return;
+        await runtime.chat.createMessage({
+          roomId: runtime.room.id,
+          authorId: "agent",
+          authorName: "System",
+          kind: "system",
+          agentSessionId: session.id,
+          runId: run.id,
+          text
+        });
+      }
+    });
   }
 
   async function withTeamAgentLock<T>(projectId: string, operation: () => Promise<T>) {
@@ -275,6 +312,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (!current || current.status !== "queued") return;
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
+      bindKnowledgeProvider(projectId);
       await projectRuntime.documents.awaitIdle();
       const session = current.sessionId
         ? await getSessionStore(projectId).get(current.sessionId)
@@ -373,11 +411,42 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const interruptionPrompt = previousRun
         ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
         : undefined;
+      const initiator = projectRuntime.rooms.getMember(
+        projectRuntime.room.id,
+        run.initiatorMemberId ?? run.memberId
+      );
+      if (!initiator) throw new Error("Agent initiator is no longer a project member");
+      const knowledgeContext = await projectRuntime.knowledgeProvider?.buildContext({
+        project: projectRuntime.project,
+        run,
+        initiator
+      });
+      if (knowledgeContext && (knowledgeContext.mode === "inject" || knowledgeContext.mode === "full")) {
+        await appendTrace(projectId, runId, {
+          type: "knowledge_injected",
+          data: {
+            mode: knowledgeContext.mode,
+            config: knowledgeContext.config,
+            query: knowledgeContext.query,
+            activeFiles: knowledgeContext.activeFiles,
+            excludedByUser: knowledgeContext.excludedByUser,
+            cards: knowledgeContext.records,
+            totalChars: knowledgeContext.totalChars
+          }
+        });
+        appendActivity(projectId, {
+          type: "knowledge_injected",
+          memberId: initiator.id,
+          participantId: initiator.participantId,
+          payload: { runId: run.id, cardIds: knowledgeContext.records.map((record) => record.id) }
+        });
+      }
       const runtimePrompt = await buildRuntimePrompt(
         projectRuntime.project.workspacePath,
         [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
         run.contexts,
-        projectRuntime.project.name
+        projectRuntime.project.name,
+        knowledgeContext?.section
       );
       await options.runtime.prepareRun?.({
         workspacePath: projectRuntime.project.workspacePath,
@@ -460,6 +529,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         data: { text: result.text }
       });
       const finishedAt = new Date().toISOString();
+      await appendKnowledgePostCheck(projectId, { ...run, fileChanges, status: "completed", finishedAt });
       await updateRun(projectId, runId, {
         status: "completed",
         output: result.text,
@@ -531,6 +601,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         summary: message
       });
     } finally {
+      const finished = await store.get(runId);
+      if (finished && ["completed", "failed", "cancelled"].includes(finished.status)) await appendKnowledgePostCheck(projectId, finished);
       activeRuns.delete(runId);
     }
   }
@@ -539,6 +611,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     async initialize() {
       const projects = await options.registry.listProjects();
       for (const project of projects) {
+        bindKnowledgeProvider(project.id);
         await migrateLegacySessions(project.id);
         const store = getStore(project.id);
         const interrupted = (await store.list()).filter(
@@ -581,6 +654,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       extraPrompt?: string;
       interruptsRunId?: string;
       runId?: string;
+      knowledge?: AgentRun["knowledge"];
     }) {
       if (disposing) throw new Error("Agent run manager is closing");
       const prompt = input.prompt.trim();
@@ -589,6 +663,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!settings.enabled) throw new Error("Agent is disabled");
       if (!settings.apiKeyConfigured) throw new Error("DEEPSEEK_API_KEY is required");
       const projectRuntime = options.runtimeManager.get(input.projectId);
+      bindKnowledgeProvider(input.projectId);
       const member = projectRuntime.rooms.getMember(
         projectRuntime.room.id,
         input.memberId
@@ -636,7 +711,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         source: input.source ?? "agent-panel",
         chatMessageId: input.chatMessageId,
         extraPrompt: input.extraPrompt?.trim() || undefined,
-        interruptsRunId: input.interruptsRunId
+        interruptsRunId: input.interruptsRunId,
+        knowledge: input.knowledge
       }, input.runId);
       emit({ type: "run_updated", projectId: input.projectId, run });
       await appendTrace(input.projectId, run.id, {
@@ -800,6 +876,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: active.runtimeSessionId
         });
       }
+      await appendKnowledgePostCheck(projectId, cancelled);
       return cancelled;
     },
     onEvent(listener: (event: AgentRunManagerEvent) => void) {
@@ -860,6 +937,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       );
       if (queue.completion) await queue.completion;
       queues.delete(projectId);
+      for (const key of postChecks) if (key.startsWith(`${projectId}:`)) postChecks.delete(key);
       stores.delete(projectId);
       for (const key of traces.keys()) {
         if (key.startsWith(`${projectId}:`)) traces.delete(key);
@@ -881,6 +959,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           .map((queue) => queue.completion)
           .filter((completion): completion is Promise<void> => Boolean(completion))
       );
+      postChecks.clear();
       listeners.clear();
     }
   };

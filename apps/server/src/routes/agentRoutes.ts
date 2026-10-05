@@ -3,6 +3,7 @@ import type { AgentPromptContext } from "@simplercp/shared";
 import type { AgentRuntime } from "../agent/agentRuntime.js";
 import type { AgentRunManager } from "../agent/agentRunManager.js";
 import type { AgentSettingsStore } from "../agent/agentSettingsStore.js";
+import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import { can, requirePermission } from "../auth/permissions.js";
 import { requireIdentity } from "../auth/permissions.js";
 
@@ -12,9 +13,10 @@ export function registerAgentRoutes(
     agentRuntime: AgentRuntime;
     agentRuns: AgentRunManager;
     agentSettings: AgentSettingsStore;
+    runtimeManager: ProjectRuntimeManager;
   }
 ) {
-  const { agentRuntime, agentRuns, agentSettings } = dependencies;
+  const { agentRuntime, agentRuns, agentSettings, runtimeManager } = dependencies;
 
   app.get("/api/agent/settings", (req, res) => {
     res.json(agentSettings.get());
@@ -188,7 +190,8 @@ export function registerAgentRoutes(
           initiatorRole: req.identity?.role,
           prompt,
           sessionId: req.params.sessionId,
-          contexts
+          contexts,
+          knowledge: normalizeKnowledgeInput(req.body?.knowledge)
         });
         res.status(202).json({ run });
       } catch (error) {
@@ -209,10 +212,11 @@ export function registerAgentRoutes(
   app.post("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
       if (!requirePermission(req, res, "agent:create")) return;
-      const { prompt, sessionId, contexts } = req.body as {
+      const { prompt, sessionId, contexts, knowledge } = req.body as {
         prompt?: string;
         sessionId?: string;
         contexts?: AgentPromptContext[];
+        knowledge?: { excludeCardIds?: string[]; disabled?: boolean };
       };
       const memberId = memberIdFor(req);
       if (!memberId || !prompt) {
@@ -225,7 +229,8 @@ export function registerAgentRoutes(
         initiatorRole: req.identity?.role,
         prompt,
         sessionId,
-        contexts
+        contexts,
+        knowledge: normalizeKnowledgeInput(knowledge)
       });
       res.status(202).json({ run });
     } catch (error) {
@@ -292,8 +297,46 @@ export function registerAgentRoutes(
       }
     }
   );
+
+  app.post("/api/projects/:projectId/agent/knowledge/preview", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId);
+      const provider = runtime.knowledgeProvider;
+      const member = runtime.rooms.getMember(runtime.room.id, identity.memberId);
+      if (!provider || !member) { res.sendStatus(404); return; }
+      res.json(await provider.buildContext({
+        project: runtime.project,
+        run: {
+          id: "preview",
+          projectId: req.params.projectId,
+          memberId: identity.memberId,
+          initiatorMemberId: identity.memberId,
+          prompt: String(req.body?.prompt ?? ""),
+          extraPrompt: typeof req.body?.extraPrompt === "string" ? req.body.extraPrompt : undefined,
+          contexts: Array.isArray(req.body?.contexts) ? req.body.contexts : undefined,
+          knowledge: normalizeKnowledgeInput(req.body?.knowledge),
+          status: "queued",
+          runtime: "opencode",
+          provider: "deepseek",
+          model: "preview",
+          createdAt: new Date().toISOString()
+        },
+        initiator: member
+      }, { recordUsage: false }));
+    } catch (error) { next(error); }
+  });
 }
 
 function memberIdFor(req: import("express").Request) {
   return req.identity?.memberId;
+}
+
+function normalizeKnowledgeInput(value: unknown) {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid knowledge options");
+  const input = value as Record<string, unknown>;
+  if (input.excludeCardIds !== undefined && (!Array.isArray(input.excludeCardIds) || input.excludeCardIds.some((id) => typeof id !== "string"))) throw new Error("Invalid excluded knowledge cards");
+  if (input.disabled !== undefined && typeof input.disabled !== "boolean") throw new Error("Invalid knowledge disabled flag");
+  return { excludeCardIds: input.excludeCardIds as string[] | undefined, disabled: input.disabled as boolean | undefined };
 }

@@ -99,7 +99,7 @@ export async function createApp(config: ServerConfig) {
     });
   });
 
-  registerAgentRoutes(app, { agentRuntime, agentRuns, agentSettings });
+  registerAgentRoutes(app, { agentRuntime, agentRuns, agentSettings, runtimeManager });
   registerProjectRoutes(app, { agentRuns, registry, runtimeManager });
   registerCollaborationRoutes(app, runtimeManager, members, chatAgentBridge);
   registerWorkspaceRoutes(app, runtimeManager);

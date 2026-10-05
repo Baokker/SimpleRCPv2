@@ -9,7 +9,8 @@ export async function buildRuntimePrompt(
   workspacePath: string,
   prompt: string,
   contexts: AgentPromptContext[] | undefined,
-  projectName: string
+  projectName: string,
+  knowledgeSection?: string
 ) {
   const scope = [
     `You are working only on the project "${projectName}".`,
@@ -17,7 +18,8 @@ export async function buildRuntimePrompt(
     "Use only files inside this workspace as project context.",
     "Do not inspect, describe, or use any parent directory or parent repository."
   ].join("\n");
-  if (!contexts || contexts.length === 0) return `${scope}\n\nUser request:\n${prompt}`;
+  const knowledge = knowledgeSection ? `\n\n${knowledgeSection}` : "";
+  if (!contexts || contexts.length === 0) return `${scope}${knowledge}\n\nUser request:\n${prompt}`;
   const sections: string[] = [];
   for (const context of contexts) {
     const result = await readWorkspaceFile(workspacePath, context.path);
@@ -30,7 +32,7 @@ export async function buildRuntimePrompt(
       `--- ${context.path} ---\n${result.content}\n--- end ${context.path} ---`
     );
   }
-  return `${scope}\n\nRelevant project files:\n${sections.join("\n")}\n\nUser request:\n${prompt}`;
+  return `${scope}${knowledge}\n\nRelevant project files:\n${sections.join("\n")}\n\nUser request:\n${prompt}`;
 }
 
 export function previewPrompt(prompt: string) {

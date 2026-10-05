@@ -214,6 +214,7 @@ function WorkspacePage({
   const [teamAgents, setTeamAgents] = useState<AgentSession[]>([]);
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
+  const [knowledgeUpdateRuns, setKnowledgeUpdateRuns] = useState<Record<string, string[]>>({});
   const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>([]);
   const [knowledgeRefreshVersion, setKnowledgeRefreshVersion] = useState(0);
   const [knowledgeUnread, setKnowledgeUnread] = useState(0);
@@ -422,6 +423,14 @@ function WorkspacePage({
             setKnowledgeRefreshVersion(version => version + 1);
             void getKnowledgeInbox(projectId).then(result => setKnowledgeUnread(result.suggestions.filter(item => !item.seenBy?.includes(joined.member.id)).length + result.warnings.filter(item => !item.seen).length)).catch(showWorkspaceError);
             if (message.popup) setKnowledgeWarning({ cardId: message.cardId, file: message.file, warningId: message.warningId });
+          }
+          if (message.type === "knowledge_update_available") {
+            setKnowledgeRefreshVersion(version => version + 1);
+            setKnowledgeUpdateRuns(current => ({
+              ...current,
+              [message.runId]: [...new Set([...(current[message.runId] ?? []), message.cardId])]
+            }));
+            showWorkspaceNotice("有新的知识卡片可供当前 Agent 任务参考。");
           }
           if (message.type === "agent_run_updated") {
             setAgentRuns((current) => {
@@ -1050,6 +1059,7 @@ function WorkspacePage({
           teamAgents={teamAgents}
           agentRuns={agentRuns}
           agentTraces={agentTraces}
+          knowledgeUpdateRuns={knowledgeUpdateRuns}
           remoteCursors={remoteCursors}
           chatText={chatText}
           chatSending={chatSending}

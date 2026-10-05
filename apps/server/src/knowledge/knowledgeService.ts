@@ -70,6 +70,7 @@ interface KnowledgeServiceOptions {
   documents: CollaborativeDocumentStore;
   events: EventLog;
   onChanged?(change: { cardId: string; action: string }): void;
+  onCardConfirmed?(card: KnowledgeCard): Promise<void> | void;
 }
 
 interface StoredCard {
@@ -392,7 +393,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   async function create(actor: KnowledgeActor, draft: Record<string, unknown>) {
-    return enqueue(async () => {
+    const created = await enqueue(async () => {
       const type = draft.type as KnowledgeCardType;
       if (!["decision", "constraint", "risk", "context", "negative", "tutorial"].includes(type)) throw new Error("Card type is invalid");
       if (typeof draft.title !== "string" || typeof draft.summary !== "string" || (draft.content !== undefined && typeof draft.content !== "string")) throw new Error("Card title, summary and content must be text");
@@ -423,6 +424,8 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         review: { confirmedBy: [actor.memberId], confirmedAt: now, editedBeforeConfirm: false },
         scope,
         ownerMemberId: actor.memberId,
+        ...(normalizeAppliesTo(draft.appliesTo) ? { appliesTo: normalizeAppliesTo(draft.appliesTo) } : {}),
+        ...(normalizeCheck(draft.check, type) ? { check: normalizeCheck(draft.check, type) } : {}),
         anchors,
         evolution: [
           { at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName } },
@@ -433,6 +436,8 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       event(card.id, "knowledge_card_created", actor);
       return card;
     });
+    await options.onCardConfirmed?.(created);
+    return created;
   }
 
   async function applyPatch(cardBeforeUpdate: KnowledgeCard, patch: Record<string, unknown>, actor: KnowledgeActor) {
@@ -460,6 +465,8 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       card.anchors = [];
       for (const input of anchorInputs(patch.anchors)) card.anchors.push(await anchorFromInput(input));
     }
+    if (patch.appliesTo !== undefined) card.appliesTo = normalizeAppliesTo(patch.appliesTo);
+    if (patch.check !== undefined) card.check = normalizeCheck(patch.check, card.type);
     if (patch.authorMemberId !== undefined) {
       if (card.status !== "draft" || typeof patch.authorMemberId !== "string" || !patch.authorMemberId) throw new Error("Only draft authors can be changed");
       card.provenance = { ...card.provenance!, author: { kind: "human", memberId: patch.authorMemberId, displayName: typeof patch.authorName === "string" ? patch.authorName : patch.authorMemberId } };
@@ -467,6 +474,25 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     const now = Date.now();
     const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: typeof patch.note === "string" ? patch.note : undefined };
     return { ...card, updatedAt: now, evolution: [...card.evolution, evolution] };
+  }
+
+  function normalizeAppliesTo(value: unknown) {
+    if (value === undefined) return undefined;
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Card appliesTo is invalid");
+    const input = value as { kind?: unknown; patterns?: unknown };
+    if (input.kind === "project") return { kind: "project" } as const;
+    if (input.kind === "glob" && Array.isArray(input.patterns) && input.patterns.every((pattern) => typeof pattern === "string" && pattern.length > 0)) return { kind: "glob", patterns: input.patterns } as const;
+    throw new Error("Card appliesTo is invalid");
+  }
+
+  function normalizeCheck(value: unknown, cardType: KnowledgeCardType) {
+    if (value === undefined) return undefined;
+    if (cardType !== "constraint" && cardType !== "negative") throw new Error("Checks require constraint or negative cards");
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Card check is invalid");
+    const input = value as { kind?: unknown; pattern?: unknown; flags?: unknown; fileGlob?: unknown };
+    if ((input.kind !== "regex-absent" && input.kind !== "regex-present") || typeof input.pattern !== "string" || typeof input.fileGlob !== "string" || (input.flags !== undefined && typeof input.flags !== "string")) throw new Error("Card check is invalid");
+    new RegExp(input.pattern, input.flags as string | undefined);
+    return { kind: input.kind, pattern: input.pattern, ...(input.flags === undefined ? {} : { flags: input.flags }), fileGlob: input.fileGlob } as const;
   }
 
   async function update(actor: KnowledgeActor, id: string, patch: Record<string, unknown>) {
@@ -482,7 +508,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean; durationMs?: number; patch?: Record<string, unknown> }) {
-    return enqueue(async () => {
+    const confirmed = await enqueue(async () => {
       const stored = await readCard(id);
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (stored.card.status !== "draft") throw new Error("Only draft knowledge cards can be confirmed");
@@ -496,6 +522,24 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       event(confirmed.id, "knowledge_card_confirmed", actor);
       options.events.append({ type: "knowledge_review_completed", roomId: options.roomId, memberId: actor.memberId, payload: { cardId: id, editedBeforeConfirm: edited, durationMs: input.durationMs } });
       return confirmed;
+    });
+    await options.onCardConfirmed?.(confirmed);
+    return confirmed;
+  }
+
+  async function recordInjection(id: string, viewerMemberId: string, at = Date.now()) {
+    return enqueue(async () => {
+      const stored = await readCard(id);
+      if (!stored) return undefined;
+      const usage = { injectedCount: 0, toolHitCount: 0, recurrenceCount: 0, ...stored.card.usage };
+      const updated: KnowledgeCard = {
+        ...stored.card,
+        usage: { ...usage, injectedCount: usage.injectedCount + 1, lastUsedAt: at },
+        updatedAt: stored.card.updatedAt
+      };
+      await saveCard(updated);
+      void viewerMemberId;
+      return updated;
     });
   }
 
@@ -595,6 +639,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         return updated;
       });
     },
+    recordInjection,
     update,
     confirm,
     archive,

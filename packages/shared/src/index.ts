@@ -148,6 +148,10 @@ export interface AgentRun {
   chatMessageId?: string;
   extraPrompt?: string;
   interruptsRunId?: string;
+  knowledge?: {
+    excludeCardIds?: string[];
+    disabled?: boolean;
+  };
   interruptedByRunId?: string;
   interruptedByMemberId?: string;
   sessionId?: string;
@@ -267,6 +271,7 @@ export type ClientMessage =
 export type ServerMessage =
   | { type: "knowledge_suggestion"; suggestionId: string; popup?: boolean }
   | { type: "knowledge_risk_warning"; cardId: string; file: string; popup?: boolean; warningId?: string }
+  | { type: "knowledge_update_available"; runId: string; cardId: string }
   | {
       type: "presence";
       roomId: string;

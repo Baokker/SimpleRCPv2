@@ -22,6 +22,7 @@ import {
   getAgentRuns,
   getAgentSessions,
   getAgentStatus,
+  previewAgentKnowledge,
   getWorkspaceDirectory,
   readWorkspaceFile
 } from "../api";
@@ -42,6 +43,8 @@ const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 export function AgentPanel({
   projectId,
   member,
+  knowledgeEnabled,
+  knowledgeUpdateRuns,
   members,
   workspaceTree,
   refreshVersion,
@@ -52,6 +55,8 @@ export function AgentPanel({
 }: {
   projectId: string;
   member: RoomMember | null;
+  knowledgeEnabled: boolean;
+  knowledgeUpdateRuns: Record<string, string[]>;
   members: RoomMember[];
   workspaceTree: WorkspaceNode[];
   refreshVersion: number;
@@ -73,6 +78,8 @@ export function AgentPanel({
   const [sessionTitle, setSessionTitle] = useState("");
   const [sessionCreating, setSessionCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [knowledgePreview, setKnowledgePreview] = useState<Array<{ id: string; title: string; score: number; chars: number }>>([]);
+  const [excludedKnowledge, setExcludedKnowledge] = useState<Set<string>>(new Set());
   const transcriptRef = useRef<HTMLOListElement>(null);
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
@@ -152,6 +159,18 @@ export function AgentPanel({
     for (const runId of sessionRunIds.split(",").filter(Boolean)) onLoadTrace(runId);
   }, [selectedSessionId, sessionRunIds, onLoadTrace]);
 
+  useEffect(() => {
+    if (!knowledgeEnabled || !member || !prompt.trim()) { setKnowledgePreview([]); return; }
+    const timer = window.setTimeout(() => {
+      void previewAgentKnowledge(projectId, {
+        prompt,
+        contexts,
+        knowledge: { excludeCardIds: [...excludedKnowledge] }
+      }).then((result) => setKnowledgePreview(result.records)).catch((error) => onErrorRef.current(error));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [knowledgeEnabled, member?.id, projectId, prompt, contexts, excludedKnowledge]);
+
   async function createSession() {
     if (!member || sessionCreating) return;
     setSessionCreating(true);
@@ -186,12 +205,15 @@ export function AgentPanel({
       }
       const response = await createAgentSessionRun(projectId, session.id, {
         prompt: text,
-        contexts
+        contexts,
+        knowledge: { excludeCardIds: [...excludedKnowledge] }
       });
       setRuns((current) => [response.run, ...current]);
       setPrompt("");
       setContexts([]);
       setContextMenuOpen(false);
+      setKnowledgePreview([]);
+      setExcludedKnowledge(new Set());
     } catch (error) {
       onErrorRef.current(error);
     } finally {
@@ -322,6 +344,7 @@ export function AgentPanel({
               projectId={projectId}
               run={run}
               trace={traces[run.id] ?? []}
+              knowledgeUpdateCardIds={knowledgeUpdateRuns[run.id] ?? []}
               onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
               canCancel={Boolean(member)}
@@ -334,6 +357,30 @@ export function AgentPanel({
       </ol>
 
       <div className="agent-composer">
+        {knowledgePreview.length ? (
+          <div className="agent-knowledge-preview" data-testid="agent-knowledge-preview">
+            <strong>将参考的知识</strong>
+            <ul>
+              {knowledgePreview.map((card) => (
+                <li key={card.id}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!excludedKnowledge.has(card.id)}
+                      onChange={() => setExcludedKnowledge((current) => {
+                        const next = new Set(current);
+                        if (next.has(card.id)) next.delete(card.id); else next.add(card.id);
+                        return next;
+                      })}
+                    />
+                    <span>{card.title}</span>
+                    <small>{card.chars} chars</small>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {contexts.length ? (
           <ul className="agent-context-chips">
             {contexts.map((context) => (
@@ -418,6 +465,7 @@ function AgentMessage({
   projectId,
   run,
   trace,
+  knowledgeUpdateCardIds,
   onLoadTrace,
   queuedRuns,
   canCancel,
@@ -428,6 +476,7 @@ function AgentMessage({
   projectId: string;
   run: AgentRun;
   trace: AgentTraceEvent[];
+  knowledgeUpdateCardIds: string[];
   onLoadTrace(): void;
   queuedRuns: AgentRun[];
   canCancel: boolean;
@@ -438,6 +487,8 @@ function AgentMessage({
   const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
   useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
   const presentation = useMemo(() => presentTrace(trace), [trace]);
+  const postCheckHits = ((trace.find((event) => event.type === "knowledge_post_check")?.data?.hits as Array<{ cardId?: string; checkResult?: { passed?: boolean } }> | undefined) ?? []);
+  const postCheckFailed = postCheckHits.some((hit) => hit.checkResult?.passed === false);
 
   return (
     <article className="agent-assistant-message" data-testid="agent-selected-run">
@@ -494,6 +545,21 @@ function AgentMessage({
       </details>
 
       {run.output ? <div className="agent-run-output">{run.output}</div> : null}
+      {knowledgeUpdateCardIds.length ? (
+        <div className="agent-knowledge-update" data-testid="agent-knowledge-update">
+          任务运行期间确认了新的知识卡片，可在下一次任务中参考（{knowledgeUpdateCardIds.join("、")}）。
+        </div>
+      ) : null}
+      {trace.some((event) => event.type === "knowledge_injected") ? (
+        <div className="agent-knowledge-reference" data-testid="agent-knowledge-reference">
+          本次参考的知识：{((trace.find((event) => event.type === "knowledge_injected")?.data?.cards as Array<{ title?: string }> | undefined) ?? []).map((card) => card.title).filter(Boolean).join("、")}
+        </div>
+      ) : null}
+      {trace.some((event) => event.type === "knowledge_post_check") ? (
+        <div className={`agent-knowledge-post-check${postCheckFailed ? " failed" : ""}`} data-testid="agent-knowledge-post-check">
+          任务后核对：{postCheckHits.length ? "涉及已知问题" : "未发现已知问题"}{postCheckFailed ? "，检查未通过" : ""}
+        </div>
+      ) : null}
       {run.error ? <p className="agent-run-error">{run.error}</p> : null}
       {run.fileChanges?.length ? (
         <ul className="agent-file-changes">

@@ -169,6 +169,70 @@ export function registerKnowledgeRoutes(
     } catch (error) { next(error); }
   });
 
+  app.get("/api/projects/:projectId/knowledge/config", async (req, res, next) => {
+    try {
+      if (!requireIdentity(req, res)) return;
+      const provider = runtimeManager.get(req.params.projectId).knowledgeProvider;
+      if (!provider) { res.sendStatus(404); return; }
+      res.json({ config: await provider.getConfig() });
+    } catch (error) { next(error); }
+  });
+
+  app.put("/api/projects/:projectId/knowledge/config", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const provider = runtimeManager.get(req.params.projectId).knowledgeProvider;
+      if (!provider) { res.sendStatus(404); return; }
+      const config = await provider.updateConfig(req.body ?? {}, identity.memberId);
+      res.json({ config });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/preview", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId);
+      const provider = runtime.knowledgeProvider;
+      if (!provider) { res.sendStatus(404); return; }
+      const member = runtime.rooms.getMember(runtime.room.id, identity.memberId);
+      if (!member) { res.status(403).json({ error: "Project membership is required" }); return; }
+      const run = {
+        id: "preview",
+        projectId: req.params.projectId,
+        memberId: identity.memberId,
+        initiatorMemberId: identity.memberId,
+        prompt: typeof req.body?.prompt === "string" ? req.body.prompt : "",
+        extraPrompt: typeof req.body?.extraPrompt === "string" ? req.body.extraPrompt : undefined,
+        contexts: Array.isArray(req.body?.contexts) ? req.body.contexts : undefined,
+        status: "queued",
+        runtime: "opencode",
+        provider: "deepseek",
+        model: "preview",
+        createdAt: new Date().toISOString()
+      } as const;
+      res.json(await provider.buildContext({ project: runtime.project, run, initiator: member }, { recordUsage: false }));
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/cards/:id/view", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const provider = runtimeManager.get(req.params.projectId).knowledgeProvider;
+      if (!provider) { res.sendStatus(404); return; }
+      await provider.markViewed(req.params.id, identity.memberId);
+      res.json({ ok: true });
+    } catch (error) { next(error); }
+  });
+
+  app.get("/api/projects/:projectId/knowledge/metrics/reuse", async (req, res, next) => {
+    try {
+      if (!requireIdentity(req, res)) return;
+      const provider = runtimeManager.get(req.params.projectId).knowledgeProvider;
+      if (!provider) { res.sendStatus(404); return; }
+      res.json({ metrics: await provider.reuseMetrics() });
+    } catch (error) { next(error); }
+  });
+
   app.get("/api/projects/:projectId/knowledge/inbox", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res); if (!identity) return;

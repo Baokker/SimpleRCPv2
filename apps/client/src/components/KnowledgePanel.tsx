@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { getKnowledgeInbox, getKnowledgeSuggestion, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, resolveKnowledgeSuggestion } from "../api";
+import { getKnowledgeInbox, getKnowledgeSuggestion, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, resolveKnowledgeSuggestion } from "../api";
 import type {
   KnowledgeCard,
   KnowledgeCardType,
@@ -237,7 +237,7 @@ export function KnowledgePanel({
       resolutions={resolutions.filter((resolution) => resolution.cardId === card.id)}
       currentSelection={currentSelection}
       actionPending={actionCardId === card.id}
-      onToggle={() => setExpanded(expanded === card.id ? undefined : card.id)}
+      onToggle={() => { setExpanded(expanded === card.id ? undefined : card.id); if (expanded !== card.id) void markKnowledgeCardViewed(projectId, card.id); }}
       onEdit={() => openEdit(card)}
       onConfirm={() => void confirm(card)}
       onArchive={() => void archive(card)}

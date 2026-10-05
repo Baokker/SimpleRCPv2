@@ -76,6 +76,7 @@ export function CollaborationPanel({
   workspaceTree,
   roomId,
   agentRefreshVersion,
+  knowledgeUpdateRuns,
   followingMemberId,
   onFollowMember,
   onOpenFile,
@@ -109,6 +110,7 @@ export function CollaborationPanel({
   teamAgents: AgentSession[];
   agentRuns: AgentRun[];
   agentTraces: Record<string, AgentTraceEvent[]>;
+  knowledgeUpdateRuns: Record<string, string[]>;
   remoteCursors: RemoteCursor[];
   chatText: string;
   chatSending: boolean;
@@ -561,9 +563,11 @@ export function CollaborationPanel({
           <AgentPanel
             projectId={projectId}
             member={member}
+            knowledgeEnabled={knowledgeEnabled}
             members={members}
             refreshVersion={agentRefreshVersion}
             traces={agentTraces}
+            knowledgeUpdateRuns={knowledgeUpdateRuns}
             onOpenFile={onOpenFile}
             workspaceTree={workspaceTree}
             onError={onError}
@@ -637,6 +641,16 @@ function ChatAgentMessage({
               ))}
             </ul>
           ) : <small>No file changes recorded.</small>}
+          {trace.some((event) => event.type === "knowledge_injected") ? (
+            <small data-testid="chat-agent-knowledge-reference">
+              本次参考的知识：{((trace.find((event) => event.type === "knowledge_injected")?.data?.cards as Array<{ title?: string }> | undefined) ?? []).map((card) => card.title).filter(Boolean).join("、")}
+            </small>
+          ) : null}
+          {trace.some((event) => event.type === "knowledge_post_check") ? (
+            <small data-testid="chat-agent-knowledge-post-check">
+              任务后核对：{((trace.find((event) => event.type === "knowledge_post_check")?.data?.hits as Array<unknown> | undefined) ?? []).length ? "涉及已知问题" : "未发现已知问题"}
+            </small>
+          ) : null}
           <details className={`chat-agent-trace ${run.status}`} open={active} onToggle={(event) => {
             if (event.currentTarget.open) onLoadAgentTrace(run.id);
           }}>

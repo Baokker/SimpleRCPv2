@@ -72,6 +72,8 @@ export interface KnowledgeCard {
   ownerMemberId?: string;
   provenance?: { origin: string; author: { kind: string; memberId?: string; displayName?: string }; trigger?: { type: string; suggestionId?: string } };
   review?: { confirmedBy: string[]; confirmedAt?: number };
+  appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] };
+  check?: { kind: "regex-absent" | "regex-present"; pattern: string; flags?: string; fileGlob: string };
   anchors: KnowledgeAnchor[];
   evolution: Array<{ at: number; action: string; note?: string }>;
 }
@@ -110,4 +112,6 @@ export interface KnowledgeSuggestion {
 export interface KnowledgeCardInput {
   type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team";
   anchors?: SuggestedKnowledgeAnchor[]; authorMemberId?: string; authorName?: string;
+  appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] };
+  check?: { kind: "regex-absent" | "regex-present"; pattern: string; flags?: string; fileGlob: string };
 }

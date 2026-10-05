@@ -38,6 +38,10 @@ const durableEventTypes = new Set([
   "knowledge_notification",
   "knowledge_warning_read",
   "knowledge_review_completed",
+  "knowledge_config_updated",
+  "knowledge_injected",
+  "knowledge_reuse_injected",
+  "knowledge_reuse_viewed",
   "mirror_resync"
 ]);
 

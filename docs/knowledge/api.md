@@ -84,3 +84,20 @@
 卡片创建、编辑、确认、归档分别写入 `knowledge_card_created`、`knowledge_card_updated`、`knowledge_card_confirmed`、`knowledge_card_archived`。日志顶层保存项目房间、操作者与时间，payload 只保存 `cardId`。
 
 捕获增加 `knowledge_suggestion_created`、`knowledge_suggestion_resolved`、`knowledge_notification`、`knowledge_warning_read` 与 `mirror_resync`。确认另外写入 `knowledge_review_completed`，保存 `cardId`、`editedBeforeConfirm`、`durationMs`。模型统计独立写入 `knowledge/llm-calls.jsonl`，包含模型、耗时、累计 token、完成标志、兜底标志、尝试次数与提示词哈希。活动日志和模型统计不保存卡片正文或完整提示词。
+## Agent 知识注入
+
+| 方法 | 路径 | 输入与返回 |
+| --- | --- | --- |
+| `GET` | `/api/projects/:projectId/knowledge/config` | 返回项目 Agent 知识注入配置。 |
+| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`ranking`、`statuses`、`fixedCardIds`、任务后核对和在途提醒。 |
+| `POST` | `/api/projects/:projectId/knowledge/preview` | 输入 `{ prompt, contexts, knowledge? }`，返回活动文件、排除卡片、候选记录和字符数量。 |
+| `POST` | `/api/projects/:projectId/knowledge/cards/:id/view` | 记录当前成员首次打开卡片，用于复用延迟。 |
+| `GET` | `/api/projects/:projectId/knowledge/metrics/reuse` | 返回知识时刻、确认、首次查看和首次注入时间点。 |
+
+Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 不包含完整卡片正文，`knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。
+
+在途提醒使用 `/ws` 消息：
+
+```json
+{ "type": "knowledge_update_available", "runId": "run-id", "cardId": "card-id" }
+```

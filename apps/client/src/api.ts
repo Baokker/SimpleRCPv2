@@ -103,16 +103,32 @@ export async function createAgentSession(
 export async function createAgentSessionRun(
   projectId: string,
   sessionId: string,
-  input: { prompt: string; contexts?: AgentPromptContext[] }
+  input: { prompt: string; contexts?: AgentPromptContext[]; knowledge?: { excludeCardIds?: string[]; disabled?: boolean } }
 ) {
   return request<{ run: AgentRun }>(
     `${projectPath(projectId)}/agent/sessions/${encodeURIComponent(sessionId)}/runs`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: input.prompt, contexts: input.contexts })
+      body: JSON.stringify({ prompt: input.prompt, contexts: input.contexts, knowledge: input.knowledge })
     }
   );
+}
+
+export async function previewAgentKnowledge(
+  projectId: string,
+  input: { prompt: string; contexts?: AgentPromptContext[]; knowledge?: { excludeCardIds?: string[]; disabled?: boolean } }
+) {
+  return request<{
+    records: Array<{ id: string; title: string; score: number; chars: number }>;
+    activeFiles: string[];
+    excludedByUser: string[];
+    totalChars: number;
+  }>(`${projectPath(projectId)}/agent/knowledge/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
 }
 
 export async function getAgentTrace(projectId: string, runId: string) {
@@ -389,6 +405,14 @@ export async function archiveKnowledgeCard(projectId: string, id: string, reason
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reason })
+  });
+}
+
+export async function markKnowledgeCardViewed(projectId: string, id: string) {
+  return request<{ ok: boolean }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/view`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
   });
 }
 

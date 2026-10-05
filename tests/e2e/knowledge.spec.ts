@@ -292,6 +292,7 @@ test.describe("knowledge stage 3", () => {
     if (await page.getByTestId("display-name").isVisible()) { await page.getByTestId("display-name").fill("Risk reviewer"); await page.getByTestId("join-project").click(); }
     await page.getByTestId("file-package.json").click();
     await expect.poll(() => page.evaluate(() => Boolean(window.__simplercpEditors?.["package.json"]?.getModel()))).toBe(true);
+    await expect.poll(() => page.evaluate(() => Boolean(window.__simplercpYjsSynced?.["package.json"]))).toBe(true);
     await page.evaluate(() => {
       const editor = window.__simplercpEditors!["package.json"]!; const model = editor.getModel()!;
       editor.executeEdits("knowledge-session", [{ range: model.getFullModelRange(), text: '{"name":"risk-package","dependencies":{"alpha":"1"}}' }]);
@@ -318,5 +319,26 @@ test.describe("knowledge stage 3", () => {
     await expect(page.getByTestId("knowledge-inbox")).toContainText("S3 chat choose the shared timeout");
     await expect(page.getByTestId("suggestion-chat.dense").filter({ hasText: "S3 chat choose the shared timeout" }).getByRole("button", { name: /src\/hello.ts:/ })).toBeVisible();
     await page.screenshot({ path: `${screenshotDirectory}/S3-4-selected-chat.png` });
+  });
+});
+
+test.describe("knowledge stage 4", () => {
+  test.skip((process.env.KNOWLEDGE ?? "off") !== "full", "Agent knowledge scenarios use test:e2e:knowledge");
+  test("个人 Agent 预览并显示注入与任务后核对", async ({ page }) => {
+    await openAs(page, "Agent knowledge reviewer");
+    const headers = await memberHeaders(page);
+    const created = await page.request.post("/api/projects/demo/knowledge/cards", {
+      headers,
+      data: { type: "constraint", title: "Agent project rule", summary: "Keep the project rule", content: "Keep the project rule in the final change.", scope: "team", tags: [] }
+    });
+    expect(created.status()).toBe(201);
+    await page.getByTestId("collab-tab-agent").click();
+    await page.getByTestId("agent-prompt").fill("Follow the project rule fake-reply=done");
+    await expect(page.getByTestId("agent-knowledge-preview")).toContainText("Agent project rule");
+    await page.getByTestId("agent-run-submit").click();
+    await expect(page.getByTestId("agent-selected-run")).toContainText("done", { timeout: 20_000 });
+    await expect(page.getByTestId("agent-knowledge-reference")).toContainText("Agent project rule");
+    await expect(page.getByTestId("agent-knowledge-post-check")).toContainText("未发现已知问题");
+    await page.screenshot({ path: `${screenshotDirectory}/S4-1-agent-injection.png` });
   });
 });
