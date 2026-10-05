@@ -47,12 +47,15 @@ describe("guard decisions", () => {
 
   it("uses the strictest action across segments", () => {
     const result = command("collaborator", "cat README.md; rm config.js");
-    expect(result.action).toBe("ask");
-    expect(result.matchedRules).toContain("hard.dynamic");
+    expect(result.action).toBe("allow_snapshot");
+    expect(result.matchedRules).not.toContain("hard.dynamic");
   });
 
   it("splits terminal compound commands and keeps benign pipelines readable", () => {
+    expect(command("student", "git status && git log").action).toBe("allow");
     expect(command("student", "pwd; sudo ls").action).toBe("deny");
+    expect(command("student", "ls; sudo ls").action).toBe("deny");
+    expect(command("student", "cat x | sh").action).toBe("ask");
     expect(command("owner", "ls; cat /platform/data/projects/x/chat.json").action).toBe("deny");
     expect(command("student", "env | sort").action).toBe("allow");
   });

@@ -129,6 +129,14 @@ function packageManagerCapability(command: string): Capability[] {
   return ["install", "add", "ci", "i", "update"].includes(subcommand ?? "") ? ["install"] : ["exec"];
 }
 
+function hasInterpreterPipe(command: string) {
+  return /\|\s*(?:(?:env\s+)?(?:command\s+)?(?:sh|bash|zsh|fish|python|python3|node|perl|ruby|php|powershell|pwsh)\b)/i.test(command);
+}
+
+function hasEvalCommand(command: string) {
+  return /(?:^|[;&|]\s*)eval(?:\s|$)/i.test(command);
+}
+
 function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: string): Capability[] {
   if (kind === "read") return ["read"];
   if (kind === "edit") return ["write"];
@@ -215,13 +223,11 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     const parts = splitShellCommands(command);
     if (parts.length > 1) {
       const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
-      const benignPipeline = /^\s*[^;&|<>`$()]+(?:\|[^;&|<>`$()]+)+\s*$/i.test(command)
-        && results.every((result) => result.legacyRisk === "safe" && !result.dynamic && result.segments.every((segment) => segment.reversibility === "reversible"));
       return {
         segments: results.flatMap((result) => result.segments),
         legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
         unknown: results.some((result) => result.unknown),
-        dynamic: !benignPipeline,
+        dynamic: results.some((result) => result.dynamic) || hasInterpreterPipe(command) || hasEvalCommand(command),
         gitContext: results.some((result) => result.gitContext),
         plainDownloadToShell: false
       };
