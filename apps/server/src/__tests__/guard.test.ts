@@ -51,6 +51,12 @@ describe("guard decisions", () => {
     expect(result.matchedRules).toContain("hard.dynamic");
   });
 
+  it("splits terminal compound commands and keeps benign pipelines readable", () => {
+    expect(command("student", "pwd; sudo ls").action).toBe("deny");
+    expect(command("owner", "ls; cat /platform/data/projects/x/chat.json").action).toBe("deny");
+    expect(command("student", "env | sort").action).toBe("allow");
+  });
+
   it("denies metadata and other project paths for owners", () => {
     expect(command("owner", "cat /platform/data/projects/other/chat.json").action).toBe("deny");
     expect(command("owner", "cat ../other-project/chat.json", { otherWorkspaceRoots: ["/workspace/other-project"] }).action).toBe("deny");

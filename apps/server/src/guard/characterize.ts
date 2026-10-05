@@ -15,7 +15,7 @@ export interface Characterization {
 
 const plainDownloadToShellPattern = /^\s*(curl|wget)\s+[^;&|<>`$()]*\|\s*(sh|bash|zsh)\s*$/i;
 
-function splitShellCommands(command: string) {
+export function splitShellCommands(command: string) {
   const parts: string[] = [];
   let start = 0;
   let quote: "single" | "double" | undefined;
@@ -42,6 +42,25 @@ function splitShellCommands(command: string) {
   const finalPart = command.slice(start).trim();
   if (finalPart) parts.push(finalPart);
   return parts.length > 1 ? parts : [];
+}
+
+function stripHereDocument(command: string) {
+  let normalized = command;
+  const markerPattern = /<<(-?)[ \t]*(['"]?)([A-Za-z_][A-Za-z0-9_-]*)\2[^\n]*(?:\n|$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = markerPattern.exec(normalized))) {
+    const stripTabs = match[1] === "-";
+    const marker = match[3]!;
+    const bodyStart = match.index + match[0].length;
+    const bodyPattern = stripTabs
+      ? new RegExp(`^[\\t]*${marker}[ \\t]*(?:\\r?\\n|$)`, "m")
+      : new RegExp(`^${marker}[ \\t]*(?:\\r?\\n|$)`, "m");
+    const bodyMatch = bodyPattern.exec(normalized.slice(bodyStart));
+    const bodyEnd = bodyMatch ? bodyStart + bodyMatch.index + bodyMatch[0].length : normalized.length;
+    normalized = `${normalized.slice(0, match.index)}${normalized.slice(bodyEnd)}`;
+    markerPattern.lastIndex = match.index;
+  }
+  return normalized;
 }
 
 function zoneFor(target: string, request: GuardRequest, platformDataRoot: string, protectedPaths: string[], otherWorkspaceRoots: string[]): PathZone {
@@ -146,7 +165,10 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
 }
 
 export function characterize(request: GuardRequest, platformDataRoot: string, protectedPaths: string[] = [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], otherWorkspaceRoots: string[] = []): Characterization {
-  const command = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
+  const rawCommand = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
+  const command = request.source === "agent" && request.kind === "command"
+    ? stripHereDocument(rawCommand)
+    : rawCommand;
   if (request.source === "agent" && request.kind === "command" && /\r?\n/.test(command)) {
     const results = command.split(/\r?\n/).filter((line) => line.trim()).map((line) => characterize({ ...request, command: line }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
     return {
@@ -184,15 +206,17 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     }
   }
   const plainDownloadToShell = request.source === "agent" && request.kind === "command" && plainDownloadToShellPattern.test(command);
-  if (request.source === "agent" && request.kind === "command" && !plainDownloadToShell) {
+  if (request.kind === "command" && !plainDownloadToShell) {
     const parts = splitShellCommands(command);
     if (parts.length > 1) {
       const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
+      const benignPipeline = /^\s*[^;&|<>`$()]+(?:\|[^;&|<>`$()]+)+\s*$/i.test(command)
+        && results.every((result) => result.legacyRisk === "safe" && !result.dynamic && result.segments.every((segment) => segment.reversibility === "reversible"));
       return {
         segments: results.flatMap((result) => result.segments),
         legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
         unknown: results.some((result) => result.unknown),
-        dynamic: true,
+        dynamic: !benignPipeline,
         gitContext: results.some((result) => result.gitContext),
         plainDownloadToShell: false
       };
