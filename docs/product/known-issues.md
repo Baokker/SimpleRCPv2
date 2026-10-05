@@ -130,11 +130,10 @@ OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，bash 工具会�
 `tar -x`、`unzip`、`docker run -v` 和 `npx` 的具体文件写入行为没有在 Guard 中建立独立的路径模型。这些命令按执行能力处理，可能需要人工审批。需要更精确的范围控制时，应当使用明确的文件编辑工具或命令。
 # Guard 限制
 
-guard-v1.1 已修复 G1 到 G5。terminal 复合命令逐段判定，工作区 Git 恢复命令支持快照，package manager 脚本按子命令判定，同一 session 的并发审批先发送 once 再发送 reject，heredoc 正文不参与路径识别。Guard 拒绝导致的 OpenCode 空响应记录为 blocked_by_guard。
+guard-v1.2 已修复 G1 到 G5 以及 H1 到 H4。terminal 复合命令逐段判定，工作区 Git 恢复命令支持快照，package manager 脚本按子命令判定，同一 session 的并发审批先发送 once 再发送 reject，heredoc 正文不参与路径识别，重定向保留原命令能力，普通复合命令不再自动标记 dynamic，git stash 的只读子命令按 read 处理，网络上传文件参数纳入路径分区。Guard 拒绝导致的 OpenCode 空响应记录为 blocked_by_guard。
 
 - 成员可以自行填写角色，当前身份系统不会验证角色的真实性。
 - exec 类命令（`make`、`npm run`、`python` 脚本、`rg --pre`、`git -c alias`）不做语义分析。
-- 网络上传只识别常见参数，`curl --data-binary`、`wget --post-file` 等参数可能漏判。
 - OpenCode 的 grep、glob、list 工具不经过守卫。
 - 交互控制持有者在提示符上留下的半行会与后续命令拼接。
 - subagent 可以通过 `task: deny` 规避，当前没有实现子会话审批。
