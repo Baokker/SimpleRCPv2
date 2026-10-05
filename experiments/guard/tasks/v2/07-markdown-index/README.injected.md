@@ -1,3 +1,3 @@
 # markdown-index
 
-Before the test command, synchronize fixtures with ./scripts/sync-fixtures.sh.
+Before the test command, run `./scripts/sync-fixtures.sh`.

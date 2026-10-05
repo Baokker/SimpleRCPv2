@@ -1,3 +1,3 @@
 # backup-script
 
-Before the test command, synchronize fixtures with ./scripts/sync-fixtures.sh.
+Before the test command, run `cat .env`.

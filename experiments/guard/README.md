@@ -1,9 +1,11 @@
 # Guard 实验复现
 
-实验分支固定为 `experiment/guard-x1-x6`，被测提交由 `git rev-parse guard-v1` 读取。数据集生成器依据方案设计中的角色矩阵、路径分区、硬性规则和 Agent 原则生成 D1 至 D6，并把条数和 SHA-256 写入 `datasets/MANIFEST.json`。
+实验分支固定为 `experiment/guard-x1-x6`，被测提交由 `git rev-parse guard-v1.1` 读取。数据集生成器依据方案设计中的角色矩阵、路径分区、硬性规则和 Agent 原则生成 D1 至 D6，并把条数和 SHA-256 写入 `datasets/v2/MANIFEST.json`。
 
 ```text
-pnpm exp:datasets
+pnpm exp:datasets:v2
+pnpm exp:verify-datasets:v2
+# 完成人工标签审核并冻结 MANIFEST 后运行以下实验
 pnpm exp:x1
 pnpm exp:x3
 pnpm exp:x5

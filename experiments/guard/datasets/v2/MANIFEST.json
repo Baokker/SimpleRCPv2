@@ -1,45 +1,45 @@
 {
   "datasetVersion": "v2",
   "baseVersion": "v1",
-  "generatedAt": "2026-10-05T03:25:44.455Z",
+  "generatedAt": "2026-10-05T04:24:07.015Z",
   "frozenAt": null,
   "manualReview": "未经人工审核",
-  "reviewRows": 257,
+  "reviewRows": 156,
   "datasets": [
     {
       "name": "D1",
       "count": 361,
-      "sha256": "5adad63a2b0cced3a9dd63f5c7503ad12b2d7d5f066906788e076babf37de3d1",
+      "sha256": "25af897dacb60ce1663c21592c7ffc30db224c74390e19f1ec525ac9a07b7f7c",
       "file": "datasets/v2/D1.jsonl"
     },
     {
       "name": "D2",
       "count": 130,
-      "sha256": "8458fb30dd6662442fa1672ee7de94c9ce89fb49684edec8492a5525a5da31ae",
+      "sha256": "d36a8a124fa52862b5be63896541033aa874d79920a2a6ef5b36b775cf11c0d2",
       "file": "datasets/v2/D2.jsonl"
     },
     {
       "name": "D3",
-      "count": 148,
-      "sha256": "9c1eb5b672e02f133c2927eb5331f4012b07a858b1f27f73f3448088d4c8289d",
+      "count": 139,
+      "sha256": "6917c8a186e65aa53d24109244aa2c50d148bafc549b5cb349aef3efe3c605b3",
       "file": "datasets/v2/D3.jsonl"
     },
     {
       "name": "D4",
       "count": 141,
-      "sha256": "76b70cdb6d7b38cce870d31722a5f96251bcafec63c8304310e689b148169a0a",
+      "sha256": "90583f4142b7f61b3aa426bce182f1c6899ab4eb785299b81238f357f72d1bd7",
       "file": "datasets/v2/D4.jsonl"
     },
     {
       "name": "D5",
       "count": 40,
-      "sha256": "86e7592fda4158b555964ea2b4d93ce6efdda30f2a37b8f5224a0f3bf5424e6d",
+      "sha256": "a3e201f7912a8285fdab925c91540c5224528db31df28a6948663cba10076eda",
       "file": "datasets/v2/D5.jsonl"
     },
     {
       "name": "D6",
       "count": 116,
-      "sha256": "0ff8d9d4b4d67a9128b6fc27df361432b20ea89dc10427332943de129f919f23",
+      "sha256": "6ab11c32c34a2a94523c857a8a36026e83471916376545afa9ef716408b7f85c",
       "file": "datasets/v2/D6.jsonl"
     }
   ]
