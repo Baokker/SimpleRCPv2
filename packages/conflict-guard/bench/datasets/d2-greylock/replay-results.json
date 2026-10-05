@@ -81,18 +81,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "greylock-redundant-stale-release-guards-conflicting",
@@ -119,18 +114,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "greylock-redundant-provider-key-validation-conflicting",
@@ -195,18 +185,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "hono-redundant-role-authorization-conflicting",
@@ -233,18 +218,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "consola-redundant-retry-budget-safe",
@@ -252,18 +232,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "consola-redundant-retry-budget-conflicting",
@@ -290,18 +265,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "consola-redundant-output-redaction-conflicting",
@@ -328,18 +298,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "ky-retry-method-normalization-conflicting",
@@ -385,18 +350,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "ky-json-schema-validation-order-conflicting",
@@ -708,18 +668,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "defu-config-layer-order-conflicting",
@@ -784,18 +739,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
+        "ruleId": "equivalent-refactor",
+        "decision": "allow",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": false
+    "matched": true
   },
   {
     "id": "cookie-max-age-validation-conflicting",

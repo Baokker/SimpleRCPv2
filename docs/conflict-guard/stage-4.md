@@ -21,10 +21,10 @@ pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v
 |---|---:|---:|---:|---:|---:|
 | P0 | 69.2% | 69.2% | 0.0% | 100.0% | 0.00 |
 | P1 | 69.2% | 69.2% | 15.4% | 100.0% | 89.98 |
-| P2 | 46.2% | 0.0% | 92.3% | 100.0% | 580.82 |
-| P3 | 53.8% | 38.5% | 15.4% | 42.3% | 155.09 |
+| P2 | 46.2% | 7.7% | 92.3% | 100.0% | 556.12 |
+| P3 | 53.8% | 42.3% | 15.4% | 26.9% | 148.30 |
 
-P1 对跨文件依赖没有干预，因此其逃逸率与 P0 相同。P2 能将关联对判为 lock，但批次判定之前的文件可能已写入；漏阻断为零与存在逃逸可以同时出现。P3 将运行时语义变化留在灰区，并将同一函数中的独立分支修改判黑，所以仍有漏阻断和误阻断。报告保存这些实际行为。主表、分组、判定序列和散点图位于 `evidence/stage-4-dev-report/`。
+P1 对跨文件依赖没有干预，因此其逃逸率与 P0 相同。P2 能将关联对判为 lock，但批次判定之前的文件可能已写入；漏阻断率为 7.7%，同时仍存在逃逸。P3 将运行时语义变化留在灰区，并将同一函数中的独立分支修改判黑，所以仍有漏阻断和误阻断。报告保存这些实际行为。主表、分组、判定序列和散点图位于 `evidence/stage-4-dev-report/`。
 
 P3 虚拟判定延迟 p50 为 1826 毫秒、p95 为 2865 毫秒。该延迟包含录制的输入持续时间与批次等待；实际运行耗时单独记录在结果 JSON 的 timing 字段。每个开发变体重复两次得到相同 JSON；两次完整报告除 timing 外逐字节相同。冻结人秒分别记录双方，并按成员合并重叠区间。数据哈希、标签一致性、确定性结果与验收计数保存在 `evidence/stage-4-dev-report/verification.json`。
 
@@ -37,7 +37,7 @@ D2 转换生成 51 个规则案例与六个交付场景的 schema 3 轨迹。规
 | 命令 | 结果 |
 |---|---|
 | `pnpm -r build` | 全部工作包构建通过 |
-| `pnpm --filter @simplercp/conflict-guard test` | 75 项通过 |
+| `pnpm --filter @simplercp/conflict-guard test` | 89 项通过 |
 | `pnpm --filter @simplercp/server test` | 142 项通过 |
 | `pnpm test:demo` | 2 项通过 |
 | `node --experimental-strip-types --test packages/conflict-guard/bench/seeds/*/test/*.test.mjs` | 7 项通过 |

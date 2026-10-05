@@ -53,8 +53,8 @@ export class SemanticChangeTracker {
       this.units.set(JSON.stringify([actorKey(batch.actor), batch.id]), { actor: actorKey(batch.actor), file: batch.file, generation: generation(fileChange!), symbols: symbols.map((symbol) => symbol.key) });
     }
     const active = this.changeSets.filter((set) => set.actor.kind === "human" && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
-    const activeKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).map((symbol) => symbol.key)));
-    for (const [key, edge] of this.staleEdges) if (!activeKeys.has(edge.from) && !activeKeys.has(edge.to)) this.staleEdges.delete(key);
+    const deletedKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => symbol.key)));
+    for (const [key, edge] of this.staleEdges) if (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to)) this.staleEdges.delete(key);
     const nextPairs = new Map<string, CandidatePair>();
     for (let leftIndex = 0; leftIndex < active.length; leftIndex += 1) for (const rightSet of active.slice(leftIndex + 1)) {
       const leftSet = active[leftIndex]!;
@@ -108,7 +108,7 @@ export class SemanticChangeTracker {
     }
   }
 
-  private findPaths(fromKeys: string[], toKeys: string[], maxHops: number) {
+  findPaths(fromKeys: string[], toKeys: string[], maxHops: number) {
     const paths = this.options.index.findPaths(fromKeys, toKeys, maxHops);
     const targets = new Set(toKeys);
     const outgoing = (key: string) => [...this.options.index.outgoing(key), ...[...this.staleEdges.values()].filter((edge) => edge.from === key)];

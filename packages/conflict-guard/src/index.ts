@@ -6,6 +6,7 @@ export * from "./trace/trace.js";
 export * from "./semantic/types.js";
 export * from "./semantic/index.js";
 export * from "./semantic/changes.js";
+export { parseSymbols, innermostSymbols } from "./semantic/symbols.js";
 export * from "./routing/candidates.js";
 export * from "./routing/classifier.js";
 export * from "./routing/typecheck.js";

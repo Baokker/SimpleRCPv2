@@ -122,6 +122,18 @@ describe("阶段 4 回放基础设施", () => {
   it("缺少录制判定的轨迹不宣称一致性通过", () => {
     expect(checkReplay(simpleTrace())).toMatchObject({ checked: false, valid: false });
   });
+  it("撤回操作立即结束冻结与闸门区间", () => {
+    const trace = simpleTrace();
+    trace.push({ schema: 3, seq: 4, at: 20, type: "edit", file: "src/a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 31, deleted: "2", inserted: "3" }] });
+    const locked = replayTrace(trace, { policy: "P3", endAt: 1700 });
+    const pairId = locked.judgements[0]!.pairId;
+    trace.push({ schema: 3, seq: 5, at: 1800, type: "ui_action", action: "revert_pair", memberId: "alice", pairId });
+    trace.push({ schema: 3, seq: 6, at: 1900, type: "edit", file: "src/a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 31, deleted: "3", inserted: "4" }] });
+    const result = replayTrace(trace, { policy: "P3", endAt: 2000 });
+    expect(result.freezeIntervals.every((interval) => interval.end === 1800)).toBe(true);
+    expect(result.gateIntervals.some((interval) => interval.file === "src/a.ts" && interval.end === 1800)).toBe(true);
+    expect(result.blockedEdits.find((edit) => edit.seq === 6)?.shouldHaveBeenBlocked).toBe(false);
+  });
 
   it("策略计算异常记录为 warn，输入继续复原", () => {
     const trace = simpleTrace();
@@ -149,14 +161,17 @@ describe("阶段 4 回放基础设施", () => {
 
   it("D2 的 51 个案例重新执行产品逻辑，六个交付场景保留来源限制", async () => {
     const root = new URL("../../bench/datasets/d2-greylock/", import.meta.url);
-    const manifest = JSON.parse(await fs.readFile(new URL("manifest.json", root), "utf8")) as { cases: Array<{ id: string; category: string; trace: string; unavailable?: string; actual: Array<{ ruleId: string; decision: string; revision: number }> }> };
+    const manifest = JSON.parse(await fs.readFile(new URL("manifest.json", root), "utf8")) as { cases: Array<{ id: string; category: string; trace: string; sourceDecision: string; unavailable?: string; actual: Array<{ ruleId: string; decision: string; revision: number }> }> };
     expect(manifest.cases.filter((item) => item.category === "rule-case")).toHaveLength(51);
     expect(manifest.cases.filter((item) => item.category === "delivery-scenario")).toHaveLength(6);
     for (const item of manifest.cases) {
       const events = readTrace(await fs.readFile(new URL(item.trace, root), "utf8"));
       const result = replayTrace(events, { policy: "P3" });
       expect(result.judgements.map((event) => ({ ruleId: event.verdict.ruleId, decision: event.verdict.decision, revision: event.revision })), item.id).toEqual(item.actual);
-      if (item.category === "rule-case") expect(result.judgements.length, item.id).toBeGreaterThan(0);
+      if (item.category === "rule-case") {
+        expect(result.judgements.length, item.id).toBeGreaterThan(0);
+        expect(result.judgements.at(-1)?.verdict.decision, item.id).toBe(item.sourceDecision);
+      }
       else expect(item.unavailable, item.id).toMatch(/one-side-unchanged|no-static-relation/);
     }
   }, 30_000);

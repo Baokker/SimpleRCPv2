@@ -1,5 +1,6 @@
 import * as ts from "typescript";
 import type { PairSide, FourStateInput, FourStateResult } from "./classifier.js";
+import { parseSymbols } from "../semantic/symbols.js";
 
 export interface TypecheckFileProvider {
   listFiles(): string[];
@@ -50,6 +51,16 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
     for (const hop of input.path?.hops ?? []) { affected.add(hop.from.slice(0, hop.from.indexOf("#"))); affected.add(hop.to.slice(0, hop.to.indexOf("#"))); }
     const original = new Map<string, string>();
     for (const file of affected) original.set(file, options.files.readFile(file));
+    const locations = new Map<PairSide, { start: number; end: number }>();
+    for (const side of [input.left, input.right]) {
+      const source = original.get(side.symbol.file)!;
+      const current = parseSymbols(side.symbol.file, source).find((symbol) => symbol.key === side.symbol.key);
+      if (current) locations.set(side, { start: current.start, end: current.end });
+      else if (side.symbol.status === "deleted") {
+        const start = source.split("\n").slice(0, Math.max(0, side.symbol.startLine - 1)).reduce((offset, line) => offset + line.length + 1, 0);
+        locations.set(side, { start: Math.min(source.length, start), end: Math.min(source.length, start) });
+      } else return { ran: false, skipped: `无法定位当前符号 ${side.symbol.key}`, durationMs: options.now() - started };
+    }
     const states = [
       { name: "baseline", left: input.left.symbol.before, right: input.right.symbol.before },
       { name: "leftOnly", left: input.left.symbol.after, right: input.right.symbol.before },
@@ -60,13 +71,11 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
     try {
       for (const state of states) {
         const replacements = new Map<string, Array<{ start: number; end: number; text: string }>>();
-        const usedPositions = new Map<string, number>();
         for (const side of [input.left, input.right]) {
           const file = side.symbol.file;
           const source = original.get(file);
           if (source === undefined) continue;
-          const start = locateSymbolText(source, side.symbol.before, usedPositions, file, side.symbol.startLine);
-          const end = side.symbol.before ? start + side.symbol.before.length : start;
+          const { start, end } = locations.get(side)!;
           const text = side === input.left ? state.left : state.right;
           const entries = replacements.get(file) ?? [];
           entries.push({ start, end, text });
@@ -77,6 +86,7 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
           for (const entry of entries.sort((a, b) => b.start - a.start)) text = text.slice(0, entry.start) + entry.text + text.slice(entry.end);
           overrides.set(file, text);
           snapshots.delete(file);
+          versions.set(file, `override:${projectVersion + 1}`);
         }
         projectVersion += 1;
         const keys = new Set<string>();
@@ -88,7 +98,7 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
         if (options.now() - started > timeout) return { ran: false, skipped: `超过 ${timeout} ms`, durationMs: options.now() - started };
       }
     } finally {
-      for (const file of affected) { overrides.delete(file); snapshots.delete(file); }
+      for (const file of affected) { overrides.delete(file); snapshots.delete(file); versions.set(file, String(options.files.version?.(file) ?? 0)); }
       projectVersion += 1;
     }
     const merged = diagnostics.get("merged") ?? new Set<string>();
@@ -101,15 +111,3 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
 }
 
 export const checkFourStates = createFourStateTypeChecker;
-
-function locateSymbolText(source: string, text: string, used: Map<string, number>, file: string, startLine: number) {
-  if (!text) {
-    const lines = source.split("\n");
-    return lines.slice(0, Math.max(0, startLine - 1)).reduce((offset, line) => offset + line.length + 1, 0);
-  }
-  const from = used.get(file) ?? 0;
-  const found = source.indexOf(text, from);
-  const position = found >= 0 ? found : source.indexOf(text);
-  used.set(file, Math.max(from, position + text.length));
-  return position >= 0 ? position : 0;
-}

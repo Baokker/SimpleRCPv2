@@ -108,17 +108,12 @@
       "hash": "d79cb40d1e0af14dc795211271324a731dae6b41cc56a49bedc61b261d093f64",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "greylock-redundant-stale-release-guards-conflicting",
@@ -154,17 +149,12 @@
       "hash": "28d53668341ed81229c8fa43f3e6bf0275f9ff10071a28e549b04a1d5c685ad0",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "greylock-redundant-provider-key-validation-conflicting",
@@ -246,17 +236,12 @@
       "hash": "fae4156b189e961dfed2bdb60b50ff0b82872743e0b6cf99c221c6e7899d3345",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "hono-redundant-role-authorization-conflicting",
@@ -292,17 +277,12 @@
       "hash": "9bdb13d53eb11f41afacc3d8af9b0395ffde0ddf349e072d48dcec5a45526ed4",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "consola-redundant-retry-budget-safe",
@@ -315,17 +295,12 @@
       "hash": "90adb718a0320fbea3f0d46d1117c7e528eba7dc4bd793f262ffd4f7a3bed922",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "consola-redundant-retry-budget-conflicting",
@@ -361,17 +336,12 @@
       "hash": "e7d8f8b387002ad169ae4738fac00a7dd4c89f5b2b4ea102347018a57e9b310d",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "consola-redundant-output-redaction-conflicting",
@@ -407,17 +377,12 @@
       "hash": "4db9a6442d94147648551d3d6538769b37fb5ae053c8510c7a4fe4e2862b9c3a",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "ky-retry-method-normalization-conflicting",
@@ -476,17 +441,12 @@
       "hash": "5f856d0322742ac9cc7719dcdbdf68444664822f3bf08f18bf4f1b401a90b77b",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "ky-json-schema-validation-order-conflicting",
@@ -867,17 +827,12 @@
       "hash": "8dc7ccfa20bd66a6853852849f4e432cf4365fc11ecf6c22b62678c37412feb5",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "defu-config-layer-order-conflicting",
@@ -959,17 +914,12 @@
       "hash": "e92c18b0d900c09becce31ef66ceb053c681ed7886e81626326d10d525048def",
       "actual": [
         {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
-          "revision": 0
-        },
-        {
-          "ruleId": "semantic-interaction-uncertain",
-          "decision": "warn",
+          "ruleId": "equivalent-refactor",
+          "decision": "allow",
           "revision": 0
         }
       ],
-      "matched": false
+      "matched": true
     },
     {
       "id": "cookie-max-age-validation-conflicting",

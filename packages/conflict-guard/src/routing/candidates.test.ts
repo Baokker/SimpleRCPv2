@@ -66,6 +66,7 @@ describe("候选对", () => {
     tracker.update([changeSet("alice", "a"), changeSet("bob", "c")]);
     expect(tracker.getCandidatePairs()[0]).toMatchObject({ id: pair.id, firstSeenAt: 1, updatedAt: 2, distance: 1 });
     expect(events.some((event) => event.type === "pair_candidate_updated")).toBe(true);
+    tracker.captureStaleEdges();
     source = source.replace("return a() + 2;", "return 4;");
     version += 1;
     index.update(["a.ts"]);
@@ -106,6 +107,8 @@ describe("候选对", () => {
     ]);
     expect(tracker.getCandidatePairs()).toEqual(expect.arrayContaining([expect.objectContaining({ distance: 1, left: expect.objectContaining({ symbol: "a.ts#target", status: "deleted" }) })]));
     expect(index.incoming("a.ts#target")).toEqual([]);
+    tracker.update([active("bob", 0, source.length)]);
+    expect(tracker.findPaths(["a.ts#target"], ["a.ts#caller"], 2)).toEqual([]);
   });
 
   it("首次删除变更在索引更新前保存旧关系", () => {

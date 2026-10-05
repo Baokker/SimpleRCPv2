@@ -182,7 +182,10 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
     }
     if (event.type === "ui_action") {
       if (event.action === "change_set_done") tracker.markDone({ kind: "human", memberId: String(event.memberId) });
-      if (event.action === "revert_pair") coordinator.resolve(String(event.pairId), "reverted");
+      if (event.action === "revert_pair") {
+        coordinator.resolve(String(event.pairId), "reverted");
+        updateFreezeIntervals(); updateGateIntervals();
+      }
       if (event.action === "confirm_pair") {
         const record = coordinator.get(String(event.pairId));
         if (record) coordinator.confirm(record.pair.id, actorKey(record.pair.left.actor) === `human:${event.memberId}` ? "left" : "right");
