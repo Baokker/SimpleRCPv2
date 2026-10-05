@@ -222,6 +222,12 @@ describe("guard decisions", () => {
     }
   });
 
+  it("treats read-only git stash subcommands as reads", () => {
+    expect(command("student", "git branch -a; git stash list").action).toBe("allow");
+    expect(command("student", "git stash show").action).toBe("allow");
+    expect(command("student", "git stash drop").action).toBe("ask");
+  });
+
   it("distinguishes package scripts from dependency installation", () => {
     for (const text of ["npm test", "npm run build", "pnpm test", "yarn exec lint"]) {
       expect(command("student", text).action).toBe("allow");

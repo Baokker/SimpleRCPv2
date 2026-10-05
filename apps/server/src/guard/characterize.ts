@@ -113,6 +113,16 @@ function gitSubcommand(command: string) {
   return "";
 }
 
+function gitStashSubcommand(command: string) {
+  const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  const stashIndex = input.findIndex((token) => token.replace(/^['"]|['"]$/g, "").toLowerCase() === "stash");
+  for (let index = stashIndex + 1; index < input.length; index += 1) {
+    const token = input[index]!.replace(/^['"]|['"]$/g, "").toLowerCase();
+    if (!token.startsWith("-")) return token;
+  }
+  return "";
+}
+
 function hasGitContextOption(command: string) {
   if (commandName(command) !== "git") return false;
   const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
@@ -149,8 +159,9 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   if (name === "git") {
     const subcommand = gitSubcommand(command);
     if (["status", "diff", "log", "show", "branch", "rev-parse"].includes(subcommand)) return ["read"];
+    if (subcommand === "stash") return ["list", "show"].includes(gitStashSubcommand(command)) ? ["read"] : ["delete"];
     if (["push", "pull", "fetch", "clone", "remote"].includes(subcommand)) return ["network"];
-    if (["checkout", "restore", "stash", "clean"].includes(subcommand)) return ["delete"];
+    if (["checkout", "restore", "clean"].includes(subcommand)) return ["delete"];
     if (["reset", "rebase", "commit", "merge"].includes(subcommand)) return ["history"];
   }
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
