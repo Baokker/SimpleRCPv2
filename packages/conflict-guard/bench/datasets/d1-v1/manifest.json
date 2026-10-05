@@ -46,7 +46,7 @@
             "src/state.ts": "export const eventState = { ready: true };\n",
             "src/types.ts": "export interface EventRecord { name: string; payload: unknown; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 0;\n"
           },
           "rightOnly": {
@@ -150,7 +150,7 @@
             "src/state.ts": "export const eventState = { ready: true };\n",
             "src/types.ts": "export interface EventRecord { name: string; payload: unknown; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 0;\n"
           },
           "rightOnly": {
@@ -158,7 +158,7 @@
             "src/state.ts": "export const eventState = { ready: true };\n",
             "src/types.ts": "export interface EventRecord { name: string; payload: unknown; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 0;\n"
           },
           "merged": {
@@ -166,7 +166,7 @@
             "src/state.ts": "export const eventState = { ready: true };\n",
             "src/types.ts": "export interface EventRecord { name: string; payload: unknown; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 0;\n"
           },
           "trace": [
@@ -229,7 +229,7 @@
                 {
                   "from": 0,
                   "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n"
+                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                 }
               ],
               "revisionAfter": 1
@@ -3849,7 +3849,7 @@
             "src/state.ts": "export const formatterState = { ready: true };\n",
             "src/types.ts": "export type FormatMode = \"short\" | \"long\";\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-2.ts": "export const fixture2 = 17;\n"
           },
           "rightOnly": {
@@ -3953,7 +3953,7 @@
             "src/state.ts": "export const formatterState = { ready: true };\n",
             "src/types.ts": "export type FormatMode = \"short\" | \"long\";\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-2.ts": "export const fixture2 = 17;\n"
           },
           "rightOnly": {
@@ -3961,7 +3961,7 @@
             "src/state.ts": "export const formatterState = { ready: true };\n",
             "src/types.ts": "export type FormatMode = \"short\" | \"long\";\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-2.ts": "export const fixture2 = 17;\n"
           },
           "merged": {
@@ -3969,7 +3969,7 @@
             "src/state.ts": "export const formatterState = { ready: true };\n",
             "src/types.ts": "export type FormatMode = \"short\" | \"long\";\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-2.ts": "export const fixture2 = 17;\n"
           },
           "trace": [
@@ -4032,7 +4032,7 @@
                 {
                   "from": 0,
                   "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n"
+                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                 }
               ],
               "revisionAfter": 1
@@ -7652,7 +7652,7 @@
             "src/state.ts": "export const calendarState = { ready: true };\n",
             "src/types.ts": "export interface CalendarEntry { start: number; end: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-1.ts": "export const fixture1 = 34;\n"
           },
           "rightOnly": {
@@ -7756,7 +7756,7 @@
             "src/state.ts": "export const calendarState = { ready: true };\n",
             "src/types.ts": "export interface CalendarEntry { start: number; end: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-1.ts": "export const fixture1 = 34;\n"
           },
           "rightOnly": {
@@ -7764,7 +7764,7 @@
             "src/state.ts": "export const calendarState = { ready: true };\n",
             "src/types.ts": "export interface CalendarEntry { start: number; end: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-4\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-4\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-1.ts": "export const fixture1 = 34;\n"
           },
           "merged": {
@@ -7772,7 +7772,7 @@
             "src/state.ts": "export const calendarState = { ready: true };\n",
             "src/types.ts": "export interface CalendarEntry { start: number; end: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-4\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-4\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-1.ts": "export const fixture1 = 34;\n"
           },
           "trace": [
@@ -7835,7 +7835,7 @@
                 {
                   "from": 0,
                   "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-4\"); return applyDiscount(price, 0.1); }\n"
+                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-4\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                 }
               ],
               "revisionAfter": 1
@@ -11455,7 +11455,7 @@
             "src/state.ts": "export const commerceState = { ready: true };\n",
             "src/types.ts": "export interface CommerceItem { id: string; price: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 51;\n"
           },
           "rightOnly": {
@@ -11559,7 +11559,7 @@
             "src/state.ts": "export const commerceState = { ready: true };\n",
             "src/types.ts": "export interface CommerceItem { id: string; price: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 51;\n"
           },
           "rightOnly": {
@@ -11567,7 +11567,7 @@
             "src/state.ts": "export const commerceState = { ready: true };\n",
             "src/types.ts": "export interface CommerceItem { id: string; price: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-1\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-1\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 51;\n"
           },
           "merged": {
@@ -11575,7 +11575,7 @@
             "src/state.ts": "export const commerceState = { ready: true };\n",
             "src/types.ts": "export interface CommerceItem { id: string; price: number; }\n",
             "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n",
-            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-1\"); return applyDiscount(price, 0.1); }\n",
+            "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-1\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
             "src/fixture-0.ts": "export const fixture0 = 51;\n"
           },
           "trace": [
@@ -11638,7 +11638,7 @@
                 {
                   "from": 0,
                   "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-1\"); return applyDiscount(price, 0.1); }\n"
+                  "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-1\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                 }
               ],
               "revisionAfter": 1

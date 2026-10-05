@@ -16,14 +16,14 @@
           "high": 0.9999999999999999
         },
         "agreement": {
-          "value": 0.6136363636363636,
-          "low": 0.46623309846201666,
-          "high": 0.7427900111329802
+          "value": 0.9545454545454546,
+          "low": 0.8486472847469684,
+          "high": 0.9874451536330189
         },
         "missBlockRatio": {
-          "value": 0.25,
-          "low": 0.1457406608068574,
-          "high": 0.39440849808414946
+          "value": 0.045454545454545456,
+          "low": 0.012554846366981079,
+          "high": 0.15135271525303162
         },
         "falseBlockRatio": {
           "value": 0,
@@ -31,9 +31,9 @@
           "high": 0.08029831778201396
         },
         "escapeRatio": {
-          "value": 0.25,
-          "low": 0.1457406608068574,
-          "high": 0.39440849808414946
+          "value": 0.045454545454545456,
+          "low": 0.012554846366981079,
+          "high": 0.15135271525303162
         },
         "frozenPersonSeconds": 0,
         "cardsPerHour": 0,
@@ -44,28 +44,28 @@
         "byOperatorFamily": {
           "IC": {
             "groups": 12,
-            "agreement": 0.5,
-            "missBlockRatio": 0.5,
+            "agreement": 0.8333333333333334,
+            "missBlockRatio": 0.16666666666666666,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.5
+            "escapeRatio": 0.16666666666666666
           },
           "CP": {
             "groups": 16,
-            "agreement": 0.5,
-            "missBlockRatio": 0.25,
+            "agreement": 1,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.25
+            "escapeRatio": 0
           },
           "SS": {
             "groups": 4,
-            "agreement": 0.5,
-            "missBlockRatio": 0.25,
+            "agreement": 1,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.25
+            "escapeRatio": 0
           },
           "EB": {
             "groups": 2,
-            "agreement": 0.5,
+            "agreement": 1,
             "missBlockRatio": 0,
             "falseBlockRatio": 0,
             "escapeRatio": 0
@@ -80,25 +80,18 @@
         },
         "byDetectability": {
           "typecheck": {
-            "groups": 5,
+            "groups": 2,
             "agreement": 0,
-            "missBlockRatio": 0.8,
+            "missBlockRatio": 1,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.8
+            "escapeRatio": 1
           },
           "none": {
-            "groups": 27,
+            "groups": 42,
             "agreement": 1,
             "missBlockRatio": 0,
             "falseBlockRatio": 0,
             "escapeRatio": 0
-          },
-          "runtime-only": {
-            "groups": 12,
-            "agreement": 0,
-            "missBlockRatio": 0.5833333333333334,
-            "falseBlockRatio": 0,
-            "escapeRatio": 0.5833333333333334
           }
         }
       },
@@ -495,7 +488,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -746,7 +739,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -754,7 +747,7 @@
         {
           "id": "d1-2-conflict",
           "relationGroupId": "d1-0002",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -1182,7 +1175,7 @@
         {
           "id": "d1-3-conflict",
           "relationGroupId": "d1-0003",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -1830,7 +1823,7 @@
         {
           "id": "d1-4-conflict",
           "relationGroupId": "d1-0004",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -2478,7 +2471,7 @@
         {
           "id": "d1-5-conflict",
           "relationGroupId": "d1-0005",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -3126,7 +3119,7 @@
         {
           "id": "d1-6-conflict",
           "relationGroupId": "d1-0006",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -3774,7 +3767,7 @@
         {
           "id": "d1-7-conflict",
           "relationGroupId": "d1-0007",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -4422,7 +4415,7 @@
         {
           "id": "d1-8-conflict",
           "relationGroupId": "d1-0008",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -5554,7 +5547,7 @@
         {
           "id": "d1-9-conflict",
           "relationGroupId": "d1-0009",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -6686,7 +6679,7 @@
         {
           "id": "d1-12-conflict",
           "relationGroupId": "d1-0012",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -10963,7 +10956,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -11214,7 +11207,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -11222,7 +11215,7 @@
         {
           "id": "d1-19-conflict",
           "relationGroupId": "d1-0019",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -11650,7 +11643,7 @@
         {
           "id": "d1-20-conflict",
           "relationGroupId": "d1-0020",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -12298,7 +12291,7 @@
         {
           "id": "d1-21-conflict",
           "relationGroupId": "d1-0021",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -12946,7 +12939,7 @@
         {
           "id": "d1-22-conflict",
           "relationGroupId": "d1-0022",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -13594,7 +13587,7 @@
         {
           "id": "d1-23-conflict",
           "relationGroupId": "d1-0023",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -14242,7 +14235,7 @@
         {
           "id": "d1-24-conflict",
           "relationGroupId": "d1-0024",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P0",
@@ -14903,14 +14896,14 @@
           "high": 0.9999999999999999
         },
         "agreement": {
-          "value": 0.6136363636363636,
-          "low": 0.46623309846201666,
-          "high": 0.7427900111329802
+          "value": 0.9545454545454546,
+          "low": 0.8486472847469684,
+          "high": 0.9874451536330189
         },
         "missBlockRatio": {
-          "value": 0.25,
-          "low": 0.1457406608068574,
-          "high": 0.39440849808414946
+          "value": 0.045454545454545456,
+          "low": 0.012554846366981079,
+          "high": 0.15135271525303162
         },
         "falseBlockRatio": {
           "value": 0,
@@ -14918,9 +14911,9 @@
           "high": 0.08029831778201396
         },
         "escapeRatio": {
-          "value": 0.25,
-          "low": 0.1457406608068574,
-          "high": 0.39440849808414946
+          "value": 0.045454545454545456,
+          "low": 0.012554846366981079,
+          "high": 0.15135271525303162
         },
         "frozenPersonSeconds": 0,
         "cardsPerHour": 0,
@@ -14931,28 +14924,28 @@
         "byOperatorFamily": {
           "IC": {
             "groups": 12,
-            "agreement": 0.5,
-            "missBlockRatio": 0.5,
+            "agreement": 0.8333333333333334,
+            "missBlockRatio": 0.16666666666666666,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.5
+            "escapeRatio": 0.16666666666666666
           },
           "CP": {
             "groups": 16,
-            "agreement": 0.5,
-            "missBlockRatio": 0.25,
+            "agreement": 1,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.25
+            "escapeRatio": 0
           },
           "SS": {
             "groups": 4,
-            "agreement": 0.5,
-            "missBlockRatio": 0.25,
+            "agreement": 1,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.25
+            "escapeRatio": 0
           },
           "EB": {
             "groups": 2,
-            "agreement": 0.5,
+            "agreement": 1,
             "missBlockRatio": 0,
             "falseBlockRatio": 0,
             "escapeRatio": 0
@@ -14967,25 +14960,18 @@
         },
         "byDetectability": {
           "typecheck": {
-            "groups": 5,
+            "groups": 2,
             "agreement": 0,
-            "missBlockRatio": 0.8,
+            "missBlockRatio": 1,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.8
+            "escapeRatio": 1
           },
           "none": {
-            "groups": 27,
+            "groups": 42,
             "agreement": 1,
             "missBlockRatio": 0,
             "falseBlockRatio": 0,
             "escapeRatio": 0
-          },
-          "runtime-only": {
-            "groups": 12,
-            "agreement": 0,
-            "missBlockRatio": 0.5833333333333334,
-            "falseBlockRatio": 0,
-            "escapeRatio": 0.5833333333333334
           }
         }
       },
@@ -15382,7 +15368,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -15633,7 +15619,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -15641,7 +15627,7 @@
         {
           "id": "d1-2-conflict",
           "relationGroupId": "d1-0002",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -16069,7 +16055,7 @@
         {
           "id": "d1-3-conflict",
           "relationGroupId": "d1-0003",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -16717,7 +16703,7 @@
         {
           "id": "d1-4-conflict",
           "relationGroupId": "d1-0004",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -17365,7 +17351,7 @@
         {
           "id": "d1-5-conflict",
           "relationGroupId": "d1-0005",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -18013,7 +17999,7 @@
         {
           "id": "d1-6-conflict",
           "relationGroupId": "d1-0006",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -18661,7 +18647,7 @@
         {
           "id": "d1-7-conflict",
           "relationGroupId": "d1-0007",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -19309,7 +19295,7 @@
         {
           "id": "d1-8-conflict",
           "relationGroupId": "d1-0008",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -20441,7 +20427,7 @@
         {
           "id": "d1-9-conflict",
           "relationGroupId": "d1-0009",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -21573,7 +21559,7 @@
         {
           "id": "d1-12-conflict",
           "relationGroupId": "d1-0012",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -25850,7 +25836,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -26101,7 +26087,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -26109,7 +26095,7 @@
         {
           "id": "d1-19-conflict",
           "relationGroupId": "d1-0019",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -26537,7 +26523,7 @@
         {
           "id": "d1-20-conflict",
           "relationGroupId": "d1-0020",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -27185,7 +27171,7 @@
         {
           "id": "d1-21-conflict",
           "relationGroupId": "d1-0021",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -27833,7 +27819,7 @@
         {
           "id": "d1-22-conflict",
           "relationGroupId": "d1-0022",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -28481,7 +28467,7 @@
         {
           "id": "d1-23-conflict",
           "relationGroupId": "d1-0023",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -29129,7 +29115,7 @@
         {
           "id": "d1-24-conflict",
           "relationGroupId": "d1-0024",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P1",
@@ -29790,9 +29776,9 @@
           "high": 0.9999999999999999
         },
         "agreement": {
-          "value": 0.29545454545454547,
-          "low": 0.18155360887243294,
-          "high": 0.4422047938565727
+          "value": 0.09090909090909091,
+          "low": 0.035921611478836546,
+          "high": 0.21159519397917487
         },
         "missBlockRatio": {
           "value": 0,
@@ -29800,9 +29786,9 @@
           "high": 0.08029831778201396
         },
         "falseBlockRatio": {
-          "value": 0.7045454545454546,
-          "low": 0.5577952061434273,
-          "high": 0.818446391127567
+          "value": 0.9090909090909091,
+          "low": 0.7884048060208251,
+          "high": 0.9640783885211635
         },
         "escapeRatio": {
           "value": 0,
@@ -29818,23 +29804,23 @@
         "byOperatorFamily": {
           "IC": {
             "groups": 12,
-            "agreement": 0.6666666666666666,
+            "agreement": 0.3333333333333333,
             "missBlockRatio": 0,
-            "falseBlockRatio": 0.3333333333333333,
+            "falseBlockRatio": 0.6666666666666666,
             "escapeRatio": 0
           },
           "CP": {
             "groups": 16,
-            "agreement": 0.25,
+            "agreement": 0,
             "missBlockRatio": 0,
-            "falseBlockRatio": 0.75,
+            "falseBlockRatio": 1,
             "escapeRatio": 0
           },
           "SS": {
             "groups": 4,
-            "agreement": 0.25,
+            "agreement": 0,
             "missBlockRatio": 0,
-            "falseBlockRatio": 0.75,
+            "falseBlockRatio": 1,
             "escapeRatio": 0
           },
           "EB": {
@@ -29854,24 +29840,17 @@
         },
         "byDetectability": {
           "typecheck": {
-            "groups": 5,
-            "agreement": 0.8,
+            "groups": 2,
+            "agreement": 1,
             "missBlockRatio": 0,
-            "falseBlockRatio": 0.2,
+            "falseBlockRatio": 0,
             "escapeRatio": 0
           },
           "none": {
-            "groups": 27,
-            "agreement": 0.07407407407407407,
+            "groups": 42,
+            "agreement": 0.047619047619047616,
             "missBlockRatio": 0,
-            "falseBlockRatio": 0.9259259259259259,
-            "escapeRatio": 0
-          },
-          "runtime-only": {
-            "groups": 12,
-            "agreement": 0.5833333333333334,
-            "missBlockRatio": 0,
-            "falseBlockRatio": 0.4166666666666667,
+            "falseBlockRatio": 0.9523809523809523,
             "escapeRatio": 0
           }
         }
@@ -30304,7 +30283,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -30590,7 +30569,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -30598,7 +30577,7 @@
         {
           "id": "d1-2-conflict",
           "relationGroupId": "d1-0002",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -31061,7 +31040,7 @@
         {
           "id": "d1-3-conflict",
           "relationGroupId": "d1-0003",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -31779,7 +31758,7 @@
         {
           "id": "d1-4-conflict",
           "relationGroupId": "d1-0004",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -32497,7 +32476,7 @@
         {
           "id": "d1-5-conflict",
           "relationGroupId": "d1-0005",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -33215,7 +33194,7 @@
         {
           "id": "d1-6-conflict",
           "relationGroupId": "d1-0006",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -33933,7 +33912,7 @@
         {
           "id": "d1-7-conflict",
           "relationGroupId": "d1-0007",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -34651,7 +34630,7 @@
         {
           "id": "d1-8-conflict",
           "relationGroupId": "d1-0008",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -35895,7 +35874,7 @@
         {
           "id": "d1-9-conflict",
           "relationGroupId": "d1-0009",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -37139,7 +37118,7 @@
         {
           "id": "d1-12-conflict",
           "relationGroupId": "d1-0012",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -41871,7 +41850,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -42157,7 +42136,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -42165,7 +42144,7 @@
         {
           "id": "d1-19-conflict",
           "relationGroupId": "d1-0019",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -42628,7 +42607,7 @@
         {
           "id": "d1-20-conflict",
           "relationGroupId": "d1-0020",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -43346,7 +43325,7 @@
         {
           "id": "d1-21-conflict",
           "relationGroupId": "d1-0021",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -44064,7 +44043,7 @@
         {
           "id": "d1-22-conflict",
           "relationGroupId": "d1-0022",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -44782,7 +44761,7 @@
         {
           "id": "d1-23-conflict",
           "relationGroupId": "d1-0023",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -45500,7 +45479,7 @@
         {
           "id": "d1-24-conflict",
           "relationGroupId": "d1-0024",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "lock",
           "result": {
             "policy": "P2",
@@ -46231,14 +46210,14 @@
           "high": 0.9999999999999999
         },
         "agreement": {
-          "value": 0.7045454545454546,
-          "low": 0.5577952061434273,
-          "high": 0.818446391127567
+          "value": 0.7954545454545454,
+          "low": 0.6549913631816677,
+          "high": 0.888468721765324
         },
         "missBlockRatio": {
-          "value": 0.20454545454545456,
-          "low": 0.11153127823467596,
-          "high": 0.34500863681833227
+          "value": 0,
+          "low": 6.938893903907228e-18,
+          "high": 0.08029831778201396
         },
         "falseBlockRatio": {
           "value": 0,
@@ -46246,9 +46225,9 @@
           "high": 0.08029831778201396
         },
         "escapeRatio": {
-          "value": 0.20454545454545456,
-          "low": 0.11153127823467596,
-          "high": 0.34500863681833227
+          "value": 0,
+          "low": 6.938893903907228e-18,
+          "high": 0.08029831778201396
         },
         "frozenPersonSeconds": 2399.52,
         "cardsPerHour": 743.801652892562,
@@ -46259,28 +46238,28 @@
         "byOperatorFamily": {
           "IC": {
             "groups": 12,
-            "agreement": 0.6666666666666666,
-            "missBlockRatio": 0.3333333333333333,
+            "agreement": 0.5,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.3333333333333333
+            "escapeRatio": 0
           },
           "CP": {
             "groups": 16,
-            "agreement": 0.5,
-            "missBlockRatio": 0.25,
+            "agreement": 1,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.25
+            "escapeRatio": 0
           },
           "SS": {
             "groups": 4,
-            "agreement": 0.75,
-            "missBlockRatio": 0.25,
+            "agreement": 0.5,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.25
+            "escapeRatio": 0
           },
           "EB": {
             "groups": 2,
-            "agreement": 1,
+            "agreement": 0.5,
             "missBlockRatio": 0,
             "falseBlockRatio": 0,
             "escapeRatio": 0
@@ -46295,25 +46274,18 @@
         },
         "byDetectability": {
           "typecheck": {
-            "groups": 5,
-            "agreement": 0.6,
-            "missBlockRatio": 0.4,
-            "falseBlockRatio": 0,
-            "escapeRatio": 0.4
-          },
-          "none": {
-            "groups": 27,
+            "groups": 2,
             "agreement": 1,
             "missBlockRatio": 0,
             "falseBlockRatio": 0,
             "escapeRatio": 0
           },
-          "runtime-only": {
-            "groups": 12,
-            "agreement": 0.08333333333333333,
-            "missBlockRatio": 0.5833333333333334,
+          "none": {
+            "groups": 42,
+            "agreement": 0.7857142857142857,
+            "missBlockRatio": 0,
             "falseBlockRatio": 0,
-            "escapeRatio": 0.5833333333333334
+            "escapeRatio": 0
           }
         }
       },
@@ -46741,7 +46713,7 @@
           "id": "d1-1-safe",
           "relationGroupId": "d1-0001",
           "truth": "allow",
-          "decision": "allow",
+          "decision": "warn",
           "result": {
             "policy": "P3",
             "seed": 1775940050,
@@ -46805,7 +46777,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -46817,10 +46789,10 @@
                 "revision": 0,
                 "at": 220,
                 "verdict": {
-                  "zone": "white",
-                  "decision": "allow",
-                  "ruleId": "observability-only",
-                  "summary": "一侧只增加了日志或可观测性语句。",
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
                   "evidence": [
                     {
                       "file": "src/consumer.ts",
@@ -46836,6 +46808,212 @@
                   "contractChanged": {
                     "left": false,
                     "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
+                  }
+                },
+                "pair": {
+                  "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                  "left": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "candidate"
+                    },
+                    "symbol": "src/consumer.ts#checkout",
+                    "status": "modified"
+                  },
+                  "right": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "origin"
+                    },
+                    "symbol": "src/producer.ts#applyDiscount",
+                    "status": "modified"
+                  },
+                  "distance": 1,
+                  "path": {
+                    "from": "src/consumer.ts#checkout",
+                    "to": "src/producer.ts#applyDiscount",
+                    "hops": [
+                      {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "kind": "call",
+                        "direction": "forward"
+                      }
+                    ],
+                    "typeOnly": false
+                  },
+                  "firstSeenAt": 220,
+                  "updatedAt": 220
+                }
+              },
+              {
+                "pairId": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                "revision": 0,
+                "at": 1600,
+                "verdict": {
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
+                  "evidence": [
+                    {
+                      "file": "src/consumer.ts",
+                      "symbol": "src/consumer.ts#checkout",
+                      "detail": "外部契约未发生变化"
+                    },
+                    {
+                      "file": "src/producer.ts",
+                      "symbol": "src/producer.ts#applyDiscount",
+                      "detail": "外部契约发生变化"
+                    }
+                  ],
+                  "contractChanged": {
+                    "left": false,
+                    "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
+                  }
+                },
+                "pair": {
+                  "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                  "left": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "candidate"
+                    },
+                    "symbol": "src/consumer.ts#checkout",
+                    "status": "modified"
+                  },
+                  "right": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "origin"
+                    },
+                    "symbol": "src/producer.ts#applyDiscount",
+                    "status": "modified"
+                  },
+                  "distance": 1,
+                  "path": {
+                    "from": "src/consumer.ts#checkout",
+                    "to": "src/producer.ts#applyDiscount",
+                    "hops": [
+                      {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "kind": "call",
+                        "direction": "forward"
+                      }
+                    ],
+                    "typeOnly": false
+                  },
+                  "firstSeenAt": 220,
+                  "updatedAt": 220
+                }
+              },
+              {
+                "pairId": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                "revision": 0,
+                "at": 1720,
+                "verdict": {
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
+                  "evidence": [
+                    {
+                      "file": "src/consumer.ts",
+                      "symbol": "src/consumer.ts#checkout",
+                      "detail": "外部契约未发生变化"
+                    },
+                    {
+                      "file": "src/producer.ts",
+                      "symbol": "src/producer.ts#applyDiscount",
+                      "detail": "外部契约发生变化"
+                    }
+                  ],
+                  "contractChanged": {
+                    "left": false,
+                    "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
+                  }
+                },
+                "pair": {
+                  "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                  "left": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "candidate"
+                    },
+                    "symbol": "src/consumer.ts#checkout",
+                    "status": "modified"
+                  },
+                  "right": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "origin"
+                    },
+                    "symbol": "src/producer.ts#applyDiscount",
+                    "status": "modified"
+                  },
+                  "distance": 1,
+                  "path": {
+                    "from": "src/consumer.ts#checkout",
+                    "to": "src/producer.ts#applyDiscount",
+                    "hops": [
+                      {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "kind": "call",
+                        "direction": "forward"
+                      }
+                    ],
+                    "typeOnly": false
+                  },
+                  "firstSeenAt": 220,
+                  "updatedAt": 220
+                }
+              },
+              {
+                "pairId": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                "revision": 0,
+                "at": 600100,
+                "verdict": {
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
+                  "evidence": [
+                    {
+                      "file": "src/consumer.ts",
+                      "symbol": "src/consumer.ts#checkout",
+                      "detail": "外部契约未发生变化"
+                    },
+                    {
+                      "file": "src/producer.ts",
+                      "symbol": "src/producer.ts#applyDiscount",
+                      "detail": "外部契约发生变化"
+                    }
+                  ],
+                  "contractChanged": {
+                    "left": false,
+                    "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
                   }
                 },
                 "pair": {
@@ -46922,10 +47100,10 @@
                     "totalLockMs": 0,
                     "updatedAt": 220,
                     "verdict": {
-                      "zone": "white",
-                      "decision": "allow",
-                      "ruleId": "observability-only",
-                      "summary": "一侧只增加了日志或可观测性语句。",
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
                       "evidence": [
                         {
                           "file": "src/consumer.ts",
@@ -46941,6 +47119,221 @@
                       "contractChanged": {
                         "left": false,
                         "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
+                      }
+                    }
+                  },
+                  {
+                    "pair": {
+                      "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                      "left": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "candidate"
+                        },
+                        "symbol": "src/consumer.ts#checkout",
+                        "status": "modified"
+                      },
+                      "right": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "origin"
+                        },
+                        "symbol": "src/producer.ts#applyDiscount",
+                        "status": "modified"
+                      },
+                      "distance": 1,
+                      "path": {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "hops": [
+                          {
+                            "from": "src/consumer.ts#checkout",
+                            "to": "src/producer.ts#applyDiscount",
+                            "kind": "call",
+                            "direction": "forward"
+                          }
+                        ],
+                        "typeOnly": false
+                      },
+                      "firstSeenAt": 220,
+                      "updatedAt": 220
+                    },
+                    "status": "judged",
+                    "revision": 0,
+                    "leftConfirmed": false,
+                    "rightConfirmed": false,
+                    "totalLockMs": 0,
+                    "updatedAt": 1600,
+                    "verdict": {
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
+                      "evidence": [
+                        {
+                          "file": "src/consumer.ts",
+                          "symbol": "src/consumer.ts#checkout",
+                          "detail": "外部契约未发生变化"
+                        },
+                        {
+                          "file": "src/producer.ts",
+                          "symbol": "src/producer.ts#applyDiscount",
+                          "detail": "外部契约发生变化"
+                        }
+                      ],
+                      "contractChanged": {
+                        "left": false,
+                        "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
+                      }
+                    }
+                  },
+                  {
+                    "pair": {
+                      "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                      "left": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "candidate"
+                        },
+                        "symbol": "src/consumer.ts#checkout",
+                        "status": "modified"
+                      },
+                      "right": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "origin"
+                        },
+                        "symbol": "src/producer.ts#applyDiscount",
+                        "status": "modified"
+                      },
+                      "distance": 1,
+                      "path": {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "hops": [
+                          {
+                            "from": "src/consumer.ts#checkout",
+                            "to": "src/producer.ts#applyDiscount",
+                            "kind": "call",
+                            "direction": "forward"
+                          }
+                        ],
+                        "typeOnly": false
+                      },
+                      "firstSeenAt": 220,
+                      "updatedAt": 220
+                    },
+                    "status": "judged",
+                    "revision": 0,
+                    "leftConfirmed": false,
+                    "rightConfirmed": false,
+                    "totalLockMs": 0,
+                    "updatedAt": 1720,
+                    "verdict": {
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
+                      "evidence": [
+                        {
+                          "file": "src/consumer.ts",
+                          "symbol": "src/consumer.ts#checkout",
+                          "detail": "外部契约未发生变化"
+                        },
+                        {
+                          "file": "src/producer.ts",
+                          "symbol": "src/producer.ts#applyDiscount",
+                          "detail": "外部契约发生变化"
+                        }
+                      ],
+                      "contractChanged": {
+                        "left": false,
+                        "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
+                      }
+                    }
+                  },
+                  {
+                    "pair": {
+                      "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                      "left": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "candidate"
+                        },
+                        "symbol": "src/consumer.ts#checkout",
+                        "status": "modified"
+                      },
+                      "right": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "origin"
+                        },
+                        "symbol": "src/producer.ts#applyDiscount",
+                        "status": "modified"
+                      },
+                      "distance": 1,
+                      "path": {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "hops": [
+                          {
+                            "from": "src/consumer.ts#checkout",
+                            "to": "src/producer.ts#applyDiscount",
+                            "kind": "call",
+                            "direction": "forward"
+                          }
+                        ],
+                        "typeOnly": false
+                      },
+                      "firstSeenAt": 220,
+                      "updatedAt": 220
+                    },
+                    "status": "judged",
+                    "revision": 0,
+                    "leftConfirmed": false,
+                    "rightConfirmed": false,
+                    "totalLockMs": 0,
+                    "updatedAt": 600100,
+                    "verdict": {
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
+                      "evidence": [
+                        {
+                          "file": "src/consumer.ts",
+                          "symbol": "src/consumer.ts#checkout",
+                          "detail": "外部契约未发生变化"
+                        },
+                        {
+                          "file": "src/producer.ts",
+                          "symbol": "src/producer.ts#applyDiscount",
+                          "detail": "外部契约发生变化"
+                        }
+                      ],
+                      "contractChanged": {
+                        "left": false,
+                        "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
                       }
                     }
                   },
@@ -46987,10 +47380,10 @@
                     "totalLockMs": 0,
                     "updatedAt": 600100,
                     "verdict": {
-                      "zone": "white",
-                      "decision": "allow",
-                      "ruleId": "observability-only",
-                      "summary": "一侧只增加了日志或可观测性语句。",
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
                       "evidence": [
                         {
                           "file": "src/consumer.ts",
@@ -47006,6 +47399,11 @@
                       "contractChanged": {
                         "left": false,
                         "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
                       }
                     }
                   }
@@ -47053,10 +47451,10 @@
                   "totalLockMs": 0,
                   "updatedAt": 600100,
                   "verdict": {
-                    "zone": "white",
-                    "decision": "allow",
-                    "ruleId": "observability-only",
-                    "summary": "一侧只增加了日志或可观测性语句。",
+                    "zone": "grey",
+                    "decision": "warn",
+                    "ruleId": "semantic-interaction-uncertain",
+                    "summary": "修改可能互相影响，需要进一步判断。",
                     "evidence": [
                       {
                         "file": "src/consumer.ts",
@@ -47072,6 +47470,11 @@
                     "contractChanged": {
                       "left": false,
                       "right": true
+                    },
+                    "typecheck": {
+                      "ran": true,
+                      "durationMs": 0,
+                      "mergeOnlyDiagnostics": []
                     }
                   }
                 }
@@ -47100,7 +47503,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-3\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -47108,7 +47511,7 @@
         {
           "id": "d1-2-conflict",
           "relationGroupId": "d1-0002",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -47600,7 +48003,7 @@
         {
           "id": "d1-3-conflict",
           "relationGroupId": "d1-0003",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -48767,7 +49170,7 @@
         {
           "id": "d1-4-conflict",
           "relationGroupId": "d1-0004",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -49503,7 +49906,7 @@
         {
           "id": "d1-5-conflict",
           "relationGroupId": "d1-0005",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -50239,7 +50642,7 @@
         {
           "id": "d1-6-conflict",
           "relationGroupId": "d1-0006",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -50975,7 +51378,7 @@
         {
           "id": "d1-7-conflict",
           "relationGroupId": "d1-0007",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -51711,7 +52114,7 @@
         {
           "id": "d1-8-conflict",
           "relationGroupId": "d1-0008",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -53470,7 +53873,7 @@
         {
           "id": "d1-9-conflict",
           "relationGroupId": "d1-0009",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -55229,7 +55632,7 @@
         {
           "id": "d1-12-conflict",
           "relationGroupId": "d1-0012",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -60496,7 +60899,7 @@
           "id": "d1-18-safe",
           "relationGroupId": "d1-0018",
           "truth": "allow",
-          "decision": "allow",
+          "decision": "warn",
           "result": {
             "policy": "P3",
             "seed": 363102795,
@@ -60560,7 +60963,7 @@
                   {
                     "from": 0,
                     "deleted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n",
-                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n"
+                    "inserted": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n"
                   }
                 ],
                 "revisionAfter": 1
@@ -60572,10 +60975,10 @@
                 "revision": 0,
                 "at": 220,
                 "verdict": {
-                  "zone": "white",
-                  "decision": "allow",
-                  "ruleId": "observability-only",
-                  "summary": "一侧只增加了日志或可观测性语句。",
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
                   "evidence": [
                     {
                       "file": "src/consumer.ts",
@@ -60591,6 +60994,212 @@
                   "contractChanged": {
                     "left": false,
                     "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
+                  }
+                },
+                "pair": {
+                  "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                  "left": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "candidate"
+                    },
+                    "symbol": "src/consumer.ts#checkout",
+                    "status": "modified"
+                  },
+                  "right": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "origin"
+                    },
+                    "symbol": "src/producer.ts#applyDiscount",
+                    "status": "modified"
+                  },
+                  "distance": 1,
+                  "path": {
+                    "from": "src/consumer.ts#checkout",
+                    "to": "src/producer.ts#applyDiscount",
+                    "hops": [
+                      {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "kind": "call",
+                        "direction": "forward"
+                      }
+                    ],
+                    "typeOnly": false
+                  },
+                  "firstSeenAt": 220,
+                  "updatedAt": 220
+                }
+              },
+              {
+                "pairId": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                "revision": 0,
+                "at": 1600,
+                "verdict": {
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
+                  "evidence": [
+                    {
+                      "file": "src/consumer.ts",
+                      "symbol": "src/consumer.ts#checkout",
+                      "detail": "外部契约未发生变化"
+                    },
+                    {
+                      "file": "src/producer.ts",
+                      "symbol": "src/producer.ts#applyDiscount",
+                      "detail": "外部契约发生变化"
+                    }
+                  ],
+                  "contractChanged": {
+                    "left": false,
+                    "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
+                  }
+                },
+                "pair": {
+                  "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                  "left": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "candidate"
+                    },
+                    "symbol": "src/consumer.ts#checkout",
+                    "status": "modified"
+                  },
+                  "right": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "origin"
+                    },
+                    "symbol": "src/producer.ts#applyDiscount",
+                    "status": "modified"
+                  },
+                  "distance": 1,
+                  "path": {
+                    "from": "src/consumer.ts#checkout",
+                    "to": "src/producer.ts#applyDiscount",
+                    "hops": [
+                      {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "kind": "call",
+                        "direction": "forward"
+                      }
+                    ],
+                    "typeOnly": false
+                  },
+                  "firstSeenAt": 220,
+                  "updatedAt": 220
+                }
+              },
+              {
+                "pairId": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                "revision": 0,
+                "at": 1720,
+                "verdict": {
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
+                  "evidence": [
+                    {
+                      "file": "src/consumer.ts",
+                      "symbol": "src/consumer.ts#checkout",
+                      "detail": "外部契约未发生变化"
+                    },
+                    {
+                      "file": "src/producer.ts",
+                      "symbol": "src/producer.ts#applyDiscount",
+                      "detail": "外部契约发生变化"
+                    }
+                  ],
+                  "contractChanged": {
+                    "left": false,
+                    "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
+                  }
+                },
+                "pair": {
+                  "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                  "left": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "candidate"
+                    },
+                    "symbol": "src/consumer.ts#checkout",
+                    "status": "modified"
+                  },
+                  "right": {
+                    "actor": {
+                      "kind": "human",
+                      "memberId": "origin"
+                    },
+                    "symbol": "src/producer.ts#applyDiscount",
+                    "status": "modified"
+                  },
+                  "distance": 1,
+                  "path": {
+                    "from": "src/consumer.ts#checkout",
+                    "to": "src/producer.ts#applyDiscount",
+                    "hops": [
+                      {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "kind": "call",
+                        "direction": "forward"
+                      }
+                    ],
+                    "typeOnly": false
+                  },
+                  "firstSeenAt": 220,
+                  "updatedAt": 220
+                }
+              },
+              {
+                "pairId": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                "revision": 0,
+                "at": 600100,
+                "verdict": {
+                  "zone": "grey",
+                  "decision": "warn",
+                  "ruleId": "semantic-interaction-uncertain",
+                  "summary": "修改可能互相影响，需要进一步判断。",
+                  "evidence": [
+                    {
+                      "file": "src/consumer.ts",
+                      "symbol": "src/consumer.ts#checkout",
+                      "detail": "外部契约未发生变化"
+                    },
+                    {
+                      "file": "src/producer.ts",
+                      "symbol": "src/producer.ts#applyDiscount",
+                      "detail": "外部契约发生变化"
+                    }
+                  ],
+                  "contractChanged": {
+                    "left": false,
+                    "right": true
+                  },
+                  "typecheck": {
+                    "ran": true,
+                    "durationMs": 0,
+                    "mergeOnlyDiagnostics": []
                   }
                 },
                 "pair": {
@@ -60677,10 +61286,10 @@
                     "totalLockMs": 0,
                     "updatedAt": 220,
                     "verdict": {
-                      "zone": "white",
-                      "decision": "allow",
-                      "ruleId": "observability-only",
-                      "summary": "一侧只增加了日志或可观测性语句。",
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
                       "evidence": [
                         {
                           "file": "src/consumer.ts",
@@ -60696,6 +61305,221 @@
                       "contractChanged": {
                         "left": false,
                         "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
+                      }
+                    }
+                  },
+                  {
+                    "pair": {
+                      "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                      "left": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "candidate"
+                        },
+                        "symbol": "src/consumer.ts#checkout",
+                        "status": "modified"
+                      },
+                      "right": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "origin"
+                        },
+                        "symbol": "src/producer.ts#applyDiscount",
+                        "status": "modified"
+                      },
+                      "distance": 1,
+                      "path": {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "hops": [
+                          {
+                            "from": "src/consumer.ts#checkout",
+                            "to": "src/producer.ts#applyDiscount",
+                            "kind": "call",
+                            "direction": "forward"
+                          }
+                        ],
+                        "typeOnly": false
+                      },
+                      "firstSeenAt": 220,
+                      "updatedAt": 220
+                    },
+                    "status": "judged",
+                    "revision": 0,
+                    "leftConfirmed": false,
+                    "rightConfirmed": false,
+                    "totalLockMs": 0,
+                    "updatedAt": 1600,
+                    "verdict": {
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
+                      "evidence": [
+                        {
+                          "file": "src/consumer.ts",
+                          "symbol": "src/consumer.ts#checkout",
+                          "detail": "外部契约未发生变化"
+                        },
+                        {
+                          "file": "src/producer.ts",
+                          "symbol": "src/producer.ts#applyDiscount",
+                          "detail": "外部契约发生变化"
+                        }
+                      ],
+                      "contractChanged": {
+                        "left": false,
+                        "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
+                      }
+                    }
+                  },
+                  {
+                    "pair": {
+                      "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                      "left": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "candidate"
+                        },
+                        "symbol": "src/consumer.ts#checkout",
+                        "status": "modified"
+                      },
+                      "right": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "origin"
+                        },
+                        "symbol": "src/producer.ts#applyDiscount",
+                        "status": "modified"
+                      },
+                      "distance": 1,
+                      "path": {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "hops": [
+                          {
+                            "from": "src/consumer.ts#checkout",
+                            "to": "src/producer.ts#applyDiscount",
+                            "kind": "call",
+                            "direction": "forward"
+                          }
+                        ],
+                        "typeOnly": false
+                      },
+                      "firstSeenAt": 220,
+                      "updatedAt": 220
+                    },
+                    "status": "judged",
+                    "revision": 0,
+                    "leftConfirmed": false,
+                    "rightConfirmed": false,
+                    "totalLockMs": 0,
+                    "updatedAt": 1720,
+                    "verdict": {
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
+                      "evidence": [
+                        {
+                          "file": "src/consumer.ts",
+                          "symbol": "src/consumer.ts#checkout",
+                          "detail": "外部契约未发生变化"
+                        },
+                        {
+                          "file": "src/producer.ts",
+                          "symbol": "src/producer.ts#applyDiscount",
+                          "detail": "外部契约发生变化"
+                        }
+                      ],
+                      "contractChanged": {
+                        "left": false,
+                        "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
+                      }
+                    }
+                  },
+                  {
+                    "pair": {
+                      "id": "4803f6d3ba7d0e4c2c13b4a50c2b37897be6c6938b7bd8d7fd9e61509f8f3090",
+                      "left": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "candidate"
+                        },
+                        "symbol": "src/consumer.ts#checkout",
+                        "status": "modified"
+                      },
+                      "right": {
+                        "actor": {
+                          "kind": "human",
+                          "memberId": "origin"
+                        },
+                        "symbol": "src/producer.ts#applyDiscount",
+                        "status": "modified"
+                      },
+                      "distance": 1,
+                      "path": {
+                        "from": "src/consumer.ts#checkout",
+                        "to": "src/producer.ts#applyDiscount",
+                        "hops": [
+                          {
+                            "from": "src/consumer.ts#checkout",
+                            "to": "src/producer.ts#applyDiscount",
+                            "kind": "call",
+                            "direction": "forward"
+                          }
+                        ],
+                        "typeOnly": false
+                      },
+                      "firstSeenAt": 220,
+                      "updatedAt": 220
+                    },
+                    "status": "judged",
+                    "revision": 0,
+                    "leftConfirmed": false,
+                    "rightConfirmed": false,
+                    "totalLockMs": 0,
+                    "updatedAt": 600100,
+                    "verdict": {
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
+                      "evidence": [
+                        {
+                          "file": "src/consumer.ts",
+                          "symbol": "src/consumer.ts#checkout",
+                          "detail": "外部契约未发生变化"
+                        },
+                        {
+                          "file": "src/producer.ts",
+                          "symbol": "src/producer.ts#applyDiscount",
+                          "detail": "外部契约发生变化"
+                        }
+                      ],
+                      "contractChanged": {
+                        "left": false,
+                        "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
                       }
                     }
                   },
@@ -60742,10 +61566,10 @@
                     "totalLockMs": 0,
                     "updatedAt": 600100,
                     "verdict": {
-                      "zone": "white",
-                      "decision": "allow",
-                      "ruleId": "observability-only",
-                      "summary": "一侧只增加了日志或可观测性语句。",
+                      "zone": "grey",
+                      "decision": "warn",
+                      "ruleId": "semantic-interaction-uncertain",
+                      "summary": "修改可能互相影响，需要进一步判断。",
                       "evidence": [
                         {
                           "file": "src/consumer.ts",
@@ -60761,6 +61585,11 @@
                       "contractChanged": {
                         "left": false,
                         "right": true
+                      },
+                      "typecheck": {
+                        "ran": true,
+                        "durationMs": 0,
+                        "mergeOnlyDiagnostics": []
                       }
                     }
                   }
@@ -60808,10 +61637,10 @@
                   "totalLockMs": 0,
                   "updatedAt": 600100,
                   "verdict": {
-                    "zone": "white",
-                    "decision": "allow",
-                    "ruleId": "observability-only",
-                    "summary": "一侧只增加了日志或可观测性语句。",
+                    "zone": "grey",
+                    "decision": "warn",
+                    "ruleId": "semantic-interaction-uncertain",
+                    "summary": "修改可能互相影响，需要进一步判断。",
                     "evidence": [
                       {
                         "file": "src/consumer.ts",
@@ -60827,6 +61656,11 @@
                     "contractChanged": {
                       "left": false,
                       "right": true
+                    },
+                    "typecheck": {
+                      "ran": true,
+                      "durationMs": 0,
+                      "mergeOnlyDiagnostics": []
                     }
                   }
                 }
@@ -60855,7 +61689,7 @@
               }
             ],
             "finalTexts": {
-              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1); }\n",
+              "src/consumer.ts": "import { applyDiscount } from \"./producer.js\";\nexport function checkout(price: number) { console.log(\"trace-6\"); return applyDiscount(price, 0.1, \"USD\"); }\n",
               "src/producer.ts": "export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n"
             }
           }
@@ -60863,7 +61697,7 @@
         {
           "id": "d1-19-conflict",
           "relationGroupId": "d1-0019",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -61355,7 +62189,7 @@
         {
           "id": "d1-20-conflict",
           "relationGroupId": "d1-0020",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "warn",
           "result": {
             "policy": "P3",
@@ -62522,7 +63356,7 @@
         {
           "id": "d1-21-conflict",
           "relationGroupId": "d1-0021",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -63258,7 +64092,7 @@
         {
           "id": "d1-22-conflict",
           "relationGroupId": "d1-0022",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -63994,7 +64828,7 @@
         {
           "id": "d1-23-conflict",
           "relationGroupId": "d1-0023",
-          "truth": "lock",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",
@@ -64730,7 +65564,7 @@
         {
           "id": "d1-24-conflict",
           "relationGroupId": "d1-0024",
-          "truth": "warn",
+          "truth": "allow",
           "decision": "allow",
           "result": {
             "policy": "P3",

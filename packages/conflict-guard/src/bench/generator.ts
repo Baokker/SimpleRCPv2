@@ -41,6 +41,7 @@ function makeVariant(options: { id: string; kind: "conflict" | "safe"; operator:
   rightOnly[consumer] = candidate.consumer;
   merged[producer] = origin.producer;
   merged[consumer] = candidate.consumer;
+  if (options.operator.id === "IC-1") leftOnly[consumer] = `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, "USD"); }\n`;
   const trace = buildTrace(options.baseline, leftOnly, rightOnly);
   return { id: options.id, kind: options.kind, truth: options.kind === "safe" ? "allow" : options.operator.expectedTruth, detectability: options.kind === "safe" ? "none" : options.operator.expectedDetectability, baseline: clone(options.baseline), leftOnly, rightOnly, merged, trace };
 }
@@ -57,7 +58,7 @@ function originText(operator: OperatorSpec, seed: number) {
 }
 
 function candidateText(operator: OperatorSpec, kind: "conflict" | "safe", seed: number) {
-  if (kind === "safe") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { console.log("trace-${seed % 7}"); return applyDiscount(price, 0.1); }\n` };
+  if (kind === "safe") return { consumer: operator.id === "IC-1" ? `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { console.log("trace-${seed % 7}"); return applyDiscount(price, 0.1, "USD"); }\n` : `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { console.log("trace-${seed % 7}"); return applyDiscount(price, 0.1); }\n` };
   if (operator.id === "IC-1") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1) + 0; }\n` };
   if (operator.id === "IC-2") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1).value; }\n` };
   if (operator.id === "IC-3") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1) / 1000; }\n` };

@@ -53,6 +53,7 @@ export interface BenchManifest {
 export interface ProbeRun {
   passed: boolean;
   observations: Record<string, string | number | boolean>;
+  typeError?: boolean;
 }
 
 export interface BenchLabel {
