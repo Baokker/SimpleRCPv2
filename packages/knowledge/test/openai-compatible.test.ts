@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http';
 import { describe, expect, test } from 'vitest';
-import { createOpenAICompatibleClient } from '../src/openaiCompatible.js';
+import { createOpenAICompatibleClient } from '../src/llm/openaiCompatible.js';
 
 function listen(server: Server): Promise<number> {
     return new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', () => { const address = server.address(); if (!address || typeof address === 'string') reject(new Error('server did not expose a port')); else resolve(address.port); }); });

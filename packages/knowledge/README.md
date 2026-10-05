@@ -10,14 +10,14 @@
 | --- | --- |
 | `open-collaboration-knowledge/src/schema.ts` | `src/schema/card.ts` |
 | `capture-trigger-policy.ts` | `src/capture/triggerPolicy.ts` |
-| `anchor-resolver.ts`、`anchor-review.ts` | `src/anchor/*` |
-| `views/index.ts` | Guide and timeline projections |
-| `demo/demoCards.ts` | Demo card factory |
+| `anchor-resolver.ts`、`anchor-review.ts` | `src/anchor/resolver.ts`、`src/anchor/review.ts` |
+| `knowledge-views.ts` | `src/views/index.ts` |
+| `demo-cards.ts` | `src/demo/demoCards.ts` |
 | `hash.ts` | `src/util/hash.ts` |
-| `extract/extract.ts`、`extract/prompt.ts` | Extraction implementation |
-| `extract/refine.ts`、`extract/refinePrompt.ts` | Field refinement implementation |
-| `retrieval/index.ts` | Knowledge index and search |
-| 旧原型的知识注入与预算函数 | `src/retrieval/inject.ts` |
+| `knowledge-extract.ts`、`knowledge-prompt.ts` | `src/extract/*` |
+| `knowledge-refine.ts`、`knowledge-refine-prompt.ts` | `src/extract/*` |
+| `knowledge-index.ts` | `src/retrieval/index.ts` |
+| `prompt.ts` 的知识注入与预算函数 | `src/retrieval/inject.ts` |
 
 ## 时钟与模型
 

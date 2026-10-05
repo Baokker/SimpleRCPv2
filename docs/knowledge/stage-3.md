@@ -18,15 +18,15 @@
 | 命令 | 结果 | 记录 |
 | --- | --- | --- |
 | `pnpm build` | shared、knowledge、server、client 全部通过 | `artifacts/stage3-build.log` |
-| `pnpm test` | server：28 个文件、104 项；knowledge：19 个文件、106 项；Demo：2 项，全部通过 | `artifacts/stage3-regression-unit.log` |
+| `pnpm test` | server：28 个文件、104 项；knowledge：19 个文件、132 项；Demo：2 项，全部通过 | `artifacts/stage3-regression-unit.log` |
 | `pnpm test:e2e` | 21 项通过，10 项按功能开关与录制开关跳过 | `artifacts/stage3-regression-e2e.log` |
-| `pnpm test:e2e:knowledge` | 8 项通过，包括阶段二五项与阶段三三项 | `artifacts/stage3-e2e-knowledge.log` |
+| `pnpm test:e2e:knowledge` | 10 项通过，包括阶段二与阶段三场景 | `artifacts/stage3-e2e-knowledge.log` |
 | 知识捕获真实集成测试 | 6 项通过，覆盖双成员归属与定向通知、磁盘依赖变化、持久恢复、并发接受、风险可见性与冷却、关闭功能 | `artifacts/stage3-capture-final.log` |
 | replay CLI | 两条自动建议：`edit.overwritten` 一条、`chat.dense` 一条 | `artifacts/stage3-replayed-suggestions.jsonl`、`stage3-replay-counts.json` |
 | 真实模型浏览器验收 | 两类建议均从 Inbox 调用 AI 草稿，并通过编辑器确认成 `reviewed` 卡片 | `artifacts/stage3-real-model.log` |
 | 已配置凭据检查 | 仓库交付文件与阶段三验证记录中匹配数量为零 | `artifacts/stage3-secret-check.json` |
 
-知识包的 31 项捕获测试覆盖区间变换、各触发正例和边界/冷却反例、覆写成员限制、多个大删除后的恢复、候选排序、成员离开后的光标停留、事件校验、小时上限及确定性草稿的证据保留。
+知识包的 52 项捕获测试覆盖区间变换、各触发正例和边界/冷却反例、覆写成员限制、Agent 归属接口、多个大删除后的恢复、候选排序、成员离开后的光标停留、事件校验、小时上限及确定性草稿的证据保留。
 
 端到端场景使用真实浏览器和平台 Yjs 通道。知识入口设置 `KNOWLEDGE=capture`，接受动作使用正式的确定性草稿路径；默认端到端入口保持知识功能关闭，知识场景通过独立命令执行。
 

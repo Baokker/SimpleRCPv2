@@ -36,7 +36,11 @@ export async function ensureKnowledgeIndex(options: EnsureKnowledgeIndexOptions)
         return lastIndexCache;
     }
     const existing = indexBuildLocks.get(cacheKey);
-    if (existing) return existing;
+    if (existing) {
+        const index = await existing;
+        if (options.strictEmbedding && index.embeddingFallbackReason) throw new Error(index.embeddingFallbackReason);
+        return index;
+    }
     const lock = buildIndex({ ...options, cards }, sourceId, workspaceHash, model, indexDir, now, cacheKey).finally(() => indexBuildLocks.delete(cacheKey));
     indexBuildLocks.set(cacheKey, lock);
     return lock;

@@ -1,6 +1,6 @@
 # 前三阶段审阅验证
 
-审阅日期：2026-10-05。分支：`feature/process-knowledge`。审阅范围为 `main` 的 `4c96c95` 至阶段三提交 `c8a2da6`，以及本次修订涉及的检索、卡片操作、编辑器和捕获流程。
+审阅日期：2026-10-05。分支：`feature/process-knowledge`。本次复核比较 `0a142a2...d25ad89`，并检查本次修订涉及的检索、目录移动、捕获归属和运行配置。
 
 ## 检索与索引
 
@@ -31,14 +31,14 @@
 | 命令 | 结果 | 记录 |
 | --- | --- | --- |
 | `pnpm build` | shared、knowledge、server、client 全部通过 | `artifacts/review-build-final.log` |
-| `pnpm test` | server：28 个文件、104 项；knowledge：19 个文件、128 项；Demo：2 项，全部通过 | `artifacts/review-tests-final.log` |
+| `pnpm test` | server：28 个文件、104 项；knowledge：19 个文件、132 项；Demo：2 项，全部通过 | `artifacts/review-tests-final.log` |
 | `pnpm test:e2e` | 21 项通过，12 项按功能开关或录制开关跳过 | `artifacts/review-e2e-final.log` |
 | `pnpm test:e2e:knowledge` | 10 项通过 | `artifacts/review-e2e-knowledge-final.log` |
 | replay CLI | `edit.overwritten` 和 `chat.dense` 各一条 | `artifacts/review-replayed-suggestions.jsonl`、`review-replay-counts.json` |
 
 服务端六项捕获集成测试使用真实 WebSocket、Yjs 和 HTTP 接口。录制会话持续约 120 秒，包含 65 条事件；线上与回放生成的建议类型、时间、actors 和候选锚点逐项相同，`comparison.json` 中的 `matched` 为 `true`。记录位于 `artifacts/knowledge-stage3-session/`。
 
-知识包的捕获测试共 49 项。锚点基准语料从 Git 跟踪文件中采集，测试临时文件与生成目录不参与语料选择。
+知识包的捕获测试共 52 项。锚点基准测试固定使用 `packages/knowledge/bench/fixtures/anchor-corpus-0869b7a/`，测试临时文件与生成目录不参与语料选择。
 
 最终差异通过 `git diff --check`。已配置凭据检查覆盖 Git 跟踪文件与本次验证日志，共 297 个文件，文本匹配数量为零；检查结果保存在 `artifacts/review-credential-check.json`。
 
@@ -78,7 +78,7 @@
 
 - 锚点确定性基准默认使用旧仓库提交 `0869b7a` 的冻结语料，结果为 range `72/288`、snapshot `144/288`、multi-strategy `264/288`；range 错误定位 24 次，删除类复核 48 次。
 - 检索默认使用 `lexicalScoring: "legacy"`，Recall@1 为 24.2%，Type-only 为 60.8%，错误文件加类型为 `0% / 63.3%`；`exact-boost` 保留为可选模式。缓存基准执行 20 次单卡修改，陈旧结果为 `0/20`。embedding 调用失败时返回词法结果和 `fallbackReason`，`strictEmbedding: true` 报告原始错误。
-- 扁平实现文件已移入 `src/schema`、`src/extract`、`src/retrieval`、`src/demo`、`src/util` 和 `src/views`，内部引用、测试引用、导出路径和 README 已同步。
+- 扁平实现文件已移入 `src/schema`、`src/anchor`、`src/capture`、`src/extract`、`src/retrieval`、`src/demo`、`src/util`、`src/views` 和 `src/llm`，内部引用、测试引用、导出路径和 README 已同步。
 - actor 解析支持 member、`agent:<runId>`、filesystem、unknown；`AuthorshipIndex.register` 支持已知坐标登记，成员改写 Agent 区间通过 `onAgentRevised` 暴露并保留 `runId`。
 - 风险提醒配置已改为项目运行参数注入，默认值保持原配置；阶段二报告补充 Monaco 版本升级原因和分支集成影响。
 

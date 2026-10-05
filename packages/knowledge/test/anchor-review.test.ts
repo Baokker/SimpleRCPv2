@@ -4,7 +4,7 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 import { describe, expect, test } from 'vitest';
-import { assessAnchorReviewHint } from '../src/anchor-review.js';
+import { assessAnchorReviewHint } from '../src/anchor/review.js';
 import type { KnowledgeAnchor } from '../src/schema/card.js';
 
 describe('anchor review hint', () => {

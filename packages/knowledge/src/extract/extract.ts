@@ -5,7 +5,7 @@
 // ******************************************************************************
 
 import type { KnowledgeCardType } from '../schema/card.js';
-import type { LlmClient } from '../client.js';
+import type { LlmClient } from '../llm/client.js';
 import { knowledgeExtractionSystemPrompt } from './prompt.js';
 
 export interface KnowledgeExtractionInput {

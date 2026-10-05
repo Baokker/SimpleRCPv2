@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import ts from "typescript";
-import { shouldTriggerCapture, defaultCaptureTriggerThresholds } from "../capture-trigger-policy.js";
+import { shouldTriggerCapture, defaultCaptureTriggerThresholds } from "./triggerPolicy.js";
 import type { CaptureSuggestion, CaptureTriggerType, KnowledgeCardType, SuggestedAnchor } from "../schema/card.js";
 import { AuthorshipIndex, isMemberActor } from "./authorship.js";
 import { VirtualCaptureClock, type CaptureClock } from "./clock.js";

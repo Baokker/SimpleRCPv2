@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { resolveKnowledgeAnchorInText } from '../src/anchor-resolver.js';
+import { resolveKnowledgeAnchorInText } from '../src/anchor/resolver.js';
 import type { KnowledgeAnchor } from '../src/schema/card.js';
 
 function posFromOffset(text: string, offset: number): { line: number; character: number } {

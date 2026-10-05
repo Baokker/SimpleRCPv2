@@ -9,12 +9,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type { KnowledgeAnchor } from '../../src/schema/card.js';
-import { assessAnchorReviewHint } from '../../src/anchor-review.js';
+import { assessAnchorReviewHint } from '../../src/anchor/review.js';
 import {
     offsetsFromRange,
     resolveKnowledgeAnchorInText,
     type ResolvedAnchor
-} from '../../src/anchor-resolver.js';
+} from '../../src/anchor/resolver.js';
 
 export const ANCHOR_BENCHMARK_EDIT_TYPES = [
     'insert-before',

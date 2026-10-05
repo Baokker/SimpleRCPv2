@@ -55,15 +55,17 @@ describe('anchor benchmark case generation', () => {
 });
 
 describe('anchor benchmark corpus collection', () => {
-    test('freezes a deterministic 48-anchor corpus from real repository files', () => {
+    test('uses the frozen 48-anchor corpus from the 0869b7a fixture', () => {
         const repoRoot = path.resolve(process.cwd(), '../..');
-        const first = collectFrozenAnchorCorpus(repoRoot);
-        const second = collectFrozenAnchorCorpus(repoRoot);
+        const fixtureRoot = path.join(repoRoot, 'packages/knowledge/bench/fixtures/anchor-corpus-0869b7a');
+        const first = collectFrozenAnchorCorpus(repoRoot, { fixtureRoot });
+        const second = collectFrozenAnchorCorpus(repoRoot, { fixtureRoot });
 
         expect(first).toEqual(second);
         expect(first).toHaveLength(48);
         expect(countByCategory(first)).toEqual({ source: 24, test: 12, config: 8, documentation: 4 });
         expect(new Set(first.map(item => item.sourceFile)).size).toBeGreaterThanOrEqual(24);
+        expect(first.every(item => item.sourceFile.startsWith('packages/open-collaboration-') || item.sourceFile === 'package.json')).toBe(true);
         expect(first.some(item => item.sourceFile.includes('anchor-benchmark'))).toBe(false);
         expect(first.some(item => item.sourceFile.startsWith('docs/superpowers/'))).toBe(false);
         for (const item of first) {
@@ -74,7 +76,8 @@ describe('anchor benchmark corpus collection', () => {
     });
 
     test('applies every labeled mutation instead of emitting no-op cases', () => {
-        const corpus = collectFrozenAnchorCorpus(path.resolve(process.cwd(), '../..'));
+        const repoRoot = path.resolve(process.cwd(), '../..');
+        const corpus = collectFrozenAnchorCorpus(repoRoot, { fixtureRoot: path.join(repoRoot, 'packages/knowledge/bench/fixtures/anchor-corpus-0869b7a') });
         const cases = createAnchorBenchmarkCases(corpus);
 
         for (const item of cases) {
