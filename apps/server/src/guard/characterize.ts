@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { GuardRequest, GuardSegment, PathZone, Reversibility, Capability } from "./types.js";
 import { commandName, legacyRisk } from "./legacy/classifier.js";
-import { hasDynamicSyntax, parseCommandPaths } from "./legacy/parser.js";
+import { hasDynamicSyntax, hasNetworkUpload, parseCommandPaths } from "./legacy/parser.js";
 
 export interface Characterization {
   segments: GuardSegment[];
@@ -183,7 +183,7 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   if (name === "git" && (subcommand === "push" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
   if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
-  if (capabilities.includes("network") && (name === "scp" || name === "rsync" || /(?:^|\s)(?:-d|--data\w*|-F|--form\w*|-T|--upload-file)(?:\s|=)/i.test(command))) return "irreversible";
+  if (capabilities.includes("network") && (name === "scp" || name === "rsync" || hasNetworkUpload(command))) return "irreversible";
   if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";
   return "reversible";
 }

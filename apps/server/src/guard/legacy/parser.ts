@@ -51,6 +51,38 @@ function positional(input: string[]) {
   return values;
 }
 
+const uploadFileOptions = new Set(["-t", "--upload-file", "--post-file", "--body-file"]);
+
+function uploadOptionValue(token: string) {
+  const lower = token.toLowerCase();
+  const equals = lower.indexOf("=");
+  if (equals < 0) return undefined;
+  const option = lower.slice(0, equals);
+  return uploadFileOptions.has(option) || option === "-d" || option.startsWith("--data") || option === "-f" || option.startsWith("--form")
+    ? token.slice(equals + 1)
+    : undefined;
+}
+
+export function hasNetworkUpload(command: string) {
+  const input = tokens(command).map(unquote);
+  for (let index = 1; index < input.length; index += 1) {
+    const token = input[index]!;
+    const lower = token.toLowerCase();
+    const inlineValue = uploadOptionValue(token);
+    if (inlineValue !== undefined) {
+      const option = lower.slice(0, lower.indexOf("="));
+      if (uploadFileOptions.has(option) || option === "-d" || option.startsWith("--data") || option === "-f" || option.startsWith("--form")) return true;
+      continue;
+    }
+    if (uploadFileOptions.has(lower) || lower === "-d" || lower.startsWith("--data") || lower === "-f" || lower.startsWith("--form")) {
+      const value = input[index + 1] ?? "";
+      if (uploadFileOptions.has(lower) || lower === "-d" || lower.startsWith("--data") || lower === "-f" || lower.startsWith("--form") || value.startsWith("@")) return true;
+      index += 1;
+    }
+  }
+  return false;
+}
+
 export function parseCommandPaths(command: string, cwd: string): ParsedOperation | undefined {
   const redirections = extractRedirections(command, cwd);
   const input = tokens(redirections.command);
@@ -74,10 +106,18 @@ export function parseCommandPaths(command: string, cwd: string): ParsedOperation
     for (let index = 1; index < input.length; index += 1) {
       const token = unquote(input[index]!);
       const lower = token.toLowerCase();
-      const takesValue = lower === "-d" || lower.startsWith("--data") || lower === "-f" || lower.startsWith("--form") || lower === "-t" || lower === "--upload-file";
+      const inlineValue = uploadOptionValue(token);
+      if (inlineValue !== undefined) {
+        const option = lower.slice(0, lower.indexOf("="));
+        if (uploadFileOptions.has(option)) uploadTargets.push(target(cwd, inlineValue, "source"));
+        else if (inlineValue.startsWith("@")) uploadTargets.push(target(cwd, inlineValue.slice(1), "source"));
+        continue;
+      }
+      const takesValue = uploadFileOptions.has(lower) || lower === "-d" || lower.startsWith("--data") || lower === "-f" || lower.startsWith("--form");
       if (takesValue) {
         const value = unquote(input[index + 1] ?? "");
-        if (value.startsWith("@")) uploadTargets.push(target(cwd, value.slice(1), "source"));
+        if (uploadFileOptions.has(lower)) uploadTargets.push(target(cwd, value, "source"));
+        else if (value.startsWith("@")) uploadTargets.push(target(cwd, value.slice(1), "source"));
         index += 1;
         continue;
       }
