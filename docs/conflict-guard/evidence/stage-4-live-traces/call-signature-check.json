@@ -1,0 +1,14 @@
+{
+  "valid": true,
+  "checked": true,
+  "actual": [
+    {
+      "pairId": "769dbd3d8556972a95a0c8c46d839f0030448aeac34f409f04a22cba1832f00c",
+      "revision": 0,
+      "at": 1791223439428,
+      "ruleId": "call-signature-incompatible",
+      "decision": "lock"
+    }
+  ],
+  "differences": []
+}

@@ -1,0 +1,14 @@
+{
+  "valid": true,
+  "checked": true,
+  "actual": [
+    {
+      "pairId": "84ce44fe16da60d414e3809a2617540a07cbcd21ffd6cd2c9b931453d171f2bd",
+      "revision": 0,
+      "at": 1791223439308,
+      "ruleId": "same-symbol-concurrent-write",
+      "decision": "lock"
+    }
+  ],
+  "differences": []
+}

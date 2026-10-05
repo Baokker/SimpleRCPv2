@@ -1,11 +1,42 @@
 # 阶段 4 基准说明
 
-D1 使用 `packages/conflict-guard/bench/seeds/` 中的七个无外部依赖 TypeScript 种子项目。每个关系组包含 producer 与 consumer 两个相关文件，并保留种子项目的其他文件。原始项目使用 Node.js 22 以上的 `--experimental-strip-types` 执行测试；回放本身在内存文件提供者上运行。
+D1 使用 `packages/conflict-guard/bench/seeds/` 中的七个无外部依赖 TypeScript 项目：commerce、inventory、permissions、formatter、calendar、billing、events。每个项目包含五个 TS 文件，分别验证价格、库存扣减、权限检查、文本格式化、日程重叠、账单和事件筛选。原始测试使用 Node.js 22 的 `--experimental-strip-types --test` 运行。
 
-变异目录覆盖四族算子：IC 接口变化、CP 控制策略变化、SS 共享状态变化、EB 错误行为变化。SF-1 到 SF-5 产生日志、注释、等价重构、无关函数和兼容配套修改。每组同时写出冲突变体与安全孪生，两个版本共享 origin 变化和轨迹节奏。
+生成器在项目中加入 producer 与 consumer 模板，并保留原始文件。`manifest.json` 保存 baseline、leftOnly、rightOnly、merged、四类归属探针、打字参数、项目划分、生成命令、代码提交和 JSONL 的 SHA-256。探针归属为 `origin-intent`、`candidate-intent`、`shared-regression`、`observation`。
 
-标签器把每个状态物化到 `os.tmpdir()` 下的临时工作目录，用 TypeScript `transpileModule` 生成可执行 JavaScript，并在子进程中运行 `checkout` 探针；合并状态另外执行 TypeScript 诊断。四种状态各运行三次，合并后意图或共享回归失败标记为 `lock`，全部通过且观测值产生新差异标记为 `warn`，其余标记为 `allow`；异常组写入 `excluded.json`。切分以项目与算子共同决定，`manifest.json` 保存种子、生成命令、组编号、算子和切分列表。
+| 算子 | 修改内容 |
+|---|---|
+| IC-1 | 必填参数与调用方参数 |
+| IC-2 | 返回对象属性与消费者读取 |
+| IC-3 | 返回值单位与消费者单位换算 |
+| IC-4 | 导出改名与调用方绑定 |
+| CP-1 | 规则顺序与消费者计算 |
+| CP-2 | 默认值与省略参数的调用 |
+| CP-3 | 输入守卫与消费者输入 |
+| CP-4 | 提前返回与副作用计数 |
+| SS-1 | 共享对象别名与跨调用读取 |
+| SS-2 | 初始化顺序与共享字段写入 |
+| SS-3 | 写入幂等性与重试 |
+| EB-1 | 异常行为与回退路径 |
+| EB-2 | 异步返回与同步消费者 |
+| SF-1 | 日志 |
+| SF-2 | 注释 |
+| SF-3 | 等价局部重构 |
+| SF-4 | 同文件中的无关函数 |
+| SF-5 | 同一函数中的独立分支配套修改 |
 
-指标以关系组为分母，包含无关系比例、本地决定比例、三分类一致率、漏阻断率、误阻断率、冲突逃逸率、冻结人秒、每小时卡片数和虚拟判定延迟。比例同时保存 Wilson 95% 区间，并按算子族与 `detectability` 分组。合成数据的代码形态较规整，探针只覆盖明确写出的意图，结果用于比较策略行为。
+每组包含一个冲突变体和一个安全孪生。两个变体共享 baseline、改动方修改和输入节奏，文本差异限定在依赖方的一个修改位置。每十组包含一个 SF-4 无关组，其余组各包含旧行为依赖和新行为配套两个变体。60 组时三类分别为 54、54、12，比例为 45%、45%、10%。算子名称表达生成场景，最终真值由探针确定；部分名为 conflict 的变体也会得到 allow 或 warn。
 
-D2 位于 `packages/conflict-guard/bench/datasets/d2-greylock/`，`manifest.json` 记录六个场景、51 条规则案例和 schema 3 转换说明，`source-report.json` 保留 GreyLock 的案例标签供回归审计。
+项目名称按固定种子排序后选择约 40% 为开发项目，其余为保留项目。同一项目的全部关系组属于同一个集合，`EB-1` 与 `SS-3` 仅用于保留项目。当前版本 `d1-v1` 使用种子 7，包含 60 组、120 个变体，开发集 26 组、保留集 34 组。全部变体完成标注，零项剔除；标签为 lock 40 项、warn 3 项、allow 77 项。保留集已生成并标注，策略评价仅运行开发集。
+
+`bench:label` 将四种状态分别写入 `os.tmpdir()`，每种状态独立运行三次。TypeScript 编译、类型诊断和探针执行均在子进程中完成，单次状态预算为 20 秒；结束后清理目录。CLI 的 `--concurrency` 控制并行数量，输出顺序保持稳定。每次运行保存各探针的结果、观测值、诊断、stdout 与 stderr。
+
+标签按以下顺序计算：超时或三次结果不稳定、baseline 失败、单方状态不满足该方意图、存在 TypeScript merge marker时剔除；merged 中意图、回归或类型检查失败为 lock；全部通过且 merged 观测值与其他三个状态均不同为 warn；其余为 allow。`detectability` 根据真实 merged 诊断区分 `typecheck` 和 `runtime-only`。原始结果写入 `labels.json`，剔除原因写入 `excluded.json`，清单中的 truth 随标注更新。
+
+打字节奏为每字符 20 毫秒，每 24 字符暂停 180 毫秒，两人开始时间差由种子选择。Yjs RelativePosition 将各自编辑位置转换到共享文本坐标。测试覆盖全部算子的交错输入，最终文本与 merged 逐字符一致。
+
+指标以关系组为分母，安全孪生与冲突变体组成一个统计单位。任一变体被剔除时整组剔除。完整一致要求组内两个标签都一致；漏阻断、误阻断和逃逸分别检查两个变体后按组计数。逃逸要求冲突文本实际进入模拟持久状态，区别于最后的 lock 判定。冻结人秒按成员合并重叠区间；卡片计数包含双方；判定延迟使用虚拟时间。比例与分组比例均提供 Wilson 95% 区间。
+
+D2 保存 GreyLock 的 51 个规则案例与六个交付场景的 schema 3 轨迹。`sourceDecision` 表示原本地规则动作，`sourceTruth` 表示原真值，`actual` 为当前 P3 的真实判定序列。51 项均执行了当前产品逻辑，41 项动作一致；10 项旧 equivalent-refactor 白区案例当前返回灰区。六个交付场景中，四项只有一方具有文本变化，另外两项的文件没有静态关联；转换器保留原始内容并在 `unavailable` 中记录原因。它们不能提供双边规则判定的一致性证据。
+
+合成项目和 probe 表达的行为有限，当前变异模板在不同种子项目中复用。D1 适合核验策略行为与评价流程，正式结论还需要后续真实数据集和 probe 抽检。反事实编辑继续更新坐标，同时单独标记；包含这种编辑的持久记录不会计为真实逃逸。重命名、外部回灌和人工撤回的复杂轨迹还需要扩大真实一致性样本。

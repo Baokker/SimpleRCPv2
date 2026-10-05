@@ -1,0 +1,37 @@
+{
+  "dataset": "d1-v1",
+  "seed": 7,
+  "groups": 60,
+  "variants": 120,
+  "probeRuns": 1440,
+  "excluded": 0,
+  "development": 26,
+  "holdout": 34,
+  "evaluatedSplit": "dev",
+  "traceHashesValid": true,
+  "truthMatchesLabels": true,
+  "determinism": {
+    "identical": true,
+    "excludedFields": ["timing"],
+    "sha256": "2882902e43c61022c599021b335b6d6a8ae25444deee9043b583b5d01d5154cf"
+  },
+  "consistency": {
+    "same-symbol": { "checked": true, "valid": true, "differences": [] },
+    "call-signature": { "checked": true, "valid": true, "differences": [] },
+    "ui-recording": { "checked": true, "valid": true, "differences": [] }
+  },
+  "regression": {
+    "build": "passed",
+    "conflictGuardTests": 75,
+    "serverTests": 142,
+    "demoTests": 2,
+    "seedTests": 7,
+    "collabModes": { "off": 2, "observe": 2, "rules": 2 },
+    "playwright": {
+      "passed": 23,
+      "skipped": 4,
+      "modelRequestsDisabled": true,
+      "skippedConditions": ["two-live-model-tests", "video-recording", "disabled-terminal-mode"]
+    }
+  }
+}

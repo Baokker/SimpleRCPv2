@@ -51,7 +51,7 @@ E2E 使用首页的真实导入流程。清单第 4 项结束后，自动验收�
 | 6 | Alice 改变 `applyDiscount` 的计算方式但不改签名，Bob 修改 `checkout` | 双方收到灰区警告，不冻结并正常写盘。 |
 | 7 | Alice 把 `formatMoney` 改为返回 `number`，Bob 对结果调用 `.toUpperCase()` | 条目显示“合并后才出现的类型错误”，出现冻结与冲突摘要。 |
 | 8 | 两人同时修改 `Cart.total` | 条目显示“两人在改同一个函数”，出现冻结与冲突摘要。 |
-| 9 | 判定后 Bob 在 `checkout` 中开始新批次 | 只有 Bob 收到 T0 提示，内容包含 Alice、`applyDiscount()` 和契约变化。 |
+| 9 | 判定后 Bob 在 `checkout` 中开始新批次 | 只有 Bob 收到 T0 提示，内容包含 Alice、`applyDiscount()` 和接口变化。 |
 | 10 | 查看统计 | 显示白区、黑区、灰区数量、本地决定比例、冻结总时长、写盘阻挡次数和卡片操作次数。 |
 
 阶段 3 自动验收证据保存在 [stage-3-manual/README.md](evidence/stage-3-manual/README.md)，包含规则模式的黑区卡片截图与验收结果。
@@ -66,34 +66,38 @@ CONFLICT_GUARD=rules pnpm test:e2e tests/e2e/conflict-guard-intervention.spec.ts
 
 ## 阶段 4
 
-在仓库目录执行以下命令生成并标注十组开发数据：
+在仓库目录完成构建后，用一条命令生成并标注十组数据。输出目录与交付的 60 组数据分开：
 
 ```bash
 pnpm --filter @simplercp/conflict-guard build
-pnpm --filter @simplercp/conflict-guard bench:generate --seeds bench/seeds --out bench/datasets/d1-v1 --groups 10 --seed 7
-pnpm --filter @simplercp/conflict-guard bench:label --dataset bench/datasets/d1-v1 --concurrency 2
+pnpm --filter @simplercp/conflict-guard bench:prepare --seeds bench/seeds --out ../../.test-workspaces/stage-4-small --groups 10 --seed 7 --concurrency 2
 ```
 
-检查 `manifest.json` 中的开发集和保留集列表，打开 `labels.json` 查看一个 `lock` 冲突组和同组 `allow` 安全孪生，确认四种状态各有三次探针结果。
+打开 `.test-workspaces/stage-4-small/manifest.json` 与 `labels.json`。`d1-1-conflict` 为 lock，`d1-1-safe` 为 allow；两者具有相同 baseline、改动方修改和打字节奏。展开 states，四种状态各有三次真实运行结果。检查项目划分和三类依赖修改的数量。
 
 运行开发集四种策略并查看摘要：
 
 ```bash
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --out ../../docs/conflict-guard/evidence/stage-4-dev-report
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --repeat 2 --out ../../docs/conflict-guard/evidence/stage-4-dev-report
 ```
 
-打开 `docs/conflict-guard/evidence/stage-4-dev-report/summary.md`，检查逃逸率、漏阻断率、误阻断率、本地决定比例和冻结人秒，并查看 `interruptions.svg`。P0 通常保持最高逃逸，P2 通常产生较多误阻断，P3 结果取决于可解析的关系与规则命中。
+打开 `docs/conflict-guard/evidence/stage-4-dev-report/summary.md`，检查主表和 Wilson 区间，并查看 `interruptions.svg`。当前开发集上 P0/P1 逃逸率为 69.2%，P2 为 46.2%，P3 为 53.8%；P2 误阻断为 92.3%，P3 为 15.4%。闸门建立之前的写盘与灰区警告会影响逃逸，分析见阶段报告。保留集只用于后续正式评价。
 
-选取一份轨迹运行一致性检查：
+使用独立演示项目启动界面回放。服务器使用 `CONFLICT_GUARD=rules`，通过首页创建一个空项目，记录 URL 中的 project id。执行以下命令，trace 参数使用文件的绝对路径：
 
 ```bash
-pnpm --filter @simplercp/conflict-guard replay:check bench/datasets/d1-v1/traces/d1-1-conflict.jsonl
+pnpm --filter @simplercp/conflict-guard replay:ui --server http://127.0.0.1:3000 --project <id> --trace <仓库绝对路径>/packages/conflict-guard/bench/datasets/d1-v1/traces/d1-1-conflict.jsonl --speed 2 --hold 15000
 ```
 
-输出中的 `valid` 为 `true` 时，P3 回放判定与轨迹中的 `pair_judged` 序列一致；合成轨迹没有派生事件时，`checked` 为 `false` 并报告回放得到的序列。真实界面回放使用 server 包命令：
+浏览器中以 Observer 加入该项目，打开 `src/consumer.ts` 和“冲突预防”页签。可以看到 `Replay origin`、`Replay candidate` 的输入和光标；停顿后出现调用签名冲突、冻结与卡片。命令会重置 trace 中的初始文件，结束后断开幽灵成员。
+
+对服务端录制轨迹运行一致性检查：
 
 ```bash
-pnpm --filter @simplercp/server replay:ui -- --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2
+pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/stage-4-live-traces/same-symbol.jsonl
+pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/stage-4-live-traces/call-signature.jsonl
 ```
 
-在浏览器里以第三位成员加入项目，可以看到轨迹中的幽灵成员按节奏编辑，随后观察冻结与冲突卡片。
+两份轨迹均返回 `checked:true`、`valid:true`、`differences:[]`。合成轨迹只有输入事件，不能用于这种产品一致性校验。
+
+本轮四项清单均已自动执行：十组数据完成 20 个变体标注；26 组开发数据完成四策略与重复确定性检查；Playwright 中第三名成员看到真实幽灵连接、冻结装饰与卡片；两份集成录制轨迹及一份浏览器录制轨迹均通过一致性检查。界面证据在 `evidence/stage-4-ui/`，命令与测试记录在 `stage-4.md`。

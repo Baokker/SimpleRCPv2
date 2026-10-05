@@ -2,7 +2,7 @@
 
 这个包保存语义冲突预防所需的纯逻辑。它接收带来源的文本编辑和光标变化，维护编辑批次、活跃变更集以及随他人编辑移动的文本范围，并发出可写入轨迹的事件。
 
-目录包含 `model/`、`tracking/`、`semantic/`、`routing/` 和 `trace/`。服务端负责把 Yjs 事务转换为 `TextEdit`，把事件写入项目元数据目录，并提供查询接口。包不依赖 Express、WebSocket 或文件系统。
+产品目录包含 `model/`、`tracking/`、`semantic/`、`routing/`、`coordination/` 和 `trace/`。服务端负责把 Yjs 事务转换为 `TextEdit`，把事件写入项目元数据目录，并提供查询接口。产品逻辑不依赖 Express、WebSocket 或文件系统；`bench/` 的探针适配器与 `scripts/` 负责命令行文件读写及子进程。
 
 `ConflictGuardTracker` 的时间通过 `ConflictGuardClock` 注入，包含 `now`、`setTimeout` 和 `clearTimeout`。默认阈值是批次空闲 1.5 秒、光标离开范围 3 行、批次最长 5 秒、活跃变更集空闲 10 分钟。阶段 4 可以使用虚拟时钟驱动相同的追踪逻辑。
 
@@ -40,18 +40,24 @@
 
 ## 阶段 4 回放与基准
 
-`replay/` 提供 `VirtualClock`、`MemoryFileProvider`、`replayTrace` 和四个 `ZoningPolicy`。回放只处理 `doc_open`、`edit`、`cursor`，批次关闭、候选关系和分区结果由同一套产品逻辑产生。P0 放行全部候选，P1 在同文件并发修改时锁定，P2 对两跳内的候选关系锁定，P3 调用 `routing/classifier.ts`。冻结后的编辑会记录 `shouldHaveBeenBlocked`，文本仍继续更新，因此字符位置保持一致。
+`replay/` 提供 `VirtualClock`、`MemoryFileProvider`、`replayTrace`、`checkReplay` 和四个 `ZoningPolicy`。主输入为 `doc_open`、`edit`、`cursor`，并支持 `mirror_resync`、文件退出和确认操作。批次关闭、候选关系和分区结果由同一套 tracker、语义索引、分区器和状态机产生。录制的派生事件只用于一致性校验。重同步与服务端共用 `textDiffOps`。
 
-基准生成器位于 `bench/`。`OPERATOR_SPECS` 包含 IC、CP、SS、EB 四族以及 SF-1 到 SF-5 安全算子。`bench:generate` 固定种子后写出 schema 3 轨迹、开发集与保留集清单；`bench:label` 为 baseline、leftOnly、rightOnly、merged 各保存三次探针结果；`replay:run` 计算 Wilson 95% 区间、漏阻断、误阻断、逃逸、冻结人秒和判定延迟。
+P0 放行全部候选，P1 对同文件并发修改建立文件候选并锁定，包含无语义关系的情况；P2 对两跳内的候选关系锁定，P3 调用 `routing/classifier.ts`。文件文本与 lib 由调用者注入，回放不读取系统 lib 文件。批次参数从 `session_start.config` 取得，语义更新合并窗口为 25 毫秒，写盘防抖为 300 毫秒。
+
+结果包含判定序列、变更对状态、最终动作、冻结与闸门区间、持久记录及反事实编辑。冻结后的相交编辑记录 `shouldHaveBeenBlocked`，文本继续更新以保留坐标；其后的相应持久记录标记 `counterfactual`，统计不把它计为真实逃逸。
+
+基准生成器位于 `bench/`，包含七个种子项目与 18 个 IC、CP、SS、EB、SF 算子。`bench:generate` 写出 schema 3 轨迹、固定项目划分和哈希；`bench:label` 在真实子进程中对四种状态各执行三次，保存四类 probe 的原始结果。`bench:prepare` 顺序执行生成与标注。`replay:run` 以关系组为分母计算指标和 Wilson 95% 区间，并分别保存算子族和 detectability 分组。
 
 ```bash
 pnpm --filter @simplercp/conflict-guard build
-pnpm --filter @simplercp/conflict-guard bench:generate --seeds bench/seeds --out bench/datasets/d1-v1 --groups 10 --seed 7
-pnpm --filter @simplercp/conflict-guard bench:label --dataset bench/datasets/d1-v1 --concurrency 2
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --out docs/conflict-guard/evidence/stage-4-dev-report
-pnpm --filter @simplercp/conflict-guard replay:check path/to/trace.jsonl
+pnpm --filter @simplercp/conflict-guard bench:prepare --seeds bench/seeds --out ../../.test-workspaces/stage-4-small --groups 10 --seed 7 --concurrency 2
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --repeat 2 --out ../../docs/conflict-guard/evidence/stage-4-dev-report
+pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/stage-4-live-traces/call-signature.jsonl
+pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../collaboration-tools
 ```
 
-回放结果只使用虚拟时间；JSON 中的 `timing` 字段用于记录运行耗时，去除该字段后同一输入、配置和种子得到相同字节序列。
+回放结果只使用虚拟时间；报告的 `timing` 保存命令行实际耗时。`--repeat` 检查每个变体的逐字节确定性；去掉 timing 后，同一输入、配置和种子产生相同结果。`replay:check` 比较 pairId、revision、规则编号、动作与时间，时间容差为批次空闲阈值；没有录制判定时返回 `checked:false, valid:false`。
 
-真实界面回放需要网络连接，因此命令放在 server 包：`pnpm --filter @simplercp/server replay:ui -- --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2`。它会注册轨迹中的 human 参与者，重置 `doc_open` 文件，通过 `WebsocketProvider` 按虚拟时间间隔发送 Yjs 编辑；浏览器中的第三位成员可以观察幽灵成员输入和阶段 3 干预。
+真实界面回放命令为 `pnpm --filter @simplercp/conflict-guard replay:ui --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2 --hold 15000`，包命令转发到服务端 CLI。它注册 `Replay <memberId>` 成员，重置初始文件，通过真实 presence 与 Yjs 连接发送编辑和光标。最后等待批次判定并保留连接，随后释放连接。第三位成员可以观察输入、冻结与冲突卡片。请使用独立的演示项目执行文件重置。
+
+种子项目、算子与标签定义见 `docs/conflict-guard/benchmark.md`，真实轨迹、界面验收与开发集结果保存在 `docs/conflict-guard/evidence/stage-4-*`。
