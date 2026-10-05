@@ -36,3 +36,30 @@ CONFLICT_GUARD=off SIMPLERCP_FAKE_AGENT_RUNTIME=false pnpm test:e2e tests/e2e/co
 ```
 
 E2E 使用首页的真实导入流程。清单第 4 项结束后，自动验收通过既有 `/conflict-guard/done` 接口结束本轮活跃变更，再执行同符号修改；手工操作可以按表中顺序继续编辑，候选中的符号组合仍然可见。
+
+## 阶段 3
+
+使用 `CONFLICT_GUARD=rules` 启动服务，并按阶段 2 的方式导入 `demo/conflict-shop`。另开共享终端执行 `cat` 查看磁盘文件。每次编辑后停留约 2 秒，等待批次关闭与 state 刷新。
+
+| 编号 | 操作 | 预期 |
+|---|---|---|
+| 1 | Alice 给 `applyDiscount(price, rate)` 增加必填参数，Bob 在 `Cart.total` 中修改调用参数 | 双方相关行出现红色冻结装饰和冲突摘要；页签出现“黑区 · 冻结 · 调用签名不兼容”；磁盘仍是冲突前文件。 |
+| 2 | Bob 在冻结的 `Cart.total` 中输入 | 输入被拦截并提示“该区域已冻结”，冻结区外可以继续编辑。 |
+| 3 | Alice 在冲突卡片中选择撤回并确认 | Alice 本轮文件修改撤回，冻结解除，Bob 的修改可以写入磁盘。 |
+| 4 | 重复第 1 步，双方都选择“双方确认后继续” | 冻结解除，当前 Y.Doc 内容写入磁盘。 |
+| 5 | Alice 只增加 `console.log`，Bob 修改 `checkout` | 条目显示“白区 · 放行 · 只改日志”，不冻结并正常写盘。 |
+| 6 | Alice 改变 `applyDiscount` 的计算方式但不改签名，Bob 修改 `checkout` | 双方收到灰区警告，不冻结并正常写盘。 |
+| 7 | Alice 把 `formatMoney` 改为返回 `number`，Bob 对结果调用 `.toUpperCase()` | 条目显示“合并后才出现的类型错误”，出现冻结与冲突摘要。 |
+| 8 | 两人同时修改 `Cart.total` | 条目显示“两人在改同一个函数”，出现冻结与冲突摘要。 |
+| 9 | 判定后 Bob 在 `checkout` 中开始新批次 | 只有 Bob 收到 T0 提示，内容包含 Alice、`applyDiscount()` 和契约变化。 |
+| 10 | 查看统计 | 显示白区、黑区、灰区数量、本地决定比例、冻结总时长、写盘阻挡次数和卡片操作次数。 |
+
+阶段 3 自动验收证据保存在 [stage-3-manual/README.md](evidence/stage-3-manual/README.md)，包含规则模式的黑区卡片截图与验收结果。
+
+自动验收命令：
+
+```bash
+CONFLICT_GUARD=rules pnpm test:e2e tests/e2e/conflict-guard-intervention.spec.ts
+```
+
+截图保存到 `docs/conflict-guard/evidence/stage-3-manual/`。
