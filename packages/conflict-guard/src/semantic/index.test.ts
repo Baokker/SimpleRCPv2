@@ -50,6 +50,7 @@ describe("TypeScript 语义索引", () => {
       { key: "src/cart.ts#price@3", kind: "function", startLine: 9, endLine: 9 },
       { key: "src/cart.ts#discount", kind: "variable", startLine: 10, endLine: 10 }
     ]);
+    expect(index.symbolsInFile("src/cart.ts").find((symbol) => symbol.key === "src/cart.ts#Cart.total")?.exported).toBe(false);
     const total = files.provider.readFile("src/cart.ts").indexOf("return this.items");
     expect(index.symbolsInRange("src/cart.ts", total, total + 6).map((symbol) => symbol.key)).toEqual(["src/cart.ts#Cart.total"]);
   });
@@ -59,14 +60,14 @@ describe("TypeScript 语义索引", () => {
     const index = createSemanticIndex({ files: files.provider, now: () => performance.now() });
     index.update();
     const edges = files.provider.listFiles().flatMap((file) => index.symbolsInFile(file).flatMap((symbol) => index.outgoing(symbol.key)));
-    expect(new Set(edges.map((edge) => edge.kind))).toEqual(new Set(["call", "value-reference", "type-reference", "inheritance", "implementation", "state-read", "state-write"]));
+    expect(new Set(edges.map((edge) => edge.kind))).toEqual(new Set(["call", "value-reference", "type-reference", "inheritance", "implementation", "state-read", "state-write", "contains", "override", "implements-member"]));
     expect(index.outgoing("src/report.ts#discountedReport")).toContainEqual({ from: "src/report.ts#discountedReport", to: "src/pricing.ts#applyDiscount", kind: "call", via: ["src/index.ts"] });
     expect(index.incoming("src/pricing.ts#applyDiscount")).toContainEqual({ from: "src/cart.ts#Cart.total", to: "src/pricing.ts#applyDiscount", kind: "call", via: [] });
     expect(index.findPaths(["src/checkout.ts#checkout"], ["src/pricing.ts#applyDiscount"], 1)).toEqual([]);
     expect(index.findPaths(["src/checkout.ts#checkout"], ["src/pricing.ts#applyDiscount"], 2)).toEqual([{ from: "src/checkout.ts#checkout", to: "src/pricing.ts#applyDiscount", hops: [
       { from: "src/checkout.ts#checkout", to: "src/cart.ts#Cart.total", kind: "call", direction: "forward" },
       { from: "src/cart.ts#Cart.total", to: "src/pricing.ts#applyDiscount", kind: "call", direction: "forward" }
-    ] }]);
+    ], typeOnly: false }]);
     expect(index.findPaths(["src/pricing.ts#applyDiscount"], ["src/checkout.ts#checkout"])[0]?.hops.map((hop) => hop.direction)).toEqual(["backward", "backward"]);
   });
 
@@ -98,6 +99,16 @@ describe("TypeScript 语义索引", () => {
     index.update(["src/a.ts"]);
     expect(index.symbolsInFile("src/a.ts")).toEqual([]);
     expect(index.symbolsInFile("src/b.ts")[0]?.key).toBe("src/b.ts#b");
+  });
+
+  it("文件删除后增量索引不读取已经不存在的版本", () => {
+    const files = memoryFiles({ "src/a.ts": "export function a() { return 1; }", "src/b.ts": "export function b() { return 2; }" });
+    const index = createSemanticIndex({ files: files.provider, now: () => performance.now() });
+    index.update();
+    files.remove("src/a.ts");
+    expect(() => index.update(["src/a.ts"])).not.toThrow();
+    expect(index.symbolsInFile("src/a.ts")).toEqual([]);
+    expect(index.stats().files).toBe(1);
   });
 
   it("新增文件满足未解析 import，删除及重命名后与全量一致", () => {
@@ -167,5 +178,51 @@ describe("TypeScript 语义索引", () => {
       expect(index.outgoing("c.ts#read")).toEqual(rebuilt.outgoing("c.ts#read"));
       expect(index.outgoing("c.ts#read").some((edge) => edge.to === "base.ts#Base.fresh" && edge.kind === "state-read")).toBe(true);
     }
+  });
+
+  it("随机混合版本变化时增量结果与全量结果一致", () => {
+    for (let seed = 1; seed <= 5; seed += 1) {
+      const files = memoryFiles({
+        "src/a.ts": "export function a() { return 1; }",
+        "src/b.ts": "import { a } from './a'; export function b() { return a(); }",
+        "src/c.ts": "import { b } from './b'; export function c() { return b(); }",
+        "src/d.ts": "export const d = 1;"
+      });
+      const index = createSemanticIndex({ files: files.provider, now: () => performance.now() });
+      index.update();
+      let state = seed;
+      for (let step = 0; step < 12; step += 1) {
+        state = (state * 1664525 + 1013904223) >>> 0;
+        const file = ["src/a.ts", "src/b.ts", "src/c.ts", "src/d.ts"][state % 4]!;
+        const value = state % 10;
+        const source = file === "src/a.ts"
+          ? `export function a() { return ${value}; }`
+          : file === "src/b.ts"
+            ? `import { a } from './a'; export function b() { return a() + ${value}; }`
+            : file === "src/c.ts"
+              ? `import { b } from './b'; export function c() { return b() + ${value}; }`
+              : `export const d = ${value};`;
+        files.set(file, source);
+        index.update(step % 2 === 0 ? [file] : []);
+        const rebuilt = createSemanticIndex({ files: files.provider, now: () => performance.now() });
+        rebuilt.update();
+        for (const currentFile of files.provider.listFiles()) {
+          expect(index.symbolsInFile(currentFile)).toEqual(rebuilt.symbolsInFile(currentFile));
+          for (const symbol of index.symbolsInFile(currentFile)) expect(index.outgoing(symbol.key)).toEqual(rebuilt.outgoing(symbol.key));
+        }
+      }
+    }
+  });
+
+  it("记录三百个文件的全量索引耗时", () => {
+    const sources = Object.fromEntries(Array.from({ length: 300 }, (_, index) => {
+      const previous = index === 0 ? "" : `import { value${index - 1} } from './file-${index - 1}';\n`;
+      return [`src/file-${index}.ts`, `${previous}export const value${index} = ${index}${index === 0 ? "" : ` + value${index - 1}`};\n`];
+    }));
+    const files = memoryFiles(sources);
+    const index = createSemanticIndex({ files: files.provider, now: () => performance.now() });
+    const update = index.update();
+    console.log(JSON.stringify({ semanticSyntheticPerformance: { files: update.files, durationMs: update.durationMs } }));
+    expect(index.stats().files).toBe(300);
   });
 });

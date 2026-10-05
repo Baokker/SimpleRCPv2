@@ -12,7 +12,7 @@ export function collectSymbols(source: ts.SourceFile, file: string): IndexedSymb
   const counts = new Map<string, number>();
   function visit(node: ts.Node, container?: string, exported = false) {
     const declaration = namedDeclaration(node);
-    const isExported = exported || hasModifier(node, ts.SyntaxKind.ExportKeyword) || hasModifier(node, ts.SyntaxKind.DefaultKeyword)
+    const isExported = hasModifier(node, ts.SyntaxKind.ExportKeyword) || hasModifier(node, ts.SyntaxKind.DefaultKeyword)
       || (ts.isVariableDeclaration(node) && hasModifier(node.parent.parent, ts.SyntaxKind.ExportKeyword));
     let nextContainer = container;
     if (declaration) {
@@ -30,7 +30,7 @@ export function collectSymbols(source: ts.SourceFile, file: string): IndexedSymb
     } else if (ts.isModuleDeclaration(node)) {
       nextContainer = container ? `${container}.${node.name.text}` : node.name.text;
     }
-    ts.forEachChild(node, (child) => visit(child, nextContainer, isExported));
+    ts.forEachChild(node, (child) => visit(child, nextContainer, declaration ? false : isExported));
   }
   visit(source);
   return symbols;

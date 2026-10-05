@@ -12,6 +12,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
   let projectVersion = 0;
   let truncated = false;
   const snapshots = new Map<string, { version: string; snapshot: ts.IScriptSnapshot }>();
+  const indexedVersions = new Map<string, string>();
   const symbols = new Map<string, IndexedSymbol[]>();
   const edges = new Map<string, RelationEdge[]>();
   const dependencies = new Map<string, Set<string>>();
@@ -51,6 +52,18 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       const nextFiles = listed.slice(0, options.maxFiles ?? 2_000);
       truncated = listed.length > nextFiles.length;
       const changed = new Set(changedFiles ?? nextFiles);
+      for (const file of files) {
+        if (!nextFiles.includes(file)) {
+          changed.add(file);
+          continue;
+        }
+        const version = String(options.files.version(file));
+        if (indexedVersions.get(file) !== version) changed.add(file);
+      }
+      for (const file of nextFiles) {
+        const version = String(options.files.version(file));
+        if (indexedVersions.get(file) !== version) changed.add(file);
+      }
       for (const file of [...files, ...nextFiles]) if (files.includes(file) !== nextFiles.includes(file)) changed.add(file);
       const affected = new Set(changed);
       for (const [file, fileEdges] of edges) if (fileEdges.some((edge) => changed.has(edge.to.slice(0, edge.to.indexOf("#"))) || edge.via.some((via) => changed.has(via)))) affected.add(file);
@@ -60,7 +73,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       files = nextFiles;
       projectVersion += 1;
       if (topologyChanged) service.cleanupSemanticCache();
-      for (const file of [...symbols.keys()]) if (!files.includes(file)) { symbols.delete(file); edges.delete(file); snapshots.delete(file); dependencies.delete(file); typeDependencies.delete(file); }
+      for (const file of [...symbols.keys()]) if (!files.includes(file)) { symbols.delete(file); edges.delete(file); snapshots.delete(file); dependencies.delete(file); typeDependencies.delete(file); indexedVersions.delete(file); }
       const program = service.getProgram();
       if (!program) throw new Error("Semantic LanguageService 未生成 Program");
       function moduleTargets(source: ts.SourceFile, exportsOnly = false, visited = new Set<string>()): Set<string> {
@@ -104,6 +117,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       }
       const keys = new Set([...symbols.values()].flat().map((symbol) => symbol.key));
       for (const [file, fileEdges] of edges) edges.set(file, fileEdges.filter((edge) => keys.has(edge.from) && keys.has(edge.to)));
+      for (const file of files) indexedVersions.set(file, String(options.files.version(file)));
       return { files: new Set([...symbolFiles, ...affected].filter((file) => files.includes(file))).size, durationMs: options.now() - started, full: changedFiles === undefined };
     },
     symbolsInFile: (file) => (symbols.get(file) ?? []).map(symbolInfo),
@@ -115,14 +129,14 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       const paths: RelationPath[] = [];
       const targets = new Set(toKeys);
       for (const from of [...new Set(fromKeys)].sort()) {
-        const queue: RelationPath[] = [{ from, to: from, hops: [] }];
+        const queue: RelationPath[] = [{ from, to: from, hops: [], typeOnly: true }];
         const visited = new Set([from]);
         for (let cursor = 0; cursor < queue.length; cursor += 1) {
           const path = queue[cursor]!;
           if (targets.has(path.to)) paths.push(path);
           if (path.hops.length >= maxHops) continue;
-          const neighbors = [...outgoing(path.to).map((edge) => ({ from: path.to, to: edge.to, kind: edge.kind, direction: "forward" as const })), ...incoming(path.to).map((edge) => ({ from: path.to, to: edge.from, kind: edge.kind, direction: "backward" as const }))].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
-          for (const hop of neighbors) if (!visited.has(hop.to)) { visited.add(hop.to); queue.push({ from, to: hop.to, hops: [...path.hops, hop] }); }
+          const neighbors = [...outgoing(path.to).filter((edge) => edge.kind !== "contains").map((edge) => ({ from: path.to, to: edge.to, kind: edge.kind, direction: "forward" as const })), ...incoming(path.to).filter((edge) => edge.kind !== "contains").map((edge) => ({ from: path.to, to: edge.from, kind: edge.kind, direction: "backward" as const }))].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+          for (const hop of neighbors) if (!visited.has(hop.to)) { visited.add(hop.to); queue.push({ from, to: hop.to, hops: [...path.hops, hop], typeOnly: path.typeOnly && hop.kind === "type-reference" }); }
         }
       }
       return paths;

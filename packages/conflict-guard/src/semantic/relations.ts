@@ -27,6 +27,8 @@ export function collectTypeDependencies(source: ts.SourceFile, checker: ts.TypeC
 
 export function collectRelations(source: ts.SourceFile, checker: ts.TypeChecker, symbolsByNode: Map<ts.Node, IndexedSymbol>): RelationEdge[] {
   const edges = new Map<string, RelationEdge>();
+  const allSymbols = [...symbolsByNode.values()].filter((symbol) => symbol.file === relativeFile(source.fileName));
+  const addEdge = (edge: RelationEdge) => edges.set(JSON.stringify([edge.from, edge.to, edge.kind]), edge);
   function visit(node: ts.Node) {
     if (ts.isIdentifier(node) && !isDeclarationName(node)) {
       const from = containingSymbol(node, symbolsByNode);
@@ -40,12 +42,42 @@ export function collectRelations(source: ts.SourceFile, checker: ts.TypeChecker,
         const to = symbolsByNode.get(declaration) ?? (ts.isEnumMember(declaration) ? symbolsByNode.get(declaration.parent) : undefined);
         if (!to || to.key === from.key) continue;
         const edge: RelationEdge = { from: from.key, to: to.key, kind: classifyRelation(node, declaration), via: [...new Set(resolved.via)].filter((file) => file !== from.file && file !== to.file) };
-        edges.set(JSON.stringify([edge.from, edge.to, edge.kind]), edge);
+        addEdge(edge);
       }
     }
     ts.forEachChild(node, visit);
   }
   visit(source);
+  const byContainer = new Map<string, IndexedSymbol>();
+  for (const symbol of allSymbols) byContainer.set(symbol.key, symbol);
+  for (const member of allSymbols) {
+    if (!member.container) continue;
+    const container = byContainer.get(`${member.file}#${member.container}`);
+    if (!container || container.kind !== "class") continue;
+    addEdge({ from: container.key, to: member.key, kind: "contains", via: [] });
+    if (!ts.isMethodDeclaration(member.node) && !ts.isGetAccessorDeclaration(member.node) && !ts.isSetAccessorDeclaration(member.node)) continue;
+    const classNode = member.node.parent;
+    if (!ts.isClassDeclaration(classNode) && !ts.isClassExpression(classNode)) continue;
+    const classType = checker.getTypeAtLocation(classNode) as ts.InterfaceType;
+    for (const baseType of checker.getBaseTypes(classType) ?? []) {
+      const baseMember = checker.getPropertyOfType(baseType, member.name);
+      for (const declaration of baseMember?.declarations ?? []) {
+        const target = symbolsByNode.get(declaration);
+        if (target) addEdge({ from: member.key, to: target.key, kind: "override", via: [] });
+      }
+    }
+    for (const heritage of classNode.heritageClauses ?? []) {
+      if (heritage.token !== ts.SyntaxKind.ImplementsKeyword) continue;
+      for (const typeNode of heritage.types) {
+        const interfaceType = checker.getTypeAtLocation(typeNode);
+        const interfaceMember = checker.getPropertyOfType(interfaceType, member.name);
+        for (const declaration of interfaceMember?.declarations ?? []) {
+          const target = symbolsByNode.get(declaration);
+          if (target) addEdge({ from: member.key, to: target.key, kind: "implements-member", via: [] });
+        }
+      }
+    }
+  }
   return [...edges.values()].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 }
 

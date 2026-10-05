@@ -15,6 +15,22 @@ describe("trace replay", () => {
     expect(validateTrace(events)).toBe(true);
     expect(() => validateTrace([events[0]!, events[1]!, { ...events[3]!, seq: 3 }])).toThrow("已经打开");
   });
+
+  it("接受同一类不同成员的距离零候选", () => {
+    const pair = {
+      id: "nested",
+      left: { actor: { kind: "human", memberId: "alice" }, symbol: "src/cart.ts#Cart" },
+      right: { actor: { kind: "human", memberId: "bob" }, symbol: "src/cart.ts#Cart.total" },
+      distance: 0,
+      path: null
+    };
+    const events = [
+      { schema: 2 as const, seq: 1, at: 0, type: "session_start" },
+      { schema: 2 as const, seq: 2, at: 1, type: "pair_candidate_opened", pair },
+      { schema: 2 as const, seq: 3, at: 2, type: "pair_candidate_closed", pair }
+    ];
+    expect(validateTraceDetailed(events)).toMatchObject({ valid: true });
+  });
   it("keeps document, batch and redaction state across session boundaries", () => {
     const hash = (value: string) => createHash("sha256").update(value).digest("hex");
     const events = [

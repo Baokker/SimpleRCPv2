@@ -49,6 +49,7 @@ export interface EditBatch {
   ranges: TrackedRange[];
   textBefore: string;
   textAfter: string;
+  deletionEdits?: Array<Pick<TextEdit, "file" | "ops" | "textBefore" | "textAfter">>;
 }
 
 export interface ActiveChangeSet {

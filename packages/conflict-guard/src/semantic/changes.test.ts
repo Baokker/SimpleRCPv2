@@ -39,4 +39,18 @@ describe("符号级变更", () => {
     index.update();
     expect(mapSymbolChanges({ file: edit.file, baseText: text, ranges: [{ start: 0, end: 0 }], firstTouchedAt: 0, lastTouchedAt: 0, deletedSymbolKeys: ["readme.md#hello"] }, "", index)).toEqual([]);
   });
+
+  it("追加字符改名时同时记录新增键与旧键删除", () => {
+    const baseText = "export function applyDiscount() { return 1; }\n";
+    const after = "export function applyDiscountV2() { return 1; }\n";
+    const file = "src/pricing.ts";
+    const index = createSemanticIndex({ files: { listFiles: () => [file], readFile: () => after, version: () => 1 }, now: () => performance.now() });
+    index.update();
+    const nameEnd = baseText.indexOf("applyDiscount") + "applyDiscount".length;
+    const change: FileChange = { file, baseText, ranges: [{ start: nameEnd, end: nameEnd + 2 }], firstTouchedAt: 0, lastTouchedAt: 1 };
+    expect(mapSymbolChanges(change, after, index).map(({ key, status }) => ({ key, status }))).toEqual([
+      { key: "src/pricing.ts#applyDiscountV2", status: "added" },
+      { key: "src/pricing.ts#applyDiscount", status: "deleted" }
+    ]);
+  });
 });

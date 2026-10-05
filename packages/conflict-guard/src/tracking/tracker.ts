@@ -103,7 +103,6 @@ export class ConflictGuardTracker {
         change.ranges = mergeRanges([...change.ranges, ...rangesForOps(edit.ops)]);
         change.lastTouchedAt = edit.at;
       }
-      change.deletedSymbolKeys = [...new Set([...(change.deletedSymbolKeys ?? []), ...deletedSymbolKeys(edit)])];
       if (created) this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(activeState.changeSet) });
       this.resetActiveTimer(actorKey, edit.file);
 
@@ -112,6 +111,7 @@ export class ConflictGuardTracker {
         existing.batch.ranges = mergeRanges([...existing.batch.ranges, ...rangesForOps(edit.ops)]);
         existing.batch.endedAt = edit.at;
         existing.batch.textAfter = edit.textAfter;
+        if (edit.ops.some((op) => op.deleted.length > 0)) existing.batch.deletionEdits = [...(existing.batch.deletionEdits ?? []), { file: edit.file, ops: edit.ops, textBefore: edit.textBefore, textAfter: edit.textAfter }];
         this.resetBatchTimers(edit.file, actorKey);
       } else {
         const batch: EditBatch = {
@@ -123,7 +123,8 @@ export class ConflictGuardTracker {
           closeReason: "flush",
           ranges: mergeRanges(rangesForOps(edit.ops)),
           textBefore: edit.textBefore,
-          textAfter: edit.textAfter
+          textAfter: edit.textAfter,
+          ...(edit.ops.some((op) => op.deleted.length > 0) ? { deletionEdits: [{ file: edit.file, ops: edit.ops, textBefore: edit.textBefore, textAfter: edit.textAfter }] } : {})
         };
         state.batches.set(actorKey, { batch });
         this.emit({ type: "batch_opened", batch: snapshotBatch(batch) });
@@ -210,9 +211,13 @@ export class ConflictGuardTracker {
     if (current.idleTimer !== undefined) this.options.clock.clearTimeout(current.idleTimer);
     if (current.maxTimer !== undefined) this.options.clock.clearTimeout(current.maxTimer);
     state.batches.delete(key);
-    const batch = { ...current.batch, endedAt: this.options.clock.now(), closeReason: reason, textAfter: state.text, ranges: current.batch.ranges.map((range) => ({ ...range })) };
-    this.emit({ type: "batch_closed", batch });
+    const batch: EditBatch = { ...current.batch, endedAt: this.options.clock.now(), closeReason: reason, textAfter: state.text, ranges: current.batch.ranges.map((range) => ({ ...range })) };
     const activeState = this.active.get(key);
+    const change = activeState?.changeSet.files.get(file);
+    if (change && batch.deletionEdits?.length) {
+      change.deletedSymbolKeys = [...new Set([...(change.deletedSymbolKeys ?? []), ...batch.deletionEdits.flatMap((deletion) => deletedSymbolKeys({ ...deletion, origin: batch.actor, at: batch.endedAt, revisionAfter: 0 }))])];
+    }
+    this.emit({ type: "batch_closed", batch });
     if (activeState && ![...this.files.values()].some((candidate) => [...candidate.batches.values()].some((item) => actorKeyOf(item.batch.actor) === key))) activeState.changeSet.status = "settled";
   }
 

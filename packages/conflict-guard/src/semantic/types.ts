@@ -17,19 +17,21 @@ export interface SymbolInfo {
   exported: boolean;
 }
 
-export type RelationKind = "call" | "value-reference" | "type-reference" | "inheritance" | "implementation" | "state-read" | "state-write";
+export type RelationKind = "call" | "value-reference" | "type-reference" | "inheritance" | "implementation" | "state-read" | "state-write" | "contains" | "override" | "implements-member";
 
 export interface RelationEdge {
   from: string;
   to: string;
   kind: RelationKind;
   via: string[];
+  stale?: boolean;
 }
 
 export interface RelationPath {
   from: string;
   to: string;
   hops: Array<{ from: string; to: string; kind: RelationKind; direction: "forward" | "backward" }>;
+  typeOnly: boolean;
 }
 
 export interface UpdateStats { files: number; durationMs: number; full: boolean }

@@ -20,12 +20,12 @@
 
 符号键使用 `相对路径#容器.名字`，例如 `src/cart.ts#Cart.total`。同容器重名按声明顺序加 `@2`、`@3`，包含重载及 getter/setter。函数、类、方法、属性、accessor、接口、类型别名、枚举与模块变量都有字符范围与从 1 开始的行号。`symbolsInRange` 取范围内最内层声明。
 
-`outgoing`、`incoming` 支持双向关系查询。关系种类为 `call`、`value-reference`、`type-reference`、`inheritance`、`implementation`、`state-read`、`state-write`，`via` 保存经过的重导出文件。`findPaths(fromKeys, toKeys, maxHops = 2)` 对每个符号组合返回一条最短路径，每一跳记录种类与方向；同符号返回零跳路径。
+`outgoing`、`incoming` 支持双向关系查询。关系种类为 `call`、`value-reference`、`type-reference`、`inheritance`、`implementation`、`state-read`、`state-write`、`contains`、`override`、`implements-member`，`via` 保存经过的重导出文件。`contains` 用于类与成员的直接嵌套关系，路径搜索默认跳过它；类与成员分别修改时由候选层按距离 0 处理。`findPaths(fromKeys, toKeys, maxHops = 2)` 对每个符号组合返回一条最短路径，每一跳记录种类与方向，并设置 `typeOnly` 表示所有跳都是类型关系；同符号返回零跳路径。
 
 ## 符号变更与候选对
 
-`mapSymbolChanges` 使用成员首次修改文件时的 `baseText` 和本人活跃范围，生成 `modified`、`added`、`deleted` 的 before/after。基线仅由 `ts.createSourceFile` 解析。删除归属要求本人的删除操作覆盖声明名称，文本相同的符号不参与候选生成。
+`mapSymbolChanges` 使用成员首次修改文件时的 `baseText` 和本人活跃范围，生成 `modified`、`added`、`deleted` 的 before/after。基线仅由 `ts.createSourceFile` 解析。批次关闭时才解析删除操作；改名时按本批次新旧符号集合补充旧键的 `deleted` 状态。文本相同的符号不参与候选生成。
 
 `SemanticChangeTracker.update(changeSets, closedBatches)` 更新符号及候选对。两位人类成员的符号在两跳内有关联时，按成员与符号键生成稳定 SHA-256 编号。距离 0 的 `path` 为 `null`，其他距离保留路径。符号文本、状态或路径变化更新候选，活跃符号结束或关系消失关闭候选。`getCandidatePairs()` 按更新时间倒序返回当前候选，`onEvent()` 发出 `change_unit` 和 `pair_candidate_opened/updated/closed`，供后续规则处理使用。
 
-一个包含有效符号变化的人类关闭批次计为一个变更单元。`statistics()` 的 `total` 是会话累计单元数，`related` 是曾经形成候选的单元数，`unrelated` 为两者之差，`unrelatedRatio` 为比例。恢复为基线且没有符号净变化的批次不产生 `change_unit`。统计随候选生成更新，已登记关联的单元保持关联记录。
+一个包含有效符号变化的人类关闭批次计为一个变更单元，单元只使用该批次的范围和文本；候选对仍使用成员当前活跃变更中的累计符号。`statistics()` 的 `total` 是会话累计单元数，`related` 是曾经形成候选的单元数，`unrelated` 为两者之差，`unrelatedRatio` 为比例，`typeOnly` 是当前仅类型关系候选数量。恢复为基线且没有符号净变化的批次不产生 `change_unit`。删除或改名符号的旧关系在活跃变更集期间保留为 `stale` 边。

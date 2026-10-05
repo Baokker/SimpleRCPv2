@@ -1,5 +1,5 @@
 import type { FileChange, TextEdit } from "../model/types.js";
-import type { SemanticIndex } from "./types.js";
+import type { SemanticIndex, SymbolInfo } from "./types.js";
 import { parseSymbols } from "./symbols.js";
 import { isSemanticFile } from "./index.js";
 
@@ -7,6 +7,8 @@ export interface SymbolChange {
   key: string;
   file: string;
   name: string;
+  kind: SymbolInfo["kind"];
+  container?: string;
   status: "modified" | "added" | "deleted";
   before: string;
   after: string;
@@ -34,10 +36,20 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
     const before = previous ? change.baseText.slice(previous.start, previous.end) : "";
     const after = text.slice(symbol.start, symbol.end);
     if (before === after) continue;
-    changes.push({ key: symbol.key, file: change.file, name: symbol.name, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt });
+    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt });
   }
-  for (const symbol of baseline) if (!currentKeys.has(symbol.key) && change.deletedSymbolKeys?.includes(symbol.key)) {
-    changes.push({ key: symbol.key, file: change.file, name: symbol.name, status: "deleted", before: change.baseText.slice(symbol.start, symbol.end), after: "", startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt });
+  const touchedBase = baseline.filter((symbol) => change.ranges.some((range) => range.start <= symbol.end && symbol.start <= range.end));
+  const addedTouched = [...touched.values()].filter((symbol) => !baselineByKey.has(symbol.key));
+  const renamedBaselineKeys = new Set(addedTouched.flatMap((added) => {
+    const currentSiblings = current.filter((candidate) => candidate.container === added.container && candidate.kind === added.kind);
+    const baselineSiblings = baseline.filter((candidate) => candidate.container === added.container && candidate.kind === added.kind);
+    const slot = currentSiblings.findIndex((candidate) => candidate.key === added.key);
+    const candidate = slot >= 0 ? baselineSiblings[slot] : undefined;
+    return candidate && !currentKeys.has(candidate.key) ? [candidate.key] : [];
+  }));
+  const deletedCandidates = [...new Map([...touchedBase, ...baseline.filter((symbol) => renamedBaselineKeys.has(symbol.key))].map((symbol) => [symbol.key, symbol])).values()];
+  for (const symbol of deletedCandidates) if (!currentKeys.has(symbol.key) && (change.deletedSymbolKeys?.includes(symbol.key) || renamedBaselineKeys.has(symbol.key) || addedTouched.some((added) => added.start <= symbol.end && symbol.start <= added.end))) {
+    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, status: "deleted", before: change.baseText.slice(symbol.start, symbol.end), after: "", startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt });
   }
   return changes;
 }

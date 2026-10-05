@@ -108,7 +108,9 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       const pair = event.pair as { id?: string; left?: { actor?: unknown; symbol?: string }; right?: { actor?: unknown; symbol?: string }; distance?: number; path?: { hops?: unknown[] } | null } | undefined;
       if (event.schema !== 2 || !pair?.id || !pair.left?.symbol || !pair.right?.symbol || ![0, 1, 2].includes(pair.distance ?? -1)) throw new Error("候选对字段不完整");
       if (actorKey(pair.left.actor) === actorKey(pair.right.actor)) throw new Error("候选对两侧参与者相同");
-      if (pair.distance === 0 ? pair.path !== null || pair.left.symbol !== pair.right.symbol : pair.path?.hops?.length !== pair.distance) throw new Error("候选对路径无效");
+      if (pair.distance === 0
+        ? pair.path !== null || (pair.left.symbol !== pair.right.symbol && !isNestedSymbolPair(pair.left.symbol, pair.right.symbol))
+        : pair.path?.hops?.length !== pair.distance) throw new Error("候选对路径无效");
       if (event.type === "pair_candidate_opened") {
         if (candidatePairs.has(pair.id)) throw new Error("候选对已经打开");
         candidatePairs.add(pair.id);
@@ -135,6 +137,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       if (typeof event.memberId !== "string" || typeof event.file !== "string" || !event.position) throw new Error("cursor is incomplete");
       continue;
     }
+    if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }
   if (!hasSession) throw new Error("Trace has no session_start");
@@ -173,6 +176,13 @@ function actorKey(actor: unknown) {
   if (value.kind === "filesystem") return "filesystem";
   if (value.kind === "unknown") return "unknown";
   throw new Error("Trace actor is invalid");
+}
+
+function isNestedSymbolPair(left: string, right: string) {
+  const [leftFile, leftPath] = left.split("#");
+  const [rightFile, rightPath] = right.split("#");
+  if (!leftFile || leftFile !== rightFile || !leftPath || !rightPath) return false;
+  return leftPath.startsWith(`${rightPath}.`) || rightPath.startsWith(`${leftPath}.`);
 }
 
 function redact(value: unknown, sensitiveValues: string[]): unknown {

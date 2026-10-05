@@ -26,7 +26,7 @@ describe("候选对", () => {
     version += 1;
     index.update(["a.ts"]);
     tracker.update([set("alice", nextBaseline, 2), set("bob", "export function a() { return 3; }", 3)], [{ batch: batch("second", "alice", nextBaseline) }, { batch: batch("third", "bob", "export function a() { return 3; }") }]);
-    expect(tracker.statistics()).toEqual({ total: 3, related: 2, unrelated: 1, unrelatedRatio: 1 / 3 });
+    expect(tracker.statistics()).toEqual({ total: 3, related: 2, unrelated: 1, unrelatedRatio: 1 / 3, typeOnly: 0 });
     expect(events.filter((event) => event.type === "change_unit")).toHaveLength(3);
     tracker.update([]);
     expect(tracker.statistics().related).toBe(2);
@@ -79,5 +79,55 @@ describe("候选对", () => {
     tracker.update([changeSet("alice", "a")]);
     expect(tracker.getCandidatePairs()).toEqual([]);
     expect(events.at(-1)?.type).toBe("pair_candidate_closed");
+  });
+
+  it("删除符号后使用活跃变更期间的墓碑关系", () => {
+    const baseline = "export function target() { return 1; }\nexport function caller() { return target(); }\n";
+    let source = baseline;
+    let version = 1;
+    const index = createSemanticIndex({ files: { listFiles: () => ["a.ts"], readFile: () => source, version: () => version }, now: () => performance.now() });
+    index.update();
+    const tracker = new SemanticChangeTracker({ index, readFile: () => source, now: () => version });
+    const targetStart = baseline.indexOf("export function target");
+    const callerStart = baseline.indexOf("export function caller");
+    const active = (memberId: string, start: number, end: number, deletedSymbolKeys?: string[]): ActiveChangeSet => ({
+      actor: { kind: "human", memberId },
+      status: "settled",
+      files: new Map([["a.ts", { file: "a.ts", baseText: baseline, ranges: [{ start, end }], firstTouchedAt: 0, lastTouchedAt: 1, deletedSymbolKeys }]])
+    });
+    tracker.update([active("alice", targetStart, targetStart), active("bob", callerStart, baseline.length)]);
+    source = "export function caller() { return removedTarget(); }\n";
+    version += 1;
+    tracker.captureStaleEdges();
+    index.update(["a.ts"]);
+    tracker.update([
+      active("alice", targetStart, targetStart, ["a.ts#target"]),
+      active("bob", 0, source.length)
+    ]);
+    expect(tracker.getCandidatePairs()).toEqual(expect.arrayContaining([expect.objectContaining({ distance: 1, left: expect.objectContaining({ symbol: "a.ts#target", status: "deleted" }) })]));
+    expect(index.incoming("a.ts#target")).toEqual([]);
+  });
+
+  it("首次删除变更在索引更新前保存旧关系", () => {
+    const baseline = "export function target() { return 1; }\nexport function caller() { return target(); }\n";
+    let source = baseline;
+    let version = 1;
+    const index = createSemanticIndex({ files: { listFiles: () => ["a.ts"], readFile: () => source, version: () => version }, now: () => performance.now() });
+    index.update();
+    const tracker = new SemanticChangeTracker({ index, readFile: () => source, now: () => version });
+    const targetStart = baseline.indexOf("export function target");
+    const callerStart = baseline.indexOf("export function caller");
+    const active: ActiveChangeSet[] = [
+      { actor: { kind: "human", memberId: "alice" }, status: "settled", files: new Map([["a.ts", { file: "a.ts", baseText: baseline, ranges: [{ start: targetStart, end: targetStart }], firstTouchedAt: 0, lastTouchedAt: 1, deletedSymbolKeys: ["a.ts#target"] }]]) },
+      { actor: { kind: "human", memberId: "bob" }, status: "settled", files: new Map([["a.ts", { file: "a.ts", baseText: baseline, ranges: [{ start: callerStart, end: baseline.length }], firstTouchedAt: 0, lastTouchedAt: 1 }]]) }
+    ];
+    source = "export function caller() { return removedTarget(); }\n";
+    version += 1;
+    tracker.captureStaleEdges(active);
+    index.update(["a.ts"]);
+    tracker.update(active);
+    expect(tracker.getCandidatePairs()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ distance: 1, left: expect.objectContaining({ symbol: "a.ts#target", status: "deleted" }) })
+    ]));
   });
 });
