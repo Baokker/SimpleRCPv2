@@ -1,6 +1,6 @@
 # 阶段 2 检查记录
 
-仓库基线 `a04580a`，实现提交为 `b6dffc3`（demo）、`8a22d05`（conflict-guard）、`fcc6da8`（server）、`e05042d`（client 与 E2E），分支 `feature/conflict-guard`。环境为 macOS、Node.js `v24.7.0`、pnpm `9.0.0`。所有命令从仓库目录执行，输出完整保存到本目录。
+这里保留阶段 2 首次交付的原始输出。首次交付基线为 `a04580a`，实现提交为 `b6dffc3`（demo）、`8a22d05`（conflict-guard）、`fcc6da8`（server）、`e05042d`（client 与 E2E）。第二轮修复基于 `36c3ba7`，最新测试结果见阶段 2 报告和 `review-fix-round2.md`。环境为 macOS、Node.js `v24.7.0`、pnpm `9.0.0`。
 
 | 原始输出 | 命令 | 结果 |
 |---|---|---|

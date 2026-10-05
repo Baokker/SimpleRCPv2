@@ -14,8 +14,8 @@
 | A4 | `recordAgentOverlaps` 只查询真实重叠集合；`getCompletedOverlapGroup` 在关联的全部 run 结束后清理台账 | `agentConcurrency.test.ts`：`records overlap only for runs that actually overlap`；`agentRunSelection.test.ts`：`retains a chain of overlapping ledgers until all connected runs finish` |
 | 1.2.1 | `getDiff` 省略 `messageID`；核实脚本使用仓库中已忽略的独立目录，finally 释放 runtime | `stage-0-session-diff.json` 四次返回空数组；session 隔离语义仍缺少运行证据，结果作为候选文件使用 |
 | 1.2.2 | `prepareWorkspace` 完成后释放初始化资格并调度 | `agentConcurrency.test.ts`：`releases workspace preparation before the team run finishes` |
-| 1.2.3 | `ensureCurrentProcess` 使用共享 Promise，创建新进程前更新 `processModel`，错误直接传播 | `agentConcurrency.test.ts`：`records the updated model on a run created after a switch`；真实场景 `crossProjectModelChange` |
-| 1.2.4 | 文件已经删除或移动时记录 null hash；其他读取与 listener 错误直接传播 | `agentWriteLedger.test.ts`：`records completed apply_patch metadata for update, add, delete and Move to operations`；检查 `subscribe` 和文件读取路径 |
+| 1.2.3 | `ensureCurrentProcess` 使用共享 Promise，进程切换成功后更新 `processModel`，失败时保留旧模型并等待空闲重试 | `agentConcurrency.test.ts`：`records the updated model on a run created after a switch`；真实场景 `crossProjectModelChange` |
+| 1.2.4 | 文件已经删除或移动时记录 null hash；文件读取与 listener 错误进入隔离记录 | `agentWriteLedger.test.ts`：`records completed apply_patch metadata for update, add, delete and Move to operations`；检查 `subscribe` 和文件读取路径 |
 | 1.2.5 | `agentScheduler.ts` 的 `rescanRequested` 保留调度中的重新扫描请求 | 检查调度循环；`agentConcurrency.test.ts`：`starts two sessions and fills the next slot when one finishes` |
 | 1.2.6 | `executeRun` 重读状态，`cancelRequested` 覆盖 runtime 激活前取消 | 检查激活前后状态与集合；`agentConcurrency.test.ts`：`cancels one active run while the other completes` |
 | 1.2.7 | 项目与服务 `closing` 标志阻止调度继续；关闭时清理台账与重叠集合 | 检查 `disposeProject`、`dispose` 和 scheduler finally；真实验收脚本完成服务资源释放并退出 |
@@ -32,7 +32,7 @@
 | --- | --- | --- |
 | B1 | 精确敏感值脱敏；敏感文件跳过；首次 edit 脱敏登记文件，后续事件与重启持续带有标记 | `trace.test.ts`：`keeps ordinary code intact and reports redacted files separately`、`reports a file first redacted during an edit`、`reports sensitive documents as skipped`；集成测试 `marks character-by-character configured value edits as redacted` |
 | B2 | `createApp` 只在启用观察时读取 Git 提交；off 或缺少 conflictGuard 配置时跳过 | `conflictGuardOff.test.ts`：`does not create trace state or require a new feature when disabled`，通过 `loadConfig` 与实际不可用的 Git 环境启动 |
-| B3 | resync 更新 tracker 与镜像，关闭已有批次和活跃范围，轨迹登记全文；observer 与写入错误直接传播 | `tracker.test.ts`：`closes existing batches when a document receives a new replay baseline`；`trace.test.ts`：`replays a mirror resynchronization`；集成测试 `tracks two members and filesystem replay without changing collaboration` |
+| B3 | resync 使用 filesystem 编辑操作更新 tracker 与镜像，保留已有批次和活跃范围并登记轨迹；observer 与写入错误进入降级状态 | `tracker.test.ts`：`tracks range transformations for filesystem edits`；`trace.test.ts`：`replays a mirror resynchronization`；集成测试 `tracks two members and filesystem replay without changing collaboration` |
 | 2.2.1 | `session_start` 保留跨会话状态 | `trace.test.ts`：`keeps document, batch and redaction state across session boundaries`；集成测试 `continues validating the trace after a service restart` |
 | 2.2.2 | 首个文件加入后发出 `change_set_opened`；空闲或停用时发出 `change_set_file_closed` | `tracker.test.ts`：`aggregates one actor across files and closes each file after active idle` |
 | 2.2.3 | tracker 保存每名成员最新光标，state 返回 cursors | 集成测试 `saves the latest cursor window through ws and broadcasts messages with missing fields`；双浏览器 `browser-state.json` |

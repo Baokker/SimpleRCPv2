@@ -1,15 +1,18 @@
 {
   "relatedState": {
     "mode": "observe",
-    "version": 3,
+    "version": 7,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
     "index": {
       "files": 6,
       "symbols": 22,
-      "edges": 21,
+      "edges": 28,
       "truncated": false,
       "latestUpdate": {
         "files": 1,
-        "durationMs": 11.823249999999462,
+        "durationMs": 9.981540999999197,
         "full": false
       }
     },
@@ -17,7 +20,7 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "status": "settled",
         "files": [
@@ -29,15 +32,15 @@
                 "end": 169
               }
             ],
-            "firstTouchedAt": 1791143430821,
-            "lastTouchedAt": 1791143430821
+            "firstTouchedAt": 1791185093606,
+            "lastTouchedAt": 1791185093606
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "status": "settled",
         "files": [
@@ -49,8 +52,8 @@
                 "end": 164
               }
             ],
-            "firstTouchedAt": 1791143433367,
-            "lastTouchedAt": 1791143433367
+            "firstTouchedAt": 1791185096107,
+            "lastTouchedAt": 1791185096107
           }
         ]
       }
@@ -59,45 +62,47 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "symbols": [
           {
             "key": "src/pricing.ts#applyDiscount",
             "file": "src/pricing.ts",
             "name": "applyDiscount",
+            "kind": "function",
             "status": "modified",
             "startLine": 3,
             "endLine": 5,
-            "lastTouchedAt": 1791143430821
+            "lastTouchedAt": 1791185093606
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "symbols": [
           {
             "key": "src/checkout.ts#checkout",
             "file": "src/checkout.ts",
             "name": "checkout",
+            "kind": "function",
             "status": "modified",
             "startLine": 4,
             "endLine": 6,
-            "lastTouchedAt": 1791143433367
+            "lastTouchedAt": 1791185096107
           }
         ]
       }
     ],
     "candidatePairs": [
       {
-        "id": "6deee5695d624338874b4c59d9619bd40a2b17009422ab8faf5b5b1e8a7ed851",
+        "id": "a9c779b84e7b0e430809a81e865c2a46b00bbb9e645104ded99e41ed09d74585",
         "left": {
           "actor": {
             "kind": "human",
-            "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+            "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
           },
           "symbol": "src/pricing.ts#applyDiscount",
           "status": "modified"
@@ -105,7 +110,7 @@
         "right": {
           "actor": {
             "kind": "human",
-            "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+            "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
           },
           "symbol": "src/checkout.ts#checkout",
           "status": "modified"
@@ -127,31 +132,36 @@
               "kind": "call",
               "direction": "backward"
             }
-          ]
+          ],
+          "typeOnly": false
         },
-        "firstSeenAt": 1791143434913,
-        "updatedAt": 1791143434913
+        "firstSeenAt": 1791185097654,
+        "updatedAt": 1791185097654
       }
     ],
     "statistics": {
       "total": 2,
       "related": 2,
       "unrelated": 0,
-      "unrelatedRatio": 0
+      "unrelatedRatio": 0,
+      "typeOnly": 0
     },
     "cursors": []
   },
   "unrelatedState": {
     "mode": "observe",
-    "version": 6,
+    "version": 11,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
     "index": {
       "files": 6,
       "symbols": 22,
-      "edges": 21,
+      "edges": 28,
       "truncated": false,
       "latestUpdate": {
         "files": 1,
-        "durationMs": 5.180000000000291,
+        "durationMs": 3.485458999999537,
         "full": false
       }
     },
@@ -159,7 +169,7 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "status": "settled",
         "files": [
@@ -171,15 +181,15 @@
                 "end": 169
               }
             ],
-            "firstTouchedAt": 1791143430821,
-            "lastTouchedAt": 1791143430821
+            "firstTouchedAt": 1791185093606,
+            "lastTouchedAt": 1791185093606
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "status": "settled",
         "files": [
@@ -191,8 +201,8 @@
                 "end": 160
               }
             ],
-            "firstTouchedAt": 1791143433367,
-            "lastTouchedAt": 1791143435693
+            "firstTouchedAt": 1791185096107,
+            "lastTouchedAt": 1791185098919
           },
           {
             "file": "src/report.ts",
@@ -202,8 +212,8 @@
                 "end": 204
               }
             ],
-            "firstTouchedAt": 1791143438576,
-            "lastTouchedAt": 1791143438576
+            "firstTouchedAt": 1791185101293,
+            "lastTouchedAt": 1791185101293
           }
         ]
       }
@@ -212,34 +222,36 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "symbols": [
           {
             "key": "src/pricing.ts#applyDiscount",
             "file": "src/pricing.ts",
             "name": "applyDiscount",
+            "kind": "function",
             "status": "modified",
             "startLine": 3,
             "endLine": 5,
-            "lastTouchedAt": 1791143430821
+            "lastTouchedAt": 1791185093606
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "symbols": [
           {
             "key": "src/report.ts#reportTime",
             "file": "src/report.ts",
             "name": "reportTime",
+            "kind": "function",
             "status": "modified",
             "startLine": 7,
             "endLine": 9,
-            "lastTouchedAt": 1791143438576
+            "lastTouchedAt": 1791185101293
           }
         ]
       }
@@ -249,21 +261,25 @@
       "total": 3,
       "related": 2,
       "unrelated": 1,
-      "unrelatedRatio": 0.3333333333333333
+      "unrelatedRatio": 0.3333333333333333,
+      "typeOnly": 0
     },
     "cursors": []
   },
   "sameSymbolState": {
     "mode": "observe",
-    "version": 10,
+    "version": 17,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
     "index": {
       "files": 6,
       "symbols": 22,
-      "edges": 21,
+      "edges": 28,
       "truncated": false,
       "latestUpdate": {
         "files": 3,
-        "durationMs": 2.0979580000002898,
+        "durationMs": 1.8409580000006827,
         "full": false
       }
     },
@@ -271,7 +287,7 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "status": "settled",
         "files": [
@@ -283,15 +299,15 @@
                 "end": 363
               }
             ],
-            "firstTouchedAt": 1791143440444,
-            "lastTouchedAt": 1791143440444
+            "firstTouchedAt": 1791185103182,
+            "lastTouchedAt": 1791185103182
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "status": "settled",
         "files": [
@@ -303,8 +319,8 @@
                 "end": 251
               }
             ],
-            "firstTouchedAt": 1791143440460,
-            "lastTouchedAt": 1791143440460
+            "firstTouchedAt": 1791185103198,
+            "lastTouchedAt": 1791185103198
           }
         ]
       }
@@ -313,45 +329,49 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "symbols": [
           {
             "key": "src/cart.ts#Cart.total",
             "file": "src/cart.ts",
             "name": "total",
+            "kind": "method",
+            "container": "Cart",
             "status": "modified",
             "startLine": 11,
             "endLine": 15,
-            "lastTouchedAt": 1791143440444
+            "lastTouchedAt": 1791185103182
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "symbols": [
           {
             "key": "src/cart.ts#Cart.total",
             "file": "src/cart.ts",
             "name": "total",
+            "kind": "method",
+            "container": "Cart",
             "status": "modified",
             "startLine": 11,
             "endLine": 15,
-            "lastTouchedAt": 1791143440460
+            "lastTouchedAt": 1791185103198
           }
         ]
       }
     ],
     "candidatePairs": [
       {
-        "id": "6d6f6a431b61996d6f842bb4e3f35cd1041a3e5350415c77251e29e378e6777a",
+        "id": "11c6fc4611142d0995f57b2dcea01cd2664133071573ec7e8768e9ea8fb3acc7",
         "left": {
           "actor": {
             "kind": "human",
-            "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+            "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
           },
           "symbol": "src/cart.ts#Cart.total",
           "status": "modified"
@@ -359,36 +379,40 @@
         "right": {
           "actor": {
             "kind": "human",
-            "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+            "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
           },
           "symbol": "src/cart.ts#Cart.total",
           "status": "modified"
         },
         "distance": 0,
         "path": null,
-        "firstSeenAt": 1791143440509,
-        "updatedAt": 1791143440509
+        "firstSeenAt": 1791185103245,
+        "updatedAt": 1791185103245
       }
     ],
     "statistics": {
       "total": 5,
       "related": 4,
       "unrelated": 1,
-      "unrelatedRatio": 0.2
+      "unrelatedRatio": 0.2,
+      "typeOnly": 0
     },
     "cursors": []
   },
   "navigationState": {
     "mode": "observe",
-    "version": 10,
+    "version": 19,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
     "index": {
       "files": 6,
       "symbols": 22,
-      "edges": 21,
+      "edges": 28,
       "truncated": false,
       "latestUpdate": {
-        "files": 3,
-        "durationMs": 2.0979580000002898,
+        "files": 1,
+        "durationMs": 6.869332999998733,
         "full": false
       }
     },
@@ -396,7 +420,7 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "status": "settled",
         "files": [
@@ -408,15 +432,15 @@
                 "end": 363
               }
             ],
-            "firstTouchedAt": 1791143440444,
-            "lastTouchedAt": 1791143440444
+            "firstTouchedAt": 1791185103182,
+            "lastTouchedAt": 1791185103182
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "status": "settled",
         "files": [
@@ -428,8 +452,8 @@
                 "end": 251
               }
             ],
-            "firstTouchedAt": 1791143440460,
-            "lastTouchedAt": 1791143440460
+            "firstTouchedAt": 1791185103198,
+            "lastTouchedAt": 1791185103198
           }
         ]
       }
@@ -438,45 +462,49 @@
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "symbols": [
           {
             "key": "src/cart.ts#Cart.total",
             "file": "src/cart.ts",
             "name": "total",
+            "kind": "method",
+            "container": "Cart",
             "status": "modified",
             "startLine": 11,
             "endLine": 15,
-            "lastTouchedAt": 1791143440444
+            "lastTouchedAt": 1791185103182
           }
         ]
       },
       {
         "actor": {
           "kind": "human",
-          "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+          "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
         },
         "symbols": [
           {
             "key": "src/cart.ts#Cart.total",
             "file": "src/cart.ts",
             "name": "total",
+            "kind": "method",
+            "container": "Cart",
             "status": "modified",
             "startLine": 11,
             "endLine": 15,
-            "lastTouchedAt": 1791143440460
+            "lastTouchedAt": 1791185103198
           }
         ]
       }
     ],
     "candidatePairs": [
       {
-        "id": "6d6f6a431b61996d6f842bb4e3f35cd1041a3e5350415c77251e29e378e6777a",
+        "id": "11c6fc4611142d0995f57b2dcea01cd2664133071573ec7e8768e9ea8fb3acc7",
         "left": {
           "actor": {
             "kind": "human",
-            "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+            "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
           },
           "symbol": "src/cart.ts#Cart.total",
           "status": "modified"
@@ -484,28 +512,29 @@
         "right": {
           "actor": {
             "kind": "human",
-            "memberId": "e0fd8fdc-139a-4990-9521-e1d099483242"
+            "memberId": "dc4e469e-d34d-4c0b-8f76-8df6857238b8"
           },
           "symbol": "src/cart.ts#Cart.total",
           "status": "modified"
         },
         "distance": 0,
         "path": null,
-        "firstSeenAt": 1791143440509,
-        "updatedAt": 1791143440509
+        "firstSeenAt": 1791185103245,
+        "updatedAt": 1791185103245
       }
     ],
     "statistics": {
       "total": 5,
       "related": 4,
       "unrelated": 1,
-      "unrelatedRatio": 0.2
+      "unrelatedRatio": 0.2,
+      "typeOnly": 0
     },
     "cursors": [
       {
         "actor": {
           "kind": "human",
-          "memberId": "4ccd700c-24de-4a2e-ae11-b698567e5dcc"
+          "memberId": "773fd83c-722a-45c4-b1cb-846bc8d22b3c"
         },
         "file": "src/cart.ts",
         "lineNumber": 11,
@@ -514,13 +543,9 @@
           "startLineNumber": 11,
           "startColumn": 3,
           "endLineNumber": 11,
-          "endColumn": 3,
-          "selectionStartLineNumber": 11,
-          "selectionStartColumn": 3,
-          "positionLineNumber": 11,
-          "positionColumn": 3
+          "endColumn": 3
         },
-        "at": 1791143442340,
+        "at": 1791185105080,
         "symbol": "src/cart.ts#Cart.total"
       }
     ]

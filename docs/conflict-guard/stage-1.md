@@ -1,12 +1,12 @@
 # 阶段 1：语义冲突预防地基
 
-更新时间：2026-10-05。产品代码提交：`0cd88f6`。
+更新时间：2026-10-05。修复基线：`36c3ba7`。本轮修改尚未推送。
 
 ## 观察行为
 
 `@simplercp/conflict-guard` 提供编辑来源、字符范围变换、编辑批次、活跃变更集、内存光标和轨迹校验。服务端支持 `CONFLICT_GUARD=off|observe|rules|full`；`off` 不创建 tracker、执行 Git、监听 Yjs 或创建轨迹文件。`rules` 和 `full` 当前使用 observe 行为并输出启动提示。启用观察时，服务启动读取一次提交编号。
 
-镜像不一致时，`tracker.openDocument` 关闭已有批次和活跃文件状态，建立新的全文基线。服务端写入带有替换全文的 `mirror_resync`；回放继续检查后续编辑。文件系统回灌通过 `applyTextDelta` 更新 Yjs，修改来源为 `filesystem`，已有成员范围随修改移动。`revisionAfter` 使用 collaborativeDocuments 的 revision；human 与 unknown 的 observer 在 document update 前执行，因此登记下一次 revision，filesystem 使用已有 revision。观察器、光标处理与轨迹写入错误直接传播。
+镜像不一致时，服务端使用 `fast-diff` 生成 filesystem 编辑操作交给 tracker，已有批次和活跃文件范围继续保留并随差异移动。服务端写入带有替换全文的 `mirror_resync`；回放继续检查后续编辑。文件系统回灌通过 `applyTextDelta` 更新 Yjs，修改来源为 `filesystem`。`revisionAfter` 使用 collaborativeDocuments 写入后的真实 revision。观察器、光标处理与轨迹写入错误会记录并让 guard 进入降级状态，协作继续运行。
 
 `.env`、`.env.*`、`*.pem`、`*.key` 文件只登记 `{ file, skipped: "sensitive" }`。其他文本按服务端已知的精确敏感值脱敏，`loadConfig` 收集 `DEEPSEEK_API_KEY` 和 `TYPESAFE_API_KEY`。文件的任意编辑出现这些值后，后续该文件事件持续带有 `redacted: true`；服务重启从现有轨迹恢复这个状态。`validateTraceDetailed` 返回 `redactedFiles` 和 `skippedFiles`，脱敏文件跳过文本操作和哈希核验。普通代码标识符保持原文。
 
@@ -16,9 +16,9 @@
 
 ## 自动测试
 
-在 `0cd88f6` 执行 `pnpm -r build`、`pnpm test`、`CONFLICT_GUARD=off pnpm test:collab` 和 `CONFLICT_GUARD=observe pnpm test:collab`，全部通过。包内测试 20 项；服务端 31 个文件、120 项；演示 2 项；每种协作模式 2 项。完整配置、命令和原始输出见 [self-acceptance/README.md](evidence/self-acceptance/README.md)。
+阶段 1 的原始验收记录见 [self-acceptance/README.md](evidence/self-acceptance/README.md)；第二轮错误隔离、resync、轨迹脱敏与 revision 修复的测试结果见 [review-fix-round2.md](review-fix-round2.md)。当前分支的完整检查命令与结果记录在阶段 2 报告。
 
-范围测试核验插入、范围内部与边界删除、替换、多操作的累计位置变化、光标切换文件、双方交替编辑的具体范围。轨迹测试核验跨会话状态、普通代码、首次 edit 脱敏、敏感文件、resync、交换事件顺序和篡改编辑内容。服务端 `conflictGuardApi.integration.test.ts` 的 7 项测试核验真实 Yjs 与 WebSocket 路径，包括每人 3 个批次、精确字符范围、前方插入后的精确位移、filesystem 回灌、逐字符输入敏感值、`/ws` 光标窗口与缺字段广播、重启后的整份轨迹。`conflictGuardOff.test.ts` 经 `loadConfig` 配置 off，并让 Git 不可用，服务仍正常启动且没有轨迹文件。
+范围测试核验插入、范围内部与边界删除、替换、多操作的累计位置变化、光标切换文件、双方交替编辑的具体范围。轨迹测试核验跨会话状态、普通代码、首次 edit 脱敏、敏感文件、resync、交换事件顺序和篡改编辑内容。服务端 `conflictGuardApi.integration.test.ts` 的 9 项测试核验真实 Yjs 与 WebSocket 路径，包括每人 3 个批次、精确字符范围、前方插入后的精确位移、filesystem 回灌、逐字符输入敏感值、`/ws` 光标窗口与缺字段广播、重启后的整份轨迹、语义错误降级与轨迹写入重试。`conflictGuardOff.test.ts` 经 `loadConfig` 配置 off，并让 Git 不可用，服务仍正常启动且没有轨迹文件。
 
 ## 双浏览器观察
 

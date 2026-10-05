@@ -19,9 +19,9 @@ SIMPLERCP_IMPORT_ROOTS="$PWD/demo" CONFLICT_GUARD=observe pnpm dev
 | 1 | Alice、Bob 的窗口均显示“冲突预防”页签，打开后具有“正在修改”“相互关联的修改”“统计”。 |
 | 2 | Alice 将 `src/pricing.ts` 第 4 行的 `price * (1 - rate)` 改为 `price - price * rate`。两边显示 Alice 的 `src/pricing.ts:3–5 applyDiscount`，状态为“修改”。 |
 | 3 | Bob 将 `src/checkout.ts` 第 5 行的 `cart.total()` 改为 `cart.total() + 1`。两边显示双方的候选条目和 `checkout 调用 Cart.total；Cart.total 调用 applyDiscount`。点击条目展开，左右分别显示两位成员的修改前后文本。 |
-| 4 | Bob 将 checkout 恢复原文，随后将 `src/report.ts` 第 8 行的 `"Shop report"` 改为 `"Daily report"`。双方候选条目消失，统计显示累计 3 个单元、1 个无关系单元，比例 33.3%。 |
+| 4 | Bob 将 checkout 恢复原文，随后将 `src/report.ts` 第 8 行的 `"Shop report"` 改为 `"Daily report"`。双方候选条目消失，统计中的变更单元数增加 1、无关系数增加 1。 |
 | 5 | Alice 修改 `Cart.total` 第 14 行的折扣参数 `0.1` 为 `0.2`，Bob 修改第 12 行的 `amount` 初始值 `0` 为 `1`。双方出现“两人在改同一个函数”。 |
-| 6 | Alice 打开 report 文件，再点击“正在修改”中 `src/cart.ts:11–15 total`，编辑器打开 cart 并定位第 11 行。 |
+| 6 | Alice 打开 report 文件，再点击“正在修改”中 `src/cart.ts:11–15 Cart.total()`，编辑器打开 cart 并定位第 11 行。 |
 | 7 | 统计显示 6 个文件、22 个符号、21 条关系与最近更新耗时，同时显示变更单元数和无关系比例。 |
 
 将服务器配置改为 `CONFLICT_GUARD=off` 并重新启动后，两个窗口均没有“冲突预防”页签。

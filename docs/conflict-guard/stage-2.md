@@ -2,11 +2,11 @@
 
 ## 文件与接口
 
-实现提交为 `b6dffc3`、`8a22d05`、`fcc6da8`、`e05042d`，基线为 `a04580a`，分支为 `feature/conflict-guard`。
+实现基线为 `36c3ba7`，分支为 `feature/conflict-guard`。本轮修改尚未推送。
 
 | 位置 | 内容 |
 |---|---|
-| `packages/conflict-guard/src/semantic/` | LanguageService 宿主、具名声明、七种关系、双向路径、符号 before/after |
+| `packages/conflict-guard/src/semantic/` | LanguageService 宿主、具名声明、十种关系、双向路径、符号 before/after |
 | `packages/conflict-guard/src/routing/` | 稳定候选编号、生命周期事件、变更单元统计 |
 | `packages/conflict-guard/src/model/`、`tracking/`、`trace/` | 符号变更字段、声明名称删除归属、schema 2 与版本 1 兼容 |
 | `apps/server/src/conflictGuard/`、`projectRuntime.ts`、`routes/conflictGuardRoutes.ts`、`createApp.ts` | 镜像和磁盘文件提供者、25 毫秒合并更新、state 与 symbol 接口、health 开关字段 |
@@ -26,14 +26,14 @@ TypeScript 为包的唯一新增运行时依赖。客户端沿用现有依赖。
 | 检查 | 结果 |
 |---|---|
 | `pnpm -r build` | 通过，四个工作区包完成构建 |
-| 包内单元测试 | 5 个文件、36 项通过 |
-| 服务端全部测试 | 32 个文件、123 项通过 |
+| 包内单元测试 | 5 个文件、43 项通过 |
+| 服务端全部测试 | 36 个文件、138 项通过 |
 | `pnpm test:demo` | 2 项通过 |
 | `pnpm --dir demo/conflict-shop test` | 3 项通过 |
 | `CONFLICT_GUARD=off` 下的观察面板 E2E | 1 项通过，双方页签隐藏 |
 | `CONFLICT_GUARD=observe` 下的观察面板 E2E | 1 项通过，包含七项浏览器清单 |
-| off 与 observe 下的 `pnpm test:collab` | 各 2 项通过 |
-| 最终包内检查与服务端相关集成检查 | 36 项与 12 项通过 |
+| off 与 observe 下的 `pnpm test:collab` | 顺序执行各 2 项通过；共享端口被其他 Playwright 进程占用时需先清理该进程 |
+| 最终包内检查与服务端相关集成检查 | 43 项与 15 项通过 |
 | 证据核验 | 7 项清单、8 张截图、39 条轨迹事件、5 个变更单元通过核验 |
 | 精确敏感值检查 | 已配置敏感值出现次数为 0 |
 
@@ -41,14 +41,14 @@ TypeScript 为包的唯一新增运行时依赖。客户端沿用现有依赖。
 
 ## 索引性能
 
-演示项目包含 6 个文件、22 个符号、21 条关系。性能测试对未打开的 `report.ts` 执行 30 次真实磁盘修改，统计同步 `SemanticIndex.update` 的计算耗时，采用排序后第 29 个样本作为 p95。
+演示项目包含 6 个文件、22 个符号、21 条关系。性能测试对未打开且被多处引用的 `pricing.ts` 执行 30 次真实磁盘修改，测量包含目录扫描的服务端 `updateSemantic`，采用排序后第 15 个样本作为 p50、第 29 个样本作为 p95。
 
-| 记录 | 首次索引 | 增量更新 p95 |
-|---|---|---|
-| 全部服务端测试，[tests.log](evidence/stage-2-checks/tests.log) | 8.13 ms | 2.10 ms |
-| 最终相关集成，[server-final.log](evidence/stage-2-checks/server-final.log) | 5.88 ms | 2.77 ms |
+| 记录 | 首次索引 | 增量更新 p50 | 增量更新 p95 |
+|---|---|---|---|
+| 相关服务端集成（最新运行） | 约 5.57 ms | 4.83 ms | 9.03 ms |
+| 包内三百文件合成测试（最新运行） | 约 39.05 ms | — | — |
 
-两次记录均低于 200 ms 要求。数值测量索引计算时间；批次等待、25 毫秒合并窗口与客户端每秒刷新时间独立计算。2000 文件规模尚未进行性能测量。
+服务端 p95 低于 200 ms。三百文件测试只记录耗时，不设置门槛。服务端数值包含目录扫描与索引计算；批次等待、25 毫秒合并窗口与客户端每秒刷新时间独立计算。2000 文件规模尚未进行性能测量。
 
 ## 浏览器清单
 
@@ -65,3 +65,9 @@ TypeScript 为包的唯一新增运行时依赖。客户端沿用现有依赖。
 - 当前语言范围、`noLib: true` 和 2000 文件上限按设计启用。重名后缀随同容器声明顺序分配，插入或删除同名声明会影响后续编号。成员范围内部的他人插入沿用阶段 1 范围规则。
 
 当前阶段提供关系发现与观察界面。分区规则、四状态诊断、模型研判和 Agent run 修改归属按后续阶段接入。
+
+## 第二轮修复
+
+第二轮修复了索引自身发现 provider 版本变化、镜像版本单调递增、首次索引异步建立、类成员关系、继承覆写关系、接口成员实现关系、类型关系标记、批次范围映射和墓碑边。服务端 guard 增加降级状态与轨迹写入失败计数，观察器、光标和语义更新异常不会中断协作。Agent 文件归属改用工作区快照差集，session diff 只作为 `session_diff_observed` 记录。轨迹导出按顺序重放并处理逐字输入的敏感值。错误隔离、不同结束顺序的归属、Git 不可用、语义索引随机增量、嵌套候选轨迹验证和三百文件性能测试均加入常驻测试。
+
+阶段 3 可以直接订阅 `SemanticChangeTracker.onEvent` 的候选生命周期事件，使用 `RelationPath.typeOnly` 区分类型关系，使用 `RelationEdge.stale` 识别已删除或改名符号的历史引用。state 中的 `degraded`、`indexing` 和 `traceWriteFailures` 可用于观察实验运行质量。
