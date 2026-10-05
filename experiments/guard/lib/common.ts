@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { mkdtempSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -7,7 +7,9 @@ import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { GuardContext, GuardDecision, GuardRequest, Level, Action } from "../../../apps/server/src/guard/types.js";
 
 export const projectRoot = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
-export const runtimeRoot = process.env.SIMPLERCP_DATA_DIR ?? mkdtempSync(path.join(os.tmpdir(),"simplercp-guard-"));
+const defaultRuntimeRoot = path.join(projectRoot, ".experiment-data", `guard-${process.pid}`);
+mkdirSync(defaultRuntimeRoot, { recursive: true });
+export const runtimeRoot = process.env.SIMPLERCP_DATA_DIR ?? defaultRuntimeRoot;
 export const workspaceRoot = path.join(runtimeRoot, "workspace");
 export const dataRoot = path.join(runtimeRoot, "data");
 
@@ -54,7 +56,7 @@ export interface RawRow {
 }
 
 export function context(level: Level, overrides: Partial<GuardContext> = {}): GuardContext {
-  return { memberLevel: level, initiatorOnline: true, workspaceRoot, platformDataRoot: dataRoot, otherWorkspaceRoots: [path.join(runtimeRoot,"other-project")], ...overrides };
+  return { memberLevel: level, initiatorOnline: true, workspaceRoot, platformDataRoot: dataRoot, otherWorkspaceRoots: [path.join(runtimeRoot, "other-project"), path.join(runtimeRoot, "p2")], ...overrides };
 }
 
 export function toRequest(item: DatasetRecord, source: "terminal" | "agent" = item.actor.viaAgent ? "agent" : "terminal"): GuardRequest {
@@ -87,7 +89,11 @@ export function standardDeviation(values: number[]): number {
 }
 
 export async function loadDataset(name: string): Promise<DatasetRecord[]> {
-  const file = path.join(projectRoot, "experiments/guard/datasets", `${name}.jsonl`);
+  const datasetVersion = process.env.GUARD_DATASET_VERSION ?? "v2";
+  const datasetDirectory = datasetVersion === "v1"
+    ? path.join(projectRoot, "experiments/guard/datasets")
+    : path.join(projectRoot, "experiments/guard/datasets", datasetVersion);
+  const file = path.join(datasetDirectory, `${name}.jsonl`);
   const text = await fs.readFile(file, "utf8");
   return text.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line) as DatasetRecord);
 }
@@ -95,15 +101,27 @@ export async function loadDataset(name: string): Promise<DatasetRecord[]> {
 export async function ensureRuntimeDirectory() {
   await fs.mkdir(workspaceRoot, { recursive: true });
   await fs.mkdir(dataRoot, { recursive: true });
-  await fs.mkdir(path.join(runtimeRoot, "other-project"), { recursive: true });
+  const otherProjectRoot = path.join(runtimeRoot, "other-project");
+  const p2Root = path.join(runtimeRoot, "p2");
+  await fs.mkdir(otherProjectRoot, { recursive: true });
+  await fs.mkdir(p2Root, { recursive: true });
+  await fs.mkdir(path.join(dataRoot, "projects", "x"), { recursive: true });
+  await fs.mkdir(path.join(dataRoot, "projects", "other"), { recursive: true });
   await fs.writeFile(path.join(workspaceRoot, "README.md"), "# guard experiment\n");
   await fs.writeFile(path.join(workspaceRoot, ".env"), "FAKE_DB_PASSWORD=canary-experiment\n");
+  await fs.writeFile(path.join(p2Root, "chat.json"), "{\"project\":\"p2\"}\n");
+  await fs.writeFile(path.join(dataRoot, "projects", "x", "chat.json"), "{\"project\":\"x\"}\n");
+  await fs.writeFile(path.join(dataRoot, "projects", "other", "chat.json"), "{\"project\":\"other\"}\n");
+  await fs.rm(path.join(workspaceRoot, "linked"), { recursive: true, force: true });
+  await fs.rm(path.join(workspaceRoot, "dangling"), { recursive: true, force: true });
+  await fs.symlink(p2Root, path.join(workspaceRoot, "linked"), "dir");
+  await fs.symlink(path.join(runtimeRoot, "missing-target"), path.join(workspaceRoot, "dangling"), "dir");
 }
 
 export async function environmentRecord(extra: Record<string, unknown> = {}) {
   const packageManager = await fs.readFile(path.join(projectRoot, "package.json"), "utf8").then((text) => JSON.parse(text) as { packageManager?: string });
   return {
-    commit: (await runCommand("git rev-parse guard-v1")).trim(),
+    commit: (await runCommand("git rev-parse guard-v1.1")).trim(),
     branch: (await runCommand("git branch --show-current")).trim(),
     node: process.version,
     pnpm: packageManager.packageManager ?? "unknown",
