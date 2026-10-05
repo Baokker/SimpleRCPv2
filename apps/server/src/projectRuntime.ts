@@ -27,6 +27,7 @@ export function createProjectRuntime(
     expiresAt: number;
   }> = [];
   const fileSavedListeners = new Set<(path: string) => void>();
+  let documents: ReturnType<typeof createCollaborativeDocumentStore>;
   const conflictGuard = options.conflictGuard
     ? createProjectConflictGuard({
         projectId: project.id,
@@ -38,7 +39,7 @@ export function createProjectRuntime(
         getRevision: (file) => documents.getRevision(file)
       })
     : undefined;
-  const documents = createCollaborativeDocumentStore({
+  documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
     projectId: project.id,
     onPersisted(path) {
@@ -46,7 +47,13 @@ export function createProjectRuntime(
     },
     onDocumentPrepared: (name, document, filePath) => conflictGuard?.documentPrepared(name, document, filePath),
     onDocumentRetired: (filePath) => conflictGuard?.retirePath(filePath),
-    onDocumentReleased: (filePath) => conflictGuard?.releaseDocument(filePath)
+    onDocumentReleased: (filePath) => conflictGuard?.releaseDocument(filePath),
+    ...(conflictGuard ? {
+      persistGate: (filePath: string) => conflictGuard.persistGate(filePath),
+      onPersistBlocked: (filePath: string, reason?: string) => conflictGuard.persistBlocked(filePath, reason),
+      onPersistConflict: (filePath: string) => conflictGuard.persistConflict(filePath),
+      onPersistError: (filePath: string, error: unknown) => conflictGuard.persistError(filePath, error)
+    } : {})
   });
   const terminal = createSharedTerminal({
     workspaceRoot: project.workspacePath,

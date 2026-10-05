@@ -34,9 +34,6 @@ export async function createApp(config: ServerConfig) {
     gitCommit,
     sensitiveValues
   });
-  if (config.conflictGuard?.mode === "rules" || config.conflictGuard?.mode === "full") {
-    console.warn(`CONFLICT_GUARD=${config.conflictGuard.mode} currently uses observe behavior`);
-  }
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
     defaultModel: config.agent?.model ?? "deepseek-chat",

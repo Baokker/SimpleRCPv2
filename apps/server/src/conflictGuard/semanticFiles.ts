@@ -1,9 +1,11 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { isSemanticFile, type SemanticFileProvider } from "@simplercp/conflict-guard";
 import { resolveWorkspacePath } from "../workspace.js";
 
 export function createWorkspaceSemanticFiles(root: string, mirror: (file: string) => { text: string; version: number } | undefined): SemanticFileProvider {
+  const require = createRequire(import.meta.url);
   function listFiles(directory = ""): string[] {
     let entries;
     try {
@@ -27,6 +29,7 @@ export function createWorkspaceSemanticFiles(root: string, mirror: (file: string
       if (current) return `mirror:${current.version}`;
       const stat = statSync(resolveWorkspacePath(root, file));
       return `disk:${stat.mtimeMs}:${stat.size}:${stat.ino}`;
-    }
+    },
+    readLib(name: string) { return readFileSync(require.resolve(`typescript/lib/${name}`), "utf8"); }
   };
 }

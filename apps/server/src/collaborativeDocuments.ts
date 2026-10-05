@@ -8,6 +8,10 @@ export interface CollaborativeDocumentStoreOptions {
   projectId?: string;
   persistDelayMs?: number;
   onPersisted?(filePath: string): void;
+  persistGate?(filePath: string): { allowed: boolean; reason?: string };
+  onPersistBlocked?(filePath: string, reason?: string): void;
+  onPersistConflict?(filePath: string): void;
+  onPersistError?(filePath: string, error: unknown): void;
   onDocumentPrepared?(name: string, document: Y.Doc, filePath: string): void;
   onDocumentRetired?(filePath: string): void;
   onDocumentReleased?(filePath: string): void;
@@ -18,6 +22,10 @@ export function createCollaborativeDocumentStore({
   projectId,
   persistDelayMs = 300,
   onPersisted,
+  persistGate,
+  onPersistBlocked,
+  onPersistConflict,
+  onPersistError,
   onDocumentPrepared,
   onDocumentRetired,
   onDocumentReleased
@@ -91,10 +99,22 @@ export function createCollaborativeDocumentStore({
 
   async function persistDocument(name: string, document: Y.Doc) {
     const { filePath } = parseDocumentName(name);
-    const content = document.getText("content").toString();
-    await writeWorkspaceFile(workspaceRoot, filePath, content);
-    persistedContents.set(name, content);
-    onPersisted?.(filePath);
+    try {
+      const gate = persistGate?.(filePath) ?? { allowed: true };
+      if (!gate.allowed) {
+        onPersistBlocked?.(filePath, gate.reason);
+        schedulePersist(name, document);
+        return;
+      }
+      const content = document.getText("content").toString();
+      const current = await readWorkspaceFile(workspaceRoot, filePath, true);
+      if (current.status === "text" && current.content !== (persistedContents.get(name) ?? current.content)) onPersistConflict?.(filePath);
+      await writeWorkspaceFile(workspaceRoot, filePath, content);
+      persistedContents.set(name, content);
+      onPersisted?.(filePath);
+    } catch (error) {
+      onPersistError?.(filePath, error);
+    }
   }
 
   async function flush(roomId: string, filePath: string) {
