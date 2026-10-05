@@ -6,6 +6,7 @@ import { VirtualClock } from "./clock.js";
 import { createP0Policy, createP1Policy, createP2Policy } from "./policies.js";
 import { replayTrace } from "./engine.js";
 import type { TraceEvent } from "../trace/trace.js";
+import { calculateReplayMetrics } from "./metrics.js";
 
 describe("阶段 4 回放基础设施", () => {
   it("虚拟时钟按时间和创建顺序执行定时器", () => {
@@ -67,6 +68,17 @@ describe("阶段 4 回放基础设施", () => {
     trace.push({ schema: 3, seq: 6, at: 40, type: "edit", file: "src/a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 0, deleted: "export function run() { return 2; }\n", inserted: "export function run() { return 3; }\n" }], revisionAfter: 2 });
     const result = replayTrace(trace, { policy: "P2" });
     expect(result.blockedEdits.some((edit) => edit.seq === 6 && edit.shouldHaveBeenBlocked)).toBe(true);
+  });
+
+  it("指标计算提供 Wilson 区间并按算子分组", () => {
+    const metrics = calculateReplayMetrics([
+      { truth: "lock", decision: "lock", local: true, escaped: false, missed: false, overblocked: false, frozenPersonSeconds: 2, cardCount: 1, operatorFamily: "IC", detectability: "typecheck", virtualDurationMs: 100 },
+      { truth: "allow", decision: "lock", local: true, escaped: false, missed: false, overblocked: true, frozenPersonSeconds: 2, cardCount: 1, operatorFamily: "SF", detectability: "none", virtualDurationMs: 100 }
+    ]);
+    expect(metrics.agreement.value).toBe(0.5);
+    expect(metrics.agreement.low).toBeLessThan(metrics.agreement.value);
+    expect(metrics.byOperatorFamily.IC.groups).toBe(1);
+    expect(metrics.cardsPerHour).toBeGreaterThan(0);
   });
 });
 
