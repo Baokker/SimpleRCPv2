@@ -12,6 +12,7 @@ import { attachRealtimeServer } from "../realtime.js";
 import { joinMember } from "./memberTestHelper.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 import { replayUi } from "../replay/uiReplay.js";
+import type { ProjectConflictGuard } from "../conflictGuard/projectConflictGuard.js";
 
 const shopRoot = fileURLToPath(new URL("../../../../demo/conflict-shop/", import.meta.url));
 
@@ -113,6 +114,76 @@ describe("rules 模式冲突干预", () => {
     expect(trace.some((event) => event.type === "edit" && (event.origin as { kind?: string })?.kind === "guard-revert")).toBe(true);
   });
 
+  it("撤回覆盖当前活跃文件的全部批次并保留另一成员的修改", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    const bobPricing = await connect("src/pricing.ts", bob.member.id);
+    const cart = await connect("src/cart.ts", bob.member.id);
+    const baseline = pricing.getText("content").toString();
+    replace(pricing, "`${currency} ${amount.toFixed(2)}`", "`${currency}: ${amount.toFixed(2)}`");
+    await waitFor(() => currentGuard().state().activeSymbols.some((set) => set.actor.kind === "human" && set.actor.memberId === alice.member.id && set.symbols.some((symbol) => symbol.name === "formatMoney")));
+    await waitFor(() => currentGuard().tracker.getActiveChangeSets().some((set) => set.actor.kind === "human" && set.actor.memberId === alice.member.id && set.status === "settled"));
+    replace(bobPricing, "applyDiscount(price, 0.2)", "applyDiscount(price, 0.25)");
+    await waitFor(() => pricing.getText("content").toString().includes("applyDiscount(price, 0.25)"));
+    replace(pricing, "applyDiscount(price: number, rate: number)", "applyDiscount(price: number, rate: number, currency: string)");
+    replace(cart, "applyDiscount(amount, 0.1)", "applyDiscount(amount, 0.2)");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "call-signature-incompatible" && record.verdict.decision === "lock") === true);
+    const pair = currentState().pairDecisions!.find((record) => record.verdict?.ruleId === "call-signature-incompatible")!;
+    expect((await alice.request(`/conflict-guard/pairs/${pair.pair.id}/revert`, { method: "POST" })).status).toBe(204);
+    const expected = baseline.replace("applyDiscount(price, 0.2)", "applyDiscount(price, 0.25)");
+    await waitFor(() => !pricing.getText("content").toString().includes("currency: string"));
+    expect(pricing.getText("content").toString()).toBe(expected);
+    expect(cart.getText("content").toString()).toContain("applyDiscount(amount, 0.2)");
+  });
+
+  it("撤回新一轮活跃文件时保留已经完成的修改", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    const cart = await connect("src/cart.ts", bob.member.id);
+    replace(pricing, "`${currency} ${amount.toFixed(2)}`", "`${currency}: ${amount.toFixed(2)}`");
+    await waitFor(() => currentGuard().tracker.getActiveChangeSets().some((set) => set.actor.kind === "human" && set.actor.memberId === alice.member.id && set.status === "settled"));
+    expect((await alice.request("/conflict-guard/done", { method: "POST" })).status).toBe(204);
+    const completed = pricing.getText("content").toString();
+    replace(pricing, "applyDiscount(price: number, rate: number)", "applyDiscount(price: number, rate: number, currency: string)");
+    replace(cart, "applyDiscount(amount, 0.1)", "applyDiscount(amount, 0.2)");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "call-signature-incompatible" && record.verdict.decision === "lock") === true);
+    const pair = currentState().pairDecisions!.find((record) => record.verdict?.ruleId === "call-signature-incompatible")!;
+    expect((await alice.request(`/conflict-guard/pairs/${pair.pair.id}/revert`, { method: "POST" })).status).toBe(204);
+    await waitFor(() => !pricing.getText("content").toString().includes("currency: string"));
+    expect(pricing.getText("content").toString()).toBe(completed);
+  });
+
+  it("T0 不向开始编辑无关函数的成员发送提示", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    const cart = await connect("src/cart.ts", bob.member.id);
+    replace(pricing, "applyDiscount(price: number, rate: number)", "applyDiscount(price: number, rate: number, currency: string)");
+    replace(cart, "applyDiscount(amount, 0.1)", "applyDiscount(amount, 0.2)");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "call-signature-incompatible") === true);
+    const report = await connect("src/report.ts", bob.member.id);
+    replace(report, 'return "Shop report"', 'return "Updated report"');
+    await waitFor(() => currentGuard().state().activeSymbols.some((set) => set.actor.kind === "human" && set.actor.memberId === bob.member.id && set.symbols.some((symbol) => symbol.name === "reportTime")));
+    const state = await (await bob.request("/conflict-guard/state")).json() as { t0Warnings: unknown[] };
+    expect(state.t0Warnings).toEqual([]);
+    const events = readTrace(await (await bob.request("/conflict-guard/trace")).text());
+    expect(events.filter((event) => event.type === "t0_warning" && event.memberId === bob.member.id)).toEqual([]);
+  });
+
+  it("T0 向没有参加已有变更对的依赖方成员发送提示", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    const cart = await connect("src/cart.ts", bob.member.id);
+    replace(pricing, "applyDiscount(price: number, rate: number)", "applyDiscount(price: number, rate: number, currency: string)");
+    replace(cart, "applyDiscount(amount, 0.1)", "applyDiscount(amount, 0.2)");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "call-signature-incompatible") === true);
+    const carol = await joinMember(origin, projectId, { name: "Carol" });
+    const checkout = await connect("src/checkout.ts", carol.member.id);
+    replace(checkout, "return formatMoney(cart.total());", "return formatMoney(cart.total() + 1);");
+    await waitFor(() => currentGuard().state().activeSymbols.some((set) => set.actor.kind === "human" && set.actor.memberId === carol.member.id && set.symbols.some((symbol) => symbol.name === "checkout")));
+    const state = await (await carol.request("/conflict-guard/state")).json() as { t0Warnings: Array<{ summary: string }> };
+    expect(state.t0Warnings).toHaveLength(1);
+    expect(state.t0Warnings[0]!.summary).toContain("applyDiscount");
+    const events = readTrace(await (await carol.request("/conflict-guard/trace")).text());
+    expect(events.filter((event) => event.type === "t0_warning" && event.memberId === carol.member.id)).toHaveLength(1);
+    expect((await (await alice.request("/conflict-guard/state")).json() as { t0Warnings: unknown[] }).t0Warnings).toEqual([]);
+  });
+
   it("幽灵成员通过真实连接重放编辑与光标并形成冻结", async () => {
     const pricing = await fs.readFile(path.join(shopRoot, "src/pricing.ts"), "utf8");
     const cart = await fs.readFile(path.join(shopRoot, "src/cart.ts"), "utf8");
@@ -133,6 +204,7 @@ describe("rules 模式冲突干预", () => {
     expect(Object.keys(result.memberIds)).toEqual(["origin", "candidate"]);
   });
 
+  function currentGuard() { return app.locals.runtimeManager.get(projectId).conflictGuard as ProjectConflictGuard; }
   function currentState() { return app.locals.runtimeManager.get(projectId).conflictGuard!.state() as { pairDecisions?: Array<{ pair: { id: string }; verdict?: { decision?: string; ruleId?: string }; status: string; resolution?: string }>; frozenFiles?: Array<{ file: string }>; blockedPersists?: Array<{ file: string }> }; }
   async function connect(file: string, memberId: string) {
     const document = new Y.Doc();
