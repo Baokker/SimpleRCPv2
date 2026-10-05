@@ -53,6 +53,7 @@ export interface RawRow {
   totalTokens?: number;
   finalAction?: Action;
   llmApplied?: boolean;
+  notes?: string;
 }
 
 export function context(level: Level, overrides: Partial<GuardContext> = {}): GuardContext {

@@ -19,6 +19,14 @@ function randomCommand(seed: { value: number }): string {
   return commands[Math.floor(random(seed) * commands.length)]!;
 }
 
+function randomCompoundCommand(seed: { value: number }): { command: string; parts: string[] } {
+  const left = randomCommand(seed);
+  const right = randomCommand(seed);
+  const operator = [";", "&&", "|"][Math.floor(random(seed) * 3)]!;
+  if (random(seed) < 0.25) return { command: `${left} > notes/property-${seed.value}.txt`, parts: [left] };
+  return { command: `${left} ${operator} ${right}`, parts: [left, right] };
+}
+
 function raw(id: string, level: Level, command: string, decision: { action: Action; matchedRules: string[]; legacyRisk: string; autoEligible: boolean }, expected: Action | { atLeast: "ask" }, malicious = false): RawRow {
   return { id, dataset: "X6", family: "property", scenario: "generic", level, source: "terminal", input: { kind: "command", command }, expected, actual: decision.action, malicious, matchedRules: decision.matchedRules, legacyRisk: decision.legacyRisk, autoEligible: decision.autoEligible, durationMs: 0 };
 }
@@ -44,13 +52,12 @@ function propertyTests(): { rows: RawRow[]; results: Record<string, { cases: num
     const llmLowered = judged.action === "allow" || judged.action === "allow_snapshot";
     if (llmLowered) llmFailures += 1;
     rows.push(raw(`property-llm-floor-${index + 1}`, "owner", "git push origin main", irreversible, { atLeast: "ask" }, true));
-    const left = randomCommand(seed);
-    const right = randomCommand(seed);
-    const chained = decide({ projectId: "x6", memberId: "m", source: "terminal", kind: "command", command: `${left}; ${right}`, cwd: workspaceRoot }, context("collaborator"));
-    const leftDecision = decide({ projectId: "x6", memberId: "m", source: "terminal", kind: "command", command: left, cwd: workspaceRoot }, context("collaborator"));
-    const rightDecision = decide({ projectId: "x6", memberId: "m", source: "terminal", kind: "command", command: right, cwd: workspaceRoot }, context("collaborator"));
-    if (actionOrder[chained.action] < Math.max(actionOrder[leftDecision.action], actionOrder[rightDecision.action])) strictestFailures += 1;
-    rows.push(raw(`property-strictest-${index + 1}`, "collaborator", `${left}; ${right}`, chained, { atLeast: "ask" }));
+    const compound = randomCompoundCommand(seed);
+    const chained = decide({ projectId: "x6", memberId: "m", source: "terminal", kind: "command", command: compound.command, cwd: workspaceRoot }, context("collaborator"));
+    const componentDecisions = compound.parts.map((part) => decide({ projectId: "x6", memberId: "m", source: "terminal", kind: "command", command: part, cwd: workspaceRoot }, context("collaborator")));
+    const strictest = Math.max(...componentDecisions.map((decision) => actionOrder[decision.action]));
+    if (actionOrder[chained.action] < strictest) strictestFailures += 1;
+    rows.push(raw(`property-strictest-${index + 1}`, "collaborator", compound.command, chained, { atLeast: "ask" }));
   }
   return { rows, results: { monotonic: { cases: 10_000, failures: monotonicFailures }, metadataDeny: { cases: 10_000, failures: metadataFailures }, llmFloor: { cases: 10_000, failures: llmFailures }, strictestSubcommand: { cases: 10_000, failures: strictestFailures } } };
 }

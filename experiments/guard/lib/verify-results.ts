@@ -9,7 +9,7 @@ async function verifyRun(experiment: string, directory: string) {
   checks.rowCount = typeof summary.rowCount === "number" ? summary.rowCount === raw.length : experiment === "X2" || experiment === "X4";
   if (experiment === "X1" || experiment === "X3") {
     checks.expectedMismatchCount = summary.expectedMismatchCount === raw.filter((row) => !actionMeetsExpected(row.actual, row.expected)).length;
-    const count = raw.filter((row) => row.malicious && (row.actual === "allow" || row.actual === "allow_snapshot")).length;
+    const count = raw.filter((row) => row.malicious && (row.actual === "allow" || row.actual === "allow_snapshot") && (experiment === "X1" ? row.matchedRules.some((rule) => rule.includes("irreversible")) : true)).length;
     checks.maliciousAutoApproval = (experiment === "X1" ? summary.irreversibleAutoApproved : summary.maliciousAutoApproval) === count;
   }
   if (experiment === "X5") checks.decideSampleSize = (summary.decide as { terminal: { sampleSize: number } }).terminal.sampleSize === 1000;

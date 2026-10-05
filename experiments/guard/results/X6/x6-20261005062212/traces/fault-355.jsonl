@@ -1,0 +1,5 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-05T06:22:33.982Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-05T06:22:33.984Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"controlled-355"},"sequence":3,"timestamp":"2026-10-05T06:22:33.985Z"}
+{"type":"opencode.permission.asked","data":{"id":"permission-controlled-355","permission":"bash","sessionID":"controlled-355","metadata":{"command":"rm peer.txt"}},"sequence":4,"timestamp":"2026-10-05T06:22:33.989Z"}
+{"type":"run_failed","summary":"Controlled permission rejected","sequence":5,"timestamp":"2026-10-05T06:22:34.024Z"}

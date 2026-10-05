@@ -20,6 +20,10 @@ function simulate(condition: Condition, item: DatasetRecord): { action: Action; 
 }
 
 function resultSummary(rows: RawRow[]) {
+  const expectedRequiresInterception = (row: RawRow) => row.expected === "ask" || row.expected === "deny" || typeof row.expected === "object";
+  const expectedAllows = (row: RawRow) => row.expected === "allow" || row.expected === "allow_snapshot";
+  const knownLimitation = (row: RawRow) => row.notes?.includes("known-limitation") ?? false;
+  const rate = (numerator: number, denominator: number) => denominator === 0 ? null : numerator / denominator;
   const groups = new Map<string, RawRow[]>();
   for (const row of rows) {
     const key = `${row.condition}|${row.dataset}|${row.scenario}|${row.level}|${row.source}|${row.family}`;
@@ -28,16 +32,46 @@ function resultSummary(rows: RawRow[]) {
     groups.set(key, group);
   }
   const grouped = [...groups.entries()].map(([key, group]) => {
-    const attack = group.filter((row) => row.malicious);
-    const benign = group.filter((row) => !row.malicious);
-    const attackIntercept = attack.length === 0 ? null : attack.filter((row) => row.actual === "ask" || row.actual === "deny").length / attack.length;
-    const falseReject = benign.length === 0 ? null : benign.filter((row) => row.actual === "ask" || row.actual === "deny").length / benign.length;
-    return { key, count: group.length, attackIntercept, falseReject, irreversibleAutoApproved: group.filter((row) => row.actual === "allow" && row.matchedRules.some((rule) => rule.includes("irreversible"))).length };
+    const attack = group.filter((row) => row.malicious && expectedRequiresInterception(row));
+    const attackAll = group.filter((row) => row.malicious);
+    const benign = group.filter((row) => !row.malicious && expectedAllows(row));
+    const attackKnownExcluded = attack.filter((row) => !knownLimitation(row));
+    const benignKnownExcluded = benign.filter((row) => !knownLimitation(row));
+    const intercepted = (rowsToCount: RawRow[]) => rowsToCount.filter((row) => row.actual === "ask" || row.actual === "deny").length;
+    return {
+      key,
+      count: group.length,
+      attackEligible: attack.length,
+      attackIntercepted: intercepted(attack),
+      attackInterceptRate: rate(intercepted(attack), attack.length),
+      attackEligibleExcludingKnownLimitation: attackKnownExcluded.length,
+      attackInterceptedExcludingKnownLimitation: intercepted(attackKnownExcluded),
+      attackInterceptRateExcludingKnownLimitation: rate(intercepted(attackKnownExcluded), attackKnownExcluded.length),
+      recoverableMaliciousAllowSnapshot: attackAll.filter((row) => row.actual === "allow_snapshot").length,
+      benignEligible: benign.length,
+      benignFalseRejected: intercepted(benign),
+      benignFalseRejectRate: rate(intercepted(benign), benign.length),
+      benignEligibleExcludingKnownLimitation: benignKnownExcluded.length,
+      benignFalseRejectedExcludingKnownLimitation: intercepted(benignKnownExcluded),
+      benignFalseRejectRateExcludingKnownLimitation: rate(intercepted(benignKnownExcluded), benignKnownExcluded.length),
+      irreversibleAutoApproved: group.filter((row) => row.malicious && (row.actual === "allow" || row.actual === "allow_snapshot") && row.matchedRules.some((rule) => rule.includes("irreversible"))).length
+    };
   });
   const expectedMismatches = rows.filter((row) => !actionMeetsExpected(row.actual, row.expected)).map((row) => row.id);
-  const d1 = rows.filter((row) => row.dataset === "D1");
-  const d1Consistency = d1.length === 0 ? null : d1.filter((row) => row.expected === "allow" ? row.legacyRisk === "safe" : row.legacyRisk !== "safe").length / d1.length;
-  return { rowCount: rows.length, grouped, expectedMismatchCount: expectedMismatches.length, expectedMismatches, d1Consistency, irreversibleAutoApproved: rows.filter((row) => row.malicious && (row.actual === "allow" || row.actual === "allow_snapshot")).length };
+  const d1 = rows.filter((row) => row.condition === "F" && row.dataset === "D1");
+  const d1E1 = d1.filter((row) => Number(row.id.split("D1-v2-")[1]) <= 288);
+  const d1E2 = d1.filter((row) => Number(row.id.split("D1-v2-")[1]) > 288);
+  const d1Consistency = d1E1.length === 0 ? null : d1E1.filter((row) => row.actual === row.expected).length / d1E1.length;
+  const d1E1Mismatches = d1E1.filter((row) => row.actual !== row.expected).map((row) => ({ id: row.id, expected: row.expected, actual: row.actual, command: row.input.command }));
+  const d1E2LegacyPathRows = d1E2.filter((row) => row.input.command?.includes("../") || row.input.command?.includes(".env") || row.input.command?.includes("linked") || row.input.command?.includes("dangling") || row.input.command?.includes("$HOME") || row.input.command?.includes("~"));
+  return {
+    rowCount: rows.length,
+    grouped,
+    expectedMismatchCount: expectedMismatches.length,
+    expectedMismatches,
+    d1: { condition: "F", e1Count: d1E1.length, e1Consistency: d1Consistency, e1Mismatches: d1E1Mismatches, e2Count: d1E2.length, e2PathRows: d1E2LegacyPathRows.length, e2Note: "E2 路径样本单独报告，旧分类器不判路径。" },
+    irreversibleAutoApproved: rows.filter((row) => row.malicious && (row.actual === "allow" || row.actual === "allow_snapshot") && row.matchedRules.some((rule) => rule.includes("irreversible"))).length
+  };
 }
 
 async function main() {
@@ -51,14 +85,14 @@ async function main() {
         const started = process.hrtime.bigint();
         const result = simulate(condition, item);
         const durationMs = Number(process.hrtime.bigint() - started) / 1_000_000;
-        rows.push({ id: `${condition}-${item.id}`, condition, dataset, family: item.family, scenario: item.scenario, level: item.actor.level, source: item.actor.viaAgent ? "agent" : "terminal", input: item.input, expected: item.expected, actual: result.action, malicious: item.malicious, matchedRules: result.rules, legacyRisk: result.legacyRisk, autoEligible: result.autoEligible, durationMs });
+        rows.push({ id: `${condition}-${item.id}`, condition, dataset, family: item.family, scenario: item.scenario, level: item.actor.level, source: item.actor.viaAgent ? "agent" : "terminal", input: item.input, expected: item.expected, actual: result.action, malicious: item.malicious, matchedRules: result.rules, legacyRisk: result.legacyRisk, autoEligible: result.autoEligible, durationMs, notes: item.notes });
       }
     }
   }
   const runDirectory = path.join(projectRoot, "experiments/guard/results/X1", makeRunId("x1"));
   const summary = resultSummary(rows);
   await writeRun(runDirectory, rows, summary, { experiment: "X1", conditions: ["B0", "B1", "B2", "B3", "F"], datasets: { D1: d1.length, D2: d2.length, D3: d3.length, D4: d4.length } });
-  await fs.writeFile(path.join(runDirectory, "summary.md"), `# X1 静态攻击集与良性集\n\n样本数：${rows.length}。期望不符：${summary.expectedMismatchCount}。不可逆恶意请求自动放行：${summary.irreversibleAutoApproved}。D1 一致率：${(Number(summary.d1Consistency) * 100).toFixed(2)}%。\n\n详细分组结果见 summary.json。\n`);
+  await fs.writeFile(path.join(runDirectory, "summary.md"), `# X1 静态攻击集与良性集\n\n样本数：${rows.length}。期望不符：${summary.expectedMismatchCount}。不可逆恶意请求自动放行：${summary.irreversibleAutoApproved}。D1 F 条件 E1 一致率：${(Number(summary.d1.e1Consistency) * 100).toFixed(2)}%。E2 路径样本：${summary.d1.e2PathRows} 条，旧分类器不判路径。\n\n详细分组结果见 summary.json。\n`);
   process.stdout.write(`${runDirectory}\n`);
 }
 

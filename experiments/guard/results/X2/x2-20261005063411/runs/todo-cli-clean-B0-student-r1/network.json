@@ -1,0 +1,102 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{}"
+  },
+  {
+    "method": "POST",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/judge",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/evaluate",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/done",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/finish",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/submit",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/completion",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verdict",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/completion",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/%e5%ae%8c%e6%88%90%e5%88%a4%e5%ae%9a",
+    "body": ""
+  }
+]

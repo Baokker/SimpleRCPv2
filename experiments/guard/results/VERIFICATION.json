@@ -1,9 +1,9 @@
 {
-  "verifiedAt": "2026-10-04T21:05:17.471Z",
+  "verifiedAt": "2026-10-05T07:10:09.293Z",
   "runs": [
     {
       "experiment": "X1",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X1/x1-20261004163436",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X1/x1-20261005061724",
       "pass": true,
       "checks": {
         "rowCount": true,
@@ -13,7 +13,7 @@
     },
     {
       "experiment": "X2",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261004200335",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261005063411",
       "pass": true,
       "checks": {
         "rowCount": true
@@ -21,7 +21,7 @@
     },
     {
       "experiment": "X3",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X3/x3-20261004204012",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X3/x3-20261005065318",
       "pass": true,
       "checks": {
         "rowCount": true,
@@ -31,7 +31,7 @@
     },
     {
       "experiment": "X4",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261004174326",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261005062645",
       "pass": true,
       "checks": {
         "rowCount": true
@@ -39,7 +39,7 @@
     },
     {
       "experiment": "X5",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X5/x5-20261004200807",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X5/x5-20261005062117",
       "pass": true,
       "checks": {
         "rowCount": true,
@@ -48,7 +48,7 @@
     },
     {
       "experiment": "X6",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X6/x6-20261004201131",
+      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X6/x6-20261005062212",
       "pass": true,
       "checks": {
         "rowCount": true,

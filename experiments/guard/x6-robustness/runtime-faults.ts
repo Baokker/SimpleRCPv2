@@ -34,7 +34,9 @@ function controlledRuntime(){
   return {api,replies,set404(id:string){listeners.set("event-permission-"+id,"404");}};
 }
 export async function runtimeFaults(directory:string){
-  const root=await fs.mkdtemp("/tmp/simplercp-x6-"),seed=path.join(root,"seed"),dataDir=path.join(root,"data");
+  const projectRoot=path.resolve(new URL("../../..", import.meta.url).pathname);
+  await fs.mkdir(path.join(projectRoot, ".experiment-data"), { recursive: true });
+  const root=await fs.mkdtemp(path.join(projectRoot, ".experiment-data", "x6-")),seed=path.join(root,"seed"),dataDir=path.join(root,"data");
   process.env.SIMPLERCP_DATA_DIR=dataDir;process.env.SIMPLERCP_TERMINAL_HOME=path.join(root,"home");
   await fs.mkdir(seed,{recursive:true});await fs.mkdir(process.env.SIMPLERCP_TERMINAL_HOME,{recursive:true});await fs.writeFile(path.join(seed,"peer.txt"),"peer\n");
   const app=await createApp({port:0,host:"127.0.0.1",publicOrigin:"http://127.0.0.1",dataDir,demoProjectRoot:seed,guardMode:"full",guardLlmMode:"off",guardApprovalTimeoutMs:30,fakeAgentRuntime:true,agent:{model:"controlled",openCodePort:49000,runTimeoutMs:2000}});

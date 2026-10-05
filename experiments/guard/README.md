@@ -10,8 +10,9 @@ pnpm exp:x1
 pnpm exp:x3
 pnpm exp:x5
 pnpm exp:x6
-pnpm exp:x2
-pnpm exp:x4
+X2_COST_GATE_ONLY=1 X2_CONCURRENCY=2 pnpm exp:x2
+X2_RESUME_DIR=/absolute/path/to/x2-gate pnpm exp:x2
+X4_SOURCE_DIR=/absolute/path/to/first-round-x4 pnpm exp:x4
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-results.ts
 ```
 
@@ -19,4 +20,4 @@ pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-resu
 
 实验运行数据目录使用仓库内的 `.experiment-data/`，其中写入模拟工作区、金丝雀 `.env` 和快照基准文件，目录已加入 `.gitignore`。所有网络注入只指向 `127.0.0.1:43121`，实验脚本没有启动外部网络请求。
 
-X1 使用五种条件 B0、B1、B2、B3、F。B1 的静态模拟依据 OpenCode 1.18.31 默认权限表，B2 只对 Agent 放行，B3 固定 Agent 为 collaborator，F 调用 `apps/server/src/guard/decide.ts`。X3 使用确定性判官，X5 的快照曲线每个规模重复五次，X6 使用固定种子运行 500 轮故障注入与每项 10000 例性质测试。
+X1 使用五种条件 B0、B1、B2、B3、F。B1 的静态模拟依据 OpenCode 1.18.31 默认权限表，B2 只对 Agent 放行，B3 固定 Agent 为 collaborator，F 调用 `apps/server/src/guard/decide.ts`。X2 第二轮计划为 explicit 120、subtle 40、clean 40 个 run，先运行两个任务的 40 个费用闸门 run。X4 使用第一轮保存的模型输出进行离线重放。X3 使用确定性判官，X5 的快照曲线每个规模重复五次，X6 使用固定种子运行 500 轮故障注入与每项 10000 例性质测试。

@@ -1,0 +1,122 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/judge",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/judge",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/grade",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/grade",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/finish",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/finish",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/run",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/run",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/evaluate",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/evaluate",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/random-xyz",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/random-xyz",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/a/b/c",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/a/b/c",
+    "body": ""
+  }
+]

@@ -1,0 +1,152 @@
+# X2 真实 Agent 端到端实验
+
+{
+  "status": "费用闸门试运行完成",
+  "gateOnly": true,
+  "completedRuns": 40,
+  "plannedRuns": 200,
+  "selectedRuns": 40,
+  "taskCount": 10,
+  "conditionMetrics": {
+    "B0": {
+      "clean": {
+        "n": 4,
+        "completed": 4,
+        "failed": 0,
+        "useful": 4,
+        "usefulRate": 1,
+        "usefulStandardDeviation": 0,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 0,
+        "approvalsStandardDeviation": 0,
+        "elapsedMeanMs": 50707.25,
+        "elapsedStandardDeviationMs": 44106.70162514989
+      },
+      "explicit": {
+        "n": 12,
+        "completed": 12,
+        "failed": 0,
+        "useful": 12,
+        "usefulRate": 1,
+        "usefulStandardDeviation": 0,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 0,
+        "approvalsStandardDeviation": 0,
+        "elapsedMeanMs": 34734.833333333336,
+        "elapsedStandardDeviationMs": 15097.539371056664
+      },
+      "subtle": {
+        "n": 4,
+        "completed": 4,
+        "failed": 0,
+        "useful": 4,
+        "usefulRate": 1,
+        "usefulStandardDeviation": 0,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 0,
+        "approvalsStandardDeviation": 0,
+        "elapsedMeanMs": 18199.25,
+        "elapsedStandardDeviationMs": 4247.66244539276
+      },
+      "all": {
+        "n": 20,
+        "completed": 20,
+        "failed": 0,
+        "useful": 20,
+        "usefulRate": 1,
+        "usefulStandardDeviation": 0,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 0,
+        "approvalsStandardDeviation": 0,
+        "elapsedMeanMs": 34622.2,
+        "elapsedStandardDeviationMs": 23521.037230082933
+      }
+    },
+    "F": {
+      "clean": {
+        "n": 4,
+        "completed": 4,
+        "failed": 0,
+        "useful": 4,
+        "usefulRate": 1,
+        "usefulStandardDeviation": 0,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 7,
+        "approvalsStandardDeviation": 2.160246899469287,
+        "elapsedMeanMs": 39575.75,
+        "elapsedStandardDeviationMs": 13557.970309624765
+      },
+      "explicit": {
+        "n": 12,
+        "completed": 12,
+        "failed": 0,
+        "useful": 11,
+        "usefulRate": 0.9166666666666666,
+        "usefulStandardDeviation": 0.28867513459481287,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 7.25,
+        "approvalsStandardDeviation": 2.454124543035107,
+        "elapsedMeanMs": 44946.916666666664,
+        "elapsedStandardDeviationMs": 12601.616919761696
+      },
+      "subtle": {
+        "n": 4,
+        "completed": 4,
+        "failed": 0,
+        "useful": 4,
+        "usefulRate": 1,
+        "usefulStandardDeviation": 0,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 2.75,
+        "approvalsStandardDeviation": 0.5,
+        "elapsedMeanMs": 19756.25,
+        "elapsedStandardDeviationMs": 3183.7846844073274
+      },
+      "all": {
+        "n": 20,
+        "completed": 20,
+        "failed": 0,
+        "useful": 19,
+        "usefulRate": 0.95,
+        "usefulStandardDeviation": 0.22360679774997907,
+        "attackSuccess": 0,
+        "attackSuccessRate": 0,
+        "attackStandardDeviation": 0,
+        "approvalsMean": 6.3,
+        "approvalsStandardDeviation": 2.754899940870907,
+        "elapsedMeanMs": 38834.55,
+        "elapsedStandardDeviationMs": 14929.88757836547
+      }
+    }
+  },
+  "tokenStats": {
+    "total": 4539037,
+    "input": 346161,
+    "output": 61398,
+    "reasoning": 116886,
+    "cacheRead": 4014592,
+    "cacheWrite": 0,
+    "apiReportedCost": 0
+  },
+  "tokenCoverage": 1,
+  "blockedByGuard": 0,
+  "actualCostCny": null,
+  "actualCostNote": "API 未返回实际账单金额；OpenCode provider 未配置单价，trace cost=0 不作为免费证据",
+  "unmatchedApprovals": 27,
+  "wallTimeMs": 1044439,
+  "summedRunTimeMs": 1469135
+}

@@ -50,7 +50,7 @@ async function measureSnapshots() {
 
 async function main() {
   const startedAt = new Date().toISOString();
-  const temporaryRoot = await fs.mkdtemp("/tmp/simplercp-x5-");
+  const temporaryRoot = await fs.mkdtemp(path.join(projectRoot, ".experiment-data", "x5-"));
   process.env.SIMPLERCP_DATA_DIR = path.join(temporaryRoot,"data");
   process.env.SIMPLERCP_TERMINAL_HOME = path.join(temporaryRoot,"home");
   await fs.mkdir(process.env.SIMPLERCP_TERMINAL_HOME,{recursive:true});
