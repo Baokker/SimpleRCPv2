@@ -62,6 +62,7 @@ test("member adds and removes project files from the Agent prompt", async ({ pag
 });
 
 test("member runs an OpenCode task and reads its trace", async ({ page }) => {
+  test.skip(process.env.SIMPLERCP_SKIP_MODEL_REQUESTS === "true", "本次验收禁止模型请求");
   const settingsResponse = await page.request.get("/api/agent/settings");
   const settings = await settingsResponse.json() as {
     apiKeyConfigured: boolean;
@@ -111,6 +112,7 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
 test("member sees a concurrent change warning when editing an Agent file", async ({
   page
 }) => {
+  test.skip(process.env.SIMPLERCP_SKIP_MODEL_REQUESTS === "true", "本次验收禁止模型请求");
   const settingsResponse = await page.request.get("/api/agent/settings");
   const settings = await settingsResponse.json() as {
     apiKeyConfigured: boolean;
