@@ -51,6 +51,12 @@ describe("guard decisions", () => {
     expect(result.matchedRules).toContain("hard.dynamic");
   });
 
+  it("splits terminal compound commands and keeps benign pipelines readable", () => {
+    expect(command("student", "pwd; sudo ls").action).toBe("deny");
+    expect(command("owner", "ls; cat /platform/data/projects/x/chat.json").action).toBe("deny");
+    expect(command("student", "env | sort").action).toBe("allow");
+  });
+
   it("denies metadata and other project paths for owners", () => {
     expect(command("owner", "cat /platform/data/projects/other/chat.json").action).toBe("deny");
     expect(command("owner", "cat ../other-project/chat.json", { otherWorkspaceRoots: ["/workspace/other-project"] }).action).toBe("deny");
@@ -127,6 +133,15 @@ describe("guard decisions", () => {
     expect(heredoc.matchedRules).not.toContain("hard.control-character");
   });
 
+  it("ignores heredoc delimiters and body text when checking the write target", () => {
+    const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("student"));
+    const result = agent("cat > index.js <<'EOF'\ncat ../other-project/chat.json\nEOF\n");
+    expect(result.action).toBe("allow_snapshot");
+    expect(result.segments.every((segment) => segment.zone === "workspace")).toBe(true);
+    expect(result.matchedRules).not.toContain("hard.dynamic");
+    expect(result.matchedRules).not.toContain("classify.unknown");
+  });
+
   it("reviews unsafe Agent cd prefixes before applying the chained command", () => {
     const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("collaborator"));
     for (const text of ["cd ~ && rm -rf Documents", "cd $HOME && rm -rf Documents", "cd ..'' && rm -rf p2", "cd - && rm -rf x"]) {
@@ -190,6 +205,21 @@ describe("guard decisions", () => {
     expect(command("observer", "git commit -m status").action).toBe("deny");
     expect(command("owner", "git clean -fdx -e log").action).toBe("ask");
     expect(command("owner", "git push origin feature-branch").action).toBe("ask");
+  });
+
+  it("treats workspace git restore operations as deletions with snapshots", () => {
+    for (const text of ["git checkout -- notes/status.txt", "git checkout .", "git restore notes/status.txt", "git stash", "git clean -fdx"]) {
+      expect(command("trusted", text).action).toBe("allow_snapshot");
+    }
+  });
+
+  it("distinguishes package scripts from dependency installation", () => {
+    for (const text of ["npm test", "npm run build", "pnpm test", "yarn exec lint"]) {
+      expect(command("student", text).action).toBe("allow");
+    }
+    for (const text of ["npm install", "pnpm add zod", "yarn update"]) {
+      expect(command("student", text).action).toBe("ask");
+    }
   });
 
   it("keeps dangerous legacy commands behind approval for exec-only capability", () => {

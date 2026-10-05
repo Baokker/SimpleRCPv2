@@ -84,6 +84,26 @@ describe("Agent Guard fake runtime permissions", () => {
     ]));
   }, 30_000);
 
+  it("replies to all approved permissions before rejecting another request in the same session", async () => {
+    running = await startServer();
+    const memberId = await joinMember(running.origin, "student", "student-multi");
+    const ownerId = await joinMember(running.origin, "teacher", "owner-multi");
+    const run = await createRun(running.origin, memberId, "fake-permission=multi fake-reply=multi-done");
+    const approvals = await waitForApprovals(running.origin, ownerId, run.id, 2);
+    const rejectId = approvals[0]!.id;
+    const approveId = approvals[1]!.id;
+    const rejected = await fetch(`${running.origin}/api/projects/demo/guard/approvals/${rejectId}`, {
+      method: "POST",
+      headers: headers(ownerId),
+      body: JSON.stringify({ approve: false })
+    });
+    expect(rejected.status).toBe(200);
+    await approve(running.origin, ownerId, approveId);
+    await expect(waitForRun(running.origin, memberId, run.id, "blocked_by_guard")).resolves.toMatchObject({ status: "blocked_by_guard" });
+    const trace = await readTrace(running.origin, memberId, run.id);
+    expect(trace.some((event) => event.type === "permission_reply_ignored")).toBe(false);
+  }, 30_000);
+
   it("cancels a run while its permission request is awaiting approval", async () => {
     running = await startServer();
     const memberId = await joinMember(running.origin, "student", "student");
@@ -236,6 +256,19 @@ async function waitForApproval(origin: string, memberId: string, runId: string) 
   const run = (await runResponse.json() as { run: { status: string; error?: string } }).run;
   const trace = await readTrace(origin, memberId, runId);
   throw new Error(`Agent approval did not appear; run=${run.status}; error=${run.error ?? "none"}; trace=${trace.map((event) => event.type).join(",")}`);
+}
+
+async function waitForApprovals(origin: string, memberId: string, runId: string, count: number) {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const response = await fetch(`${origin}/api/projects/demo/guard/approvals`, { headers: headers(memberId) });
+    const approvals = (await response.json() as { approvals: Array<{ id: string }> }).approvals;
+    if (approvals.length >= count) return approvals.slice(0, count);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  const runResponse = await fetch(`${origin}/api/projects/demo/agent/runs/${runId}`, { headers: headers(memberId) });
+  const run = (await runResponse.json() as { run: { status: string; error?: string } }).run;
+  throw new Error(`Expected ${count} approvals; run=${run.status}; error=${run.error ?? "none"}`);
 }
 
 async function approve(origin: string, memberId: string, approvalId: string) {

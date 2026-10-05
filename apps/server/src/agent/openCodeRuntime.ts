@@ -20,6 +20,15 @@ interface OpenCodeRuntimeOptions {
   guardMode?: "full" | "human-only" | "off";
 }
 
+export class OpenCodeEmptyResponseError extends Error {
+  readonly code = "empty_response";
+
+  constructor() {
+    super("OpenCode returned an empty response");
+    this.name = "OpenCodeEmptyResponseError";
+  }
+}
+
 export function createOpenCodeRuntime(
   options: OpenCodeRuntimeOptions
 ): AgentRuntime {
@@ -127,7 +136,7 @@ export function createOpenCodeRuntime(
         .filter((part) => part.type === "text")
         .map((part) => part.text)
         .join("\n");
-      if (!text.trim()) throw new Error("OpenCode returned an empty response");
+      if (!text.trim()) throw new OpenCodeEmptyResponseError();
       return { text, messageId: response.data.info.id };
     },
     async getDiff(input) {

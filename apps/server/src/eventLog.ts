@@ -28,6 +28,7 @@ const durableEventTypes = new Set([
   "agent_task_started",
   "agent_task_completed",
   "agent_task_failed",
+  "agent_task_blocked",
   "agent_task_cancelled"
 ]);
 

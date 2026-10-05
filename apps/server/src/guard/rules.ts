@@ -35,5 +35,9 @@ export function segmentAction(segment: GuardSegment, level: Level): { action: Ac
       rules.push("hard.nonowner.irreversible");
     }
   }
+  if (level === "owner" && segment.capabilities.includes("delete") && /\bgit\s+clean\b/i.test(segment.text)) {
+    action = stricter(action, "ask");
+    rules.push("hard.owner.git-clean");
+  }
   return { action, rules };
 }

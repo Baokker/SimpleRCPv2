@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { AgentRuntime } from "./agentRuntime.js";
+import { OpenCodeEmptyResponseError } from "./openCodeRuntime.js";
 
 export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, realKeyConfigured: boolean): AgentRuntime {
   const modes = new Map<string, "real" | "fake">();
@@ -78,7 +79,8 @@ function eventBelongsToSession(event: { data: unknown }, sessionId: string) {
 export function createFakeAgentRuntime(): AgentRuntime {
   const abortControllers = new Map<string, AbortController>();
   const listeners = new Map<string, Set<(event: { type: string; data: Record<string, unknown> }) => void | Promise<void>>>();
-  const permissionWaiters = new Map<string, { resolve: (reply: "once" | "reject") => void; reply404: boolean }>();
+  const permissionWaiters = new Map<string, { resolve: (reply: "once" | "reject") => void; reply404: boolean; sessionId: string; invalidatePeer?: string }>();
+  const blockedSessions = new Set<string>();
   let nextSessionId = 0;
 
   return {
@@ -104,20 +106,39 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
       };
       await emit("fake.started", { prompt: input.prompt });
-      const permissionMarker = input.prompt.match(/fake-permission=(bash|edit|v2|sub-session)/)?.[1];
+      const permissionMarker = input.prompt.match(/fake-permission=(bash|edit|v2|sub-session|multi)/)?.[1];
       if (permissionMarker) {
-        const requestId = `fake-permission-${input.sessionId}`;
-        const permission = permissionMarker === "edit" ? "edit" : "bash";
-        const metadata = permissionMarker === "edit"
-          ? { filepath: "src/fake-agent.ts", files: [{ movePath: ".env" }] }
-          : { command: "rm fake-agent.txt" };
-        const eventType = permissionMarker === "v2" ? "permission.v2.asked" : "permission.asked";
-        const sessionID = permissionMarker === "sub-session" ? "sub-session" : input.sessionId;
-        const reply = new Promise<"once" | "reject">((resolve) => {
-          permissionWaiters.set(requestId, { resolve, reply404: input.prompt.includes("fake-reply-404") });
-        });
-        await emit(eventType, { id: requestId, permission, sessionID, metadata });
-        if (sessionID === input.sessionId && await reply === "reject") throw new Error("Fake Agent permission was rejected");
+        const requests = permissionMarker === "multi"
+          ? [
+              { id: `fake-permission-${input.sessionId}-first`, command: "rm first.txt" },
+              { id: `fake-permission-${input.sessionId}-second`, command: "rm second.txt" }
+            ]
+          : [{ id: `fake-permission-${input.sessionId}`, command: permissionMarker === "edit" ? undefined : "rm fake-agent.txt" }];
+        const replies = requests.map((request) => new Promise<"once" | "reject">((resolve) => {
+          permissionWaiters.set(request.id, {
+            resolve,
+            reply404: input.prompt.includes("fake-reply-404"),
+            sessionId: input.sessionId,
+            invalidatePeer: permissionMarker === "multi" && request.id.endsWith("-first") ? requests[1]?.id : undefined
+          });
+        }));
+        for (const [index, request] of requests.entries()) {
+          const permission = permissionMarker === "edit" ? "edit" : "bash";
+          const metadata = permissionMarker === "edit"
+            ? { filepath: "src/fake-agent.ts", files: [{ movePath: ".env" }] }
+            : { command: request.command };
+          const eventType = permissionMarker === "v2" ? "permission.v2.asked" : "permission.asked";
+          const sessionID = permissionMarker === "sub-session" ? "sub-session" : input.sessionId;
+          await emit(eventType, { id: request.id, permission, sessionID, metadata });
+          if (permissionMarker !== "multi" && sessionID === input.sessionId && await replies[index]! === "reject") {
+            throw new Error("Fake Agent permission was rejected");
+          }
+        }
+        if (permissionMarker === "multi") {
+          const resolved = await Promise.all(replies);
+          if (blockedSessions.has(input.sessionId)) throw new OpenCodeEmptyResponseError();
+          if (resolved.some((reply) => reply === "reject")) throw new OpenCodeEmptyResponseError();
+        }
       }
       const writePath = [...input.prompt.matchAll(/fake-write=([^\s]+)/g)].at(-1)?.[1];
       if (writePath) {
@@ -146,9 +167,17 @@ export function createFakeAgentRuntime(): AgentRuntime {
     },
     async replyPermission(input) {
       const pending = permissionWaiters.get(input.requestId);
-      if (!pending) throw new Error("Fake permission request not found");
+      if (!pending) throw new Error("Permission request not found");
       permissionWaiters.delete(input.requestId);
       pending.resolve(input.reply);
+      if (input.reply === "reject" && pending.invalidatePeer) {
+        const peer = permissionWaiters.get(pending.invalidatePeer);
+        if (peer) {
+          permissionWaiters.delete(pending.invalidatePeer);
+          peer.resolve("reject");
+          blockedSessions.add(pending.sessionId);
+        }
+      }
       if (pending.reply404) throw new Error("Permission endpoint returned 404");
     },
     async cancel(input) {
@@ -168,6 +197,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
       abortControllers.clear();
       for (const pending of permissionWaiters.values()) pending.resolve("reject");
       permissionWaiters.clear();
+      blockedSessions.clear();
       listeners.clear();
     }
   };

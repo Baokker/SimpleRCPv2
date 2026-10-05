@@ -15,7 +15,7 @@ export interface Characterization {
 
 const plainDownloadToShellPattern = /^\s*(curl|wget)\s+[^;&|<>`$()]*\|\s*(sh|bash|zsh)\s*$/i;
 
-function splitShellCommands(command: string) {
+export function splitShellCommands(command: string) {
   const parts: string[] = [];
   let start = 0;
   let quote: "single" | "double" | undefined;
@@ -42,6 +42,25 @@ function splitShellCommands(command: string) {
   const finalPart = command.slice(start).trim();
   if (finalPart) parts.push(finalPart);
   return parts.length > 1 ? parts : [];
+}
+
+function stripHereDocument(command: string) {
+  let normalized = command;
+  const markerPattern = /<<(-?)[ \t]*(['"]?)([A-Za-z_][A-Za-z0-9_-]*)\2[^\n]*(?:\n|$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = markerPattern.exec(normalized))) {
+    const stripTabs = match[1] === "-";
+    const marker = match[3]!;
+    const bodyStart = match.index + match[0].length;
+    const bodyPattern = stripTabs
+      ? new RegExp(`^[\\t]*${marker}[ \\t]*(?:\\r?\\n|$)`, "m")
+      : new RegExp(`^${marker}[ \\t]*(?:\\r?\\n|$)`, "m");
+    const bodyMatch = bodyPattern.exec(normalized.slice(bodyStart));
+    const bodyEnd = bodyMatch ? bodyStart + bodyMatch.index + bodyMatch[0].length : normalized.length;
+    normalized = `${normalized.slice(0, match.index)}${normalized.slice(bodyEnd)}`;
+    markerPattern.lastIndex = match.index;
+  }
+  return normalized;
 }
 
 function zoneFor(target: string, request: GuardRequest, platformDataRoot: string, protectedPaths: string[], otherWorkspaceRoots: string[]): PathZone {
@@ -104,6 +123,12 @@ function hasGitContextOption(command: string) {
   });
 }
 
+function packageManagerCapability(command: string): Capability[] {
+  const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  const subcommand = input.slice(1).find((token) => !token.startsWith("-"))?.replace(/^['"]|['"]$/g, "").toLowerCase();
+  return ["install", "add", "ci", "i", "update"].includes(subcommand ?? "") ? ["install"] : ["exec"];
+}
+
 function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: string): Capability[] {
   if (kind === "read") return ["read"];
   if (kind === "edit") return ["write"];
@@ -117,17 +142,17 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
     const subcommand = gitSubcommand(command);
     if (["status", "diff", "log", "show", "branch", "rev-parse"].includes(subcommand)) return ["read"];
     if (["push", "pull", "fetch", "clone", "remote"].includes(subcommand)) return ["network"];
-    if (["checkout", "stash"].includes(subcommand)) return ["write"];
-    if (subcommand === "clean") return ["delete"];
+    if (["checkout", "restore", "stash", "clean"].includes(subcommand)) return ["delete"];
     if (["reset", "rebase", "commit", "merge"].includes(subcommand)) return ["history"];
   }
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
   if (["chmod", "chown", "chgrp", "sudo", "su", "doas"].includes(name)) return ["privilege"];
   if (["kill", "killall", "pkill", "taskkill", "stop-process"].includes(name)) return ["process"];
-  if (["npm", "pnpm", "yarn", "pip", "pip3", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return ["install"];
+  if (["npm", "pnpm", "yarn"].includes(name)) return packageManagerCapability(command);
+  if (["pip", "pip3", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return ["install"];
   if (["curl", "wget", "scp", "sftp", "ssh", "rsync"].includes(name)) return ["network"];
   if (name === "git" && /\b(push|pull|fetch|clone|remote)\b/i.test(command)) return ["network"];
-  if (name === "git" && /\b(checkout|stash|clean)\b/i.test(command)) return ["write"];
+  if (name === "git" && /\b(checkout|restore|stash|clean)\b/i.test(command)) return ["delete"];
   if (name === "git" && /\b(reset|rebase|commit|merge)\b/i.test(command)) return ["history"];
   if (["mkdir", "md", "touch", "tee", "cp", "copy", "mv", "move", "new-item", "set-content", "add-content"].includes(name)) return ["write"];
   return ["exec"];
@@ -140,13 +165,15 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && (name === "scp" || name === "rsync" || /(?:^|\s)(?:-d|--data\w*|-F|--form\w*|-T|--upload-file)(?:\s|=)/i.test(command))) return "irreversible";
-  if (name === "git" && subcommand === "clean") return "irreversible";
   if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";
   return "reversible";
 }
 
 export function characterize(request: GuardRequest, platformDataRoot: string, protectedPaths: string[] = [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], otherWorkspaceRoots: string[] = []): Characterization {
-  const command = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
+  const rawCommand = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
+  const command = request.source === "agent" && request.kind === "command"
+    ? stripHereDocument(rawCommand)
+    : rawCommand;
   if (request.source === "agent" && request.kind === "command" && /\r?\n/.test(command)) {
     const results = command.split(/\r?\n/).filter((line) => line.trim()).map((line) => characterize({ ...request, command: line }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
     return {
@@ -184,15 +211,17 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     }
   }
   const plainDownloadToShell = request.source === "agent" && request.kind === "command" && plainDownloadToShellPattern.test(command);
-  if (request.source === "agent" && request.kind === "command" && !plainDownloadToShell) {
+  if (request.kind === "command" && !plainDownloadToShell) {
     const parts = splitShellCommands(command);
     if (parts.length > 1) {
       const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
+      const benignPipeline = /^\s*[^;&|<>`$()]+(?:\|[^;&|<>`$()]+)+\s*$/i.test(command)
+        && results.every((result) => result.legacyRisk === "safe" && !result.dynamic && result.segments.every((segment) => segment.reversibility === "reversible"));
       return {
         segments: results.flatMap((result) => result.segments),
         legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
         unknown: results.some((result) => result.unknown),
-        dynamic: true,
+        dynamic: !benignPipeline,
         gitContext: results.some((result) => result.gitContext),
         plainDownloadToShell: false
       };
