@@ -45,8 +45,7 @@ export async function extractKnowledgeCardDraft(
     const baseTimeoutMs = options.timeoutMs ?? 30_000;
     const maxAbortRetries = 2;
 
-    // Intentionally do NOT include suggested* fields in the model payload to avoid biasing outputs
-    // toward fixed phrases. We still keep them in `input` for fallback/normalization.
+    // 不把 suggested* 字段放入模型请求，避免输出被固定短语影响；这些字段仍用于兜底和规范化。
     const payload = {
         triggerType: input.triggerType,
         anchors: input.anchors ?? [],
@@ -101,7 +100,7 @@ export async function extractKnowledgeCardDraft(
         attempt++;
     }
 
-    // Deterministic, grounded fallback (never invents facts).
+    // 使用确定且有证据依据的兜底内容，不生成证据中没有的事实。
     options.onFallback?.();
     return createHeuristicFallbackDraft(input);
 }

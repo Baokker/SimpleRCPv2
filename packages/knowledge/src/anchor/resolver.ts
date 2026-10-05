@@ -3,7 +3,7 @@ import type { KnowledgeAnchor, TextRange } from '../schema/card.js';
 export interface ResolvedAnchor {
     startOffset: number;
     endOffset: number;
-    /** 0..1 */
+    /** 置信度范围为 0 到 1。 */
     confidence: number;
 }
 
@@ -15,7 +15,7 @@ export function resolveKnowledgeAnchorInText(docText: string, anchor: KnowledgeA
         return undefined;
     }
 
-    // 1) Range check (fast path).
+    // 第一层：检查范围是否仍然匹配。
     if (anchor.rangeAtCapture) {
         const rangeOffsets = offsetsFromRange(docText, anchor.rangeAtCapture);
         if (rangeOffsets) {
@@ -26,7 +26,7 @@ export function resolveKnowledgeAnchorInText(docText: string, anchor: KnowledgeA
         }
     }
 
-    // 2) Exact search (unique).
+    // 第二层：查找唯一的完整文本。
     const first = docText.indexOf(selectionText);
     if (first !== -1) {
         const second = docText.indexOf(selectionText, first + 1);
@@ -35,7 +35,7 @@ export function resolveKnowledgeAnchorInText(docText: string, anchor: KnowledgeA
         }
     }
 
-    // 3) Fuzzy: derive candidates from landmark lines.
+    // 第三层：根据标志行生成模糊匹配候选。
     const fp = anchor.fingerprint;
     const landmarks = (fp?.landmarkLines ?? []).filter(Boolean);
     if (!landmarks.length) {
@@ -162,7 +162,7 @@ function allOccurrences(haystack: string, needle: string, maxHits: number): numb
 function computeLineStarts(text: string): number[] {
     const starts: number[] = [0];
     for (let i = 0; i < text.length; i++) {
-        if (text.charCodeAt(i) === 10 /* \n */) {
+        if (text.charCodeAt(i) === 10 /* 换行符 */) {
             starts.push(i + 1);
         }
     }

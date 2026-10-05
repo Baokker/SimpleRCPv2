@@ -1,4 +1,4 @@
-import { createOpenAICompatibleClient } from '../src/openaiCompatible.js';
+import { createOpenAICompatibleClient } from '../src/llm/openaiCompatible.js';
 import { extractKnowledgeCardDraft } from '../src/extract/extract.js';
 
 const baseUrl = process.env.DEEPSEEK_BASE_URL;
