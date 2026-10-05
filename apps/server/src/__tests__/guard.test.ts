@@ -204,6 +204,15 @@ describe("guard decisions", () => {
     }
   });
 
+  it("distinguishes package scripts from dependency installation", () => {
+    for (const text of ["npm test", "npm run build", "pnpm test", "yarn exec lint"]) {
+      expect(command("student", text).action).toBe("allow");
+    }
+    for (const text of ["npm install", "pnpm add zod", "yarn update"]) {
+      expect(command("student", text).action).toBe("ask");
+    }
+  });
+
   it("keeps dangerous legacy commands behind approval for exec-only capability", () => {
     for (const text of ["dd if=/dev/zero of=src/a.ts", "halt"]) {
       const result = command("student", text);

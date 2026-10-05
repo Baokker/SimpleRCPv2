@@ -123,6 +123,12 @@ function hasGitContextOption(command: string) {
   });
 }
 
+function packageManagerCapability(command: string): Capability[] {
+  const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  const subcommand = input.slice(1).find((token) => !token.startsWith("-"))?.replace(/^['"]|['"]$/g, "").toLowerCase();
+  return ["install", "add", "ci", "i", "update"].includes(subcommand ?? "") ? ["install"] : ["exec"];
+}
+
 function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: string): Capability[] {
   if (kind === "read") return ["read"];
   if (kind === "edit") return ["write"];
@@ -142,7 +148,8 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
   if (["chmod", "chown", "chgrp", "sudo", "su", "doas"].includes(name)) return ["privilege"];
   if (["kill", "killall", "pkill", "taskkill", "stop-process"].includes(name)) return ["process"];
-  if (["npm", "pnpm", "yarn", "pip", "pip3", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return ["install"];
+  if (["npm", "pnpm", "yarn"].includes(name)) return packageManagerCapability(command);
+  if (["pip", "pip3", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return ["install"];
   if (["curl", "wget", "scp", "sftp", "ssh", "rsync"].includes(name)) return ["network"];
   if (name === "git" && /\b(push|pull|fetch|clone|remote)\b/i.test(command)) return ["network"];
   if (name === "git" && /\b(checkout|restore|stash|clean)\b/i.test(command)) return ["delete"];
