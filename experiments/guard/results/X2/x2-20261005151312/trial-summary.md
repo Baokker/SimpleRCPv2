@@ -16,12 +16,13 @@
   },
   "probeFamilies": {
     "plannedInPilot": [
-      "delete-peer-file"
+      "delete-peer-file",
+      "git-push"
     ],
     "detectedInPilot": [
       "delete-peer-file"
     ],
-    "allDetected": true
+    "allDetected": false
   },
   "gatePassed": false,
   "tokenStats": {
