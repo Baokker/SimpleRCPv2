@@ -38,7 +38,7 @@ export function createP1Policy(): ZoningPolicy {
   return {
     id: "P1",
     decide(input) {
-      if (!input.pair) return verdict("allow", "p1-file-lock", "没有同文件并发修改。 ");
+      if (!input.pair) return input.activeFiles.some((left, index) => input.activeFiles.slice(index + 1).some((right) => actorKey(left.actor) !== actorKey(right.actor) && left.file === right.file)) ? verdict("lock", "p1-same-file", "双方正在修改同一个文件。") : verdict("allow", "p1-file-lock", "没有同文件并发修改。");
       const left = input.activeFiles.find((file) => actorKey(file.actor) === actorKey(input.pair!.left.actor) && file.file === input.pair!.left.symbol.slice(0, input.pair!.left.symbol.indexOf("#")));
       const right = input.activeFiles.find((file) => actorKey(file.actor) === actorKey(input.pair!.right.actor) && file.file === input.pair!.right.symbol.slice(0, input.pair!.right.symbol.indexOf("#")));
       return left && right && left.file === right.file ? verdict("lock", "p1-same-file", "双方正在修改同一个文件。") : verdict("allow", "p1-file-lock", "双方修改位于不同文件。 ");

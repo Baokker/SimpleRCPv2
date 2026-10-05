@@ -21,6 +21,10 @@ export interface OperatorSpec {
 export interface BenchVariant {
   id: string;
   kind: "conflict" | "safe";
+  operatorId?: string;
+  dependencyMode?: "old-behavior" | "new-behavior" | "unrelated";
+  probe?: string;
+  probes?: BenchProbe[];
   truth: BenchTruth;
   detectability: Detectability;
   baseline: Record<string, string>;
@@ -28,7 +32,12 @@ export interface BenchVariant {
   rightOnly: Record<string, string>;
   merged: Record<string, string>;
   trace: TraceEvent[];
+  traceFile?: string;
+  traceHash?: string;
 }
+
+export type ProbeOwner = "origin-intent" | "candidate-intent" | "shared-regression" | "observation";
+export interface BenchProbe { id: string; owner: ProbeOwner; expression: string; expected?: unknown; statement: string }
 
 export interface BenchRelationGroup {
   id: string;
@@ -45,6 +54,8 @@ export interface BenchManifest {
   generatedBy: string;
   generationCommand: string;
   codeCommit: string;
+  typing?: { characterIntervalMs: number; pauseEveryCharacters: number; pauseMs: number; startGapMs: [number, number] };
+  dependencyMix?: { oldBehavior: number; newBehavior: number; unrelated: number; schedule: string };
   projects: string[];
   groups: BenchRelationGroup[];
   split: { development: string[]; holdout: string[] };
@@ -54,6 +65,11 @@ export interface ProbeRun {
   passed: boolean;
   observations: Record<string, string | number | boolean>;
   typeError?: boolean;
+  probes?: Record<string, { owner: ProbeOwner; passed: boolean; value?: unknown; error?: string }>;
+  timeout?: boolean;
+  stdout?: string;
+  stderr?: string;
+  diagnostics?: string[];
 }
 
 export interface BenchLabel {

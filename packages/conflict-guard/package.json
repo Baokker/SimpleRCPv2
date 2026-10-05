@@ -14,12 +14,15 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "bench:generate": "node --experimental-strip-types scripts/bench-generate.ts",
+    "bench:prepare": "node --experimental-strip-types scripts/bench-prepare.ts",
     "bench:label": "node --experimental-strip-types scripts/bench-label.ts",
+    "bench:import-greylock": "node --experimental-strip-types scripts/bench-import-greylock.ts",
     "replay:run": "node --experimental-strip-types scripts/replay-run.ts",
     "replay:check": "node --experimental-strip-types scripts/replay-check.ts",
     "replay:ui": "node --experimental-strip-types scripts/replay-ui.ts"
   },
   "dependencies": {
+    "fast-diff": "1.3.0",
     "typescript": "^5.9.3",
     "yjs": "^13.6.31"
   },

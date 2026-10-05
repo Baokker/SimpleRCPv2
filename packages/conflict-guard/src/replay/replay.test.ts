@@ -7,6 +7,9 @@ import { createP0Policy, createP1Policy, createP2Policy } from "./policies.js";
 import { replayTrace } from "./engine.js";
 import type { TraceEvent } from "../trace/trace.js";
 import { calculateReplayMetrics } from "./metrics.js";
+import { checkReplay } from "./check.js";
+import fs from "node:fs/promises";
+import { readTrace } from "../trace/trace.js";
 
 describe("阶段 4 回放基础设施", () => {
   it("虚拟时钟按时间和创建顺序执行定时器", () => {
@@ -65,7 +68,7 @@ describe("阶段 4 回放基础设施", () => {
     const trace = simpleTrace();
     trace.push({ schema: 3, seq: 4, at: 20, type: "doc_open", file: "src/b.ts", text: "import { run } from \"./a.js\";\nexport function other() { return run(); }\n", textHash: "" });
     trace.push({ schema: 3, seq: 5, at: 30, type: "edit", file: "src/b.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 0, deleted: "import { run } from \"./a.js\";\nexport function other() { return run(); }\n", inserted: "import { run } from \"./a.js\";\nexport function other() { return run() + 1; }\n" }], revisionAfter: 1 });
-    trace.push({ schema: 3, seq: 6, at: 40, type: "edit", file: "src/a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 0, deleted: "export function run() { return 2; }\n", inserted: "export function run() { return 3; }\n" }], revisionAfter: 2 });
+    trace.push({ schema: 3, seq: 6, at: 1600, type: "edit", file: "src/a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 0, deleted: "export function run() { return 2; }\n", inserted: "export function run() { return 3; }\n" }], revisionAfter: 2 });
     const result = replayTrace(trace, { policy: "P2" });
     expect(result.blockedEdits.some((edit) => edit.seq === 6 && edit.shouldHaveBeenBlocked)).toBe(true);
   });
@@ -80,6 +83,68 @@ describe("阶段 4 回放基础设施", () => {
     expect(metrics.byOperatorFamily.IC.groups).toBe(1);
     expect(metrics.cardsPerHour).toBeGreaterThan(0);
   });
+
+  it("P1 为同文件无语义关系的修改建立文件锁，P2 放行", () => {
+    const text = "export function alpha() { return 1; }\nexport function beta() { return 2; }\n";
+    const trace: TraceEvent[] = [
+      { schema: 3, seq: 1, at: 0, type: "doc_open", file: "a.ts", text },
+      { schema: 3, seq: 2, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "1", inserted: "3" }] },
+      { schema: 3, seq: 3, at: 200, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("2"), deleted: "2", inserted: "4" }] }
+    ];
+    const p1 = replayTrace(trace, { policy: "P1", endAt: 3000 });
+    expect(p1.judgements.map((item) => item.verdict.decision)).toEqual(["lock"]);
+    expect(p1.semanticRelations).toBe(0);
+    expect(replayTrace(trace, { policy: "P2" }).judgements).toEqual([]);
+  });
+
+  it("P3 执行同符号规则，冻结区域外编辑继续执行并记录写盘闸门", () => {
+    const text = "export function alpha() { return 1; }\nexport function beta() { return 2; }\n";
+    const trace: TraceEvent[] = [
+      { schema: 3, seq: 1, at: 0, type: "doc_open", file: "a.ts", text },
+      { schema: 3, seq: 2, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "1", inserted: "3" }] },
+      { schema: 3, seq: 3, at: 200, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("1"), deleted: "3", inserted: "4" }] },
+      { schema: 3, seq: 4, at: 1800, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("2"), deleted: "2", inserted: "5" }] },
+      { schema: 3, seq: 5, at: 1900, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "4", inserted: "6" }] }
+    ];
+    const result = replayTrace(trace, { policy: "P3", endAt: 4000 });
+    expect(result.judgements[0]!.verdict.ruleId).toBe("same-symbol-concurrent-write");
+    expect(result.blockedEdits.find((edit) => edit.seq === 4)!.shouldHaveBeenBlocked).toBe(false);
+    expect(result.blockedEdits.find((edit) => edit.seq === 5)!.shouldHaveBeenBlocked).toBe(true);
+    expect(result.gateIntervals.some((interval) => interval.file === "a.ts")).toBe(true);
+    expect(result.persistBlockedCount).toBeGreaterThan(0);
+    expect(result.finalTexts["a.ts"]).toContain("return 6");
+  });
+
+  it("缺少录制判定的轨迹不宣称一致性通过", () => {
+    expect(checkReplay(simpleTrace())).toMatchObject({ checked: false, valid: false });
+  });
+
+  it("mirror_resync 使用产品的差异转换，保留两人的独立修改区域", () => {
+    const text = "export function alpha() { return 1; }\nexport function beta() { return 2; }\n";
+    const trace: TraceEvent[] = [
+      { schema: 3, seq: 1, at: 0, type: "doc_open", file: "a.ts", text },
+      { schema: 3, seq: 2, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "1", inserted: "3" }] },
+      { schema: 3, seq: 3, at: 200, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("2"), deleted: "2", inserted: "4" }] },
+      { schema: 3, seq: 4, at: 1800, type: "mirror_resync", file: "a.ts", text: "// refreshed\n" + text.replace("return 1", "return 3").replace("return 2", "return 4") }
+    ];
+    const result = replayTrace(trace, { policy: "P3" });
+    expect(result.judgements).toEqual([]);
+    expect(result.finalTexts["a.ts"]).toContain("// refreshed");
+  });
+
+  it("D2 的 51 个案例重新执行产品逻辑，六个交付场景保留来源限制", async () => {
+    const root = new URL("../../bench/datasets/d2-greylock/", import.meta.url);
+    const manifest = JSON.parse(await fs.readFile(new URL("manifest.json", root), "utf8")) as { cases: Array<{ id: string; category: string; trace: string; unavailable?: string; actual: Array<{ ruleId: string; decision: string; revision: number }> }> };
+    expect(manifest.cases.filter((item) => item.category === "rule-case")).toHaveLength(51);
+    expect(manifest.cases.filter((item) => item.category === "delivery-scenario")).toHaveLength(6);
+    for (const item of manifest.cases) {
+      const events = readTrace(await fs.readFile(new URL(item.trace, root), "utf8"));
+      const result = replayTrace(events, { policy: "P3" });
+      expect(result.judgements.map((event) => ({ ruleId: event.verdict.ruleId, decision: event.verdict.decision, revision: event.revision })), item.id).toEqual(item.actual);
+      if (item.category === "rule-case") expect(result.judgements.length, item.id).toBeGreaterThan(0);
+      else expect(item.unavailable, item.id).toMatch(/one-side-unchanged|no-static-relation/);
+    }
+  }, 30_000);
 });
 
 function sampleChange(key: string): SymbolChange {

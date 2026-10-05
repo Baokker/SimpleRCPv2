@@ -1,5 +1,6 @@
 export * from "./model/types.js";
 export * from "./tracking/rangeTransform.js";
+export * from "./tracking/textDiff.js";
 export * from "./tracking/tracker.js";
 export * from "./trace/trace.js";
 export * from "./semantic/types.js";
@@ -14,4 +15,5 @@ export * from "./replay/files.js";
 export * from "./replay/policies.js";
 export * from "./replay/metrics.js";
 export * from "./replay/engine.js";
+export * from "./replay/check.js";
 export * from "./bench/index.js";

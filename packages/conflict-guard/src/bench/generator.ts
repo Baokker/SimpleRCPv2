@@ -1,108 +1,86 @@
 import { createHash } from "node:crypto";
+import * as Y from "yjs";
 import type { TraceEvent } from "../trace/trace.js";
-import type { BenchManifest, BenchRelationGroup, BenchVariant, OperatorSpec, SeedProject } from "./types.js";
+import type { BenchManifest, BenchRelationGroup, BenchVariant, SeedProject } from "./types.js";
 import { OPERATOR_SPECS } from "./operators.js";
+import { operatorTemplate } from "./templates.js";
 
-export interface GenerateOptions {
-  groups: number;
-  seed: number;
-  projects: SeedProject[];
-  generatedBy?: string;
-}
-
+export interface GenerateOptions { groups: number; seed: number; projects: SeedProject[]; generatedBy?: string; codeCommit?: string; generationCommand?: string }
 export function generateManifest(options: GenerateOptions): BenchManifest {
   if (!Number.isInteger(options.groups) || options.groups < 1) throw new Error("groups 必须为正整数");
   if (options.projects.length === 0) throw new Error("至少需要一个种子项目");
   const random = createRandom(options.seed);
+  const projects = [...options.projects].sort((a, b) => a.name.localeCompare(b.name));
+  const shuffled = [...projects].sort((a, b) => hash(`${options.seed}:${a.name}`).localeCompare(hash(`${options.seed}:${b.name}`)));
+  const devProjects = new Set(shuffled.slice(0, Math.max(1, Math.round(projects.length * 0.4))).map((project) => project.name));
+  const reserved = new Set(["EB-1", "SS-3"]);
   const groups: BenchRelationGroup[] = [];
   for (let index = 0; index < options.groups; index += 1) {
-    const project = options.projects[random.nextInt(options.projects.length)]!;
-    const operator = OPERATOR_SPECS[index % OPERATOR_SPECS.length]!;
-    const groupSeed = random.nextInt(2_147_483_647);
-    const projectName = project.name || `seed-${index}`;
-    const split = holdout(projectName, operator.id, index, options.groups) ? "holdout" : "dev";
-    const baseline = projectFiles(project, index);
-    const conflict = makeVariant({ id: `d1-${index + 1}-conflict`, kind: "conflict", operator, baseline, seed: groupSeed });
-    const safe = makeVariant({ id: `d1-${index + 1}-safe`, kind: "safe", operator, baseline, seed: groupSeed });
-    groups.push({ id: `d1-${String(index + 1).padStart(4, "0")}`, project: projectName, operator, split, seed: groupSeed, variants: { conflict, safe } });
+    const project = projects[index % projects.length]!;
+    const eligible = OPERATOR_SPECS.filter((operator) => operator.id !== "SF-4" && (!devProjects.has(project.name) || !reserved.has(operator.id)));
+    const operator = index % 10 === 9 ? OPERATOR_SPECS.find((operator) => operator.id === "SF-4")! : eligible[(index - Math.floor(index / 10)) % eligible.length]!;
+    const seed = random.nextInt(2_147_483_647);
+    const variants = (kind: "conflict" | "safe"): BenchVariant => {
+      const template = operatorTemplate(operator.id, kind === "safe", seed);
+      const baseline = { ...project.files, ...template.baseline };
+      const leftOnly = { ...baseline, ...template.left };
+      const rightOnly = { ...baseline, ...template.right };
+      const merged = { ...baseline, ...template.left, ...template.right, ...template.merged };
+      return { id: `d1-${index + 1}-${kind}`, kind, operatorId: operator.id, dependencyMode: operator.id === "SF-4" ? "unrelated" : kind === "safe" ? "new-behavior" : "old-behavior", probes: template.probes, truth: kind === "safe" ? "allow" : operator.expectedTruth, detectability: kind === "safe" ? "none" : operator.expectedDetectability, baseline, leftOnly, rightOnly, merged, trace: buildTrace(baseline, template.left, template.right, seed) };
+    };
+    groups.push({ id: `d1-${String(index + 1).padStart(4, "0")}`, project: project.name, operator, split: devProjects.has(project.name) ? "dev" : "holdout", seed, variants: { conflict: variants("conflict"), safe: variants("safe") } });
   }
-  return { version: "d1-v1", seed: options.seed, generatedBy: options.generatedBy ?? "@simplercp/conflict-guard bench:generate", generationCommand: "bench:generate --seeds <dir> --out <dataset> --groups <n> --seed <s>", codeCommit: "working-tree", projects: [...new Set(groups.map((group) => group.project))].sort(), groups, split: { development: groups.filter((group) => group.split === "dev").map((group) => group.id), holdout: groups.filter((group) => group.split === "holdout").map((group) => group.id) } };
+  const unrelated = Math.floor(options.groups / 10) * 2;
+  return { version: "d1-v1", seed: options.seed, generatedBy: options.generatedBy ?? "@simplercp/conflict-guard bench:generate", generationCommand: options.generationCommand ?? `bench:generate --seeds bench/seeds --out bench/datasets/d1-v1 --groups ${options.groups} --seed ${options.seed}`, codeCommit: options.codeCommit ?? "unspecified", typing: { characterIntervalMs: 20, pauseEveryCharacters: 24, pauseMs: 180, startGapMs: [100, 399] }, dependencyMix: { oldBehavior: options.groups - unrelated / 2, newBehavior: options.groups - unrelated / 2, unrelated, schedule: "每十个关系组包含一个无关组；其余组分别包含依赖旧行为与依赖新行为的两个变体。" }, projects: projects.map((project) => project.name), groups, split: { development: groups.filter((group) => group.split === "dev").map((group) => group.id), holdout: groups.filter((group) => group.split === "holdout").map((group) => group.id) } };
 }
 
-function makeVariant(options: { id: string; kind: "conflict" | "safe"; operator: OperatorSpec; baseline: Record<string, string>; seed: number }): BenchVariant {
-  const leftOnly = clone(options.baseline);
-  const rightOnly = clone(options.baseline);
-  const merged = clone(options.baseline);
-  const producer = "src/producer.ts";
-  const consumer = "src/consumer.ts";
-  const origin = originText(options.operator, options.seed);
-  const candidate = candidateText(options.operator, options.kind, options.seed);
-  leftOnly[producer] = origin.producer;
-  rightOnly[consumer] = candidate.consumer;
-  merged[producer] = origin.producer;
-  merged[consumer] = candidate.consumer;
-  if (options.operator.id === "IC-1") leftOnly[consumer] = `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1, "USD"); }\n`;
-  const trace = buildTrace(options.baseline, leftOnly, rightOnly);
-  return { id: options.id, kind: options.kind, truth: options.kind === "safe" ? "allow" : options.operator.expectedTruth, detectability: options.kind === "safe" ? "none" : options.operator.expectedDetectability, baseline: clone(options.baseline), leftOnly, rightOnly, merged, trace };
-}
-
-function originText(operator: OperatorSpec, seed: number) {
-  const marker = seed % 2 === 0 ? "origin" : "changed";
-  if (operator.id === "IC-1") return { producer: `export function applyDiscount(price: number, rate: number, currency: string): number { return price * (1 - rate); }\n`, marker };
-  if (operator.id === "IC-2") return { producer: `export function applyDiscount(price: number, rate: number): { value: number } { return { value: price * (1 - rate) }; }\n`, marker };
-  if (operator.id === "IC-3") return { producer: `export function applyDiscount(price: number, rate: number): number { return price * (1 - rate) * 1000; }\n`, marker };
-  if (operator.family === "CP") return { producer: `export function applyDiscount(price: number, rate: number): number { const ${marker} = price * (1 - rate); return ${marker}; }\n`, marker };
-  if (operator.family === "SS") return { producer: `let shared = 0;\nexport function applyDiscount(price: number, rate: number): number { shared += 1; return price * (1 - rate); }\n`, marker };
-  if (operator.family === "EB") return { producer: `export function applyDiscount(price: number, rate: number): number | undefined { if (rate < 0) return undefined; return price * (1 - rate); }\n`, marker };
-  return { producer: `export function applyDiscount(price: number, rate: number): number { console.log("${marker}"); return price * (1 - rate); }\n`, marker };
-}
-
-function candidateText(operator: OperatorSpec, kind: "conflict" | "safe", seed: number) {
-  if (kind === "safe") return { consumer: operator.id === "IC-1" ? `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { console.log("trace-${seed % 7}"); return applyDiscount(price, 0.1, "USD"); }\n` : `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { console.log("trace-${seed % 7}"); return applyDiscount(price, 0.1); }\n` };
-  if (operator.id === "IC-1") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1) + 0; }\n` };
-  if (operator.id === "IC-2") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1).value; }\n` };
-  if (operator.id === "IC-3") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1) / 1000; }\n` };
-  if (operator.family === "EB") return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { try { return applyDiscount(price, 0.1) as number; } catch { return price; } }\n` };
-  return { consumer: `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1) + 1; }\n` };
-}
-
-function projectFiles(project: SeedProject, index: number) {
-  const files = clone(project.files);
-  files["src/producer.ts"] = `export function applyDiscount(price: number, rate: number): number { return price * (1 - rate); }\n`;
-  files["src/consumer.ts"] = `import { applyDiscount } from "./producer.js";\nexport function checkout(price: number) { return applyDiscount(price, 0.1); }\n`;
-  files[`src/fixture-${index % 3}.ts`] = `export const fixture${index % 3} = ${index};\n`;
-  return files;
-}
-
-function buildTrace(baseline: Record<string, string>, leftOnly: Record<string, string>, rightOnly: Record<string, string>): TraceEvent[] {
-  const events: TraceEvent[] = [{ schema: 3, seq: 1, at: 0, type: "session_start", mode: "rules", seed: 0 }];
-  let seq = 2;
-  const actor = (memberId: string) => ({ kind: "human", memberId });
-  for (const file of ["src/producer.ts", "src/consumer.ts"]) {
-    const text = baseline[file] ?? "";
-    events.push({ schema: 3, seq: seq++, at: 0, type: "doc_open", file, text, textHash: hash(text) });
+function buildTrace(baseline: Record<string, string>, left: Record<string, string>, right: Record<string, string>, seed: number): TraceEvent[] {
+  const events: TraceEvent[] = [{ schema: 3, seq: 1, at: 0, type: "session_start", mode: "rules", seed, config: { idleMs: 1500, maxBatchDurationMs: 5000, activeIdleMs: 600000 }, typing: { characterIntervalMs: 20, pauseEveryCharacters: 24, pauseMs: 180 } }];
+  for (const file of Object.keys(baseline).sort()) events.push({ schema: 3, seq: events.length + 1, at: 0, type: "doc_open", file, text: baseline[file], textHash: hash(baseline[file]!) });
+  const edits: Array<{ file: string; memberId: string; at: number; from: number; deleted: string; inserted: string }> = [];
+  const documents = new Map<string, Y.Doc>();
+  const anchors = new Map<string, { cursor: Y.RelativePosition; end: Y.RelativePosition }>();
+  for (const file of Object.keys(baseline).sort()) {
+    const document = new Y.Doc(); document.clientID = documents.size + 1;
+    document.getText("content").insert(0, baseline[file]!); documents.set(file, document);
   }
-  const edits: Array<[string, string, string, number]> = [["src/producer.ts", leftOnly["src/producer.ts"] ?? "", "origin", 100], ["src/consumer.ts", rightOnly["src/consumer.ts"] ?? "", "candidate", 220]];
-  for (const [file, after, memberId, at] of edits) {
-    const before = baseline[file] ?? "";
-    events.push({ schema: 3, seq: seq++, at, type: "edit", file, origin: actor(memberId), ops: [{ from: 0, deleted: before, inserted: after }], revisionAfter: 1 });
+  for (const [memberId, changes, start] of [["origin", left, 100], ["candidate", right, 200 + seed % 300]] as const) {
+    for (const [file, after] of Object.entries(changes)) {
+      const before = baseline[file]!;
+      let prefix = 0;
+      while (prefix < before.length && prefix < after.length && before[prefix] === after[prefix]) prefix += 1;
+      let suffix = 0;
+      while (suffix < before.length - prefix && suffix < after.length - prefix && before[before.length - 1 - suffix] === after[after.length - 1 - suffix]) suffix += 1;
+      const removed = before.slice(prefix, before.length - suffix);
+      const added = after.slice(prefix, after.length - suffix);
+      const text = documents.get(file)!.getText("content");
+      anchors.set(`${memberId}:${file}`, { cursor: Y.createRelativePositionFromTypeIndex(text, prefix, -1), end: Y.createRelativePositionFromTypeIndex(text, before.length - suffix, -1) });
+      if (removed.length) edits.push({ file, memberId, at: start, from: prefix, deleted: removed, inserted: "" });
+      for (let index = 0; index < added.length; index += 1) edits.push({ file, memberId, at: start + index * 20 + Math.floor(index / 24) * 180, from: prefix + index, deleted: "", inserted: added[index]! });
+    }
   }
+  const revisions = new Map<string, number>();
+  const ordered = edits.sort((a, b) => a.at - b.at || a.memberId.localeCompare(b.memberId));
+  for (const edit of ordered) {
+    const document = documents.get(edit.file)!;
+    const text = document.getText("content");
+    const anchor = anchors.get(`${edit.memberId}:${edit.file}`)!;
+    const from = Y.createAbsolutePositionFromRelativePosition(anchor.cursor, document)!.index;
+    const end = edit.deleted ? Y.createAbsolutePositionFromRelativePosition(anchor.end, document)!.index : from;
+    const deleted = text.toString().slice(from, end);
+    if (edit.deleted && deleted !== edit.deleted) throw new Error(`算子的文本区域发生重叠：${edit.file}`);
+    document.transact(() => { if (deleted) text.delete(from, deleted.length); if (edit.inserted) text.insert(from, edit.inserted); });
+    anchor.cursor = Y.createRelativePositionFromTypeIndex(text, from + edit.inserted.length, -1);
+    const revision = (revisions.get(edit.file) ?? 0) + 1;
+    revisions.set(edit.file, revision);
+    events.push({ schema: 3, seq: events.length + 1, at: edit.at, type: "edit", file: edit.file, origin: { kind: "human", memberId: edit.memberId }, ops: [{ from, deleted, inserted: edit.inserted }], revisionAfter: revision });
+  }
+  for (const memberId of ["origin", "candidate"]) {
+    const last = [...ordered].reverse().find((edit) => edit.memberId === memberId);
+    if (last) events.push({ schema: 3, seq: events.length + 1, at: (ordered.at(-1)?.at ?? 0) + 5000, type: "cursor", memberId, file: last.file, position: { lineNumber: 1, column: 1 } });
+  }
+  for (const document of documents.values()) document.destroy();
   return events;
 }
-
-function holdout(project: string, operator: string, index: number, total: number) {
-  return index >= Math.max(1, Math.ceil(total * 0.4)) || project.toLowerCase().includes("holdout") || ["EB-1", "SS-3"].includes(operator);
-}
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function hash(value: string) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function createRandom(seed: number) {
-  let state = (seed >>> 0) || 1;
-  return { nextInt(max: number) { state = (state * 1_664_525 + 1_013_904_223) >>> 0; return state % max; } };
-}
+function hash(text: string) { return createHash("sha256").update(text).digest("hex"); }
+function createRandom(seed: number) { let state = seed >>> 0 || 1; return { nextInt(max: number) { state = (state * 1_664_525 + 1_013_904_223) >>> 0; return state % max; } }; }

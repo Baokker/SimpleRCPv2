@@ -1,11 +1,10 @@
-import * as ts from "typescript";
 import type { SemanticFileProvider } from "../semantic/types.js";
 
 export class MemoryFileProvider implements SemanticFileProvider {
   private readonly files = new Map<string, { text: string; version: number }>();
   private versionCounter = 0;
 
-  constructor(initial: Record<string, string> = {}) {
+  constructor(initial: Record<string, string> = {}, private readonly libs: Record<string, string> = {}) {
     for (const file of Object.keys(initial).sort()) this.open(file, initial[file] ?? "");
   }
 
@@ -38,12 +37,6 @@ export class MemoryFileProvider implements SemanticFileProvider {
   }
 
   readLib(name: string) {
-    return ts.sys.readFile(requireLibPath(name)) ?? "";
+    return this.libs[name] ?? "";
   }
 }
-
-function requireLibPath(name: string) {
-  const path = ts.getDefaultLibFilePath({ target: ts.ScriptTarget.ES2022 });
-  return path.endsWith("lib.d.ts") ? path.replace(/lib\.d\.ts$/, name) : path;
-}
-

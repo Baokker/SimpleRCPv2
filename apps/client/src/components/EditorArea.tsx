@@ -3,6 +3,8 @@ import { LoaderCircle, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import * as monacoRuntime from "monaco-editor";
 import type * as Monaco from "monaco-editor";
+import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import TypeScriptWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import type { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
@@ -15,6 +17,11 @@ import type {
 } from "../types";
 import type { ThemeMode } from "../theme";
 
+self.MonacoEnvironment = {
+  getWorker(_moduleId, label) {
+    return label === "typescript" || label === "javascript" ? new TypeScriptWorker() : new EditorWorker();
+  }
+};
 loader.config({ monaco: monacoRuntime });
 
 export interface OpenFile {

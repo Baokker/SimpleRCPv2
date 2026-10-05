@@ -18,6 +18,7 @@ export interface ReplayGroupOutcome {
   hasRelation?: boolean;
   operatorFamily?: string;
   detectability?: string;
+  agreed?: boolean;
 }
 
 export interface ReplayMetrics {
@@ -37,17 +38,17 @@ export interface ReplayMetrics {
 
 export interface ReplayMetricsGroup {
   groups: number;
-  agreement: number;
-  missBlockRatio: number;
-  falseBlockRatio: number;
-  escapeRatio: number;
+  agreement: WilsonInterval;
+  missBlockRatio: WilsonInterval;
+  falseBlockRatio: WilsonInterval;
+  escapeRatio: WilsonInterval;
 }
 
 export function calculateReplayMetrics(outcomes: ReplayGroupOutcome[], noRelation = 0): ReplayMetrics {
   const count = outcomes.length;
   const proportion = (value: number, denominator = count) => wilson(value, denominator);
   const local = outcomes.filter((outcome) => outcome.local).length;
-  const agreement = outcomes.filter((outcome) => outcome.truth === outcome.decision).length;
+  const agreement = outcomes.filter((outcome) => outcome.agreed ?? outcome.truth === outcome.decision).length;
   const missed = outcomes.filter((outcome) => outcome.missed).length;
   const overblocked = outcomes.filter((outcome) => outcome.overblocked).length;
   const escaped = outcomes.filter((outcome) => outcome.escaped).length;
@@ -86,10 +87,10 @@ function groupedMetrics(outcomes: ReplayGroupOutcome[], key: (outcome: ReplayGro
     const size = members.length;
     groups[name] = {
       groups: size,
-      agreement: members.filter((outcome) => outcome.truth === outcome.decision).length / size,
-      missBlockRatio: members.filter((outcome) => outcome.missed).length / size,
-      falseBlockRatio: members.filter((outcome) => outcome.overblocked).length / size,
-      escapeRatio: members.filter((outcome) => outcome.escaped).length / size
+      agreement: wilson(members.filter((outcome) => outcome.agreed ?? outcome.truth === outcome.decision).length, size),
+      missBlockRatio: wilson(members.filter((outcome) => outcome.missed).length, size),
+      falseBlockRatio: wilson(members.filter((outcome) => outcome.overblocked).length, size),
+      escapeRatio: wilson(members.filter((outcome) => outcome.escaped).length, size)
     };
   }
   return groups;

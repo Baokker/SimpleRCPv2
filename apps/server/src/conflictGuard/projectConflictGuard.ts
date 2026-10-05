@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import diff from "fast-diff";
 import { createRequire } from "node:module";
 import type * as Y from "yjs";
 import {
   ConflictGuardTracker,
+  textDiffOps,
   type ConflictGuardClock,
   type ConflictGuardEvent,
   type CursorChange,
@@ -676,22 +676,6 @@ function applyOps(text: string, ops: TextEditOp[]) {
     offset += op.inserted.length - op.deleted.length;
   }
   return result;
-}
-
-function textDiffOps(before: string, after: string): TextEditOp[] {
-  const ops: TextEditOp[] = [];
-  let from = 0;
-  for (const [operation, value] of diff(before, after)) {
-    if (operation === diff.EQUAL) {
-      from += value.length;
-    } else if (operation === diff.DELETE) {
-      ops.push({ from, deleted: value, inserted: "" });
-      from += value.length;
-    } else {
-      ops.push({ from, deleted: "", inserted: value });
-    }
-  }
-  return ops;
 }
 
 function hashText(value: string) { return crypto.createHash("sha256").update(value).digest("hex"); }

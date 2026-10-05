@@ -6,11 +6,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
-import { readTrace, validateTraceDetailed } from "@simplercp/conflict-guard";
+import { checkReplay, readTrace, validateTraceDetailed } from "@simplercp/conflict-guard";
 import { createApp } from "../createApp.js";
 import { attachRealtimeServer } from "../realtime.js";
 import { joinMember } from "./memberTestHelper.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import { replayUi } from "../replay/uiReplay.js";
 
 const shopRoot = fileURLToPath(new URL("../../../../demo/conflict-shop/", import.meta.url));
 
@@ -72,6 +73,8 @@ describe("rules 模式冲突干预", () => {
     const events = readTrace(await (await alice.request("/conflict-guard/trace")).text());
     expect(events.some((event) => event.type === "pair_judged")).toBe(true);
     expect(validateTraceDetailed(events).valid).toBe(true);
+    expect(checkReplay(events)).toMatchObject({ checked: true, valid: true, differences: [] });
+    await saveReplayEvidence("same-symbol", events);
   });
 
   it("调用签名不兼容判黑并挡住两个文件的写盘", async () => {
@@ -87,6 +90,9 @@ describe("rules 模式冲突干预", () => {
     expect(state.blockedPersists?.length).toBeGreaterThan(0);
     const pricingSource = await fs.readFile(path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/pricing.ts"), "utf8");
     expect(pricingSource).toContain("applyDiscount(price: number, rate: number)");
+    const events = readTrace(await (await alice.request("/conflict-guard/trace")).text());
+    expect(checkReplay(events)).toMatchObject({ checked: true, valid: true, differences: [] });
+    await saveReplayEvidence("call-signature", events);
   });
 
   it("成员撤回后解除冻结并记录 guard-revert", async () => {
@@ -107,6 +113,26 @@ describe("rules 模式冲突干预", () => {
     expect(trace.some((event) => event.type === "edit" && (event.origin as { kind?: string })?.kind === "guard-revert")).toBe(true);
   });
 
+  it("幽灵成员通过真实连接重放编辑与光标并形成冻结", async () => {
+    const pricing = await fs.readFile(path.join(shopRoot, "src/pricing.ts"), "utf8");
+    const cart = await fs.readFile(path.join(shopRoot, "src/cart.ts"), "utf8");
+    const events = [
+      { schema: 3 as const, seq: 1, at: 0, type: "session_start", config: { idleMs: 50 } },
+      { schema: 3 as const, seq: 2, at: 0, type: "doc_open", file: "src/pricing.ts", text: pricing },
+      { schema: 3 as const, seq: 3, at: 0, type: "doc_open", file: "src/cart.ts", text: cart },
+      { schema: 3 as const, seq: 4, at: 100, type: "edit", file: "src/pricing.ts", origin: { kind: "human", memberId: "origin" }, ops: [{ from: pricing.indexOf("rate: number)"), deleted: "rate: number)", inserted: "rate: number, currency: string)" }] },
+      { schema: 3 as const, seq: 5, at: 200, type: "edit", file: "src/cart.ts", origin: { kind: "human", memberId: "candidate" }, ops: [{ from: cart.indexOf("amount, 0.1"), deleted: "amount, 0.1", inserted: "amount, 0.2" }] },
+      { schema: 3 as const, seq: 6, at: 210, type: "cursor", file: "src/cart.ts", memberId: "candidate", position: { lineNumber: 14, column: 10 } }
+    ];
+    const replay = replayUi({ server: origin, projectId, events, speed: 2, settleMs: 100, holdMs: 500 });
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "call-signature-incompatible") === true);
+    expect(currentState().frozenFiles?.map((file) => file.file)).toEqual(expect.arrayContaining(["src/pricing.ts", "src/cart.ts"]));
+    const result = await replay;
+    const trace = readTrace(await (await alice.request("/conflict-guard/trace")).text());
+    expect(trace.some((event) => event.type === "cursor" && event.memberId === result.memberIds.candidate)).toBe(true);
+    expect(Object.keys(result.memberIds)).toEqual(["origin", "candidate"]);
+  });
+
   function currentState() { return app.locals.runtimeManager.get(projectId).conflictGuard!.state() as { pairDecisions?: Array<{ pair: { id: string }; verdict?: { decision?: string; ruleId?: string }; status: string; resolution?: string }>; frozenFiles?: Array<{ file: string }>; blockedPersists?: Array<{ file: string }> }; }
   async function connect(file: string, memberId: string) {
     const document = new Y.Doc();
@@ -118,5 +144,13 @@ describe("rules 模式冲突干预", () => {
   }
   function replace(document: Y.Doc, before: string, after: string) { const text = document.getText("content"); const start = text.toString().indexOf(before); expect(start).toBeGreaterThanOrEqual(0); document.transact(() => { text.delete(start, before.length); text.insert(start, after); }); }
 });
+
+async function saveReplayEvidence(name: string, events: ReturnType<typeof readTrace>) {
+  const directory = process.env.SIMPLERCP_REPLAY_EVIDENCE;
+  if (!directory) return;
+  await fs.mkdir(directory, { recursive: true });
+  await fs.writeFile(path.join(directory, `${name}.jsonl`), events.map((event) => JSON.stringify(event)).join("\n") + "\n");
+  await fs.writeFile(path.join(directory, `${name}-check.json`), JSON.stringify(checkReplay(events), null, 2) + "\n");
+}
 
 async function waitFor(check: () => boolean) { const end = Date.now() + 5_000; while (!check()) { if (Date.now() >= end) throw new Error("等待规则判定超时"); await new Promise((resolve) => setTimeout(resolve, 10)); } }

@@ -9,6 +9,8 @@ import type { ZoneVerdict } from "../routing/classifier.js";
 import { MemoryFileProvider } from "./files.js";
 import { VirtualClock } from "./clock.js";
 import { policyFor, type ActiveFileChange, type ZoningPolicy } from "./policies.js";
+import { transformRanges } from "../tracking/rangeTransform.js";
+import { textDiffOps } from "../tracking/textDiff.js";
 
 export interface ReplayOptions {
   policy: ZoningPolicy | ZoningPolicy["id"];
@@ -17,6 +19,9 @@ export interface ReplayOptions {
   cursorLeaveLines?: number;
   maxBatchDurationMs?: number;
   activeIdleMs?: number;
+  initialFiles?: Record<string, string>;
+  libs?: Record<string, string>;
+  endAt?: number;
 }
 
 export interface ReplayJudgement {
@@ -33,17 +38,24 @@ export interface ReplayResult {
   events: TraceEvent[];
   judgements: ReplayJudgement[];
   pairs: Array<{ id: string; records: PairRecord[]; final?: PairRecord }>;
-  freezeIntervals: Array<{ pairId: string; file: string; actor: ActorRef; start: number; end?: number }>;
+  freezeIntervals: Array<{ pairId: string; symbol: string; file: string; actor: ActorRef; startOffset: number; endOffset: number; start: number; end?: number }>;
   gateIntervals: Array<{ file: string; start: number; end?: number; reason: string }>;
   blockedEdits: Array<{ seq: number; file: string; actor: ActorRef; shouldHaveBeenBlocked: boolean }>;
   finalTexts: Record<string, string>;
+  endedAt: number;
+  errors: Array<{ at: number; pairId: string; message: string }>;
+  semanticRelations: number;
+  persisted: Array<{ at: number; file: string; text: string; counterfactual: boolean }>;
+  persistBlockedCount: number;
 }
 
 export function replayTrace(events: TraceEvent[], options: ReplayOptions): ReplayResult {
+  if (events.some((event) => event.redacted || event.skipped === "sensitive")) throw new Error("脱敏轨迹不能执行语义回放");
   const clock = new VirtualClock(events[0]?.at ?? 0);
-  const files = new MemoryFileProvider();
+  const files = new MemoryFileProvider(options.initialFiles, options.libs);
+  const config = (events.find((event) => event.type === "session_start")?.config ?? {}) as ReplayOptions;
   const trackerClock: ConflictGuardClock = { now: () => clock.now(), setTimeout: (callback, delay) => clock.setTimeout(callback, delay), clearTimeout: (handle) => clock.clearTimeout(handle) };
-  const tracker = new ConflictGuardTracker({ clock: trackerClock, idleMs: options.idleMs ?? 1_500, cursorLeaveLines: options.cursorLeaveLines ?? 3, maxBatchDurationMs: options.maxBatchDurationMs ?? 5_000, activeIdleMs: options.activeIdleMs ?? 600_000, createId: (() => { let count = 0; return () => `replay-batch-${++count}`; })() });
+  const tracker = new ConflictGuardTracker({ clock: trackerClock, idleMs: options.idleMs ?? config.idleMs ?? 1_500, cursorLeaveLines: options.cursorLeaveLines ?? config.cursorLeaveLines ?? 3, maxBatchDurationMs: options.maxBatchDurationMs ?? config.maxBatchDurationMs ?? 5_000, activeIdleMs: options.activeIdleMs ?? config.activeIdleMs ?? 600_000, createId: (() => { let count = 0; return () => `replay-batch-${++count}`; })() });
   const index = createSemanticIndex({ files, now: () => clock.now() });
   const semantic = new SemanticChangeTracker({ index, readFile: (file) => files.readFile(file), now: () => clock.now() });
   const policy = typeof options.policy === "string" ? policyFor(options.policy) : options.policy;
@@ -53,14 +65,43 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   const gateIntervals: ReplayResult["gateIntervals"] = [];
   const blockedEdits: ReplayResult["blockedEdits"] = [];
   const openGates = new Map<string, { start: number; reason: string }>();
+  const persisted: ReplayResult["persisted"] = [];
+  const persistTimers = new Map<string, unknown>();
+  const dirtyFiles = new Set<string>();
+  const counterfactualFiles = new Set<string>();
+  const changedFiles = new Set<string>();
+  let persistBlockedCount = 0;
   let currentText = new Map<string, string>();
   let candidatePairs: CandidatePair[] = [];
-  const coordinator = createPairCoordinator({ now: () => clock.now(), classify: (pair) => policy.decide({ pair, activeFiles: activeFiles(), project: index, symbols: (side) => symbolFor(side.actor, side.symbol) }) });
+  const semanticRelations = new Set<string>();
+  const errors: ReplayResult["errors"] = [];
+  const coordinator = createPairCoordinator({ now: () => clock.now(), classify: (pair) => {
+    try { return policy.decide({ pair, activeFiles: activeFiles(), project: index, symbols: (side) => symbolFor(side.actor, side.symbol) }); }
+    catch (error) {
+      errors.push({ at: clock.now(), pairId: pair.id, message: error instanceof Error ? error.message : String(error) });
+      return { zone: "grey", decision: "warn", ruleId: "policy-error", summary: "判定计算失败，请共同检查修改。", evidence: [], contractChanged: { left: false, right: false } };
+    }
+  } });
+  let updateTimer: unknown;
+  const closedBatches: Array<{ batch: import("../model/types.js").EditBatch; change?: import("../model/types.js").FileChange }> = [];
+  function scheduleRefresh() {
+    if (updateTimer !== undefined) return;
+    updateTimer = clock.setTimeout(() => {
+      updateTimer = undefined;
+      try {
+        semantic.captureStaleEdges(tracker.getActiveChangeSets());
+        index.update([...changedFiles]);
+        changedFiles.clear();
+        refresh(closedBatches.splice(0));
+      } catch (error) {
+        errors.push({ at: clock.now(), pairId: "", message: error instanceof Error ? error.message : String(error) });
+      }
+    }, 25);
+  }
 
   const refresh = (batches: Array<{ batch: import("../model/types.js").EditBatch; change?: import("../model/types.js").FileChange }> = []) => {
-    const changed = [...new Set(batches.map(({ batch }) => batch.file))];
-    if (changed.length > 0) index.update(changed);
     semantic.update(tracker.getActiveChangeSets(), batches);
+    for (const pair of semantic.getCandidatePairs()) semanticRelations.add(pair.id);
     candidatePairs = policy.id === "P1" ? withSameFilePairs(semantic.getCandidatePairs()) : semantic.getCandidatePairs();
     coordinator.update(candidatePairs);
     updateFreezeIntervals();
@@ -68,8 +109,10 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   };
 
   tracker.onEvent((event: ConflictGuardEvent) => {
-    if (event.type === "batch_closed") refresh([{ batch: event.batch, change: tracker.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(event.batch.actor))?.files.get(event.batch.file) }]);
-    else if (event.type === "change_set_file_closed" || event.type === "change_set_closed") refresh();
+    if (event.type === "batch_closed") {
+      closedBatches.push({ batch: event.batch, change: tracker.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(event.batch.actor))?.files.get(event.batch.file) });
+      scheduleRefresh();
+    } else if (event.type === "change_set_file_closed" || event.type === "change_set_closed") scheduleRefresh();
   });
   semantic.onEvent(() => undefined);
   coordinator.onEvent((event) => {
@@ -81,16 +124,16 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
 
   const ordered = [...events].sort((left, right) => left.seq - right.seq);
   for (const event of ordered) {
-    clock.advanceTo(event.at);
+    clock.advanceTo(Math.max(clock.now(), event.at));
     if (event.type === "doc_open") {
       if (event.skipped === "sensitive") continue;
       const file = String(event.file);
       const text = String(event.text ?? "");
       files.open(file, text);
+      changedFiles.add(file);
       currentText.set(file, text);
       tracker.openDocument(file, text);
-      index.update([file]);
-      refresh();
+      scheduleRefresh();
       continue;
     }
     if (event.type === "edit") {
@@ -99,28 +142,56 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       const ops = event.ops as TextEditOp[];
       const after = applyOps(before, ops);
       const origin = event.origin as ActorRef;
-      const shouldBlock = isFrozen(file, origin, freezeIntervals, clock.now());
+      const shouldBlock = isFrozen(file, origin, ops, index, freezeIntervals, clock.now());
+      if (shouldBlock) counterfactualFiles.add(file);
       blockedEdits.push({ seq: event.seq, file, actor: origin, shouldHaveBeenBlocked: shouldBlock });
       currentText.set(file, after);
       files.set(file, after);
+      changedFiles.add(file);
       tracker.edit({ file, origin, at: event.at, ops, revisionAfter: Number(event.revisionAfter ?? 0), textBefore: before, textAfter: after });
-      index.update([file]);
-      refresh();
+      for (const region of freezeIntervals.filter((region) => region.file === file && region.end === undefined)) {
+        const range = transformRanges([{ start: region.startOffset, end: region.endOffset }], ops)[0];
+        if (range) { region.startOffset = range.start; region.endOffset = range.end; }
+      }
+      if (origin.kind === "filesystem" || origin.kind === "guard-revert") scheduleRefresh();
+      updateGateIntervals();
+      if (origin.kind !== "filesystem") {
+        dirtyFiles.add(file);
+        clock.clearTimeout(persistTimers.get(file));
+        persistTimers.set(file, clock.setTimeout(() => persist(file), 300));
+      }
       continue;
     }
     if (event.type === "cursor") {
       const position = event.position as { lineNumber: number; column: number };
       tracker.cursorChanged({ actor: { kind: "human", memberId: String(event.memberId) }, file: String(event.file), lineNumber: Number(position.lineNumber), column: Number(position.column), at: event.at });
-      refresh();
+    }
+    if (event.type === "doc_retired") { tracker.retireFile(String(event.file)); files.remove(String(event.file)); currentText.delete(String(event.file)); changedFiles.add(String(event.file)); scheduleRefresh(); }
+    if (event.type === "mirror_resync") {
+      const file = String(event.file); const before = currentText.get(file) ?? ""; const after = String(event.text);
+      if (before !== after) { tracker.edit({ file, origin: { kind: "filesystem" }, at: event.at, ops: textDiffOps(before, after), revisionAfter: 0, textBefore: before, textAfter: after }); files.set(file, after); currentText.set(file, after); changedFiles.add(file); scheduleRefresh(); }
+    }
+    if (event.type === "ui_action") {
+      if (event.action === "change_set_done") tracker.markDone({ kind: "human", memberId: String(event.memberId) });
+      if (event.action === "revert_pair") coordinator.resolve(String(event.pairId), "reverted");
+      if (event.action === "confirm_pair") {
+        const record = coordinator.get(String(event.pairId));
+        if (record) coordinator.confirm(record.pair.id, actorKey(record.pair.left.actor) === `human:${event.memberId}` ? "left" : "right");
+        updateFreezeIntervals(); updateGateIntervals();
+      }
     }
   }
-  clock.flush();
-  tracker.flush();
-  refresh();
+  clock.advanceTo(options.endAt ?? clock.now() + (options.idleMs ?? config.idleMs ?? 1_500) + 25);
   for (const [file, gate] of openGates) gateIntervals.push({ file, start: gate.start, end: clock.now(), reason: gate.reason });
   for (const interval of freezeIntervals) if (interval.end === undefined) interval.end = clock.now();
   const pairs = [...recordMap.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([id, records]) => ({ id, records, final: records.at(-1) }));
-  return { policy: policy.id, seed: options.seed ?? 0, events, judgements, pairs, freezeIntervals, gateIntervals, blockedEdits, finalTexts: Object.fromEntries([...currentText.entries()].sort(([left], [right]) => left.localeCompare(right))) };
+  return { policy: policy.id, seed: options.seed ?? 0, events, judgements, pairs, freezeIntervals, gateIntervals, blockedEdits, endedAt: clock.now(), errors, semanticRelations: semanticRelations.size, persisted, persistBlockedCount, finalTexts: Object.fromEntries([...currentText.entries()].sort(([left], [right]) => left.localeCompare(right))) };
+
+  function persist(file: string) {
+    persistTimers.delete(file);
+    if (openGates.has(file)) { persistBlockedCount += 1; return; }
+    if (dirtyFiles.delete(file)) persisted.push({ at: clock.now(), file, text: files.readFile(file), counterfactual: counterfactualFiles.has(file) });
+  }
 
   function activeFiles(): ActiveFileChange[] {
     return semantic.getActiveChangeSets().flatMap((set) => [...set.files.values()].map((file) => ({ actor: set.actor, file: file.file, symbols: file.symbols ?? [] })));
@@ -137,14 +208,16 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       for (const key of keys) {
         const file = key.slice(0, key.indexOf("#"));
         const interval = freezeIntervals.find((item) => item.pairId === pair.pair.id && item.file === file && actorKey(item.actor) === actorKey(key === pair.pair.left.symbol ? pair.pair.left.actor : pair.pair.right.actor) && item.end === undefined);
-        if (locked && !interval) freezeIntervals.push({ pairId: pair.pair.id, file, actor: key === pair.pair.left.symbol ? pair.pair.left.actor : pair.pair.right.actor, start: clock.now() });
+        const symbol = index.symbolsInFile(file).find((item) => item.key === key) ?? (policy.id === "P1" ? { start: 0, end: files.readFile(file).length } : undefined);
+        if (locked && !interval && symbol) freezeIntervals.push({ pairId: pair.pair.id, symbol: key, file, actor: key === pair.pair.left.symbol ? pair.pair.left.actor : pair.pair.right.actor, startOffset: symbol.start, endOffset: symbol.end, start: clock.now() });
+        if (locked && interval && symbol) { interval.startOffset = symbol.start; interval.endOffset = symbol.end; }
         if (!locked && interval) interval.end = clock.now();
       }
     }
   }
 
   function withSameFilePairs(pairs: CandidatePair[]) {
-    const result = new Map(pairs.map((pair) => [pair.id, pair]));
+    const result = new Map<string, CandidatePair>();
     const byFile = new Map<string, ActiveFileChange[]>();
     for (const file of activeFiles()) {
       const entries = byFile.get(file.file) ?? [];
@@ -155,13 +228,11 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       for (let index = 0; index < entries.length; index += 1) for (const right of entries.slice(index + 1)) {
         const left = entries[index]!;
         if (actorKey(left.actor) === actorKey(right.actor)) continue;
-        const leftSymbol = left.symbols[0];
-        const rightSymbol = right.symbols[0];
-        if (!leftSymbol || !rightSymbol) continue;
         const actors = [actorKey(left.actor), actorKey(right.actor)].sort();
-        const symbols = [leftSymbol.key, rightSymbol.key].sort();
-        const id = `p1:${file}:${actors.join(":")}\u003a${symbols.join(":")}`;
-        if (!result.has(id)) result.set(id, { id, left: { actor: left.actor, symbol: leftSymbol.key, status: leftSymbol.status }, right: { actor: right.actor, symbol: rightSymbol.key, status: rightSymbol.status }, distance: 0, path: null, firstSeenAt: clock.now(), updatedAt: clock.now() });
+        const id = `p1:${file}:${actors.join(":")}`;
+        const previous = candidatePairs.find((pair) => pair.id === id);
+        const updatedAt = Math.max(...left.symbols.map((symbol) => symbol.lastTouchedAt), ...right.symbols.map((symbol) => symbol.lastTouchedAt), previous?.updatedAt ?? 0);
+        if (!result.has(id)) result.set(id, { id, left: { actor: left.actor, symbol: `${file}#file`, status: "modified" }, right: { actor: right.actor, symbol: `${file}#file`, status: "modified" }, distance: 0, path: null, firstSeenAt: previous?.firstSeenAt ?? clock.now(), updatedAt });
       }
     }
     return [...result.values()];
@@ -169,6 +240,9 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
 
   function updateGateIntervals() {
     const next = new Map<string, string>();
+    if (policy.id !== "P0") for (const set of tracker.getActiveChangeSets()) if (set.status === "editing") for (const file of set.files.values()) {
+      if (candidatePairs.some((pair) => [pair.left, pair.right].some((side) => actorKey(side.actor) === actorKey(set.actor) && side.symbol.startsWith(`${file.file}#`)))) next.set(file.file, "pending-judgement");
+    }
     for (const record of coordinator.records()) {
       if (record.status !== "judged" || record.verdict?.decision !== "lock") continue;
       for (const key of [record.pair.left.symbol, record.pair.right.symbol]) next.set(key.slice(0, key.indexOf("#")), `pair:${record.pair.id}`);
@@ -177,6 +251,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
     for (const [file, gate] of openGates) if (!next.has(file)) {
       gateIntervals.push({ file, start: gate.start, end: clock.now(), reason: gate.reason });
       openGates.delete(file);
+      persist(file);
     }
   }
 }
@@ -200,8 +275,8 @@ function actorKey(actor: ActorRef) {
   return actor.kind;
 }
 
-function isFrozen(file: string, actor: ActorRef, intervals: ReplayResult["freezeIntervals"], at: number) {
-  return actor.kind === "human" && intervals.some((interval) => interval.file === file && interval.end === undefined && interval.start <= at);
+function isFrozen(file: string, actor: ActorRef, ops: TextEditOp[], index: import("../semantic/types.js").SemanticIndex, intervals: ReplayResult["freezeIntervals"], at: number) {
+  return actor.kind === "human" && intervals.some((interval) => interval.file === file && interval.end === undefined && interval.start <= at && ops.some((op) => op.from <= interval.endOffset && op.from + op.deleted.length >= interval.startOffset));
 }
 
 function cloneRecord(record: PairRecord): PairRecord {
