@@ -2,6 +2,7 @@ import * as ts from "typescript";
 import { collectSymbols, innermostSymbols, symbolInfo, type IndexedSymbol } from "./symbols.js";
 import { collectRelations, collectTypeDependencies } from "./relations.js";
 import type { RelationEdge, RelationPath, SemanticFileProvider, SemanticIndex } from "./types.js";
+import { createFourStateTypeChecker } from "../routing/typecheck.js";
 
 export function isSemanticFile(file: string) {
   return /\.(ts|tsx|js|jsx|mts|cts)$/i.test(file) && !file.split("/").some((part) => ["node_modules", ".git", "dist", "build", "coverage"].includes(part));
@@ -42,6 +43,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
     useCaseSensitiveFileNames: () => true
   };
   const service = ts.createLanguageService(host);
+  const checkFourStates = createFourStateTypeChecker({ files: options.files, now: options.now });
 
   function outgoing(key: string) { return [...edges.values()].flat().filter((edge) => edge.from === key); }
   function incoming(key: string) { return [...edges.values()].flat().filter((edge) => edge.to === key); }
@@ -141,6 +143,9 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       }
       return paths;
     },
-    stats: () => ({ files: files.length, symbols: [...symbols.values()].flat().length, edges: [...edges.values()].flat().length, truncated })
+    stats: () => ({ files: files.length, symbols: [...symbols.values()].flat().length, edges: [...edges.values()].flat().length, truncated }),
+    readFile: (file: string) => options.files.readFile(file),
+    listFiles: () => [...files],
+    checkFourStates
   };
 }

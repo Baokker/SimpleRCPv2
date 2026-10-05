@@ -4,6 +4,7 @@ export type ActorRef =
   | { kind: "human"; memberId: string }
   | { kind: "agent"; runId: string; ownerId: string; teamAgent?: string }
   | { kind: "filesystem" }
+  | { kind: "guard-revert"; memberId: string }
   | { kind: "unknown" };
 
 export interface TextEditOp {

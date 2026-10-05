@@ -264,6 +264,7 @@ export class ConflictGuardTracker {
 function actorKeyOf(actor: ActorRef) {
   if (actor.kind === "human") return `human:${actor.memberId}`;
   if (actor.kind === "agent") return `agent:${actor.runId}`;
+  if (actor.kind === "guard-revert") return `guard-revert:${actor.memberId}`;
   if (actor.kind === "unknown") return "unknown";
   return "filesystem";
 }

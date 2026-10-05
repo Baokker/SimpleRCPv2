@@ -2,6 +2,7 @@ export interface SemanticFileProvider {
   listFiles(): string[];
   readFile(file: string): string;
   version(file: string): string | number;
+  readLib?(name: string): string;
 }
 
 export interface SymbolInfo {
@@ -44,4 +45,7 @@ export interface SemanticIndex {
   incoming(key: string): RelationEdge[];
   findPaths(fromKeys: string[], toKeys: string[], maxHops?: number): RelationPath[];
   stats(): { files: number; symbols: number; edges: number; truncated: boolean };
+  readFile?(file: string): string;
+  listFiles?(): string[];
+  checkFourStates?(input: import("../routing/classifier.js").FourStateInput): import("../routing/classifier.js").FourStateResult;
 }

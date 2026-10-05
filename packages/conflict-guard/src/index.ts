@@ -6,3 +6,6 @@ export * from "./semantic/types.js";
 export * from "./semantic/index.js";
 export * from "./semantic/changes.js";
 export * from "./routing/candidates.js";
+export * from "./routing/classifier.js";
+export * from "./routing/typecheck.js";
+export * from "./coordination/pairState.js";

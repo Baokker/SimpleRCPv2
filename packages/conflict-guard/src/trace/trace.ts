@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { ConflictGuardEvent, TextEditOp } from "../model/types.js";
 
 export interface TraceEvent {
-  schema: 1 | 2;
+  schema: 1 | 2 | 3;
   seq: number;
   at: number;
   type: string;
@@ -38,7 +38,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
   const closedBatches = new Set<string>();
   const candidatePairs = new Set<string>();
   for (const event of events) {
-    if (event.schema !== 1 && event.schema !== 2) throw new Error("Unsupported trace schema");
+    if (event.schema !== 1 && event.schema !== 2 && event.schema !== 3) throw new Error("Unsupported trace schema");
     if (event.seq !== expectedSequence++) throw new Error("Trace sequence is not contiguous");
     if (!Number.isFinite(event.at)) throw new Error("Trace timestamp is invalid");
     if (event.type === "session_start") {
@@ -96,7 +96,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       continue;
     }
     if (event.type === "change_unit") {
-      if (event.schema !== 2 || !event.actor || typeof event.batchId !== "string" || !closedBatches.has(event.batchId) || !Array.isArray(event.symbols)) throw new Error("change_unit 字段不完整");
+      if (event.schema < 2 || !event.actor || typeof event.batchId !== "string" || !closedBatches.has(event.batchId) || !Array.isArray(event.symbols)) throw new Error("change_unit 字段不完整");
       actorKey(event.actor);
       for (const symbol of event.symbols as Array<Record<string, unknown>>) {
         if (typeof symbol.key !== "string" || typeof symbol.file !== "string" || !["modified", "added", "deleted"].includes(String(symbol.status))
@@ -106,7 +106,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
     }
     if (["pair_candidate_opened", "pair_candidate_updated", "pair_candidate_closed"].includes(event.type)) {
       const pair = event.pair as { id?: string; left?: { actor?: unknown; symbol?: string }; right?: { actor?: unknown; symbol?: string }; distance?: number; path?: { hops?: unknown[] } | null } | undefined;
-      if (event.schema !== 2 || !pair?.id || !pair.left?.symbol || !pair.right?.symbol || ![0, 1, 2].includes(pair.distance ?? -1)) throw new Error("候选对字段不完整");
+      if (event.schema < 2 || !pair?.id || !pair.left?.symbol || !pair.right?.symbol || ![0, 1, 2].includes(pair.distance ?? -1)) throw new Error("候选对字段不完整");
       if (actorKey(pair.left.actor) === actorKey(pair.right.actor)) throw new Error("候选对两侧参与者相同");
       if (pair.distance === 0
         ? pair.path !== null || (pair.left.symbol !== pair.right.symbol && !isNestedSymbolPair(pair.left.symbol, pair.right.symbol))
@@ -137,6 +137,15 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       if (typeof event.memberId !== "string" || typeof event.file !== "string" || !event.position) throw new Error("cursor is incomplete");
       continue;
     }
+    if (["pair_judged", "pair_stale", "pair_resolved", "pair_closed"].includes(event.type)) {
+      if (typeof event.pairId !== "string" || !Number.isInteger(event.revision) || !event.pair) throw new Error("pair coordination event is incomplete");
+      if (event.type === "pair_judged") {
+        const verdict = event.verdict as { zone?: string; decision?: string; ruleId?: string } | undefined;
+        if (!verdict || !["white", "black", "grey"].includes(verdict.zone ?? "") || !["allow", "warn", "lock"].includes(verdict.decision ?? "") || typeof verdict.ruleId !== "string") throw new Error("pair_judged verdict is incomplete");
+      }
+      continue;
+    }
+    if (["freeze_violation", "persist_conflict", "persist_error", "ui_action", "t0_warning"].includes(event.type)) continue;
     if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }
@@ -174,6 +183,7 @@ function actorKey(actor: unknown) {
   if (value.kind === "human" && typeof value.memberId === "string") return `human:${value.memberId}`;
   if (value.kind === "agent" && typeof value.runId === "string") return `agent:${value.runId}`;
   if (value.kind === "filesystem") return "filesystem";
+  if (value.kind === "guard-revert" && typeof value.memberId === "string") return `guard-revert:${value.memberId}`;
   if (value.kind === "unknown") return "unknown";
   throw new Error("Trace actor is invalid");
 }

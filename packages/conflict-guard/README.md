@@ -29,3 +29,11 @@
 `SemanticChangeTracker.update(changeSets, closedBatches)` 更新符号及候选对。两位人类成员的符号在两跳内有关联时，按成员与符号键生成稳定 SHA-256 编号。距离 0 的 `path` 为 `null`，其他距离保留路径。符号文本、状态或路径变化更新候选，活跃符号结束或关系消失关闭候选。`getCandidatePairs()` 按更新时间倒序返回当前候选，`onEvent()` 发出 `change_unit` 和 `pair_candidate_opened/updated/closed`，供后续规则处理使用。
 
 一个包含有效符号变化的人类关闭批次计为一个变更单元，单元只使用该批次的范围和文本；候选对仍使用成员当前活跃变更中的累计符号。`statistics()` 的 `total` 是会话累计单元数，`related` 是曾经形成候选的单元数，`unrelated` 为两者之差，`unrelatedRatio` 为比例，`typeOnly` 是当前仅类型关系候选数量。恢复为基线且没有符号净变化的批次不产生 `change_unit`。删除或改名符号的旧关系在活跃变更集期间保留为 `stale` 边。
+
+## 阶段 3 分区与协调
+
+`routing/classifier.ts` 提供纯逻辑 `classify(ZoneInput)`。规则按固定顺序返回 `white/allow`、`black/lock` 或 `grey/warn`，结果同时返回双方 `contractChanged`。`routing/typecheck.ts` 使用同一个 TypeScript LanguageService 检查 baseline、leftOnly、rightOnly、merged 四个状态，只记录合并状态新增的诊断，单次检查超过 500 毫秒返回跳过原因。`coordination/pairState.ts` 管理 `pending → judged → stale → judged` 和 `resolved/closed` 状态，保存修订号、判定、双方确认状态与冻结时间。
+
+规则编号依次为 `type-only-unchanged`、`same-symbol-concurrent-write`、`comment-format-only`、`observability-only`、`equivalent-refactor`、`referenced-symbol-removed`、`runtime-export-removed`、`call-signature-incompatible`、`consumed-return-property-removed`、`interface-required-member-incompatible`、`merge-only-type-error`、`unparsable-side` 和 `semantic-interaction-uncertain`。白区返回 `allow`，黑区返回 `lock`，灰区返回 `warn`。服务端在 `rules/full` 模式将黑区符号行交给写盘闸门，在 `observe` 模式只记录结果。
+
+四状态检查使用文件提供者的 `readLib()` 读取 `lib.es2022.d.ts`，单次检查耗时写入 `typecheck.durationMs`。变更对事件包含 `revision`、规则编号、双方符号键和判定证据，阶段 4 可以按事件顺序复现判定。客户端冻结只阻止冻结区域的键入、粘贴和拖放，服务端继续接受 Yjs update，并把越界修改记录为 `freeze_violation`。
