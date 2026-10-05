@@ -37,3 +37,21 @@
 规则编号依次为 `type-only-unchanged`、`same-symbol-concurrent-write`、`comment-format-only`、`observability-only`、`equivalent-refactor`、`referenced-symbol-removed`、`runtime-export-removed`、`call-signature-incompatible`、`consumed-return-property-removed`、`interface-required-member-incompatible`、`merge-only-type-error`、`unparsable-side` 和 `semantic-interaction-uncertain`。白区返回 `allow`，黑区返回 `lock`，灰区返回 `warn`。服务端在 `rules/full` 模式将黑区符号行交给写盘闸门，在 `observe` 模式只记录结果。
 
 四状态检查使用文件提供者的 `readLib()` 读取 `lib.es2022.d.ts`，单次检查耗时写入 `typecheck.durationMs`。变更对事件包含 `revision`、规则编号、双方符号键和判定证据，阶段 4 可以按事件顺序复现判定。客户端冻结只阻止冻结区域的键入、粘贴和拖放，服务端继续接受 Yjs update，并把越界修改记录为 `freeze_violation`。
+
+## 阶段 4 回放与基准
+
+`replay/` 提供 `VirtualClock`、`MemoryFileProvider`、`replayTrace` 和四个 `ZoningPolicy`。回放只处理 `doc_open`、`edit`、`cursor`，批次关闭、候选关系和分区结果由同一套产品逻辑产生。P0 放行全部候选，P1 在同文件并发修改时锁定，P2 对两跳内的候选关系锁定，P3 调用 `routing/classifier.ts`。冻结后的编辑会记录 `shouldHaveBeenBlocked`，文本仍继续更新，因此字符位置保持一致。
+
+基准生成器位于 `bench/`。`OPERATOR_SPECS` 包含 IC、CP、SS、EB 四族以及 SF-1 到 SF-5 安全算子。`bench:generate` 固定种子后写出 schema 3 轨迹、开发集与保留集清单；`bench:label` 为 baseline、leftOnly、rightOnly、merged 各保存三次探针结果；`replay:run` 计算 Wilson 95% 区间、漏阻断、误阻断、逃逸、冻结人秒和判定延迟。
+
+```bash
+pnpm --filter @simplercp/conflict-guard build
+pnpm --filter @simplercp/conflict-guard bench:generate --seeds bench/seeds --out bench/datasets/d1-v1 --groups 10 --seed 7
+pnpm --filter @simplercp/conflict-guard bench:label --dataset bench/datasets/d1-v1 --concurrency 2
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --out docs/conflict-guard/evidence/stage-4-dev-report
+pnpm --filter @simplercp/conflict-guard replay:check path/to/trace.jsonl
+```
+
+回放结果只使用虚拟时间；JSON 中的 `timing` 字段用于记录运行耗时，去除该字段后同一输入、配置和种子得到相同字节序列。
+
+真实界面回放需要网络连接，因此命令放在 server 包：`pnpm --filter @simplercp/server replay:ui -- --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2`。它会注册轨迹中的 human 参与者，重置 `doc_open` 文件，通过 `WebsocketProvider` 按虚拟时间间隔发送 Yjs 编辑；浏览器中的第三位成员可以观察幽灵成员输入和阶段 3 干预。
