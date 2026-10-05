@@ -47,6 +47,7 @@ export interface ReplayResult {
   semanticRelations: number;
   persisted: Array<{ at: number; file: string; text: string; counterfactual: boolean }>;
   persistBlockedCount: number;
+  finalDecision: "allow" | "warn" | "lock";
 }
 
 export function replayTrace(events: TraceEvent[], options: ReplayOptions): ReplayResult {
@@ -75,11 +76,13 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   let candidatePairs: CandidatePair[] = [];
   const semanticRelations = new Set<string>();
   const errors: ReplayResult["errors"] = [];
+  let degradedReason: string | undefined;
   const coordinator = createPairCoordinator({ now: () => clock.now(), classify: (pair) => {
+    if (degradedReason) return errorVerdict();
     try { return policy.decide({ pair, activeFiles: activeFiles(), project: index, symbols: (side) => symbolFor(side.actor, side.symbol) }); }
     catch (error) {
       errors.push({ at: clock.now(), pairId: pair.id, message: error instanceof Error ? error.message : String(error) });
-      return { zone: "grey", decision: "warn", ruleId: "policy-error", summary: "判定计算失败，请共同检查修改。", evidence: [], contractChanged: { left: false, right: false } };
+      return errorVerdict();
     }
   } });
   let updateTimer: unknown;
@@ -92,9 +95,15 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
         semantic.captureStaleEdges(tracker.getActiveChangeSets());
         index.update([...changedFiles]);
         changedFiles.clear();
+        if (degradedReason) for (const pair of candidatePairs) coordinator.markChanged(pair.id);
+        degradedReason = undefined;
         refresh(closedBatches.splice(0));
       } catch (error) {
-        errors.push({ at: clock.now(), pairId: "", message: error instanceof Error ? error.message : String(error) });
+        degradedReason = error instanceof Error ? error.message : String(error);
+        errors.push({ at: clock.now(), pairId: "", message: degradedReason });
+        for (const pair of candidatePairs) coordinator.markChanged(pair.id);
+        coordinator.update(candidatePairs);
+        updateFreezeIntervals(); updateGateIntervals();
       }
     }, 25);
   }
@@ -185,12 +194,18 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   for (const [file, gate] of openGates) gateIntervals.push({ file, start: gate.start, end: clock.now(), reason: gate.reason });
   for (const interval of freezeIntervals) if (interval.end === undefined) interval.end = clock.now();
   const pairs = [...recordMap.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([id, records]) => ({ id, records, final: records.at(-1) }));
-  return { policy: policy.id, seed: options.seed ?? 0, events, judgements, pairs, freezeIntervals, gateIntervals, blockedEdits, endedAt: clock.now(), errors, semanticRelations: semanticRelations.size, persisted, persistBlockedCount, finalTexts: Object.fromEntries([...currentText.entries()].sort(([left], [right]) => left.localeCompare(right))) };
+  const decisions = pairs.flatMap((pair) => pair.final?.verdict ? [pair.final.verdict.decision] : []);
+  const finalDecision = decisions.includes("lock") ? "lock" : decisions.includes("warn") ? "warn" : "allow";
+  return { policy: policy.id, seed: options.seed ?? 0, events, judgements, pairs, freezeIntervals, gateIntervals, blockedEdits, endedAt: clock.now(), errors, semanticRelations: semanticRelations.size, persisted, persistBlockedCount, finalDecision, finalTexts: Object.fromEntries([...currentText.entries()].sort(([left], [right]) => left.localeCompare(right))) };
 
   function persist(file: string) {
     persistTimers.delete(file);
     if (openGates.has(file)) { persistBlockedCount += 1; return; }
     if (dirtyFiles.delete(file)) persisted.push({ at: clock.now(), file, text: files.readFile(file), counterfactual: counterfactualFiles.has(file) });
+  }
+
+  function errorVerdict(): ZoneVerdict {
+    return { zone: "grey", decision: "warn", ruleId: "policy-error", summary: "判定计算失败，请共同检查修改。", evidence: [], contractChanged: { left: false, right: false } };
   }
 
   function activeFiles(): ActiveFileChange[] {
@@ -204,12 +219,12 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   function updateFreezeIntervals() {
     for (const pair of coordinator.records()) {
       const locked = pair.verdict?.decision === "lock" && pair.status === "judged";
-      const keys = [pair.pair.left.symbol, pair.pair.right.symbol];
-      for (const key of keys) {
+      for (const side of [pair.pair.left, pair.pair.right]) {
+        const key = side.symbol;
         const file = key.slice(0, key.indexOf("#"));
-        const interval = freezeIntervals.find((item) => item.pairId === pair.pair.id && item.file === file && actorKey(item.actor) === actorKey(key === pair.pair.left.symbol ? pair.pair.left.actor : pair.pair.right.actor) && item.end === undefined);
+        const interval = freezeIntervals.find((item) => item.pairId === pair.pair.id && item.symbol === key && actorKey(item.actor) === actorKey(side.actor) && item.end === undefined);
         const symbol = index.symbolsInFile(file).find((item) => item.key === key) ?? (policy.id === "P1" ? { start: 0, end: files.readFile(file).length } : undefined);
-        if (locked && !interval && symbol) freezeIntervals.push({ pairId: pair.pair.id, symbol: key, file, actor: key === pair.pair.left.symbol ? pair.pair.left.actor : pair.pair.right.actor, startOffset: symbol.start, endOffset: symbol.end, start: clock.now() });
+        if (locked && !interval && symbol) freezeIntervals.push({ pairId: pair.pair.id, symbol: key, file, actor: side.actor, startOffset: symbol.start, endOffset: symbol.end, start: clock.now() });
         if (locked && interval && symbol) { interval.startOffset = symbol.start; interval.endOffset = symbol.end; }
         if (!locked && interval) interval.end = clock.now();
       }

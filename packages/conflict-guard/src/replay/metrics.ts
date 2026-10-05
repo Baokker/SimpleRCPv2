@@ -19,6 +19,7 @@ export interface ReplayGroupOutcome {
   operatorFamily?: string;
   detectability?: string;
   agreed?: boolean;
+  counterfactualEdits?: number;
 }
 
 export interface ReplayMetrics {
@@ -31,6 +32,7 @@ export interface ReplayMetrics {
   escapeRatio: WilsonInterval;
   frozenPersonSeconds: number;
   cardsPerHour: number;
+  counterfactualEdits: number;
   decisionLatencyMs: { p50: number; p95: number };
   byOperatorFamily: Record<string, ReplayMetricsGroup>;
   byDetectability: Record<string, ReplayMetricsGroup>;
@@ -66,6 +68,7 @@ export function calculateReplayMetrics(outcomes: ReplayGroupOutcome[], noRelatio
     escapeRatio: proportion(escaped),
     frozenPersonSeconds: frozen,
     cardsPerHour: cards / durationHours,
+    counterfactualEdits: outcomes.reduce((sum, outcome) => sum + (outcome.counterfactualEdits ?? 0), 0),
     decisionLatencyMs: { p50: percentile(latencies, 0.5), p95: percentile(latencies, 0.95) },
     byOperatorFamily: groupedMetrics(outcomes, (outcome) => outcome.operatorFamily ?? "unknown"),
     byDetectability: groupedMetrics(outcomes, (outcome) => outcome.detectability ?? "unknown")

@@ -41,8 +41,7 @@ for (const id of ids) {
       const trace = text === undefined ? variant.trace : readTrace(text);
       const result = replayTrace(trace, { policy, seed: group.seed, initialFiles: variant.baseline, libs });
       for (let repetition = 1; repetition < repeat; repetition += 1) if (JSON.stringify(replayTrace(trace, { policy, seed: group.seed, initialFiles: variant.baseline, libs })) !== JSON.stringify(result)) throw new Error(`重复回放结果不一致：${label.id}`);
-      const decisions = result.judgements.map((item) => item.verdict.decision);
-      const decision = strongest(decisions);
+      const decision = result.finalDecision;
       const firstEdits = new Map<string, number>();
       for (const event of trace) if (event.type === "edit") { const actor = JSON.stringify(event.origin); if (!firstEdits.has(actor)) firstEdits.set(actor, event.at); }
       const triggerAt = Math.max(...firstEdits.values());
@@ -57,6 +56,7 @@ for (const id of ids) {
       variants.push({ id: label.id, truth: label.label as "allow" | "warn" | "lock", decision, escaped, local: result.judgements.every((item) => item.verdict.zone !== "grey"), frozenPersonSeconds: personSeconds(result), cards: result.judgements.filter((item) => item.verdict.decision === "lock").length * 2, latency: result.judgements[0] ? result.judgements[0].at - triggerAt : undefined, duration: result.endedAt - trace[0]!.at, result: { ...result, events: undefined } });
     }
     const outcome: ReplayGroupOutcome = { truth: strongest(variants.map((item) => item.truth)), decision: strongest(variants.map((item) => item.decision)), agreed: variants.every((item) => item.truth === item.decision), local: variants.every((item) => item.local), escaped: variants.some((item) => item.escaped), missed: variants.some((item) => item.truth === "lock" && item.decision !== "lock"), overblocked: variants.some((item) => item.truth !== "lock" && item.decision === "lock"), frozenPersonSeconds: variants.reduce((sum, item) => sum + item.frozenPersonSeconds, 0), cardCount: variants.reduce((sum, item) => sum + item.cards, 0), latencyMs: variants.flatMap((item) => item.latency === undefined ? [] : [item.latency]).at(-1), virtualDurationMs: variants.reduce((sum, item) => sum + item.duration, 0), hasRelation: variants.some((item) => item.result.semanticRelations > 0), operatorFamily: group.operator.family, detectability: groupLabels.find((label) => label.detectability !== "none")?.detectability ?? "none" };
+    outcome.counterfactualEdits = variants.reduce((sum, item) => sum + item.result.blockedEdits.filter((edit) => edit.shouldHaveBeenBlocked).length, 0);
     outcomes.push(outcome); rows.push({ id: group.id, operator: group.operator.id, outcome, variants });
   }
   reports[policy.id] = { metrics: calculateReplayMetrics(outcomes), groups: rows };

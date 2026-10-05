@@ -64,7 +64,7 @@ describe("阶段 4 回放基础设施", () => {
     expect(files.version("src/a.ts")).toBeGreaterThan(second as number);
   });
 
-  it("锁定后落入冻结文件的编辑被标记为应当阻止", () => {
+  it("锁定后进入冻结区域的编辑被标记为应当阻止", () => {
     const trace = simpleTrace();
     trace.push({ schema: 3, seq: 4, at: 20, type: "doc_open", file: "src/b.ts", text: "import { run } from \"./a.js\";\nexport function other() { return run(); }\n", textHash: "" });
     trace.push({ schema: 3, seq: 5, at: 30, type: "edit", file: "src/b.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 0, deleted: "import { run } from \"./a.js\";\nexport function other() { return run(); }\n", inserted: "import { run } from \"./a.js\";\nexport function other() { return run() + 1; }\n" }], revisionAfter: 1 });
@@ -108,6 +108,10 @@ describe("阶段 4 回放基础设施", () => {
     ];
     const result = replayTrace(trace, { policy: "P3", endAt: 4000 });
     expect(result.judgements[0]!.verdict.ruleId).toBe("same-symbol-concurrent-write");
+    expect(result.freezeIntervals.filter((interval) => interval.symbol === "a.ts#alpha").map((interval) => interval.actor)).toEqual([
+      { kind: "human", memberId: "alice" },
+      { kind: "human", memberId: "bob" }
+    ]);
     expect(result.blockedEdits.find((edit) => edit.seq === 4)!.shouldHaveBeenBlocked).toBe(false);
     expect(result.blockedEdits.find((edit) => edit.seq === 5)!.shouldHaveBeenBlocked).toBe(true);
     expect(result.gateIntervals.some((interval) => interval.file === "a.ts")).toBe(true);
@@ -117,6 +121,17 @@ describe("阶段 4 回放基础设施", () => {
 
   it("缺少录制判定的轨迹不宣称一致性通过", () => {
     expect(checkReplay(simpleTrace())).toMatchObject({ checked: false, valid: false });
+  });
+
+  it("策略计算异常记录为 warn，输入继续复原", () => {
+    const trace = simpleTrace();
+    trace.push({ schema: 3, seq: 4, at: 20, type: "edit", file: "src/a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: 31, deleted: "2", inserted: "3" }] });
+    const result = replayTrace(trace, { policy: { id: "P3", decide() { throw new Error("invalid policy configuration"); } } });
+    expect(result.finalDecision).toBe("warn");
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]!.message).toBe("invalid policy configuration");
+    expect(result.freezeIntervals).toEqual([]);
+    expect(result.finalTexts["src/a.ts"]).toContain("return 3");
   });
 
   it("mirror_resync 使用产品的差异转换，保留两人的独立修改区域", () => {
