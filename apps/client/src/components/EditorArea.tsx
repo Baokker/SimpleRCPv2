@@ -9,6 +9,7 @@ import type { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { summarizeTextChange } from "../editActivity";
+import { historyEditRanges } from "../monacoHistory";
 import type {
   CursorPosition,
   EditorSelection,
@@ -276,34 +277,68 @@ function CollaborativeEditor({
         onMount={(editor, monaco) => {
           editorRef.current = editor;
           onMount(editor, monaco);
-          const keydown = editor.onKeyDown((event) => {
-            const position = editor.getPosition();
-            if (!position || !frozenRegionsRef.current.some((region) => position.lineNumber >= region.startLine && position.lineNumber <= region.endLine)) return;
-            const key = event.browserEvent.key;
-            const navigation = key.startsWith("Arrow") || key === "Home" || key === "End" || key === "PageUp" || key === "PageDown" || key === "Tab" || key === "Escape";
-            const modifierCommand = event.browserEvent.metaKey || event.browserEvent.ctrlKey;
-            const editingCommand = modifierCommand && ["v", "x", "z", "y"].includes(key.toLowerCase());
-            if (navigation || (modifierCommand && !editingCommand)) return;
-            event.preventDefault();
-            event.stopPropagation();
-            window.dispatchEvent(new CustomEvent("simplercp-conflict-guard-notice", { detail: "该区域已冻结" }));
-          });
-          const domNode = editor.getDomNode();
-          const blockedPointer = (event: Event) => {
-            const position = editor.getPosition();
-            if (!position || !frozenRegionsRef.current.some((region) => position.lineNumber >= region.startLine && position.lineNumber <= region.endLine)) return;
-            event.preventDefault();
-            event.stopPropagation();
-            window.dispatchEvent(new CustomEvent("simplercp-conflict-guard-notice", { detail: "该区域已冻结" }));
+          const model = editor.getModel();
+          const showFrozenNotice = () => window.dispatchEvent(new CustomEvent("simplercp-conflict-guard-notice", { detail: "该区域已冻结" }));
+          const intersectsFrozenRegion = (range: Monaco.IRange) => {
+            if (!model) return false;
+            const validRange = model.validateRange(range);
+            const from = model.getOffsetAt({ lineNumber: validRange.startLineNumber, column: validRange.startColumn });
+            const to = model.getOffsetAt({ lineNumber: validRange.endLineNumber, column: validRange.endColumn });
+            const decoratedRegions = frozenDecorationIdsRef.current.flatMap((id) => { const range = model.getDecorationRange(id); return range ? [{ startLine: range.startLineNumber, endLine: range.endLineNumber }] : []; });
+            const regions = decoratedRegions.length > 0 ? decoratedRegions : frozenRegionsRef.current;
+            return regions.some((region) => {
+              const startLine = Math.min(region.startLine, model.getLineCount());
+              const endLine = Math.min(region.endLine, model.getLineCount());
+              const start = model.getOffsetAt({ lineNumber: startLine, column: 1 });
+              const end = model.getOffsetAt({ lineNumber: endLine, column: model.getLineMaxColumn(endLine) }) + (endLine < model.getLineCount() ? model.getEOL().length : 0);
+              return from === to ? from >= start && from <= end : from < end && to > start;
+            });
           };
-          domNode?.addEventListener("paste", blockedPointer, true);
-          domNode?.addEventListener("drop", blockedPointer, true);
-          domNode?.addEventListener("dragover", blockedPointer, true);
+          const pushEditOperations = model?.pushEditOperations;
+          const guardedEdit: Monaco.editor.ITextModel["pushEditOperations"] = (beforeCursorState, editOperations, cursorStateComputer) => {
+            if (editOperations.some((operation) => intersectsFrozenRegion(operation.range))) {
+              showFrozenNotice();
+              return beforeCursorState;
+            }
+            return pushEditOperations!.call(model!, beforeCursorState, editOperations, cursorStateComputer);
+          };
+          if (model) model.pushEditOperations = guardedEdit;
+          const guardHistory = (action: "undo" | "redo", operation: () => void): (() => void) => () => {
+            if (frozenRegionsRef.current.length > 0 && model) {
+              try {
+                if (historyEditRanges(model, action).some(intersectsFrozenRegion)) { showFrozenNotice(); return; }
+              } catch (error) {
+                console.error("Conflict guard could not read Monaco edit history", error);
+                window.dispatchEvent(new CustomEvent("simplercp-conflict-guard-notice", { detail: "无法读取编辑历史，该操作暂不可用" }));
+                return;
+              }
+            }
+            operation();
+          };
+          const historyModel = model as Monaco.editor.ITextModel & { undo(): void; redo(): void };
+          const originalUndo = historyModel.undo.bind(historyModel);
+          const originalRedo = historyModel.redo.bind(historyModel);
+          const guardedUndo = model ? guardHistory("undo", originalUndo) : undefined;
+          const guardedRedo = model ? guardHistory("redo", originalRedo) : undefined;
+          historyModel.undo = () => guardHistory("undo", originalUndo)();
+          historyModel.redo = () => guardHistory("redo", originalRedo)();
+          const undoCommand = editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => guardedUndo?.());
+          const redoCommand = editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, () => guardedRedo?.());
+          const trigger = editor.trigger.bind(editor);
+          editor.trigger = ((source: string, handlerId: string, payload: unknown) => {
+            if ((handlerId === "undo" || handlerId === "redo") && model) {
+              (handlerId === "undo" ? guardedUndo : guardedRedo)?.();
+              return;
+            }
+            return trigger(source, handlerId, payload);
+          }) as typeof editor.trigger;
           editor.onDidDispose(() => {
-            keydown.dispose();
-            domNode?.removeEventListener("paste", blockedPointer, true);
-            domNode?.removeEventListener("drop", blockedPointer, true);
-            domNode?.removeEventListener("dragover", blockedPointer, true);
+            if (model?.pushEditOperations === guardedEdit) model.pushEditOperations = pushEditOperations!;
+            editor.trigger = trigger as typeof editor.trigger;
+            historyModel.undo = originalUndo;
+            historyModel.redo = originalRedo;
+            void undoCommand;
+            void redoCommand;
           });
 
           const document = new Y.Doc();

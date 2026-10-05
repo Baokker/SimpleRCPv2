@@ -22,6 +22,7 @@ import {
 } from "./api";
 import { getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
+import { relationPathText } from "./conflictGuardPresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -225,6 +226,8 @@ function WorkspacePage({
   );
   const [conflictGuardState, setConflictGuardState] = useState<ConflictGuardState>();
   const seenT0WarningsRef = useRef(new Set<string>());
+  const seenConflictWarningsRef = useRef(new Set<string>());
+  const [conflictWarnings, setConflictWarnings] = useState<Array<{ id: string; summary: string; path: string }>>([]);
   const [collaborationVisible, setCollaborationVisible] = useState(true);
   const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
   const [workspaceWidth, setWorkspaceWidth] = useState(() => readLayoutDimension(WORKSPACE_WIDTH_KEY, 252, 180, 420));
@@ -495,6 +498,19 @@ function WorkspacePage({
             if (seenT0WarningsRef.current.has(warning.id)) continue;
             seenT0WarningsRef.current.add(warning.id);
             showWorkspaceNotice(warning.summary);
+          }
+          if (state.mode === "rules" || state.mode === "full") {
+            const memberId = sessionStorage.getItem(`simplercp.memberId.${projectId}`) ?? identity.memberId;
+            const warnings = (state.pairDecisions ?? []).flatMap((record) => {
+              if (record.status !== "judged" || record.verdict?.decision !== "warn") return [];
+              if (record.pair.left.actor.memberId !== memberId && record.pair.right.actor.memberId !== memberId) return [];
+              const id = `${record.pair.id}:${record.revision}`;
+              if (seenConflictWarningsRef.current.has(id)) return [];
+              seenConflictWarningsRef.current.add(id);
+              const path = relationPathText(record.pair.path);
+              return [{ id, summary: record.verdict.summary, path }];
+            });
+            if (warnings.length > 0) setConflictWarnings((previous) => [...previous, ...warnings]);
           }
         }
       } catch {
@@ -870,6 +886,12 @@ function WorkspacePage({
           </button>
         </div>
       ) : null}
+      <div className="conflict-warning-list">{conflictWarnings.map((warning) => (
+        <div className="workspace-notice conflict-warning" role="status" data-testid="conflict-warning" key={warning.id}>
+          <span>冲突预防：{warning.summary}<br /><small>{warning.path}</small></span>
+          <button type="button" aria-label="关闭通知" onClick={() => setConflictWarnings((previous) => previous.filter((entry) => entry.id !== warning.id))}>×</button>
+        </div>
+      ))}</div>
       <aside className="workspace-pane">
         <WorkspaceExplorer
           tree={tree}

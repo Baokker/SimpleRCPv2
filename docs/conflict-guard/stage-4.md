@@ -28,7 +28,7 @@ P1 对跨文件依赖没有干预，因此其逃逸率与 P0 相同。P2 能将�
 
 P3 虚拟判定延迟 p50 为 1826 毫秒、p95 为 2865 毫秒。该延迟包含录制的输入持续时间与批次等待；实际运行耗时单独记录在结果 JSON 的 timing 字段。每个开发变体重复两次得到相同 JSON；两次完整报告除 timing 外逐字节相同。冻结人秒分别记录双方，并按成员合并重叠区间。数据哈希、标签一致性、确定性结果与验收计数保存在 `evidence/stage-4-dev-report/verification.json`。
 
-D2 转换生成 51 个规则案例与六个交付场景的 schema 3 轨迹。规则案例的当前本地动作有 41 项与 GreyLock 一致；十项旧 equivalent-refactor 白区案例当前返回 grey/warn，完整列表见 `bench/datasets/d2-greylock/replay-results.json`。六个交付场景中四项一方 before/after 相同，两项没有静态关系，因此当前 tracker 没有双边候选。清单保存 unavailable 原因，保留来源内容。它们不能作为真实分区一致性的证据。
+D2 转换生成 51 个规则案例与六个交付场景的 schema 3 轨迹。规则案例的当前本地动作全部与 GreyLock 一致。六个交付场景中四项一方 before/after 相同，两项没有静态关系，因此当前 tracker 没有双边候选。清单保存 unavailable 原因，保留来源内容。它们不能作为真实分区一致性的证据。
 
 两份服务端录制分别覆盖同符号与调用签名冲突。`replay:check` 对 pairId、revision、ruleId、decision 和批次容差时间均无差异，证据在 `evidence/stage-4-live-traces/`。Playwright 使用 D1 的 `d1-1-conflict` 轨迹与独立空项目，通过包命令创建真实幽灵成员。第三名成员看到了输入、光标、红色冻结装饰与卡片，浏览器错误列表为空。记录在 `evidence/stage-4-ui/`。
 
@@ -38,7 +38,7 @@ D2 转换生成 51 个规则案例与六个交付场景的 schema 3 轨迹。规
 |---|---|
 | `pnpm -r build` | 全部工作包构建通过 |
 | `pnpm --filter @simplercp/conflict-guard test` | 89 项通过 |
-| `pnpm --filter @simplercp/server test` | 142 项通过 |
+| `pnpm --filter @simplercp/server test` | 152 项通过 |
 | `pnpm test:demo` | 2 项通过 |
 | `node --experimental-strip-types --test packages/conflict-guard/bench/seeds/*/test/*.test.mjs` | 7 项通过 |
 | `CONFLICT_GUARD=off pnpm test:collab` | 2 项通过 |

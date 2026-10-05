@@ -951,6 +951,23 @@ body[data-resizing="terminal"] {
   border-color: var(--danger);
 }
 
+.conflict-warning-list {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.conflict-warning-list .conflict-warning {
+  position: static;
+  border-color: #eab308;
+  transform: none;
+}
+
 .workspace-alert a,
 .workspace-alert button,
 .workspace-notice button {

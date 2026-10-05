@@ -33,6 +33,8 @@ export interface ConflictGuardState {
     pair: ConflictGuardState["candidatePairs"][number];
     status: string;
     revision: number;
+    leftConfirmed?: boolean;
+    rightConfirmed?: boolean;
     verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean } };
     resolution?: string;
     totalLockMs?: number;
