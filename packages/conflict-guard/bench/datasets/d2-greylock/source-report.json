@@ -1,0 +1,734 @@
+{
+  "version": 1,
+  "taskType": "local-routing-coverage-freeze-v2",
+  "generatedAt": "2026-10-01T05:42:27.276Z",
+  "evaluation": {
+    "protocolId": "greylock-local-routing-coverage-v2",
+    "datasetEvaluations": [
+      {
+        "datasetId": "greylock-local-routing-boundary-v1",
+        "role": "targeted-boundary",
+        "expectedCaseCount": 15,
+        "actualCaseCount": 15,
+        "white": 4,
+        "black": 6,
+        "grey": 5,
+        "localResolutionCount": 10,
+        "modelRequestCount": 5,
+        "localCoverage": 0.6666666666666666,
+        "unsafeLocalAllowCount": 0,
+        "unnecessaryLocalLockCount": 0,
+        "passed": true
+      },
+      {
+        "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+        "role": "deep-semantic-development",
+        "expectedCaseCount": 35,
+        "actualCaseCount": 35,
+        "white": 8,
+        "black": 0,
+        "grey": 27,
+        "localResolutionCount": 8,
+        "modelRequestCount": 27,
+        "localCoverage": 0.22857142857142856,
+        "unsafeLocalAllowCount": 0,
+        "unnecessaryLocalLockCount": 0,
+        "passed": true
+      },
+      {
+        "datasetId": "greylock-independent-pair-holdout-v2",
+        "role": "deep-semantic-holdout",
+        "expectedCaseCount": 16,
+        "actualCaseCount": 16,
+        "white": 2,
+        "black": 0,
+        "grey": 14,
+        "localResolutionCount": 2,
+        "modelRequestCount": 14,
+        "localCoverage": 0.125,
+        "unsafeLocalAllowCount": 0,
+        "unnecessaryLocalLockCount": 0,
+        "passed": true
+      },
+      {
+        "datasetId": "greylock-real-shared-state-mutation-v1",
+        "role": "shared-state-mutation",
+        "expectedCaseCount": 30,
+        "actualCaseCount": 30,
+        "white": 0,
+        "black": 0,
+        "grey": 30,
+        "localResolutionCount": 0,
+        "modelRequestCount": 30,
+        "localCoverage": 0,
+        "unsafeLocalAllowCount": 0,
+        "unnecessaryLocalLockCount": 0,
+        "passed": true
+      }
+    ],
+    "semanticCaseCount": 51,
+    "semanticLocalResolutionCount": 10,
+    "passed": true
+  },
+  "datasets": [
+    {
+      "datasetId": "greylock-local-routing-boundary-v1",
+      "caseCount": 15,
+      "zoneCounts": {
+        "white": 4,
+        "grey": 5,
+        "black": 6
+      },
+      "reasonCounts": {
+        "strict-observability": 2,
+        "equivalent-refactor": 2,
+        "call-signature-incompatible": 2,
+        "referenced-symbol-removed": 1,
+        "consumed-return-property-removed": 3,
+        "semantic-interaction-uncertain": 5
+      },
+      "localResolutionCount": 10,
+      "modelRequestCount": 5,
+      "localCoverage": 0.6666666666666666,
+      "unsafeLocalAllowCount": 0,
+      "unnecessaryLocalLockCount": 0,
+      "rows": [
+        {
+          "id": "white-strict-observability",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "strict-observability"
+        },
+        {
+          "id": "white-equivalent-local-extraction",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "white-comment-and-formatting",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "white-origin-observability",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "strict-observability"
+        },
+        {
+          "id": "black-required-parameter-added",
+          "expectedDecision": "lock",
+          "zone": "black",
+          "reason": "call-signature-incompatible"
+        },
+        {
+          "id": "black-called-symbol-removed",
+          "expectedDecision": "lock",
+          "zone": "black",
+          "reason": "referenced-symbol-removed"
+        },
+        {
+          "id": "black-primitive-parameter-type-changed",
+          "expectedDecision": "lock",
+          "zone": "black",
+          "reason": "call-signature-incompatible"
+        },
+        {
+          "id": "black-consumed-return-property-removed",
+          "expectedDecision": "lock",
+          "zone": "black",
+          "reason": "consumed-return-property-removed"
+        },
+        {
+          "id": "black-local-alias-consumed-property-removed",
+          "expectedDecision": "lock",
+          "zone": "black",
+          "reason": "consumed-return-property-removed"
+        },
+        {
+          "id": "black-destructured-consumed-property-removed",
+          "expectedDecision": "lock",
+          "zone": "black",
+          "reason": "consumed-return-property-removed"
+        },
+        {
+          "id": "grey-unused-destructured-property-removed",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "grey-authorization-interaction",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "grey-configuration-ordering",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "grey-shared-state-interaction",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "grey-error-behavior-interaction",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        }
+      ]
+    },
+    {
+      "datasetId": "greylock-counterfactual-pair-v1.5-strict-development",
+      "caseCount": 35,
+      "zoneCounts": {
+        "white": 8,
+        "grey": 27,
+        "black": 0
+      },
+      "reasonCounts": {
+        "semantic-interaction-uncertain": 27,
+        "equivalent-refactor": 8
+      },
+      "localResolutionCount": 8,
+      "modelRequestCount": 27,
+      "localCoverage": 0.22857142857142856,
+      "unsafeLocalAllowCount": 0,
+      "unnecessaryLocalLockCount": 0,
+      "rows": [
+        {
+          "id": "hono-redundant-token-verification-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "hono-redundant-token-verification-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "hono-redundant-role-authorization-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "hono-redundant-role-authorization-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "hono-redundant-request-size-limit-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "consola-redundant-stream-routing-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "consola-redundant-stream-routing-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "consola-redundant-retry-budget-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "consola-redundant-retry-budget-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "consola-redundant-output-redaction-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "consola-redundant-output-redaction-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "greylock-redundant-stale-release-guards-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "greylock-redundant-stale-release-guards-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "greylock-redundant-provider-key-validation-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "greylock-redundant-provider-key-validation-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "greylock-redundant-lifecycle-ordering-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "greylock-redundant-lifecycle-ordering-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ky-retry-method-normalization-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "ky-retry-method-normalization-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ky-retry-status-policy-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ky-json-schema-validation-order-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "ky-json-schema-validation-order-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ofetch-retry-status-policy-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ofetch-json-body-payload-gate-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ofetch-json-body-payload-gate-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ofetch-explicit-response-type-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "ofetch-explicit-response-type-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "fastify-content-type-parser-priority-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "fastify-body-limit-default-ownership-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "fastify-body-limit-default-ownership-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "fastify-http2-chunk-size-dual-representation-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "fastify-http2-chunk-size-dual-representation-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "pino-user-option-precedence-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "pino-user-option-precedence-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "pino-level-threshold-vs-display-label-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        }
+      ]
+    },
+    {
+      "datasetId": "greylock-independent-pair-holdout-v2",
+      "caseCount": 16,
+      "zoneCounts": {
+        "white": 2,
+        "grey": 14,
+        "black": 0
+      },
+      "reasonCounts": {
+        "semantic-interaction-uncertain": 14,
+        "equivalent-refactor": 2
+      },
+      "localResolutionCount": 2,
+      "modelRequestCount": 14,
+      "localCoverage": 0.125,
+      "unsafeLocalAllowCount": 0,
+      "unnecessaryLocalLockCount": 0,
+      "rows": [
+        {
+          "id": "defu-dangerous-config-key-guard-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "defu-dangerous-config-key-guard-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "defu-config-layer-order-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "defu-config-layer-order-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "cookie-samesite-normalization-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "cookie-samesite-normalization-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "cookie-max-age-validation-safe",
+          "expectedDecision": "allow",
+          "zone": "white",
+          "reason": "equivalent-refactor"
+        },
+        {
+          "id": "cookie-max-age-validation-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "query-string-empty-value-filter-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "query-string-empty-value-filter-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "query-string-array-separator-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "query-string-array-separator-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "validator-email-domain-case-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "validator-email-domain-case-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "validator-email-subaddress-safe",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "validator-email-subaddress-conflicting",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        }
+      ]
+    },
+    {
+      "datasetId": "greylock-real-shared-state-mutation-v1",
+      "caseCount": 30,
+      "zoneCounts": {
+        "white": 0,
+        "grey": 30,
+        "black": 0
+      },
+      "reasonCounts": {
+        "semantic-interaction-uncertain": 30
+      },
+      "localResolutionCount": 0,
+      "modelRequestCount": 30,
+      "localCoverage": 0,
+      "unsafeLocalAllowCount": 0,
+      "unnecessaryLocalLockCount": 0,
+      "rows": [
+        {
+          "id": "route-index-clamp-and-round-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "route-index-number-normalization-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "route-index-base-convention-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "route-index-double-lower-bound-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "route-index-double-upper-bound-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "finalized-boolean-normalization-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "finalized-explicit-status-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "finalized-header-timing-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "finalized-double-response-ready-guard-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "finalized-double-abort-guard-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "stream-closed-boolean-normalization-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "stream-closed-numeric-view-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "stream-close-error-policy-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "stream-aborted-versus-closed-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "stream-double-closing-guard-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-request-fallback-normalization-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-request-trim-and-copy-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-request-empty-url-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-request-signal-ownership-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-request-double-fallback-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "context-error-presence-normalization-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "context-error-token-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "context-error-recovery-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "context-error-double-fallback-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "context-error-double-reportable-guard-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-delay-clamp-and-round-allow",
+          "expectedDecision": "allow",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-delay-unit-conversion-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-delay-zero-policy-warn",
+          "expectedDecision": "warn",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-delay-double-default-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        },
+        {
+          "id": "custom-delay-double-clamp-lock",
+          "expectedDecision": "lock",
+          "zone": "grey",
+          "reason": "semantic-interaction-uncertain"
+        }
+      ]
+    }
+  ]
+}

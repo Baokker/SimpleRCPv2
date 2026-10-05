@@ -12,7 +12,12 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bench:generate": "node --experimental-strip-types scripts/bench-generate.ts",
+    "bench:label": "node --experimental-strip-types scripts/bench-label.ts",
+    "replay:run": "node --experimental-strip-types scripts/replay-run.ts",
+    "replay:check": "node --experimental-strip-types scripts/replay-check.ts",
+    "replay:ui": "node --experimental-strip-types scripts/replay-ui.ts"
   },
   "dependencies": {
     "typescript": "^5.9.3",

@@ -1,0 +1,8 @@
+{
+  "version": "d2-greylock-v1",
+  "source": "source-report.json",
+  "caseCount": 51,
+  "scenarios": 6,
+  "schema": 3,
+  "conversion": "GreyLock local-routing-coverage-v2 rows are replayed through the conflict-guard classifier; expectedDecision remains the source label for audit."
+}
