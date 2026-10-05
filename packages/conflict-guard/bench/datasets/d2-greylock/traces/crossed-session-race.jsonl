@@ -1,0 +1,5 @@
+{"schema":3,"seq":1,"at":0,"type":"session_start","mode":"rules","config":{"idleMs":1500,"activeIdleMs":600000}}
+{"schema":3,"seq":2,"at":0,"type":"doc_open","file":"reader.ts","text":"export function isReady(value: { status: string }): boolean {\n    return value.status === 'ready';\n}\n","textHash":"5263e3337ab3f539d5fbb8a9cf5f4fa9f6b7ab3ca7d1f5e06ba1a173cd60c231"}
+{"schema":3,"seq":3,"at":0,"type":"doc_open","file":"writer.ts","text":"export function writeStatus(status: 'ready' | 'busy'): { status: string } {\n    return { status };\n}\n","textHash":"1098f9a061d32e25a1f7a54bfb342d66fb0a29685cb4dfd48013ce6e52c48346"}
+{"schema":3,"seq":4,"at":100,"type":"edit","file":"writer.ts","origin":{"kind":"human","memberId":"origin"},"ops":[{"from":95,"deleted":"","inserted":": status.toLowerCase()"}],"revisionAfter":1}
+{"schema":3,"seq":5,"at":300,"type":"edit","file":"reader.ts","origin":{"kind":"human","memberId":"candidate"},"ops":[{"from":85,"deleted":"","inserted":".trim()"}],"revisionAfter":2}

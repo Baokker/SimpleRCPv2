@@ -1,0 +1,4 @@
+{"schema":3,"seq":1,"at":0,"type":"session_start","mode":"rules","config":{"idleMs":1500,"activeIdleMs":600000}}
+{"schema":3,"seq":2,"at":0,"type":"doc_open","file":"src/lib/normalizeEmail.js","text":"function normalizeEmailDomain(domain = \"EXAMPLE.COM\") {\n  return canonicalDomain(domain.toLowerCase())\n}\nfunction canonicalDomain(domain) {\n  return domain.toLowerCase()\n}\n","textHash":"2d610e4ae494e572a1e83052e22c746dee23c169de092e61f5f7e234ad6bfe38"}
+{"schema":3,"seq":3,"at":100,"type":"edit","file":"src/lib/normalizeEmail.js","origin":{"kind":"human","memberId":"origin"},"ops":[{"from":87,"deleted":".toLowerCase()","inserted":""}],"revisionAfter":1}
+{"schema":3,"seq":4,"at":300,"type":"edit","file":"src/lib/normalizeEmail.js","origin":{"kind":"human","memberId":"candidate"},"ops":[{"from":141,"deleted":".toLowerCase()","inserted":""}],"revisionAfter":2}

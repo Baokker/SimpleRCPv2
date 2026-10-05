@@ -1,0 +1,5 @@
+{"schema":3,"seq":1,"at":0,"type":"session_start","mode":"rules","config":{"idleMs":1500,"activeIdleMs":600000}}
+{"schema":3,"seq":2,"at":0,"type":"doc_open","file":"scripts/greylock-live-api-config.ts","text":"function loadProvider(apiKey) {\n  return apiKey.trim().length > 0\n}\n","textHash":"85208d372b4f289f6b50242af0c2042d7dce376fd494860e357389ff4faf34dc"}
+{"schema":3,"seq":3,"at":0,"type":"doc_open","file":"scripts/greylock-live-api-e2e.ts","text":"function startProvider(apiKey) {\n  if (apiKey.trim().length === 0) return false\n  return loadProvider(apiKey)\n}\n","textHash":"647ea8e159f8cdbc130d77a7b508fe1aa86b65ec2ae0ab7fcf562b68362f766f"}
+{"schema":3,"seq":4,"at":100,"type":"edit","file":"scripts/greylock-live-api-e2e.ts","origin":{"kind":"human","memberId":"origin"},"ops":[{"from":35,"deleted":"if (apiKey.trim().length === 0) return false\n  ","inserted":""}],"revisionAfter":1}
+{"schema":3,"seq":5,"at":300,"type":"edit","file":"scripts/greylock-live-api-config.ts","origin":{"kind":"human","memberId":"candidate"},"ops":[{"from":22,"deleted":"apiKey) {\n  return apiKey.trim().length > 0","inserted":"_apiKey) {\n  return true"}],"revisionAfter":2}

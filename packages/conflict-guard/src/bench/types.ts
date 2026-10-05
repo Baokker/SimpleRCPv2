@@ -25,7 +25,7 @@ export interface BenchVariant {
   dependencyMode?: "old-behavior" | "new-behavior" | "unrelated";
   probe?: string;
   probes?: BenchProbe[];
-  truth: BenchTruth;
+  truth: BenchTruth | "exclude";
   detectability: Detectability;
   baseline: Record<string, string>;
   leftOnly: Record<string, string>;

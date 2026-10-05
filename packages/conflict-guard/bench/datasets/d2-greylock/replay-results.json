@@ -1,0 +1,1025 @@
+[
+  {
+    "id": "hono-redundant-token-verification-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "hono-redundant-token-verification-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "consola-redundant-stream-routing-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "consola-redundant-stream-routing-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "greylock-redundant-stale-release-guards-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "greylock-redundant-stale-release-guards-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "greylock-redundant-provider-key-validation-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "greylock-redundant-provider-key-validation-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "greylock-redundant-lifecycle-ordering-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "greylock-redundant-lifecycle-ordering-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "hono-redundant-role-authorization-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "hono-redundant-role-authorization-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "hono-redundant-request-size-limit-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "consola-redundant-retry-budget-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "consola-redundant-retry-budget-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "consola-redundant-output-redaction-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "consola-redundant-output-redaction-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ky-retry-method-normalization-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "ky-retry-method-normalization-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ky-retry-status-policy-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ky-json-schema-validation-order-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "ky-json-schema-validation-order-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ofetch-retry-status-policy-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ofetch-json-body-payload-gate-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ofetch-json-body-payload-gate-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ofetch-explicit-response-type-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "ofetch-explicit-response-type-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "fastify-content-type-parser-priority-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "fastify-body-limit-default-ownership-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "fastify-body-limit-default-ownership-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "fastify-http2-chunk-size-dual-representation-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "fastify-http2-chunk-size-dual-representation-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "pino-user-option-precedence-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "pino-user-option-precedence-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "pino-level-threshold-vs-display-label-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "defu-dangerous-config-key-guard-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "defu-dangerous-config-key-guard-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "defu-config-layer-order-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "defu-config-layer-order-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "cookie-samesite-normalization-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "cookie-samesite-normalization-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "cookie-max-age-validation-safe",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": false
+  },
+  {
+    "id": "cookie-max-age-validation-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "query-string-empty-value-filter-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "query-string-empty-value-filter-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "query-string-array-separator-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "query-string-array-separator-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "validator-email-domain-case-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "validator-email-domain-case-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "validator-email-subaddress-safe",
+    "sourceDecision": "warn",
+    "sourceTruth": "allow",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "validator-email-subaddress-conflicting",
+    "sourceDecision": "warn",
+    "sourceTruth": "lock",
+    "actual": [
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      },
+      {
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
+        "revision": 0
+      }
+    ],
+    "category": "rule-case",
+    "matched": true
+  },
+  {
+    "id": "control-policy-grey",
+    "sourceDecision": "warn",
+    "sourceTruth": "warn",
+    "actual": [],
+    "category": "delivery-scenario",
+    "unavailable": "one-side-unchanged",
+    "matched": false
+  },
+  {
+    "id": "crossed-session-race",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [],
+    "category": "delivery-scenario",
+    "unavailable": "no-static-relation",
+    "matched": false
+  },
+  {
+    "id": "log-only-white",
+    "sourceDecision": "allow",
+    "sourceTruth": "allow",
+    "actual": [],
+    "category": "delivery-scenario",
+    "unavailable": "one-side-unchanged",
+    "matched": false
+  },
+  {
+    "id": "provider-failure-fallback",
+    "sourceDecision": "lock",
+    "sourceTruth": "lock",
+    "actual": [],
+    "category": "delivery-scenario",
+    "unavailable": "one-side-unchanged",
+    "matched": false
+  },
+  {
+    "id": "return-contract-black",
+    "sourceDecision": "lock",
+    "sourceTruth": "lock",
+    "actual": [],
+    "category": "delivery-scenario",
+    "unavailable": "one-side-unchanged",
+    "matched": false
+  },
+  {
+    "id": "stale-reanalysis",
+    "sourceDecision": "lock",
+    "sourceTruth": "lock",
+    "actual": [],
+    "category": "delivery-scenario",
+    "unavailable": "no-static-relation",
+    "matched": false
+  }
+]

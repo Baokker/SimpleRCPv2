@@ -1,9 +1,1254 @@
 {
   "version": "d2-greylock-v1",
-  "source": "source-report.json",
-  "labels": "labels.json",
+  "schema": 3,
   "caseCount": 51,
   "scenarios": 6,
-  "schema": 3,
-  "conversion": "GreyLock local-routing-coverage-v2 rows are replayed through the conflict-guard classifier; expectedDecision remains the source label for audit."
+  "generationCommand": "bench:import-greylock --source <GreyLock directory>",
+  "cases": [
+    {
+      "id": "hono-redundant-token-verification-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/hono-redundant-token-verification-safe.jsonl",
+      "hash": "8b62af0aa03ef6d1f9324fbf10b18436abcd024e9b28491d62e683052ff0c7fe",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "hono-redundant-token-verification-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/hono-redundant-token-verification-conflicting.jsonl",
+      "hash": "4c79d2e7b7d8e6986bbf394c5a9fafc37f72f2343348707ebafba4f4eb11c3ad",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "consola-redundant-stream-routing-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/consola-redundant-stream-routing-safe.jsonl",
+      "hash": "4c2aef9dd9325dbc57768c60b3e746153974962769bed0572d61958ce45bd65d",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "consola-redundant-stream-routing-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/consola-redundant-stream-routing-conflicting.jsonl",
+      "hash": "b6f0c5ea71d9582ff8a9ba0efe282e7b164f296ba617cf9d2579dd0fbbc0f245",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "greylock-redundant-stale-release-guards-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.2",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/greylock-redundant-stale-release-guards-safe.jsonl",
+      "hash": "d79cb40d1e0af14dc795211271324a731dae6b41cc56a49bedc61b261d093f64",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "greylock-redundant-stale-release-guards-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/greylock-redundant-stale-release-guards-conflicting.jsonl",
+      "hash": "acf680de8d5cc7307307741e4a55bdf7552a7fe4068469d5c1f395f05cffe640",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "greylock-redundant-provider-key-validation-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/greylock-redundant-provider-key-validation-safe.jsonl",
+      "hash": "28d53668341ed81229c8fa43f3e6bf0275f9ff10071a28e549b04a1d5c685ad0",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "greylock-redundant-provider-key-validation-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/greylock-redundant-provider-key-validation-conflicting.jsonl",
+      "hash": "2499eeeb4e968a7886407f4828fc3ca09e24baf59b7358667245625c50c688d4",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "greylock-redundant-lifecycle-ordering-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/greylock-redundant-lifecycle-ordering-safe.jsonl",
+      "hash": "3270ab6355def73657696f3182559f04b436ff2c32f8699ad17fd20ef18b34a8",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "greylock-redundant-lifecycle-ordering-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/greylock-redundant-lifecycle-ordering-conflicting.jsonl",
+      "hash": "b874b546151a03a6b0bc72313b5fd6053f6f9fa06fe7a26b5c8911c4d2e21ac1",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "hono-redundant-role-authorization-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/hono-redundant-role-authorization-safe.jsonl",
+      "hash": "fae4156b189e961dfed2bdb60b50ff0b82872743e0b6cf99c221c6e7899d3345",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "hono-redundant-role-authorization-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/hono-redundant-role-authorization-conflicting.jsonl",
+      "hash": "9d943e3eb33bd2da2f538ac0dd784d9b155d02f247c35910e384d5c0fe0a5ff0",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "hono-redundant-request-size-limit-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/hono-redundant-request-size-limit-safe.jsonl",
+      "hash": "9bdb13d53eb11f41afacc3d8af9b0395ffde0ddf349e072d48dcec5a45526ed4",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "consola-redundant-retry-budget-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/consola-redundant-retry-budget-safe.jsonl",
+      "hash": "90adb718a0320fbea3f0d46d1117c7e528eba7dc4bd793f262ffd4f7a3bed922",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "consola-redundant-retry-budget-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/consola-redundant-retry-budget-conflicting.jsonl",
+      "hash": "e0daf0169200aab848e3850257c457a780ec5bd4989c089312117c89d56ba89c",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "consola-redundant-output-redaction-safe",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/consola-redundant-output-redaction-safe.jsonl",
+      "hash": "e7d8f8b387002ad169ae4738fac00a7dd4c89f5b2b4ea102347018a57e9b310d",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "consola-redundant-output-redaction-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-v1.3-extension",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/consola-redundant-output-redaction-conflicting.jsonl",
+      "hash": "14e4c606f6648f5a5b61a1337e5fad374732b3fca470e534deed9b135c20e415",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ky-retry-method-normalization-safe",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/ky-retry-method-normalization-safe.jsonl",
+      "hash": "4db9a6442d94147648551d3d6538769b37fb5ae053c8510c7a4fe4e2862b9c3a",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "ky-retry-method-normalization-conflicting",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ky-retry-method-normalization-conflicting.jsonl",
+      "hash": "508581a0518f6ad993af4bd01cdba213a1aaf72d84eee9207fb0aba78a8b2b7a",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ky-retry-status-policy-safe",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ky-retry-status-policy-safe.jsonl",
+      "hash": "ed727ae6300451defe1673f973f22a339384f55bf40b25b45269fb1054e7fda5",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ky-json-schema-validation-order-safe",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/ky-json-schema-validation-order-safe.jsonl",
+      "hash": "5f856d0322742ac9cc7719dcdbdf68444664822f3bf08f18bf4f1b401a90b77b",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "ky-json-schema-validation-order-conflicting",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ky-json-schema-validation-order-conflicting.jsonl",
+      "hash": "55a0d7e902aa2b74a2422ff81acb8379b374d4df57b12d77754d28189c8c6903",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ofetch-retry-status-policy-safe",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ofetch-retry-status-policy-safe.jsonl",
+      "hash": "0cf0811dee325ad8954b78b59a5c5ce1a44de0f472356de3a51818931bfdfb06",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ofetch-json-body-payload-gate-safe",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ofetch-json-body-payload-gate-safe.jsonl",
+      "hash": "edb6e5278411178560774fe9dd8699afd3b19d20075b5117161a6521612745d3",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ofetch-json-body-payload-gate-conflicting",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ofetch-json-body-payload-gate-conflicting.jsonl",
+      "hash": "e24b6498467c94c62c0045c5fef27802aa1a1948b10f53a1c3a5415b59e533a2",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ofetch-explicit-response-type-safe",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ofetch-explicit-response-type-safe.jsonl",
+      "hash": "d32261490b8213786a528b9dbe743a4f1fd80d90d1dd63af736f6cea5913d67c",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "ofetch-explicit-response-type-conflicting",
+      "sourceDataset": "greylock-state-gated-counterfactual-v1-dev",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/ofetch-explicit-response-type-conflicting.jsonl",
+      "hash": "c86f3b052f5b975fc367163a8cf48d508b871fecd66e12a6c235aaac03babd73",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "fastify-content-type-parser-priority-safe",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/fastify-content-type-parser-priority-safe.jsonl",
+      "hash": "06c971e24c311b00ccabd98f731261326e7340298fb0d55462adc2ab7891b821",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "fastify-body-limit-default-ownership-safe",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/fastify-body-limit-default-ownership-safe.jsonl",
+      "hash": "9595acd4155e87941ebb71d79519091d79cb4683a6937c27d1dd19f4a7a48730",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "fastify-body-limit-default-ownership-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/fastify-body-limit-default-ownership-conflicting.jsonl",
+      "hash": "ccb1288498643ad6d619d66432c0f24a57735fde04a61afaeed1f163bf4e8b9a",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "fastify-http2-chunk-size-dual-representation-safe",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/fastify-http2-chunk-size-dual-representation-safe.jsonl",
+      "hash": "04cf5dda70b9657e31a6cff052dc358066bf7318002536afd51998b2d1e404a7",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "fastify-http2-chunk-size-dual-representation-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/fastify-http2-chunk-size-dual-representation-conflicting.jsonl",
+      "hash": "ec0a0e7c8e5ca1aa287a3f50b7dd3933f8c7494dedff308a30187f77e51660ae",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "pino-user-option-precedence-safe",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/pino-user-option-precedence-safe.jsonl",
+      "hash": "d7bd02aa6d28557d689400963d2bc080f6d13cf05835649c13f3c9702074ed02",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "pino-user-option-precedence-conflicting",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/pino-user-option-precedence-conflicting.jsonl",
+      "hash": "4637ca45a7cd41041cae55efbb2f338b0355bd7746e163d1646343dd06156b50",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "pino-level-threshold-vs-display-label-safe",
+      "sourceDataset": "greylock-counterfactual-pair-holdout-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/pino-level-threshold-vs-display-label-safe.jsonl",
+      "hash": "20ec5becf20307d9f04471974257771b1f174a06ae9703ce056ced9a09ccb8d9",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "defu-dangerous-config-key-guard-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/defu-dangerous-config-key-guard-safe.jsonl",
+      "hash": "cc6c8000ff45d0ef86e3953a7b75126d27c89a1dcbdb132974657283ec83eaa7",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "defu-dangerous-config-key-guard-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/defu-dangerous-config-key-guard-conflicting.jsonl",
+      "hash": "3f251a0955f0a636711056e41f6920f66524e7a3b1b4f5b8a60cf2ed7b7fbf3d",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "defu-config-layer-order-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/defu-config-layer-order-safe.jsonl",
+      "hash": "8dc7ccfa20bd66a6853852849f4e432cf4365fc11ecf6c22b62678c37412feb5",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "defu-config-layer-order-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/defu-config-layer-order-conflicting.jsonl",
+      "hash": "205835fc165884978f33668dc94fbf19e19816a844b83bb3a6fe157afc832896",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "cookie-samesite-normalization-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/cookie-samesite-normalization-safe.jsonl",
+      "hash": "b908d4bbbc3c256a3c2076295413f41c8a1eb17b0a5c121788113a927e7a8e7c",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "cookie-samesite-normalization-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/cookie-samesite-normalization-conflicting.jsonl",
+      "hash": "b11e8863435b0c2373e451c53211adf12bc14af42b93f71d0642385bdc2c8a12",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "cookie-max-age-validation-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "sourceRule": "equivalent-refactor",
+      "category": "rule-case",
+      "trace": "traces/cookie-max-age-validation-safe.jsonl",
+      "hash": "e92c18b0d900c09becce31ef66ceb053c681ed7886e81626326d10d525048def",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": false
+    },
+    {
+      "id": "cookie-max-age-validation-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/cookie-max-age-validation-conflicting.jsonl",
+      "hash": "d9049481d3761420befea61bb22420d999160baa97dd85d7613edbb4ba2e3248",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "query-string-empty-value-filter-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/query-string-empty-value-filter-safe.jsonl",
+      "hash": "dce573e1be10564676bb71115092a576071943e205476101b2287da77fa2691a",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "query-string-empty-value-filter-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/query-string-empty-value-filter-conflicting.jsonl",
+      "hash": "53bc5b13187a1cb10a0d22c890b7f21298e26c0b4f882338d49c056189c57d3b",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "query-string-array-separator-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/query-string-array-separator-safe.jsonl",
+      "hash": "d8c1dcbbd78956a7f80ba3fd986dda4b8861c0cdf4cd67ee352042c909663c6f",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "query-string-array-separator-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/query-string-array-separator-conflicting.jsonl",
+      "hash": "24d596673d911ecaa9101e58e4c1ee0c3fe0ef2f25b1304ca761b9acf008252f",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "validator-email-domain-case-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/validator-email-domain-case-safe.jsonl",
+      "hash": "a017d4d4b597c3ff75a94d8fd607de55b10339cd68d5964b22cefe81030eac1c",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "validator-email-domain-case-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/validator-email-domain-case-conflicting.jsonl",
+      "hash": "9337d80b20fa712ba5ebc70accb994f30aec814936b54145073b656ca10c3fd0",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "validator-email-subaddress-safe",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "allow",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/validator-email-subaddress-safe.jsonl",
+      "hash": "ef35ffbce8052ee920e0fd647186965d5614555b226e95ecd6701fb97c0442bb",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "validator-email-subaddress-conflicting",
+      "sourceDataset": "greylock-independent-pair-holdout-v2",
+      "sourceDecision": "warn",
+      "sourceTruth": "lock",
+      "sourceRule": "semantic-interaction-uncertain",
+      "category": "rule-case",
+      "trace": "traces/validator-email-subaddress-conflicting.jsonl",
+      "hash": "02c6f91e4d39cb7c33e0f59dad874187cee31b760db6c7c266f3aed23f499848",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        },
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ],
+      "matched": true
+    },
+    {
+      "id": "control-policy-grey",
+      "sourceDataset": "greylock-replay-v1",
+      "sourceDecision": "warn",
+      "sourceTruth": "warn",
+      "category": "delivery-scenario",
+      "trace": "traces/control-policy-grey.jsonl",
+      "hash": "2be6e73ccd6f157dc461ddf01cec5016f8deb63585609ff6d0c4fa0f686cec5a",
+      "unavailable": "one-side-unchanged",
+      "actual": [],
+      "matched": false
+    },
+    {
+      "id": "crossed-session-race",
+      "sourceDataset": "greylock-replay-v1",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "category": "delivery-scenario",
+      "trace": "traces/crossed-session-race.jsonl",
+      "hash": "7d89f48e25ee8bec6634c0b956ea13c173012b652cf4d122d48688f3ed3655a2",
+      "unavailable": "no-static-relation",
+      "actual": [],
+      "matched": false
+    },
+    {
+      "id": "log-only-white",
+      "sourceDataset": "greylock-replay-v1",
+      "sourceDecision": "allow",
+      "sourceTruth": "allow",
+      "category": "delivery-scenario",
+      "trace": "traces/log-only-white.jsonl",
+      "hash": "0814a64db26b713e5b73d4417ba26f90b4bfb5c8c6d09bcd14b34100586f3446",
+      "unavailable": "one-side-unchanged",
+      "actual": [],
+      "matched": false
+    },
+    {
+      "id": "provider-failure-fallback",
+      "sourceDataset": "greylock-replay-v1",
+      "sourceDecision": "lock",
+      "sourceTruth": "lock",
+      "category": "delivery-scenario",
+      "trace": "traces/provider-failure-fallback.jsonl",
+      "hash": "1c55c706b6c7591343ed218fbf4c3d2097a3213110bf38261d79515fcf31fb5e",
+      "unavailable": "one-side-unchanged",
+      "actual": [],
+      "matched": false
+    },
+    {
+      "id": "return-contract-black",
+      "sourceDataset": "greylock-replay-v1",
+      "sourceDecision": "lock",
+      "sourceTruth": "lock",
+      "category": "delivery-scenario",
+      "trace": "traces/return-contract-black.jsonl",
+      "hash": "8a1667209fa22f206edc917ba50d5c691ac18cd528ddb3cf4a5cf48615915eec",
+      "unavailable": "one-side-unchanged",
+      "actual": [],
+      "matched": false
+    },
+    {
+      "id": "stale-reanalysis",
+      "sourceDataset": "greylock-replay-v1",
+      "sourceDecision": "lock",
+      "sourceTruth": "lock",
+      "category": "delivery-scenario",
+      "trace": "traces/stale-reanalysis.jsonl",
+      "hash": "fa55cab7a7fd6e68957f5d73724bafb67f38ffe631fb2104d37cfc05a422bf0b",
+      "unavailable": "no-static-relation",
+      "actual": [],
+      "matched": false
+    }
+  ]
 }

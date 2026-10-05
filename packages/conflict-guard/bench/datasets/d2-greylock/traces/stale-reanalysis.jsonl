@@ -1,0 +1,5 @@
+{"schema":3,"seq":1,"at":0,"type":"session_start","mode":"rules","config":{"idleMs":1500,"activeIdleMs":600000}}
+{"schema":3,"seq":2,"at":0,"type":"doc_open","file":"client.ts","text":"export function takePage(limit: number): number {\n    return limit;\n}\n","textHash":"62cea6894e0ddd0925725ded69696381d40d675b05103c860c70e42b4e63ae2f"}
+{"schema":3,"seq":3,"at":0,"type":"doc_open","file":"service.ts","text":"export function readLimit(config: { limit: number }): number {\n    return config.limit;\n}\n","textHash":"64941051b876efe4fb3ee97783ab213ef9bb150ae0875edbe428f1af563dba26"}
+{"schema":3,"seq":4,"at":100,"type":"edit","file":"service.ts","origin":{"kind":"human","memberId":"origin"},"ops":[{"from":74,"deleted":"config.limit","inserted":"Math.max(0, config.limit)"}],"revisionAfter":1}
+{"schema":3,"seq":5,"at":300,"type":"edit","file":"client.ts","origin":{"kind":"human","memberId":"candidate"},"ops":[{"from":61,"deleted":"limit","inserted":"Math.min(limit, 100)"}],"revisionAfter":2}

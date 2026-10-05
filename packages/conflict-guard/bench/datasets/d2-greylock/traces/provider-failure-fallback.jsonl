@@ -1,0 +1,4 @@
+{"schema":3,"seq":1,"at":0,"type":"session_start","mode":"rules","config":{"idleMs":1500,"activeIdleMs":600000}}
+{"schema":3,"seq":2,"at":0,"type":"doc_open","file":"pricing.ts","text":"export function submitOrder(total: number): string {\n    return `accepted:${total.toFixed(2)}`;\n}\n","textHash":"0ae551ec9154a1e0d5138184a977e92be594675e87be65b31adc43520c4f2c02"}
+{"schema":3,"seq":3,"at":0,"type":"doc_open","file":"service.ts","text":"export function resolvePolicy(discountRate: number): 'standard' | 'review' {\n    return discountRate > 0.5 ? 'review' : 'standard';\n}\n","textHash":"e161ffd4b431c1bf14d9319dd2c9a1dbdaa0cf9ef28c445dc6560ca0120c0e0f"}
+{"schema":3,"seq":4,"at":300,"type":"edit","file":"pricing.ts","origin":{"kind":"human","memberId":"candidate"},"ops":[{"from":64,"deleted":"","inserted":"total > 1000 ? `review:${total.toFixed(2)}` : "}],"revisionAfter":2}
