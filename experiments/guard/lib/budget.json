@@ -1,0 +1,12 @@
+{
+  "model": "deepseek-flash",
+  "currency": "CNY",
+  "period": "idle",
+  "reason": "2026-10-05 is within the configured Chinese legal holiday period",
+  "pricesPerMillionTokens": {
+    "cacheHitInput": 0.02,
+    "cacheMissInput": 1,
+    "output": 4
+  },
+  "source": "experiments/guard/results/deepseek-pricing-20261005.html"
+}
