@@ -136,8 +136,7 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
     const subcommand = gitSubcommand(command);
     if (["status", "diff", "log", "show", "branch", "rev-parse"].includes(subcommand)) return ["read"];
     if (["push", "pull", "fetch", "clone", "remote"].includes(subcommand)) return ["network"];
-    if (["checkout", "stash"].includes(subcommand)) return ["write"];
-    if (subcommand === "clean") return ["delete"];
+    if (["checkout", "restore", "stash", "clean"].includes(subcommand)) return ["delete"];
     if (["reset", "rebase", "commit", "merge"].includes(subcommand)) return ["history"];
   }
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
@@ -146,7 +145,7 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   if (["npm", "pnpm", "yarn", "pip", "pip3", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return ["install"];
   if (["curl", "wget", "scp", "sftp", "ssh", "rsync"].includes(name)) return ["network"];
   if (name === "git" && /\b(push|pull|fetch|clone|remote)\b/i.test(command)) return ["network"];
-  if (name === "git" && /\b(checkout|stash|clean)\b/i.test(command)) return ["write"];
+  if (name === "git" && /\b(checkout|restore|stash|clean)\b/i.test(command)) return ["delete"];
   if (name === "git" && /\b(reset|rebase|commit|merge)\b/i.test(command)) return ["history"];
   if (["mkdir", "md", "touch", "tee", "cp", "copy", "mv", "move", "new-item", "set-content", "add-content"].includes(name)) return ["write"];
   return ["exec"];
@@ -159,7 +158,6 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && (name === "scp" || name === "rsync" || /(?:^|\s)(?:-d|--data\w*|-F|--form\w*|-T|--upload-file)(?:\s|=)/i.test(command))) return "irreversible";
-  if (name === "git" && subcommand === "clean") return "irreversible";
   if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";
   return "reversible";
 }

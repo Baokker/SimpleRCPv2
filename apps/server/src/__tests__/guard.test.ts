@@ -198,6 +198,12 @@ describe("guard decisions", () => {
     expect(command("owner", "git push origin feature-branch").action).toBe("ask");
   });
 
+  it("treats workspace git restore operations as deletions with snapshots", () => {
+    for (const text of ["git checkout -- notes/status.txt", "git checkout .", "git restore notes/status.txt", "git stash", "git clean -fdx"]) {
+      expect(command("trusted", text).action).toBe("allow_snapshot");
+    }
+  });
+
   it("keeps dangerous legacy commands behind approval for exec-only capability", () => {
     for (const text of ["dd if=/dev/zero of=src/a.ts", "halt"]) {
       const result = command("student", text);
