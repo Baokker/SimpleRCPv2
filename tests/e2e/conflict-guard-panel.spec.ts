@@ -95,7 +95,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
   const sameSymbolState = await guardRequest(alice, projectId, "state");
   await capture(alice, "05-same-symbol");
   await openFile(alice, "src/report.ts");
-  await alice.getByTestId("conflict-guard-panel").getByRole("button", { name: "src/cart.ts:11–15 total", exact: true }).first().click();
+  await alice.getByTestId("conflict-guard-panel").getByRole("button", { name: "src/cart.ts:11–15 Cart.total()", exact: true }).first().click();
   await expect(alice.locator(".tab.active")).toContainText("src/cart.ts");
   await expect.poll(() => alice.evaluate(() => window.__simplercpEditors?.["src/cart.ts"]?.getPosition()?.lineNumber)).toBe(11);
   await capture(alice, "06-navigation-statistics");

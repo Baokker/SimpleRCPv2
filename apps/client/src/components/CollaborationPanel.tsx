@@ -113,17 +113,25 @@ export function CollaborationPanel({
   const errorHandler = useRef(onError);
   errorHandler.current = onError;
   useEffect(() => {
+    setConflictState(undefined);
     if (!member) return;
     let active = true;
     let timer: number | undefined;
     async function refresh() {
-      const state = await getConflictGuardState(projectId);
-      if (!active) return;
-      setConflictState(state);
-      timer = window.setTimeout(() => { void refresh().catch((error) => errorHandler.current(error)); }, 1_000);
+      try {
+        const state = await getConflictGuardState(projectId);
+        if (active) setConflictState(state);
+      } catch (error) {
+        if (active) errorHandler.current(error);
+      } finally {
+        if (active) timer = window.setTimeout(() => { void refresh(); }, 1_000);
+      }
     }
     void getServerInfo().then((info) => {
-      if (!active || info.features.conflictGuard === "off") return;
+      if (!active || info.features.conflictGuard === "off") {
+        if (active) setConflictState(undefined);
+        return;
+      }
       return refresh();
     }).catch((error) => errorHandler.current(error));
     return () => { active = false; if (timer !== undefined) window.clearTimeout(timer); };

@@ -155,7 +155,12 @@ export function EditorArea({
                 onCursorChange(
                   activeFile.path,
                   event.selection.getPosition(),
-                  event.selection
+                  {
+                    startLineNumber: event.selection.startLineNumber,
+                    startColumn: event.selection.startColumn,
+                    endLineNumber: event.selection.endLineNumber,
+                    endColumn: event.selection.endColumn
+                  }
                 );
               });
             }}
@@ -192,6 +197,7 @@ function CollaborativeEditor({
     monaco: typeof Monaco
   ): void;
 }) {
+  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "reconnecting" | "ready"
   >("connecting");
@@ -213,6 +219,9 @@ function CollaborativeEditor({
     collaboration.provider.destroy();
     collaboration.document.destroy();
     collaborationRef.current = undefined;
+    if (window.__simplercpEditors?.[file.path] === editorRef.current) {
+      delete window.__simplercpEditors[file.path];
+    }
     if (window.__simplercpYjsSynced) {
       delete window.__simplercpYjsSynced[file.path];
     }
@@ -239,6 +248,7 @@ function CollaborativeEditor({
           domReadOnly: connectionStatus !== "ready" || !canEdit
         }}
         onMount={(editor, monaco) => {
+          editorRef.current = editor;
           onMount(editor, monaco);
 
           const document = new Y.Doc();
