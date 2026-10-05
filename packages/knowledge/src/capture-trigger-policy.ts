@@ -4,7 +4,7 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 
-import type { CaptureTriggerType } from './schema.js';
+import type { CaptureTriggerType } from './schema/card.js';
 
 export const CAPTURE_TRIGGER_TYPES = [
     'chat.dense',

@@ -6,8 +6,8 @@
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import type { KnowledgeCard, KnowledgeCardType } from '../../src/schema.js';
-import { ensureKnowledgeIndex, searchKnowledgeCards } from '../../src/knowledge-index.js';
+import type { KnowledgeCard, KnowledgeCardType } from '../../src/schema/card.js';
+import { ensureKnowledgeIndex, searchKnowledgeCards } from '../../src/retrieval/index.js';
 
 export const KNOWLEDGE_SCALE_SIZES = [10, 50, 100, 500, 1000] as const;
 

@@ -1,1 +1,1 @@
-export { buildKnowledgeGuideItems } from '../knowledge-views.js';
+export { buildKnowledgeGuideItems } from './index.js';

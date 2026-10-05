@@ -5,7 +5,7 @@
 // ******************************************************************************
 
 import { describe, expect, test } from 'vitest';
-import { extractFirstJsonObject, extractKnowledgeCardDraft, parseKnowledgeCardDraftFromText } from '../src/knowledge-extract.js';
+import { extractFirstJsonObject, extractKnowledgeCardDraft, parseKnowledgeCardDraftFromText } from '../src/extract/extract.js';
 
 describe('knowledge-extract', () => {
     test('extractFirstJsonObject extracts JSON inside code fences', () => {

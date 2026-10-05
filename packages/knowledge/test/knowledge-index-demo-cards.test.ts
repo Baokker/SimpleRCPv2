@@ -7,9 +7,9 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { createDemoKnowledgeCards } from '../src/demo-cards.js';
-import { ensureKnowledgeIndex, searchKnowledgeCards } from '../src/knowledge-index.js';
-import { buildKnowledgeContext, pickCardsWithinBudget } from '../src/knowledge-inject.js';
+import { createDemoKnowledgeCards } from '../src/demo/demoCards.js';
+import { ensureKnowledgeIndex, searchKnowledgeCards } from '../src/retrieval/index.js';
+import { buildKnowledgeContext, pickCardsWithinBudget } from '../src/retrieval/inject.js';
 
 describe('knowledge-index demo cards retrieval', () => {
     test('refreshes cached scope and ownership without changing card text', async () => {
@@ -131,6 +131,23 @@ describe('knowledge-index demo cards retrieval', () => {
 
         expect(riskResults[0]?.cardId).toBe('demo-risk');
         expect(riskResults[0]?.mode).toBe('lexical');
+    });
+
+    test('falls back to lexical retrieval when embedding calls fail and supports strict mode', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const root = await fs.mkdtemp(path.join(artifactRoot, 'embedding-fallback-'));
+        try {
+            const [card] = createDemoKnowledgeCards({ selectedText: 'const value = 1;', now: 1_000 });
+            const embeddings = { client: { async embed(): Promise<number[][]> { throw new Error('embedding service unavailable'); } } };
+            const options = { workspaceId: `embedding-fallback-${root}`, cards: [card], query: 'value', embeddings, indexDir: root };
+            const results = await searchKnowledgeCards(options);
+            expect(results[0]?.mode).toBe('lexical');
+            expect(results[0]?.fallbackReason).toBe('embedding service unavailable');
+            await expect(searchKnowledgeCards({ ...options, strictEmbedding: true })).rejects.toThrow('embedding service unavailable');
+        } finally {
+            await fs.rm(root, { recursive: true, force: true });
+        }
     });
 
     test('migrates legacy cards read from the workspace directory', async () => {

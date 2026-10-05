@@ -28,5 +28,6 @@
 ## 遗留问题
 
 - 持久化层只保存文件文本，Yjs 更新历史没有持久化，文档实例重建后必须依赖文本策略刷新相对位置。
+- 阶段二将 `monaco-editor` 从 `0.49.0` 升级到 `0.52.2`，原因是 gutter hover 的 Markdown command 服务注入和命令点击支持。点一、点二集成时，三个分支的 `apps/client/package.json` 可能产生依赖版本冲突，需要统一 Monaco 版本后再合并客户端改动。
 - 端到端截图已经保存到 `docs/knowledge/screenshots/`；截图由 Playwright 测试生成，未保存浏览器地址栏等无关窗口内容。
 - 阶段二没有实现自动捕获、Inbox 内容、Agent 注入、作用域升级和复杂治理流程。

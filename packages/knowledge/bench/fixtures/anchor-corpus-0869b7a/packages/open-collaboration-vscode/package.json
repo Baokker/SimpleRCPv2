@@ -1,0 +1,536 @@
+{
+  "name": "collaboration-tools",
+  "displayName": "Collaboration Tools",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Connect with others and live-share your code in real-time collaboration sessions",
+  "publisher": "Garfield",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "collaboration",
+    "share",
+    "live-share",
+    "real-time",
+    "team",
+    "co-edit",
+    "pair-programming"
+  ],
+  "icon": "data/oct-logo.png",
+  "galleryBanner": {
+    "color": "#CBC9E8",
+    "theme": "light"
+  },
+  "bugs": {
+    "url": "https://github.com/cscw-and-se/collaboration-tools/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cscw-and-se/collaboration-tools",
+    "directory": "packages/open-collaboration-vscode"
+  },
+  "author": {
+    "name": "Garfield",
+    "url": "https://github.com/cscw-and-se"
+  },
+  "main": "./dist/extension.js",
+  "browser": "./dist/extension.web.js",
+  "l10n": "./l10n",
+  "engines": {
+    "vscode": "^1.73.0",
+    "node": ">=20.10.0",
+    "npm": ">=10.2.3"
+  },
+  "activationEvents": [
+    "onStartupFinished",
+    "onUri:oct"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "resourceLabelFormatters": [
+      {
+        "scheme": "oct",
+        "formatting": {
+          "label": "${path}",
+          "separator": "/",
+          "workspaceSuffix": "Collaboration Tools"
+        }
+      }
+    ],
+    "configuration": {
+      "title": "Collaboration Tools",
+      "properties": {
+        "oct.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8100",
+          "description": "%oct.serverUrl%"
+        },
+        "oct.alwaysAskToOverrideServerUrl": {
+          "type": "boolean",
+          "default": true,
+          "description": "%oct.alwaysAskToOverrideServerUrl%"
+        },
+        "oct.webClientUrl": {
+          "type": "string",
+          "default": "https://www.open-collab.tools/playground/?room=${roomId}",
+          "description": "%oct.webClientUrl%"
+        },
+        "oct.knowledge.capture.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%oct.knowledge.capture.enabled%"
+        },
+        "oct.knowledge.capture.hostOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "%oct.knowledge.capture.hostOnly%"
+        },
+        "oct.knowledge.capture.inboxLocation": {
+          "type": "string",
+          "enum": [
+            "local",
+            "workspace"
+          ],
+          "default": "local",
+          "description": "%oct.knowledge.capture.inboxLocation%"
+        },
+        "oct.knowledge.llm.model": {
+          "type": "string",
+          "default": "gpt-5-medium",
+          "description": "%oct.knowledge.llm.model%"
+        },
+        "oct.knowledge.llm.openai.baseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "%oct.knowledge.llm.openai.baseUrl%"
+        },
+        "oct.knowledge.llm.openai.timeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "description": "%oct.knowledge.llm.openai.timeoutMs%"
+        },
+        "oct.knowledge.rag.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%oct.knowledge.rag.enabled%"
+        },
+        "oct.knowledge.rag.topK": {
+          "type": "number",
+          "default": 5,
+          "description": "%oct.knowledge.rag.topK%"
+        },
+        "oct.knowledge.rag.embedding.baseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "%oct.knowledge.rag.embedding.baseUrl%"
+        },
+        "oct.knowledge.rag.embedding.model": {
+          "type": "string",
+          "default": "text-embedding-v4",
+          "description": "%oct.knowledge.rag.embedding.model%"
+        },
+        "oct.knowledge.rag.embedding.timeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "description": "%oct.knowledge.rag.embedding.timeoutMs%"
+        },
+        "oct.knowledge.rag.warnings.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%oct.knowledge.rag.warnings.enabled%"
+        },
+        "oct.knowledge.rag.warnings.threshold": {
+          "type": "number",
+          "default": 0.8,
+          "description": "%oct.knowledge.rag.warnings.threshold%"
+        },
+        "oct.knowledge.rag.warnings.configFiles": {
+          "type": "array",
+          "default": [
+            "**/tsconfig*.json",
+            "**/vite.config.*",
+            "**/eslint.config.*",
+            "**/.eslintrc*",
+            "**/Dockerfile",
+            "**/docker-compose.y*ml",
+            "**/.github/workflows/*.y*ml"
+          ],
+          "items": { "type": "string" },
+          "description": "%oct.knowledge.rag.warnings.configFiles%"
+        }
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "oct.roomView",
+          "name": "%oct.roomView%",
+          "when": "oct.connection"
+        },
+        {
+          "id": "oct.knowledgeInboxView",
+          "name": "%oct.knowledge.inboxView%",
+          "when": "workbenchState != empty"
+        },
+        {
+          "id": "oct.knowledgeCardsView",
+          "name": "%oct.knowledge.cardsView%",
+          "when": "workbenchState != empty"
+        },
+        {
+          "id": "oct.chatView",
+          "type": "webview",
+          "name": "Chat",
+          "when": "oct.connection"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "oct.followPeer",
+          "when": "oct.connection"
+        },
+        {
+          "command": "oct.stopFollowPeer",
+          "when": "oct.connection && oct.following"
+        },
+        {
+          "command": "oct.knowledge.pinSelection",
+          "when": "editorHasSelection && (resourceScheme == file || resourceScheme == oct)"
+        },
+        {
+          "command": "oct.knowledge.captureFromChat",
+          "when": "oct.connection"
+        },
+        {
+          "command": "oct.knowledge.openInbox",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.setLLMApiKey",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.setEmbeddingApiKey",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.refreshInbox",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.refreshCards",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.generateDemoCards",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.openGuide",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "oct.knowledge.openTimeline",
+          "when": "workbenchState != empty"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "oct.followPeer",
+          "when": "viewItem == peer",
+          "group": "inline"
+        },
+        {
+          "command": "oct.stopFollowPeer",
+          "when": "viewItem == followedPeer",
+          "group": "inline"
+        },
+        {
+          "command": "oct.knowledge.acceptSuggestion",
+          "when": "viewItem == knowledgeInboxSuggestion",
+          "group": "inline"
+        },
+        {
+          "command": "oct.knowledge.aiDraftSuggestion",
+          "when": "viewItem == knowledgeInboxSuggestion",
+          "group": "inline"
+        },
+        {
+          "command": "oct.knowledge.editSuggestion",
+          "when": "viewItem == knowledgeInboxSuggestion",
+          "group": "inline"
+        },
+        {
+          "command": "oct.knowledge.discardSuggestion",
+          "when": "viewItem == knowledgeInboxSuggestion",
+          "group": "inline"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "oct.knowledge.refreshInbox",
+          "when": "view == oct.knowledgeInboxView",
+          "group": "navigation"
+        },
+        {
+          "command": "oct.knowledge.refreshCards",
+          "when": "view == oct.knowledgeCardsView",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "oct.knowledge.pinSelection",
+          "when": "editorHasSelection && (resourceScheme == file || resourceScheme == oct)",
+          "group": "navigation@99"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "oct.knowledge.pinSelection",
+          "when": "editorHasSelection && (resourceScheme == file || resourceScheme == oct)",
+          "group": "navigation@99"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "oct.dev.fuzzing",
+        "title": "Run Fuzzing Test",
+        "category": "Open Collaboration Tools Developer",
+        "enablement": "oct.dev"
+      },
+      {
+        "command": "oct.followPeer",
+        "title": "%oct.followPeer%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "oct.stopFollowPeer",
+        "title": "%oct.stopFollowPeer%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "oct.closeConnection",
+        "title": "%oct.closeConnection%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(close)",
+        "enablement": "oct.connection"
+      },
+      {
+        "command": "oct.joinRoom",
+        "title": "%oct.joinRoom%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(vm-connect)",
+        "enablement": "!oct.connection"
+      },
+      {
+        "command": "oct.createRoom",
+        "title": "%oct.createRoom%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(vm-connect)",
+        "enablement": "workbenchState != empty && !oct.connection"
+      },
+      {
+        "command": "oct.signOut",
+        "title": "%oct.signOut%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(sign-out)"
+      },
+      {
+        "command": "oct.knowledge.pinSelection",
+        "title": "%oct.knowledge.pinSelection%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(pinned)"
+      },
+      {
+        "command": "oct.knowledge.openInbox",
+        "title": "%oct.knowledge.openInbox%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(inbox)"
+      },
+      {
+        "command": "oct.knowledge.refreshInbox",
+        "title": "%oct.knowledge.refreshInbox%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "oct.knowledge.refreshCards",
+        "title": "%oct.knowledge.refreshCards%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "oct.knowledge.openCard",
+        "title": "%oct.knowledge.openCard%",
+        "category": "Open Collaboration Tools"
+      },
+      {
+        "command": "oct.knowledge.generateDemoCards",
+        "title": "%oct.knowledge.generateDemoCards%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "oct.knowledge.openGuide",
+        "title": "%oct.knowledge.openGuide%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(list-ordered)"
+      },
+      {
+        "command": "oct.knowledge.openTimeline",
+        "title": "%oct.knowledge.openTimeline%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(history)"
+      },
+      {
+        "command": "oct.knowledge.acceptSuggestion",
+        "title": "%oct.knowledge.acceptSuggestion%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(check)"
+      },
+      {
+        "command": "oct.knowledge.aiDraftSuggestion",
+        "title": "%oct.knowledge.aiDraftSuggestion%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "oct.knowledge.editSuggestion",
+        "title": "%oct.knowledge.editSuggestion%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "oct.knowledge.discardSuggestion",
+        "title": "%oct.knowledge.discardSuggestion%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "oct.knowledge.setLLMApiKey",
+        "title": "%oct.knowledge.setLLMApiKey%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(key)"
+      },
+      {
+        "command": "oct.knowledge.setEmbeddingApiKey",
+        "title": "%oct.knowledge.setEmbeddingApiKey%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(key)"
+      },
+      {
+        "command": "oct.knowledge.captureFromChat",
+        "title": "%oct.knowledge.captureFromChat%",
+        "category": "Open Collaboration Tools",
+        "icon": "$(book)",
+        "enablement": "oct.connection"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "oct.knowledge.anchorPick.confirm",
+        "key": "enter",
+        "when": "oct.knowledge.anchorPickMode && editorTextFocus"
+      },
+      {
+        "command": "oct.knowledge.anchorPick.cancel",
+        "key": "escape",
+        "when": "oct.knowledge.anchorPickMode"
+      }
+    ],
+    "colors": [
+      {
+        "id": "oct.user.yellow",
+        "description": "%oct.user.color%",
+        "defaults": {
+          "dark": "#fcb900",
+          "light": "#fcb900"
+        }
+      },
+      {
+        "id": "oct.user.green",
+        "description": "%oct.user.color%",
+        "defaults": {
+          "dark": "#107c10",
+          "light": "#107c10"
+        }
+      },
+      {
+        "id": "oct.user.magenta",
+        "description": "%oct.user.color%",
+        "defaults": {
+          "dark": "#b4009e",
+          "light": "#b4009e"
+        }
+      },
+      {
+        "id": "oct.user.lightGreen",
+        "description": "%oct.user.color%",
+        "defaults": {
+          "dark": "#bad80a",
+          "light": "#bad80a"
+        }
+      },
+      {
+        "id": "oct.user.lightOrange",
+        "description": "%oct.user.color%",
+        "defaults": {
+          "dark": "#ff8c00",
+          "light": "#ff8c00"
+        }
+      },
+      {
+        "id": "oct.user.lightMagenta",
+        "description": "%oct.user.color%",
+        "defaults": {
+          "dark": "#e3008c",
+          "light": "#e3008c"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run check-types && tsx ./scripts/esbuild.ts --production",
+    "package": "vsce package --no-dependencies",
+    "build": "npm run check-types && tsx ./scripts/esbuild.ts",
+    "watch": "tsx ./scripts/esbuild.ts --watch",
+    "check-types": "tsc --noEmit",
+    "l10n-export": "vscode-l10n-dev export --outDir ./l10n ./src",
+    "l10n-pseudo": "vscode-l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
+    "l10n-translate": "tsx ./scripts/translate.ts"
+  },
+  "dependencies": {
+    "async-mutex": "~0.5.0",
+    "inversify": "~6.2.2",
+    "reflect-metadata": "~0.2.2",
+    "open-collaboration-agent": "0.3.0",
+    "open-collaboration-knowledge": "0.3.1",
+    "open-collaboration-yjs": "0.3.1",
+    "open-collaboration-protocol": "0.3.1",
+    "lodash": "~4.17.21",
+    "nanoid": "~5.1.5",
+    "node-fetch": "~3.3.2"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "~2.6.12",
+    "@types/vscode": "^1.73.0",
+    "@vscode/l10n-dev": "~0.0.35",
+    "@vscode/vsce": "^3.0.0",
+    "deepl-node": "~1.17.3"
+  },
+  "volta": {
+    "node": "22.14.0",
+    "npm": "10.9.2"
+  }
+}

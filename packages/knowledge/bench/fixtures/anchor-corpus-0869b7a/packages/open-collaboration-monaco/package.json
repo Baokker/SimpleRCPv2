@@ -1,0 +1,75 @@
+{
+  "name": "open-collaboration-monaco",
+  "version": "0.3.3",
+  "license": "MIT",
+  "description": "Connect a single Monaco Editor to an Open Collaboration Tools session",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "type": "module",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./example": {
+      "types": "./lib/example.d.ts",
+      "default": "./lib/example.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "lib/index.d.ts"
+      ],
+      "example": [
+        "lib/example.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "echo 'open-collaboration-protocol: Nothing extra to build.'"
+  },
+  "dependencies": {
+    "lodash": "~4.17.21",
+    "open-collaboration-protocol": "~0.3.1",
+    "open-collaboration-yjs": "~0.3.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.89.0"
+  },
+  "peerDependencies": {
+    "monaco-editor": ">= 0.44.0"
+  },
+  "keywords": [
+    "collaboration",
+    "live-share",
+    "real-time",
+    "pair-programming",
+    "monaco-editor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eclipse-oct/open-collaboration-tools",
+    "directory": "packages/open-collaboration-monaco"
+  },
+  "bugs": {
+    "url": "https://github.com/eclipse-oct/open-collaboration-tools/issues"
+  },
+  "homepage": "https://www.open-collab.tools/",
+  "author": {
+    "name": "TypeFox",
+    "url": "https://www.typefox.io/"
+  },
+  "volta": {
+    "node": "22.14.0",
+    "npm": "10.9.2"
+  },
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.2.3"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "name": "open-collaboration-server",
+  "version": "0.3.1",
+  "license": "MIT",
+  "description": "Open Collaboration Server implementation, part of the Open Collaboration Tools project",
+  "files": [
+    "bin",
+    "bundle",
+    "lib",
+    "src"
+  ],
+  "type": "module",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "lib/app.d.ts"
+      ]
+    }
+  },
+  "bin": {
+    "oct-server": "./bin/server"
+  },
+  "scripts": {
+    "build": "tsx scripts/esbuild.ts",
+    "start": "node bundle/app.js --hostname=0.0.0.0",
+    "start:direct": "tsx src/app.ts --hostname=0.0.0.0",
+    "start:dev": "tsx watch src/app.ts --hostname=localhost"
+  },
+  "dependencies": {
+    "commander": "~13.1.0",
+    "cookie-parser": "^1.4.7",
+    "express": "~5.1.0",
+    "inversify": "~6.2.2",
+    "jose": "~6.0.10",
+    "nanoid": "~5.1.5",
+    "open-collaboration-protocol": "~0.3.1",
+    "passport": "~0.7.0",
+    "passport-github": "~1.1.0",
+    "passport-google-oauth20": "~2.0.0",
+    "passport-oauth2": "~1.8.0",
+    "reflect-metadata": "~0.2.2",
+    "semver": "~7.7.1",
+    "socket.io": "~4.8.1",
+    "ws": "~8.18.1",
+    "yaml": "^2.7.1"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "~5.0.1",
+    "@types/node-forge": "~1.3.11",
+    "@types/passport": "~1.0.17",
+    "@types/passport-github": "~1.1.12",
+    "@types/passport-google-oauth20": "~2.0.16",
+    "@types/passport-oauth2": "~1.4.17",
+    "@types/ws": "~8.18.1",
+    "@types/yargs": "~17.0.33"
+  },
+  "keywords": [
+    "collaboration",
+    "live-share",
+    "server"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eclipse-oct/open-collaboration-tools",
+    "directory": "packages/open-collaboration-server"
+  },
+  "bugs": {
+    "url": "https://github.com/eclipse-oct/open-collaboration-tools/issues"
+  },
+  "homepage": "https://www.open-collab.tools/",
+  "author": {
+    "name": "TypeFox",
+    "url": "https://www.typefox.io/"
+  },
+  "volta": {
+    "node": "22.14.0",
+    "npm": "10.9.2"
+  },
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.2.3"
+  }
+}

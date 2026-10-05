@@ -7,6 +7,22 @@ export type CaptureEventType =
   | "docRetired"
   | "memberPresence";
 
+export type CaptureActorKind = "member" | "agent" | "filesystem" | "unknown";
+
+export interface ParsedCaptureActor {
+  kind: CaptureActorKind;
+  memberId?: string;
+  runId?: string;
+}
+
+export function parseActor(actor: string): ParsedCaptureActor {
+  if (actor === "filesystem") return { kind: "filesystem" };
+  if (actor === "unknown") return { kind: "unknown" };
+  if (actor.startsWith("agent:") && actor.length > "agent:".length) return { kind: "agent", runId: actor.slice("agent:".length) };
+  if (actor.length > 0) return { kind: "member", memberId: actor };
+  return { kind: "unknown" };
+}
+
 export interface CaptureEventBase {
   schemaVersion: 1;
   type: CaptureEventType;

@@ -1,4 +1,4 @@
-import type { KnowledgeCard, KnowledgeEvolutionEntry } from './schema.js';
+import type { KnowledgeCard, KnowledgeEvolutionEntry } from './schema/card.js';
 
 export interface ConfirmCardOptions {
     memberId: string;

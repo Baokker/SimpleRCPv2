@@ -24,16 +24,25 @@ export interface CaptureServiceOptions {
   metadataRoot: string; workspaceRoot: string; knowledge: KnowledgeService; documents: CollaborativeDocumentStore;
   chat: ChatStore; events: EventLog; roomId: string; projectId: string; recordEvents?: boolean;
   config?: CaptureConfigInput; llm?: { apiKey?: string; baseUrl: string; model: string };
+  riskWarningConfig?: Partial<RiskWarningConfig>;
   onNotify(memberId: string, message: ServerMessage): void;
   memberName(memberId: string): string;
 }
-export const riskWarningConfig = {
+export interface RiskWarningConfig {
+  files: string[];
+  lexicalThreshold: number;
+  vectorThreshold: number;
+  cooldownMs: number;
+  dedupeThreshold: number;
+}
+export const defaultRiskWarningConfig: RiskWarningConfig = {
   files: ["**/package.json", "**/tsconfig*.json", "**/vite.config.*", "**/.eslintrc*", "**/Dockerfile", "**/docker-compose*.yml", ".github/workflows/*"],
   lexicalThreshold: 1, vectorThreshold: 0.8, cooldownMs: 300_000, dedupeThreshold: 0.8
 };
 export interface KnowledgeRiskWarning { id: string; cardId: string; file: string; createdAt: number; seen: boolean; }
 
 export function createCaptureService(options: CaptureServiceOptions) {
+  const riskWarningConfig: RiskWarningConfig = { ...defaultRiskWarningConfig, ...options.riskWarningConfig, files: options.riskWarningConfig?.files ?? defaultRiskWarningConfig.files };
   const root = path.join(options.metadataRoot, "knowledge");
   const inbox = path.join(root, "inbox");
   const eventFile = path.join(root, "events.jsonl");

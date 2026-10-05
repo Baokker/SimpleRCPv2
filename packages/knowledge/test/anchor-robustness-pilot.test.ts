@@ -6,7 +6,7 @@
 import { describe, expect, test } from 'vitest';
 import { assessAnchorReviewHint } from '../src/anchor-review.js';
 import { resolveKnowledgeAnchorInText } from '../src/anchor-resolver.js';
-import type { KnowledgeAnchor } from '../src/schema.js';
+import type { KnowledgeAnchor } from '../src/schema/card.js';
 
 interface PilotCase {
     id: string;

@@ -2,17 +2,17 @@
   {
     "condition": "current-unfiltered",
     "queries": 120,
-    "targetRecallAt1": 0.6,
-    "targetRecallAt3": 0.8333333333333334,
-    "unsafeExposureRate": 0.7333333333333333,
-    "unsafeCards": 99,
+    "targetRecallAt1": 0.775,
+    "targetRecallAt3": 0.925,
+    "unsafeExposureRate": 0.85,
+    "unsafeCards": 124,
     "retrievedCards": 360
   },
   {
     "condition": "reviewed-only",
     "queries": 120,
-    "targetRecallAt1": 0.625,
-    "targetRecallAt3": 0.875,
+    "targetRecallAt1": 0.8166666666666667,
+    "targetRecallAt3": 0.9666666666666667,
     "unsafeExposureRate": 0,
     "unsafeCards": 0,
     "retrievedCards": 360

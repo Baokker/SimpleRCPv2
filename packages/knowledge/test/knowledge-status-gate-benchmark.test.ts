@@ -7,7 +7,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { REUSABLE_KNOWLEDGE_CARD_STATUSES } from '../src/schema.js';
+import { REUSABLE_KNOWLEDGE_CARD_STATUSES } from '../src/schema/card.js';
 import {
     runKnowledgeStatusGateBenchmark,
     statusGateCorpus,

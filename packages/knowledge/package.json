@@ -6,7 +6,7 @@
   "types": "./dist/src/index.d.ts",
   "exports": {
     ".": { "types": "./dist/src/index.d.ts", "default": "./dist/src/index.js" },
-    "./schema": { "types": "./dist/src/schema.d.ts", "default": "./dist/src/schema.js" },
+    "./schema": { "types": "./dist/src/schema/card.d.ts", "default": "./dist/src/schema/card.js" },
     "./capture/triggerPolicy": { "types": "./dist/src/capture/triggerPolicy.d.ts", "default": "./dist/src/capture/triggerPolicy.js" },
     "./capture/engine": { "types": "./dist/src/capture/engine.d.ts", "default": "./dist/src/capture/engine.js" },
     "./capture/events": { "types": "./dist/src/capture/events.d.ts", "default": "./dist/src/capture/events.js" },

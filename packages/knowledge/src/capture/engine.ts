@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import ts from "typescript";
 import { shouldTriggerCapture, defaultCaptureTriggerThresholds } from "../capture-trigger-policy.js";
-import type { CaptureSuggestion, CaptureTriggerType, KnowledgeCardType, SuggestedAnchor } from "../schema.js";
+import type { CaptureSuggestion, CaptureTriggerType, KnowledgeCardType, SuggestedAnchor } from "../schema/card.js";
 import { AuthorshipIndex, isMemberActor } from "./authorship.js";
 import { VirtualCaptureClock, type CaptureClock } from "./clock.js";
-import type { CaptureChatEvent, CaptureEditEvent, CaptureEvent } from "./events.js";
+import { parseActor, type CaptureChatEvent, type CaptureEditEvent, type CaptureEvent } from "./events.js";
 import { inferCoOccurrence, type CaptureActivity } from "./inference.js";
 
 export interface CaptureEngineConfig {
@@ -47,6 +47,14 @@ interface FileState {
   rollbacks: Array<{ at: number; hash: string; before: string; after: string; removedChars: number; deletedLines: number; actor: string }>;
 }
 export interface CaptureCheckpoint { at: number; file: string; actor: string; before: string; after: string; }
+export interface AgentRevisedEvent {
+  file: string;
+  agent: string;
+  runId: string;
+  editor: string;
+  intervals: import("./authorship.js").OverwrittenInterval[];
+  at: number;
+}
 
 export function resolveCaptureConfig(config: CaptureConfigInput = {}): CaptureEngineConfig {
   const resolved = { ...defaultCaptureEngineConfig, ...config, weights: { ...defaultCaptureEngineConfig.weights, ...config.weights } };
@@ -62,6 +70,7 @@ export function createCaptureEngine(options: {
   config?: CaptureConfigInput;
   onSuggestion(suggestion: CaptureSuggestion): void;
   onCheckpoint?(checkpoint: CaptureCheckpoint): void;
+  onAgentRevised?(event: AgentRevisedEvent): void;
 }) {
   const config = resolveCaptureConfig(options.config);
   const files = new Map<string, FileState>();
@@ -169,6 +178,12 @@ export function createCaptureEngine(options: {
     for (const item of overwritten) groups.set(item.actor, [...(groups.get(item.actor) ?? []), item]);
     for (const [author, intervals] of groups) {
       const significant = intervals.some(item => shouldTriggerCapture({ triggerType: "edit.overwritten", overwrittenLines: countLines(item.deletedText), overwrittenRatio: item.ratio, overwrittenAgeMs: event.at - item.at }, config));
+      const editorActor = parseActor(event.actor);
+      const targetActor = parseActor(author);
+      if (significant && editorActor.kind === "member" && targetActor.kind === "agent" && targetActor.runId) {
+        options.onAgentRevised?.({ file: event.file, agent: author, runId: targetActor.runId, editor: event.actor, intervals, at: event.at });
+        continue;
+      }
       const pair = [author, event.actor].sort().join(":");
       if (!significant || !cooled(`overwrite:${event.file}:${pair}`, event.at, config.overwrittenCooldownMs)) continue;
       emit("edit.overwritten", event.at, [author, event.actor], {

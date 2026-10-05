@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { isKnowledgeCard, LatestSchemaVersion } from '../src/schema.js';
+import { isKnowledgeCard, LatestSchemaVersion } from '../src/schema/card.js';
 
 describe('knowledge card guard', () => {
     test('rejects non-object', () => {

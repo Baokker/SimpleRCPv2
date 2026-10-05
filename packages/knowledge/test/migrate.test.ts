@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { migrateKnowledgeCard } from '../src/migrate.js';
+import { migrateKnowledgeCard } from '../src/schema/migrate.js';
 
 describe('knowledge card migration', () => {
     test('migrates a reviewed v2 event card to a reviewed team v3 card', () => {

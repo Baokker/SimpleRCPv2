@@ -1,5 +1,5 @@
 import type { CaptureChatEvent } from "./events.js";
-import type { SuggestedAnchor } from "../schema.js";
+import type { SuggestedAnchor } from "../schema/card.js";
 
 export interface CaptureActivity { type: "cursor" | "edit" | "presence"; actor: string; file: string; at: number; startLine: number; endLine: number; chars?: number; }
 export function inferCoOccurrence(options: {

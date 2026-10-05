@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AuthorshipIndex, VirtualCaptureClock, createCaptureEngine, replayEvents, NotificationPolicy, inferCoOccurrence, defaultCaptureEngineConfig, isCaptureEvent, isCaptureSuggestion, extractKnowledgeCardDraft, type CaptureEvent, type CaptureSuggestion } from "../src/index.js";
+import { AuthorshipIndex, VirtualCaptureClock, createCaptureEngine, replayEvents, NotificationPolicy, inferCoOccurrence, defaultCaptureEngineConfig, isCaptureEvent, isCaptureSuggestion, extractKnowledgeCardDraft, parseActor, type CaptureEvent, type CaptureSuggestion } from "../src/index.js";
 
 function session() {
   const clock = new VirtualCaptureClock();
@@ -20,6 +20,17 @@ function session() {
 }
 
 describe("authorship intervals", () => {
+  it("parses member, agent, filesystem, and unknown actors", () => {
+    expect(parseActor("Ada")).toEqual({ kind: "member", memberId: "Ada" });
+    expect(parseActor("agent:run-7")).toEqual({ kind: "agent", runId: "run-7" });
+    expect(parseActor("filesystem")).toEqual({ kind: "filesystem" });
+    expect(parseActor("unknown")).toEqual({ kind: "unknown" });
+  });
+  it("registers agent ranges at known coordinates", () => {
+    const index = new AuthorshipIndex();
+    index.register("a", "agent:run-7", [{ start: 2, end: 6, text: "code" }], 10);
+    expect(index.get("a")).toMatchObject([{ actor: "agent:run-7", start: 2, end: 6, text: "code" }]);
+  });
   it("transforms insertions before, after, and inside while retaining separate owners", () => {
     const index = new AuthorshipIndex();
     index.apply("a", "Ada", [{ start: 0, deleteCount: 0, insertText: "abcdef" }], 0);
@@ -170,6 +181,18 @@ describe("checkpoint capture", () => {
 });
 
 describe("edit and chat sequence capture", () => {
+  it("exposes member edits over Agent-authored ranges without edit.overwritten", () => {
+    const clock = new VirtualCaptureClock();
+    const suggestions: CaptureSuggestion[] = [];
+    const revisions: Array<{ runId: string; editor: string }> = [];
+    const engine = createCaptureEngine({ clock, onSuggestion: suggestion => suggestions.push(suggestion), onAgentRevised: event => revisions.push({ runId: event.runId, editor: event.editor }) });
+    const process = (event: CaptureEvent) => { clock.advanceTo(event.at); engine.process(event); };
+    process({ schemaVersion: 1, seq: 1, at: 0, type: "docOpen", file: "a.ts", text: "" });
+    process({ schemaVersion: 1, seq: 2, at: 1, type: "edit", file: "a.ts", actor: "agent:run-7", ops: [{ start: 0, deleteCount: 0, insertText: "one\ntwo\nthree\nfour\n" }], textBefore: "", textAfter: "one\ntwo\nthree\nfour\n" });
+    process({ schemaVersion: 1, seq: 3, at: 2, type: "edit", file: "a.ts", actor: "Ada", ops: [{ start: 0, deleteCount: 19, insertText: "replacement\n" }], textBefore: "one\ntwo\nthree\nfour\n", textAfter: "replacement\n" });
+    expect(suggestions).toEqual([]);
+    expect(revisions).toEqual([{ runId: "run-7", editor: "Ada" }]);
+  });
   it("captures a different member overwriting fresh text", () => {
     const s = session(); s.open(""); s.edit("one\ntwo\nthree\nfour\n", "Ada", 100); s.edit("replacement\n", "Bob", 200);
     expect(s.suggestions[0]).toMatchObject({ triggerType: "edit.overwritten", actors: { memberIds: ["Ada", "Bob"] }, evidence: { author: "Ada", editor: "Bob", replacement: "replacement\n", elapsedMs: 100 } });

@@ -7,13 +7,14 @@ import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import { createKnowledgeService } from "./knowledge/knowledgeService.js";
 import { createCaptureService } from "./knowledge/captureService.js";
+import type { RiskWarningConfig } from "./knowledge/captureService.js";
 import type { CaptureConfigInput } from "@simplercp/knowledge";
 import type { ChatMessage, WorkspaceChange, ServerMessage } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 
 export interface ProjectRuntimeOptions {
   terminalEnabled?: boolean; knowledgeMode?: string; knowledgeRecordEvents?: boolean;
-  captureConfig?: CaptureConfigInput; llm?: { apiKey?: string; baseUrl: string; model: string };
+  captureConfig?: CaptureConfigInput; riskWarningConfig?: Partial<RiskWarningConfig>; llm?: { apiKey?: string; baseUrl: string; model: string };
 }
 export function createProjectRuntime(
   project: ProjectRecord,
@@ -62,7 +63,7 @@ export function createProjectRuntime(
     : undefined;
   const capture = knowledge ? createCaptureService({
     projectId: project.id, roomId: room.id, workspaceRoot: project.workspacePath, metadataRoot: projectRoot,
-    knowledge, documents, chat, events, recordEvents: options.knowledgeRecordEvents, config: options.captureConfig, llm: options.llm,
+    knowledge, documents, chat, events, recordEvents: options.knowledgeRecordEvents, config: options.captureConfig, riskWarningConfig: options.riskWarningConfig, llm: options.llm,
     memberName(memberId) { return rooms.getMember(room.id, memberId)?.displayName ?? memberId; },
     onNotify(memberId, message) { for (const listener of knowledgeNotificationListeners) listener(memberId, message); }
   }) : undefined;

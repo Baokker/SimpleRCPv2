@@ -1,4 +1,4 @@
-import type { KnowledgeAnchor, TextRange } from './schema.js';
+import type { KnowledgeAnchor, TextRange } from './schema/card.js';
 
 export interface ResolvedAnchor {
     startOffset: number;

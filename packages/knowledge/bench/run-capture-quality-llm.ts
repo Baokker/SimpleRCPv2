@@ -1,5 +1,5 @@
 import { createOpenAICompatibleClient } from '../src/openaiCompatible.js';
-import { extractKnowledgeCardDraft } from '../src/knowledge-extract.js';
+import { extractKnowledgeCardDraft } from '../src/extract/extract.js';
 
 const baseUrl = process.env.DEEPSEEK_BASE_URL;
 const apiKey = process.env.DEEPSEEK_API_KEY;

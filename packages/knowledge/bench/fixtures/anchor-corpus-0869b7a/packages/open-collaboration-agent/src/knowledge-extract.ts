@@ -4,8 +4,10 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 
-import type { KnowledgeCardType } from './schema.js';
-import type { LlmClient } from './client.js';
+import { type CoreMessage, generateText } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
+import type { KnowledgeCardType } from 'open-collaboration-knowledge';
 import { knowledgeExtractionSystemPrompt } from './knowledge-prompt.js';
 
 export interface KnowledgeExtractionInput {
@@ -32,9 +34,6 @@ export interface KnowledgeCardDraftV2 {
 export interface ExtractKnowledgeCardDraftOptions {
     model: string;
     maxAttempts?: number;
-    client?: LlmClient;
-    timeoutMs?: number;
-    onFallback?(): void;
 }
 
 export async function extractKnowledgeCardDraft(
@@ -42,7 +41,7 @@ export async function extractKnowledgeCardDraft(
     options: ExtractKnowledgeCardDraftOptions
 ): Promise<KnowledgeCardDraftV2> {
     const maxAttempts = Math.max(1, Math.min(3, Math.floor(options.maxAttempts ?? 3)));
-    const baseTimeoutMs = options.timeoutMs ?? 30_000;
+    const baseTimeoutMs = readTimeoutMs(process.env.OCT_OPENAI_TIMEOUT_MS ?? process.env.OPENAI_TIMEOUT_MS);
     const maxAbortRetries = 2;
 
     // Intentionally do NOT include suggested* fields in the model payload to avoid biasing outputs
@@ -54,15 +53,15 @@ export async function extractKnowledgeCardDraft(
         evidence: input.evidence ?? {}
     };
 
-    const baseUserMessage: { role: 'user'; content: string } = {
+    const baseUserMessage: CoreMessage = {
         role: 'user',
-        content: `KNOWLEDGE EXTRACTION INPUT (JSON):\n${stringifyJsonWithinLimit(payload, 24_000)}`
+        content: `KNOWLEDGE EXTRACTION INPUT (JSON):\n${safeJsonStringify(payload, 24_000)}`
     };
 
     let lastText = '';
     let attempt = 1;
     while (attempt <= maxAttempts) {
-        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [baseUserMessage];
+        const messages: CoreMessage[] = [baseUserMessage];
         if (attempt > 1) {
             messages.push({
                 role: 'user',
@@ -78,10 +77,15 @@ export async function extractKnowledgeCardDraft(
         let abortRetries = 0;
         while (true) {
             const timeoutMs = Math.min(300_000, baseTimeoutMs * Math.max(1, Math.pow(2, abortRetries)));
+            const provider = getProviderForModel(options.model, { timeoutMs });
+            const languageModel = provider(options.model);
             try {
-                if (!options.client) { options.onFallback?.(); return createHeuristicFallbackDraft(input); }
-                const result = await options.client.complete({ model: options.model, messages: [{ role: 'system', content: knowledgeExtractionSystemPrompt }, ...messages], responseFormat: { type: 'json_object' }, timeoutMs });
-                lastText = result.text;
+                const result = await generateText({
+                    model: languageModel,
+                    system: knowledgeExtractionSystemPrompt,
+                    messages
+                });
+                lastText = result.text ?? '';
                 break;
             } catch (err: any) {
                 if (isAbortError(err) && abortRetries < maxAbortRetries) {
@@ -102,13 +106,14 @@ export async function extractKnowledgeCardDraft(
     }
 
     // Deterministic, grounded fallback (never invents facts).
-    options.onFallback?.();
     return createHeuristicFallbackDraft(input);
 }
 
 export function parseKnowledgeCardDraftFromText(text: string): Partial<KnowledgeCardDraftV2> {
     const jsonText = extractFirstJsonObject(text);
-    if (!jsonText) return {};
+    if (!jsonText) {
+        return {};
+    }
     try {
         const parsed = JSON.parse(jsonText) as unknown;
         if (!parsed || typeof parsed !== 'object') {
@@ -122,16 +127,55 @@ export function parseKnowledgeCardDraftFromText(text: string): Partial<Knowledge
 
 export function extractFirstJsonObject(text: string): string | undefined {
     const raw = String(text ?? '').trim();
-    if (!raw) return undefined;
-    const match = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-    const candidate = (match?.[1] ?? raw).trim();
-    if (!candidate.startsWith('{') || !candidate.endsWith('}')) return undefined;
-    try {
-        const parsed = JSON.parse(candidate) as unknown;
-        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? candidate : undefined;
-    } catch {
+    if (!raw) {
         return undefined;
     }
+
+    const withoutFences = raw
+        .replace(/^\s*```(?:json)?\s*/i, '')
+        .replace(/\s*```\s*$/i, '')
+        .trim();
+
+    const start = withoutFences.indexOf('{');
+    if (start === -1) {
+        return undefined;
+    }
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < withoutFences.length; i++) {
+        const ch = withoutFences[i];
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (ch === '\\\\') {
+                escaped = true;
+                continue;
+            }
+            if (ch === '"') {
+                inString = false;
+            }
+            continue;
+        }
+        if (ch === '"') {
+            inString = true;
+            continue;
+        }
+        if (ch === '{') {
+            depth++;
+            continue;
+        }
+        if (ch === '}') {
+            depth--;
+            if (depth === 0) {
+                return withoutFences.slice(start, i + 1);
+            }
+        }
+    }
+    return undefined;
 }
 
 function normalizeDraft(parsed: Partial<KnowledgeCardDraftV2>, input: KnowledgeExtractionInput): KnowledgeCardDraftV2 {
@@ -182,7 +226,6 @@ function isAcceptableDraft(d: KnowledgeCardDraftV2, input: KnowledgeExtractionIn
     if (!d) {
         return false;
     }
-    if (input.triggerType === 'edit.overwritten' && d.type !== 'decision' && d.type !== 'negative') return false;
     if (!d.title || d.title.trim().length < 4) {
         return false;
     }
@@ -222,7 +265,7 @@ function ensureGroundedSections(
         }
         lines.push('');
         lines.push('```json');
-        lines.push(stringifyJsonWithinLimit(evidence ?? {}, 4000));
+        lines.push(safeJsonStringify(evidence ?? {}, 4000));
         lines.push('```');
     }
 
@@ -256,8 +299,6 @@ function defaultTypeForTrigger(triggerType: string): KnowledgeCardType {
         case 'magicNumber.added':
             return 'constraint';
         case 'packageJson.dependencySwitch':
-        case 'dependency.changed':
-        case 'edit.overwritten':
             return 'decision';
         case 'rollback.detected':
             return 'risk';
@@ -286,8 +327,6 @@ function filterResolvableCitations(citations: string[], input: KnowledgeExtracti
         projectHints: input.projectHints ?? {},
         evidence: input.evidence ?? {}
     };
-    const resolvable = new Set<string>();
-    collectCitationPaths(root, '', resolvable);
     const out: string[] = [];
     for (const c of citations) {
         let path = String(c ?? '').trim();
@@ -303,22 +342,24 @@ function filterResolvableCitations(citations: string[], input: KnowledgeExtracti
         if (path.startsWith('payload.')) {
             path = path.slice('payload.'.length);
         }
-        if (resolvable.has(path)) out.push(path);
+        if (!(
+            path === 'evidence' ||
+            path === 'anchors' ||
+            path === 'projectHints' ||
+            path.startsWith('evidence.') ||
+            path.startsWith('anchors[') ||
+            path.startsWith('anchors.') ||
+            path.startsWith('projectHints.') ||
+            path.startsWith('triggerType')
+        )) {
+            continue;
+        }
+        const resolved = resolveJsonPath(root as any, path);
+        if (typeof resolved !== 'undefined') {
+            out.push(path);
+        }
     }
     return out.slice(0, 24);
-}
-
-function collectCitationPaths(value: unknown, prefix: string, paths: Set<string>): void {
-    if (prefix) paths.add(prefix);
-    if (Array.isArray(value)) {
-        value.forEach((item, index) => collectCitationPaths(item, `${prefix}[${index}]`, paths));
-        return;
-    }
-    if (!value || typeof value !== 'object') return;
-    for (const [key, child] of Object.entries(value)) {
-        const next = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? (prefix ? `${prefix}.${key}` : key) : `${prefix}[${JSON.stringify(key)}]`;
-        collectCitationPaths(child, next, paths);
-    }
 }
 
 function defaultEvidenceCitations(input: KnowledgeExtractionInput): string[] {
@@ -352,7 +393,6 @@ function defaultEvidenceCitations(input: KnowledgeExtractionInput): string[] {
             );
             break;
         case 'packageJson.dependencySwitch':
-        case 'dependency.changed':
             candidates.push(
                 'evidence.added[0]',
                 'evidence.removed[0]',
@@ -360,9 +400,6 @@ function defaultEvidenceCitations(input: KnowledgeExtractionInput): string[] {
                 'evidence.diff.after',
                 'evidence.dependencyUsages'
             );
-            break;
-        case 'edit.overwritten':
-            candidates.push('evidence.overwritten[0].originalText', 'evidence.replacement', 'evidence.diff.before', 'evidence.diff.after');
             break;
         case 'rollback.detected':
             candidates.push(
@@ -387,6 +424,100 @@ function defaultEvidenceCitations(input: KnowledgeExtractionInput): string[] {
     return filtered.length ? filtered : ['evidence'];
 }
 
+function resolveJsonPath(root: any, path: string): unknown {
+    // Supports a small JSONPath-like subset:
+    // - dot: evidence.todo.before
+    // - brackets: [0], ['key'], ["key"]
+    // Returns undefined when not resolvable.
+    let cur: any = root;
+    let i = 0;
+    const s = String(path ?? '').trim();
+    const readIdentifier = (): string => {
+        let start = i;
+        while (i < s.length) {
+            const ch = s[i];
+            if (!/[A-Za-z0-9_$]/.test(ch)) {
+                break;
+            }
+            i++;
+        }
+        return s.slice(start, i);
+    };
+    const skipDot = () => {
+        if (s[i] === '.') {
+            i++;
+        }
+    };
+
+    while (i < s.length) {
+        skipDot();
+        if (s[i] === '[') {
+            i++;
+            while (i < s.length && /\s/.test(s[i])) {
+                i++;
+            }
+            if (i >= s.length) {
+                return undefined;
+            }
+            if (s[i] === '"' || s[i] === "'") {
+                const quote = s[i++];
+                let key = '';
+                let escaped = false;
+                while (i < s.length) {
+                    const ch = s[i++];
+                    if (escaped) {
+                        key += ch;
+                        escaped = false;
+                        continue;
+                    }
+                    if (ch === '\\\\') {
+                        escaped = true;
+                        continue;
+                    }
+                    if (ch === quote) {
+                        break;
+                    }
+                    key += ch;
+                }
+                while (i < s.length && s[i] !== ']') {
+                    i++;
+                }
+                if (s[i] !== ']') {
+                    return undefined;
+                }
+                i++;
+                cur = cur?.[key];
+                continue;
+            }
+            // number index
+            let numText = '';
+            while (i < s.length && /[0-9]/.test(s[i])) {
+                numText += s[i++];
+            }
+            while (i < s.length && s[i] !== ']') {
+                i++;
+            }
+            if (s[i] !== ']') {
+                return undefined;
+            }
+            i++;
+            const idx = Number(numText);
+            if (!Number.isFinite(idx)) {
+                return undefined;
+            }
+            cur = cur?.[idx];
+            continue;
+        }
+
+        const id = readIdentifier();
+        if (!id) {
+            return undefined;
+        }
+        cur = cur?.[id];
+    }
+    return cur;
+}
+
 function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): KnowledgeCardDraftV2 {
     const type = defaultTypeForTrigger(input.triggerType);
     const title = normalizeNonEmptyString(input.suggestedTitle, `[${input.triggerType}]`);
@@ -396,7 +527,7 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
     const citations: string[] = [];
     const tags: string[] = [];
 
-    unknowns.push('修改原因及效果需要根据记录的证据核对。');
+    unknowns.push('LLM output was invalid/incomplete; this draft was generated by a deterministic fallback. Re-run AI Draft after improving evidence or adjusting the prompt/model.');
 
     const addCitationIf = (path: string, value: unknown) => {
         if (typeof value !== 'undefined' && value !== null) {
@@ -493,7 +624,7 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
                         const occ = Array.isArray(u?.occurrences) ? u.occurrences : [];
                         return [
                             `### ${String(u?.number ?? '')}`,
-                            ...occ.slice(0, 6).map((o: any) => `- ${o?.file ?? file}:${o?.line ?? '?'}: ${String(o?.context ?? '')}`)
+                            ...occ.slice(0, 6).map((o: any) => `- line ${o?.line ?? '?'}: ${String(o?.context ?? '')}`)
                         ].join('\n');
                     }).join('\n\n')
                     : '(No usage context captured in evidence.)',
@@ -506,7 +637,6 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
             }
             break;
         }
-        case 'dependency.changed':
         case 'packageJson.dependencySwitch': {
             const file = typeof evidence.file === 'string' ? evidence.file : '';
             const added = Array.isArray(evidence.added) ? evidence.added : [];
@@ -535,7 +665,7 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
                 typeof evidence?.dependencyUsages === 'object' && evidence?.dependencyUsages
                     ? Object.entries(evidence.dependencyUsages as any).slice(0, 6).map(([dep, hits]: any) => {
                         const arr = Array.isArray(hits) ? hits : [];
-                        return [`- ${dep}:`, ...arr.slice(0, 6).map((h: any) => `  - ${h?.file ?? ''}:${h?.line ?? ''} ${String(h?.context ?? h?.preview ?? '')}`)].join('\n');
+                        return [`- ${dep}:`, ...arr.slice(0, 6).map((h: any) => `  - ${h?.file ?? ''}:${h?.line ?? ''} ${String(h?.preview ?? '')}`)].join('\n');
                     }).join('\n')
                     : '(No usage hits captured in evidence.)',
                 '',
@@ -547,28 +677,12 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
             }
             break;
         }
-        case 'edit.overwritten': {
-            addCitationIf('evidence.overwritten[0].originalText', evidence.overwritten?.[0]?.originalText);
-            addCitationIf('evidence.replacement', evidence.replacement);
-            summary = summary || `${String(evidence.editor ?? '')} 改写了 ${String(evidence.author ?? '')} 在 ${String(evidence.file ?? '')} 中的内容。`;
-            contentLines = [
-                '## 编辑证据',
-                `文件：${String(evidence.file ?? '')}`,
-                `作者：${String(evidence.author ?? '')}；改写者：${String(evidence.editor ?? '')}；间隔：${Number(evidence.elapsedMs ?? 0)} ms`,
-                '```', String(evidence.overwritten?.[0]?.originalText ?? ''), '```',
-                '## 改写内容', '```', String(evidence.replacement ?? ''), '```',
-                '## 需要确认', '请补充改写原因与双方接受的规则。'
-            ];
-            unknowns.push('改写的原因需要参与成员确认。');
-            break;
-        }
         case 'rollback.detected': {
             const file = typeof evidence.file === 'string' ? evidence.file : '';
             addCitationIf('evidence.deletedAt', evidence?.deletedAt);
             addCitationIf('evidence.beforeAfter.before', evidence?.beforeAfter?.before);
             addCitationIf('evidence.beforeAfter.after', evidence?.beforeAfter?.after);
             addCitationIf('evidence.deletion.removedChars', evidence?.deletion?.removedChars);
-            addCitationIf('evidence.restored', evidence?.restored);
             addCitationIf('anchors[0].snapshot.text', (input.anchors as any)?.[0]?.snapshot?.text);
             summary = summary || `A large deletion was reverted shortly afterwards${file ? ` in ${file}` : ''}.`;
             contentLines = [
@@ -583,8 +697,8 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
                     : '(No before/after deletion snippet captured in evidence.)',
                 '',
                 '## Restored code snapshot (anchor)',
-                typeof evidence.restored === 'string' || typeof (input.anchors as any)?.[0]?.snapshot?.text === 'string'
-                    ? ['```', String(evidence.restored ?? (input.anchors as any)[0].snapshot.text).trim().slice(0, 4000), '```'].join('\n')
+                typeof (input.anchors as any)?.[0]?.snapshot?.text === 'string' && String((input.anchors as any)[0].snapshot.text).trim()
+                    ? ['```', String((input.anchors as any)[0].snapshot.text).trim().slice(0, 4000), '```'].join('\n')
                     : '(No anchor snapshot text available.)',
                 '',
                 '## Guidance',
@@ -599,7 +713,7 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
             summary = summary || 'Summarize the recent discussion into durable knowledge (decisions, constraints, risks, pitfalls).';
             contentLines = [
                 '## Discussion evidence (examples)',
-                ...msgs.slice(0, 20).map((m: any, idx: number) => `- ${idx + 1}. ${String(m?.userName ?? m?.authorId ?? 'User')}: ${String(m?.text ?? '')}`),
+                ...msgs.slice(0, 10).map((m: any, idx: number) => `- ${idx + 1}. ${String(m?.userName ?? 'User')}: ${String(m?.text ?? '')}`),
                 '',
                 '## Unknowns',
                 '- Exact decisions/outcomes (requires human confirmation if not explicit in messages).'
@@ -662,13 +776,109 @@ function normalizeConfidence(value: unknown): number {
     return Math.max(0, Math.min(1, n));
 }
 
-function stringifyJsonWithinLimit(value: unknown, maxChars: number): string {
-    const serialized = JSON.stringify(value, undefined, 2);
-    const text = typeof serialized === 'string' ? serialized : '';
+function safeJsonStringify(value: unknown, maxChars: number): string {
+    let text = '';
+    try {
+        text = JSON.stringify(value, undefined, 2);
+    } catch {
+        text = '{}';
+    }
     if (text.length <= maxChars) {
         return text;
     }
     return text.slice(0, maxChars) + '\n...';
+}
+
+function getProviderForModel(modelId: string, options?: { timeoutMs?: number }) {
+    if (modelId.startsWith('claude-')) {
+        return anthropic;
+    }
+    if (isOpenAICompatibleModel(modelId)) {
+        const isQwen = isQwenModel(modelId);
+        const baseURLRaw = firstNonEmpty(
+            process.env.OCT_OPENAI_BASE_URL,
+            process.env.OPENAI_BASE_URL,
+            process.env.OPENAI_API_BASE,
+            isQwen ? process.env.OCT_QWEN_BASE_URL : undefined,
+            isQwen ? process.env.QWEN_BASE_URL : undefined,
+            isQwen ? 'https://dashscope.aliyuncs.com/compatible-mode/v1' : undefined
+        );
+        const apiKey = firstNonEmpty(
+            process.env.OPENAI_API_KEY,
+            process.env.OCT_OPENAI_API_KEY,
+            isQwen ? process.env.QWEN_API_KEY : undefined,
+            isQwen ? process.env.DASHSCOPE_API_KEY : undefined
+        );
+        const timeoutMs = Number.isFinite(options?.timeoutMs as any) && (options?.timeoutMs as number) > 0
+            ? Math.floor(options!.timeoutMs!)
+            : readTimeoutMs(process.env.OCT_OPENAI_TIMEOUT_MS ?? process.env.OPENAI_TIMEOUT_MS);
+        return createOpenAI({
+            ...(apiKey ? { apiKey } : {}),
+            baseURL: normalizeOpenAIBaseURL(baseURLRaw),
+            fetch: createTimeoutFetch(globalThis.fetch, timeoutMs)
+        });
+    }
+    throw new Error(`Unknown model: ${modelId}`);
+}
+
+function isQwenModel(modelId: string): boolean {
+    const id = String(modelId ?? '').trim().toLowerCase();
+    return id.startsWith('qwen') || id.startsWith('qwq');
+}
+
+function isOpenAICompatibleModel(modelId: string): boolean {
+    const id = String(modelId ?? '').trim().toLowerCase();
+    return id.startsWith('gpt-') || id.startsWith('o') || isQwenModel(modelId);
+}
+
+function firstNonEmpty(...values: Array<string | undefined>): string | undefined {
+    for (const v of values) {
+        const s = typeof v === 'string' ? v.trim() : '';
+        if (s) {
+            return s;
+        }
+    }
+    return undefined;
+}
+
+function normalizeOpenAIBaseURL(value: string | undefined): string | undefined {
+    const raw = String(value ?? '').trim();
+    if (!raw) {
+        return undefined;
+    }
+    const withoutTrailing = raw.replace(/\/+$/g, '');
+    if (withoutTrailing.endsWith('/v1')) {
+        return withoutTrailing;
+    }
+    return withoutTrailing + '/v1';
+}
+
+function readTimeoutMs(value: string | undefined): number {
+    const n = Number(String(value ?? '').trim());
+    if (!Number.isFinite(n) || n <= 0) {
+        return 30_000;
+    }
+    return Math.min(300_000, Math.max(1_000, Math.floor(n)));
+}
+
+function createTimeoutFetch(fetchFn: typeof fetch, timeoutMs: number): typeof fetch {
+    return async (input: any, init?: any) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const signal = init?.signal;
+            if (signal) {
+                if (signal.aborted) {
+                    controller.abort();
+                } else {
+                    signal.addEventListener('abort', () => controller.abort(), { once: true });
+                }
+            }
+            return await fetchFn(input, { ...(init ?? {}), signal: controller.signal });
+        } finally {
+            clearTimeout(timeout);
+        }
+    };
 }
 
 function isAbortError(err: unknown): boolean {

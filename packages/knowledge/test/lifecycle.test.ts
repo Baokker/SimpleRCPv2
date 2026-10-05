@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { appendEvolution, confirmCard, isReusable } from '../src/lifecycle.js';
-import { LatestSchemaVersion, type KnowledgeCard } from '../src/schema.js';
+import { LatestSchemaVersion, type KnowledgeCard } from '../src/schema/card.js';
 
 function card(overrides: Partial<KnowledgeCard> = {}): KnowledgeCard {
     return { schemaVersion: LatestSchemaVersion, id: 'c1', type: 'decision', title: 'Decision', summary: 'Summary', content: 'Content', source: 'event', status: 'draft', tags: [], createdAt: 1, updatedAt: 1, metadata: {}, provenance: { origin: 'human-agent', author: { kind: 'agent', agentRunId: 'run-1' }, evidenceRefs: {} }, scope: 'personal', ownerMemberId: 'm1', anchors: [], evolution: [{ at: 1, action: 'created' },], ...overrides };

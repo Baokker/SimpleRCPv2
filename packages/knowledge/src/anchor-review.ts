@@ -4,7 +4,7 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 import { resolveKnowledgeAnchorInText } from './anchor-resolver.js';
-import type { KnowledgeAnchor } from './schema.js';
+import type { KnowledgeAnchor } from './schema/card.js';
 
 export interface AnchorReviewHint {
     needsReview: boolean;

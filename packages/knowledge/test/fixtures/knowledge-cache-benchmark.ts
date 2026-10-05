@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { ensureKnowledgeIndex } from '../../src/knowledge-index.js';
+import { ensureKnowledgeIndex } from '../../src/retrieval/index.js';
 import { createScaleCards } from './knowledge-scale-benchmark.js';
 
 export interface KnowledgeCacheRow {
@@ -79,7 +79,7 @@ export async function writeKnowledgeCacheArtifacts(outputDir: string, rows: Know
         benchmarkVersion: 'knowledge-cache-rebuild-v2', generatedAt: new Date().toISOString(), trials: rows.length,
         cards: rows[0]?.cards ?? 0, embeddingsEnabled: false, staleUnforcedChanges: staleCount,
         sourceSha256: createHash('sha256').update(await fs.readFile(new URL(import.meta.url))).digest('hex'),
-        implementationSha256: createHash('sha256').update(await fs.readFile(new URL('../../src/knowledge-index.ts', import.meta.url))).digest('hex'),
+        implementationSha256: createHash('sha256').update(await fs.readFile(new URL('../../src/retrieval/index.ts', import.meta.url))).digest('hex'),
         gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
         gitDirty: gitStatus.length > 0
     };

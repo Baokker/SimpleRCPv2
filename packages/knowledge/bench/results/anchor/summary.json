@@ -8,69 +8,69 @@
       "total": 336,
       "locatableTotal": 288,
       "outcomes": {
-        "correct": 71,
+        "correct": 72,
         "wrong": 24,
         "review-needed": 0,
-        "unresolved": 241
+        "unresolved": 240
       },
-      "correctRate": 0.2465277777777778,
+      "correctRate": 0.25,
       "correctRate95Ci": [
-        0.20030461878123118,
-        0.29942375911965624
+        0.20350256640962516,
+        0.30307884741042823
       ],
       "wrongRate": 0.07142857142857142,
       "wrongRate95Ci": [
         0.04846648880559784,
         0.10407952191537931
       ],
-      "latencyP50Us": 2.0375000000058208,
-      "latencyP95Us": 4.1375499999958265
+      "latencyP50Us": 1.8084000000044398,
+      "latencyP95Us": 2.8604499999687505
     },
     {
       "method": "snapshot-only",
       "total": 336,
       "locatableTotal": 288,
       "outcomes": {
-        "correct": 143,
-        "wrong": 1,
+        "correct": 144,
+        "wrong": 0,
         "review-needed": 0,
         "unresolved": 192
       },
-      "correctRate": 0.4965277777777778,
+      "correctRate": 0.5,
       "correctRate95Ci": [
-        0.43921016359081944,
-        0.5539368004900145
+        0.44263531652639665,
+        0.5573646834736034
       ],
-      "wrongRate": 0.002976190476190476,
+      "wrongRate": 0,
       "wrongRate95Ci": [
-        0.0005255640322474418,
-        0.016663212289996905
+        0,
+        0.011303679174473356
       ],
-      "latencyP50Us": 0.937500000009095,
-      "latencyP95Us": 2.03755000000001
+      "latencyP50Us": 0.9500000000116415,
+      "latencyP95Us": 1.8938500000103886
     },
     {
       "method": "multi-strategy",
       "total": 336,
       "locatableTotal": 288,
       "outcomes": {
-        "correct": 263,
-        "wrong": 25,
+        "correct": 264,
+        "wrong": 24,
         "review-needed": 48,
         "unresolved": 0
       },
-      "correctRate": 0.9131944444444444,
+      "correctRate": 0.9166666666666666,
       "correctRate95Ci": [
-        0.8749989189086674,
-        0.9405123554720775
+        0.8790018250608985,
+        0.943362485239012
       ],
-      "wrongRate": 0.0744047619047619,
+      "wrongRate": 0.07142857142857142,
       "wrongRate95Ci": [
-        0.05090277706065409,
-        0.10752833080809406
+        0.04846648880559784,
+        0.10407952191537931
       ],
-      "latencyP50Us": 3.237500000000182,
-      "latencyP95Us": 11.283249999991085
+      "latencyP50Us": 2.9667000000245025,
+      "latencyP95Us": 8.285349999971459
     }
   ],
   "byEditType": [
@@ -157,12 +157,12 @@
       "method": "range-only",
       "total": 48,
       "outcomes": {
-        "correct": 47,
+        "correct": 48,
         "wrong": 0,
         "review-needed": 0,
-        "unresolved": 1
+        "unresolved": 0
       },
-      "correctRate": 0.9791666666666666,
+      "correctRate": 1,
       "wrongRate": 0
     },
     {
@@ -170,26 +170,26 @@
       "method": "snapshot-only",
       "total": 48,
       "outcomes": {
-        "correct": 47,
-        "wrong": 1,
+        "correct": 48,
+        "wrong": 0,
         "review-needed": 0,
         "unresolved": 0
       },
-      "correctRate": 0.9791666666666666,
-      "wrongRate": 0.020833333333333332
+      "correctRate": 1,
+      "wrongRate": 0
     },
     {
       "editType": "rename-nearby-symbol",
       "method": "multi-strategy",
       "total": 48,
       "outcomes": {
-        "correct": 47,
-        "wrong": 1,
+        "correct": 48,
+        "wrong": 0,
         "review-needed": 0,
         "unresolved": 0
       },
-      "correctRate": 0.9791666666666666,
-      "wrongRate": 0.020833333333333332
+      "correctRate": 1,
+      "wrongRate": 0
     },
     {
       "editType": "formatting",

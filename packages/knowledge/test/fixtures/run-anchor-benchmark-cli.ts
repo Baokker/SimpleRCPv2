@@ -25,13 +25,17 @@ const args = parseArgs(process.argv.slice(2));
 const outputRoot = path.resolve(repoRoot, args.output ?? 'packages/knowledge/bench/results/anchor-cli');
 const timingIterations = args.iterations ? Number(args.iterations) : 200;
 const corpusPath = path.join(outputRoot, 'corpus.json');
+const corpusMode = args.corpus ?? 'frozen';
+if (corpusMode !== 'frozen' && corpusMode !== 'current') {
+    throw new Error(`--corpus must be frozen or current, received ${corpusMode}`);
+}
 
 if (!Number.isInteger(timingIterations) || timingIterations < 1) {
     throw new Error(`--iterations must be a positive integer, received ${args.iterations}`);
 }
 
 mkdirSync(outputRoot, { recursive: true });
-const corpus = loadOrFreezeCorpus(corpusPath, args.refreshCorpus === 'true');
+const corpus = loadOrFreezeCorpus(corpusPath, args.refreshCorpus === 'true', corpusMode);
 const cases = createAnchorBenchmarkCases(corpus);
 if (cases.length < 300) {
     throw new Error(`Formal benchmark requires at least 300 cases; generated ${cases.length}`);
@@ -90,14 +94,16 @@ if (reproducibility.verdict !== 'REPRODUCIBLE') {
     process.exitCode = 1;
 }
 
-function loadOrFreezeCorpus(file: string, refresh: boolean): FrozenAnchorSample[] {
+function loadOrFreezeCorpus(file: string, refresh: boolean, mode: 'frozen' | 'current'): FrozenAnchorSample[] {
     if (!refresh && existsSync(file)) {
         const parsed = JSON.parse(readFileSync(file, 'utf8')) as FrozenAnchorSample[];
         if (parsed.length !== 48) {
             throw new Error(`Frozen corpus must contain 48 anchors; found ${parsed.length}`);
         }
-        return parsed;
+        const isFrozen = parsed.every(sample => sample.sourceFile.startsWith('packages/open-collaboration-') || sample.sourceFile === 'package.json');
+        if ((mode === 'frozen' && isFrozen) || (mode === 'current' && !isFrozen)) return parsed;
     }
+    if (mode === 'frozen') return collectFrozenAnchorCorpus(repoRoot, { fixtureRoot: path.join(repoRoot, 'packages/knowledge/bench/fixtures/anchor-corpus-0869b7a') });
     return collectFrozenAnchorCorpus(repoRoot);
 }
 

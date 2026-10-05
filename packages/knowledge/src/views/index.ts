@@ -3,8 +3,8 @@
 // This program and the accompanying materials are made available under the
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
-import { normalizeWorkspaceRelativePath } from './schema.js';
-import type { KnowledgeCard, KnowledgeEvolutionEntry } from './schema.js';
+import { normalizeWorkspaceRelativePath } from '../schema/card.js';
+import type { KnowledgeCard, KnowledgeEvolutionEntry } from '../schema/card.js';
 
 export interface KnowledgeGuideItem {
     card: KnowledgeCard;

@@ -9,8 +9,8 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REUSABLE_KNOWLEDGE_CARD_STATUSES, type KnowledgeCard, type KnowledgeCardStatus } from '../../src/schema.js';
-import { searchKnowledgeCards } from '../../src/knowledge-index.js';
+import { REUSABLE_KNOWLEDGE_CARD_STATUSES, type KnowledgeCard, type KnowledgeCardStatus } from '../../src/schema/card.js';
+import { searchKnowledgeCards } from '../../src/retrieval/index.js';
 import {
     RETRIEVAL_STRESS_CARDS,
     RETRIEVAL_STRESS_QUERIES
@@ -132,8 +132,8 @@ export async function writeKnowledgeStatusGateArtifacts(
         targetCards: 24,
         unreleasedDistractors: 24,
         sourceSha256: createHash('sha256').update(await fs.readFile(sourcePath)).digest('hex'),
-        implementationSha256: createHash('sha256').update(await fs.readFile(new URL('../../src/knowledge-index.ts', import.meta.url))).digest('hex'),
-        promptConsumerSha256: createHash('sha256').update(await fs.readFile(new URL('../../src/knowledge-inject.ts', import.meta.url))).digest('hex'),
+        implementationSha256: createHash('sha256').update(await fs.readFile(new URL('../../src/retrieval/index.ts', import.meta.url))).digest('hex'),
+        promptConsumerSha256: createHash('sha256').update(await fs.readFile(new URL('../../src/retrieval/inject.ts', import.meta.url))).digest('hex'),
         gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
         gitDirty: gitStatus.length > 0
     };

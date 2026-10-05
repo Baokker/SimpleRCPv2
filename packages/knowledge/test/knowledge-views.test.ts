@@ -4,9 +4,9 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 import { describe, expect, test } from 'vitest';
-import { buildKnowledgeGuideItems, buildKnowledgeTimelineItems } from '../src/knowledge-views.js';
-import { LatestSchemaVersion } from '../src/schema.js';
-import type { KnowledgeCard, KnowledgeCardStatus, KnowledgeCardType } from '../src/schema.js';
+import { buildKnowledgeGuideItems, buildKnowledgeTimelineItems } from '../src/views/index.js';
+import { LatestSchemaVersion } from '../src/schema/card.js';
+import type { KnowledgeCard, KnowledgeCardStatus, KnowledgeCardType } from '../src/schema/card.js';
 
 describe('knowledge guide items', () => {
     test('orders current file cards by guide priority, review status, and recency', () => {

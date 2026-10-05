@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { isCaptureSuggestion } from '../src/schema.js';
+import { isCaptureSuggestion } from '../src/schema/card.js';
 
 describe('capture suggestion guard', () => {
     test('rejects non-object', () => {

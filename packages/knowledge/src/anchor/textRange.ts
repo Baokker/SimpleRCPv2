@@ -1,1 +1,1 @@
-export type { TextPosition, TextRange, RelativeTextPosition } from '../schema.js';
+export type { TextPosition, TextRange, RelativeTextPosition } from '../schema/card.js';

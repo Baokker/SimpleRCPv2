@@ -5,8 +5,8 @@
 // ******************************************************************************
 
 import * as path from 'node:path';
-import type { KnowledgeCard, KnowledgeCardType } from '../../src/schema.js';
-import { searchKnowledgeCards, type KnowledgeSearchResult } from '../../src/knowledge-index.js';
+import type { KnowledgeCard, KnowledgeCardType } from '../../src/schema/card.js';
+import { searchKnowledgeCards, type KnowledgeSearchResult } from '../../src/retrieval/index.js';
 
 export const RETRIEVAL_STRESS_CONDITIONS = ['lexical', 'file-only', 'type-only', 'file+type', 'wrong-file+type'] as const;
 export type RetrievalStressCondition = typeof RETRIEVAL_STRESS_CONDITIONS[number];

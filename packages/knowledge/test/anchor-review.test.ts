@@ -5,7 +5,7 @@
 // ******************************************************************************
 import { describe, expect, test } from 'vitest';
 import { assessAnchorReviewHint } from '../src/anchor-review.js';
-import type { KnowledgeAnchor } from '../src/schema.js';
+import type { KnowledgeAnchor } from '../src/schema/card.js';
 
 describe('anchor review hint', () => {
     test('does not request review when the captured range still resolves', () => {

@@ -1,1 +1,1 @@
-export { buildKnowledgeTimelineItems } from '../knowledge-views.js';
+export { buildKnowledgeTimelineItems } from './index.js';

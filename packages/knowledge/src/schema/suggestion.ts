@@ -1,2 +1,2 @@
-export type { CaptureSuggestion } from '../schema.js';
-export { isCaptureSuggestion } from '../schema.js';
+export type { CaptureSuggestion } from './card.js';
+export { isCaptureSuggestion } from './card.js';

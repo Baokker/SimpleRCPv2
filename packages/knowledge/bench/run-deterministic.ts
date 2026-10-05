@@ -10,18 +10,31 @@ import { runKnowledgeStatusGateBenchmark, statusGateCorpus, summarizeKnowledgeSt
 const resultRoot = path.resolve('bench/results');
 await fs.mkdir(resultRoot, { recursive: true });
 const selected = new Set<string>();
+let anchorCorpusMode: 'frozen' | 'current' = 'frozen';
 const argumentsList = process.argv.slice(2);
 for (let index = 0; index < argumentsList.length; index++) {
-    if (argumentsList[index] !== '--only') throw new Error(`Unknown benchmark argument: ${argumentsList[index]}`);
-    const name = argumentsList[index + 1];
-    if (!name) throw new Error('--only requires an experiment name');
-    selected.add(name);
-    index++;
+    if (argumentsList[index] === '--') {
+        continue;
+    } else if (argumentsList[index] === '--only') {
+        const name = argumentsList[index + 1];
+        if (!name) throw new Error('--only requires an experiment name');
+        selected.add(name);
+        index++;
+    } else if (argumentsList[index] === '--anchor-corpus') {
+        const mode = argumentsList[index + 1];
+        if (mode !== 'frozen' && mode !== 'current') throw new Error('--anchor-corpus must be frozen or current');
+        anchorCorpusMode = mode;
+        index++;
+    } else {
+        throw new Error(`Unknown benchmark argument: ${argumentsList[index]}`);
+    }
 }
 const shouldRun = (name: string) => selected.size === 0 || selected.has(name);
 
 if (shouldRun('anchor')) {
-    const corpus = collectFrozenAnchorCorpus(path.resolve('../..'));
+    const repositoryRoot = path.resolve('../..');
+    const frozenFixtureRoot = path.resolve('bench/fixtures/anchor-corpus-0869b7a');
+    const corpus = collectFrozenAnchorCorpus(repositoryRoot, anchorCorpusMode === 'frozen' ? { fixtureRoot: frozenFixtureRoot } : {});
     const anchorCases = createAnchorBenchmarkCases(corpus);
     const anchorSummary = summarizeAnchorBenchmark(anchorCases, runAnchorBenchmarkCases(anchorCases, { timingIterations: 5, warmupIterations: 1 }));
     await writeResult('anchor', anchorSummary);
@@ -29,7 +42,7 @@ if (shouldRun('anchor')) {
 
 if (shouldRun('retrieval-stress')) await writeResult('retrieval-stress', summarizeRetrievalStress(await runRetrievalStressBenchmark()));
 if (shouldRun('knowledge-scale')) await writeResult('knowledge-scale', await runKnowledgeScaleBenchmark());
-if (shouldRun('knowledge-cache')) await writeResult('knowledge-cache', await runKnowledgeCacheBenchmark(20, 3));
+if (shouldRun('knowledge-cache')) await writeResult('knowledge-cache', await runKnowledgeCacheBenchmark(20, 20));
 if (shouldRun('capture-quality')) await writeResult('capture-quality', summarizeTriggerCases());
 if (shouldRun('status-gate')) {
     const statusSummary = summarizeKnowledgeStatusGate(await runKnowledgeStatusGateBenchmark(statusGateCorpus()));

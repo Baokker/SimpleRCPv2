@@ -6,9 +6,9 @@
 
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import type { KnowledgeAnchor } from '../../src/schema.js';
+import type { KnowledgeAnchor } from '../../src/schema/card.js';
 import { assessAnchorReviewHint } from '../../src/anchor-review.js';
 import {
     offsetsFromRange,
@@ -174,15 +174,17 @@ export function createAnchorBenchmarkCases(samples: FrozenAnchorSample[]): Ancho
     });
 }
 
-export function collectFrozenAnchorCorpus(repoRoot: string): FrozenAnchorSample[] {
+export function collectFrozenAnchorCorpus(repoRoot: string, options: { fixtureRoot?: string } = {}): FrozenAnchorSample[] {
     const candidatesByCategory = new Map<FrozenAnchorSample['category'], CorpusCandidate[]>();
     for (const category of CORPUS_CATEGORY_ORDER) {
         candidatesByCategory.set(category, []);
     }
 
-    for (const absoluteFile of listRepositoryFiles(repoRoot)) {
-        const sourceFile = path.relative(repoRoot, absoluteFile).split(path.sep).join('/');
-        if (sourceFile.includes('anchor-benchmark') || sourceFile.startsWith('docs/superpowers/')) {
+    const sourceRoot = options.fixtureRoot ?? repoRoot;
+    const sourceFiles = options.fixtureRoot ? listFilesRecursively(sourceRoot) : listRepositoryFiles(sourceRoot);
+    for (const absoluteFile of sourceFiles) {
+        const sourceFile = path.relative(sourceRoot, absoluteFile).split(path.sep).join('/');
+        if (sourceFile === 'SOURCE.md' || sourceFile.includes('anchor-benchmark') || sourceFile.startsWith('docs/superpowers/')) {
             continue;
         }
         const category = classifyCorpusFile(sourceFile);
@@ -672,7 +674,17 @@ function findCorpusCandidates(input: Omit<FrozenAnchorSample, 'id' | 'selectionS
 
 function listRepositoryFiles(root: string): string[] {
     const tracked = execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8' });
-    return tracked.split('\0').filter(Boolean).map(file => path.join(root, file)).sort();
+    return tracked.split('\0').filter(Boolean).map(file => path.join(root, file)).filter(existsSync).sort();
+}
+
+function listFilesRecursively(root: string): string[] {
+    const files: string[] = [];
+    for (const entry of readdirSync(root, { withFileTypes: true })) {
+        const absolute = path.join(root, entry.name);
+        if (entry.isDirectory()) files.push(...listFilesRecursively(absolute));
+        else if (entry.isFile() && statSync(absolute).isFile()) files.push(absolute);
+    }
+    return files.sort();
 }
 
 function classifyCorpusFile(sourceFile: string): FrozenAnchorSample['category'] | undefined {

@@ -4,7 +4,7 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 
-import { parseKnowledgeCardDraftFromText } from '../../src/knowledge-extract.js';
+import { parseKnowledgeCardDraftFromText } from '../../src/extract/extract.js';
 import {
     CAPTURE_TRIGGER_TYPES,
     shouldTriggerCapture,

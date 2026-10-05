@@ -4,8 +4,8 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 import { describe, expect, test } from 'vitest';
-import { createDemoKnowledgeCards } from '../src/demo-cards.js';
-import { isKnowledgeCard } from '../src/schema.js';
+import { createDemoKnowledgeCards } from '../src/demo/demoCards.js';
+import { isKnowledgeCard } from '../src/schema/card.js';
 
 describe('demo knowledge cards', () => {
     test('creates six valid cards covering all process knowledge types', () => {

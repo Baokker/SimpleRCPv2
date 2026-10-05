@@ -8,16 +8,16 @@
 
 | 旧原型文件 | 新包文件 |
 | --- | --- |
-| `open-collaboration-knowledge/src/schema.ts` | `src/schema.ts` 与 `src/schema/*` |
+| `open-collaboration-knowledge/src/schema.ts` | `src/schema/card.ts` |
 | `capture-trigger-policy.ts` | `src/capture/triggerPolicy.ts` |
 | `anchor-resolver.ts`、`anchor-review.ts` | `src/anchor/*` |
-| `knowledge-views.ts` | `src/views/*` |
-| `demo-cards.ts` | `src/demo/demoCards.ts` |
-| `hash.ts` | `src/util/hash.ts` 与根模块 |
-| `knowledge-extract.ts`、`knowledge-prompt.ts` | `src/extract/*` |
-| `knowledge-refine.ts`、`knowledge-refine-prompt.ts` | `src/extract/*` |
-| `knowledge-index.ts` | `src/retrieval/index.ts` |
-| `prompt.ts` 的知识注入与预算函数 | `src/retrieval/inject.ts` |
+| `views/index.ts` | Guide and timeline projections |
+| `demo/demoCards.ts` | Demo card factory |
+| `hash.ts` | `src/util/hash.ts` |
+| `extract/extract.ts`、`extract/prompt.ts` | Extraction implementation |
+| `extract/refine.ts`、`extract/refinePrompt.ts` | Field refinement implementation |
+| `retrieval/index.ts` | Knowledge index and search |
+| 旧原型的知识注入与预算函数 | `src/retrieval/inject.ts` |
 
 ## 时钟与模型
 
@@ -29,4 +29,4 @@ v3 保留 v2 的内容、锚点、演化字段，新增 `superseded` 状态、`p
 
 ## 检索与注入
 
-`searchKnowledgeCards` 接受显式 `cards[]` 或调用方传入的 `cardsDirectory`。提供向量客户端时使用向量检索，服务错误直接报告；未提供时使用词法分数与活动文件加分。目录中的 v1/v2 卡片会在建立索引时迁移为 v3，作用域与属主变化会更新缓存。`buildKnowledgeContext` 在排序与 `topK` 筛选前应用 `isReusable` 或自定义过滤函数，再按类型优先级和字符预算生成结构化文本与命中明细。总预算包含标题、摘要、标签、文件路径、正文和格式字符，超过预算的卡片跳过。
+`searchKnowledgeCards` 接受显式 `cards[]` 或调用方传入的 `cardsDirectory`。提供向量客户端时使用向量检索，调用失败默认返回词法结果并附带 `fallbackReason`；设置 `strictEmbedding: true` 可以报告原始错误；未提供时使用词法分数与活动文件加分，默认 `lexicalScoring: "legacy"`。目录中的 v1/v2 卡片会在建立索引时迁移为 v3，作用域与属主变化会更新缓存。`buildKnowledgeContext` 在排序与 `topK` 筛选前应用 `isReusable` 或自定义过滤函数，再按类型优先级和字符预算生成结构化文本与命中明细。总预算包含标题、摘要、标签、文件路径、正文和格式字符，超过预算的卡片跳过。
