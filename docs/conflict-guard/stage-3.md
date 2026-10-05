@@ -13,7 +13,7 @@
 - `CONFLICT_GUARD=off|observe|rules pnpm test:collab`
 - `pnpm test:e2e -- tests/e2e/conflict-guard-panel.spec.ts tests/e2e/conflict-guard-intervention.spec.ts`
 
-本轮实际结果：`pnpm -r build` 通过；conflict-guard 包 58 项测试通过；server 全部 141 项测试通过；阶段 3 规则集成测试 3 项通过；阶段 3 Playwright 2 项通过。包内三百文件合成索引测试记录全量耗时约 42 ms，服务端 `conflict-shop` 广泛引用文件增量更新 p50 约 4.4 ms、p95 约 6.1 ms，调用签名场景服务端判定与写盘闸门测试通过。
+本轮实际结果：`pnpm -r build` 通过；conflict-guard 包 58 项测试通过；server 全部 141 项测试通过；阶段 3 规则集成测试 3 项通过；阶段 3 Playwright 2 项通过。包内三百文件合成索引测试记录全量耗时约 61 ms，服务端 `conflict-shop` 广泛引用文件增量更新 p50 约 4.8 ms、p95 约 6.4 ms，调用签名场景服务端判定与写盘闸门测试通过。
 
 包内测试覆盖同一声明并发修改、注释和日志修改、等价重构、删除引用、返回属性删除、调用签名不兼容、类型关联放行、不可解析修改、四状态类型检查、状态机重判、自动解冻和双方确认。state 接口返回 `pairDecisions`、`frozenFiles`、闸门阻挡文件、冻结总时长、区统计、本地决定比例和写盘冲突次数。
 
