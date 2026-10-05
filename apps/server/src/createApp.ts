@@ -125,7 +125,12 @@ export async function createApp(config: ServerConfig) {
 }
 
 function readGitCommit() {
-  const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-  if (!commit) throw new Error("Git commit is empty");
-  return commit;
+  try {
+    const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    if (!commit) throw new Error("Git commit is empty");
+    return commit;
+  } catch (error) {
+    console.error("Unable to read Git commit for conflict guard", error);
+    return "unknown";
+  }
 }

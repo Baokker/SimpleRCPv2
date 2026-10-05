@@ -62,9 +62,13 @@ export function createCollaborativeDocumentStore({
       text.insert(0, result.content);
     }
     persistedContents.set(name, result.content);
+    text.observe((event) => {
+      if (event.transaction.origin !== FILESYSTEM_ORIGIN) {
+        revisions.set(filePath, (revisions.get(filePath) ?? 0) + 1);
+      }
+    });
     document.on("update", (_update, origin) => {
       if (origin !== FILESYSTEM_ORIGIN) {
-        revisions.set(filePath, (revisions.get(filePath) ?? 0) + 1);
         schedulePersist(name, document);
       }
     });

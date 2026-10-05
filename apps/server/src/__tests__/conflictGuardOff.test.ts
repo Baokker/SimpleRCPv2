@@ -4,6 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../createApp.js";
 import { loadConfig } from "../config.js";
+import { readTrace } from "@simplercp/conflict-guard";
 import { createTestWorkspace } from "./testWorkspace.js";
 import { joinMember } from "./memberTestHelper.js";
 
@@ -41,6 +42,34 @@ describe("conflict guard off", () => {
       await expect(fs.stat(path.join(root, "data", "projects", "demo", "conflict-guard", "trace.jsonl"))).rejects.toThrow();
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("starts in observe mode with an unknown Git commit when Git is unavailable", async () => {
+    const root = await createTestWorkspace("conflict-guard-git-unavailable-");
+    const demoRoot = path.join(root, "demo", "workspace");
+    await fs.mkdir(demoRoot, { recursive: true });
+    const originalPath = process.env.PATH;
+    process.env.PATH = path.join(root, "unavailable-git");
+    let app: Awaited<ReturnType<typeof createApp>> | undefined;
+    try {
+      app = await createApp({
+        port: 0,
+        host: "127.0.0.1",
+        publicOrigin: "http://127.0.0.1:5173",
+        dataDir: path.join(root, "data"),
+        demoProjectRoot: demoRoot,
+        conflictGuard: { mode: "observe", idleMs: 50, cursorLeaveLines: 3, maxBatchDurationMs: 500, activeIdleMs: 5_000, cursorDebounceMs: 20 }
+      });
+      const guard = app.locals.runtimeManager.get("demo").conflictGuard!;
+      await guard.waitForTrace();
+      const sessionStart = readTrace(await fs.readFile(guard.tracePath, "utf8")).find((event) => event.type === "session_start");
+      expect(sessionStart?.gitCommit).toBe("unknown");
+    } finally {
+      if (originalPath === undefined) delete process.env.PATH;
+      else process.env.PATH = originalPath;
+      await app?.locals.runtimeManager.dispose();
       await fs.rm(root, { recursive: true, force: true });
     }
   });

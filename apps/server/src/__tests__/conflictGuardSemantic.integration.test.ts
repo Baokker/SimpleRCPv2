@@ -79,7 +79,7 @@ describe("符号观察的真实协作接口", () => {
     const checkout = await connect("src/checkout.ts", bob.member.id);
     replace(pricing, "price * (1 - rate)", "price - price * rate");
     replace(checkout, "formatMoney(cart.total())", "formatMoney(cart.total() + 1)");
-    await waitFor(() => state().candidatePairs.length === 1);
+    await waitFor(() => state().candidatePairs.length === 1 && state().statistics.total === 2);
     const pair = state().candidatePairs[0]!;
     expect(pair.distance).toBe(2);
     expect(new Set([pair.left.symbol, pair.right.symbol])).toEqual(new Set(["src/pricing.ts#applyDiscount", "src/checkout.ts#checkout"]));
@@ -120,20 +120,39 @@ describe("符号观察的真实协作接口", () => {
     const currentRuntime = runtime();
     const guard = currentRuntime.conflictGuard!;
     const initial = state().index.latestUpdate.durationMs;
-    const file = path.join(currentRuntime.project.workspacePath, "src/report.ts");
+    const file = path.join(currentRuntime.project.workspacePath, "src/pricing.ts");
     const source = await fs.readFile(file, "utf8");
-    await fs.writeFile(file, `${source}\nexport function addedReport() { return 1; }\n`);
-    await waitFor(() => guard.semanticIndex.symbolsInFile("src/report.ts").some((symbol) => symbol.name === "addedReport"));
+    await fs.writeFile(file, `${source}\nexport function performanceProbe() { return 1; }\n`);
+    guard.workspaceChanged("src/pricing.ts");
+    await waitFor(() => guard.semanticIndex.symbolsInFile("src/pricing.ts").some((symbol) => symbol.name === "performanceProbe"));
     expect(state().activeSymbols).toEqual([]);
     const durations: number[] = [];
     for (let index = 0; index < 30; index += 1) {
-      await fs.writeFile(file, `${source}\nexport function addedReport() { return ${index}; }\n`);
-      durations.push(guard.semanticIndex.update(["src/report.ts"]).durationMs);
+      await fs.writeFile(file, `${source}\nexport function performanceProbe() { return ${index}; }\n`);
+      const previousVersion = state().version;
+      guard.workspaceChanged("src/pricing.ts");
+      await waitFor(() => state().version > previousVersion && state().index.latestUpdate.full === false);
+      durations.push(state().index.latestUpdate.durationMs);
     }
     durations.sort((a, b) => a - b);
+    const p50 = durations[Math.ceil(durations.length * 0.5) - 1]!;
     const p95 = durations[Math.ceil(durations.length * 0.95) - 1]!;
-    console.log(JSON.stringify({ semanticPerformance: { initialMs: initial, incrementalSamples: durations.length, p95Ms: p95 } }));
+    console.log(JSON.stringify({ semanticPerformance: { initialMs: initial, incrementalSamples: durations.length, p50Ms: p50, p95Ms: p95 } }));
     expect(p95).toBeLessThan(200);
+  });
+
+  it("关闭已打开文件后重新索引磁盘版本并保留引用关系", async () => {
+    const currentRuntime = runtime();
+    const guard = currentRuntime.conflictGuard!;
+    const document = await currentRuntime.documents.getDocument(currentRuntime.room.id, "src/pricing.ts");
+    await waitFor(() => guard.semanticIndex.symbolsInFile("src/pricing.ts").some((symbol) => symbol.name === "applyDiscount"));
+    const before = guard.semanticIndex.outgoing("src/cart.ts#Cart.total");
+    expect(before.some((edge) => edge.to === "src/pricing.ts#applyDiscount")).toBe(true);
+    currentRuntime.documents.release(`${currentRuntime.project.id}|${currentRuntime.room.id}:src/pricing.ts`);
+    await waitFor(() => state().version > 1 && guard.semanticIndex.outgoing("src/cart.ts#Cart.total").some((edge) => edge.to === "src/pricing.ts#applyDiscount"));
+    const after = guard.semanticIndex.outgoing("src/cart.ts#Cart.total");
+    expect(after.some((edge) => edge.to === "src/pricing.ts#applyDiscount")).toBe(true);
+    document.destroy();
   });
 });
 

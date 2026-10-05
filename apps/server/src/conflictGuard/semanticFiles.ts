@@ -5,7 +5,14 @@ import { resolveWorkspacePath } from "../workspace.js";
 
 export function createWorkspaceSemanticFiles(root: string, mirror: (file: string) => { text: string; version: number } | undefined): SemanticFileProvider {
   function listFiles(directory = ""): string[] {
-    return readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap((entry) => {
+    let entries;
+    try {
+      entries = readdirSync(path.join(root, directory), { withFileTypes: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw error;
+    }
+    return entries.flatMap((entry) => {
       const file = path.posix.join(directory, entry.name);
       if (["node_modules", ".git", "dist", "build", "coverage"].includes(entry.name)) return [];
       if (entry.isDirectory()) return listFiles(file);

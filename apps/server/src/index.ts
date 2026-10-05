@@ -4,6 +4,9 @@ import { config as loadEnvironment } from "dotenv";
 import { createApp } from "./createApp.js";
 import { loadConfig } from "./config.js";
 import { attachRealtimeServer } from "./realtime.js";
+import { registerProcessFaultHandlers } from "./processFaults.js";
+
+registerProcessFaultHandlers();
 
 loadEnvironment({
   path: fileURLToPath(new URL("../../../.env", import.meta.url))

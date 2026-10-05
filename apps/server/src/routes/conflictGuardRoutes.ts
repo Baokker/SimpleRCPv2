@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import type { Express } from "express";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import { requireIdentity } from "../auth/permissions.js";
@@ -34,7 +33,7 @@ export function registerConflictGuardRoutes(app: Express, runtimeManager: Projec
       await runtime.conflictGuard.waitForTrace();
       res.type("application/x-ndjson");
       res.setHeader("Content-Disposition", 'attachment; filename="conflict-guard-trace.jsonl"');
-      res.send(await fs.readFile(runtime.conflictGuard.tracePath, "utf8"));
+      res.send(await runtime.conflictGuard.exportTrace());
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") { res.type("application/x-ndjson").send(""); return; }
       next(error);

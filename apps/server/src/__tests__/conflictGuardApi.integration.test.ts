@@ -235,8 +235,10 @@ describe("conflict guard API", () => {
   });
 
   it("marks character-by-character configured value edits as redacted", async () => {
+    const workspacePath = app.locals.runtimeManager.get("demo").project.workspacePath;
+    await fs.writeFile(path.join(workspacePath, "config.ts"), "export const configured = \"\";\n", "utf8");
     const document = new Y.Doc();
-    const provider = createProvider(origin, roomId, document, memberId);
+    const provider = createProvider(origin, roomId, document, memberId, "config.ts");
     await waitForSync(provider);
     const text = document.getText("content");
     for (const character of sensitiveValue) {
@@ -248,8 +250,40 @@ describe("conflict guard API", () => {
     expect(source).not.toContain(sensitiveValue);
     const events = readTrace(source);
     expect(events.some((event) => event.type === "edit" && event.redacted === true)).toBe(true);
-    expect(validateTraceDetailed(events).redactedFiles).toEqual(["README.md"]);
+    expect(validateTraceDetailed(events).redactedFiles).toEqual(["config.ts"]);
     provider.destroy();
+  });
+
+  it("enters degraded state when a semantic update throws and keeps the API available", async () => {
+    const guard = app.locals.runtimeManager.get("demo").conflictGuard!;
+    guard.semanticIndex.update = () => {
+      throw new Error("semantic update injection");
+    };
+    guard.workspaceChanged("README.md");
+    await wait(80);
+    expect(guard.state()).toMatchObject({ degraded: true, degradedReason: "semantic update injection" });
+    const response = await fetch(`${origin}/api/projects/demo/conflict-guard/state`, { headers: { "X-SimpleRCP-Member": memberId } });
+    expect(response.status).toBe(200);
+  });
+
+  it("continues the trace write chain after a metadata path failure", async () => {
+    const guard = app.locals.runtimeManager.get("demo").conflictGuard!;
+    await guard.waitForTrace();
+    const traceDirectory = path.dirname(guard.tracePath);
+    const backupDirectory = `${traceDirectory}-backup`;
+    await fs.rename(traceDirectory, backupDirectory);
+    await fs.writeFile(traceDirectory, "blocked", "utf8");
+    guard.cursorChanged({ memberId, path: "README.md", position: { lineNumber: 1, column: 2 } });
+    await guard.waitForTrace();
+    expect(guard.state().traceWriteFailures).toBeGreaterThan(0);
+
+    await fs.rm(traceDirectory, { force: true });
+    await fs.rename(backupDirectory, traceDirectory);
+    guard.cursorChanged({ memberId, path: "README.md", position: { lineNumber: 1, column: 3 } });
+    await guard.waitForTrace();
+    const events = readTrace(await fs.readFile(guard.tracePath, "utf8"));
+    expect(events.at(-1)).toMatchObject({ type: "cursor", position: { lineNumber: 1, column: 3 } });
+    expect(validateTraceDetailed(events).valid).toBe(true);
   });
 
   it("saves the latest cursor window through ws and broadcasts messages with missing fields", async () => {
@@ -275,10 +309,10 @@ describe("conflict guard API", () => {
   });
 });
 
-function createProvider(serverOrigin: string, room: string, document: Y.Doc, memberId: string) {
+function createProvider(serverOrigin: string, room: string, document: Y.Doc, memberId: string, file = "README.md") {
   return new WebsocketProvider(
     `${serverOrigin}/yjs/demo`,
-    encodeURIComponent(`${room}:README.md`),
+    encodeURIComponent(`${room}:${file}`),
     document,
     { disableBc: true, params: { memberId }, WebSocketPolyfill: WebSocket as unknown as typeof globalThis.WebSocket }
   );
