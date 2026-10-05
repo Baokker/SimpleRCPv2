@@ -83,7 +83,7 @@
 
 卡片创建、编辑、确认、归档分别写入 `knowledge_card_created`、`knowledge_card_updated`、`knowledge_card_confirmed`、`knowledge_card_archived`。日志顶层保存项目房间、操作者与时间，payload 只保存 `cardId`。
 
-捕获增加 `knowledge_suggestion_created`、`knowledge_suggestion_resolved`、`knowledge_notification`、`knowledge_warning_read` 与 `mirror_resync`。确认另外写入 `knowledge_review_completed`，保存 `cardId`、`editedBeforeConfirm`、`durationMs`。模型统计独立写入 `knowledge/llm-calls.jsonl`，包含模型、耗时、累计 token、完成标志、兜底标志、尝试次数与提示词哈希。活动日志和模型统计不保存卡片正文或完整提示词。
+捕获增加 `knowledge_suggestion_created`、`knowledge_suggestion_resolved`、`knowledge_notification`、`knowledge_warning_read` 与 `mirror_resync`。确认另外写入 `knowledge_review_completed`，保存 `cardId`、`editedBeforeConfirm`、`durationMs`。Agent 复用时间点写入 `knowledge_reuse_confirmed`、`knowledge_reuse_viewed` 与 `knowledge_reuse_injected`。模型统计独立写入 `knowledge/llm-calls.jsonl`，包含模型、耗时、累计 token、完成标志、兜底标志、尝试次数与提示词哈希。活动日志和模型统计不保存卡片正文或完整提示词。
 ## Agent 知识注入
 
 | 方法 | 路径 | 输入与返回 |

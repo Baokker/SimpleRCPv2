@@ -43,14 +43,29 @@ describe("knowledge agent injection", () => {
 
     const memberResponse = await fetch(`${origin}/api/projects/demo/members`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Ada" }) });
     const memberId = (await memberResponse.json() as { member: { id: string } }).member.id;
+    const secondMemberResponse = await fetch(`${origin}/api/projects/demo/members`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Bob" }) });
+    const secondMemberId = (await secondMemberResponse.json() as { member: { id: string } }).member.id;
     const headers = { "content-type": "application/json", "X-SimpleRCP-Member": memberId };
+    const secondHeaders = { "content-type": "application/json", "X-SimpleRCP-Member": secondMemberId };
     const cardResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "constraint", title: "Project rule", summary: "Keep the project rule", content: "The project rule must remain documented.", tags: ["rule"], scope: "team" }) });
     expect(cardResponse.status).toBe(201);
     const card = (await cardResponse.json() as { card: { id: string } }).card;
 
+    const personalResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "context", title: "Ada private note", summary: "Only Ada can use this note", content: "Private note", tags: [], scope: "personal" }) });
+    expect(personalResponse.status).toBe(201);
+    const personalCard = (await personalResponse.json() as { card: { id: string } }).card;
+    const bobPreview = await fetch(`${origin}/api/projects/demo/agent/knowledge/preview`, { method: "POST", headers: secondHeaders, body: JSON.stringify({ prompt: "Ada private note" }) });
+    expect((await bobPreview.json() as { records: Array<{ id: string }> }).records.map((item) => item.id)).not.toContain(personalCard.id);
+
     const preview = await fetch(`${origin}/api/projects/demo/agent/knowledge/preview`, { method: "POST", headers, body: JSON.stringify({ prompt: "Please follow the project rule" }) });
     expect(preview.status).toBe(200);
     expect((await preview.json() as { records: Array<{ id: string }> }).records.map((item) => item.id)).toContain(card.id);
+    const excludedPreview = await fetch(`${origin}/api/projects/demo/knowledge/preview`, { method: "POST", headers, body: JSON.stringify({ prompt: "Please follow the project rule", knowledge: { excludeCardIds: [card.id] } }) });
+    expect((await excludedPreview.json() as { records: Array<{ id: string }> }).records.map((item) => item.id)).not.toContain(card.id);
+    const fixedConfig = await fetch(`${origin}/api/projects/demo/knowledge/config`, { method: "PUT", headers, body: JSON.stringify({ fixedCardIds: [card.id] }) });
+    expect(fixedConfig.status).toBe(200);
+    const fixedPreview = await fetch(`${origin}/api/projects/demo/agent/knowledge/preview`, { method: "POST", headers, body: JSON.stringify({ prompt: "Unrelated task" }) });
+    expect((await fixedPreview.json() as { records: Array<{ id: string }> }).records.map((item) => item.id)).toContain(card.id);
     const previewCard = await fetch(`${origin}/api/projects/demo/knowledge/cards/${card.id}`, { headers });
     expect((await previewCard.json() as { card: { usage?: { injectedCount?: number } } }).card.usage?.injectedCount ?? 0).toBe(0);
 

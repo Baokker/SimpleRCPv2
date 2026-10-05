@@ -204,6 +204,7 @@ export function registerKnowledgeRoutes(
         prompt: typeof req.body?.prompt === "string" ? req.body.prompt : "",
         extraPrompt: typeof req.body?.extraPrompt === "string" ? req.body.extraPrompt : undefined,
         contexts: Array.isArray(req.body?.contexts) ? req.body.contexts : undefined,
+        knowledge: normalizeKnowledgeInput(req.body?.knowledge),
         status: "queued",
         runtime: "opencode",
         provider: "deepseek",
@@ -287,4 +288,13 @@ export function registerKnowledgeRoutes(
       res.status(201).json({ suggestion: await capture.fromChat(identity, req.body.messageIds) });
     } catch (error) { next(error); }
   });
+}
+
+function normalizeKnowledgeInput(value: unknown) {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid knowledge options");
+  const input = value as Record<string, unknown>;
+  if (input.excludeCardIds !== undefined && (!Array.isArray(input.excludeCardIds) || input.excludeCardIds.some((id) => typeof id !== "string"))) throw new Error("Invalid excluded knowledge cards");
+  if (input.disabled !== undefined && typeof input.disabled !== "boolean") throw new Error("Invalid knowledge disabled flag");
+  return { excludeCardIds: input.excludeCardIds as string[] | undefined, disabled: input.disabled as boolean | undefined };
 }

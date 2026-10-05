@@ -23,3 +23,9 @@ OpenCode 的 `session.prompt` 返回值和事件流当前没有稳定的 token �
 阶段五可以复用 `KnowledgeProvider.postRunCheck` 的命中结构，补充 Agent 修改归属、复盘事件和矛盾处理。阶段六可以在 provider 之上提供 Agent 主动检索工具，继续沿用项目配置、可见性门控和 `isReusable`。阶段七可以复用 `reuse-metrics.json` 的时间点与 trace 记录开展实验分析。
 
 遗留问题包括 OpenCode token 统计缺口、工作区快照在缺少 patch 时只能使用文件级行段，以及在途提醒依赖运行管理器绑定 provider。后续可以从 OpenCode 事件中补充修改行段和用量数据。
+
+## 2026-10-05 审阅修复
+
+本次审阅补充了运行中 trace 的 `concurrent_change` 与 `file_changes` 文件关联，任务后核对覆盖多段 patch、普通失败路径和服务重启标记的失败任务。复用指标优先使用捕获建议创建时间，并把确认、首次查看和首次注入时间点写入活动日志。知识段与团队任务提示会过滤已配置的敏感值，Agent 面板和团队任务卡片中的知识标题可以打开对应卡片。通用知识预览接口现在支持排除卡片参数。
+
+新增逻辑通过 `pnpm build`、`pnpm test` 与 `git diff --check` 验证；原有阶段四端到端场景保持通过。

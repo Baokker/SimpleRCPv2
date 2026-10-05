@@ -12,9 +12,10 @@ import type { RiskWarningConfig } from "./knowledge/captureService.js";
 import type { CaptureConfigInput } from "@simplercp/knowledge";
 import type { ChatMessage, WorkspaceChange, ServerMessage } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
+import type { KnowledgeMode } from "./config.js";
 
 export interface ProjectRuntimeOptions {
-  terminalEnabled?: boolean; knowledgeMode?: string; knowledgeRecordEvents?: boolean;
+  terminalEnabled?: boolean; knowledgeMode?: KnowledgeMode; knowledgeRecordEvents?: boolean;
   captureConfig?: CaptureConfigInput; riskWarningConfig?: Partial<RiskWarningConfig>; llm?: { apiKey?: string; baseUrl: string; model: string };
 }
 export function createProjectRuntime(
@@ -75,7 +76,8 @@ export function createProjectRuntime(
       knowledge,
       events,
       metadataRoot: projectRoot,
-      workspaceRoot: project.workspacePath
+      workspaceRoot: project.workspacePath,
+      sensitiveValues: [options.llm?.apiKey].filter((value): value is string => Boolean(value))
     });
   }
   const capture = knowledge ? createCaptureService({

@@ -552,7 +552,9 @@ function AgentMessage({
       ) : null}
       {trace.some((event) => event.type === "knowledge_injected") ? (
         <div className="agent-knowledge-reference" data-testid="agent-knowledge-reference">
-          本次参考的知识：{((trace.find((event) => event.type === "knowledge_injected")?.data?.cards as Array<{ title?: string }> | undefined) ?? []).map((card) => card.title).filter(Boolean).join("、")}
+          本次参考的知识：{((trace.find((event) => event.type === "knowledge_injected")?.data?.cards as Array<{ id?: string; title?: string }> | undefined) ?? []).filter((card) => card.id && card.title).map((card) => (
+            <button key={card.id} type="button" onClick={() => openKnowledgeCard(card.id!)}>{card.title}</button>
+          ))}
         </div>
       ) : null}
       {trace.some((event) => event.type === "knowledge_post_check") ? (
@@ -576,6 +578,10 @@ function AgentMessage({
       ) : null}
     </article>
   );
+}
+
+function openKnowledgeCard(cardId: string) {
+  window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: cardId }));
 }
 
 function flattenFiles(nodes: WorkspaceNode[]): string[] {

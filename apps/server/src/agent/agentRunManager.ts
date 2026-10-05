@@ -186,6 +186,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (!provider) return;
     provider.bind({
       listRuns: (id) => getStore(id).list(),
+      listTrace: (id, runId) => getTrace(id, runId).list(),
       appendTrace: async (id, runId, event) => { await appendTrace(id, runId, event); },
       notify: (memberId, message) => runtime.notifyKnowledge(memberId, message),
       async createSystemMessage(run, text) {
@@ -310,8 +311,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const store = getStore(projectId);
     const current = await store.get(runId);
     if (!current || current.status !== "queued") return;
+    let workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
+    let workspacePath: string | undefined;
+    let runtimeSessionId: string | undefined;
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
+      workspacePath = projectRuntime.project.workspacePath;
       bindKnowledgeProvider(projectId);
       await projectRuntime.documents.awaitIdle();
       const session = current.sessionId
@@ -351,7 +356,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           });
         }
       }
-      const workspaceBefore = await createAgentWorkspaceSnapshot(
+      workspaceBefore = await createAgentWorkspaceSnapshot(
         projectRuntime.project.workspacePath
       );
       const revisionsBefore = projectRuntime.documents.getRevisions();
@@ -366,7 +371,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         summary: "Agent run started"
       });
 
-      let runtimeSessionId = workspacePrepared ? undefined : run.runtimeSessionId ?? session.runtimeSessionId;
+      runtimeSessionId = workspacePrepared ? undefined : run.runtimeSessionId ?? session.runtimeSessionId;
       if (!runtimeSessionId) {
         const session = await options.runtime.createSession({
           workspacePath: projectRuntime.project.workspacePath,
@@ -386,6 +391,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } else {
         await getSessionStore(projectId).update(run.sessionId!, { lastRunId: run.id });
       }
+      if (!runtimeSessionId) throw new Error("Agent runtime session is unavailable");
+      const activeRuntimeSessionId = runtimeSessionId;
 
       appendActivity(projectId, {
         type: "agent_task_started",
@@ -450,14 +457,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       );
       await options.runtime.prepareRun?.({
         workspacePath: projectRuntime.project.workspacePath,
-        sessionId: runtimeSessionId,
+        sessionId: activeRuntimeSessionId,
         runPrompt: run.prompt
       });
 
       const stopEvents = await options.runtime.subscribe(
         {
           workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId
+          sessionId: activeRuntimeSessionId
         },
         async (event) => {
           await appendTrace(projectId, runId, {
@@ -471,28 +478,28 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       try {
         result = await runWithTimeout(options.runtime.run({
           workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId,
+          sessionId: activeRuntimeSessionId,
           prompt: runtimePrompt
         }), options.runTimeoutMs, () => options.runtime.cancel({
           workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId
+          sessionId: activeRuntimeSessionId
         })).finally(stopEvents);
       } catch (error) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
-          await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
+          await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore);
           return;
         }
         throw error;
       }
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
-        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, result.messageId);
+        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore, result.messageId);
         return;
       }
       const runtimeFileChanges = await options.runtime.getDiff({
         workspacePath: projectRuntime.project.workspacePath,
-        sessionId: runtimeSessionId,
+        sessionId: activeRuntimeSessionId,
         messageId: result.messageId
       });
       const workspaceAfter = await createAgentWorkspaceSnapshot(
@@ -566,10 +573,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") return;
       const message = error instanceof Error ? error.message : "Agent run failed";
+      if (workspaceBefore && workspacePath && runtimeSessionId) {
+        await recordCancelledFileChanges(projectId, runId, workspacePath, runtimeSessionId, workspaceBefore);
+      }
+      const finishedAt = new Date().toISOString();
       await updateRun(projectId, runId, {
         status: "failed",
         error: message,
-        finishedAt: new Date().toISOString()
+        finishedAt
       });
       appendActivity(projectId, {
         type: "agent_task_failed",
@@ -619,7 +630,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         );
         for (const run of interrupted) {
           const message = "Agent run was interrupted by a server restart";
-          await updateRun(project.id, run.id, {
+          const failed = await updateRun(project.id, run.id, {
             status: "failed",
             error: message,
             finishedAt: new Date().toISOString()
@@ -628,6 +639,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: "run_failed",
             summary: message
           });
+          await appendKnowledgePostCheck(project.id, failed);
           appendActivity(project.id, {
             type: "agent_task_failed",
             memberId: run.memberId,

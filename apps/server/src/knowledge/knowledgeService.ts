@@ -407,6 +407,8 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       const anchors: KnowledgeAnchor[] = [];
       for (const input of anchorInputs(draft.anchors)) anchors.push(await anchorFromInput(input));
       const now = Date.now();
+      const appliesTo = normalizeAppliesTo(draft.appliesTo);
+      const check = normalizeCheck(draft.check, type);
       const card: KnowledgeCard = {
         schemaVersion: LatestSchemaVersion,
         id: crypto.randomUUID(),
@@ -424,8 +426,8 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         review: { confirmedBy: [actor.memberId], confirmedAt: now, editedBeforeConfirm: false },
         scope,
         ownerMemberId: actor.memberId,
-        ...(normalizeAppliesTo(draft.appliesTo) ? { appliesTo: normalizeAppliesTo(draft.appliesTo) } : {}),
-        ...(normalizeCheck(draft.check, type) ? { check: normalizeCheck(draft.check, type) } : {}),
+        ...(appliesTo ? { appliesTo } : {}),
+        ...(check ? { check } : {}),
         anchors,
         evolution: [
           { at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName } },
