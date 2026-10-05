@@ -133,6 +133,15 @@ describe("guard decisions", () => {
     expect(heredoc.matchedRules).not.toContain("hard.control-character");
   });
 
+  it("ignores heredoc delimiters and body text when checking the write target", () => {
+    const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("student"));
+    const result = agent("cat > index.js <<'EOF'\ncat ../other-project/chat.json\nEOF\n");
+    expect(result.action).toBe("allow_snapshot");
+    expect(result.segments.every((segment) => segment.zone === "workspace")).toBe(true);
+    expect(result.matchedRules).not.toContain("hard.dynamic");
+    expect(result.matchedRules).not.toContain("classify.unknown");
+  });
+
   it("reviews unsafe Agent cd prefixes before applying the chained command", () => {
     const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("collaborator"));
     for (const text of ["cd ~ && rm -rf Documents", "cd $HOME && rm -rf Documents", "cd ..'' && rm -rf p2", "cd - && rm -rf x"]) {
