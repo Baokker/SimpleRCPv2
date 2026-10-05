@@ -35,6 +35,7 @@ const durableEventTypes = new Set([
   "knowledge_card_archived",
   "knowledge_suggestion_created",
   "knowledge_suggestion_resolved",
+  "knowledge_suggestion_disputed",
   "knowledge_notification",
   "knowledge_warning_read",
   "knowledge_review_completed",

@@ -1,4 +1,6 @@
 import path from "node:path";
+import crypto from "node:crypto";
+import diff from "fast-diff";
 import type {
   AgentRun,
   AgentSettingsResponse,
@@ -57,6 +59,38 @@ interface ActiveRun {
   runtimeSessionId: string;
 }
 
+function insertedRanges(before: string | undefined, after: string | undefined) {
+  if (after === undefined) return [] as Array<{ start: number; end: number; text: string }>;
+  before ??= "";
+  const ranges: Array<{ start: number; end: number; text: string }> = [];
+  let offset = 0;
+  for (const [operation, value] of diff(before, after)) {
+    if (operation === diff.EQUAL) offset += value.length;
+    else if (operation === diff.DELETE) continue;
+    else { ranges.push({ start: offset, end: offset + value.length, text: value }); offset += value.length; }
+  }
+  return ranges;
+}
+
+function extractToolEvent(type: string, data: Record<string, unknown>, run: AgentRun) {
+  const part = (data.part && typeof data.part === "object" ? data.part : data) as Record<string, unknown>;
+  const state = (part.state && typeof part.state === "object" ? part.state : part) as Record<string, unknown>;
+  const input = (state.input && typeof state.input === "object" ? state.input : {}) as Record<string, unknown>;
+  const toolName = typeof part.tool === "string" ? part.tool : typeof state.tool === "string" ? state.tool : undefined;
+  const isTool = type.toLowerCase().includes("tool") || part.type === "tool" || toolName !== undefined;
+  if (!isTool) return undefined;
+  const status = typeof state.status === "string" ? state.status : undefined;
+  const terminalStatuses = new Set(["completed", "success", "error", "failed"]);
+  if (status !== undefined && !terminalStatuses.has(status)) return undefined;
+  if (status === undefined && typeof data.success !== "boolean") return undefined;
+  const success = status === "completed" || status === "success" || (status === undefined && data.success === true);
+  const command = typeof input.command === "string" ? input.command : typeof input.cmd === "string" ? input.cmd : typeof state.command === "string" ? state.command : undefined;
+  const rawError = typeof state.error === "string" ? state.error : typeof data.error === "string" ? data.error : state.error ?? data.error;
+  const error = rawError === undefined ? undefined : (typeof rawError === "string" ? rawError : JSON.stringify(rawError)).slice(0, 2000);
+  const exitCode = typeof state.exitCode === "number" ? state.exitCode : typeof (state.metadata as Record<string, unknown> | undefined)?.exitCode === "number" ? (state.metadata as Record<string, unknown>).exitCode as number : undefined;
+  return { runId: run.id, memberId: run.initiatorMemberId ?? run.memberId, tool: toolName ?? "tool", command, success, exitCode, error } as const;
+}
+
 export type AgentRunManagerEvent =
   | { type: "run_updated"; projectId: string; run: AgentRun }
   | { type: "activity_appended"; projectId: string; event: EventRecord }
@@ -93,6 +127,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
   let disposing = false;
+
+  function runtimeManagerCapture(projectId: string) {
+    return options.runtimeManager.find(projectId)?.capture;
+  }
 
   function getStore(projectId: string) {
     const existing = stores.get(projectId);
@@ -171,6 +209,23 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     });
   }
 
+  async function requestAgentSelfRecap(projectId: string, runId: string, evidence: Record<string, unknown>) {
+    const run = await getStore(projectId).get(runId);
+    if (!run) throw new Error("Agent run not found for self recap");
+    const projectRuntime = options.runtimeManager.get(projectId);
+    const session = run.sessionId ? await getSessionStore(projectId).get(run.sessionId) : undefined;
+    const sessionId = run.runtimeSessionId ?? session?.runtimeSessionId;
+    if (!sessionId) throw new Error("Agent runtime session is unavailable for self recap");
+    const prompt = [
+      "Review the completed Agent task using only this evidence.",
+      "Return one strict JSON object with type, title, summary, whatHappened, correction, rule, appliesTo, notApplicable, scopeSuggestion, checkSuggestion, confidence, evidenceCitations, and unknowns.",
+      `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}`
+    ].join("\n\n");
+    const result = await options.runtime.run({ workspacePath: projectRuntime.project.workspacePath, sessionId, prompt });
+    await appendTrace(projectId, runId, { type: "knowledge_agent_self_recap", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), chars: result.text.length } });
+    return result.text;
+  }
+
   function appendActivity(
     projectId: string,
     input: Omit<EventRecord, "id" | "timestamp">
@@ -203,6 +258,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         });
       }
     });
+    runtime.capture?.bindAgentSelfRecap(
+      (suggestion) => requestAgentSelfRecap(projectId, suggestion.actors.runIds[0] ?? "", suggestion.evidence),
+      () => provider.getConfig().then((value) => value.recapMode)
+    );
   }
 
   async function withTeamAgentLock<T>(projectId: string, operation: () => Promise<T>) {
@@ -273,11 +332,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   ) {
     let workspaceChanges: AgentRun["fileChanges"] = [];
     let runtimeChanges: AgentRun["fileChanges"] = [];
+    let workspaceAfter: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     try {
-      workspaceChanges = compareAgentWorkspaceSnapshots(
-        workspaceBefore,
-        await createAgentWorkspaceSnapshot(workspacePath)
-      );
+      workspaceAfter = await createAgentWorkspaceSnapshot(workspacePath);
+      workspaceChanges = compareAgentWorkspaceSnapshots(workspaceBefore, workspaceAfter);
     } catch (error) {
       await appendTrace(projectId, runId, {
         type: "file_changes_unavailable",
@@ -305,6 +363,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         data: { files: fileChanges }
       });
     }
+    return {
+      fileChanges,
+      agentRanges: workspaceAfter ? fileChanges.flatMap((change) => insertedRanges(workspaceBefore.get(change.file)?.content, workspaceAfter?.get(change.file)?.content).map((range) => ({ file: change.file, ...range }))) : []
+    };
   }
 
   async function executeRun(projectId: string, runId: string) {
@@ -365,6 +427,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         status: "running",
         startedAt
       });
+      await projectRuntime.capture?.agentRun({
+        runId: run.id,
+        memberId: run.initiatorMemberId ?? run.memberId,
+        action: "start",
+        status: "running",
+        source: run.source,
+        sessionId: run.sessionId,
+        prompt: run.prompt,
+        extraPrompt: run.extraPrompt,
+        interruptsRunId: run.interruptsRunId
+      });
       if (workspacePrepared && run.runtimeSessionId) run = await updateRun(projectId, runId, { runtimeSessionId: undefined });
       await appendTrace(projectId, runId, {
         type: "run_started",
@@ -407,10 +480,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       });
 
-      activeRuns.set(runId, {
-        workspacePath: projectRuntime.project.workspacePath,
-        runtimeSessionId
-      });
+      activeRuns.set(runId, { workspacePath: projectRuntime.project.workspacePath, runtimeSessionId });
 
       const previousRun = run.interruptsRunId
         ? await store.get(run.interruptsRunId)
@@ -471,6 +541,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: `opencode.${event.type}`,
             data: event.data
           });
+          const tool = extractToolEvent(event.type, event.data, run);
+          if (tool) await projectRuntime.capture?.agentTool(tool);
         }
       );
 
@@ -487,14 +559,42 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } catch (error) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
-          await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore);
+          const cancelledChanges = await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore!);
+          await projectRuntime.capture?.agentRun({
+            runId: run.id,
+            memberId: run.initiatorMemberId ?? run.memberId,
+            action: "cancelled",
+            status: "cancelled",
+            source: run.source,
+            sessionId: run.sessionId,
+            prompt: run.prompt,
+            extraPrompt: run.extraPrompt,
+            interruptsRunId: run.interruptsRunId,
+            interruptedByMemberId: latestAfterFailure.interruptedByMemberId,
+            fileChanges: cancelledChanges.fileChanges,
+            agentRanges: cancelledChanges.agentRanges.map((range) => ({ ...range, ownerId: run.initiatorMemberId ?? run.memberId }))
+          });
           return;
         }
         throw error;
       }
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
-        await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore, result.messageId);
+        const cancelledChanges = await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore!, result.messageId);
+        await projectRuntime.capture?.agentRun({
+          runId: run.id,
+          memberId: run.initiatorMemberId ?? run.memberId,
+          action: "cancelled",
+          status: "cancelled",
+          source: run.source,
+          sessionId: run.sessionId,
+          prompt: run.prompt,
+          extraPrompt: run.extraPrompt,
+          interruptsRunId: run.interruptsRunId,
+          interruptedByMemberId: latest.interruptedByMemberId,
+          fileChanges: cancelledChanges.fileChanges,
+          agentRanges: cancelledChanges.agentRanges.map((range) => ({ ...range, ownerId: run.initiatorMemberId ?? run.memberId }))
+        });
         return;
       }
       const runtimeFileChanges = await options.runtime.getDiff({
@@ -509,6 +609,20 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         compareAgentWorkspaceSnapshots(workspaceBefore, workspaceAfter),
         runtimeFileChanges
       );
+      const agentOwnerId = run.initiatorMemberId ?? run.memberId;
+      const agentRanges = fileChanges.flatMap((change) => insertedRanges(workspaceBefore?.get(change.file)?.content, workspaceAfter.get(change.file)?.content).map((range) => ({ file: change.file, ...range, ownerId: agentOwnerId })));
+      await projectRuntime.capture?.agentRun({
+        runId: run.id,
+        memberId: run.initiatorMemberId ?? run.memberId,
+        action: "end",
+        status: "completed",
+        source: run.source,
+        sessionId: run.sessionId,
+        prompt: run.prompt,
+        extraPrompt: run.extraPrompt,
+        fileChanges,
+        agentRanges
+      });
       for (const change of fileChanges) {
         const previousRevision = revisionsBefore.get(change.file) ?? 0;
         const currentRevision = projectRuntime.documents.getRevision(change.file);
@@ -573,14 +687,32 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") return;
       const message = error instanceof Error ? error.message : "Agent run failed";
+      let failedFileChanges = current.fileChanges;
+      let failedAgentRanges: Array<{ file: string; start: number; end: number; text: string }> = [];
       if (workspaceBefore && workspacePath && runtimeSessionId) {
-        await recordCancelledFileChanges(projectId, runId, workspacePath, runtimeSessionId, workspaceBefore);
+        const failedChanges = await recordCancelledFileChanges(projectId, runId, workspacePath, runtimeSessionId, workspaceBefore);
+        failedFileChanges = failedChanges.fileChanges;
+        failedAgentRanges = failedChanges.agentRanges.map((range) => ({ ...range, ownerId: current.initiatorMemberId ?? current.memberId }));
       }
       const finishedAt = new Date().toISOString();
       await updateRun(projectId, runId, {
         status: "failed",
         error: message,
+        fileChanges: failedFileChanges,
         finishedAt
+      });
+      await options.runtimeManager.find(projectId)?.capture?.agentRun({
+        runId: current.id,
+        memberId: current.initiatorMemberId ?? current.memberId,
+        action: "failed",
+        status: "failed",
+        source: current.source,
+        sessionId: current.sessionId,
+        prompt: current.prompt,
+        extraPrompt: current.extraPrompt,
+        error: message,
+        fileChanges: failedFileChanges,
+        agentRanges: failedAgentRanges
       });
       appendActivity(projectId, {
         type: "agent_task_failed",
@@ -886,6 +1018,20 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await options.runtime.cancel({
           workspacePath: active.workspacePath,
           sessionId: active.runtimeSessionId
+        });
+      } else {
+        await runtimeManagerCapture(projectId)?.agentRun({
+          runId: run.id,
+          memberId: run.initiatorMemberId ?? run.memberId,
+          action: interruptedBy ? "interrupted" : "cancelled",
+          status: "cancelled",
+          source: run.source,
+          sessionId: run.sessionId,
+          prompt: run.prompt,
+          extraPrompt: run.extraPrompt,
+          interruptsRunId: interruptedBy?.runId,
+          interruptedByMemberId: interruptedBy?.memberId,
+          fileChanges: run.fileChanges
         });
       }
       await appendKnowledgePostCheck(projectId, cancelled);

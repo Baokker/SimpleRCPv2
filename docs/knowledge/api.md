@@ -89,7 +89,7 @@
 | 方法 | 路径 | 输入与返回 |
 | --- | --- | --- |
 | `GET` | `/api/projects/:projectId/knowledge/config` | 返回项目 Agent 知识注入配置。 |
-| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`ranking`、`statuses`、`fixedCardIds`、任务后核对和在途提醒。 |
+| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`lexicalScoring`、`ranking`、`statuses`、`fixedCardIds`、任务后核对和在途提醒。`lexicalScoring` 与 `ranking` 独立。 |
 | `POST` | `/api/projects/:projectId/knowledge/preview` | 输入 `{ prompt, contexts, knowledge? }`，返回活动文件、排除卡片、候选记录和字符数量。 |
 | `POST` | `/api/projects/:projectId/knowledge/cards/:id/view` | 记录当前成员首次打开卡片，用于复用延迟。 |
 | `GET` | `/api/projects/:projectId/knowledge/metrics/reuse` | 返回知识时刻、确认、首次查看和首次注入时间点。 |
@@ -101,3 +101,18 @@ Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disable
 ```json
 { "type": "knowledge_update_available", "runId": "run-id", "cardId": "card-id" }
 ```
+
+## Agent 协作捕获与治理
+
+Agent 运行期间服务端把生命周期和工具调用写入 `knowledge/events.jsonl`。生命周期事件包含 `agentRun`，工具事件包含 `agentTool`。触发建议继续通过 `/inbox` 读取，`triggerType` 可以是 `agent.interrupted`、`agent.revised`、`agent.corrected`、`agent.retried` 或 `agent.toolRecovered`。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| `POST` | `/api/projects/:projectId/knowledge/inbox/:id/dispute` | `{ reason }`，参与成员提交异议，建议进入 `disputed`。 |
+| `POST` | `/api/projects/:projectId/knowledge/cards/:id/scope/request-team` | 属主把 personal 卡片变为 proposedTeam。 |
+| `POST` | `/api/projects/:projectId/knowledge/cards/:id/scope/confirm-team` | 非属主成员确认 proposedTeam，或在关闭二次确认时由属主确认。 |
+| `POST` | `/api/projects/:projectId/knowledge/cards/:id/relations` | `{ kind, cardId }`，建立 `contradicts`、`supersedes`、`duplicates` 或 `refines`。 |
+| `GET` | `/api/projects/:projectId/knowledge/cards/:id/relations/candidates` | 返回最多 5 张相似的 reviewed 团队卡片，供人工选择关系。 |
+| `GET` | `/api/projects/:projectId/knowledge/cards/pending-team` | 返回当前成员以外属主提交的 proposedTeam 卡片。 |
+
+`KnowledgeEventSink` 为点一、点二预留 `terminal.commandDenied`、`terminal.commandApproved`、`conflict.detected` 和 `conflict.resolved` 事件。事件只携带参与者、文件、时间与说明。

@@ -56,6 +56,22 @@ export function registerKnowledgeRoutes(
     } catch (error) { next(error); }
   });
 
+  app.get("/api/projects/:projectId/knowledge/cards/pending-team", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const service = serviceFor(req.params.projectId, res); if (!service) return;
+      res.json({ cards: await service.listPendingTeam(identity) });
+    } catch (error) { next(error); }
+  });
+
+  app.get("/api/projects/:projectId/knowledge/cards/:id/relations/candidates", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const service = serviceFor(req.params.projectId, res); if (!service) return;
+      res.json({ candidates: await service.relationCandidates(identity, req.params.id) });
+    } catch (error) { next(error); }
+  });
+
   app.get("/api/projects/:projectId/knowledge/cards/:id", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res);
@@ -133,6 +149,33 @@ export function registerKnowledgeRoutes(
       const selection = req.body?.selection ?? req.body;
       const card = await service.reanchor(identity, req.params.id, index, selection);
       res.json({ card });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/cards/:id/scope/request-team", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const service = serviceFor(req.params.projectId, res); if (!service) return;
+      res.json({ card: await service.requestTeam(identity, req.params.id) });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/cards/:id/scope/confirm-team", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId); const service = serviceFor(req.params.projectId, res); if (!service) return;
+      const config = await runtime.knowledgeProvider?.getConfig();
+      res.json({ card: await service.confirmTeam(identity, req.params.id, config?.requireSecondConfirmForTeam ?? true) });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/cards/:id/relations", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const service = serviceFor(req.params.projectId, res); if (!service) return;
+      const kind = req.body?.kind; const cardId = req.body?.cardId;
+      if (!["supersedes", "contradicts", "duplicates", "refines"].includes(kind) || typeof cardId !== "string") throw new Error("Knowledge relation is invalid");
+      res.json({ card: await service.relate(identity, req.params.id, { kind, cardId }) });
     } catch (error) { next(error); }
   });
 
@@ -280,6 +323,14 @@ export function registerKnowledgeRoutes(
       } catch (error) { next(error); }
     });
   }
+  app.post("/api/projects/:projectId/knowledge/inbox/:id/dispute", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const capture = runtimeManager.get(req.params.projectId).capture; if (!capture) { res.sendStatus(404); return; }
+      if (typeof req.body?.reason !== "string" || !req.body.reason.trim()) throw new Error("A dispute reason is required");
+      res.json({ suggestion: await capture.dispute(identity, req.params.id, req.body.reason) });
+    } catch (error) { next(error); }
+  });
   app.post("/api/projects/:projectId/knowledge/from-chat", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res); if (!identity) return;

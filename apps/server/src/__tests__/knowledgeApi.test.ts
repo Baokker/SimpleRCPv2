@@ -90,6 +90,41 @@ describe("knowledge API", () => {
     const personal = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers: headers(first), body: JSON.stringify({ type: "context", title: "Private note", summary: "Only Ada sees this", content: "Private", tags: [], scope: "personal" }) });
     expect(personal.status).toBe(201);
     const personalCard = (await personal.json() as { card: { id: string } }).card;
+    const proposed = await fetch(`${origin}/api/projects/demo/knowledge/cards/${personalCard.id}/scope/request-team`, { method: "POST", headers: headers(first) });
+    expect(proposed.status).toBe(200);
+    expect((await proposed.json() as { card: { scope: string } }).card.scope).toBe("proposedTeam");
+    const pendingTeam = await fetch(`${origin}/api/projects/demo/knowledge/cards/pending-team`, { headers: headers(second) });
+    expect(pendingTeam.status).toBe(200);
+    expect((await pendingTeam.json() as { cards: Array<{ id: string }> }).cards.map(card => card.id)).toContain(personalCard.id);
+    const teamConfirmation = await fetch(`${origin}/api/projects/demo/knowledge/cards/${personalCard.id}/scope/confirm-team`, { method: "POST", headers: headers(second) });
+    expect(teamConfirmation.status).toBe(200);
+    expect((await teamConfirmation.json() as { card: { scope: string; review: { confirmedBy: string[] } } }).card).toMatchObject({ scope: "team", review: { confirmedBy: expect.arrayContaining([first, second]) } });
+    const relationTargetResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers: headers(first), body: JSON.stringify({ type: "risk", title: "Private relation target", summary: "A private card used for relation tests", content: "Private relation target", tags: [], scope: "team" }) });
+    const relationTarget = (await relationTargetResponse.json() as { card: { id: string } }).card;
+    const candidates = await fetch(`${origin}/api/projects/demo/knowledge/cards/${personalCard.id}/relations/candidates`, { headers: headers(first) });
+    expect(candidates.status).toBe(200);
+    expect((await candidates.json() as { candidates: Array<{ card: { id: string } }> }).candidates.map(candidate => candidate.card.id)).toContain(relationTarget.id);
+    const relation = await fetch(`${origin}/api/projects/demo/knowledge/cards/${personalCard.id}/relations`, { method: "POST", headers: headers(first), body: JSON.stringify({ kind: "contradicts", cardId: relationTarget.id }) });
+    expect(relation.status).toBe(200);
+    expect((await relation.json() as { card: { relations: Array<{ kind: string; cardId: string }> } }).card.relations).toContainEqual({ kind: "contradicts", cardId: relationTarget.id });
+    const supersederResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers: headers(first), body: JSON.stringify({ type: "decision", title: "Superseding card", summary: "A newer relation target", content: "Superseding card", tags: [], scope: "team" }) });
+    const superseder = (await supersederResponse.json() as { card: { id: string } }).card;
+    const supersede = await fetch(`${origin}/api/projects/demo/knowledge/cards/${superseder.id}/relations`, { method: "POST", headers: headers(first), body: JSON.stringify({ kind: "supersedes", cardId: relationTarget.id }) });
+    expect(supersede.status).toBe(200);
+    const superseded = await fetch(`${origin}/api/projects/demo/knowledge/cards/${relationTarget.id}`, { headers: headers(second) });
+    expect((await superseded.json() as { card: { status: string } }).card.status).toBe("superseded");
+    const configOff = await fetch(`${origin}/api/projects/demo/knowledge/config`, { method: "PUT", headers: headers(first), body: JSON.stringify({ requireSecondConfirmForTeam: false }) });
+    expect(configOff.status).toBe(200);
+    const ownerConfirmResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers: headers(first), body: JSON.stringify({ type: "decision", title: "Owner team card", summary: "Owner can confirm when configured", content: "Owner confirmation is enabled by project configuration.", tags: [], scope: "personal" }) });
+    const ownerConfirmCard = (await ownerConfirmResponse.json() as { card: { id: string } }).card;
+    expect((await fetch(`${origin}/api/projects/demo/knowledge/cards/${ownerConfirmCard.id}/scope/request-team`, { method: "POST", headers: headers(first) })).status).toBe(200);
+    const ownerConfirmed = await fetch(`${origin}/api/projects/demo/knowledge/cards/${ownerConfirmCard.id}/scope/confirm-team`, { method: "POST", headers: headers(first) });
+    expect(ownerConfirmed.status).toBe(200);
+    expect((await ownerConfirmed.json() as { card: { scope: string } }).card.scope).toBe("team");
+    const configOn = await fetch(`${origin}/api/projects/demo/knowledge/config`, { method: "PUT", headers: headers(first), body: JSON.stringify({ requireSecondConfirmForTeam: true }) });
+    expect(configOn.status).toBe(200);
+    const privateOnlyResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers: headers(first), body: JSON.stringify({ type: "context", title: "Private only", summary: "Only Ada sees this card", content: "Private", tags: [], scope: "personal" }) });
+    const privateOnlyCard = (await privateOnlyResponse.json() as { card: { id: string } }).card;
     const draftResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards/${teamCard.id}`, { headers: headers(first) });
     const draftValue = await draftResponse.json() as { card: Record<string, unknown> };
     const projectMetadata = (app.locals.registry.getProject("demo") as { metadataPath: string }).metadataPath;
@@ -145,8 +180,8 @@ describe("knowledge API", () => {
 
     const secondCards = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { headers: headers(second) }).then((response) => response.json()) as { cards: Array<{ id: string }> };
     expect(secondCards.cards.map((card) => card.id)).toContain(teamCard.id);
-    expect(secondCards.cards.map((card) => card.id)).not.toContain(personalCard.id);
-    const hiddenPersonal = await fetch(`${origin}/api/projects/demo/knowledge/cards/${personalCard.id}`, { headers: headers(second) });
+    expect(secondCards.cards.map((card) => card.id)).not.toContain(privateOnlyCard.id);
+    const hiddenPersonal = await fetch(`${origin}/api/projects/demo/knowledge/cards/${privateOnlyCard.id}`, { headers: headers(second) });
     expect(hiddenPersonal.status).toBe(404);
 
     const updated = await fetch(`${origin}/api/projects/demo/knowledge/cards/${teamCard.id}`, {

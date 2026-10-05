@@ -39,12 +39,18 @@ export interface KnowledgeProviderConfig {
   topK: number;
   maxCharsPerCard: number;
   maxTotalChars: number;
+  lexicalScoring: "legacy" | "exact-boost";
   ranking: "legacy" | "bounded";
   useActiveFiles: boolean;
   statuses: KnowledgeCardStatus[];
   fixedCardIds: string[];
   postRunCheck: boolean;
   inflightNotify: boolean;
+  requireSecondConfirmForTeam: boolean;
+  recapMode: "server" | "agent-self";
+  correctionClassifier: "rules" | "rules+llm";
+  contradictionJudge: "none" | "llm";
+  orphanedAfterMs: number;
 }
 
 export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
@@ -52,12 +58,18 @@ export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   topK: 5,
   maxCharsPerCard: 800,
   maxTotalChars: 4000,
+  lexicalScoring: "legacy",
   ranking: "bounded",
   useActiveFiles: true,
   statuses: ["reviewed"],
   fixedCardIds: [],
   postRunCheck: true,
-  inflightNotify: true
+  inflightNotify: true,
+  requireSecondConfirmForTeam: true,
+  recapMode: "server",
+  correctionClassifier: "rules",
+  contradictionJudge: "none",
+  orphanedAfterMs: 7 * 24 * 60 * 60_000
 };
 
 export interface KnowledgeContextResult {
@@ -194,26 +206,37 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
           indexDir: path.join(root, "index"),
           query,
           topK: Math.max(config.topK, 25),
-          lexicalScoring: "legacy"
+          lexicalScoring: config.lexicalScoring
         });
     const cardById = new Map(reusable.map((card) => [card.id, card]));
     const ranked = rankResults(selected, activeFiles, config);
     const records: KnowledgeInjectionRecord[] = [];
     const blocks: string[] = [KNOWLEDGE_PROMPT_TITLE];
+    const selectedIds = new Set(ranked.map((result) => result.cardId));
+    const seenSources = new Set<string>();
     let totalChars = 0;
     for (const result of ranked) {
       const card = cardById.get(result.cardId);
       if (!card) continue;
+      const sourceKeys = [...(card.provenance?.evidenceRefs.runIds ?? []).map((id) => `run:${id}`), ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((id) => `message:${id}`)];
+      if (sourceKeys.some((key) => seenSources.has(key))) continue;
+      for (const key of sourceKeys) seenSources.add(key);
       const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
       const content = truncate(safeCardText(card.content), config.maxCharsPerCard);
+      const contradictory = [...cardById.values()].some((candidate) => selectedIds.has(candidate.id) && (candidate.relations ?? []).some((relation) => relation.kind === "contradicts" && relation.cardId === card.id))
+        || (card.relations ?? []).some((relation) => relation.kind === "contradicts" && selectedIds.has(relation.cardId));
       const block = formatCard({
         ...card,
         title: safeCardText(card.title),
         summary: safeCardText(card.summary)
-      }, content, result.score, options.sensitiveValues);
+      }, content, result.score, options.sensitiveValues, contradictory);
       if (totalChars + block.length > config.maxTotalChars) continue;
-      const lexical = config.ranking === "legacy" ? result.score : Math.max(0, result.score - activeFileBoost(card, activeFiles));
-      const boost = Math.max(0, result.score - lexical);
+      const lexical = typeof (result as KnowledgeSearchResult & { lexical?: number }).lexical === "number"
+        ? (result as KnowledgeSearchResult & { lexical: number }).lexical
+        : config.ranking === "legacy" ? result.score : Math.max(0, result.score - activeFileBoost(card, activeFiles));
+      const boost = typeof (result as KnowledgeSearchResult & { boost?: number }).boost === "number"
+        ? (result as KnowledgeSearchResult & { boost: number }).boost
+        : Math.max(0, result.score - lexical);
       records.push({
         id: card.id,
         version: card.updatedAt,
@@ -265,9 +288,10 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       const lines = changedLines(change.patch, change.additions, change.deletions);
       for (const card of candidates) {
         const applies = card.appliesTo?.kind === "project" || (card.appliesTo?.kind === "glob" && card.appliesTo.patterns.some((pattern) => minimatch(change.file, pattern, { dot: true })));
-        const resolution = (await options.knowledge.resolveAnchors({ memberId: initiator.id, displayName: initiator.displayName }, change.file)).find((item) => item.cardId === card.id && item.range);
+        const resolution = (await options.knowledge.resolveAnchors({ memberId: initiator.id, displayName: initiator.displayName }, change.file)).find((item) => item.cardId === card.id && item.range && item.status !== "needsReview");
         const intersects = resolution?.range ? rangesIntersect(lines, { start: resolution.range.startLine, end: resolution.range.endLine }) : false;
-        if (!applies && !intersects) continue;
+        const checkMatchesFile = Boolean(card.check && minimatch(change.file, card.check.fileGlob, { dot: true }));
+        if (!applies && !intersects && !checkMatchesFile) continue;
         let checkResult: KnowledgePostCheckHit["checkResult"];
         if (card.check && minimatch(change.file, card.check.fileGlob, { dot: true })) {
           const loaded = await readWorkspaceFile(options.workspaceRoot, change.file, true);
@@ -281,6 +305,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
         hits.push({ cardId: card.id, file: change.file, lines, ...(checkResult ? { checkResult } : {}) });
       }
     }
+    for (const change of run.fileChanges) await options.knowledge.refreshExpired({ memberId: initiator.id, displayName: initiator.displayName }, change.file, config.orphanedAfterMs);
     return { hits };
   }
 
@@ -366,28 +391,39 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
   const allowedStatuses = new Set<KnowledgeCardStatus>(["draft", "reviewed", "needsReview", "archived", "orphaned", "superseded"]);
   if (value.statuses !== undefined && (!Array.isArray(value.statuses) || value.statuses.some((status) => !allowedStatuses.has(status as KnowledgeCardStatus)))) throw new Error("Knowledge statuses are invalid");
   const statuses = value.statuses as KnowledgeCardStatus[] | undefined ?? defaultKnowledgeProviderConfig.statuses;
-  for (const key of ["injectEnabled", "useActiveFiles", "postRunCheck", "inflightNotify"] as const) if (value[key] !== undefined && typeof value[key] !== "boolean") throw new Error(`Knowledge ${key} must be boolean`);
+  for (const key of ["injectEnabled", "useActiveFiles", "postRunCheck", "inflightNotify", "requireSecondConfirmForTeam"] as const) if (value[key] !== undefined && typeof value[key] !== "boolean") throw new Error(`Knowledge ${key} must be boolean`);
+  if (value.recapMode !== undefined && value.recapMode !== "server" && value.recapMode !== "agent-self") throw new Error("Knowledge recapMode is invalid");
+  if (value.correctionClassifier !== undefined && value.correctionClassifier !== "rules" && value.correctionClassifier !== "rules+llm") throw new Error("Knowledge correctionClassifier is invalid");
+  if (value.contradictionJudge !== undefined && value.contradictionJudge !== "none" && value.contradictionJudge !== "llm") throw new Error("Knowledge contradictionJudge is invalid");
+  if (value.lexicalScoring !== undefined && value.lexicalScoring !== "legacy" && value.lexicalScoring !== "exact-boost") throw new Error("Knowledge lexical scoring is invalid");
   return {
     injectEnabled: value.injectEnabled ?? defaultKnowledgeProviderConfig.injectEnabled,
     topK: numberValue(value.topK, defaultKnowledgeProviderConfig.topK, 1, 25),
     maxCharsPerCard: numberValue(value.maxCharsPerCard, defaultKnowledgeProviderConfig.maxCharsPerCard, 1, 20_000),
     maxTotalChars: numberValue(value.maxTotalChars, defaultKnowledgeProviderConfig.maxTotalChars, 1, 100_000),
+    lexicalScoring: value.lexicalScoring ?? defaultKnowledgeProviderConfig.lexicalScoring,
     ranking: value.ranking === "legacy" ? "legacy" : "bounded",
     useActiveFiles: value.useActiveFiles ?? defaultKnowledgeProviderConfig.useActiveFiles,
     statuses,
     fixedCardIds: Array.isArray(value.fixedCardIds) ? value.fixedCardIds.filter((id): id is string => typeof id === "string") : [],
     postRunCheck: value.postRunCheck ?? defaultKnowledgeProviderConfig.postRunCheck,
-    inflightNotify: value.inflightNotify ?? defaultKnowledgeProviderConfig.inflightNotify
+    inflightNotify: value.inflightNotify ?? defaultKnowledgeProviderConfig.inflightNotify,
+    requireSecondConfirmForTeam: value.requireSecondConfirmForTeam ?? defaultKnowledgeProviderConfig.requireSecondConfirmForTeam,
+    recapMode: value.recapMode ?? defaultKnowledgeProviderConfig.recapMode,
+    correctionClassifier: value.correctionClassifier ?? defaultKnowledgeProviderConfig.correctionClassifier,
+    contradictionJudge: value.contradictionJudge ?? defaultKnowledgeProviderConfig.contradictionJudge,
+    orphanedAfterMs: numberValue(value.orphanedAfterMs, defaultKnowledgeProviderConfig.orphanedAfterMs, 1, 365 * 24 * 60 * 60_000)
   };
 }
 
 function rankResults(results: KnowledgeSearchResult[], activeFiles: string[], config: KnowledgeProviderConfig) {
-  if (config.ranking === "legacy") return results.slice(0, 25);
+  if (config.ranking === "legacy") return results.slice(0, 25).map((result) => ({ ...result, lexical: result.score, boost: 0 }));
   const highest = results.reduce((value, result) => Math.max(value, result.score), 0);
   const cap = highest * 0.5;
   return results.map((result) => {
     const boost = config.useActiveFiles ? activeFileBoostFromFiles(result.files, activeFiles) : 0;
-    return { ...result, score: result.score + Math.min(boost, cap) };
+    const boundedBoost = Math.min(boost, cap);
+    return { ...result, score: result.score + boundedBoost, lexical: result.score, boost: boundedBoost };
   }).sort((left, right) => priority(left.type) - priority(right.type) || right.score - left.score).slice(0, 25);
 }
 
@@ -395,11 +431,11 @@ function priority(type: string) { return ["negative", "risk", "constraint"].incl
 function activeFileBoost(card: KnowledgeCard, activeFiles: string[]) { return activeFileBoostFromFiles(card.anchors.map((anchor) => anchor.file.workspaceRelativePath), activeFiles); }
 function activeFileBoostFromFiles(files: string[], activeFiles: string[]) { return files.some((file) => activeFiles.some((active) => file === active || file.endsWith(`/${active}`))) ? 0.06 : 0; }
 function fixedResult(card: KnowledgeCard): KnowledgeSearchResult { return { cardId: card.id, score: 1, mode: "lexical", type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags, files: card.anchors.map((anchor) => anchor.file.workspaceRelativePath), excerpt: card.content }; }
-function formatCard(card: KnowledgeCard, content: string, score: number, sensitiveValues?: string[]) {
+function formatCard(card: KnowledgeCard, content: string, score: number, sensitiveValues?: string[], contradictory = false) {
   const anchors = card.anchors.map((anchor) => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
   const author = card.provenance?.author.displayName ?? card.metadata.createdBy?.name ?? card.ownerMemberId ?? "unknown";
   const confirmedBy = card.review?.confirmedBy?.join(", ") ?? "";
-  return redactKnowledgeText(`[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
+  return redactKnowledgeText(`${contradictory ? "[CONTRADICTS_ANOTHER_INJECTED_CARD: unresolved]\\n" : ""}[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
 }
 function truncate(value: string, max: number) { return value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`; }
 function summarize(value: string) { return value.length > 500 ? `${value.slice(0, 497)}…` : value; }

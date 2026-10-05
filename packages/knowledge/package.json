@@ -16,6 +16,7 @@
     "./views/guide": { "types": "./dist/src/views/guide.d.ts", "default": "./dist/src/views/guide.js" },
     "./views/timeline": { "types": "./dist/src/views/timeline.d.ts", "default": "./dist/src/views/timeline.js" },
     "./extract": { "types": "./dist/src/extract/extract.d.ts", "default": "./dist/src/extract/extract.js" },
+    "./extract/recapPrompt": { "types": "./dist/src/extract/recapPrompt.d.ts", "default": "./dist/src/extract/recapPrompt.js" },
     "./retrieval/index": { "types": "./dist/src/retrieval/index.d.ts", "default": "./dist/src/retrieval/index.js" },
     "./retrieval/inject": { "types": "./dist/src/retrieval/inject.d.ts", "default": "./dist/src/retrieval/inject.js" },
     "./llm/client": { "types": "./dist/src/llm/client.d.ts", "default": "./dist/src/llm/client.js" },

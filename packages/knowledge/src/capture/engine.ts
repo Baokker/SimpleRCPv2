@@ -4,7 +4,7 @@ import { shouldTriggerCapture, defaultCaptureTriggerThresholds } from "./trigger
 import type { CaptureSuggestion, CaptureTriggerType, KnowledgeCardType, SuggestedAnchor } from "../schema/card.js";
 import { AuthorshipIndex, isMemberActor } from "./authorship.js";
 import { VirtualCaptureClock, type CaptureClock } from "./clock.js";
-import { parseActor, type CaptureChatEvent, type CaptureEditEvent, type CaptureEvent } from "./events.js";
+import { parseActor, type CaptureAgentRunEvent, type CaptureAgentToolEvent, type CaptureChatEvent, type CaptureEditEvent, type CaptureEvent } from "./events.js";
 import { inferCoOccurrence, type CaptureActivity } from "./inference.js";
 
 export interface CaptureEngineConfig {
@@ -27,6 +27,14 @@ export interface CaptureEngineConfig {
   overwrittenMinLines: number;
   overwrittenMinRatio: number;
   historyMs: number;
+  agentInterruptWindowMs: number;
+  agentRevisionWindowMs: number;
+  agentRevisionCooldownMs: number;
+  agentRevisionMinRatio: number;
+  agentCorrectionWindowMs: number;
+  agentRetryWindowMs: number;
+  agentSimilarityThreshold: number;
+  correctionTerms: string[];
   weights: { dwell: number; edits: number; speakers: number; textMatch: number };
 }
 export const defaultCaptureEngineConfig: CaptureEngineConfig = {
@@ -36,6 +44,10 @@ export const defaultCaptureEngineConfig: CaptureEngineConfig = {
   magicCooldownMs: 120_000, dependencyCooldownMs: 0, rollbackWindowMs: 300_000,
   rollbackCooldownMs: 300_000, overwrittenWindowMs: 600_000, overwrittenCooldownMs: 300_000,
   overwrittenMinLines: 3, overwrittenMinRatio: 0.5, historyMs: 1_800_000,
+  agentInterruptWindowMs: 180_000, agentRevisionWindowMs: 900_000, agentRevisionCooldownMs: 300_000, agentCorrectionWindowMs: 600_000,
+  agentRevisionMinRatio: 0.3,
+  agentRetryWindowMs: 1_800_000, agentSimilarityThreshold: 0.35,
+  correctionTerms: ["改", "改成", "修改", "纠正", "不要", "换成", "重做", "修复", "instead", "revert", "change", "correct", "fix", "do not"],
   weights: { dwell: 1, edits: 0.02, speakers: 2, textMatch: 3 }
 };
 export type CaptureConfigInput = Partial<Omit<CaptureEngineConfig, "weights">> & { weights?: Partial<CaptureEngineConfig["weights"]> };
@@ -52,16 +64,45 @@ export interface AgentRevisedEvent {
   agent: string;
   runId: string;
   editor: string;
+  ownerId?: string;
   intervals: import("./authorship.js").OverwrittenInterval[];
   at: number;
 }
 
+export function createAgentRevisedSuggestion(event: AgentRevisedEvent): CaptureSuggestion {
+  const digest = createHash("sha256").update(`${event.file}\n${event.editor}\n${event.runId}`).digest("hex").slice(0, 16);
+  const lineCount = Math.max(1, event.intervals.reduce((max, interval) => Math.max(max, interval.deletedText.split(/\r?\n/).length), 1));
+  return {
+    id: `capture-${event.at}-agent-revised-${digest}`,
+    triggerType: "agent.revised",
+    createdAt: event.at,
+    origin: "human-agent",
+    actors: { memberIds: [...new Set([event.editor, ...(event.ownerId ? [event.ownerId] : [])])].sort(), runIds: [event.runId] },
+    suggestedType: "decision",
+    suggestedTitle: "成员改写了 Agent 的内容",
+    suggestedSummary: `成员在 ${event.file} 上改写了 Agent 的内容`,
+    suggestedAnchors: [{ file: event.file, startLine: 1, endLine: lineCount, score: 1, reasons: ["Agent 修改范围"] }],
+    evidence: { file: event.file, runId: event.runId, editor: event.editor, ownerId: event.ownerId, overwritten: event.intervals },
+    confidence: 0.7,
+    state: "open"
+  };
+}
+
+interface AgentRunState {
+  event: CaptureAgentRunEvent;
+  status: CaptureAgentRunEvent["status"];
+  endedAt?: number;
+  editedAfterFailure?: boolean;
+  retryFrom?: { event: CaptureAgentRunEvent; similarity: number };
+}
+
 export function resolveCaptureConfig(config: CaptureConfigInput = {}): CaptureEngineConfig {
   const resolved = { ...defaultCaptureEngineConfig, ...config, weights: { ...defaultCaptureEngineConfig.weights, ...config.weights } };
-  for (const [key, value] of Object.entries(resolved)) if (key !== "weights" && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("Capture configuration must contain nonnegative finite numbers");
+  for (const [key, value] of Object.entries(resolved)) if (key !== "weights" && key !== "correctionTerms" && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("Capture configuration must contain nonnegative finite numbers");
   for (const value of Object.values(resolved.weights)) if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error("Capture weights must contain nonnegative finite numbers");
   if (!resolved.checkpointIdleMs || !resolved.chatWindowMs) throw new Error("Capture windows must be positive");
   if (!Number.isInteger(resolved.chatMinMessages) || resolved.chatMinMessages < 1 || !Number.isInteger(resolved.magicMinDigits) || resolved.magicMinDigits < 1 || resolved.overwrittenMinRatio > 1) throw new Error("Capture thresholds are invalid");
+  if (resolved.agentSimilarityThreshold > 1 || resolved.agentRevisionMinRatio > 1 || !Array.isArray(resolved.correctionTerms) || resolved.correctionTerms.some((term) => typeof term !== "string" || !term)) throw new Error("Agent capture thresholds are invalid");
   return resolved;
 }
 
@@ -80,12 +121,14 @@ export function createCaptureEngine(options: {
   const cooldowns = new Map<string, number>();
   const seenChatIds = new Set<string>();
   const timers = new Set<number>();
+  const agentRuns = new Map<string, AgentRunState>();
+  const failedTools = new Map<string, { command?: string; executable?: string; at: number; error?: string; edited: boolean }[]>();
   let sequence = 0;
 
-  function emit(trigger: CaptureTriggerType, at: number, actors: string[], evidence: Record<string, unknown>, type: KnowledgeCardType, anchors: SuggestedAnchor[] = []) {
+  function emit(trigger: CaptureTriggerType, at: number, actors: string[], evidence: Record<string, unknown>, type: KnowledgeCardType, anchors: SuggestedAnchor[] = [], origin: "human-human" | "human-agent" = "human-human", runIds: string[] = []) {
     options.onSuggestion({
-      id: `capture-${at}-${++sequence}`, triggerType: trigger, createdAt: at, origin: "human-human",
-      actors: { memberIds: [...new Set(actors.filter(isMemberActor))].sort(), runIds: [] },
+      id: `capture-${at}-${++sequence}`, triggerType: trigger, createdAt: at, origin,
+      actors: { memberIds: [...new Set(actors.filter(isMemberActor))].sort(), runIds: [...new Set(runIds)] },
       suggestedType: type, suggestedTitle: titles[trigger] ?? trigger,
       suggestedSummary: `${titles[trigger] ?? trigger}${typeof evidence.file === "string" ? `：${evidence.file}` : ""}`, suggestedAnchors: anchors,
       evidence, confidence: 0.7, state: "open"
@@ -173,15 +216,20 @@ export function createCaptureEngine(options: {
     const before = state.text;
     const after = applyCaptureOps(before, event.ops);
     if (event.textAfter !== undefined && after !== event.textAfter) throw new Error(`Capture text mismatch: ${event.file}`);
-    const overwritten = authorship.apply(event.file, event.actor, event.ops, event.at).filter(interval => event.at - interval.at <= config.overwrittenWindowMs);
+    for (const failures of failedTools.values()) for (const failure of failures) failure.edited = true;
+    const overwritten = authorship.apply(event.file, event.actor, event.ops, event.at).filter(interval => event.at - interval.at <= Math.max(config.overwrittenWindowMs, config.agentRevisionWindowMs));
     const groups = new Map<string, typeof overwritten>();
     for (const item of overwritten) groups.set(item.actor, [...(groups.get(item.actor) ?? []), item]);
     for (const [author, intervals] of groups) {
       const significant = intervals.some(item => shouldTriggerCapture({ triggerType: "edit.overwritten", overwrittenLines: countLines(item.deletedText), overwrittenRatio: item.ratio, overwrittenAgeMs: event.at - item.at }, config));
       const editorActor = parseActor(event.actor);
       const targetActor = parseActor(author);
-      if (significant && editorActor.kind === "member" && targetActor.kind === "agent" && targetActor.runId) {
-        options.onAgentRevised?.({ file: event.file, agent: author, runId: targetActor.runId, editor: event.actor, intervals, at: event.at });
+      const agentSignificant = intervals.some((item) => item.ratio >= config.agentRevisionMinRatio && event.at - item.at <= config.agentRevisionWindowMs);
+      if ((significant || agentSignificant) && editorActor.kind === "member" && targetActor.kind === "agent" && targetActor.runId) {
+        const ownerId = intervals.find((interval) => interval.ownerId)?.ownerId;
+        if (cooled(`agent-revised:${event.file}:${targetActor.runId}`, event.at, config.agentRevisionCooldownMs)) {
+          options.onAgentRevised?.({ file: event.file, agent: author, runId: targetActor.runId, editor: event.actor, ownerId, intervals, at: event.at });
+        }
         continue;
       }
       const pair = [author, event.actor].sort().join(":");
@@ -224,6 +272,62 @@ export function createCaptureEngine(options: {
     updateDependencyBaseline(event.file, state, after);
   }
 
+  function agentRun(event: CaptureAgentRunEvent) {
+    const previous = event.previousRunId
+      ? agentRuns.get(event.previousRunId)
+      : event.sessionId
+        ? [...agentRuns.values()].filter((run) => run.event.sessionId === event.sessionId && run.endedAt !== undefined).sort((a, b) => (b.endedAt ?? 0) - (a.endedAt ?? 0))[0]
+        : undefined;
+    if (event.action === "start") {
+      if (previous?.status === "cancelled" && previous.event.action === "cancelled" && previous.endedAt !== undefined && event.at - previous.endedAt <= config.agentInterruptWindowMs && previous.event.memberId === event.memberId) {
+        emit("agent.interrupted", event.at, [event.memberId], { run: previous.event, interruption: { memberId: event.memberId, nextRunId: event.runId } }, "negative", [], "human-agent", [previous.event.runId, event.runId]);
+      }
+      if (previous?.endedAt !== undefined && event.at - previous.endedAt <= config.agentCorrectionWindowMs && isCorrection(event.prompt, previous.event.fileChanges, config.correctionTerms)) {
+        emit("agent.corrected", event.at, [event.memberId, previous.event.memberId], { previousRun: previous.event, correction: event, previousDiff: previous.event.fileChanges }, "decision", [], "human-agent", [previous.event.runId, event.runId]);
+      }
+      const retrySimilarity = previous ? promptSimilarity(event.prompt, previous.event.prompt) : 0;
+      agentRuns.set(event.runId, {
+        event,
+        status: "running",
+        ...(previous && (previous.status === "failed" || previous.status === "cancelled") && previous.endedAt !== undefined && event.at - previous.endedAt <= config.agentRetryWindowMs && retrySimilarity >= config.agentSimilarityThreshold ? { retryFrom: { event: previous.event, similarity: retrySimilarity } } : {})
+      });
+      return;
+    }
+    const state = agentRuns.get(event.runId) ?? { event, status: event.status };
+    state.event = { ...state.event, ...event };
+    state.status = event.status ?? (event.action === "end" ? "completed" : event.action === "interrupted" ? "cancelled" : event.action);
+    state.endedAt = event.at;
+    agentRuns.set(event.runId, state);
+    if (event.agentRanges?.length) {
+      const grouped = new Map<string, Array<{ start: number; end: number; text: string; ownerId?: string }>>();
+      for (const range of event.agentRanges) grouped.set(range.file, [...(grouped.get(range.file) ?? []), range]);
+      for (const [file, ranges] of grouped) authorship.register(file, `agent:${event.runId}`, ranges.map((range) => ({ ...range, ownerId: range.ownerId ?? event.memberId })), event.at);
+    }
+    if (event.action === "end" && state.retryFrom && state.retryFrom.event.memberId === event.memberId) {
+      emit("agent.retried", event.at, [event.memberId], { failedRun: state.retryFrom.event, retryRun: event, similarity: state.retryFrom.similarity }, "tutorial", [], "human-agent", [state.retryFrom.event.runId, event.runId]);
+    }
+    if (event.action === "interrupted" || (event.action === "cancelled" && event.interruptedByMemberId)) {
+      const interrupter = event.interruptedByMemberId ?? event.memberId;
+      emit("agent.interrupted", event.at, [interrupter, event.memberId], { run: event, interruption: { memberId: interrupter, runId: event.interruptsRunId } }, "negative", [], "human-agent", [event.runId, ...(event.interruptsRunId ? [event.interruptsRunId] : [])]);
+    }
+  }
+
+  function agentTool(event: CaptureAgentToolEvent) {
+    const command = event.command?.trim();
+    const executable = command?.split(/\s+/)[0];
+    const entries = failedTools.get(event.runId) ?? [];
+    if (!event.success) {
+      if (!isNetworkError(event.error)) entries.push({ command, executable, at: event.at, error: event.error, edited: false });
+      failedTools.set(event.runId, entries);
+      return;
+    }
+    const failure = entries.find((item) => commandsMatch(item.command, command));
+    if (!failure) return;
+    if (!failure.edited) return;
+    emit("agent.toolRecovered", event.at, [event.memberId], { runId: event.runId, failure: { command: failure.command, error: failure.error?.slice(0, 2000) }, success: { command, exitCode: event.exitCode } }, "tutorial", [], "human-agent", [event.runId]);
+    failedTools.set(event.runId, entries.filter((item) => item !== failure));
+  }
+
   function process(event: CaptureEvent) {
     if (event.at !== options.clock.now()) throw new Error("Advance the capture clock before processing an event");
     if (event.type === "docOpen") {
@@ -249,6 +353,7 @@ export function createCaptureEngine(options: {
       }
       const before = event.textBefore ?? state.text;
       if (event.textAfter !== undefined) {
+        if (event.textAfter !== before) for (const failures of failedTools.values()) for (const failure of failures) failure.edited = true;
         if (isPackage(event.file)) {
           const baseline = dependencyNames(before) !== undefined ? before : state.dependencyBaseline ?? before;
           dependencies(event.file, baseline, event.textAfter, "filesystem", event.at, rangeAnchor(event.file, event.textAfter, 0, event.textAfter.length));
@@ -264,7 +369,8 @@ export function createCaptureEngine(options: {
       for (const [actor] of state?.checkpoints ?? []) checkpoint(event.file, actor, event.at);
       authorship.retire(event.file);
       state?.checkpoints.clear();
-    }
+    } else if (event.type === "agentRun") agentRun(event);
+    else if (event.type === "agentTool") agentTool(event);
     const cutoff = event.at - config.historyMs;
     let expiredCount = 0;
     const dwellBoundaries = new Map<string, CaptureActivity>();
@@ -281,13 +387,13 @@ export function createCaptureEngine(options: {
     const lastAt = messages.length ? Math.max(...messages.map(message => message.at)) : endAt;
     return inferCoOccurrence({ messages, activities, texts: new Map([...files].map(([file, state]) => [file, state.text])), from: firstAt - config.chatBeforeMs, to: Math.min(endAt, lastAt + config.chatAfterMs), weights: config.weights });
   }
-  return { process, infer, config, dispose() { for (const id of timers) cancel(id); files.clear(); activities.length = 0; chats.length = 0; } };
+  return { process, infer, config, authorship, dispose() { for (const id of timers) cancel(id); files.clear(); activities.length = 0; chats.length = 0; agentRuns.clear(); failedTools.clear(); } };
 }
 
 export function replayEvents(events: CaptureEvent[], config: CaptureConfigInput = {}, endAt?: number): CaptureSuggestion[] {
   const clock = new VirtualCaptureClock(events[0]?.at ?? 0);
   const suggestions: CaptureSuggestion[] = [];
-  const engine = createCaptureEngine({ clock, config, onSuggestion: suggestion => suggestions.push(suggestion) });
+  const engine = createCaptureEngine({ clock, config, onSuggestion: suggestion => suggestions.push(suggestion), onAgentRevised: event => suggestions.push(createAgentRevisedSuggestion(event)) });
   let seq = -1;
   for (const event of events) {
     if (event.seq <= seq) throw new Error("Capture events must have increasing sequence numbers");
@@ -358,4 +464,28 @@ function mostActiveSpeaker(messages: CaptureChatEvent[]) {
   for (const message of messages) counts.set(message.authorId, (counts.get(message.authorId) ?? 0) + 1);
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
 }
-const titles: Record<string, string> = { "chat.dense": "协作讨论", "todo.cleared": "待办标记已完成", "magicNumber.added": "新增数字常量", "dependency.changed": "依赖变化", "rollback.detected": "内容恢复", "edit.overwritten": "成员改写了协作者的内容" };
+function isCorrection(prompt: string, changes: unknown, terms: string[]) {
+  const value = prompt.toLowerCase();
+  const previousFiles = Array.isArray(changes) && changes.some((change) => change && typeof change === "object" && typeof (change as { file?: unknown }).file === "string" && prompt.includes((change as { file: string }).file));
+  const correction = terms.some((term) => value.includes(term.toLowerCase()));
+  return correction || (previousFiles && correction);
+}
+function promptSimilarity(left: string, right: string) {
+  const tokens = (value: string) => new Set(value.toLowerCase().split(/[^\p{L}\p{N}_]+/u).filter((item) => item.length > 1));
+  const a = tokens(left); const b = tokens(right); const intersection = [...a].filter((item) => b.has(item)).length;
+  return intersection / Math.max(1, Math.min(a.size, b.size));
+}
+function isNetworkError(value?: string) { return /timeout|timed out|dns|network|eai_again|enotfound|connection reset|install source/i.test(value ?? ""); }
+function commandsMatch(left?: string, right?: string) {
+  if (!left || !right) return false;
+  if (left.trim() === right.trim()) return true;
+  const leftTokens = left.trim().split(/\s+/);
+  const rightTokens = right.trim().split(/\s+/);
+  if (leftTokens[0] !== rightTokens[0]) return false;
+  const leftArguments = new Set(leftTokens.slice(1));
+  const rightArguments = new Set(rightTokens.slice(1));
+  if (!leftArguments.size || !rightArguments.size) return true;
+  const shared = [...leftArguments].filter((token) => rightArguments.has(token)).length;
+  return shared / Math.max(1, Math.min(leftArguments.size, rightArguments.size)) >= 0.5;
+}
+const titles: Record<string, string> = { "chat.dense": "协作讨论", "todo.cleared": "待办标记已完成", "magicNumber.added": "新增数字常量", "dependency.changed": "依赖变化", "rollback.detected": "内容恢复", "edit.overwritten": "成员改写了协作者的内容", "agent.interrupted": "Agent 任务被打断", "agent.revised": "成员改写了 Agent 的内容", "agent.corrected": "成员纠正了 Agent 任务", "agent.retried": "失败任务再次运行", "agent.toolRecovered": "工具失败后修复" };

@@ -469,6 +469,24 @@ export function resolveKnowledgeSuggestion(projectId: string, id: string, action
 export function captureKnowledgeFromChat(projectId: string, messageIds: string[]) {
   return request<{ suggestion: import("./types").KnowledgeSuggestion }>(`${projectPath(projectId)}/knowledge/from-chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageIds }) });
 }
+export function disputeKnowledgeSuggestion(projectId: string, id: string, reason: string) {
+  return request<{ suggestion: import("./types").KnowledgeSuggestion }>(`${projectPath(projectId)}/knowledge/inbox/${encodeURIComponent(id)}/dispute`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason }) });
+}
+export function requestKnowledgeTeamScope(projectId: string, id: string) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/scope/request-team`, { method: "POST" });
+}
+export function getPendingKnowledgeTeamCards(projectId: string) {
+  return request<{ cards: KnowledgeCard[] }>(`${projectPath(projectId)}/knowledge/cards/pending-team`);
+}
+export function confirmKnowledgeTeamScope(projectId: string, id: string) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/scope/confirm-team`, { method: "POST" });
+}
+export function relateKnowledgeCards(projectId: string, id: string, relation: { kind: "supersedes" | "contradicts" | "duplicates" | "refines"; cardId: string }) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/relations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(relation) });
+}
+export function getKnowledgeRelationCandidates(projectId: string, id: string) {
+  return request<{ candidates: Array<{ card: KnowledgeCard; score: number }> }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/relations/candidates`);
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const projectId = path.match(/^\/api\/projects\/([^/?]+)/)?.[1];

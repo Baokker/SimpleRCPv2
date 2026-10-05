@@ -14,6 +14,7 @@ import {
   normalizeWorkspaceRelativePath,
   offsetsFromRange,
   resolveKnowledgeAnchorInText,
+  searchKnowledgeCards,
   type KnowledgeAnchor,
   type KnowledgeCard,
   type KnowledgeCardStatus,
@@ -71,6 +72,8 @@ interface KnowledgeServiceOptions {
   events: EventLog;
   onChanged?(change: { cardId: string; action: string }): void;
   onCardConfirmed?(card: KnowledgeCard): Promise<void> | void;
+  orphanedAfterMs?: number;
+  requireSecondConfirmForTeam?: boolean;
 }
 
 interface StoredCard {
@@ -300,7 +303,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
           const endOffset = end.index;
           const slice = text.slice(startOffset, endOffset);
           const confidence = similarity(anchor.snapshot.text, slice);
-          if (confidence >= ANCHOR_SIMILARITY_THRESHOLD) {
+          if (confidence >= ANCHOR_SIMILARITY_THRESHOLD && changedLineRatio(anchor.snapshot.text, slice) <= 0.5) {
             return { cardId: card.id, anchorIndex, range: toEditorRange(text, startOffset, endOffset), status: "ok", strategy: "yjs", confidence };
           }
         }
@@ -323,6 +326,15 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       };
     }
     const captured = anchor.rangeAtCapture ? offsetsFromRange(text, anchor.rangeAtCapture) : undefined;
+    if (changedLineRatio(anchor.snapshot.text, text.slice(resolved.startOffset, resolved.endOffset)) > 0.5) {
+      return {
+        cardId: card.id,
+        anchorIndex,
+        range: toEditorRange(text, resolved.startOffset, resolved.endOffset),
+        status: "needsReview",
+        confidence: resolved.confidence
+      };
+    }
     const strategy = captured && captured.startOffset === resolved.startOffset && captured.endOffset === resolved.endOffset
       ? "range"
       : text.indexOf(anchor.snapshot.text) === resolved.startOffset && text.indexOf(anchor.snapshot.text, resolved.startOffset + 1) === -1
@@ -348,6 +360,24 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   function offsetToTextPosition(text: string, offset: number) {
     const point = lineColumnAt(text, offset);
     return { line: point.line - 1, character: point.column - 1 };
+  }
+
+  function changedLineRatio(before: string, after: string) {
+    const beforeLines = before.split(/\r?\n/);
+    const afterLines = after.split(/\r?\n/);
+    const total = Math.max(beforeLines.length, afterLines.length);
+    if (!total) return 0;
+    if (beforeLines.length === afterLines.length) {
+      if (total > 1) {
+        const changedLines = beforeLines.reduce((count, line, index) => count + (line === afterLines[index] ? 0 : 1), 0);
+        return changedLines / total;
+      }
+      const unchangedCharacters = diff(before, after).reduce((count, [operation, value]) => count + (operation === diff.EQUAL ? value.length : 0), 0);
+      return 1 - unchangedCharacters / Math.max(1, Math.max(before.length, after.length));
+    }
+    let changed = 0;
+    for (let index = 0; index < total; index += 1) if (beforeLines[index] !== afterLines[index]) changed += 1;
+    return changed / total;
   }
 
   async function resolveCards(viewer: Identity | KnowledgeActor, file: string) {
@@ -386,10 +416,34 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     });
   }
 
+  async function listPendingTeam(viewer: Identity | KnowledgeActor) {
+    const cards = (await readCards()).map(({ card }) => card).filter((card) => card.scope === "proposedTeam" && card.status === "reviewed" && card.ownerMemberId !== viewer.memberId);
+    return cards;
+  }
+
   async function get(viewer: Identity | KnowledgeActor, id: string) {
     const stored = await readCard(id);
     if (!stored || !visible(stored.card, viewer)) return undefined;
     return stored.card;
+  }
+
+  async function relationCandidates(viewer: Identity | KnowledgeActor, id: string) {
+    const source = await get(viewer, id);
+    if (!source || source.scope !== "team" || source.status !== "reviewed") return [];
+    const cards = (await list(viewer, { scope: "team", status: "reviewed" })).filter((card) => card.id !== id);
+    const results = await searchKnowledgeCards({
+      cards,
+      workspaceId: options.projectId,
+      indexDir: path.join(options.metadataRoot, "knowledge", "index"),
+      query: `${source.title}\n${source.summary}\n${source.content}`,
+      filters: { statuses: ["reviewed"] },
+      topK: 5
+    });
+    const byId = new Map(cards.map((card) => [card.id, card]));
+    return results.flatMap((result) => {
+      const card = byId.get(result.cardId);
+      return card ? [{ card, score: result.score }] : [];
+    });
   }
 
   async function create(actor: KnowledgeActor, draft: Record<string, unknown>) {
@@ -459,10 +513,11 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       card.tags = patch.tags;
     }
     if (patch.scope !== undefined) {
-      if (patch.scope !== "personal" && patch.scope !== "team") throw new Error("Card scope must be personal or team");
+      if (patch.scope !== "personal" && patch.scope !== "team" && patch.scope !== "proposedTeam") throw new Error("Card scope must be personal, proposedTeam or team");
+      if (patch.scope === "proposedTeam" && cardBeforeUpdate.scope !== "proposedTeam") throw new Error("Cards must use the team scope request endpoint");
       card.scope = patch.scope;
     }
-    if (card.scope !== "personal" && card.scope !== "team") throw new Error("Card scope must be personal or team");
+    if (card.scope !== "personal" && card.scope !== "team" && card.scope !== "proposedTeam") throw new Error("Card scope must be personal, proposedTeam or team");
     if (patch.anchors !== undefined) {
       card.anchors = [];
       for (const input of anchorInputs(patch.anchors)) card.anchors.push(await anchorFromInput(input));
@@ -567,10 +622,71 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (!current) throw new Error("Knowledge anchor not found");
       const anchor = await anchorFromInput({ file: current.file.workspaceRelativePath, selection });
       const now = Date.now();
-      const updated: KnowledgeCard = { ...stored.card, updatedAt: now, anchors: stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate), evolution: [...stored.card.evolution, { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "reanchor" }] };
+      const updated: KnowledgeCard = { ...stored.card, status: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : stored.card.status, updatedAt: now, anchors: stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate), evolution: [...stored.card.evolution, { at: now, action: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "reanchor" }] };
       await saveCard(updated);
       event(updated.id, "knowledge_card_updated", actor);
       return updated;
+    });
+  }
+
+  async function refreshExpired(actor: KnowledgeActor, file: string, orphanedAfterMs = options.orphanedAfterMs ?? 7 * 24 * 60 * 60_000) {
+    const resolutions = await resolveCards(actor, file);
+    return enqueue(async () => {
+      const now = Date.now();
+      const changed: KnowledgeCard[] = [];
+      for (const resolution of resolutions) {
+        if (resolution.status !== "needsReview") continue;
+        const stored = await readCard(resolution.cardId);
+        if (!stored || !visible(stored.card, actor) || (stored.card.status !== "reviewed" && stored.card.status !== "needsReview")) continue;
+        const reviewStartedAt = stored.card.status === "needsReview"
+          ? [...stored.card.evolution].reverse().find((entry) => entry.note === "anchor review" && entry.action === "updated")?.at ?? stored.card.updatedAt
+          : stored.card.updatedAt;
+        const age = now - reviewStartedAt;
+        const status: KnowledgeCardStatus = age >= orphanedAfterMs ? "orphaned" : "needsReview";
+        if (status === stored.card.status) continue;
+        const updated: KnowledgeCard = { ...stored.card, status, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: status === "orphaned" ? "orphaned" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "anchor review" }] };
+        await saveCard(updated); event(updated.id, "knowledge_card_updated", actor); changed.push(updated);
+      }
+      return changed;
+    });
+  }
+
+  async function requestTeam(actor: KnowledgeActor, id: string) {
+    return enqueue(async () => {
+      const stored = await readCard(id);
+      if (!stored || !visible(stored.card, actor) || stored.card.ownerMemberId !== actor.memberId) throw new KnowledgeCardNotFoundError("Knowledge card not found");
+      if (stored.card.scope !== "personal" || stored.card.status !== "reviewed") throw new Error("Only reviewed personal cards can request team scope");
+      const now = Date.now();
+      const updated: KnowledgeCard = { ...stored.card, scope: "proposedTeam", updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: "scopeChanged", by: { peerId: actor.memberId, name: actor.displayName }, note: "proposedTeam" }] };
+      await saveCard(updated); event(updated.id, "knowledge_card_updated", actor); return updated;
+    });
+  }
+
+  async function confirmTeam(actor: KnowledgeActor, id: string, requireSecondConfirm = true) {
+    return enqueue(async () => {
+      const stored = await readCard(id);
+      if (!stored || (stored.card.scope !== "proposedTeam" && !visible(stored.card, actor))) throw new KnowledgeCardNotFoundError("Knowledge card not found");
+      if (stored.card.scope !== "proposedTeam") throw new Error("Knowledge card is not awaiting team confirmation");
+      if (stored.card.status !== "reviewed") throw new Error("Only reviewed cards can request team scope");
+      if (requireSecondConfirm && stored.card.ownerMemberId === actor.memberId) throw new Error("The card owner cannot provide the second team confirmation");
+      const existing = stored.card.review?.confirmedBy ?? [];
+      const now = Date.now();
+      const updated: KnowledgeCard = { ...stored.card, scope: "team", updatedAt: now, review: { ...(stored.card.review ?? { confirmedBy: [] }), confirmedBy: [...new Set([...existing, actor.memberId])], confirmedAt: now }, evolution: [...stored.card.evolution, { at: now, action: "scopeChanged", by: { peerId: actor.memberId, name: actor.displayName }, note: "team" }] };
+      await saveCard(updated); event(updated.id, "knowledge_card_updated", actor); await options.onCardConfirmed?.(updated); return updated;
+    });
+  }
+
+  async function relate(actor: KnowledgeActor, id: string, relation: { kind: "supersedes" | "contradicts" | "duplicates" | "refines"; cardId: string }) {
+    return enqueue(async () => {
+      const stored = await readCard(id); const target = await readCard(relation.cardId);
+      if (!stored || !target || !visible(stored.card, actor) || !visible(target.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
+      if (stored.card.id === target.card.id) throw new Error("A card cannot relate to itself");
+      if (stored.card.scope !== "team" || target.card.scope !== "team" || stored.card.status !== "reviewed" || target.card.status !== "reviewed") throw new Error("Relations require reviewed team cards");
+      const now = Date.now();
+      const relations = [...(stored.card.relations ?? []).filter((item) => item.cardId !== relation.cardId), relation];
+      const updated: KnowledgeCard = { ...stored.card, relations, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: relation.kind === "supersedes" ? "superseded" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `${relation.kind}:${relation.cardId}` }] };
+      const targetUpdated: KnowledgeCard = relation.kind === "supersedes" ? { ...target.card, status: "superseded", updatedAt: now, evolution: [...target.card.evolution, { at: now, action: "superseded", by: { peerId: actor.memberId, name: actor.displayName }, note: id }] } : target.card;
+      await saveCard(updated); if (targetUpdated !== target.card) await saveCard(targetUpdated); event(updated.id, "knowledge_card_updated", actor); if (targetUpdated !== target.card) event(targetUpdated.id, "knowledge_card_updated", actor); return updated;
     });
   }
 
@@ -611,17 +727,21 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
 
   return {
     list,
+    listPendingTeam,
     get,
+    relationCandidates,
     create,
-    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; provenance: KnowledgeProvenance; source: "ai" | "event"; anchors?: Array<{ file: string; selection: KnowledgeAnchorSelection }> }) {
+    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; provenance: KnowledgeProvenance; source: "ai" | "event"; scope?: KnowledgeScope; anchors?: Array<{ file: string; selection: KnowledgeAnchorSelection }>; appliesTo?: KnowledgeCard["appliesTo"]; check?: KnowledgeCard["check"] }) {
       return enqueue(async () => {
         const now = Date.now();
         const anchors: KnowledgeAnchor[] = [];
         for (const input of draft.anchors ?? []) anchors.push(await anchorFromInput(input));
+        const appliesTo = normalizeAppliesTo(draft.appliesTo);
+        const check = normalizeCheck(draft.check, draft.type);
         const card: KnowledgeCard = {
-          ...draft, schemaVersion: LatestSchemaVersion, id: crypto.randomUUID(), status: "draft", createdAt: now, updatedAt: now,
+          ...draft, ...(appliesTo ? { appliesTo } : {}), ...(check ? { check } : {}), schemaVersion: LatestSchemaVersion, id: crypto.randomUUID(), status: "draft", createdAt: now, updatedAt: now,
           metadata: { createdBy: { peerId: actor.memberId, name: actor.displayName }, roomId: options.roomId, relatedChatMessageIds: draft.provenance.evidenceRefs.chatMessageIds },
-          scope: "team", ownerMemberId: actor.memberId, review: { confirmedBy: [] }, anchors,
+          scope: draft.scope ?? "team", ownerMemberId: actor.memberId, review: { confirmedBy: [] }, anchors,
           evolution: [{ at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName } }]
         };
         await saveCard(card);
@@ -646,6 +766,10 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     confirm,
     archive,
     reanchor,
+    refreshExpired,
+    requestTeam,
+    confirmTeam,
+    relate,
     generateDemo,
     resolveAnchors: resolveCards,
     guide: async (viewer: Identity | KnowledgeActor, file?: string) => buildKnowledgeGuideItems(await list(viewer), file),

@@ -4,7 +4,7 @@ import type { AgentFileChange } from "@simplercp/shared";
 import diff from "fast-diff";
 import { isIgnoredPath } from "../workspacePolicy.js";
 
-interface SnapshotFile {
+export interface SnapshotFile {
   content?: string;
   bytes: Buffer;
 }

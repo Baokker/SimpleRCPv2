@@ -5,7 +5,9 @@ export type CaptureEventType =
   | "fileExternal"
   | "docOpen"
   | "docRetired"
-  | "memberPresence";
+  | "memberPresence"
+  | "agentRun"
+  | "agentTool";
 
 export type CaptureActorKind = "member" | "agent" | "filesystem" | "unknown";
 
@@ -93,6 +95,58 @@ export interface CaptureMemberPresenceEvent extends CaptureEventBase {
   previousFile?: string;
 }
 
+export interface CaptureAgentFileChange {
+  file: string;
+  additions?: number;
+  deletions?: number;
+  addedText?: string;
+  removedText?: string;
+  patch?: string;
+}
+
+export interface CaptureAgentRunEvent extends CaptureEventBase {
+  type: "agentRun";
+  runId: string;
+  memberId: string;
+  action: "start" | "end" | "failed" | "cancelled" | "interrupted";
+  status?: "queued" | "running" | "completed" | "failed" | "cancelled";
+  source?: "agent-panel" | "chat";
+  sessionId?: string;
+  prompt: string;
+  extraPrompt?: string;
+  interruptsRunId?: string;
+  interruptedByMemberId?: string;
+  previousRunId?: string;
+  previousStatus?: "completed" | "failed" | "cancelled";
+  previousPrompt?: string;
+  fileChanges?: CaptureAgentFileChange[];
+  agentRanges?: Array<{ file: string; start: number; end: number; text: string; ownerId?: string }>;
+  error?: string;
+}
+
+export interface CaptureAgentToolEvent extends CaptureEventBase {
+  type: "agentTool";
+  runId: string;
+  memberId: string;
+  tool: string;
+  command?: string;
+  success: boolean;
+  exitCode?: number;
+  error?: string;
+}
+
+export type ExternalCollaborationEvent = {
+  type: "terminal.commandDenied" | "terminal.commandApproved" | "conflict.detected" | "conflict.resolved";
+  at: number;
+  participants: string[];
+  file?: string;
+  description: string;
+};
+
+export interface KnowledgeEventSink {
+  push(event: ExternalCollaborationEvent): void | Promise<void>;
+}
+
 export type CaptureEvent =
   | CaptureEditEvent
   | CaptureCursorEvent
@@ -100,7 +154,9 @@ export type CaptureEvent =
   | CaptureFileExternalEvent
   | CaptureDocOpenEvent
   | CaptureDocRetiredEvent
-  | CaptureMemberPresenceEvent;
+  | CaptureMemberPresenceEvent
+  | CaptureAgentRunEvent
+  | CaptureAgentToolEvent;
 
 export function isCaptureEvent(value: unknown): value is CaptureEvent {
   if (!value || typeof value !== "object") return false;
@@ -108,6 +164,28 @@ export function isCaptureEvent(value: unknown): value is CaptureEvent {
   if (event.schemaVersion !== 1 || typeof event.at !== "number" || !Number.isFinite(event.at) || event.at < 0 || !coordinate(event.seq)) return false;
   const optionalText = (field: string) => event[field] === undefined || typeof event[field] === "string";
   if (event.type === "memberPresence") return text(event.memberId) && ["join", "leave", "switchFile"].includes(String(event.action)) && optionalText("file") && optionalText("previousFile");
+  if (event.type === "agentRun") {
+    if (!text(event.runId) || !text(event.memberId) || !text(event.prompt) || !["start", "end", "failed", "cancelled", "interrupted"].includes(String(event.action))) return false;
+    if (event.source !== undefined && !["agent-panel", "chat"].includes(String(event.source))) return false;
+    if (event.status !== undefined && !["queued", "running", "completed", "failed", "cancelled"].includes(String(event.status))) return false;
+    for (const field of ["sessionId", "extraPrompt", "interruptsRunId", "interruptedByMemberId", "previousRunId", "previousPrompt", "error"]) if (!optionalText(field)) return false;
+    if (event.fileChanges !== undefined && (!Array.isArray(event.fileChanges) || event.fileChanges.some((change) => {
+      if (!change || typeof change !== "object" || !text((change as Record<string, unknown>).file)) return true;
+      const value = change as Record<string, unknown>;
+      return ["addedText", "removedText", "patch"].some((field) => value[field] !== undefined && typeof value[field] !== "string")
+        || ["additions", "deletions"].some((field) => value[field] !== undefined && !coordinate(value[field]));
+    }))) return false;
+    if (event.agentRanges !== undefined && (!Array.isArray(event.agentRanges) || event.agentRanges.some((range) => {
+      if (!range || typeof range !== "object") return true;
+      const value = range as Record<string, unknown>;
+      return !text(value.file) || !coordinate(value.start) || !coordinate(value.end) || value.end <= value.start || typeof value.text !== "string" || value.end - value.start !== value.text.length || (value.ownerId !== undefined && !text(value.ownerId));
+    }))) return false;
+    return true;
+  }
+  if (event.type === "agentTool") {
+    return text(event.runId) && text(event.memberId) && text(event.tool) && typeof event.success === "boolean"
+      && optionalText("command") && optionalText("error") && (event.exitCode === undefined || Number.isInteger(event.exitCode));
+  }
   if (event.type === "chat") return text(event.messageId) && text(event.authorId) && ["member", "agent", "system"].includes(String(event.kind)) && typeof event.text === "string" && optionalText("file") && (event.mentions === undefined || Array.isArray(event.mentions) && event.mentions.every(text));
   if (!text(event.file)) return false;
   if (event.type === "docOpen") return typeof event.text === "string";

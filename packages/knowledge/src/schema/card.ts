@@ -172,10 +172,10 @@ function isTextPosition(value: unknown): value is TextPosition { return !!value 
 function isRelativeTextPosition(value: unknown): value is RelativeTextPosition { return !!value && typeof value === 'object' && typeof (value as RelativeTextPosition).type === 'string' && ((value as RelativeTextPosition).item === undefined || typeof (value as RelativeTextPosition).item === 'string') && ((value as RelativeTextPosition).assoc === undefined || typeof (value as RelativeTextPosition).assoc === 'number'); }
 
 function isCaptureTriggerType(value: unknown): value is CaptureTriggerType {
-    return value === 'chat.dense' || value === 'todo.cleared' || value === 'magicNumber.added' || value === 'packageJson.dependencySwitch' || value === 'dependency.changed' || value === 'diagnostics.fixed' || value === 'rollback.detected' || value === 'edit.overwritten';
+    return value === 'chat.dense' || value === 'todo.cleared' || value === 'magicNumber.added' || value === 'packageJson.dependencySwitch' || value === 'dependency.changed' || value === 'diagnostics.fixed' || value === 'rollback.detected' || value === 'edit.overwritten' || value === 'agent.interrupted' || value === 'agent.revised' || value === 'agent.corrected' || value === 'agent.retried' || value === 'agent.toolRecovered';
 }
 
-export type CaptureTriggerType = 'chat.dense' | 'todo.cleared' | 'magicNumber.added' | 'packageJson.dependencySwitch' | 'dependency.changed' | 'diagnostics.fixed' | 'rollback.detected' | 'edit.overwritten';
+export type CaptureTriggerType = 'chat.dense' | 'todo.cleared' | 'magicNumber.added' | 'packageJson.dependencySwitch' | 'dependency.changed' | 'diagnostics.fixed' | 'rollback.detected' | 'edit.overwritten' | 'agent.interrupted' | 'agent.revised' | 'agent.corrected' | 'agent.retried' | 'agent.toolRecovered';
 
 export interface SuggestedAnchor { file: string; startLine: number; endLine: number; score: number; reasons: string[]; }
 function isSuggestedAnchor(value: unknown): value is SuggestedAnchor {
@@ -197,7 +197,7 @@ export interface CaptureSuggestion {
     evidence: Record<string, unknown>;
     confidence?: number;
     dedupe?: { cardId: string; score: number };
-    state?: 'open' | 'accepted' | 'discarded' | 'merged';
+    state?: 'open' | 'accepted' | 'discarded' | 'merged' | 'disputed';
     resolvedAt?: number;
     resolvedBy?: string;
     draftCardId?: string;
@@ -209,7 +209,7 @@ export function isCaptureSuggestion(value: unknown): value is CaptureSuggestion 
     if (!value || typeof value !== 'object') return false;
     const v = value as Partial<CaptureSuggestion>;
     const validType = v.suggestedType === undefined || ['decision', 'constraint', 'risk', 'context', 'negative', 'tutorial'].includes(v.suggestedType);
-    if (v.state !== undefined && !['open', 'accepted', 'discarded', 'merged'].includes(v.state)) return false;
+    if (v.state !== undefined && !['open', 'accepted', 'discarded', 'merged', 'disputed'].includes(v.state)) return false;
     if (v.seenBy !== undefined && (!Array.isArray(v.seenBy) || v.seenBy.some(id => typeof id !== 'string'))) return false;
     return typeof v.id === 'string' && !!v.id && isCaptureTriggerType(v.triggerType) && isFiniteNumber(v.createdAt) && isKnowledgeOrigin(v.origin) && !!v.actors && Array.isArray(v.actors.memberIds) && v.actors.memberIds.every(id => typeof id === 'string') && Array.isArray(v.actors.runIds) && v.actors.runIds.every(id => typeof id === 'string') && !!v.evidence && typeof v.evidence === 'object' && !Array.isArray(v.evidence) && validType && (v.suggestedTitle === undefined || typeof v.suggestedTitle === 'string') && (v.suggestedSummary === undefined || typeof v.suggestedSummary === 'string') && (v.suggestedAnchors === undefined || (Array.isArray(v.suggestedAnchors) && v.suggestedAnchors.every(anchor => isKnowledgeAnchor(anchor) || isSuggestedAnchor(anchor)))) && (v.confidence === undefined || (isFiniteNumber(v.confidence) && v.confidence >= 0 && v.confidence <= 1)) && (v.dedupe === undefined || (!!v.dedupe && typeof v.dedupe.cardId === 'string' && !!v.dedupe.cardId && isFiniteNumber(v.dedupe.score) && v.dedupe.score >= 0 && v.dedupe.score <= 1));
 }

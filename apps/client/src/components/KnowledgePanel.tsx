@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { getKnowledgeInbox, getKnowledgeSuggestion, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, resolveKnowledgeSuggestion } from "../api";
+import { confirmKnowledgeTeamScope, disputeKnowledgeSuggestion, getKnowledgeInbox, getKnowledgeRelationCandidates, getKnowledgeSuggestion, getPendingKnowledgeTeamCards, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, relateKnowledgeCards, requestKnowledgeTeamScope, resolveKnowledgeSuggestion } from "../api";
 import type {
   KnowledgeCard,
   KnowledgeCardType,
@@ -9,7 +9,7 @@ import type {
   KnowledgeAnchorResolution
 } from "../types";
 
-type View = "current" | "all" | "guide" | "timeline" | "inbox";
+type View = "current" | "all" | "guide" | "timeline" | "inbox" | "pending";
 type Selection = { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
 type CardInput = import("../types").KnowledgeCardInput;
 
@@ -66,16 +66,21 @@ export function KnowledgePanel({
   const [scope, setScope] = useState<KnowledgeScope>("team");
   const [suggestions, setSuggestions] = useState<import("../types").KnowledgeSuggestion[]>([]);
   const [warnings, setWarnings] = useState<import("../types").KnowledgeRiskWarning[]>([]);
+  const [pendingTeam, setPendingTeam] = useState<KnowledgeCard[]>([]);
   const [allSuggestions, setAllSuggestions] = useState(false);
   const [draftEvidence, setDraftEvidence] = useState<import("../types").KnowledgeSuggestion>();
   const [selectedAnchors, setSelectedAnchors] = useState<number[]>([]);
   const [authorMemberId, setAuthorMemberId] = useState("");
   const [mergeCardId, setMergeCardId] = useState("");
+  const [disputeReason, setDisputeReason] = useState<Record<string, string>>({});
+  const [relationKind, setRelationKind] = useState<Record<string, "contradicts" | "supersedes" | "duplicates" | "refines">>({});
+  const [relationTarget, setRelationTarget] = useState<Record<string, string>>({});
+  const [relationCandidates, setRelationCandidates] = useState<Record<string, KnowledgeCard[]>>({});
   const openedAt = useRef(0);
 
   useEffect(() => {
     let active = true;
-    void getKnowledgeInbox(projectId, allSuggestions).then(result => { if (active) { setSuggestions(result.suggestions); setWarnings(result.warnings); } }).catch(error => { if (active) setFormError(String(error)); });
+    void Promise.all([getKnowledgeInbox(projectId, allSuggestions), getPendingKnowledgeTeamCards(projectId)]).then(([inbox, pending]) => { if (active) { setSuggestions(inbox.suggestions); setWarnings(inbox.warnings); setPendingTeam(pending.cards); } }).catch(error => { if (active) setFormError(String(error)); });
     return () => { active = false; };
   }, [projectId, allSuggestions, refreshVersion, cards]);
 
@@ -139,7 +144,7 @@ export function KnowledgePanel({
     setContent(card.content);
     setTags(card.tags.join(", "));
     setType(card.type);
-    setScope(card.scope === "personal" ? "personal" : "team");
+    setScope(card.scope ?? "team");
     setFormError(undefined);
     setFormOpen(true);
     openedAt.current = Date.now();
@@ -164,7 +169,7 @@ export function KnowledgePanel({
       summary: summary.trim(),
       content,
       tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-      scope: scope === "personal" ? "personal" : "team"
+      scope
     };
     if (editingCard?.status === "draft") {
       input.authorMemberId = authorMemberId;
@@ -203,6 +208,46 @@ export function KnowledgePanel({
     finally { setActionCardId(undefined); }
   }
 
+  async function disputeSuggestion(suggestion: import("../types").KnowledgeSuggestion) {
+    const reason = disputeReason[suggestion.id]?.trim();
+    if (!reason || !memberId || actionCardId) return;
+    setActionCardId(suggestion.id); setFormError(undefined);
+    try {
+      const result = await disputeKnowledgeSuggestion(projectId, suggestion.id, reason);
+      setSuggestions(items => items.map(item => item.id === suggestion.id ? result.suggestion : item));
+      setDisputeReason(items => ({ ...items, [suggestion.id]: "" }));
+    } catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setActionCardId(undefined); }
+  }
+
+  async function requestTeam(card: KnowledgeCard) {
+    setActionCardId(card.id); setFormError(undefined);
+    try { await requestKnowledgeTeamScope(projectId, card.id); await onRefresh(); }
+    catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setActionCardId(undefined); }
+  }
+
+  async function confirmTeam(card: KnowledgeCard) {
+    setActionCardId(card.id); setFormError(undefined);
+    try { await confirmKnowledgeTeamScope(projectId, card.id); await onRefresh(); }
+    catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setActionCardId(undefined); }
+  }
+
+  async function relate(card: KnowledgeCard) {
+    const target = relationTarget[card.id];
+    if (!target || actionCardId) return;
+    setActionCardId(card.id); setFormError(undefined);
+    try { await relateKnowledgeCards(projectId, card.id, { kind: relationKind[card.id] ?? "contradicts", cardId: target }); await onRefresh(); }
+    catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setActionCardId(undefined); }
+  }
+
+  function loadRelationCandidates(card: KnowledgeCard) {
+    if (relationCandidates[card.id] || card.scope !== "team") return;
+    void getKnowledgeRelationCandidates(projectId, card.id).then(result => setRelationCandidates(items => ({ ...items, [card.id]: result.candidates.map(candidate => candidate.card) }))).catch(error => setFormError(String(error)));
+  }
+
   async function archive(card: KnowledgeCard) {
     setActionCardId(card.id);
     setFormError(undefined);
@@ -237,11 +282,19 @@ export function KnowledgePanel({
       resolutions={resolutions.filter((resolution) => resolution.cardId === card.id)}
       currentSelection={currentSelection}
       actionPending={actionCardId === card.id}
-      onToggle={() => { setExpanded(expanded === card.id ? undefined : card.id); if (expanded !== card.id) void markKnowledgeCardViewed(projectId, card.id); }}
+      onToggle={() => { setExpanded(expanded === card.id ? undefined : card.id); if (expanded !== card.id) { void markKnowledgeCardViewed(projectId, card.id); loadRelationCandidates(card); } }}
       onEdit={() => openEdit(card)}
       onConfirm={() => void confirm(card)}
       onArchive={() => void archive(card)}
       onReanchor={(index) => void reanchor(card, index)}
+      onRequestTeam={() => void requestTeam(card)}
+      onConfirmTeam={() => void confirmTeam(card)}
+      onRelate={() => void relate(card)}
+      relationCandidates={relationCandidates[card.id] ?? cards.filter(candidate => candidate.id !== card.id && candidate.status === "reviewed" && candidate.scope === "team").slice(0, 5)}
+      relationKind={relationKind[card.id] ?? "contradicts"}
+      relationTarget={relationTarget[card.id] ?? ""}
+      onRelationKindChange={(value) => setRelationKind(items => ({ ...items, [card.id]: value }))}
+      onRelationTargetChange={(value) => setRelationTarget(items => ({ ...items, [card.id]: value }))}
       onOpenAnchor={onOpenAnchor}
     />
   );
@@ -249,9 +302,9 @@ export function KnowledgePanel({
   return (
     <section className="knowledge-panel" data-testid="knowledge-panel">
       <div className="knowledge-toolbar">
-        {(["inbox", "current", "all", "guide", "timeline"] as View[]).map((candidate) => (
+        {(["inbox", "pending", "current", "all", "guide", "timeline"] as View[]).map((candidate) => (
           <button type="button" key={candidate} className={view === candidate ? "active" : ""} onClick={() => setView(candidate)}>
-            {candidate === "inbox" ? "Inbox" : candidate === "current" ? "当前文件" : candidate === "all" ? "全部卡片" : candidate === "guide" ? "导览" : "时间线"}
+            {candidate === "inbox" ? "Inbox" : candidate === "pending" ? "待确认" : candidate === "current" ? "当前文件" : candidate === "all" ? "全部卡片" : candidate === "guide" ? "导览" : "时间线"}
           </button>
         ))}
       </div>
@@ -281,8 +334,16 @@ export function KnowledgePanel({
             <button disabled={Boolean(actionCardId) || (!mergeCardId && !suggestion.dedupe)} onClick={() => void resolveSuggestion(suggestion, "merge")}>合并到已有卡片</button>
             <button disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "discard")}>丢弃</button>
           </div>
+          {memberId && suggestion.actors.memberIds.includes(memberId) ? <div className="knowledge-dispute">
+            <input value={disputeReason[suggestion.id] ?? ""} onChange={event => setDisputeReason(items => ({ ...items, [suggestion.id]: event.target.value }))} placeholder="异议理由" aria-label="异议理由" />
+            <button disabled={Boolean(actionCardId) || !disputeReason[suggestion.id]?.trim()} onClick={() => void disputeSuggestion(suggestion)}>我有不同意见</button>
+          </div> : null}
         </li>)}</ol>
-      </div> : view === "guide" ? (
+      </div> : view === "pending" ? (
+        <ol className="knowledge-list">
+          {pendingTeam.length === 0 ? <li>暂无待确认卡片</li> : pendingTeam.map(renderCard)}
+        </ol>
+      ) : view === "guide" ? (
         <ol className="knowledge-list">
           {guide.map((item) => renderCard(item.card))}
         </ol>
@@ -319,7 +380,7 @@ export function KnowledgePanel({
           <input value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="摘要" />
           <textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder="正文 Markdown" />
           <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="标签，用逗号分隔" />
-          <select value={scope === "personal" ? "personal" : "team"} onChange={(event) => setScope(event.target.value as KnowledgeScope)} aria-label="作用域"><option value="team">团队</option><option value="personal">个人</option></select>
+          <select value={scope} onChange={(event) => setScope(event.target.value as KnowledgeScope)} aria-label="作用域"><option value="team">团队</option><option value="personal">个人</option>{editingCard?.scope === "proposedTeam" ? <option value="proposedTeam">待确认</option> : null}</select>
           <div><button type="button" onClick={closeForm}>取消</button><button type="button" disabled={saving || !title.trim() || !summary.trim()} onClick={() => void submit()}>{editingCard?.status === "draft" ? "确认并保存" : "保存"}</button></div>
         </div>
       ) : null}
@@ -339,6 +400,14 @@ function KnowledgeCardItem({
   onConfirm,
   onArchive,
   onReanchor,
+  onRequestTeam,
+  onConfirmTeam,
+  onRelate,
+  relationCandidates,
+  relationKind,
+  relationTarget,
+  onRelationKindChange,
+  onRelationTargetChange,
   onOpenAnchor
 }: {
   card: KnowledgeCard;
@@ -352,6 +421,14 @@ function KnowledgeCardItem({
   onConfirm(): void;
   onArchive(): void;
   onReanchor(index: number): void;
+  onRequestTeam?(): void;
+  onConfirmTeam?(): void;
+  onRelate?(): void;
+  relationCandidates?: KnowledgeCard[];
+  relationKind?: "contradicts" | "supersedes" | "duplicates" | "refines";
+  relationTarget?: string;
+  onRelationKindChange?(value: "contradicts" | "supersedes" | "duplicates" | "refines"): void;
+  onRelationTargetChange?(value: string): void;
   onOpenAnchor(path: string, range?: { startLine: number; startColumn: number; endLine: number; endColumn: number }): void;
 }) {
   const canManage = Boolean(memberId && (card.ownerMemberId === memberId || card.review?.confirmedBy.includes(memberId)));
@@ -380,8 +457,19 @@ function KnowledgeCardItem({
           <div className="knowledge-card-actions">
             {canManage ? <button type="button" onClick={onEdit}>编辑</button> : null}
             {card.status === "draft" ? <button type="button" disabled={actionPending} onClick={onConfirm}>确认</button> : null}
+            {card.scope === "personal" && card.status === "reviewed" && card.ownerMemberId === memberId && onRequestTeam ? <button type="button" disabled={actionPending} onClick={onRequestTeam}>申请团队确认</button> : null}
+            {card.scope === "proposedTeam" && card.ownerMemberId !== memberId && onConfirmTeam ? <button type="button" disabled={actionPending} onClick={onConfirmTeam}>确认升级为团队卡片</button> : null}
             {canManage && card.status !== "archived" ? <button type="button" disabled={actionPending} onClick={onArchive}>归档</button> : null}
           </div>
+          {card.scope === "team" && card.status === "reviewed" && relationCandidates?.length && onRelate && onRelationKindChange && onRelationTargetChange ? <div className="knowledge-card-relations">
+            <select value={relationKind} onChange={event => onRelationKindChange(event.target.value as "contradicts" | "supersedes" | "duplicates" | "refines")} aria-label="知识关系">
+              <option value="contradicts">矛盾</option><option value="supersedes">替代</option><option value="duplicates">重复</option><option value="refines">细化</option>
+            </select>
+            <select value={relationTarget} onChange={event => onRelationTargetChange(event.target.value)} aria-label="关系目标">
+              <option value="">选择相关团队卡片</option>{relationCandidates.map(candidate => <option key={candidate.id} value={candidate.id}>{candidate.title}</option>)}
+            </select>
+            <button type="button" disabled={actionPending || !relationTarget} onClick={onRelate}>建立关系</button>
+          </div> : null}
         </div>
       ) : null}
     </li>

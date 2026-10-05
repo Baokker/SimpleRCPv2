@@ -107,6 +107,9 @@ describe("knowledge capture with real collaboration", () => {
     await s.runtime.capture!.markRead(ada, [suggestion.id]);
     expect(await s.runtime.capture!.get(suggestion.id)).toMatchObject({ seenBy: [ada] });
     expect((await s.runtime.capture!.list(bob))[0]?.seenBy).not.toContain(bob);
+    const disputed = await s.request(ada, `knowledge/inbox/${suggestion.id}/dispute`, { reason: "需要补充适用范围" });
+    expect(disputed.response.status).toBe(200);
+    expect(disputed.body.suggestion).toMatchObject({ state: "disputed", evidence: { dispute: { memberId: ada, reason: "需要补充适用范围" } } });
     const accepted = await s.request(bob, `knowledge/inbox/${suggestion.id}/accept`, {});
     expect(accepted.response.status).toBe(200);
     const card = accepted.body.card as { id: string; status: string; provenance: { author: { memberId: string } } };
@@ -209,6 +212,23 @@ describe("knowledge capture with real collaboration", () => {
     expect(merge.response.status).toBe(200);
     expect(merge.body.card).toMatchObject({ usage: { recurrenceCount: 1 }, evolution: expect.arrayContaining([expect.objectContaining({ action: "recurrence", note: suggestion.id })]) });
     expect(await s.runtime.knowledge!.list({ memberId: ada, displayName: "Ada" })).toHaveLength(1);
+  });
+
+  it("moves an unresolved anchor from needsReview to orphaned after the configured age", async () => {
+    const s = await start(); const ada = await s.join("Ada");
+    const card = await s.runtime.knowledge!.create({ memberId: ada, displayName: "Ada" }, {
+      type: "constraint", title: "Anchor review", summary: "Review this anchor after the file changes", content: "Review this anchor after the file changes.", tags: [], scope: "personal",
+      anchors: [{ file: "code.ts", selection: { startLineNumber: 2, startColumn: 1, endLineNumber: 2, endColumn: 27 } }]
+    });
+    const documentText = await s.connection(ada, "code.ts");
+    documentText.delete(0, documentText.length);
+    await s.runtime.documents.awaitIdle();
+    const resolution = await s.runtime.knowledge!.resolveAnchors({ memberId: ada, displayName: "Ada" }, "code.ts");
+    expect(resolution).toEqual(expect.arrayContaining([expect.objectContaining({ cardId: card.id, status: "needsReview" })]));
+    const first = await s.runtime.knowledge!.refreshExpired({ memberId: ada, displayName: "Ada" }, "code.ts", 1_000_000);
+    expect(first.find((item) => item.id === card.id)).toMatchObject({ status: "needsReview" });
+    const second = await s.runtime.knowledge!.refreshExpired({ memberId: ada, displayName: "Ada" }, "code.ts", 0);
+    expect(second.find((item) => item.id === card.id)).toMatchObject({ status: "orphaned" });
   });
 
   it("registers no capture service and creates no knowledge files when disabled", async () => {

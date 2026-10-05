@@ -17,10 +17,10 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
       return real.prepareWorkspace?.(workspacePath) ?? false;
     },
     async prepareRun(input) {
-      modes.set(input.sessionId, /fake-(?:delay|write|reply)=/.test(input.runPrompt) ? "fake" : "real");
+      modes.set(input.sessionId, /fake-(?:delay|write|reply|edit|tool)=/.test(input.runPrompt) ? "fake" : "real");
     },
     async createSession(input) {
-      const mode = /fake-(?:delay|write|reply)=/.test(input.title) ? "fake" : "real";
+      const mode = /fake-(?:delay|write|reply|edit|tool)=/.test(input.title) ? "fake" : "real";
       const session = await (mode === "fake" ? fake : real).createSession(input);
       modes.set(session.id, mode);
       return session;
@@ -79,6 +79,28 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
         await fs.mkdir(path.dirname(absolutePath), { recursive: true });
         await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
+      }
+      for (const match of input.prompt.matchAll(/fake-edit=([^\s:]+):(\d+):([\s\S]*?)(?=\s+fake-(?:write|edit|tool|delay|reply)=|$)/g)) {
+        const editPath = path.resolve(input.workspacePath, match[1]!);
+        if (!editPath.startsWith(`${path.resolve(input.workspacePath)}${path.sep}`)) throw new Error("Fake Agent edit path must stay inside the project workspace");
+        const line = Number(match[2]);
+        if (!Number.isInteger(line) || line < 1) throw new Error("Fake Agent edit line is invalid");
+        const content = await fs.readFile(editPath, "utf8");
+        const lines = content.split("\n");
+        lines.splice(Math.min(line - 1, lines.length), 0, match[3]!);
+        await fs.writeFile(editPath, lines.join("\n"));
+      }
+      for (const match of input.prompt.matchAll(/fake-tool=(ok|fail):([\s\S]*?)(?=\s+fake-tool=|$)/g)) {
+        const success = match[1] === "ok";
+        await emit("message.part.updated", {
+          part: {
+            type: "tool",
+            tool: "bash",
+            state: success
+              ? { status: "completed", input: { command: match[2] }, output: "", metadata: { exitCode: 0 } }
+              : { status: "error", input: { command: match[2] }, error: "command failed", metadata: { exitCode: 1 } }
+          }
+        });
       }
       const delayMs = Number([...input.prompt.matchAll(/fake-delay=(\d+)/g)].at(-1)?.[1] ?? 0);
       try {

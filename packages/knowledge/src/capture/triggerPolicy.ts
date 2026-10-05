@@ -82,5 +82,11 @@ export function shouldTriggerCapture(signal: CaptureTriggerSignal, thresholds: C
         case 'edit.overwritten':
             return ((signal.overwrittenLines ?? 0) > thresholds.overwrittenMinLines || (signal.overwrittenRatio ?? 0) > thresholds.overwrittenMinRatio)
                 && (signal.overwrittenAgeMs ?? Infinity) <= thresholds.overwrittenWindowMs;
+        case 'agent.interrupted':
+        case 'agent.revised':
+        case 'agent.corrected':
+        case 'agent.retried':
+        case 'agent.toolRecovered':
+            return true;
     }
 }

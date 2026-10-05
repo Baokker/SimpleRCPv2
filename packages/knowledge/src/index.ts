@@ -17,6 +17,7 @@ export * from './capture/notifications.js';
 export * from './llm/client.js';
 export * from './llm/openaiCompatible.js';
 export * from './extract/extract.js';
+export * from './extract/recapPrompt.js';
 export * from './extract/refine.js';
 export * from './retrieval/index.js';
 export * from './retrieval/inject.js';

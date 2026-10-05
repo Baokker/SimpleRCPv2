@@ -4,10 +4,11 @@ import path from "node:path";
 import { minimatch } from "minimatch";
 import diff from "fast-diff";
 import {
-  VirtualCaptureClock, NotificationPolicy, createCaptureEngine, createOpenAICompatibleClient,
+  VirtualCaptureClock, NotificationPolicy, createCaptureEngine, createOpenAICompatibleClient, createAgentRevisedSuggestion,
   extractKnowledgeCardDraft, isCaptureEvent, isCaptureSuggestion, searchKnowledgeCards, changedSnippet, applyCaptureOps,
+  extractAgentRecapDraft, parseAgentRecapDraft,
   type CaptureEvent, type CaptureSuggestion, type CaptureChatEvent, type CaptureConfigInput,
-  type CaptureCheckpoint, type LlmUsage
+  type CaptureCheckpoint, type LlmUsage, type CaptureAgentRunEvent, type CaptureAgentToolEvent
 } from "@simplercp/knowledge";
 import type { KnowledgeActor, KnowledgeService } from "./knowledgeService.js";
 import type { CollaborativeDocumentStore } from "../collaborativeDocuments.js";
@@ -27,6 +28,8 @@ export interface CaptureServiceOptions {
   riskWarningConfig?: Partial<RiskWarningConfig>;
   onNotify(memberId: string, message: ServerMessage): void;
   memberName(memberId: string): string;
+  recapMode?: () => Promise<"server" | "agent-self">;
+  agentSelfRecap?: (suggestion: CaptureSuggestion) => Promise<string>;
 }
 export interface RiskWarningConfig {
   files: string[];
@@ -40,6 +43,24 @@ export const defaultRiskWarningConfig: RiskWarningConfig = {
   lexicalThreshold: 1, vectorThreshold: 0.8, cooldownMs: 300_000, dedupeThreshold: 0.8
 };
 export interface KnowledgeRiskWarning { id: string; cardId: string; file: string; createdAt: number; seen: boolean; }
+
+type RecapCardFields = {
+  appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] };
+  check?: { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string };
+};
+
+function recapCardFields(draft: {
+  type: string;
+  appliesTo?: { files: string[]; globs: string[]; taskKinds: string[] };
+  checkSuggestion?: { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string };
+}): RecapCardFields {
+  const patterns = [...new Set([...(draft.appliesTo?.files ?? []), ...(draft.appliesTo?.globs ?? [])].filter(Boolean))];
+  const appliesTo = patterns.length ? { kind: "glob" as const, patterns } : { kind: "project" as const };
+  const check = draft.checkSuggestion && (draft.type === "constraint" || draft.type === "negative")
+    ? draft.checkSuggestion
+    : undefined;
+  return check ? { appliesTo, check } : { appliesTo };
+}
 
 export function createCaptureService(options: CaptureServiceOptions) {
   const riskWarningConfig: RiskWarningConfig = { ...defaultRiskWarningConfig, ...options.riskWarningConfig, files: options.riskWarningConfig?.files ?? defaultRiskWarningConfig.files };
@@ -60,9 +81,21 @@ export function createCaptureService(options: CaptureServiceOptions) {
   let disposed = false;
   let timer: NodeJS.Timeout | undefined;
   let operations: Promise<unknown> = Promise.resolve();
+  let recapMode = options.recapMode;
+  let agentSelfRecap = options.agentSelfRecap;
   const engine = createCaptureEngine({ clock, config: options.config,
     onSuggestion(suggestion) { if (!recovering) enqueue(() => storeSuggestion(suggestion)); },
-    onCheckpoint(checkpoint) { if (!recovering) enqueue(() => warn(checkpoint)); }
+    onCheckpoint(checkpoint) {
+      if (recovering) return;
+      enqueue(async () => {
+        await warn(checkpoint);
+        await options.knowledge.refreshExpired({ memberId: checkpoint.actor, displayName: options.memberName(checkpoint.actor) }, checkpoint.file);
+      });
+    },
+    onAgentRevised(event) {
+      if (recovering) return;
+      enqueue(() => storeSuggestion(createAgentRevisedSuggestion(event)));
+    }
   });
   const ready = initialize();
   operations = ready;
@@ -117,7 +150,12 @@ export function createCaptureService(options: CaptureServiceOptions) {
     }
     const configPath = path.join(root, "capture-config.json");
     const previousConfig = await readJsonFile<unknown>(configPath);
-    if (previousConfig !== undefined && JSON.stringify(previousConfig) !== JSON.stringify(engine.config)) throw new Error("Recorded capture configuration differs from this runtime");
+    if (previousConfig !== undefined) {
+      if (!previousConfig || typeof previousConfig !== "object" || Array.isArray(previousConfig)) throw new Error("Recorded capture configuration is invalid");
+      for (const [key, value] of Object.entries(previousConfig)) {
+        if (key in engine.config && JSON.stringify((engine.config as unknown as Record<string, unknown>)[key]) !== JSON.stringify(value)) throw new Error("Recorded capture configuration differs from this runtime");
+      }
+    }
     await writeJsonFileAtomically(configPath, engine.config);
     try {
       const recording = await fs.readFile(eventFile, "utf8");
@@ -173,12 +211,23 @@ export function createCaptureService(options: CaptureServiceOptions) {
   async function storeSuggestion(suggestion: CaptureSuggestion) {
     suggestion = mask(suggestion) as CaptureSuggestion;
     if (suggestions.has(suggestion.id)) return suggestions.get(suggestion.id)!;
+    const sourceIds = sourceEvidenceIds(suggestion);
+    if (sourceIds.size > 0) {
+      const duplicate = [...suggestions.values()].find((candidate) => candidate.id !== suggestion.id && (candidate.state === undefined || candidate.state === "open" || candidate.state === "disputed") && intersects(sourceIds, sourceEvidenceIds(candidate)));
+      if (duplicate) return duplicate;
+    }
     const actors = suggestion.actors.memberIds;
     const cards = new Map<string, Awaited<ReturnType<KnowledgeService["list"]>>[number]>();
     for (const memberId of actors) for (const card of await options.knowledge.list({ memberId, displayName: options.memberName(memberId) }, { status: "reviewed" })) {
       if (card.scope === "personal" || card.scope === "proposedTeam") { if (actors.length !== 1) continue; }
       cards.set(card.id, card);
     }
+    const cardSourceIds = (card: Awaited<ReturnType<KnowledgeService["list"]>>[number]) => new Set([
+      ...(card.provenance?.evidenceRefs.runIds ?? []).map((runId) => `run:${runId}`),
+      ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((messageId) => `message:${messageId}`)
+    ]);
+    const matchingCard = [...cards.values()].find((card) => intersects(sourceIds, cardSourceIds(card)));
+    if (matchingCard) suggestion.dedupe = { cardId: matchingCard.id, score: 1 };
     if (!actors.length) for (const card of await options.knowledge.list({ memberId: "filesystem", displayName: "filesystem" }, { status: "reviewed", scope: "team" })) cards.set(card.id, card);
     const results = await searchKnowledgeCards({ cards: [...cards.values()], workspaceId: options.projectId, indexDir: path.join(root, "index"), query: `${suggestion.suggestedSummary ?? ""}\n${JSON.stringify(suggestion.evidence).slice(0, 6000)}`, filters: { statuses: ["reviewed"] }, topK: 1 });
     const best = results[0];
@@ -189,6 +238,16 @@ export function createCaptureService(options: CaptureServiceOptions) {
     for (const actor of actors) notify(actor, { type: "knowledge_suggestion", suggestionId: suggestion.id }, suggestion.createdAt);
     return suggestion;
   }
+
+  function sourceEvidenceIds(suggestion: CaptureSuggestion) {
+    const ids = new Set<string>();
+    for (const runId of suggestion.actors.runIds) ids.add(`run:${runId}`);
+    for (const key of ["runId", "previousRunId", "suggestionId"] as const) if (typeof suggestion.evidence[key] === "string") ids.add(`${key}:${suggestion.evidence[key]}`);
+    const messages = suggestion.evidence.chatMessages;
+    if (Array.isArray(messages)) for (const message of messages) if (message && typeof message === "object" && typeof (message as { messageId?: unknown }).messageId === "string") ids.add(`message:${(message as { messageId: string }).messageId}`);
+    return ids;
+  }
+  function intersects(left: Set<string>, right: Set<string>) { for (const value of left) if (right.has(value)) return true; return false; }
   async function save(suggestion: CaptureSuggestion) {
     if (!isCaptureSuggestion(suggestion)) throw new Error("Invalid knowledge suggestion");
     await writeJsonFileAtomically(path.join(inbox, `${suggestion.id}.json`), suggestion);
@@ -221,7 +280,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     await awaitIdle();
     const suggestion = suggestions.get(id);
     if (!suggestion) throw Object.assign(new Error("Knowledge suggestion not found"), { statusCode: 404 });
-    if (resolving.has(id) || suggestion.state && suggestion.state !== "open") throw Object.assign(new Error("Knowledge suggestion is being processed or has already been resolved"), { statusCode: 409 });
+    if (resolving.has(id) || suggestion.state && suggestion.state !== "open" && suggestion.state !== "disputed") throw Object.assign(new Error("Knowledge suggestion is being processed or has already been resolved"), { statusCode: 409 });
     resolving.add(id);
     const pending = operation(suggestion);
     activeResolutions.add(pending);
@@ -242,7 +301,33 @@ export function createCaptureService(options: CaptureServiceOptions) {
     const client = ai && options.llm?.apiKey ? createOpenAICompatibleClient(options.llm) : undefined;
     let completed = false;
     let fallback = !client;
+    let mode = "extract";
     try {
+      if (ai && suggestion.origin === "human-agent" && ["agent.interrupted", "agent.revised", "agent.corrected"].includes(suggestion.triggerType)) {
+        mode = "recap";
+        if (await recapMode?.() === "agent-self") {
+          mode = "agent-self";
+          if (!agentSelfRecap) throw new Error("Agent self recap is unavailable");
+          const raw = await agentSelfRecap(suggestion);
+          const parsed = parseAgentRecapDraft(raw, suggestion.evidence);
+          if (!parsed) throw new Error("Agent self recap returned invalid JSON");
+          completed = true;
+          fallback = false;
+          return { draft: { type: parsed.type, title: parsed.title, summary: parsed.summary, content: [`## 发生了什么`, parsed.whatHappened, `## 纠正`, parsed.correction, `## 规则`, parsed.rule, `## 适用范围`, [...parsed.appliesTo.files, ...parsed.appliesTo.globs, ...parsed.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, parsed.notApplicable].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: parsed.confidence, evidenceCitations: parsed.evidenceCitations, unknowns: parsed.unknowns, ...recapCardFields(parsed) }, fallback: false };
+        }
+        const recap = await extractAgentRecapDraft(suggestion.evidence, {
+          model: options.llm?.model ?? "deterministic",
+          client: client ? { async complete(request) {
+            promptHashes.push(crypto.createHash("sha256").update(JSON.stringify(request.messages)).digest("hex"));
+            const result = await client.complete(request);
+            for (const key of ["promptTokens", "completionTokens", "totalTokens"] as const) if (result.usage?.[key] !== undefined) usage[key] = (usage[key] ?? 0) + result.usage[key]!;
+            return result;
+          } } : undefined,
+          onFallback() { fallback = true; }
+        });
+        completed = true;
+        return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
+      }
       const draft = await extractKnowledgeCardDraft({
         triggerType: suggestion.triggerType, suggestedType: suggestion.suggestedType,
         suggestedTitle: suggestion.suggestedTitle, suggestedSummary: suggestion.suggestedSummary,
@@ -261,14 +346,18 @@ export function createCaptureService(options: CaptureServiceOptions) {
     } finally {
       if (ai) {
         suggestion.ai = { model: options.llm?.model, durationMs: Date.now() - started, totalTokens: usage.totalTokens, fallback };
-        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes }) + "\n", { mode: 0o600 });
+        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes }) + "\n", { mode: 0o600 });
         await save(suggestion);
       }
     }
   }
   return {
     ready, feed, attribution,
-    async list(memberId: string, all = false) { await awaitIdle(); return [...suggestions.values()].filter(item => (!item.state || item.state === "open") && (all || item.actors.memberIds.includes(memberId))).sort((a, b) => b.createdAt - a.createdAt); },
+    bindAgentSelfRecap(callback: (suggestion: CaptureSuggestion) => Promise<string>, getMode?: () => Promise<"server" | "agent-self">) { agentSelfRecap = callback; recapMode = getMode ?? recapMode; },
+    async agentRun(event: Omit<CaptureAgentRunEvent, "type" | "schemaVersion" | "seq" | "at">) { await feed({ type: "agentRun", ...event }); },
+    async agentTool(event: Omit<CaptureAgentToolEvent, "type" | "schemaVersion" | "seq" | "at">) { await feed({ type: "agentTool", ...event }); },
+    registerAgentWrite(file: string, runId: string, ownerId: string, ranges: Array<{ start: number; end: number; text: string }>, at = Date.now()) { engine.authorship.register(file, `agent:${runId}`, ranges.map((range) => ({ ...range, ownerId })), at); },
+    async list(memberId: string, all = false) { await awaitIdle(); return [...suggestions.values()].filter(item => (!item.state || item.state === "open" || item.state === "disputed") && (all || item.actors.memberIds.includes(memberId))).sort((a, b) => b.createdAt - a.createdAt); },
     async listWarnings(actor: KnowledgeActor) {
       await awaitIdle(); await options.events.awaitIdle();
       const records = options.events.list().filter(event => event.memberId === actor.memberId);
@@ -334,7 +423,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
       return withSuggestion(id, async suggestion => {
         const { draft, fallback } = await generateDraft(suggestion, ai);
         const authorId = typeof suggestion.evidence.editor === "string" ? suggestion.evidence.editor : typeof suggestion.evidence.primaryActor === "string" ? suggestion.evidence.primaryActor : suggestion.actors.memberIds[0] ?? actor.memberId;
-        const card = await options.knowledge.createDraft(actor, { ...draft, source: ai && !fallback ? "ai" : "event", provenance: { origin: "human-human", author: { kind: "human", memberId: authorId, displayName: options.memberName(authorId) }, trigger: { type: suggestion.triggerType, suggestionId: id }, evidenceRefs: { chatMessageIds: Array.isArray(suggestion.evidence.chatMessages) ? (suggestion.evidence.chatMessages as CaptureChatEvent[]).map(message => message.messageId) : [], files: typeof suggestion.evidence.file === "string" ? [{ path: suggestion.evidence.file, revision: String(suggestion.evidence.revisionAfter ?? "") }] : [] } } });
+        const card = await options.knowledge.createDraft(actor, { ...draft, source: ai && !fallback ? "ai" : "event", scope: suggestion.origin === "human-agent" ? "personal" : "team", provenance: { origin: suggestion.origin, author: { kind: "human", memberId: authorId, displayName: options.memberName(authorId) }, trigger: { type: suggestion.triggerType, suggestionId: id }, evidenceRefs: { runIds: suggestion.actors.runIds, chatMessageIds: Array.isArray(suggestion.evidence.chatMessages) ? (suggestion.evidence.chatMessages as CaptureChatEvent[]).map(message => message.messageId) : [], files: typeof suggestion.evidence.file === "string" ? [{ path: suggestion.evidence.file, revision: String(suggestion.evidence.revisionAfter ?? "") }] : [] } } });
         suggestion.draftCardId = card.id;
         await resolve(actor, suggestion, "accepted");
         return { card, suggestion };
@@ -345,6 +434,16 @@ export function createCaptureService(options: CaptureServiceOptions) {
         const card = await options.knowledge.recordRecurrence(actor, cardId, id);
         await resolve(actor, suggestion, "merged");
         return { card, suggestion };
+      });
+    },
+    async dispute(actor: KnowledgeActor, id: string, reason: string) {
+      return withSuggestion(id, async (suggestion) => {
+        if (!suggestion.actors.memberIds.includes(actor.memberId)) throw new Error("Only suggestion participants can dispute it");
+        suggestion.state = "disputed";
+        suggestion.evidence = { ...suggestion.evidence, dispute: { memberId: actor.memberId, reason: reason.trim().slice(0, 2000) } };
+        await save(suggestion);
+        options.events.append({ type: "knowledge_suggestion_disputed", roomId: options.roomId, memberId: actor.memberId, payload: { suggestionId: id } });
+        return suggestion;
       });
     },
     async fromChat(actor: KnowledgeActor, messageIds: string[]) {

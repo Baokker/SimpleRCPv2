@@ -342,3 +342,49 @@ test.describe("knowledge stage 4", () => {
     await page.screenshot({ path: `${screenshotDirectory}/S4-1-agent-injection.png` });
   });
 });
+
+test.describe("knowledge stage 5", () => {
+  test.skip((process.env.KNOWLEDGE ?? "off") !== "full", "Agent capture scenarios use test:e2e:knowledge");
+
+  test("成员改写 Agent 修改后双方收到 Agent 纠正建议", async ({ browser }) => {
+    const first = await browser.newPage();
+    const second = await browser.newPage();
+    await openAs(first, "Stage5 Ada");
+    await openAs(second, "Stage5 Bob");
+    for (const page of [first, second]) {
+      await page.getByTestId("dir-src").click();
+      await page.getByTestId("file-src/hello.ts").click();
+      await page.getByTestId("collab-tab-knowledge").click();
+      await expect.poll(() => page.evaluate(() => Boolean(window.__simplercpEditors?.["src/hello.ts"]?.getModel()))).toBe(true);
+    }
+    const adaHeaders = await memberHeaders(first);
+    const sessionResponse = await first.request.post("/api/projects/demo/agent/sessions", { headers: adaHeaders, data: { title: "Stage5 capture" } });
+    expect(sessionResponse.status()).toBe(201);
+    const session = (await sessionResponse.json() as { session: { id: string } }).session;
+    const runResponse = await first.request.post(`/api/projects/demo/agent/sessions/${session.id}/runs`, {
+      headers: adaHeaders,
+      data: { prompt: "Write the corrected example fake-edit=src/hello.ts:1:export const agentStage5 = true; fake-delay=100 fake-reply=stage5" }
+    });
+    expect(runResponse.status()).toBe(202);
+    const runId = (await runResponse.json() as { run: { id: string } }).run.id;
+    await expect.poll(async () => {
+      const response = await first.request.get(`/api/projects/demo/agent/runs/${runId}`, { headers: adaHeaders });
+      return (await response.json() as { run: { status: string } }).run.status;
+    }, { timeout: 30_000 }).toBe("completed");
+    await expect.poll(() => second.evaluate(() => window.__simplercpEditors!["src/hello.ts"]!.getModel()!.getValue())).toContain("agentStage5");
+    await second.evaluate(() => {
+      const editor = window.__simplercpEditors!["src/hello.ts"]!;
+      editor.executeEdits("stage5-revision", [{ range: editor.getModel()!.getFullModelRange(), text: "export const humanStage5 = true;\n" }]);
+    });
+    await expect.poll(() => first.getByTestId("knowledge-unread").isVisible(), { timeout: 30_000 }).toBe(true);
+    await expect.poll(() => second.getByTestId("knowledge-unread").isVisible(), { timeout: 30_000 }).toBe(true);
+    await first.getByRole("button", { name: "Inbox", exact: true }).click();
+    await second.getByRole("button", { name: "Inbox", exact: true }).click();
+    await expect(first.getByTestId("knowledge-inbox")).toContainText("成员在 src/hello.ts 上改写了 Agent 的内容");
+    await expect(second.getByTestId("knowledge-inbox")).toContainText("成员在 src/hello.ts 上改写了 Agent 的内容");
+    await first.screenshot({ path: `${screenshotDirectory}/S5-1-agent-revised-inbox-ada.png` });
+    await second.screenshot({ path: `${screenshotDirectory}/S5-1-agent-revised-inbox-bob.png` });
+    await first.close();
+    await second.close();
+  });
+});
