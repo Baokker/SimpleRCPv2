@@ -98,6 +98,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const recordedOverlaps = new Set<string>();
   const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
+  const failures = { trace: 0, attribution: 0, listener: 0 };
+  let lastInternalError: { projectId: string; runId: string; phase: keyof typeof failures; reason: string } | undefined;
   let disposing = false;
   let scheduler: ReturnType<typeof createAgentScheduler>;
 
@@ -152,7 +154,25 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   }
 
   function emit(event: AgentRunManagerEvent) {
-    for (const listener of listeners) listener(event);
+    for (const listener of listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        failures.listener += 1;
+        console.error("Agent run event listener failed", error);
+      }
+    }
+  }
+
+  function recordInternalError(projectId: string, runId: string, phase: keyof typeof failures, error: unknown) {
+    failures[phase] += 1;
+    lastInternalError = { projectId, runId, phase, reason: error instanceof Error ? error.message : String(error) };
+    console.error(`Agent ${phase} failed for run ${runId}`, error);
+  }
+
+  async function recordAttributionError(projectId: string, runId: string, stage: string, error: unknown) {
+    recordInternalError(projectId, runId, "attribution", error);
+    await appendTrace(projectId, runId, { type: "attribution_error", summary: "Agent file attribution could not be completed", data: { stage, error: error instanceof Error ? error.message : String(error) } });
   }
 
   async function updateRun(
@@ -180,9 +200,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     runId: string,
     input: Omit<AgentTraceEvent, "sequence" | "timestamp">
   ) {
-    const event = await getTrace(projectId, runId).append(input);
-    emit({ type: "trace_appended", projectId, runId, event });
-    return event;
+    try {
+      const event = await getTrace(projectId, runId).append(input);
+      emit({ type: "trace_appended", projectId, runId, event });
+      return event;
+    } catch (error) {
+      recordInternalError(projectId, runId, "trace", error);
+      return undefined;
+    }
   }
 
   function appendActivity(
@@ -249,11 +274,19 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     runId: string,
     workspacePath: string,
     runtimeSessionId: string,
-    workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>>,
+    workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined,
     revisionsBefore: Map<string, number>,
     messageId?: string
   ) {
-    const workspaceChanges = compareAgentWorkspaceSnapshots(workspaceBefore, await createAgentWorkspaceSnapshot(workspacePath));
+    try {
+    let workspaceChanges: NonNullable<AgentRun["fileChanges"]> = [];
+    if (workspaceBefore) {
+      try {
+        workspaceChanges = compareAgentWorkspaceSnapshots(workspaceBefore, await createAgentWorkspaceSnapshot(workspacePath));
+      } catch (error) {
+        await recordAttributionError(projectId, runId, "workspace_after", error);
+      }
+    }
     try {
       const runtimeChanges = await options.runtime.getDiff({ workspacePath, sessionId: runtimeSessionId, messageId });
       await appendTrace(projectId, runId, {
@@ -299,6 +332,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
     }
     return fileChanges;
+    } catch (error) {
+      await recordAttributionError(projectId, runId, "file_changes", error);
+      return [];
+    }
   }
 
   async function attributeFileChanges(
@@ -431,9 +468,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           });
         }
       }
-      const workspaceBefore = await createAgentWorkspaceSnapshot(
-        projectRuntime.project.workspacePath
-      );
+      let workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
+      try {
+        workspaceBefore = await createAgentWorkspaceSnapshot(projectRuntime.project.workspacePath);
+      } catch (error) {
+        await recordAttributionError(projectId, runId, "workspace_before", error);
+      }
       workspaceBeforeForRun = workspaceBefore;
       const revisionsBefore = projectRuntime.documents.getRevisions();
       revisionsBeforeForRun = revisionsBefore;
@@ -563,6 +603,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       );
 
+      const processModel = options.runtime.getCurrentModel?.();
+      if (processModel && processModel !== run.model) run = await updateRun(projectId, runId, { model: processModel });
+
       let result: { text: string; messageId?: string };
       try {
         result = await runWithTimeout(options.runtime.run({
@@ -576,6 +619,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           try {
             await stopEvents();
           } catch (error) {
+            recordInternalError(projectId, runId, "listener", error);
             await appendTrace(projectId, runId, {
               type: "listener_error",
               summary: error instanceof Error ? error.message : String(error),
@@ -641,11 +685,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     } catch (error) {
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
-        if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
+        if (workspacePathForRun && runtimeSessionIdForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
         await recordCancellationCompletion(projectId, runId);
         return;
       }
-      if (workspacePathForRun && runtimeSessionIdForRun && workspaceBeforeForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
+      if (workspacePathForRun && runtimeSessionIdForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
       const message = error instanceof Error ? error.message : "Agent run failed";
       await updateRun(projectId, runId, {
         status: "failed",
@@ -719,6 +763,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   });
 
   return {
+    diagnostics() { return { degraded: failures.trace + failures.attribution + failures.listener > 0, failures: { ...failures }, lastInternalError }; },
     async initialize() {
       const projects = await options.registry.listProjects();
       for (const project of projects) {

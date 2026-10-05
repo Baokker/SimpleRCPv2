@@ -5,11 +5,13 @@ import type { AgentTraceEvent } from "@simplercp/shared";
 export function createTraceStore(storagePath: string, sensitiveValues: string[] = collectSensitiveEnvironment()) {
   const collectedValues = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])];
   let operations = Promise.resolve();
+  let writeFailures = 0;
+  let readFailures = 0;
 
   return {
     async append(input: Omit<AgentTraceEvent, "sequence" | "timestamp">) {
       let result: AgentTraceEvent | undefined;
-      operations = operations.then(async () => {
+      operations = operations.catch(() => undefined).then(async () => {
         const events = await readTrace(storagePath);
         const event = redactSensitive(
           {
@@ -23,14 +25,27 @@ export function createTraceStore(storagePath: string, sensitiveValues: string[] 
         await fs.appendFile(storagePath, `${JSON.stringify(event)}\n`, "utf8");
         result = event;
       });
-      await operations;
+      try {
+        await operations;
+      } catch (error) {
+        writeFailures += 1;
+        console.error("Agent trace write failed", error);
+        throw error;
+      }
       if (!result) throw new Error("Agent trace event was not created");
       return result;
     },
     async list() {
-      await operations;
-      return readTrace(storagePath);
-    }
+      await operations.catch(() => undefined);
+      try {
+        return await readTrace(storagePath);
+      } catch (error) {
+        readFailures += 1;
+        console.error("Agent trace read failed", error);
+        return [];
+      }
+    },
+    diagnostics() { return { writeFailures, readFailures }; }
   };
 }
 

@@ -6,6 +6,8 @@ import type * as Y from "yjs";
 import {
   ConflictGuardTracker,
   textDiffOps,
+  parseSymbols,
+  innermostSymbols,
   type ConflictGuardClock,
   type ConflictGuardEvent,
   type CursorChange,
@@ -220,17 +222,22 @@ export function createProjectConflictGuard(options: {
       const manager = undoManagers.get(key);
       if (manager) {
         manager.stopCapturing();
-        undoBaselines.set(key, manager.undoStack.length);
+        if (!undoBaselines.has(key)) undoBaselines.set(key, manager.undoStack.length);
       }
+      const symbols = parseSymbols(event.batch.file, event.batch.textAfter);
+      const touchedKeys = [...new Set(event.batch.ranges.flatMap((range) => innermostSymbols(symbols, range.start, range.end)).map((symbol) => symbol.key))];
       for (const record of pairCoordinator.records()) {
-        if (record.status !== "judged" || !record.verdict) continue;
-        const side = actorKey(record.pair.left.actor) === actorKey(event.batch.actor) ? record.verdict.contractChanged.right : actorKey(record.pair.right.actor) === actorKey(event.batch.actor) ? record.verdict.contractChanged.left : false;
-        if (!side) continue;
+        if ((record.status !== "judged" && record.status !== "resolved") || !record.verdict) continue;
+        const dependencies = [
+          { side: record.pair.left, changed: record.verdict.contractChanged.left },
+          { side: record.pair.right, changed: record.verdict.contractChanged.right }
+        ].filter(({ side, changed }) => changed && actorKey(side.actor) !== actorKey(event.batch.actor));
+        const dependency = dependencies.find(({ side }) => semantic.getActiveChangeSets().some((set) => actorKey(set.actor) === actorKey(side.actor) && [...set.files.values()].some((file) => file.symbols?.some((symbol) => symbol.key === side.symbol))) && semantic.findPaths(touchedKeys, [side.symbol], 2).length > 0);
+        if (!dependency) continue;
         const key = `${event.batch.id}:${record.pair.id}`;
         if (t0Events.has(key)) continue;
         t0Events.add(key);
-        const dependency = actorKey(record.pair.left.actor) === actorKey(event.batch.actor) ? record.pair.right.symbol : record.pair.left.symbol;
-        const warning = { id: key, batchId: event.batch.id, memberId: event.batch.actor.memberId, pairId: record.pair.id, summary: `正在修改你依赖的 ${displaySymbol(dependency)}：${record.verdict.summary}`, at: clock.now() };
+        const warning = { id: key, batchId: event.batch.id, memberId: event.batch.actor.memberId, pairId: record.pair.id, summary: `正在修改你依赖的 ${displaySymbol(dependency.side.symbol)}：${record.verdict.summary}`, at: clock.now() };
         t0Warnings.push({ id: warning.id, memberId: warning.memberId, pairId: warning.pairId, summary: warning.summary, at: warning.at });
         if (t0Warnings.length > 100) t0Warnings.shift();
         void appendTrace({ type: "t0_warning", ...warning });
@@ -241,7 +248,18 @@ export function createProjectConflictGuard(options: {
       closedBatches.push({ batch: event.batch, change });
       scheduleSemanticUpdate(event.batch.file);
     }
-    if (event.type === "change_set_closed" || event.type === "change_set_file_closed") scheduleSemanticUpdate();
+    if (event.type === "change_set_closed" || event.type === "change_set_file_closed") {
+      const actor = event.type === "change_set_closed" ? event.changeSet.actor : event.actor;
+      if (actor.kind === "human") {
+        const files = event.type === "change_set_closed" ? [...event.changeSet.files.keys()] : [event.file];
+        for (const file of files) {
+          const key = `${actor.memberId}:${file}`;
+          undoManagers.get(key)?.stopCapturing();
+          undoBaselines.delete(key);
+        }
+      }
+      scheduleSemanticUpdate();
+    }
     if (event.type === "cursor") {
       const memberId = event.cursor.actor.memberId;
       const pending = pendingCursors.get(memberId);

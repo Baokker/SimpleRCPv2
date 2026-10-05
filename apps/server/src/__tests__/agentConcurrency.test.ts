@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../createApp.js";
 import { joinMember } from "./memberTestHelper.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import { getProjectMetadataPath } from "../projects.js";
+import type { AgentRuntime } from "../agent/agentRuntime.js";
+import { createOpenCodeRuntime } from "../agent/openCodeRuntime.js";
+import { createLocalProcessLifecycle } from "./testProcessLifecycle.js";
 
 describe("Agent concurrency with fake runtime", () => {
   let root: string;
@@ -74,6 +78,79 @@ describe("Agent concurrency with fake runtime", () => {
     expect(initial).toHaveLength(2);
     expect(new Date(initial[0]!.startedAt!).getTime()).toBeLessThan(new Date(initial[1]!.finishedAt!).getTime());
     expect(new Date(initial[1]!.startedAt!).getTime()).toBeLessThan(new Date(initial[0]!.finishedAt!).getTime());
+  });
+
+  it("工作区快照读取失败时保留成功结果并记录归属错误", async () => {
+    const run = await createRun("fake-delay=250 fake-write=snapshot-error.ts");
+    await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && item.status === "running"));
+    await waitFor(async () => (await getTrace(run.id)).some((event) => event.type === "agent_write"));
+    const workspace = app.locals.runtimeManager.get("demo").project.workspacePath as string;
+    const heldWorkspace = `${workspace}-held`;
+    await fs.rename(workspace, heldWorkspace);
+    try {
+      await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && ["completed", "failed"].includes(item.status)));
+      expect((await getRuns()).find((item) => item.id === run.id)?.status).toBe("completed");
+      expect((await getTrace(run.id)).some((event) => event.type === "attribution_error")).toBe(true);
+      expect(app.locals.agentRuns.diagnostics()).toMatchObject({ degraded: true, failures: { attribution: 1 } });
+    } finally {
+      await fs.rename(heldWorkspace, workspace);
+    }
+  });
+
+  it("进程切换期间开始的运行记录订阅完成后的实际模型", async () => {
+    let model = "old-model";
+    const lifecycle = createLocalProcessLifecycle(100);
+    const processRuntime = createOpenCodeRuntime({ port: 4096, baseUrl: "http://127.0.0.1:1", getSettings: () => ({ provider: "deepseek", model, enabled: true, apiKeyConfigured: true }), createProcess: lifecycle.create });
+    const runtime = app.locals.agentRuntime as AgentRuntime;
+    const originalSubscribe = runtime.subscribe.bind(runtime);
+    runtime.acquireRun = processRuntime.acquireRun;
+    runtime.getCurrentModel = processRuntime.getCurrentModel;
+    runtime.subscribe = async (input, listener, onListenerError) => {
+      await processRuntime.status();
+      return originalSubscribe(input, listener, onListenerError);
+    };
+    try {
+      await processRuntime.status();
+      const previousRun = processRuntime.acquireRun!();
+      model = "new-model";
+      previousRun();
+      const run = await createRun("fake-delay=20");
+      await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && item.status === "completed"));
+      expect((await app.locals.agentRuns.getRun("demo", run.id)).model).toBe(processRuntime.getCurrentModel!());
+      expect(processRuntime.getCurrentModel!()).toBe("new-model");
+      expect(lifecycle.records[0]!.disposeCount).toBe(1);
+    } finally {
+      await processRuntime.dispose();
+      await lifecycle.disposeAll();
+    }
+  });
+
+  it("轨迹文件无法写入时运行成功且恢复后仍能读取已有事件", async () => {
+    const runtime = app.locals.agentRuntime as AgentRuntime;
+    const subscribe = runtime.subscribe.bind(runtime);
+    runtime.subscribe = async (input, listener, onListenerError) => {
+      const stop = await subscribe(input, listener, onListenerError);
+      return async () => { await stop(); throw new Error("event stop injection"); };
+    };
+    const run = await createRun("fake-delay=250");
+    await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && item.status === "running"));
+    await waitFor(async () => (await getTrace(run.id)).some((event) => event.type === "run_started"));
+    const project = app.locals.runtimeManager.get("demo").project;
+    const tracePath = path.join(getProjectMetadataPath(project), "agent-runs", run.id, "trace.jsonl");
+    await fs.rename(tracePath, `${tracePath}.saved`);
+    await fs.mkdir(tracePath);
+    try {
+      await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && ["completed", "failed"].includes(item.status)));
+      expect((await getRuns()).find((item) => item.id === run.id)?.status).toBe("completed");
+      expect(app.locals.agentRuns.diagnostics().failures.trace).toBeGreaterThan(0);
+      expect(app.locals.agentRuns.diagnostics().failures.listener).toBe(1);
+    } finally {
+      await fs.rmdir(tracePath);
+      await fs.rename(`${tracePath}.saved`, tracePath);
+    }
+    expect((await getTrace(run.id)).some((event) => event.type === "run_started")).toBe(true);
+    const next = await createRun("fake-delay=10");
+    await waitFor(async () => (await getRuns()).some((item) => item.id === next.id && item.status === "completed"));
   });
 
   it("serializes the same session and records tool attribution", async () => {

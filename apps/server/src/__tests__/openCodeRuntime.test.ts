@@ -1,7 +1,52 @@
 import { describe, expect, it } from "vitest";
 import { createOpenCodeRuntime } from "../agent/openCodeRuntime.js";
+import { createLocalProcessLifecycle } from "./testProcessLifecycle.js";
 
 describe("OpenCode runtime model switching", () => {
+  it("空闲时修改模型后首个预留运行使用新进程模型", async () => {
+    let model = "old-model";
+    const lifecycle = createLocalProcessLifecycle();
+    const runtime = createOpenCodeRuntime({ port: 4096, baseUrl: "http://127.0.0.1:1", getSettings: () => ({ provider: "deepseek", model, enabled: true, apiKeyConfigured: true }), createProcess: lifecycle.create });
+    let release: (() => void) | undefined;
+    try {
+      await runtime.status();
+      model = "new-model";
+      release = runtime.acquireRun!();
+      await runtime.status();
+      expect(runtime.getCurrentModel!()).toBe("new-model");
+      expect(lifecycle.records[0]!.disposeCount).toBe(1);
+    } finally {
+      release?.();
+      await runtime.dispose();
+      await lifecycle.disposeAll();
+    }
+  });
+
+  it("全局两个活动运行均结束后才释放实际子进程", async () => {
+    let model = "old-model";
+    const lifecycle = createLocalProcessLifecycle();
+    const runtime = createOpenCodeRuntime({ port: 4096, baseUrl: "http://127.0.0.1:1", getSettings: () => ({ provider: "deepseek", model, enabled: true, apiKeyConfigured: true }), createProcess: lifecycle.create });
+    const releases: Array<() => void> = [];
+    try {
+      await runtime.status();
+      releases.push(runtime.acquireRun!(), runtime.acquireRun!());
+      model = "new-model";
+      releases.pop()!();
+      await runtime.status();
+      expect(runtime.getCurrentModel!()).toBe("old-model");
+      expect(lifecycle.records[0]!.disposeCount).toBe(0);
+      releases.pop()!();
+      releases.push(runtime.acquireRun!());
+      await runtime.status();
+      expect(runtime.getCurrentModel!()).toBe("new-model");
+      expect(lifecycle.records[0]!.disposeCount).toBe(1);
+    } finally {
+      for (const release of releases) release();
+      await runtime.dispose();
+      await lifecycle.disposeAll();
+    }
+  });
+
   it("keeps the old process model when dispose fails and retries while idle", async () => {
     let model = "old-model";
     let failDispose = true;

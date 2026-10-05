@@ -50,16 +50,19 @@ export function createOpenCodeRuntime(
     if (modelChangePromise) await modelChangePromise;
     const model = options.getSettings().model;
     if (model === processModel || activeRunCount > 0) return process;
+    await startModelSwitch(model);
+    return process;
+  }
+
+  function startModelSwitch(targetModel: string) {
     if (!modelChangePromise) {
-      const targetModel = model;
       modelChangePromise = (async () => {
         await process.dispose();
         process = createProcess(targetModel);
         processModel = targetModel;
       })().finally(() => { modelChangePromise = undefined; });
     }
-    await modelChangePromise;
-    return process;
+    return modelChangePromise;
   }
 
   async function getClient(workspacePath: string) {
@@ -80,7 +83,9 @@ export function createOpenCodeRuntime(
 
   return {
     acquireRun() {
+      const wasIdle = activeRunCount === 0;
       activeRunCount += 1;
+      if (wasIdle && options.getSettings().model !== processModel) void startModelSwitch(options.getSettings().model).catch((error) => console.error("Agent runtime model switch failed", error));
       let released = false;
       return () => {
         if (released) return;
@@ -114,13 +119,14 @@ export function createOpenCodeRuntime(
           ...(settings.model !== processModel && activeRunCount > 0 ? { modelChangePending: true } : {})
         };
       }
+      if (modelChangePromise) await modelChangePromise;
       const current = await ensureCurrentProcess();
       const running = await current.start();
       return {
         runtime: "opencode",
         state: "ready",
         version: running.version,
-        model: settings.model,
+        model: processModel,
         apiKeyConfigured: settings.apiKeyConfigured,
         ...(settings.model !== processModel && activeRunCount > 0 ? { modelChangePending: true } : {})
       };
