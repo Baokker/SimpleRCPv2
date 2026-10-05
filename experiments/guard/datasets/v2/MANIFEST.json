@@ -2,8 +2,8 @@
   "datasetVersion": "v2",
   "baseVersion": "v1",
   "generatedAt": "2026-10-05T05:56:12.188Z",
-  "frozenAt": null,
-  "manualReview": "未经人工审核",
+  "frozenAt": "2026-10-05T06:05:44Z",
+  "manualReview": "作者确认继续，审核栏未逐行填写，label_source 保持 ai-derived",
   "reviewRows": 142,
   "datasets": [
     {

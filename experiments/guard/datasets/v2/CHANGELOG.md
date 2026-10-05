@@ -14,4 +14,4 @@
 - 按夹具中的路径规则修正 named-user tilde 与未加引号的 protected glob，D1 对应两条记录的 expected 改为 ask；PowerShell `-c` 纳入内联解释器局限说明。
 - 审核表中的 JSON 单元格转义管道符，保证含有 shell pipeline 的记录保持单行单列。
 
-当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。
+作者确认继续实验，审核栏未逐行填写，记录保留 ai-derived 标签来源。MANIFEST.json 已冻结 v2 数据集。
