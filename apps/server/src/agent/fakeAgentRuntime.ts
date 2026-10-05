@@ -90,7 +90,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
         lines.splice(Math.min(line - 1, lines.length), 0, match[3]!);
         await fs.writeFile(editPath, lines.join("\n"));
       }
-      for (const match of input.prompt.matchAll(/fake-tool=(ok|fail):([\s\S]*?)(?=\s+fake-tool=|$)/g)) {
+      for (const match of input.prompt.matchAll(/fake-tool=(ok|fail):([\s\S]*?)(?=\s+fake-(?:write|edit|tool|delay|reply)=|$)/g)) {
         const success = match[1] === "ok";
         await emit("message.part.updated", {
           part: {

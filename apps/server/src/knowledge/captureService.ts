@@ -19,6 +19,7 @@ import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { isIgnoredPath } from "../workspacePolicy.js";
 import { readWorkspaceFile } from "../workspace.js";
 import { createEditAttribution, deltaOperations } from "./attribution.js";
+import { redactSensitive } from "../agent/traceStore.js";
 
 type EventInput<T = CaptureEvent> = T extends CaptureEvent ? Omit<T, "seq" | "at" | "schemaVersion"> : never;
 export interface CaptureServiceOptions {
@@ -63,7 +64,7 @@ function recapCardFields(draft: {
 }
 
 export function createCaptureService(options: CaptureServiceOptions) {
-  const riskWarningConfig: RiskWarningConfig = { ...defaultRiskWarningConfig, ...options.riskWarningConfig, files: options.riskWarningConfig?.files ?? defaultRiskWarningConfig.files };
+  let riskWarningConfig: RiskWarningConfig = { ...defaultRiskWarningConfig, ...options.riskWarningConfig, files: options.riskWarningConfig?.files ?? defaultRiskWarningConfig.files };
   const root = path.join(options.metadataRoot, "knowledge");
   const inbox = path.join(root, "inbox");
   const eventFile = path.join(root, "events.jsonl");
@@ -195,10 +196,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   }
   function capturePath(file: string) { return !isIgnoredPath(file) && !file.split("/").some(segment => segment.startsWith(".env")); }
   function mask(value: unknown): unknown {
-    if (typeof value === "string") return options.llm?.apiKey ? value.split(options.llm.apiKey).join("*".repeat(options.llm.apiKey.length)) : value;
-    if (Array.isArray(value)) return value.map(mask);
-    if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, mask(item)]));
-    return value;
+    return redactSensitive(value, options.llm?.apiKey ? [options.llm.apiKey] : []);
   }
   const attribution = createEditAttribution({ documents: options.documents,
     onOpen(file, text) { if (capturePath(file)) void feed({ type: "docOpen", file, text }); },
@@ -213,22 +211,22 @@ export function createCaptureService(options: CaptureServiceOptions) {
     if (suggestions.has(suggestion.id)) return suggestions.get(suggestion.id)!;
     const sourceIds = sourceEvidenceIds(suggestion);
     if (sourceIds.size > 0) {
-      const duplicate = [...suggestions.values()].find((candidate) => candidate.id !== suggestion.id && (candidate.state === undefined || candidate.state === "open" || candidate.state === "disputed") && intersects(sourceIds, sourceEvidenceIds(candidate)));
+      const duplicate = [...suggestions.values()].find((candidate) => candidate.id !== suggestion.id && intersects(sourceIds, sourceEvidenceIds(candidate)));
       if (duplicate) return duplicate;
     }
     const actors = suggestion.actors.memberIds;
     const cards = new Map<string, Awaited<ReturnType<KnowledgeService["list"]>>[number]>();
-    for (const memberId of actors) for (const card of await options.knowledge.list({ memberId, displayName: options.memberName(memberId) }, { status: "reviewed" })) {
-      if (card.scope === "personal" || card.scope === "proposedTeam") { if (actors.length !== 1) continue; }
+    for (const memberId of actors) for (const card of await options.knowledge.list({ memberId, displayName: options.memberName(memberId) }, {})) {
       cards.set(card.id, card);
     }
     const cardSourceIds = (card: Awaited<ReturnType<KnowledgeService["list"]>>[number]) => new Set([
       ...(card.provenance?.evidenceRefs.runIds ?? []).map((runId) => `run:${runId}`),
-      ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((messageId) => `message:${messageId}`)
+      ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((messageId) => `message:${messageId}`),
+      ...(card.provenance?.evidenceRefs.traceRefs ?? []).map((ref) => `trace:${ref.runId}:${ref.seq}`)
     ]);
     const matchingCard = [...cards.values()].find((card) => intersects(sourceIds, cardSourceIds(card)));
     if (matchingCard) suggestion.dedupe = { cardId: matchingCard.id, score: 1 };
-    if (!actors.length) for (const card of await options.knowledge.list({ memberId: "filesystem", displayName: "filesystem" }, { status: "reviewed", scope: "team" })) cards.set(card.id, card);
+    if (!actors.length) for (const card of await options.knowledge.list({ memberId: "filesystem", displayName: "filesystem" }, { scope: "team" })) cards.set(card.id, card);
     const results = await searchKnowledgeCards({ cards: [...cards.values()], workspaceId: options.projectId, indexDir: path.join(root, "index"), query: `${suggestion.suggestedSummary ?? ""}\n${JSON.stringify(suggestion.evidence).slice(0, 6000)}`, filters: { statuses: ["reviewed"] }, topK: 1 });
     const best = results[0];
     if (best && best.score >= riskWarningConfig.dedupeThreshold) suggestion.dedupe = { cardId: best.cardId, score: Math.min(1, best.score) };
@@ -243,6 +241,11 @@ export function createCaptureService(options: CaptureServiceOptions) {
     const ids = new Set<string>();
     for (const runId of suggestion.actors.runIds) ids.add(`run:${runId}`);
     for (const key of ["runId", "previousRunId", "suggestionId"] as const) if (typeof suggestion.evidence[key] === "string") ids.add(`${key}:${suggestion.evidence[key]}`);
+    const traceRefs = suggestion.evidence.traceRefs;
+    if (Array.isArray(traceRefs)) for (const ref of traceRefs) {
+      if (!ref || typeof ref !== "object" || typeof (ref as { runId?: unknown }).runId !== "string" || !Number.isInteger((ref as { seq?: unknown }).seq)) continue;
+      ids.add(`trace:${(ref as { runId: string }).runId}:${(ref as { seq: number }).seq}`);
+    }
     const messages = suggestion.evidence.chatMessages;
     if (Array.isArray(messages)) for (const message of messages) if (message && typeof message === "object" && typeof (message as { messageId?: unknown }).messageId === "string") ids.add(`message:${(message as { messageId: string }).messageId}`);
     return ids;
@@ -353,8 +356,16 @@ export function createCaptureService(options: CaptureServiceOptions) {
   }
   return {
     ready, feed, attribution,
+    setRiskWarningConfig(config: Partial<RiskWarningConfig>) { riskWarningConfig = { ...riskWarningConfig, ...config, files: config.files ?? riskWarningConfig.files }; },
     bindAgentSelfRecap(callback: (suggestion: CaptureSuggestion) => Promise<string>, getMode?: () => Promise<"server" | "agent-self">) { agentSelfRecap = callback; recapMode = getMode ?? recapMode; },
-    async agentRun(event: Omit<CaptureAgentRunEvent, "type" | "schemaVersion" | "seq" | "at">) { await feed({ type: "agentRun", ...event }); },
+    async agentRun(event: Omit<CaptureAgentRunEvent, "type" | "schemaVersion" | "seq" | "at">) {
+      await feed({ type: "agentRun", ...event });
+      if (["end", "failed", "cancelled", "interrupted"].includes(event.action)) {
+        for (const file of new Set((event.fileChanges ?? []).map((change) => change.file))) {
+          await options.knowledge.refreshExpired({ memberId: event.memberId, displayName: options.memberName(event.memberId) }, file);
+        }
+      }
+    },
     async agentTool(event: Omit<CaptureAgentToolEvent, "type" | "schemaVersion" | "seq" | "at">) { await feed({ type: "agentTool", ...event }); },
     registerAgentWrite(file: string, runId: string, ownerId: string, ranges: Array<{ start: number; end: number; text: string }>, at = Date.now()) { engine.authorship.register(file, `agent:${runId}`, ranges.map((range) => ({ ...range, ownerId })), at); },
     async list(memberId: string, all = false) { await awaitIdle(); return [...suggestions.values()].filter(item => (!item.state || item.state === "open" || item.state === "disputed") && (all || item.actors.memberIds.includes(memberId))).sort((a, b) => b.createdAt - a.createdAt); },
@@ -396,10 +407,13 @@ export function createCaptureService(options: CaptureServiceOptions) {
       await ready;
       if (!capturePath(change.path)) return;
       if (change.type === "unlink" || change.type === "unlinkDir") {
-        for (const file of [...texts.keys()].filter(file => file === change.path || file.startsWith(`${change.path}/`))) {
+        const affectedFiles = [...texts.keys()].filter(file => file === change.path || file.startsWith(`${change.path}/`));
+        for (const file of affectedFiles) {
           await feed({ type: "fileExternal", file, change: "unlink", textBefore: texts.get(file) });
           texts.delete(file);
+          await options.knowledge.refreshExpired({ memberId: "filesystem", displayName: "filesystem" }, file);
         }
+        if (change.type === "unlink") await options.knowledge.refreshExpired({ memberId: "filesystem", displayName: "filesystem" }, change.path);
         return;
       }
       if (["add", "change"].includes(change.type)) {
@@ -423,7 +437,10 @@ export function createCaptureService(options: CaptureServiceOptions) {
       return withSuggestion(id, async suggestion => {
         const { draft, fallback } = await generateDraft(suggestion, ai);
         const authorId = typeof suggestion.evidence.editor === "string" ? suggestion.evidence.editor : typeof suggestion.evidence.primaryActor === "string" ? suggestion.evidence.primaryActor : suggestion.actors.memberIds[0] ?? actor.memberId;
-        const card = await options.knowledge.createDraft(actor, { ...draft, source: ai && !fallback ? "ai" : "event", scope: suggestion.origin === "human-agent" ? "personal" : "team", provenance: { origin: suggestion.origin, author: { kind: "human", memberId: authorId, displayName: options.memberName(authorId) }, trigger: { type: suggestion.triggerType, suggestionId: id }, evidenceRefs: { runIds: suggestion.actors.runIds, chatMessageIds: Array.isArray(suggestion.evidence.chatMessages) ? (suggestion.evidence.chatMessages as CaptureChatEvent[]).map(message => message.messageId) : [], files: typeof suggestion.evidence.file === "string" ? [{ path: suggestion.evidence.file, revision: String(suggestion.evidence.revisionAfter ?? "") }] : [] } } });
+        const traceRefs = Array.isArray(suggestion.evidence.traceRefs)
+          ? suggestion.evidence.traceRefs.filter((ref): ref is { runId: string; seq: number } => Boolean(ref) && typeof ref === "object" && typeof (ref as { runId?: unknown }).runId === "string" && Number.isInteger((ref as { seq?: unknown }).seq)).map((ref) => ({ runId: ref.runId, seq: ref.seq }))
+          : [];
+        const card = await options.knowledge.createDraft(actor, { ...draft, source: ai && !fallback ? "ai" : "event", scope: suggestion.origin === "human-agent" ? "personal" : "team", provenance: { origin: suggestion.origin, author: { kind: "human", memberId: authorId, displayName: options.memberName(authorId) }, trigger: { type: suggestion.triggerType, suggestionId: id }, evidenceRefs: { runIds: suggestion.actors.runIds, chatMessageIds: Array.isArray(suggestion.evidence.chatMessages) ? (suggestion.evidence.chatMessages as CaptureChatEvent[]).map(message => message.messageId) : [], ...(traceRefs.length ? { traceRefs } : {}), files: typeof suggestion.evidence.file === "string" ? [{ path: suggestion.evidence.file, revision: String(suggestion.evidence.revisionAfter ?? "") }] : [] } } });
         suggestion.draftCardId = card.id;
         await resolve(actor, suggestion, "accepted");
         return { card, suggestion };

@@ -11,13 +11,14 @@ describe("fake Agent capture markers", () => {
     const session = await runtime.createSession({ workspacePath: root, title: "fake-edit" });
     const events: Array<{ type: string; data: Record<string, unknown> }> = [];
     const stop = await runtime.subscribe({ workspacePath: root, sessionId: session.id }, (event) => { events.push(event); });
-    await runtime.run({ workspacePath: root, sessionId: session.id, prompt: "fake-edit=file.ts:1:two fake-tool=fail:npm test fake-tool=ok:npm test" });
+    await runtime.run({ workspacePath: root, sessionId: session.id, prompt: "fake-tool=fail:npm test fake-edit=file.ts:1:two fake-tool=ok:npm test" });
     await stop();
     await runtime.dispose();
     expect(await fs.readFile(path.join(root, "file.ts"), "utf8")).toContain("two");
     const toolEvents = events.filter((event) => event.type === "message.part.updated");
     expect(toolEvents).toHaveLength(2);
     expect((toolEvents[0]?.data.part as { state: { status: string } }).state.status).toBe("error");
+    expect((toolEvents[0]?.data.part as { state: { input: { command: string } } }).state.input.command).toBe("npm test");
     await fs.rm(root, { recursive: true, force: true });
   });
 });

@@ -1,10 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { VirtualCaptureClock, createCaptureEngine, replayEvents, createAgentRecapFallback, parseAgentRecapDraft, type CaptureEvent } from "../src/index.js";
+import { VirtualCaptureClock, createCaptureEngine, createKnowledgeEventSink, replayEvents, createAgentRecapFallback, parseAgentRecapDraft, createAgentRevisedSuggestion, type CaptureEvent } from "../src/index.js";
 
 function run(events: CaptureEvent[]) {
   const clock = new VirtualCaptureClock(events[0]?.at ?? 0);
   const suggestions: import("../src/schema/card.js").CaptureSuggestion[] = [];
-  const engine = createCaptureEngine({ clock, onSuggestion: (suggestion) => suggestions.push(suggestion) });
+  const engine = createCaptureEngine({
+    clock,
+    onSuggestion: (suggestion) => suggestions.push(suggestion),
+    onAgentRevised: (revision) => suggestions.push(createAgentRevisedSuggestion(revision))
+  });
   for (const event of events) { clock.advanceTo(event.at); engine.process(event); }
   return { suggestions, engine };
 }
@@ -35,7 +39,7 @@ describe("Agent capture events", () => {
   test("captures failed tool recovery after an edit", () => {
     const { suggestions } = run([
       event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", action: "start", status: "running", prompt: "Fix tests" }, 1),
-      event({ type: "agentTool", at: 1, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: false, error: "exit 1" }, 2),
+      event({ type: "agentTool", at: 1, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: false, error: "exit 1", traceSeq: 7 }, 2),
       event({ type: "docOpen", at: 2, file: "src/a.ts", text: "old\n" }, 3),
       event({ type: "fileExternal", at: 3, file: "src/a.ts", change: "change", textBefore: "old\n", textAfter: "new\n" }, 4),
       event({ type: "agentTool", at: 4, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: true, exitCode: 0 }, 5)
@@ -55,6 +59,28 @@ describe("Agent capture events", () => {
     expect(suggestions.map((suggestion) => suggestion.triggerType)).not.toContain("agent.toolRecovered");
   });
 
+  test("does not use a member edit as Agent tool recovery evidence", () => {
+    const { suggestions } = run([
+      event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", action: "start", status: "running", prompt: "Fix tests" }, 1),
+      event({ type: "agentTool", at: 1, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: false, error: "exit 1" }, 2),
+      event({ type: "docOpen", at: 2, file: "src/a.ts", text: "old\n" }, 3),
+      event({ type: "edit", at: 3, file: "src/a.ts", actor: "Bob", ops: [{ start: 0, deleteCount: 4, insertText: "member\n" }], textBefore: "old\n", textAfter: "member\n" }, 4),
+      event({ type: "agentTool", at: 4, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: true, exitCode: 0 }, 5)
+    ]);
+    expect(suggestions.map((suggestion) => suggestion.triggerType)).not.toContain("agent.toolRecovered");
+  });
+
+  test("does not retain failed tools after the run ends", () => {
+    const { suggestions } = run([
+      event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", action: "start", status: "running", prompt: "Fix tests" }, 1),
+      event({ type: "agentTool", at: 1, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: false, error: "exit 1" }, 2),
+      event({ type: "agentRun", at: 2, runId: "run-1", memberId: "Ada", action: "failed", status: "failed", prompt: "Fix tests" }, 3),
+      event({ type: "fileExternal", at: 3, file: "src/a.ts", change: "change", textBefore: "old\n", textAfter: "new\n" }, 4),
+      event({ type: "agentTool", at: 4, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: true, exitCode: 0 }, 5)
+    ]);
+    expect(suggestions.map((suggestion) => suggestion.triggerType)).not.toContain("agent.toolRecovered");
+  });
+
   test("does not treat unrelated commands from the same executable as recovery", () => {
     const { suggestions } = run([
       event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", action: "start", status: "running", prompt: "Fix tests" }, 1),
@@ -66,6 +92,20 @@ describe("Agent capture events", () => {
     expect(suggestions.map((suggestion) => suggestion.triggerType)).not.toContain("agent.toolRecovered");
   });
 
+  test("requires a successful exit code and records modified files for recovery", () => {
+    const failed = event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", action: "start", status: "running", prompt: "Fix tests" }, 1);
+    const failure = event({ type: "agentTool", at: 1, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: false, error: "exit 1", traceSeq: 7 }, 2);
+    const open = event({ type: "docOpen", at: 2, file: "src/a.ts", text: "old\n" }, 3);
+    const edit = event({ type: "fileExternal", at: 3, file: "src/a.ts", change: "change", textBefore: "old\n", textAfter: "new\n" }, 4);
+    const failedAgain = event({ type: "agentTool", at: 4, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: true, exitCode: 1 }, 5);
+    const { suggestions } = run([failed, failure, open, edit, failedAgain]);
+    expect(suggestions).toEqual([]);
+
+    const success = event({ type: "agentTool", at: 5, runId: "run-1", memberId: "Ada", tool: "bash", command: "npm test", success: true, exitCode: 0, traceSeq: 9 }, 6);
+    const result = run([failed, failure, open, edit, success]);
+    expect(result.suggestions[0]?.evidence).toMatchObject({ modifiedFiles: ["src/a.ts"], traceRefs: [{ runId: "run-1", seq: 7 }, { runId: "run-1", seq: 9 }], success: { traceSeq: 9 } });
+  });
+
   test("emits retry only after the replacement run succeeds", () => {
     const first = run([
       event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", action: "start", status: "running", sessionId: "session", prompt: "Run the parser tests" }, 1),
@@ -74,6 +114,16 @@ describe("Agent capture events", () => {
       event({ type: "agentRun", at: 3, runId: "run-2", memberId: "Ada", action: "end", status: "completed", sessionId: "session", prompt: "Run the parser tests again" }, 4)
     ]);
     expect(first.suggestions.map((suggestion) => suggestion.triggerType)).toContain("agent.retried");
+  });
+
+  test("does not emit retry when the replacement run fails", () => {
+    const { suggestions } = run([
+      event({ type: "agentRun", at: 0, runId: "run-1", memberId: "Ada", prompt: "Run the parser tests", action: "start", status: "running" }, 1),
+      event({ type: "agentRun", at: 1, runId: "run-1", memberId: "Ada", prompt: "Run the parser tests", action: "failed", status: "failed" }, 2),
+      event({ type: "agentRun", at: 2, runId: "run-2", memberId: "Ada", prompt: "Run the parser tests again", action: "start", status: "running" }, 3),
+      event({ type: "agentRun", at: 3, runId: "run-2", memberId: "Ada", prompt: "Run the parser tests again", action: "end", status: "failed" }, 4)
+    ]);
+    expect(suggestions.map((suggestion) => suggestion.triggerType)).not.toContain("agent.retried");
   });
 
   test("does not attribute a retry to a different member", () => {
@@ -96,6 +146,38 @@ describe("Agent capture events", () => {
     engine.process(event({ type: "edit", at: 1, file: "src/a.ts", actor: "Bob", ops: [{ start: 0, deleteCount: 14, insertText: "replacement\n" }], textBefore: "one\ntwo\nthree\n", textAfter: "replacement\n" }, 2));
     expect(revisions).toHaveLength(1);
     expect(revisions[0]).toMatchObject({ runId: "run-1", ownerId: "Ada", editor: "Bob" });
+  });
+
+  test("uses changed line ratio for Agent revision threshold", () => {
+    const clock = new VirtualCaptureClock(0);
+    const revisions: unknown[] = [];
+    const engine = createCaptureEngine({ clock, onSuggestion: () => undefined, onAgentRevised: revision => revisions.push(revision) });
+    const text = "a\nb\nc\nd\ne\nf\ng\nh\ni\nj";
+    engine.process(event({ type: "docOpen", at: 0, file: "src/a.ts", text }, 1));
+    engine.authorship.register("src/a.ts", "agent:run-1", [{ start: 0, end: text.length, text, ownerId: "Ada" }], 0);
+    clock.advanceTo(1);
+    engine.process(event({ type: "edit", at: 1, file: "src/a.ts", actor: "Bob", ops: [{ start: 0, deleteCount: 1, insertText: "z" }], textBefore: text, textAfter: `z\nb\nc\nd\ne\nf\ng\nh\ni\nj` }, 2));
+    expect(revisions).toHaveLength(0);
+  });
+
+  test("reports a member restoring the full file after an Agent run", () => {
+    const { suggestions } = run([
+      event({ type: "docOpen", at: 0, file: "src/a.ts", text: "before\n" }, 1),
+      event({ type: "agentRun", at: 1, runId: "run-1", memberId: "Ada", action: "end", status: "completed", prompt: "write", fileChanges: [{ file: "src/a.ts", beforeText: "before\n", afterText: "after\n" }] }, 2),
+      event({ type: "docOpen", at: 1.5, file: "src/a.ts", text: "after\n" }, 3),
+      event({ type: "edit", at: 2, file: "src/a.ts", actor: "Bob", ops: [{ start: 0, deleteCount: 6, insertText: "before\n" }], textBefore: "after\n", textAfter: "before\n" }, 4)
+    ]);
+    expect(suggestions[0]).toMatchObject({ triggerType: "agent.revised", actors: { memberIds: ["Ada", "Bob"] }, suggestedAnchors: [{ startLine: 1 }] });
+    expect(suggestions[0]?.evidence).toMatchObject({ restored: { beforeText: "before\n", afterText: "after\n" }, agentPrompt: "write", agentFileChange: { file: "src/a.ts" } });
+  });
+
+  test("exposes the external collaboration event sink", () => {
+    const clock = new VirtualCaptureClock(10);
+    const events: unknown[] = [];
+    const engine = createCaptureEngine({ clock, onSuggestion: () => undefined, onExternalEvent: event => events.push(event) });
+    const sink = createKnowledgeEventSink(event => engine.processExternal(event));
+    sink.push({ type: "conflict.detected", at: 10, participants: ["Ada", "Bob"], file: "src/a.ts", description: "Conflict" });
+    expect(events).toHaveLength(1);
   });
 
   test("registers recorded Agent ranges and replays a revision", () => {

@@ -208,6 +208,9 @@ describe("knowledge API", () => {
     await fs.writeFile(path.join(project.workspacePath, "README.md"), "# Demo\n\nChanged entirely.\n");
     const deleted = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: headers(first) }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; status: string }> };
     expect(deleted.resolutions.find((item) => item.cardId === teamCard.id)).toMatchObject({ status: "needsReview", range: { startLine: 3, startColumn: 1, endLine: 3, endColumn: 1 } });
+    await fs.rm(path.join(project.workspacePath, "README.md"));
+    const missing = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: headers(first) }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; status: string }> };
+    expect(missing.resolutions.find((item) => item.cardId === teamCard.id)).toMatchObject({ status: "needsReview" });
 
     const demo = await fetch(`${origin}/api/projects/demo/knowledge/demo`, { method: "POST", headers: headers(first), body: "{}" });
     expect(demo.status).toBe(201);

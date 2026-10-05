@@ -51,6 +51,7 @@ export function createProjectRuntime(
   });
   const room = rooms.createRoom(project.workspacePath, project.name);
   let provider: ReturnType<typeof createKnowledgeProvider> | undefined;
+  let capture: ReturnType<typeof createCaptureService> | undefined;
   const knowledge = options.knowledgeMode && options.knowledgeMode !== "off"
     ? createKnowledgeService({
       projectId: project.id,
@@ -61,6 +62,9 @@ export function createProjectRuntime(
       events,
       onChanged(change) {
         for (const listener of knowledgeChangedListeners) listener(change);
+      },
+      onNotify(memberId, message) {
+        for (const listener of knowledgeNotificationListeners) listener(memberId, message);
       },
       onCardConfirmed(card) {
         return provider?.onCardConfirmed(card);
@@ -77,15 +81,17 @@ export function createProjectRuntime(
       events,
       metadataRoot: projectRoot,
       workspaceRoot: project.workspacePath,
-      sensitiveValues: [options.llm?.apiKey].filter((value): value is string => Boolean(value))
+      sensitiveValues: [options.llm?.apiKey].filter((value): value is string => Boolean(value)),
+      onConfigUpdated(nextConfig) { capture?.setRiskWarningConfig(nextConfig.riskWarning); }
     });
   }
-  const capture = knowledge ? createCaptureService({
-    projectId: project.id, roomId: room.id, workspaceRoot: project.workspacePath, metadataRoot: projectRoot,
-    knowledge, documents, chat, events, recordEvents: options.knowledgeRecordEvents, config: options.captureConfig, riskWarningConfig: options.riskWarningConfig, llm: options.llm,
-    memberName(memberId) { return rooms.getMember(room.id, memberId)?.displayName ?? memberId; },
-    onNotify(memberId, message) { for (const listener of knowledgeNotificationListeners) listener(memberId, message); }
-  }) : undefined;
+  capture = knowledge ? createCaptureService({
+      projectId: project.id, roomId: room.id, workspaceRoot: project.workspacePath, metadataRoot: projectRoot,
+      knowledge, documents, chat, events, recordEvents: options.knowledgeRecordEvents, config: options.captureConfig, riskWarningConfig: options.riskWarningConfig, llm: options.llm,
+      memberName(memberId) { return rooms.getMember(room.id, memberId)?.displayName ?? memberId; },
+      onNotify(memberId, message) { for (const listener of knowledgeNotificationListeners) listener(memberId, message); }
+    }) : undefined;
+  if (provider && capture) void provider.getConfig().then((nextConfig) => capture?.setRiskWarningConfig(nextConfig.riskWarning));
   const terminalListeners = new Set<(data: string) => void>();
   const inputWindows = new Map<string, { count: number; timer: ReturnType<typeof setTimeout> }>();
   function flushInput(memberId: string) {
@@ -107,12 +113,12 @@ export function createProjectRuntime(
     for (const listener of terminalListeners) listener(data);
   });
   const watcher = watchWorkspace(project.workspacePath, async (change) => {
+    if (change.type === "unlink" || change.type === "unlinkDir") {
+      documents.dropPath(change.path);
+    }
     await capture?.external(change);
     if (change.type === "change" || change.type === "add") {
       await documents.reloadPath(change.path);
-    }
-    if (change.type === "unlink" || change.type === "unlinkDir") {
-      documents.dropPath(change.path);
     }
     if (change.type !== "change" && !isSuppressedWorkspaceChange(change)) {
       for (const listener of workspaceListeners) listener(change);

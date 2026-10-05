@@ -72,6 +72,23 @@ function insertedRanges(before: string | undefined, after: string | undefined) {
   return ranges;
 }
 
+function addSnapshotContents(
+  fileChanges: AgentRun["fileChanges"],
+  before: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>>,
+  after: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined
+) {
+  if (!fileChanges || !after) return fileChanges;
+  return fileChanges.map((change) => {
+    const beforeText = before.get(change.file)?.content;
+    const afterText = after.get(change.file)?.content;
+    return {
+      ...change,
+      ...(beforeText !== undefined ? { beforeText } : {}),
+      ...(afterText !== undefined ? { afterText } : {})
+    };
+  });
+}
+
 function extractToolEvent(type: string, data: Record<string, unknown>, run: AgentRun) {
   const part = (data.part && typeof data.part === "object" ? data.part : data) as Record<string, unknown>;
   const state = (part.state && typeof part.state === "object" ? part.state : part) as Record<string, unknown>;
@@ -364,7 +381,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
     }
     return {
-      fileChanges,
+      fileChanges: addSnapshotContents(fileChanges, workspaceBefore, workspaceAfter),
+      workspaceAfter,
       agentRanges: workspaceAfter ? fileChanges.flatMap((change) => insertedRanges(workspaceBefore.get(change.file)?.content, workspaceAfter?.get(change.file)?.content).map((range) => ({ file: change.file, ...range }))) : []
     };
   }
@@ -537,12 +555,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: activeRuntimeSessionId
         },
         async (event) => {
-          await appendTrace(projectId, runId, {
+          const traceEvent = await appendTrace(projectId, runId, {
             type: `opencode.${event.type}`,
             data: event.data
           });
           const tool = extractToolEvent(event.type, event.data, run);
-          if (tool) await projectRuntime.capture?.agentTool(tool);
+          if (tool) await projectRuntime.capture?.agentTool({ ...tool, traceSeq: traceEvent.sequence });
         }
       );
 
@@ -560,6 +578,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
           const cancelledChanges = await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore!);
+          const interruptedByRun = latestAfterFailure.interruptedByRunId ? await store.get(latestAfterFailure.interruptedByRunId) : undefined;
           await projectRuntime.capture?.agentRun({
             runId: run.id,
             memberId: run.initiatorMemberId ?? run.memberId,
@@ -571,6 +590,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             extraPrompt: run.extraPrompt,
             interruptsRunId: run.interruptsRunId,
             interruptedByMemberId: latestAfterFailure.interruptedByMemberId,
+            interruptedByPrompt: interruptedByRun?.prompt,
             fileChanges: cancelledChanges.fileChanges,
             agentRanges: cancelledChanges.agentRanges.map((range) => ({ ...range, ownerId: run.initiatorMemberId ?? run.memberId }))
           });
@@ -581,6 +601,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
         const cancelledChanges = await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore!, result.messageId);
+        const interruptedByRun = latest.interruptedByRunId ? await store.get(latest.interruptedByRunId) : undefined;
         await projectRuntime.capture?.agentRun({
           runId: run.id,
           memberId: run.initiatorMemberId ?? run.memberId,
@@ -592,6 +613,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           extraPrompt: run.extraPrompt,
           interruptsRunId: run.interruptsRunId,
           interruptedByMemberId: latest.interruptedByMemberId,
+          interruptedByPrompt: interruptedByRun?.prompt,
           fileChanges: cancelledChanges.fileChanges,
           agentRanges: cancelledChanges.agentRanges.map((range) => ({ ...range, ownerId: run.initiatorMemberId ?? run.memberId }))
         });
@@ -609,6 +631,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         compareAgentWorkspaceSnapshots(workspaceBefore, workspaceAfter),
         runtimeFileChanges
       );
+      const recordedFileChanges = addSnapshotContents(fileChanges, workspaceBefore, workspaceAfter);
       const agentOwnerId = run.initiatorMemberId ?? run.memberId;
       const agentRanges = fileChanges.flatMap((change) => insertedRanges(workspaceBefore?.get(change.file)?.content, workspaceAfter.get(change.file)?.content).map((range) => ({ file: change.file, ...range, ownerId: agentOwnerId })));
       await projectRuntime.capture?.agentRun({
@@ -620,7 +643,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         sessionId: run.sessionId,
         prompt: run.prompt,
         extraPrompt: run.extraPrompt,
-        fileChanges,
+        fileChanges: recordedFileChanges,
         agentRanges
       });
       for (const change of fileChanges) {
@@ -1020,6 +1043,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: active.runtimeSessionId
         });
       } else {
+        const interruptedByRun = interruptedBy?.runId ? await store.get(interruptedBy.runId) : undefined;
         await runtimeManagerCapture(projectId)?.agentRun({
           runId: run.id,
           memberId: run.initiatorMemberId ?? run.memberId,
@@ -1031,10 +1055,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           extraPrompt: run.extraPrompt,
           interruptsRunId: interruptedBy?.runId,
           interruptedByMemberId: interruptedBy?.memberId,
+          interruptedByPrompt: interruptedByRun?.prompt,
           fileChanges: run.fileChanges
         });
       }
-      await appendKnowledgePostCheck(projectId, cancelled);
+      if (!active) await appendKnowledgePostCheck(projectId, cancelled);
       return cancelled;
     },
     onEvent(listener: (event: AgentRunManagerEvent) => void) {

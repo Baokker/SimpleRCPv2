@@ -8,8 +8,12 @@
 
 知识面板的“待确认”视图读取 `GET /knowledge/cards/pending-team`，属主可以申请团队确认，其他成员可以提交第二次确认。卡片展开后可以选择团队卡片建立关系，Inbox 中的参与成员可以提交异议理由。
 
+普通编辑和草稿确认接口不能把个人卡片直接改为团队卡片。必须先调用 `scope/request-team`，再由符合配置要求的成员调用 `scope/confirm-team`。Agent 身份不能确认草稿或团队作用域。
+
 同源去重使用 run id、聊天消息 id 和建议 id。生成建议前发现相同来源的未解决建议时复用原建议；Agent 注入时同一来源的多张卡片只保留一张。
 
 `refreshExpired` 根据锚点解析结果把无法定位的 reviewed 卡片转为 `needsReview`。超过配置的复核期限后转为 `orphaned`。重新锚定会写入 `reviewed` 演化记录并恢复可注入状态。
+
+状态变更时服务端通过 `knowledge_anchor_needs_review` 通知属主和确认人，消息不包含卡片正文。
 
 阶段五定义 `KnowledgeEventSink` 接口，支持 `terminal.commandDenied`、`terminal.commandApproved`、`conflict.detected` 和 `conflict.resolved`，事件包含参与者、文件、时间和说明。点一、点二的事件接入留给后续阶段。

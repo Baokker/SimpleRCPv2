@@ -28,11 +28,12 @@ import {
 import type { Identity } from "../auth/identity.js";
 import type { CollaborativeDocumentStore } from "../collaborativeDocuments.js";
 import type { EventLog } from "../eventLog.js";
+import type { ServerMessage } from "../types.js";
 
 const require = createRequire(import.meta.url);
 const YRuntime = require("yjs") as typeof Y;
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
-import { readWorkspaceFile } from "../workspace.js";
+import { pathExists, readWorkspaceFile, resolveWorkspacePath } from "../workspace.js";
 
 export interface KnowledgeListFilter {
   file?: string;
@@ -71,6 +72,7 @@ interface KnowledgeServiceOptions {
   documents: CollaborativeDocumentStore;
   events: EventLog;
   onChanged?(change: { cardId: string; action: string }): void;
+  onNotify?(memberId: string, message: ServerMessage): void;
   onCardConfirmed?(card: KnowledgeCard): Promise<void> | void;
   orphanedAfterMs?: number;
   requireSecondConfirmForTeam?: boolean;
@@ -163,13 +165,15 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     options.onChanged?.({ cardId, action: type.replace("knowledge_card_", "") });
   }
 
-  async function currentDocument(file: string) {
+  async function currentDocument(file: string, allowMissing = false) {
     const normalized = normalizeWorkspaceRelativePath(file);
     const name = `${options.projectId}|${options.roomId}:${normalized}`;
     const document = await options.documents.getPreparedDocument(name);
     if (document) {
       return { text: document.getText("content").toString(), document, epoch: options.documents.getDocumentEpoch(document) };
     }
+    const absolutePath = resolveWorkspacePath(options.workspaceRoot, normalized);
+    if (allowMissing && !(await pathExists(absolutePath))) return { text: "", document: undefined, epoch: undefined };
     const loaded = await readWorkspaceFile(options.workspaceRoot, normalized, true);
     if (loaded.status !== "text") throw new Error("Knowledge anchors require a text file");
     return { text: loaded.content, document: undefined, epoch: undefined };
@@ -380,27 +384,31 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     return changed / total;
   }
 
+  async function resolveCardAnchors(cards: KnowledgeCard[], normalized: string) {
+    const current = await currentDocument(normalized, true);
+    const resolutions: KnowledgeAnchorResolution[] = [];
+    const refreshedCards: KnowledgeCard[] = [];
+    for (const card of cards) {
+      let changed = false;
+      for (let index = 0; index < card.anchors.length; index += 1) {
+        const anchor = card.anchors[index]!;
+        if (normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) !== normalized) continue;
+        const before = JSON.stringify(anchor.yjsRelative);
+        const result = resolveOne(card, index, anchor, current.text, current.document, current.epoch);
+        if (before !== JSON.stringify(anchor.yjsRelative)) changed = true;
+        resolutions.push(result);
+      }
+      if (changed) refreshedCards.push(card);
+    }
+    for (const card of refreshedCards) await saveCard(card);
+    return resolutions;
+  }
+
   async function resolveCards(viewer: Identity | KnowledgeActor, file: string) {
     return enqueue(async () => {
       const normalized = normalizeWorkspaceRelativePath(file);
       const cards = await list(viewer, { file: normalized });
-      const current = await currentDocument(normalized);
-      const resolutions: KnowledgeAnchorResolution[] = [];
-      const refreshedCards: KnowledgeCard[] = [];
-      for (const card of cards) {
-        let changed = false;
-        for (let index = 0; index < card.anchors.length; index += 1) {
-          const anchor = card.anchors[index]!;
-          if (normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) !== normalized) continue;
-          const before = JSON.stringify(anchor.yjsRelative);
-          const result = resolveOne(card, index, anchor, current.text, current.document, current.epoch);
-          if (before !== JSON.stringify(anchor.yjsRelative)) changed = true;
-          resolutions.push(result);
-        }
-        if (changed) refreshedCards.push(card);
-      }
-      for (const card of refreshedCards) await saveCard(card);
-      return resolutions;
+      return resolveCardAnchors(cards, normalized);
     });
   }
 
@@ -515,6 +523,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     if (patch.scope !== undefined) {
       if (patch.scope !== "personal" && patch.scope !== "team" && patch.scope !== "proposedTeam") throw new Error("Card scope must be personal, proposedTeam or team");
       if (patch.scope === "proposedTeam" && cardBeforeUpdate.scope !== "proposedTeam") throw new Error("Cards must use the team scope request endpoint");
+      if (patch.scope === "team" && cardBeforeUpdate.scope !== "team") throw new Error("Cards must use the team scope confirmation endpoint");
       card.scope = patch.scope;
     }
     if (card.scope !== "personal" && card.scope !== "team" && card.scope !== "proposedTeam") throw new Error("Card scope must be personal, proposedTeam or team");
@@ -566,10 +575,12 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
 
   async function confirm(actor: KnowledgeActor, id: string, input: { edited?: boolean; durationMs?: number; patch?: Record<string, unknown> }) {
     const confirmed = await enqueue(async () => {
+      if (actor.memberId === "agent" || actor.memberId.startsWith("agent:")) throw new Error("Agent actors cannot confirm knowledge cards");
       const stored = await readCard(id);
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (stored.card.status !== "draft") throw new Error("Only draft knowledge cards can be confirmed");
       const card = input.patch === undefined ? stored.card : await applyPatch(stored.card, input.patch, actor);
+      if (stored.card.provenance?.origin === "human-agent" && card.scope === "team" && stored.card.scope !== "team") throw new Error("Agent-origin cards must use team scope confirmation");
       const edited = input.edited === true
         || (["type", "title", "summary", "content", "tags", "scope", "anchors"] as const).some(key => JSON.stringify(stored.card[key]) !== JSON.stringify(card[key]))
         || JSON.stringify(stored.card.provenance?.author) !== JSON.stringify(card.provenance?.author);
@@ -630,22 +641,29 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   async function refreshExpired(actor: KnowledgeActor, file: string, orphanedAfterMs = options.orphanedAfterMs ?? 7 * 24 * 60 * 60_000) {
-    const resolutions = await resolveCards(actor, file);
+    const normalizedFile = normalizeWorkspaceRelativePath(file);
+    const resolutions = await enqueue(async () => {
+      const cards = (await readCards()).map(({ card }) => card).filter((card) => card.anchors.some((anchor) => normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) === normalizedFile));
+      return resolveCardAnchors(cards, normalizedFile);
+    });
     return enqueue(async () => {
       const now = Date.now();
       const changed: KnowledgeCard[] = [];
       for (const resolution of resolutions) {
         if (resolution.status !== "needsReview") continue;
         const stored = await readCard(resolution.cardId);
-        if (!stored || !visible(stored.card, actor) || (stored.card.status !== "reviewed" && stored.card.status !== "needsReview")) continue;
+        if (!stored || (stored.card.status !== "reviewed" && stored.card.status !== "needsReview")) continue;
         const reviewStartedAt = stored.card.status === "needsReview"
           ? [...stored.card.evolution].reverse().find((entry) => entry.note === "anchor review" && entry.action === "updated")?.at ?? stored.card.updatedAt
-          : stored.card.updatedAt;
-        const age = now - reviewStartedAt;
-        const status: KnowledgeCardStatus = age >= orphanedAfterMs ? "orphaned" : "needsReview";
+          : now;
+        const status: KnowledgeCardStatus = stored.card.status === "needsReview" && now - reviewStartedAt >= orphanedAfterMs ? "orphaned" : "needsReview";
         if (status === stored.card.status) continue;
         const updated: KnowledgeCard = { ...stored.card, status, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: status === "orphaned" ? "orphaned" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "anchor review" }] };
         await saveCard(updated); event(updated.id, "knowledge_card_updated", actor); changed.push(updated);
+        for (const memberId of new Set([updated.ownerMemberId, ...(updated.review?.confirmedBy ?? [])])) {
+          if (!memberId) continue;
+          options.onNotify?.(memberId, { type: "knowledge_anchor_needs_review", cardId: updated.id, file: normalizedFile, status: status as "needsReview" | "orphaned" });
+        }
       }
       return changed;
     });
@@ -664,11 +682,13 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
 
   async function confirmTeam(actor: KnowledgeActor, id: string, requireSecondConfirm = true) {
     return enqueue(async () => {
+      if (actor.memberId === "agent" || actor.memberId.startsWith("agent:")) throw new Error("Agent actors cannot confirm team scope");
       const stored = await readCard(id);
       if (!stored || (stored.card.scope !== "proposedTeam" && !visible(stored.card, actor))) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (stored.card.scope !== "proposedTeam") throw new Error("Knowledge card is not awaiting team confirmation");
       if (stored.card.status !== "reviewed") throw new Error("Only reviewed cards can request team scope");
       if (requireSecondConfirm && stored.card.ownerMemberId === actor.memberId) throw new Error("The card owner cannot provide the second team confirmation");
+      if (!requireSecondConfirm && stored.card.ownerMemberId !== actor.memberId) throw new Error("Only the card owner can confirm team scope when a second confirmation is disabled");
       const existing = stored.card.review?.confirmedBy ?? [];
       const now = Date.now();
       const updated: KnowledgeCard = { ...stored.card, scope: "team", updatedAt: now, review: { ...(stored.card.review ?? { confirmedBy: [] }), confirmedBy: [...new Set([...existing, actor.memberId])], confirmedAt: now }, evolution: [...stored.card.evolution, { at: now, action: "scopeChanged", by: { peerId: actor.memberId, name: actor.displayName }, note: "team" }] };

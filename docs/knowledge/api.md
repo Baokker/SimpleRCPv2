@@ -79,6 +79,14 @@
 
 每条风险提醒保存在活动日志中，由 Inbox 返回 `{ id, cardId, file, createdAt, seen }`。推迟或受到每小时上限限制的提醒仍可在 Inbox 打开。
 
+锚点解析失败或长期未复核时，服务端向卡片属主和确认人发送：
+
+```json
+{ "type": "knowledge_anchor_needs_review", "cardId": "card-id", "file": "src/example.ts", "status": "needsReview" }
+```
+
+`status` 为 `needsReview` 或 `orphaned`。客户端收到后刷新知识列表并提示重新锚定。
+
 ## 活动日志
 
 卡片创建、编辑、确认、归档分别写入 `knowledge_card_created`、`knowledge_card_updated`、`knowledge_card_confirmed`、`knowledge_card_archived`。日志顶层保存项目房间、操作者与时间，payload 只保存 `cardId`。
@@ -89,7 +97,7 @@
 | 方法 | 路径 | 输入与返回 |
 | --- | --- | --- |
 | `GET` | `/api/projects/:projectId/knowledge/config` | 返回项目 Agent 知识注入配置。 |
-| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`lexicalScoring`、`ranking`、`statuses`、`fixedCardIds`、任务后核对和在途提醒。`lexicalScoring` 与 `ranking` 独立。 |
+| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`lexicalScoring`、`ranking`、`statuses`、`fixedCardIds`、任务后核对、在途提醒、团队二次确认、复盘、矛盾判定、锚点孤立期限和 `riskWarning`。`lexicalScoring` 与 `ranking` 独立。`riskWarning` 包含 `files`、`lexicalThreshold`、`vectorThreshold`、`cooldownMs`、`dedupeThreshold`。 |
 | `POST` | `/api/projects/:projectId/knowledge/preview` | 输入 `{ prompt, contexts, knowledge? }`，返回活动文件、排除卡片、候选记录和字符数量。 |
 | `POST` | `/api/projects/:projectId/knowledge/cards/:id/view` | 记录当前成员首次打开卡片，用于复用延迟。 |
 | `GET` | `/api/projects/:projectId/knowledge/metrics/reuse` | 返回知识时刻、确认、首次查看和首次注入时间点。 |

@@ -11,7 +11,7 @@
 - 新增 `createOpenAICompatibleClient`，支持 DeepSeek 等 OpenAI 兼容服务的 chat、embedding、超时、HTTP 错误、usage 和可选 `response_format`。
 - 服务端 `config.ts` 增加 `KNOWLEDGE` 解析，启动日志打印模式；`off` 为默认值。服务端声明 workspace 依赖，但本阶段没有接入事件、路由、Agent 或客户端。
 - 移植锚点、检索、规模、缓存、触发阈值和状态门控实验；结果提交在 `packages/knowledge/bench/results/`。规模实验覆盖 10、50、100、500、1000 张卡片，每个实验均有独立的 `bench:*` 入口。
-- 补充显式 v1/v2 卡片迁移、目录来源的自定义过滤、schema 守卫、严格 JSON 抽取和证据路径收集。索引目录由调用方传入，向量服务错误直接报告。
+- 补充显式 v1/v2 卡片迁移、目录来源的自定义过滤、schema 守卫、严格 JSON 抽取和证据路径收集。索引目录由调用方传入；向量服务失败时默认回落到词法检索，`strictEmbedding` 可配置为严格报错。
 
 ## 验证结果
 

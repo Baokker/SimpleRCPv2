@@ -424,6 +424,10 @@ function WorkspacePage({
             void getKnowledgeInbox(projectId).then(result => setKnowledgeUnread(result.suggestions.filter(item => !item.seenBy?.includes(joined.member.id)).length + result.warnings.filter(item => !item.seen).length)).catch(showWorkspaceError);
             if (message.popup) setKnowledgeWarning({ cardId: message.cardId, file: message.file, warningId: message.warningId });
           }
+          if (message.type === "knowledge_anchor_needs_review") {
+            setKnowledgeRefreshVersion(version => version + 1);
+            showWorkspaceNotice(message.status === "orphaned" ? "知识卡片锚点已孤立，请重新锚定。" : "知识卡片锚点需要复核。");
+          }
           if (message.type === "knowledge_update_available") {
             setKnowledgeRefreshVersion(version => version + 1);
             setKnowledgeUpdateRuns(current => ({

@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { minimatch } from "minimatch";
+import diff from "fast-diff";
 import {
   isReusable,
   searchKnowledgeCards,
@@ -51,6 +52,15 @@ export interface KnowledgeProviderConfig {
   correctionClassifier: "rules" | "rules+llm";
   contradictionJudge: "none" | "llm";
   orphanedAfterMs: number;
+  riskWarning: KnowledgeRiskWarningConfig;
+}
+
+export interface KnowledgeRiskWarningConfig {
+  files: string[];
+  lexicalThreshold: number;
+  vectorThreshold: number;
+  cooldownMs: number;
+  dedupeThreshold: number;
 }
 
 export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
@@ -69,7 +79,14 @@ export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   recapMode: "server",
   correctionClassifier: "rules",
   contradictionJudge: "none",
-  orphanedAfterMs: 7 * 24 * 60 * 60_000
+  orphanedAfterMs: 7 * 24 * 60 * 60_000,
+  riskWarning: {
+    files: ["**/package.json", "**/tsconfig*.json", "**/vite.config.*", "**/.eslintrc*", "**/Dockerfile", "**/docker-compose*.yml", ".github/workflows/*"],
+    lexicalThreshold: 1,
+    vectorThreshold: 0.8,
+    cooldownMs: 300_000,
+    dedupeThreshold: 0.8
+  }
 };
 
 export interface KnowledgeContextResult {
@@ -121,6 +138,7 @@ export interface KnowledgeProviderOptions {
   workspaceRoot: string;
   sensitiveValues?: string[];
   hooks?: ProviderHooks;
+  onConfigUpdated?(config: KnowledgeProviderConfig): void;
 }
 
 export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
@@ -146,6 +164,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const storedConfig = await readJsonFile<Partial<KnowledgeProviderConfig>>(configPath);
     if (storedConfig) config = normalizeConfig(storedConfig);
     await writeJsonFileAtomically(configPath, config);
+    options.onConfigUpdated?.(config);
     const storedMetrics = await readJsonFile<ReuseMetric[]>(metricsPath);
     if (storedMetrics !== undefined) {
       if (!Array.isArray(storedMetrics)) throw new Error("Invalid knowledge reuse metrics");
@@ -164,13 +183,14 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
 
   async function getConfig() {
     await awaitReady();
-    return { ...config, statuses: [...config.statuses], fixedCardIds: [...config.fixedCardIds] };
+    return { ...config, statuses: [...config.statuses], fixedCardIds: [...config.fixedCardIds], riskWarning: { ...config.riskWarning, files: [...config.riskWarning.files] } };
   }
 
   async function updateConfig(patch: Partial<KnowledgeProviderConfig>, actorMemberId?: string) {
     await awaitReady();
-    config = normalizeConfig({ ...config, ...patch });
+    config = normalizeConfig({ ...config, ...patch, ...(patch.riskWarning ? { riskWarning: { ...config.riskWarning, ...patch.riskWarning } } : {}) });
     await writeJsonFileAtomically(configPath, config);
+    options.onConfigUpdated?.(config);
     options.events.append({ type: "knowledge_config_updated", roomId: options.roomId, memberId: actorMemberId, payload: { fields: Object.keys(patch) } });
     return getConfig();
   }
@@ -194,6 +214,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       {}
     );
     const reusable = visibleCards.filter((card) =>
+      !["needsReview", "orphaned", "archived", "superseded"].includes(card.status) &&
       config.statuses.includes(card.status) &&
       (card.status === "reviewed" ? isReusable(card, { viewerMemberId: input.initiator.id }) : true) &&
       !excludedByUser.includes(card.id)
@@ -212,17 +233,32 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const ranked = rankResults(selected, activeFiles, config);
     const records: KnowledgeInjectionRecord[] = [];
     const blocks: string[] = [KNOWLEDGE_PROMPT_TITLE];
-    const selectedIds = new Set(ranked.map((result) => result.cardId));
     const seenSources = new Set<string>();
-    let totalChars = 0;
+    const candidates: Array<{ result: KnowledgeSearchResult; card: KnowledgeCard; content: string; baseBlock: string }> = [];
+    let candidateChars = 0;
     for (const result of ranked) {
       const card = cardById.get(result.cardId);
       if (!card) continue;
-      const sourceKeys = [...(card.provenance?.evidenceRefs.runIds ?? []).map((id) => `run:${id}`), ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((id) => `message:${id}`)];
+      const sourceKeys = [
+        ...(card.provenance?.evidenceRefs.runIds ?? []).map((id) => `run:${id}`),
+        ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((id) => `message:${id}`),
+        ...(card.provenance?.evidenceRefs.traceRefs ?? []).map((ref) => `trace:${ref.runId}:${ref.seq}`)
+      ];
       if (sourceKeys.some((key) => seenSources.has(key))) continue;
       for (const key of sourceKeys) seenSources.add(key);
       const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
       const content = truncate(safeCardText(card.content), config.maxCharsPerCard);
+      const baseBlock = formatCard({ ...card, title: safeCardText(card.title), summary: safeCardText(card.summary) }, content, result.score, options.sensitiveValues);
+      if (candidateChars + baseBlock.length > config.maxTotalChars) continue;
+      candidates.push({ result, card, content, baseBlock });
+      candidateChars += baseBlock.length;
+      if (candidates.length >= config.topK) break;
+    }
+    const selectedIds = new Set(candidates.map((candidate) => candidate.card.id));
+    let totalChars = 0;
+    for (const candidate of candidates) {
+      const { result, card, content } = candidate;
+      const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
       const contradictory = [...cardById.values()].some((candidate) => selectedIds.has(candidate.id) && (candidate.relations ?? []).some((relation) => relation.kind === "contradicts" && relation.cardId === card.id))
         || (card.relations ?? []).some((relation) => relation.kind === "contradicts" && selectedIds.has(relation.cardId));
       const block = formatCard({
@@ -282,14 +318,14 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const initiator = options.room.members.find((member) => member.id === (run.initiatorMemberId ?? run.memberId));
     if (!initiator) return { hits: [] };
     const cards = await options.knowledge.list({ memberId: initiator.id, displayName: initiator.displayName }, {});
-    const candidates = cards.filter((card) => card.status === "reviewed" && ["negative", "constraint", "risk"].includes(card.type));
+    const candidates = cards.filter((card) => ["negative", "constraint", "risk"].includes(card.type) && (card.status === "reviewed" || (card.status === "needsReview" && card.check !== undefined)));
     const hits: KnowledgePostCheckHit[] = [];
     for (const change of run.fileChanges) {
-      const lines = changedLines(change.patch, change.additions, change.deletions);
-      for (const card of candidates) {
+      const lines = changedLines(change.patch, change.additions, change.deletions, change.beforeText, change.afterText);
+      for (const lineRange of lines) for (const card of candidates) {
         const applies = card.appliesTo?.kind === "project" || (card.appliesTo?.kind === "glob" && card.appliesTo.patterns.some((pattern) => minimatch(change.file, pattern, { dot: true })));
         const resolution = (await options.knowledge.resolveAnchors({ memberId: initiator.id, displayName: initiator.displayName }, change.file)).find((item) => item.cardId === card.id && item.range && item.status !== "needsReview");
-        const intersects = resolution?.range ? rangesIntersect(lines, { start: resolution.range.startLine, end: resolution.range.endLine }) : false;
+        const intersects = resolution?.range ? rangesIntersect(lineRange, { start: resolution.range.startLine, end: resolution.range.endLine }) : false;
         const checkMatchesFile = Boolean(card.check && minimatch(change.file, card.check.fileGlob, { dot: true }));
         if (!applies && !intersects && !checkMatchesFile) continue;
         let checkResult: KnowledgePostCheckHit["checkResult"];
@@ -302,7 +338,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
             checkResult = { passed, message: passed ? "Check passed" : `Check failed: ${card.check.kind}` };
           }
         }
-        hits.push({ cardId: card.id, file: change.file, lines, ...(checkResult ? { checkResult } : {}) });
+        hits.push({ cardId: card.id, file: change.file, lines: lineRange, ...(checkResult ? { checkResult } : {}) });
       }
     }
     for (const change of run.fileChanges) await options.knowledge.refreshExpired({ memberId: initiator.id, displayName: initiator.displayName }, change.file, config.orphanedAfterMs);
@@ -396,6 +432,7 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
   if (value.correctionClassifier !== undefined && value.correctionClassifier !== "rules" && value.correctionClassifier !== "rules+llm") throw new Error("Knowledge correctionClassifier is invalid");
   if (value.contradictionJudge !== undefined && value.contradictionJudge !== "none" && value.contradictionJudge !== "llm") throw new Error("Knowledge contradictionJudge is invalid");
   if (value.lexicalScoring !== undefined && value.lexicalScoring !== "legacy" && value.lexicalScoring !== "exact-boost") throw new Error("Knowledge lexical scoring is invalid");
+  if (value.ranking !== undefined && value.ranking !== "legacy" && value.ranking !== "bounded") throw new Error("Knowledge ranking is invalid");
   return {
     injectEnabled: value.injectEnabled ?? defaultKnowledgeProviderConfig.injectEnabled,
     topK: numberValue(value.topK, defaultKnowledgeProviderConfig.topK, 1, 25),
@@ -412,7 +449,22 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
     recapMode: value.recapMode ?? defaultKnowledgeProviderConfig.recapMode,
     correctionClassifier: value.correctionClassifier ?? defaultKnowledgeProviderConfig.correctionClassifier,
     contradictionJudge: value.contradictionJudge ?? defaultKnowledgeProviderConfig.contradictionJudge,
-    orphanedAfterMs: numberValue(value.orphanedAfterMs, defaultKnowledgeProviderConfig.orphanedAfterMs, 1, 365 * 24 * 60 * 60_000)
+    orphanedAfterMs: numberValue(value.orphanedAfterMs, defaultKnowledgeProviderConfig.orphanedAfterMs, 1, 365 * 24 * 60 * 60_000),
+    riskWarning: normalizeRiskWarningConfig(value.riskWarning)
+  };
+}
+
+function normalizeRiskWarningConfig(value: unknown): KnowledgeRiskWarningConfig {
+  const input = value && typeof value === "object" && !Array.isArray(value) ? value as Partial<KnowledgeRiskWarningConfig> : {};
+  const files = input.files ?? defaultKnowledgeProviderConfig.riskWarning.files;
+  if (!Array.isArray(files) || files.some((file) => typeof file !== "string" || !file)) throw new Error("Knowledge risk warning files are invalid");
+  const numberValue = (candidate: unknown, fallback: number, min: number, max: number) => typeof candidate === "number" && Number.isFinite(candidate) ? Math.max(min, Math.min(max, candidate)) : fallback;
+  return {
+    files: [...files],
+    lexicalThreshold: numberValue(input.lexicalThreshold, defaultKnowledgeProviderConfig.riskWarning.lexicalThreshold, 0, 100),
+    vectorThreshold: numberValue(input.vectorThreshold, defaultKnowledgeProviderConfig.riskWarning.vectorThreshold, 0, 1),
+    cooldownMs: numberValue(input.cooldownMs, defaultKnowledgeProviderConfig.riskWarning.cooldownMs, 0, 365 * 24 * 60 * 60_000),
+    dedupeThreshold: numberValue(input.dedupeThreshold, defaultKnowledgeProviderConfig.riskWarning.dedupeThreshold, 0, 1)
   };
 }
 
@@ -435,23 +487,45 @@ function formatCard(card: KnowledgeCard, content: string, score: number, sensiti
   const anchors = card.anchors.map((anchor) => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
   const author = card.provenance?.author.displayName ?? card.metadata.createdBy?.name ?? card.ownerMemberId ?? "unknown";
   const confirmedBy = card.review?.confirmedBy?.join(", ") ?? "";
-  return redactKnowledgeText(`${contradictory ? "[CONTRADICTS_ANOTHER_INJECTED_CARD: unresolved]\\n" : ""}[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
+  return redactKnowledgeText(`${contradictory ? "[CONTRADICTS_ANOTHER_INJECTED_CARD: unresolved]\n" : ""}[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
 }
 function truncate(value: string, max: number) { return value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`; }
 function summarize(value: string) { return value.length > 500 ? `${value.slice(0, 497)}…` : value; }
-function changedLines(patch: string | undefined, additions: number, deletions: number) {
-  if (!patch) return { start: 1, end: Math.max(1, additions + deletions) };
+function changedLines(patch: string | undefined, additions: number, deletions: number, beforeText?: string, afterText?: string) {
+  if (!patch && beforeText !== undefined && afterText !== undefined) {
+    const ranges: Array<{ start: number; end: number }> = [];
+    let afterOffset = 0;
+    for (const [operation, value] of diff(beforeText, afterText)) {
+      if (operation === diff.EQUAL) {
+        afterOffset += value.length;
+        continue;
+      }
+      const start = lineNumber(afterText, afterOffset);
+      const end = lineNumber(afterText, operation === diff.INSERT ? afterOffset + value.length : afterOffset);
+      ranges.push({ start, end });
+      if (operation === diff.INSERT) afterOffset += value.length;
+    }
+    return mergeLineRanges(ranges);
+  }
+  if (!patch) return [{ start: 1, end: Math.max(1, additions + deletions) }];
   const matches = [...patch.matchAll(/^@@ [^\n]*? \+(\d+)(?:,(\d+))? @@/gm)];
-  if (!matches.length) return { start: 1, end: Math.max(1, additions + deletions) };
+  if (!matches.length) return [{ start: 1, end: Math.max(1, additions + deletions) }];
   const ranges = matches.map((match) => {
     const start = Math.max(1, Number(match[1] ?? 1));
     const count = Math.max(1, Number(match[2] ?? 1));
     return { start, end: start + count - 1 };
   });
-  return {
-    start: Math.min(...ranges.map((range) => range.start)),
-    end: Math.max(...ranges.map((range) => range.end))
-  };
+  return ranges;
+}
+function lineNumber(text: string, offset: number) { return text.slice(0, Math.max(0, Math.min(offset, text.length))).split("\n").length; }
+function mergeLineRanges(ranges: Array<{ start: number; end: number }>) {
+  const merged: Array<{ start: number; end: number }> = [];
+  for (const range of ranges.sort((left, right) => left.start - right.start)) {
+    const previous = merged.at(-1);
+    if (previous && range.start <= previous.end + 1) previous.end = Math.max(previous.end, range.end);
+    else merged.push({ ...range });
+  }
+  return merged.length ? merged : [{ start: 1, end: 1 }];
 }
 function rangesIntersect(left: { start: number; end: number }, right: { start: number; end: number }) { return left.start <= right.end && right.start <= left.end; }
 function runInitiatesCard(run: AgentRun, files: string[], card: KnowledgeCard, trace: AgentTraceEvent[]) {
@@ -464,11 +538,23 @@ function runInitiatesCard(run: AgentRun, files: string[], card: KnowledgeCard, t
         if (file && typeof file === "object" && typeof (file as { file?: unknown }).file === "string") changedFiles.add((file as { file: string }).file);
       }
     }
+    if (event.type.startsWith("opencode.")) {
+      const values = collectTraceStrings(event.data);
+      for (const file of files) if (values.some((value) => value.includes(file))) changedFiles.add(file);
+    }
   }
   if (files.some((file) => run.contexts?.some((context) => context.path === file) || changedFiles.has(file) || text.includes(file))) return true;
   if (card.appliesTo?.kind === "project") return true;
-  const candidateFiles = [...new Set([...files, ...changedFiles])];
+  const contextFiles = (run.contexts ?? []).map((context) => context.path);
+  const candidateFiles = [...new Set([...files, ...changedFiles, ...contextFiles])];
   return card.appliesTo?.kind === "glob" && candidateFiles.some((file) => card.appliesTo?.kind === "glob" && card.appliesTo.patterns.some((pattern) => minimatch(file, pattern, { dot: true })));
+}
+
+function collectTraceStrings(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(collectTraceStrings);
+  if (value && typeof value === "object") return Object.values(value).flatMap(collectTraceStrings);
+  return [];
 }
 
 function isInjectionMode(mode: KnowledgeProviderOptions["mode"]) {

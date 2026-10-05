@@ -9,7 +9,10 @@ export interface AuthorshipInterval {
   text: string;
   groupId: string;
   originalText: string;
+  originalOffset: number;
+  sourceId: string;
   groupLength: number;
+  groupLineCount: number;
 }
 
 export interface OverwrittenInterval extends AuthorshipInterval {
@@ -18,11 +21,13 @@ export interface OverwrittenInterval extends AuthorshipInterval {
   ratio: number;
   actorKind: CaptureActorKind;
   runId?: string;
+  deletedLineIds: string[];
 }
 
 export class AuthorshipIndex {
   private readonly intervals = new Map<string, AuthorshipInterval[]>();
   private readonly deletedByGroup = new Map<string, number>();
+  private readonly deletedLinesByGroup = new Map<string, Set<string>>();
   private sequence = 0;
   constructor(private readonly maxAgeMs = 30 * 60_000) {}
 
@@ -35,8 +40,11 @@ export class AuthorshipIndex {
       const target = parseActor(interval.actor);
       groupSizes.set(interval.groupId, target.kind === "agent" ? interval.groupLength : (groupSizes.get(interval.groupId) ?? 0) + interval.end - interval.start);
     }
-    const activeGroups = new Set(current.map((interval) => interval.groupId));
-    for (const groupId of this.deletedByGroup.keys()) if (!activeGroups.has(groupId)) this.deletedByGroup.delete(groupId);
+    const activeGroups = new Set([...this.intervals.values()].flatMap(intervals => intervals.filter(interval => at - interval.at <= this.maxAgeMs).map(interval => interval.groupId)));
+    for (const groupId of this.deletedByGroup.keys()) if (!activeGroups.has(groupId)) {
+      this.deletedByGroup.delete(groupId);
+      this.deletedLinesByGroup.delete(groupId);
+    }
     for (const op of operations) {
       for (const interval of current) {
         const target = parseActor(interval.actor);
@@ -47,15 +55,24 @@ export class AuthorshipIndex {
         const previous = deleted.get(interval.groupId);
         const text = interval.text.slice(start - interval.start, end - interval.start);
         const targetKind = parseActor(interval.actor).kind;
+        const originalStart = interval.originalOffset + start - interval.start;
+        const originalEnd = interval.originalOffset + end - interval.start;
+        const firstLine = interval.originalText.slice(0, originalStart).split("\n").length - 1;
+        const lastLine = interval.originalText.slice(0, originalEnd - 1).split("\n").length - 1;
+        const deletedLineIds = Array.from({ length: lastLine - firstLine + 1 }, (_, index) => `${interval.sourceId}:${firstLine + index}`);
+        const allDeletedLineIds = this.deletedLinesByGroup.get(interval.groupId) ?? new Set<string>();
+        for (const lineId of deletedLineIds) allDeletedLineIds.add(lineId);
+        this.deletedLinesByGroup.set(interval.groupId, allDeletedLineIds);
         const deletedChars = targetKind === "agent" ? (this.deletedByGroup.get(interval.groupId) ?? 0) + end - start : (previous?.deletedChars ?? 0) + end - start;
         if (targetKind === "agent") this.deletedByGroup.set(interval.groupId, deletedChars);
         deleted.set(interval.groupId, {
           ...interval,
           deletedText: (previous?.deletedText ?? "") + text,
           deletedChars,
-            ratio: deletedChars / Math.max(1, groupSizes.get(interval.groupId) ?? interval.groupLength),
+          ratio: deletedChars / Math.max(1, groupSizes.get(interval.groupId) ?? interval.groupLength),
           actorKind: target.kind,
-          runId: target.runId
+          runId: target.runId,
+          deletedLineIds: [...allDeletedLineIds]
         });
       }
     }
@@ -64,7 +81,8 @@ export class AuthorshipIndex {
       if (op.insertText && (editor.kind === "member" || editor.kind === "agent")) {
         const groupId = `${at}:${++this.sequence}`;
         this.deletedByGroup.set(groupId, 0);
-        current.push({ actor, start: op.start, end: op.start + op.insertText.length, at, text: op.insertText, originalText: op.insertText, groupId, groupLength: op.insertText.length });
+        this.deletedLinesByGroup.set(groupId, new Set());
+        current.push({ actor, start: op.start, end: op.start + op.insertText.length, at, text: op.insertText, originalText: op.insertText, originalOffset: 0, sourceId: groupId, groupId, groupLength: op.insertText.length, groupLineCount: countAuthorshipLines(op.insertText) });
       }
     }
     this.intervals.set(file, current.sort((a, b) => a.start - b.start));
@@ -77,10 +95,12 @@ export class AuthorshipIndex {
     const current = (this.intervals.get(file) ?? []).filter(interval => at - interval.at <= this.maxAgeMs);
     const groupId = `${at}:${++this.sequence}`;
     const groupLength = ranges.reduce((total, range) => total + range.text.length, 0);
+    const groupLineCount = ranges.reduce((total, range) => total + countAuthorshipLines(range.text), 0);
     this.deletedByGroup.set(groupId, 0);
-    for (const range of ranges) {
+    this.deletedLinesByGroup.set(groupId, new Set());
+    for (const [index, range] of ranges.entries()) {
       if (!Number.isInteger(range.start) || !Number.isInteger(range.end) || range.start < 0 || range.end <= range.start || range.end - range.start !== range.text.length) throw new Error("Authorship range is invalid");
-      current.push({ actor, ownerId: range.ownerId, start: range.start, end: range.end, at, text: range.text, originalText: range.text, groupId, groupLength });
+      current.push({ actor, ownerId: range.ownerId, start: range.start, end: range.end, at, text: range.text, originalText: range.text, originalOffset: 0, sourceId: `${groupId}:${index}`, groupId, groupLength, groupLineCount });
     }
     this.intervals.set(file, current.sort((a, b) => a.start - b.start));
   }
@@ -91,11 +111,15 @@ export class AuthorshipIndex {
   retire(file: string) {
     const groups = new Set((this.intervals.get(file) ?? []).map((interval) => interval.groupId));
     this.intervals.delete(file);
-    for (const groupId of groups) this.deletedByGroup.delete(groupId);
+    for (const groupId of groups) {
+      this.deletedByGroup.delete(groupId);
+      this.deletedLinesByGroup.delete(groupId);
+    }
   }
 }
 
 export function isMemberActor(actor: string) { return parseActor(actor).kind === "member"; }
+function countAuthorshipLines(text: string) { return text ? text.split("\n").length - (text.endsWith("\n") ? 1 : 0) : 0; }
 
 export function transformIntervals(intervals: AuthorshipInterval[], op: CaptureEditOp) {
   const transformed: AuthorshipInterval[] = [];
@@ -105,7 +129,7 @@ export function transformIntervals(intervals: AuthorshipInterval[], op: CaptureE
     if (interval.end <= op.start) { transformed.push(interval); continue; }
     if (interval.start >= deletionEnd) { transformed.push({ ...interval, start: interval.start + shift, end: interval.end + shift }); continue; }
     if (interval.start < op.start) transformed.push({ ...interval, end: op.start, text: interval.text.slice(0, op.start - interval.start) });
-    if (interval.end > deletionEnd) transformed.push({ ...interval, start: op.start + op.insertText.length, end: interval.end + shift, text: interval.text.slice(deletionEnd - interval.start) });
+    if (interval.end > deletionEnd) transformed.push({ ...interval, start: op.start + op.insertText.length, end: interval.end + shift, text: interval.text.slice(deletionEnd - interval.start), originalOffset: interval.originalOffset + deletionEnd - interval.start });
   }
   intervals.splice(0, intervals.length, ...transformed);
 }

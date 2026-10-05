@@ -102,6 +102,8 @@ export interface CaptureAgentFileChange {
   addedText?: string;
   removedText?: string;
   patch?: string;
+  beforeText?: string;
+  afterText?: string;
 }
 
 export interface CaptureAgentRunEvent extends CaptureEventBase {
@@ -116,6 +118,7 @@ export interface CaptureAgentRunEvent extends CaptureEventBase {
   extraPrompt?: string;
   interruptsRunId?: string;
   interruptedByMemberId?: string;
+  interruptedByPrompt?: string;
   previousRunId?: string;
   previousStatus?: "completed" | "failed" | "cancelled";
   previousPrompt?: string;
@@ -133,6 +136,7 @@ export interface CaptureAgentToolEvent extends CaptureEventBase {
   success: boolean;
   exitCode?: number;
   error?: string;
+  traceSeq?: number;
 }
 
 export type ExternalCollaborationEvent = {
@@ -145,6 +149,10 @@ export type ExternalCollaborationEvent = {
 
 export interface KnowledgeEventSink {
   push(event: ExternalCollaborationEvent): void | Promise<void>;
+}
+
+export function createKnowledgeEventSink(push: (event: ExternalCollaborationEvent) => void | Promise<void>): KnowledgeEventSink {
+  return { push };
 }
 
 export type CaptureEvent =
@@ -168,11 +176,11 @@ export function isCaptureEvent(value: unknown): value is CaptureEvent {
     if (!text(event.runId) || !text(event.memberId) || !text(event.prompt) || !["start", "end", "failed", "cancelled", "interrupted"].includes(String(event.action))) return false;
     if (event.source !== undefined && !["agent-panel", "chat"].includes(String(event.source))) return false;
     if (event.status !== undefined && !["queued", "running", "completed", "failed", "cancelled"].includes(String(event.status))) return false;
-    for (const field of ["sessionId", "extraPrompt", "interruptsRunId", "interruptedByMemberId", "previousRunId", "previousPrompt", "error"]) if (!optionalText(field)) return false;
+    for (const field of ["sessionId", "extraPrompt", "interruptsRunId", "interruptedByMemberId", "interruptedByPrompt", "previousRunId", "previousPrompt", "error"]) if (!optionalText(field)) return false;
     if (event.fileChanges !== undefined && (!Array.isArray(event.fileChanges) || event.fileChanges.some((change) => {
       if (!change || typeof change !== "object" || !text((change as Record<string, unknown>).file)) return true;
       const value = change as Record<string, unknown>;
-      return ["addedText", "removedText", "patch"].some((field) => value[field] !== undefined && typeof value[field] !== "string")
+      return ["addedText", "removedText", "patch", "beforeText", "afterText"].some((field) => value[field] !== undefined && typeof value[field] !== "string")
         || ["additions", "deletions"].some((field) => value[field] !== undefined && !coordinate(value[field]));
     }))) return false;
     if (event.agentRanges !== undefined && (!Array.isArray(event.agentRanges) || event.agentRanges.some((range) => {
@@ -184,7 +192,8 @@ export function isCaptureEvent(value: unknown): value is CaptureEvent {
   }
   if (event.type === "agentTool") {
     return text(event.runId) && text(event.memberId) && text(event.tool) && typeof event.success === "boolean"
-      && optionalText("command") && optionalText("error") && (event.exitCode === undefined || Number.isInteger(event.exitCode));
+      && optionalText("command") && optionalText("error") && (event.exitCode === undefined || Number.isInteger(event.exitCode))
+      && (event.traceSeq === undefined || coordinate(event.traceSeq));
   }
   if (event.type === "chat") return text(event.messageId) && text(event.authorId) && ["member", "agent", "system"].includes(String(event.kind)) && typeof event.text === "string" && optionalText("file") && (event.mentions === undefined || Array.isArray(event.mentions) && event.mentions.every(text));
   if (!text(event.file)) return false;

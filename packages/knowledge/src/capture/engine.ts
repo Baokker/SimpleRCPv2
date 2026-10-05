@@ -4,7 +4,7 @@ import { shouldTriggerCapture, defaultCaptureTriggerThresholds } from "./trigger
 import type { CaptureSuggestion, CaptureTriggerType, KnowledgeCardType, SuggestedAnchor } from "../schema/card.js";
 import { AuthorshipIndex, isMemberActor } from "./authorship.js";
 import { VirtualCaptureClock, type CaptureClock } from "./clock.js";
-import { parseActor, type CaptureAgentRunEvent, type CaptureAgentToolEvent, type CaptureChatEvent, type CaptureEditEvent, type CaptureEvent } from "./events.js";
+import { parseActor, type CaptureAgentFileChange, type CaptureAgentRunEvent, type CaptureAgentToolEvent, type CaptureChatEvent, type CaptureEditEvent, type CaptureEvent, type ExternalCollaborationEvent } from "./events.js";
 import { inferCoOccurrence, type CaptureActivity } from "./inference.js";
 
 export interface CaptureEngineConfig {
@@ -67,6 +67,14 @@ export interface AgentRevisedEvent {
   ownerId?: string;
   intervals: import("./authorship.js").OverwrittenInterval[];
   at: number;
+  anchors?: SuggestedAnchor[];
+  diff?: ReturnType<typeof changedSnippet>;
+  replacement?: string;
+  chatMessages?: CaptureChatEvent[];
+  cursors?: CaptureActivity[];
+  restored?: { beforeText: string; afterText: string };
+  agentPrompt?: string;
+  agentFileChange?: CaptureAgentFileChange;
 }
 
 export function createAgentRevisedSuggestion(event: AgentRevisedEvent): CaptureSuggestion {
@@ -81,8 +89,8 @@ export function createAgentRevisedSuggestion(event: AgentRevisedEvent): CaptureS
     suggestedType: "decision",
     suggestedTitle: "成员改写了 Agent 的内容",
     suggestedSummary: `成员在 ${event.file} 上改写了 Agent 的内容`,
-    suggestedAnchors: [{ file: event.file, startLine: 1, endLine: lineCount, score: 1, reasons: ["Agent 修改范围"] }],
-    evidence: { file: event.file, runId: event.runId, editor: event.editor, ownerId: event.ownerId, overwritten: event.intervals },
+    suggestedAnchors: event.anchors ?? [{ file: event.file, startLine: 1, endLine: lineCount, score: 1, reasons: ["Agent 修改范围"] }],
+    evidence: { file: event.file, runId: event.runId, editor: event.editor, ownerId: event.ownerId, overwritten: event.intervals, ...(event.diff ? { diff: event.diff } : {}), ...(event.replacement !== undefined ? { replacement: event.replacement } : {}), ...(event.chatMessages ? { chatMessages: event.chatMessages } : {}), ...(event.cursors ? { cursors: event.cursors } : {}), ...(event.restored ? { restored: event.restored } : {}), ...(event.agentPrompt !== undefined ? { agentPrompt: event.agentPrompt } : {}), ...(event.agentFileChange ? { agentFileChange: event.agentFileChange } : {}) },
     confidence: 0.7,
     state: "open"
   };
@@ -112,6 +120,7 @@ export function createCaptureEngine(options: {
   onSuggestion(suggestion: CaptureSuggestion): void;
   onCheckpoint?(checkpoint: CaptureCheckpoint): void;
   onAgentRevised?(event: AgentRevisedEvent): void;
+  onExternalEvent?(event: ExternalCollaborationEvent): void | Promise<void>;
 }) {
   const config = resolveCaptureConfig(options.config);
   const files = new Map<string, FileState>();
@@ -122,7 +131,7 @@ export function createCaptureEngine(options: {
   const seenChatIds = new Set<string>();
   const timers = new Set<number>();
   const agentRuns = new Map<string, AgentRunState>();
-  const failedTools = new Map<string, { command?: string; executable?: string; at: number; error?: string; edited: boolean }[]>();
+  const failedTools = new Map<string, { command?: string; executable?: string; at: number; error?: string; traceSeq?: number; editedFiles: Set<string> }[]>();
   let sequence = 0;
 
   function emit(trigger: CaptureTriggerType, at: number, actors: string[], evidence: Record<string, unknown>, type: KnowledgeCardType, anchors: SuggestedAnchor[] = [], origin: "human-human" | "human-agent" = "human-human", runIds: string[] = []) {
@@ -216,19 +225,39 @@ export function createCaptureEngine(options: {
     const before = state.text;
     const after = applyCaptureOps(before, event.ops);
     if (event.textAfter !== undefined && after !== event.textAfter) throw new Error(`Capture text mismatch: ${event.file}`);
-    for (const failures of failedTools.values()) for (const failure of failures) failure.edited = true;
     const overwritten = authorship.apply(event.file, event.actor, event.ops, event.at).filter(interval => event.at - interval.at <= Math.max(config.overwrittenWindowMs, config.agentRevisionWindowMs));
     const groups = new Map<string, typeof overwritten>();
+    const revisedRuns = new Set<string>();
     for (const item of overwritten) groups.set(item.actor, [...(groups.get(item.actor) ?? []), item]);
     for (const [author, intervals] of groups) {
       const significant = intervals.some(item => shouldTriggerCapture({ triggerType: "edit.overwritten", overwrittenLines: countLines(item.deletedText), overwrittenRatio: item.ratio, overwrittenAgeMs: event.at - item.at }, config));
       const editorActor = parseActor(event.actor);
       const targetActor = parseActor(author);
-      const agentSignificant = intervals.some((item) => item.ratio >= config.agentRevisionMinRatio && event.at - item.at <= config.agentRevisionWindowMs);
+      const agentSignificant = intervals.some((item) => item.deletedLineIds.length / Math.max(1, item.groupLineCount) >= config.agentRevisionMinRatio && event.at - item.at <= config.agentRevisionWindowMs);
       if ((significant || agentSignificant) && editorActor.kind === "member" && targetActor.kind === "agent" && targetActor.runId) {
         const ownerId = intervals.find((interval) => interval.ownerId)?.ownerId;
         if (cooled(`agent-revised:${event.file}:${targetActor.runId}`, event.at, config.agentRevisionCooldownMs)) {
-          options.onAgentRevised?.({ file: event.file, agent: author, runId: targetActor.runId, editor: event.actor, ownerId, intervals, at: event.at });
+          const start = Math.min(...event.ops.map((operation) => operation.start));
+          const end = Math.max(...event.ops.map((operation) => operation.start + operation.insertText.length));
+          const run = targetActor.runId ? agentRuns.get(targetActor.runId) : undefined;
+          const agentFileChange = run?.event.fileChanges?.find((change) => change.file === event.file);
+          options.onAgentRevised?.({
+            file: event.file,
+            agent: author,
+            runId: targetActor.runId,
+            editor: event.actor,
+            ownerId,
+            intervals,
+            at: event.at,
+            anchors: rangeAnchor(event.file, after, start, end),
+            diff: changedSnippet(before, after),
+            replacement: event.ops.map((operation) => operation.insertText).join(""),
+            chatMessages: chats.filter(message => [event.actor, ownerId].includes(message.authorId) && message.at >= Math.min(...intervals.map(item => item.at))),
+            cursors: [event.actor, ownerId].filter((actor): actor is string => Boolean(actor)).map(actor => activities.filter(activity => activity.type === "cursor" && activity.actor === actor).at(-1)).filter((activity): activity is CaptureActivity => Boolean(activity)),
+            agentPrompt: run?.event.prompt,
+            agentFileChange
+          });
+          revisedRuns.add(targetActor.runId);
         }
         continue;
       }
@@ -241,6 +270,28 @@ export function createCaptureEngine(options: {
         cursors: [author, event.actor].map(actor => activities.filter(activity => activity.type === "cursor" && activity.actor === actor).at(-1)).filter(Boolean),
         diff: changedSnippet(before, after), revisionAfter: event.revisionAfter
       }, "decision", rangeAnchor(event.file, after, event.ops[0]?.start ?? 0, (event.ops[0]?.start ?? 0) + (event.ops[0]?.insertText.length ?? 0)));
+    }
+    if (isMemberActor(event.actor) && event.textAfter !== undefined) {
+      for (const [runId, run] of agentRuns) {
+        const fileChange = run.event.fileChanges?.find((change) => change.file === event.file && change.beforeText !== undefined && change.afterText !== undefined && change.beforeText !== change.afterText);
+        if (revisedRuns.has(runId) || !fileChange || run.endedAt === undefined || event.at - run.endedAt > config.agentRevisionWindowMs || fileChange.afterText !== before || fileChange.beforeText !== after) continue;
+        if (!cooled(`agent-revised:${event.file}:${runId}`, event.at, config.agentRevisionCooldownMs)) continue;
+        options.onAgentRevised?.({
+          file: event.file,
+          agent: `agent:${runId}`,
+          runId,
+          editor: event.actor,
+          ownerId: run.event.memberId,
+          intervals: [],
+          at: event.at,
+          anchors: rangeAnchor(event.file, after, 0, after.length),
+          diff: changedSnippet(before, after),
+          replacement: after,
+          restored: { beforeText: fileChange.beforeText!, afterText: fileChange.afterText! },
+          agentPrompt: run.event.prompt,
+          agentFileChange: fileChange
+        });
+      }
     }
     if (isMemberActor(event.actor)) {
       const removedChars = event.ops.reduce((sum, op) => sum + op.deleteCount, 0);
@@ -278,18 +329,26 @@ export function createCaptureEngine(options: {
       : event.sessionId
         ? [...agentRuns.values()].filter((run) => run.event.sessionId === event.sessionId && run.endedAt !== undefined).sort((a, b) => (b.endedAt ?? 0) - (a.endedAt ?? 0))[0]
         : undefined;
+    const retryPrevious = event.previousRunId
+      ? agentRuns.get(event.previousRunId)
+      : [...agentRuns.values()].filter((run) => run.event.memberId === event.memberId && run.endedAt !== undefined && (run.status === "failed" || run.status === "cancelled")).sort((a, b) => (b.endedAt ?? 0) - (a.endedAt ?? 0))[0];
     if (event.action === "start") {
-      if (previous?.status === "cancelled" && previous.event.action === "cancelled" && previous.endedAt !== undefined && event.at - previous.endedAt <= config.agentInterruptWindowMs && previous.event.memberId === event.memberId) {
-        emit("agent.interrupted", event.at, [event.memberId], { run: previous.event, interruption: { memberId: event.memberId, nextRunId: event.runId } }, "negative", [], "human-agent", [previous.event.runId, event.runId]);
+      if (previous?.status === "cancelled" && previous.event.action === "cancelled" && !previous.event.interruptedByMemberId && previous.endedAt !== undefined && event.at - previous.endedAt <= config.agentInterruptWindowMs && previous.event.memberId === event.memberId) {
+        emit("agent.interrupted", event.at, [event.memberId], {
+          primaryActor: event.memberId,
+          run: previous.event,
+          interruption: { memberId: event.memberId, nextRunId: event.runId, nextPrompt: event.prompt },
+          chatMessages: chats.filter(message => message.authorId === event.memberId && message.at >= event.at - config.agentInterruptWindowMs && message.at <= event.at)
+        }, "negative", [], "human-agent", [previous.event.runId, event.runId]);
       }
       if (previous?.endedAt !== undefined && event.at - previous.endedAt <= config.agentCorrectionWindowMs && isCorrection(event.prompt, previous.event.fileChanges, config.correctionTerms)) {
-        emit("agent.corrected", event.at, [event.memberId, previous.event.memberId], { previousRun: previous.event, correction: event, previousDiff: previous.event.fileChanges }, "decision", [], "human-agent", [previous.event.runId, event.runId]);
+        emit("agent.corrected", event.at, [event.memberId, previous.event.memberId], { primaryActor: event.memberId, previousRun: previous.event, correction: event, previousDiff: previous.event.fileChanges }, "decision", [], "human-agent", [previous.event.runId, event.runId]);
       }
-      const retrySimilarity = previous ? promptSimilarity(event.prompt, previous.event.prompt) : 0;
+      const retrySimilarity = retryPrevious ? promptSimilarity(event.prompt, retryPrevious.event.prompt) : 0;
       agentRuns.set(event.runId, {
         event,
         status: "running",
-        ...(previous && (previous.status === "failed" || previous.status === "cancelled") && previous.endedAt !== undefined && event.at - previous.endedAt <= config.agentRetryWindowMs && retrySimilarity >= config.agentSimilarityThreshold ? { retryFrom: { event: previous.event, similarity: retrySimilarity } } : {})
+        ...(retryPrevious && (retryPrevious.status === "failed" || retryPrevious.status === "cancelled") && retryPrevious.endedAt !== undefined && event.at - retryPrevious.endedAt <= config.agentRetryWindowMs && retrySimilarity >= config.agentSimilarityThreshold ? { retryFrom: { event: retryPrevious.event, similarity: retrySimilarity } } : {})
       });
       return;
     }
@@ -303,13 +362,19 @@ export function createCaptureEngine(options: {
       for (const range of event.agentRanges) grouped.set(range.file, [...(grouped.get(range.file) ?? []), range]);
       for (const [file, ranges] of grouped) authorship.register(file, `agent:${event.runId}`, ranges.map((range) => ({ ...range, ownerId: range.ownerId ?? event.memberId })), event.at);
     }
-    if (event.action === "end" && state.retryFrom && state.retryFrom.event.memberId === event.memberId) {
+    if (event.action === "end" && state.status === "completed" && state.retryFrom && state.retryFrom.event.memberId === event.memberId) {
       emit("agent.retried", event.at, [event.memberId], { failedRun: state.retryFrom.event, retryRun: event, similarity: state.retryFrom.similarity }, "tutorial", [], "human-agent", [state.retryFrom.event.runId, event.runId]);
     }
     if (event.action === "interrupted" || (event.action === "cancelled" && event.interruptedByMemberId)) {
       const interrupter = event.interruptedByMemberId ?? event.memberId;
-      emit("agent.interrupted", event.at, [interrupter, event.memberId], { run: event, interruption: { memberId: interrupter, runId: event.interruptsRunId } }, "negative", [], "human-agent", [event.runId, ...(event.interruptsRunId ? [event.interruptsRunId] : [])]);
+      emit("agent.interrupted", event.at, [interrupter, event.memberId], {
+        primaryActor: interrupter,
+        run: event,
+        interruption: { memberId: interrupter, runId: event.interruptsRunId, nextPrompt: event.interruptedByPrompt },
+        chatMessages: chats.filter(message => (message.authorId === interrupter || message.authorId === event.memberId) && message.at >= event.at - config.agentInterruptWindowMs && message.at <= event.at)
+      }, "negative", [], "human-agent", [event.runId, ...(event.interruptsRunId ? [event.interruptsRunId] : [])]);
     }
+    failedTools.delete(event.runId);
   }
 
   function agentTool(event: CaptureAgentToolEvent) {
@@ -317,15 +382,16 @@ export function createCaptureEngine(options: {
     const executable = command?.split(/\s+/)[0];
     const entries = failedTools.get(event.runId) ?? [];
     if (!event.success) {
-      if (!isNetworkError(event.error)) entries.push({ command, executable, at: event.at, error: event.error, edited: false });
+      if (!isNetworkError(event.error)) entries.push({ command, executable, at: event.at, error: event.error, traceSeq: event.traceSeq, editedFiles: new Set() });
       failedTools.set(event.runId, entries);
       return;
     }
     const failure = entries.find((item) => commandsMatch(item.command, command));
-    if (!failure) return;
-    if (!failure.edited) return;
-    emit("agent.toolRecovered", event.at, [event.memberId], { runId: event.runId, failure: { command: failure.command, error: failure.error?.slice(0, 2000) }, success: { command, exitCode: event.exitCode } }, "tutorial", [], "human-agent", [event.runId]);
+    if (!failure || (event.exitCode !== undefined && event.exitCode !== 0)) return;
     failedTools.set(event.runId, entries.filter((item) => item !== failure));
+    if (!failure.editedFiles.size) return;
+    const traceRefs = [failure.traceSeq, event.traceSeq].filter((seq): seq is number => seq !== undefined).map((seq) => ({ runId: event.runId, seq }));
+    emit("agent.toolRecovered", event.at, [event.memberId], { runId: event.runId, ...(traceRefs.length ? { traceRefs } : {}), failure: { command: failure.command, error: failure.error?.slice(0, 2000) }, modifiedFiles: [...failure.editedFiles], success: { command, exitCode: event.exitCode, traceSeq: event.traceSeq } }, "tutorial", [], "human-agent", [event.runId]);
   }
 
   function process(event: CaptureEvent) {
@@ -353,7 +419,7 @@ export function createCaptureEngine(options: {
       }
       const before = event.textBefore ?? state.text;
       if (event.textAfter !== undefined) {
-        if (event.textAfter !== before) for (const failures of failedTools.values()) for (const failure of failures) failure.edited = true;
+        if (event.textAfter !== before) for (const failures of failedTools.values()) for (const failure of failures) failure.editedFiles.add(event.file);
         if (isPackage(event.file)) {
           const baseline = dependencyNames(before) !== undefined ? before : state.dependencyBaseline ?? before;
           dependencies(event.file, baseline, event.textAfter, "filesystem", event.at, rangeAnchor(event.file, event.textAfter, 0, event.textAfter.length));
@@ -382,12 +448,21 @@ export function createCaptureEngine(options: {
     while (chats[0] && chats[0].at < cutoff) seenChatIds.delete(chats.shift()!.messageId);
     for (const [key, at] of cooldowns) if (at < cutoff) cooldowns.delete(key);
   }
+  async function processExternal(event: ExternalCollaborationEvent) {
+    if (!["terminal.commandDenied", "terminal.commandApproved", "conflict.detected", "conflict.resolved"].includes(event.type)
+      || !Number.isFinite(event.at) || event.at < 0
+      || !Array.isArray(event.participants) || event.participants.length === 0 || event.participants.some((participant) => typeof participant !== "string" || !participant.trim())
+      || typeof event.description !== "string" || !event.description.trim()
+      || (event.file !== undefined && (typeof event.file !== "string" || !event.file.trim()))) throw new Error("External collaboration event is invalid");
+    if (event.at !== options.clock.now()) throw new Error("Advance the capture clock before processing an external event");
+    await options.onExternalEvent?.(event);
+  }
   function infer(messages: CaptureChatEvent[], endAt: number) {
     const firstAt = messages.length ? Math.min(...messages.map(message => message.at)) : endAt;
     const lastAt = messages.length ? Math.max(...messages.map(message => message.at)) : endAt;
     return inferCoOccurrence({ messages, activities, texts: new Map([...files].map(([file, state]) => [file, state.text])), from: firstAt - config.chatBeforeMs, to: Math.min(endAt, lastAt + config.chatAfterMs), weights: config.weights });
   }
-  return { process, infer, config, authorship, dispose() { for (const id of timers) cancel(id); files.clear(); activities.length = 0; chats.length = 0; agentRuns.clear(); failedTools.clear(); } };
+  return { process, processExternal, infer, config, authorship, dispose() { for (const id of timers) cancel(id); files.clear(); activities.length = 0; chats.length = 0; agentRuns.clear(); failedTools.clear(); } };
 }
 
 export function replayEvents(events: CaptureEvent[], config: CaptureConfigInput = {}, endAt?: number): CaptureSuggestion[] {
