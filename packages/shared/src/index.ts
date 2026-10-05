@@ -115,6 +115,7 @@ export type AgentRunStatus =
   | "running"
   | "completed"
   | "failed"
+  | "blocked_by_guard"
   | "cancelled";
 
 export interface AgentFileChange {

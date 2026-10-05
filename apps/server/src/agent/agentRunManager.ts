@@ -30,6 +30,7 @@ import {
 import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
 import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
+import { OpenCodeEmptyResponseError } from "./openCodeRuntime.js";
 
 interface AgentRunManagerOptions {
   members: MemberStore;
@@ -388,12 +389,48 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
       const permissionTasks = new Set<Promise<void>>();
       const handledPermissionIds = new Set<string>();
+      const permissionBatches = new Map<string, { active: number; deferredRejects: Array<{ requestId: string; message: string }>; flushing: boolean }>();
+      let guardRejected = false;
+      const batchFor = (sessionId: string) => {
+        const currentBatch = permissionBatches.get(sessionId);
+        if (currentBatch) return currentBatch;
+        const batch = { active: 0, deferredRejects: [], flushing: false };
+        permissionBatches.set(sessionId, batch);
+        return batch;
+      };
+      async function replyPermission(requestId: string, reply: "once" | "reject", message?: string) {
+        try {
+          await options.runtime.replyPermission({
+            workspacePath: projectRuntime.project.workspacePath,
+            requestId,
+            reply,
+            message
+          });
+        } catch (error) {
+          const summary = error instanceof Error ? error.message : "Permission reply failed";
+          if (reply === "reject" && /permission request not found/i.test(summary)) {
+            await appendTrace(projectId, runId, { type: "permission_reply_ignored", summary });
+            return;
+          }
+          await appendTrace(projectId, runId, { type: "permission_reply_failed", summary });
+        }
+      }
+      async function flushRejectedPermissions(sessionId: string, batch: { active: number; deferredRejects: Array<{ requestId: string; message: string }>; flushing: boolean }) {
+        if (batch.active !== 0 || batch.flushing || batch.deferredRejects.length === 0) return;
+        batch.flushing = true;
+        const rejected = batch.deferredRejects.splice(0);
+        for (const item of rejected) await replyPermission(item.requestId, "reject", item.message);
+        batch.flushing = false;
+        permissionBatches.delete(sessionId);
+      }
       async function handlePermissionEvent(event: { type: string; data: Record<string, unknown> }) {
         const properties = event.data;
         const data = properties;
         const requestId = typeof data.id === "string" ? data.id : typeof data.requestID === "string" ? data.requestID : undefined;
         if (!requestId || handledPermissionIds.has(requestId)) return;
         handledPermissionIds.add(requestId);
+        const permissionBatch = batchFor(runtimeSessionId);
+        permissionBatch.active += 1;
         const permission = typeof data.permission === "string" ? data.permission : typeof data.action === "string" ? data.action : "";
         const rawPatterns = Array.isArray(data.patterns) ? data.patterns : data.resources;
         const patterns = Array.isArray(rawPatterns)
@@ -432,23 +469,22 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           if (permissionResult.approved && permissionResult.decision.action === "allow_snapshot") {
             await projectRuntime.guard.createSnapshot(request);
           }
-          try {
-            await options.runtime.replyPermission({
-              workspacePath: projectRuntime.project.workspacePath,
+          if (permissionResult.approved) {
+            await replyPermission(requestId, "once");
+          } else {
+            guardRejected = true;
+            permissionBatch.deferredRejects.push({
               requestId,
-              reply: permissionResult.approved ? "once" : "reject",
-              message: permissionResult.approved ? undefined : permissionResult.decision.matchedRules.join(", ") || "Permission denied by project guard"
+              message: permissionResult.decision.matchedRules.join(", ") || "Permission denied by project guard"
             });
-          } catch (error) {
-            await appendTrace(projectId, runId, { type: "permission_reply_failed", summary: error instanceof Error ? error.message : "Permission reply failed" });
           }
         } catch (error) {
+          guardRejected = true;
           await appendTrace(projectId, runId, { type: "permission_failed", summary: error instanceof Error ? error.message : "Permission handling failed" });
-          try {
-            await options.runtime.replyPermission({ workspacePath: projectRuntime.project.workspacePath, requestId, reply: "reject", message: "Permission handling failed" });
-          } catch {
-            // Permission endpoints can disappear when a run or session ends.
-          }
+          permissionBatch.deferredRejects.push({ requestId, message: "Permission handling failed" });
+        } finally {
+          permissionBatch.active -= 1;
+          await flushRejectedPermissions(runtimeSessionId, permissionBatch);
         }
       }
 
@@ -487,6 +523,30 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       ).finally(stopEvents);
       } catch (error) {
+        if (guardRejected && error instanceof OpenCodeEmptyResponseError) {
+          const message = "blocked_by_guard";
+          await updateRun(projectId, runId, {
+            status: "blocked_by_guard",
+            error: message,
+            finishedAt: new Date().toISOString()
+          });
+          appendActivity(projectId, {
+            type: "agent_task_blocked",
+            memberId: current.memberId,
+            participantId: current.participantId,
+            payload: {
+              runId: current.id,
+              sessionId: current.sessionId,
+              name: current.memberName,
+              error: message
+            }
+          });
+          await appendTrace(projectId, runId, {
+            type: "run_blocked_by_guard",
+            summary: message
+          });
+          return;
+        }
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
           await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore);
