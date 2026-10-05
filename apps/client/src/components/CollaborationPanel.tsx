@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
-import { downloadAgentTrace, getServerInfo, getConflictGuardState } from "../api";
+import { downloadAgentTrace, getServerInfo, getConflictGuardState, sendConflictPairChat } from "../api";
 import { ConflictGuardPanel } from "./ConflictGuardPanel";
 import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
@@ -235,7 +235,7 @@ export function CollaborationPanel({
       </nav>
 
       <div className="collab-tab-body">
-        {activeTab === "conflict" && conflictState ? <ConflictGuardPanel state={conflictState} projectId={projectId} members={members} onOpenSymbol={onOpenSymbol} onError={onError} /> : null}
+        {activeTab === "conflict" && conflictState ? <ConflictGuardPanel state={conflictState} projectId={projectId} members={members} memberId={member?.id} onOpenSymbol={onOpenSymbol} onError={onError} onChat={(text, pairId) => { void sendConflictPairChat(projectId, pairId, text).catch(onError); setActiveTab("chat"); }} /> : null}
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
             <div className="team-agent-bar" data-testid="team-agent-bar">

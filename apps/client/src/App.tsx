@@ -20,6 +20,8 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
+import { getConflictGuardState, getServerInfo } from "./api";
+import type { ConflictGuardState } from "./conflictGuardTypes";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -221,6 +223,8 @@ function WorkspacePage({
   const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
     "Saved"
   );
+  const [conflictGuardState, setConflictGuardState] = useState<ConflictGuardState>();
+  const seenT0WarningsRef = useRef(new Set<string>());
   const [collaborationVisible, setCollaborationVisible] = useState(true);
   const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
   const [workspaceWidth, setWorkspaceWidth] = useState(() => readLayoutDimension(WORKSPACE_WIDTH_KEY, 252, 180, 420));
@@ -467,6 +471,41 @@ function WorkspacePage({
     }, 1500);
     return () => window.clearInterval(timer);
   }, [roomId]);
+
+  useEffect(() => {
+    const handleNotice = (event: Event) => {
+      const message = (event as CustomEvent<string>).detail;
+      if (message) showWorkspaceNotice(message);
+    };
+    window.addEventListener("simplercp-conflict-guard-notice", handleNotice);
+    return () => window.removeEventListener("simplercp-conflict-guard-notice", handleNotice);
+  }, [showWorkspaceNotice]);
+
+  useEffect(() => {
+    let active = true;
+    let timer: number | undefined;
+    const refresh = async () => {
+      try {
+        const info = await getServerInfo();
+        if (info.features.conflictGuard === "off") { if (active) setConflictGuardState(undefined); return; }
+        const state = await getConflictGuardState(projectId);
+        if (active) {
+          setConflictGuardState(state);
+          for (const warning of state.t0Warnings ?? []) {
+            if (seenT0WarningsRef.current.has(warning.id)) continue;
+            seenT0WarningsRef.current.add(warning.id);
+            showWorkspaceNotice(warning.summary);
+          }
+        }
+      } catch {
+        // 面板轮询失败时保留上一次冻结状态，下一次继续请求。
+      } finally {
+        if (active) timer = window.setTimeout(refresh, 1_000);
+      }
+    };
+    void refresh();
+    return () => { active = false; if (timer !== undefined) window.clearTimeout(timer); };
+  }, [projectId]);
 
   useEffect(() => {
     if (!followingMemberId) return;
@@ -873,6 +912,12 @@ function WorkspacePage({
           onCloseFile={closeFile}
           onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
+          frozenRegions={conflictGuardState?.frozenFiles}
+          conflictCards={(conflictGuardState?.pairDecisions ?? []).filter((record) => record.status === "judged" && record.verdict?.decision === "lock").map((record) => ({
+            pairId: record.pair.id,
+            summary: record.verdict?.summary ?? "修改之间存在冲突",
+            files: [record.pair.left.symbol.split("#")[0] ?? "", record.pair.right.symbol.split("#")[0] ?? ""]
+          }))}
         />
       </section>
       <aside className="collab-pane" hidden={!collaborationVisible}>

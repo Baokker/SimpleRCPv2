@@ -29,6 +29,30 @@ export interface ConflictGuardState {
     updatedAt: number;
   }>;
   statistics: { total: number; related: number; unrelated: number; unrelatedRatio: number; typeOnly?: number };
+  pairDecisions?: Array<{
+    pair: ConflictGuardState["candidatePairs"][number];
+    status: string;
+    revision: number;
+    verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean } };
+    resolution?: string;
+    totalLockMs?: number;
+  }>;
+  frozenFiles?: Array<{ file: string; regions: Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }> }>;
+  blockedPersists?: Array<{ file: string; reason: string }>;
+  persistConflicts?: number;
+  persistBlockedCount?: number;
+  uiActionCount?: number;
+  intervention?: {
+    decisions: number;
+    localDecisionRatio: number;
+    white: number;
+    black: number;
+    grey: number;
+    frozenDurationMs: number;
+    persistBlockedCount: number;
+    uiActionCount: number;
+  };
+  t0Warnings?: Array<{ id: string; pairId: string; summary: string; at: number }>;
 }
 
 export interface ConflictGuardSymbol {

@@ -45,6 +45,7 @@ export function EditorArea({
   onLocalEdit,
   onCursorChange,
   navigationTarget
+  , frozenRegions, conflictCards
 }: {
   openFiles: OpenFile[];
   activePath?: string;
@@ -64,6 +65,8 @@ export function EditorArea({
     position: CursorPosition,
     selection: EditorSelection
   ): void;
+  frozenRegions?: Array<{ file: string; regions: Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }> }>;
+  conflictCards?: Array<{ pairId: string; summary: string; files: string[] }>;
 }) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -142,6 +145,7 @@ export function EditorArea({
             canEdit={canEdit}
             theme={theme}
             onLocalEdit={onLocalEdit}
+            frozenRegions={frozenRegions?.find((entry) => entry.file === activeFile.path)?.regions}
             onReady={() => setEditorVersion((version) => version + 1)}
             onMount={(editor, monaco) => {
               editorRef.current = editor;
@@ -164,6 +168,7 @@ export function EditorArea({
                 );
               });
             }}
+            conflictCards={conflictCards?.filter((card) => card.files.includes(activeFile.path))}
           />
         ) : (
           <div className="empty-state">Open a file to start collaborating.</div>
@@ -183,6 +188,7 @@ function CollaborativeEditor({
   onLocalEdit,
   onMount,
   onReady
+  , frozenRegions, conflictCards
 }: {
   file: OpenFile;
   projectId: string;
@@ -196,11 +202,16 @@ function CollaborativeEditor({
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco
   ): void;
+  frozenRegions?: Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }>;
+  conflictCards?: Array<{ pairId: string; summary: string; files: string[] }>;
 }) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "reconnecting" | "ready"
   >("connecting");
+  const frozenRegionsRef = useRef<Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }>>([]);
+  const frozenDecorationIdsRef = useRef<string[]>([]);
+  frozenRegionsRef.current = frozenRegions ?? [];
   const collaborationRef = useRef<{
     binding?: MonacoBinding;
     document: Y.Doc;
@@ -210,6 +221,14 @@ function CollaborativeEditor({
   }>();
 
   useEffect(() => () => destroyCollaboration(), []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = window.__simplercpMonaco;
+    if (!editor || !monaco) return;
+    frozenDecorationIdsRef.current = editor.deltaDecorations(frozenDecorationIdsRef.current, frozenRegionsRef.current.map((region) => ({ range: new monaco.Range(region.startLine, 1, region.endLine, 1), options: { isWholeLine: true, className: "conflict-frozen-range", hoverMessage: { value: `已冻结：${region.summary}` } } })));
+    return () => { editor.deltaDecorations(frozenDecorationIdsRef.current, []); frozenDecorationIdsRef.current = []; };
+  }, [frozenRegions]);
 
   function destroyCollaboration() {
     const collaboration = collaborationRef.current;
@@ -250,6 +269,35 @@ function CollaborativeEditor({
         onMount={(editor, monaco) => {
           editorRef.current = editor;
           onMount(editor, monaco);
+          const keydown = editor.onKeyDown((event) => {
+            const position = editor.getPosition();
+            if (!position || !frozenRegionsRef.current.some((region) => position.lineNumber >= region.startLine && position.lineNumber <= region.endLine)) return;
+            const key = event.browserEvent.key;
+            const navigation = key.startsWith("Arrow") || key === "Home" || key === "End" || key === "PageUp" || key === "PageDown" || key === "Tab" || key === "Escape";
+            const modifierCommand = event.browserEvent.metaKey || event.browserEvent.ctrlKey;
+            const editingCommand = modifierCommand && ["v", "x", "z", "y"].includes(key.toLowerCase());
+            if (navigation || (modifierCommand && !editingCommand)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            window.dispatchEvent(new CustomEvent("simplercp-conflict-guard-notice", { detail: "该区域已冻结" }));
+          });
+          const domNode = editor.getDomNode();
+          const blockedPointer = (event: Event) => {
+            const position = editor.getPosition();
+            if (!position || !frozenRegionsRef.current.some((region) => position.lineNumber >= region.startLine && position.lineNumber <= region.endLine)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            window.dispatchEvent(new CustomEvent("simplercp-conflict-guard-notice", { detail: "该区域已冻结" }));
+          };
+          domNode?.addEventListener("paste", blockedPointer, true);
+          domNode?.addEventListener("drop", blockedPointer, true);
+          domNode?.addEventListener("dragover", blockedPointer, true);
+          editor.onDidDispose(() => {
+            keydown.dispose();
+            domNode?.removeEventListener("paste", blockedPointer, true);
+            domNode?.removeEventListener("drop", blockedPointer, true);
+            domNode?.removeEventListener("dragover", blockedPointer, true);
+          });
 
           const document = new Y.Doc();
           const text = document.getText("content");
@@ -344,6 +392,7 @@ function CollaborativeEditor({
             : "Reconnecting collaboration"}
         </div>
       ) : null}
+      {conflictCards && conflictCards.length > 0 ? <div className="editor-conflict-overlay" data-testid="editor-conflict-overlay">{conflictCards.map((card) => <article className="conflict-card" key={card.pairId}><strong>冲突预防</strong><p>{card.summary}</p></article>)}</div> : null}
     </div>
   );
 }

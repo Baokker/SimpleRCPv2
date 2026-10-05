@@ -40,6 +40,14 @@ export function getConflictGuardSymbol(projectId: string, key: string) {
   return request<ConflictGuardSymbol>(`${projectPath(projectId)}/conflict-guard/symbol?key=${encodeURIComponent(key)}`);
 }
 
+export function confirmConflictPair(projectId: string, pairId: string) {
+  return request<void>(`${projectPath(projectId)}/conflict-guard/pairs/${encodeURIComponent(pairId)}/confirm`, { method: "POST" });
+}
+
+export function revertConflictPair(projectId: string, pairId: string) {
+  return request<void>(`${projectPath(projectId)}/conflict-guard/pairs/${encodeURIComponent(pairId)}/revert`, { method: "POST" });
+}
+
 export async function getAgentSettings() {
   return request<AgentSettingsResponse>("/api/agent/settings");
 }
@@ -341,6 +349,14 @@ export async function sendChatMessage(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: input.text })
+  });
+}
+
+export async function sendConflictPairChat(projectId: string, pairId: string, text: string) {
+  return request<{ message: ChatMessage }>(`${projectPath(projectId)}/conflict-guard/pairs/${encodeURIComponent(pairId)}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
   });
 }
 
