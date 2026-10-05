@@ -235,13 +235,14 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
   let capabilities: Capability[] = baseCapabilities;
   if (parsed?.action === "delete") capabilities = ["delete"];
-  if (parsed?.action === "write" && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
-    capabilities = baseCapabilities.includes("exec") ? ["write"] : [...baseCapabilities, "write"];
+  if ((parsed?.action === "write" || parsed?.targets.some((target) => target.role === "destination"))
+    && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
+    capabilities = [...baseCapabilities.filter((capability) => capability !== "exec"), "write"];
   }
   const reversibility = reversibilityFor(name, command, capabilities, request.kind);
   const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
-    const segmentCapabilities = item.role === "destination" ? ["write"] as Capability[] : capabilities;
+    const segmentCapabilities = capabilities;
     const segmentReversibility = legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
       ? "irreversible" as const
       : reversibilityFor(name, command, segmentCapabilities, request.kind);

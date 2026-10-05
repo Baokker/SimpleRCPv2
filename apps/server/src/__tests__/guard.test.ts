@@ -107,6 +107,12 @@ describe("guard decisions", () => {
     expect(command("student", "echo hi > ../p2/x").action).toBe("ask");
   });
 
+  it("preserves the command capability when adding a redirection write target", () => {
+    expect(command("collaborator", "npm install > notes/p.txt").action).toBe("ask");
+    expect(command("collaborator", "sudo ls > notes/p.txt").action).toBe("deny");
+    expect(command("student", "echo hi > note.txt").action).toBe("allow_snapshot");
+  });
+
   it("checks redirection targets when the operator touches the preceding token", () => {
     expect(command("observer", "cat src/a.ts>src/b.ts").action).toBe("deny");
     expect(command("student", "echo hi>..''/p2/x").action).toBe("ask");
