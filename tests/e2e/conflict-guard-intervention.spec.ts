@@ -45,7 +45,7 @@ test("rules 模式显示黑区判定与冻结区域", async ({ browser }) => {
   if (saveEvidence) { await fs.mkdir(evidenceRoot, { recursive: true }); await alice.screenshot({ path: path.join(evidenceRoot, "01-black-zone-card.png"), fullPage: true }); await bob.screenshot({ path: path.join(evidenceRoot, "01-bob-black-zone-card.png"), fullPage: true }); }
   await alice.getByTestId("conflict-candidate").first().getByRole("button").click();
   await expect(alice.getByTestId("conflict-card").getByRole("button", { name: "我来改" })).toBeVisible();
-  if (saveEvidence) await fs.writeFile(path.join(evidenceRoot, "acceptance.json"), JSON.stringify({ mode: health.features.conflictGuard, checklist: [true, true, true, true, true, true, true, true, true, true] }, null, 2));
+  if (saveEvidence) await fs.writeFile(path.join(evidenceRoot, "acceptance.json"), JSON.stringify({ mode: health.features.conflictGuard, automatedChecks: { blackZoneCard: true, freezeDecoration: true, candidateExpansion: true, confirmationButton: true }, manualChecks: "未在本次自动运行中执行完整十项人工操作" }, null, 2));
   await aliceContext.close();
   await bobContext.close();
 });

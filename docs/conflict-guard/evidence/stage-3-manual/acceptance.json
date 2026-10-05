@@ -1,15 +1,10 @@
 {
   "mode": "rules",
-  "checklist": [
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true
-  ]
+  "automatedChecks": {
+    "blackZoneCard": true,
+    "freezeDecoration": true,
+    "candidateExpansion": true,
+    "confirmationButton": true
+  },
+  "manualChecks": "未在本次自动运行中执行完整十项人工操作"
 }
