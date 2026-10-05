@@ -63,3 +63,37 @@ CONFLICT_GUARD=rules pnpm test:e2e tests/e2e/conflict-guard-intervention.spec.ts
 ```
 
 截图保存到 `docs/conflict-guard/evidence/stage-3-manual/`。
+
+## 阶段 4
+
+在仓库目录执行以下命令生成并标注十组开发数据：
+
+```bash
+pnpm --filter @simplercp/conflict-guard build
+pnpm --filter @simplercp/conflict-guard bench:generate --seeds bench/seeds --out bench/datasets/d1-v1 --groups 10 --seed 7
+pnpm --filter @simplercp/conflict-guard bench:label --dataset bench/datasets/d1-v1 --concurrency 2
+```
+
+检查 `manifest.json` 中的开发集和保留集列表，打开 `labels.json` 查看一个 `lock` 冲突组和同组 `allow` 安全孪生，确认四种状态各有三次探针结果。
+
+运行开发集四种策略并查看摘要：
+
+```bash
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --out ../../docs/conflict-guard/evidence/stage-4-dev-report
+```
+
+打开 `docs/conflict-guard/evidence/stage-4-dev-report/summary.md`，检查逃逸率、漏阻断率、误阻断率、本地决定比例和冻结人秒，并查看 `interruptions.svg`。P0 通常保持最高逃逸，P2 通常产生较多误阻断，P3 结果取决于可解析的关系与规则命中。
+
+选取一份轨迹运行一致性检查：
+
+```bash
+pnpm --filter @simplercp/conflict-guard replay:check bench/datasets/d1-v1/traces/d1-1-conflict.jsonl
+```
+
+输出中的 `valid` 为 `true` 时，P3 回放判定与轨迹中的 `pair_judged` 序列一致；合成轨迹没有派生事件时，`checked` 为 `false` 并报告回放得到的序列。真实界面回放使用 server 包命令：
+
+```bash
+pnpm --filter @simplercp/server replay:ui -- --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2
+```
+
+在浏览器里以第三位成员加入项目，可以看到轨迹中的幽灵成员按节奏编辑，随后观察冻结与冲突卡片。

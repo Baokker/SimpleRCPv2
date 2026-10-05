@@ -7,7 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "replay:ui": "tsx scripts/replay-ui.ts"
   },
   "dependencies": {
     "@simplercp/conflict-guard": "workspace:*",
