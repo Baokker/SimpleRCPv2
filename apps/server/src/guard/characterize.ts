@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { GuardRequest, GuardSegment, PathZone, Reversibility, Capability } from "./types.js";
 import { commandName, legacyRisk } from "./legacy/classifier.js";
-import { hasDynamicSyntax, parseCommandPaths } from "./legacy/parser.js";
+import { hasDynamicSyntax, hasNetworkUpload, parseCommandPaths } from "./legacy/parser.js";
 
 export interface Characterization {
   segments: GuardSegment[];
@@ -113,6 +113,16 @@ function gitSubcommand(command: string) {
   return "";
 }
 
+function gitStashSubcommand(command: string) {
+  const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  const stashIndex = input.findIndex((token) => token.replace(/^['"]|['"]$/g, "").toLowerCase() === "stash");
+  for (let index = stashIndex + 1; index < input.length; index += 1) {
+    const token = input[index]!.replace(/^['"]|['"]$/g, "").toLowerCase();
+    if (!token.startsWith("-")) return token;
+  }
+  return "";
+}
+
 function hasGitContextOption(command: string) {
   if (commandName(command) !== "git") return false;
   const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
@@ -129,6 +139,14 @@ function packageManagerCapability(command: string): Capability[] {
   return ["install", "add", "ci", "i", "update"].includes(subcommand ?? "") ? ["install"] : ["exec"];
 }
 
+function hasInterpreterPipe(command: string) {
+  return /\|\s*(?:(?:env\s+)?(?:command\s+)?(?:sh|bash|zsh|fish|python|python3|node|perl|ruby|php|powershell|pwsh)\b)/i.test(command);
+}
+
+function hasEvalCommand(command: string) {
+  return /(?:^|[;&|]\s*)eval(?:\s|$)/i.test(command);
+}
+
 function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: string): Capability[] {
   if (kind === "read") return ["read"];
   if (kind === "edit") return ["write"];
@@ -141,8 +159,9 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   if (name === "git") {
     const subcommand = gitSubcommand(command);
     if (["status", "diff", "log", "show", "branch", "rev-parse"].includes(subcommand)) return ["read"];
+    if (subcommand === "stash") return ["list", "show"].includes(gitStashSubcommand(command)) ? ["read"] : ["delete"];
     if (["push", "pull", "fetch", "clone", "remote"].includes(subcommand)) return ["network"];
-    if (["checkout", "restore", "stash", "clean"].includes(subcommand)) return ["delete"];
+    if (["checkout", "restore", "clean"].includes(subcommand)) return ["delete"];
     if (["reset", "rebase", "commit", "merge"].includes(subcommand)) return ["history"];
   }
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
@@ -164,7 +183,7 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   if (name === "git" && (subcommand === "push" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
   if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
-  if (capabilities.includes("network") && (name === "scp" || name === "rsync" || /(?:^|\s)(?:-d|--data\w*|-F|--form\w*|-T|--upload-file)(?:\s|=)/i.test(command))) return "irreversible";
+  if (capabilities.includes("network") && (name === "scp" || name === "rsync" || hasNetworkUpload(command))) return "irreversible";
   if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";
   return "reversible";
 }
@@ -215,13 +234,11 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     const parts = splitShellCommands(command);
     if (parts.length > 1) {
       const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
-      const benignPipeline = /^\s*[^;&|<>`$()]+(?:\|[^;&|<>`$()]+)+\s*$/i.test(command)
-        && results.every((result) => result.legacyRisk === "safe" && !result.dynamic && result.segments.every((segment) => segment.reversibility === "reversible"));
       return {
         segments: results.flatMap((result) => result.segments),
         legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
         unknown: results.some((result) => result.unknown),
-        dynamic: !benignPipeline,
+        dynamic: results.some((result) => result.dynamic) || hasInterpreterPipe(command) || hasEvalCommand(command),
         gitContext: results.some((result) => result.gitContext),
         plainDownloadToShell: false
       };
@@ -235,13 +252,14 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
   let capabilities: Capability[] = baseCapabilities;
   if (parsed?.action === "delete") capabilities = ["delete"];
-  if (parsed?.action === "write" && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
-    capabilities = baseCapabilities.includes("exec") ? ["write"] : [...baseCapabilities, "write"];
+  if ((parsed?.action === "write" || parsed?.targets.some((target) => target.role === "destination"))
+    && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
+    capabilities = [...baseCapabilities.filter((capability) => capability !== "exec"), "write"];
   }
   const reversibility = reversibilityFor(name, command, capabilities, request.kind);
   const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
-    const segmentCapabilities = item.role === "destination" ? ["write"] as Capability[] : capabilities;
+    const segmentCapabilities = capabilities;
     const segmentReversibility = legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
       ? "irreversible" as const
       : reversibilityFor(name, command, segmentCapabilities, request.kind);
