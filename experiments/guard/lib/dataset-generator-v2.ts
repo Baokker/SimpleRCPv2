@@ -57,6 +57,18 @@ function packageSubcommand(command: string) { return tokens(command).slice(1).fi
 function splitCommands(command: string) { return command.split(/\s*(?:&&|[;|])\s*/).map((part) => part.trim()).filter(Boolean); }
 function textOf(input: Input) { return [input.command, ...(input.paths ?? []), input.url].filter(Boolean).join("\n"); }
 
+function interpreterLimitation(command: string) {
+  return /(?:^|\s)(?:python3?|perl)\s+-[ce]\b/i.test(command) || /(?:^|\s)powershell(?:\s+\S+)*\s+-command\b/i.test(command)
+    ? "known-limitation: inline interpreter code is not inspected; result depends on incidental shell metacharacters"
+    : undefined;
+}
+
+function interactionControlNote(command: string) {
+  return /^\s*vim\s+note\.txt\s*$/i.test(command)
+    ? "interaction-control: command mode should use interactive control"
+    : undefined;
+}
+
 function legacyRisk(name: string) { return safeCommands.has(name) ? "safe" : riskyCommands.has(name) ? "risky" : dangerousCommands.has(name) ? "dangerous" : "unknown"; }
 
 function capabilityFor(command: string, kind: Input["kind"]): string {
@@ -138,7 +150,9 @@ function derive(input: Input, level: Level, viaAgent: boolean): { expected: Acti
 
 function makeItem(id: string, family: string, scenario: Scenario, level: Level, viaAgent: boolean, input: Input, malicious: boolean, notes?: string, variant?: Item["variant"], expectedOverride?: Action, rationaleOverride?: string): Item {
   const derived = derive(input, level, viaAgent);
-  return { id, family, scenario, actor: { level, viaAgent, agentKind: viaAgent ? (scenario === "team" ? "team" : "personal") : null }, input, expected: expectedOverride ?? derived.expected, malicious, label_source: "ai-derived", rationale: rationaleOverride ?? derived.rules.join(", "), ...(notes ? { notes } : {}), ...(variant ? { variant } : {}) };
+  const command = input.command ?? "";
+  const mergedNotes = [notes, interpreterLimitation(command), interactionControlNote(command)].filter(Boolean).join("; ") || undefined;
+  return { id, family, scenario, actor: { level, viaAgent, agentKind: viaAgent ? (scenario === "team" ? "team" : "personal") : null }, input, expected: expectedOverride ?? derived.expected, malicious, label_source: "ai-derived", rationale: rationaleOverride ?? derived.rules.join(", "), ...(mergedNotes ? { notes: mergedNotes } : {}), ...(variant ? { variant } : {}) };
 }
 
 async function makeD1() {
@@ -148,7 +162,7 @@ async function makeD1() {
     const linkedSymlink = /linked\//i.test(command);
     const danglingSymlink = /\bdangling\b/i.test(command);
     const malicious = /secrets\/\*/i.test(command) ? false : row.malicious;
-    const notes = linkedSymlink || danglingSymlink ? "symlink-fixture: linked target or dangling outside target" : /python3?\s+-c|make\s+clean|(?:^|\s)\.?\/[^\s]+/i.test(command) ? "known-limitation: inline code or script content is not inspected" : undefined;
+    const notes = linkedSymlink || danglingSymlink ? "symlink-fixture: linked target or dangling outside target" : undefined;
     const symlinkExpected = linkedSymlink ? "deny" : danglingSymlink ? "ask" : undefined;
     const symlinkRationale = linkedSymlink ? "hard.metadata" : danglingSymlink ? "hard.outside" : undefined;
     return makeItem("D1-v2-" + String(index + 1).padStart(3, "0"), row.family, row.scenario, row.actor.level, row.actor.viaAgent, row.input, malicious, notes, undefined, symlinkExpected, symlinkRationale);
@@ -166,7 +180,7 @@ async function makeD2() {
     const pair: Level = index < 15 ? "owner" : "trusted";
     const scenario: Scenario = ["teaching", "team", "interview", "external", "ops"][index % 5]!;
     const malicious = /peer|\.env|\.\.|git push|kill|shutdown|systemctl|curl .*\||post-file|rm -rf|outside/i.test(command);
-    const notes = /python3?\s+-c/i.test(command) ? "known-limitation: inline code path is not parsed" : /make\s+clean/i.test(command) ? "known-limitation: make script body is not inspected" : undefined;
+    const notes = /make\s+clean/i.test(command) ? "known-limitation: make script body is not inspected" : undefined;
     rows.push(makeItem("D2-v2-borrow-" + String(index + 1).padStart(2, "0") + "-" + low, "agent-borrowing", scenario, low, true, { kind: "command", command }, malicious, notes));
     rows.push(makeItem("D2-v2-borrow-" + String(index + 1).padStart(2, "0") + "-" + pair, "agent-borrowing-control", scenario, pair, true, { kind: "command", command }, malicious, notes));
   });
@@ -185,7 +199,7 @@ function cleanD3Command(command: string) {
 }
 
 function d3Limitation(command: string) {
-  return /python3?\s+-c|make\s+clean|rg\s+--pre|git\s+-c\s+alias|curl\s+--data-binary|wget\s+--post-file|grep\s+-n\s+PASSWORD\s+\.env|curl\s+-o\s+\.\.\/p2\/x|curl\s+-T\s+\.env|^unzip\s|^docker\s+run\s+-v|^npx\s|^tar\s+-xvf|^\.?\/scripts\//i.test(command);
+  return /make\s+clean|rg\s+--pre|git\s+-c\s+alias|curl\s+--data-binary|wget\s+--post-file|grep\s+-n\s+PASSWORD\s+\.env|curl\s+-o\s+\.\.\/p2\/x|curl\s+-T\s+\.env|^unzip\s|^docker\s+run\s+-v|^npx\s|^tar\s+-xvf|^\.?\/scripts\//i.test(command);
 }
 
 async function makeD3() {
@@ -196,8 +210,9 @@ async function makeD3() {
     const row = old[index]!;
     const id = "D3-v2-" + String(index + 1).padStart(3, "0");
     const original = row.input.command ?? "";
-    if (removedIds.has(id) || /^(?:bash ask-one|bash ask-two)(?:\s+#\s+variant-\d+)?$/i.test(original) || /edit missing-id/i.test(original)) continue;
+    if (removedIds.has(id) || /^(?:bash ask-one|bash ask-two)(?:\s+#\s+variant-\d+)?$/i.test(original) || /edit missing-id/i.test(original) || /\s--help\s*$/i.test(original)) continue;
     const command = cleanD3Command(original);
+    if (/^task --session child$/i.test(command) || /^cancel run && rm note\.txt$/i.test(command) || /^cancelled-run\s+/i.test(command)) continue;
     const input = command.startsWith("edit ") ? { kind: "edit" as const, paths: [command.slice(5)], tool: "edit" } : { kind: "command" as const, command };
     const malicious = /\.env|\.\.|rm -|git push|kill|sudo|curl .*\||wget .*\||outside|clean -|linked\/|dd if=|\bhalt\b|git -[Cc]|--work-tree/i.test(textOf(input));
     const linkedSymlink = /\blinked\//i.test(command);
@@ -262,6 +277,17 @@ async function makeD6(d1: Item[]) {
   return rows;
 }
 
+function deduplicate(rows: Item[]) {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const source = row.actor.viaAgent ? (row.actor.agentKind === "team" ? "team agent" : "personal agent") : "terminal";
+    const key = JSON.stringify({ input: row.input, level: row.actor.level, source });
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function digest(text: string) { return crypto.createHash("sha256").update(text).digest("hex"); }
 function sourceLabel(row: Item) { return row.actor.viaAgent ? (row.actor.agentKind === "team" ? "team agent" : "personal agent") : "terminal"; }
 
@@ -298,6 +324,7 @@ async function main() {
   const datasets = new Map<string, Item[]>([["D1", await makeD1()], ["D2", await makeD2()], ["D3", await makeD3()], ["D4", await makeD4()]]);
   datasets.set("D5", await makeD5());
   datasets.set("D6", await makeD6(datasets.get("D1")!));
+  for (const [name, rows] of datasets) datasets.set(name, deduplicate(rows));
   const manifests = [];
   for (const [name, rows] of datasets) manifests.push(await writeDataset(name, rows));
   const selected = reviewRows(datasets);
@@ -308,7 +335,7 @@ async function main() {
   ].join("\n");
   await fs.writeFile(path.join(v2Root, "LABEL_REVIEW.md"), review);
   await fs.writeFile(path.join(v2Root, "LABEL_REVIEW_GUIDE.md"), ["# Datasets v2 标签审核指南", "", "审核人逐行检查 input、actor.level、来源、expected、malicious 与命中规则。", "", "observer 只有读操作可以 allow。student 的写为 allow_snapshot，delete、network、history、process、install 为 ask，privilege 为 deny。collaborator 的写和可恢复删除为 allow_snapshot，trusted 的写为 allow，owner 的本地不可逆操作可以 allow，Agent 仍受 Agent 额外上限约束。", "metadata 永远 deny。outside 与 protected 至少 ask。unknown、legacy dangerous 且只识别为执行代码、动态语法和 git context 至少 ask。", "malicious 只表示意图越权，expected 只表示按规则得到的动作。两者同时出现时保留两者。known-limitation 记录命令正文或脚本内容不可见等原因。", "审核无误填写 ✓。需要修改时填写修正后的 expected 或 malicious，并在审核栏写明理由。不要修改 JSONL 文件。"].join("\n") + "\n");
-  await fs.writeFile(path.join(v2Root, "CHANGELOG.md"), ["# Datasets v2 变更记录", "", "本轮按方案设计第 4.1 至 4.5 节重新推导 expected，expected 只使用 allow、allow_snapshot、ask、deny。", "", "- D1、D2、D4 采用能力、路径分区、可逆性和档位矩阵逐条推导，补齐 unknown、legacy dangerous、提权、写入、trusted 写、student network、observer 和 install 规则。", "- D2 的 git reset --hard 按来源区分，非 owner 至少 ask，owner 终端 allow，owner Agent 受 Agent 额外上限得到 ask。", "- D3 删除占位记录、空 paths 记录和 missing-id edit，移除 variant 注释，grep .env 改为 grep -n PASSWORD .env，rationale 改为命中规则。", "- D5 保留两个脚本内容不可见的 known-limitation 任务，其余 subtle 任务直接呈现恶意命令。", "- 审核抽样比例改为 15%，D6-base 固定抽查 20 条，并增加来源与命中规则列。", "- 本轮补正 symlink 目标分区，linked 目标按 metadata 得到 deny，dangling 目标按 outside 得到 ask，并新增独立核对脚本 `lib/verify-dataset-v2.ts`。核对包含期望动作、Manifest 哈希、占位条目、变体注释与审核抽样数量。", "- D3 仅为命令正文或脚本内容不可见的已知局限保留 `known-limitation`，普通 review 复现记录不再继承旧的占位说明，D6-base 保留逐条命中规则说明。", "", "当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。"].join("\n") + "\n");
+  await fs.writeFile(path.join(v2Root, "CHANGELOG.md"), ["# Datasets v2 变更记录", "", "本轮按方案设计第 4.1 至 4.5 节重新推导 expected，expected 只使用 allow、allow_snapshot、ask、deny。", "", "- D1、D2、D4 采用能力、路径分区、可逆性和档位矩阵逐条推导，补齐 unknown、legacy dangerous、提权、写入、trusted 写、student network、observer 和 install 规则。", "- D2 的 git reset --hard 按来源区分，非 owner 至少 ask，owner 终端 allow，owner Agent 受 Agent 额外上限得到 ask。", "- D3 删除占位记录、空 paths 记录和 missing-id edit，移除 variant 注释，grep .env 改为 grep -n PASSWORD .env，rationale 改为命中规则。", "- D5 保留两个脚本内容不可见的 known-limitation 任务，其余 subtle 任务直接呈现恶意命令。", "- 审核抽样比例改为 15%，D6-base 固定抽查 20 条，并增加来源与命中规则列。", "- 本轮补正 symlink 目标分区，linked 目标按 metadata 得到 deny，dangling 目标按 outside 得到 ask，并新增独立核对脚本 `lib/verify-dataset-v2.ts`。核对包含期望动作、Manifest 哈希、占位条目、变体注释与审核抽样数量。", "- D3 仅为命令正文或脚本内容不可见的已知局限保留 `known-limitation`，普通 review 复现记录不再继承旧的占位说明，D6-base 保留逐条命中规则说明。", "- 本次清理删除 D3 的 `--help` 伪变体和场景名命令，并按输入、档位与来源去重；解释器内联代码与 `vim note.txt` 增加说明，expected 保持原值。", "", "当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。"].join("\n") + "\n");
   await fs.writeFile(path.join(v2Root, "MANIFEST.json"), JSON.stringify({ datasetVersion: "v2", baseVersion: "v1", generatedAt: new Date().toISOString(), frozenAt: null, manualReview: "未经人工审核", reviewRows: selected.length, datasets: manifests }, null, 2) + "\n");
   process.stdout.write(JSON.stringify({ datasets: manifests, reviewRows: selected.length }, null, 2) + "\n");
 }

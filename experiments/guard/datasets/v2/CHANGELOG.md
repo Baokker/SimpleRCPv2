@@ -9,5 +9,6 @@
 - 审核抽样比例改为 15%，D6-base 固定抽查 20 条，并增加来源与命中规则列。
 - 本轮补正 symlink 目标分区，linked 目标按 metadata 得到 deny，dangling 目标按 outside 得到 ask，并新增独立核对脚本 `lib/verify-dataset-v2.ts`。核对包含期望动作、Manifest 哈希、占位条目、变体注释与审核抽样数量。
 - D3 仅为命令正文或脚本内容不可见的已知局限保留 `known-limitation`，普通 review 复现记录不再继承旧的占位说明，D6-base 保留逐条命中规则说明。
+- 本次清理删除 D3 的 `--help` 伪变体和场景名命令，并按输入、档位与来源去重；解释器内联代码与 `vim note.txt` 增加说明，expected 保持原值。
 
 当前人工审核状态为未经人工审核，MANIFEST.json 的 frozenAt 保持 null。

@@ -5,7 +5,7 @@ import path from "node:path";
 type Level = "observer" | "student" | "collaborator" | "trusted" | "owner";
 type Action = "allow" | "allow_snapshot" | "ask" | "deny";
 type Input = { kind: "command" | "edit" | "read" | "fetch"; command?: string; paths?: string[]; url?: string; tool?: string };
-type Row = { id: string; actor: { level: Level; viaAgent: boolean }; input: Input; expected: Action; malicious: boolean; notes?: string };
+type Row = { id: string; actor: { level: Level; viaAgent: boolean; agentKind: "personal" | "team" | null }; input: Input; expected: Action; malicious: boolean; notes?: string };
 
 const root = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
 const dataRoot = path.join(root, "experiments/guard/datasets/v2");
@@ -114,10 +114,22 @@ function checkD3(row: Row): string[] {
   const issues: string[] = [];
   const command = row.input.command ?? "";
   if (/\s+#\s+variant-\d+\s*$/i.test(command)) issues.push("variant-comment");
+  if (/\s--help\s*$/i.test(command)) issues.push("help-variant");
+  if (/^task --session child$|^cancel run && rm note\.txt$|^cancelled-run\s+/i.test(command)) issues.push("scenario-name-command");
   if (/^(?:bash ask-one|bash ask-two)(?:\s+#\s+variant-\d+)?$/i.test(command)) issues.push("placeholder-command");
   if (row.input.kind === "read" && (!row.input.paths || row.input.paths.length === 0)) issues.push("empty-read-paths");
   if (row.input.kind === "edit" && row.input.paths?.includes("missing-id")) issues.push("missing-edit-path");
   return issues;
+}
+
+function sourceKey(row: Row) { return row.actor.viaAgent ? (row.actor.agentKind === "team" ? "team agent" : "personal agent") : "terminal"; }
+function duplicateKey(row: Row) { return JSON.stringify({ input: row.input, level: row.actor.level, source: sourceKey(row) }); }
+function requiredNotes(row: Row): string[] {
+  const command = row.input.command ?? "";
+  const required: string[] = [];
+  if (/(?:^|\s)(?:python3?|perl)\s+-[ce]\b/i.test(command) || /(?:^|\s)powershell(?:\s+\S+)*\s+-command\b/i.test(command)) required.push("known-limitation: inline interpreter code is not inspected; result depends on incidental shell metacharacters");
+  if (/^\s*vim\s+note\.txt\s*$/i.test(command)) required.push("interaction-control: command mode should use interactive control");
+  return required;
 }
 
 async function main() {
@@ -132,11 +144,21 @@ async function main() {
     total += data.length;
     const item = manifest.datasets.find((entry) => entry.name === dataset);
     if (!item || item.count !== data.length || item.sha256 !== hash(content)) errors.push(`${dataset}: MANIFEST mismatch`);
+    if (["D2", "D3", "D5", "D6"].includes(dataset)) {
+      const seen = new Map<string, string>();
+      for (const row of data) {
+        const key = duplicateKey(row);
+        const previous = seen.get(key);
+        if (previous) errors.push(`${dataset}/${row.id}: duplicate of ${previous}`);
+        else seen.set(key, row.id);
+      }
+    }
     for (const row of data) {
       if (row.expected !== "allow" && row.expected !== "allow_snapshot" && row.expected !== "ask" && row.expected !== "deny") errors.push(`${dataset}/${row.id}: invalid expected`);
       const recomputed = expected(row);
       if (recomputed !== row.expected) errors.push(`${dataset}/${row.id}: expected=${row.expected}, recomputed=${recomputed}`);
       if (dataset === "D3") for (const issue of checkD3(row)) errors.push(`${dataset}/${row.id}: ${issue}`);
+      for (const note of requiredNotes(row)) if (!row.notes?.includes(note)) errors.push(`${dataset}/${row.id}: missing note ${note}`);
     }
   }
   const review = await fs.readFile(path.join(dataRoot, "LABEL_REVIEW.md"), "utf8");
