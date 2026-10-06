@@ -193,6 +193,7 @@ export function createProjectConflictGuard(options: {
   void appendTrace({
     type: "session_start",
     mode: options.config.mode,
+    pairRevisionMode: "judged-input",
     config: {
       idleMs: options.config.idleMs,
       cursorLeaveLines: options.config.cursorLeaveLines,

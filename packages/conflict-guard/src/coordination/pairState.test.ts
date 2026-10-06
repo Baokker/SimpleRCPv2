@@ -6,6 +6,20 @@ const pair: CandidatePair = { id: "p", left: { actor: { kind: "human", memberId:
 const verdict = { zone: "black" as const, decision: "lock" as const, ruleId: "call-signature-incompatible", summary: "冲突", evidence: [], contractChanged: { left: true, right: false } };
 
 describe("变更对状态机", () => {
+  test("pending and stale inputs retain their revision across refreshes and temporary removal", () => {
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    const defer = () => false;
+    coordinator.update([{ ...pair, revisionKey: "first" }], defer);
+    coordinator.update([{ ...pair, revisionKey: "typing" }], defer);
+    coordinator.update([]);
+    coordinator.update([{ ...pair, revisionKey: "complete" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", revision: 0 });
+    coordinator.update([{ ...pair, revisionKey: "changed" }], defer);
+    coordinator.update([{ ...pair, revisionKey: "typing-again" }], defer);
+    coordinator.update([]);
+    coordinator.update([{ ...pair, revisionKey: "complete-again" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", revision: 1 });
+  });
   test("grey analysis aborts on revision change and ignores late results", () => {
     const requests: Array<{ signal: AbortSignal; complete(value: typeof verdict): void }> = [];
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => ({ ...verdict, zone: "grey", decision: "warn" }), adjudicate(_pair, _local, signal, complete) { requests.push({ signal, complete }); } });
@@ -98,6 +112,19 @@ describe("变更对状态机", () => {
     coordinator.update([]);
     coordinator.update([{ ...current, updatedAt: 10 }]);
     expect(coordinator.get(pair.id)).toMatchObject({ status: "resolved", resolution: "overridden", revision: 0 });
+  });
+  test("a previous confirmation does not apply after closed revisions return to their original content", () => {
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([{ ...pair, revisionKey: "original" }]);
+    coordinator.confirm(pair.id, "left");
+    coordinator.confirm(pair.id, "right");
+    coordinator.update([]);
+    coordinator.update([{ ...pair, revisionKey: "changed" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", revision: 1, verdict: { decision: "lock" } });
+    coordinator.update([]);
+    coordinator.update([{ ...pair, revisionKey: "original" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", revision: 2, verdict: { decision: "lock" }, leftConfirmed: false, rightConfirmed: false });
+    expect(coordinator.get(pair.id)?.resolution).toBeUndefined();
   });
   test("关闭后不同内容重新出现时继续增加修订号", () => {
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });

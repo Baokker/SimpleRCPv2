@@ -7,7 +7,7 @@ import type { RelationPath } from "../semantic/types.js";
 import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
 import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
-import { createPairCoordinator, type PairEvent, type PairAdjudicator } from "./pairState.js";
+import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode } from "./pairState.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
 
 export interface FrozenRegion {
@@ -32,6 +32,7 @@ export function createSessionCoordinator(options: {
   adjudicate?: PairAdjudicator;
   clock?: ConflictGuardClock;
   softDeadlineMs?: number;
+  revisionMode?: PairRevisionMode;
   onError(error: unknown, pairId: string): void;
   onEvent?(event: Record<string, unknown>): void;
 }) {
@@ -45,7 +46,7 @@ export function createSessionCoordinator(options: {
   const batchSymbols = new Map<string, Set<string>>();
   const batchPaths = new Map<string, Array<{ actor: string; path: RelationPath }>>();
   let lastFrozen = "[]";
-  const coordinator = createPairCoordinator({ now: options.now, adjudicate: options.adjudicate, classify(pair) {
+  const coordinator = createPairCoordinator({ now: options.now, adjudicate: options.adjudicate, revisionMode: options.revisionMode, classify(pair) {
     try { return options.classify(pair); }
     catch (error) {
       options.onError(error, pair.id);

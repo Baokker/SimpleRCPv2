@@ -10,8 +10,18 @@ import { calculateReplayMetrics } from "./metrics.js";
 import { checkReplay } from "./check.js";
 import fs from "node:fs/promises";
 import { readTrace } from "../trace/trace.js";
+import { replayLibraries } from "../../scripts/replay-libs.js";
 
 describe("阶段 4 回放基础设施", () => {
+  it("historical refresh coalescing is verified by identical semantic input hashes", async () => {
+    const events = readTrace(await fs.readFile(new URL("../../../../docs/conflict-guard/evidence/stage-5-review/continuous-input.jsonl", import.meta.url), "utf8"));
+    const libs = await replayLibraries();
+    expect(checkReplay(events, { libs }).valid).toBe(true);
+    const changed = events.map((event) => event.type === "pair_judged" ? { ...event, pair: { ...(event.pair as CandidatePair), revisionKey: "0".repeat(64) } } : event);
+    expect(checkReplay(changed, { libs }).valid).toBe(false);
+    const strict = events.map((event) => event.type === "session_start" ? { ...event, pairRevisionMode: "judged-input" } : event);
+    expect(checkReplay(strict, { libs }).valid).toBe(false);
+  });
   it("虚拟时钟按时间和创建顺序执行定时器", () => {
     const clock = new VirtualClock(10);
     const output: string[] = [];

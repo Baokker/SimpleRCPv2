@@ -57,7 +57,7 @@ export function generateManifest(options: GenerateOptions): BenchManifest {
 export function synthesizeTrace(baseline: Record<string, string>, left: Record<string, string>, right: Record<string, string>, seed: number): TraceEvent[] {
   const random = createRandom(seed);
   const pauseEvery = seed % 4 === 0 ? 48 : 24;
-  const events: TraceEvent[] = [{ schema: 3, seq: 1, at: 0, type: "session_start", mode: "rules", seed, config: { idleMs: 1500, maxBatchDurationMs: 5000, activeIdleMs: 600000 }, typing: { pauseEveryCharacters: pauseEvery, schedule: (["simultaneous", "sequential", "alternating"] as const)[seed % 3] } }];
+  const events: TraceEvent[] = [{ schema: 3, seq: 1, at: 0, type: "session_start", mode: "rules", pairRevisionMode: "judged-input", seed, config: { idleMs: 1500, maxBatchDurationMs: 5000, activeIdleMs: 600000 }, typing: { pauseEveryCharacters: pauseEvery, schedule: (["simultaneous", "sequential", "alternating"] as const)[seed % 3] } }];
   for (const file of Object.keys(baseline).filter((file) => !file.startsWith("test/")).sort()) events.push({ schema: 3, seq: events.length + 1, at: 0, type: "doc_open", file, text: baseline[file], textHash: hash(baseline[file]!) });
   interface Edit { file: string; memberId: string; at: number; block: string; deleted: string; inserted: string }
   const edits: Edit[] = [];

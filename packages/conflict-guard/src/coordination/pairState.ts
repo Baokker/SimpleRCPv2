@@ -3,6 +3,7 @@ import type { ZoneVerdict } from "../routing/classifier.js";
 
 export type PairStatus = "pending" | "analyzing" | "judged" | "stale" | "resolved" | "closed";
 export type Resolution = "reverted" | "overridden" | "auto-cleared";
+export type PairRevisionMode = "judged-input" | "legacy";
 
 export interface PairRecord {
   pair: CandidatePair;
@@ -29,19 +30,22 @@ export type PairEvent =
 
 export type PairAdjudicator = (pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict) => void) => void;
 
-export function createPairCoordinator(options: { now(): number; classify(pair: CandidatePair): ZoneVerdict; adjudicate?: PairAdjudicator }) {
+export function createPairCoordinator(options: { now(): number; classify(pair: CandidatePair): ZoneVerdict; adjudicate?: PairAdjudicator; revisionMode?: PairRevisionMode }) {
   const records = new Map<string, PairRecord>();
   const revisionHistory = new Map<string, number>();
   const finalized = new Map<string, { revisionKey?: string; verdict: ZoneVerdict; resolution: Resolution }>();
   const requestedResolutions = new Map<string, Resolution>();
   const listeners = new Set<(event: PairEvent) => void>();
   const analyses = new Map<string, AbortController>();
+  const invalidated = new Set<string>();
   const emit = (event: PairEvent) => { for (const listener of listeners) { try { listener(event); } catch { /* 事件监听器隔离 */ } } };
   const ensure = (pair: CandidatePair) => {
     const previous = records.get(pair.id);
     if (previous && previous.status !== "closed") { previous.pair = pair; previous.revisionKey = pair.revisionKey; previous.updatedAt = options.now(); return previous; }
+    const advance = previous && previous.revisionKey !== pair.revisionKey && (options.revisionMode === "legacy" || previous.verdict && !invalidated.has(pair.id));
+    const revision = (revisionHistory.get(pair.id) ?? 0) + (advance ? 1 : 0);
+    if (advance) { invalidated.add(pair.id); finalized.delete(pair.id); }
     const final = finalized.get(pair.id);
-    const revision = (revisionHistory.get(pair.id) ?? 0) + (previous && previous.revisionKey !== pair.revisionKey ? 1 : 0);
     revisionHistory.set(pair.id, revision);
     const record: PairRecord = { pair, status: final && final.revisionKey === pair.revisionKey ? "resolved" : "pending", revision, leftConfirmed: false, rightConfirmed: false, totalLockMs: 0, updatedAt: options.now(), revisionKey: pair.revisionKey, ...(final && final.revisionKey === pair.revisionKey ? { verdict: final.verdict, resolution: final.resolution } : {}) };
     records.set(pair.id, record);
@@ -68,6 +72,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     return [...records.values()].filter((record) => record.status !== "closed");
   }
   function judge(record: PairRecord) {
+    invalidated.delete(record.pair.id);
     const previous = record.verdict;
     const verdict = options.classify(record.pair);
     if (verdict.zone === "grey" && options.adjudicate) {
@@ -106,9 +111,11 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   function markChanged(id: string) {
     const record = records.get(id);
     if (!record || record.status === "closed") return;
+    if (options.revisionMode !== "legacy" && (record.status === "pending" || record.status === "stale")) return;
     analyses.get(id)?.abort();
     analyses.delete(id);
     record.revision += 1;
+    invalidated.add(id);
     revisionHistory.set(id, record.revision);
     finalized.delete(id);
     record.status = "stale";
