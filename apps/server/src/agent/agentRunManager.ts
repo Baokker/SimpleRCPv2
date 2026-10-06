@@ -269,10 +269,25 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}`
     ].join("\n\n");
     const promptHash = crypto.createHash("sha256").update(prompt).digest("hex");
+    const observedUsage = new Map<string, AgentRunUsage>();
+    const stopEvents = await options.runtime.subscribe(
+      { workspacePath: projectRuntime.project.workspacePath, sessionId },
+      async (event) => {
+        if (event.type !== "message.updated") return;
+        const usage = event.data.usageSummary;
+        if (!usage || typeof usage !== "object") return;
+        const info = event.data.info;
+        const messageId = info && typeof info === "object" && typeof (info as { id?: unknown }).id === "string"
+          ? (info as { id: string }).id
+          : `event-${observedUsage.size}`;
+        observedUsage.set(messageId, usage as AgentRunUsage);
+      }
+    );
     let result: Awaited<ReturnType<AgentRuntime["run"]>>;
     try {
       result = await options.runtime.run({ workspacePath: projectRuntime.project.workspacePath, sessionId, prompt });
     } catch (error) {
+      await stopEvents();
       const recapError = Object.assign(new Error(error instanceof Error ? error.message : String(error)), {
         promptHash,
         provider: run.provider,
@@ -289,8 +304,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
       throw recapError;
     }
-    await appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider: run.provider, model: run.model, usage: result.usage } });
-    return { text: result.text, provider: run.provider, model: run.model, promptHash, usage: toLlmUsage(result.usage) };
+    await stopEvents();
+    if (result.usage) observedUsage.set(result.messageId ?? "result", result.usage);
+    const usage = sumUsage(observedUsage.values());
+    await appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider: run.provider, model: run.model, usage } });
+    return { text: result.text, provider: run.provider, model: run.model, promptHash, usage: toLlmUsage(usage) };
   }
 
   function appendActivity(
