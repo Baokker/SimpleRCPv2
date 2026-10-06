@@ -1,7 +1,7 @@
 # 共享终端与 Agent Guard 设计
 
-版本：v1.2  
-冻结提交：guard-v1.2（包含 G1 到 G5、H1 到 H4 的修复与回归测试）
+版本：v1.3  
+冻结提交：guard-v1.3（包含 G1 到 G5、H1 到 H4、R3-01 到 R3-04、L3-01 与 T-01 的修复及回归测试）
 
 ## 请求与刻画
 
@@ -9,7 +9,7 @@
 
 命令刻画为若干 GuardSegment。每段包含能力、路径分区和可逆性。能力包括 read、write、delete、exec、network、history、process、privilege、install。路径分区包括 workspace、outside、protected、metadata。可逆性包括 reversible、snapshot、irreversible。terminal 与 Agent 均使用 splitShellCommands 逐段判定，动作取最严格结果。良性只读管道例如 env | sort 保持可放行。
 
-工作区外、项目元数据目录、其他项目工作区、默认受保护文件和项目追加的受保护路径分别按分区处理。Shell 的变量展开、命令替换、管道、重定向、解释器内联代码和无法解析的路径会提高风险等级。
+工作区外、项目元数据目录、其他项目工作区、默认受保护文件和项目追加的受保护路径分别按分区处理。对于不存在的目标，系统解析已存在父目录和符号链接目标后再进行分区判断。Shell 的变量展开、命令替换、管道、重定向、解释器内联代码和无法解析的路径会提高风险等级。相邻引号拼接在路径分区前还原为 Shell 实际路径。
 
 ## 档位与矩阵
 
@@ -39,7 +39,7 @@ Agent 继承发起成员的档位。Agent 的不可逆操作和网络加执行�
 
 ## 快照与恢复
 
-allow_snapshot 按命令涉及的工作区路径复制被跟踪和未被忽略的文件，记录文件哈希与命令。没有明确路径的工作区级快照只允许 owner 恢复。快照保留最近 20 项，存放在项目元数据目录的 snapshots。对于命令执行前不存在的目标路径，快照清单记录空哈希；恢复时会删除该目标路径以及它后来创建的内容。对于快照中没有记录的文件，恢复过程不会删除快照创建之后的新文件。工作区内的 git checkout、git restore、git stash 和 git clean 归入 delete，可使用快照保护。
+allow_snapshot 按命令涉及的工作区路径复制被跟踪和未被忽略的文件，记录文件哈希与命令。没有明确路径的工作区级快照只允许 owner 恢复。快照保留最近 20 项，存放在项目元数据目录的 snapshots。对于命令执行前不存在的目标路径，快照清单记录空哈希；恢复时会删除该目标路径以及它后来创建的内容。对于快照中没有记录的文件，恢复过程不会删除快照创建之后的新文件。工作区内的 git checkout、git restore 和 git stash 归入 delete，可使用快照保护。git clean 归入不可逆操作，非 owner 至少需要审批。
 
 ## LLM 研判
 
@@ -49,7 +49,7 @@ allow_snapshot 按命令涉及的工作区路径复制被跟踪和未被忽略�
 
 ## OpenCode 接入
 
-Guard 模式为 `full` 或 `human-only` 时，OpenCode 的 `bash`、`edit`、`webfetch`、`websearch` 使用 `ask`，子 Agent `task` 使用 `deny`。`full` 使用按路径对象规则：通配规则先写入，`*.env`、`*.env.*`、`.env*`、`*.pem`、`*.key`、`*.git/config`、`*.git/hooks/*` 后写入。`off` 和 `human-only` 不覆盖 `read` 键，让 OpenCode 保留默认保护。OpenCode 1.18.31 的 SDK 类型确认支持 `read` 对象配置。
+Guard 模式为 `full` 或 `human-only` 时，OpenCode 的 `bash`、`edit`、`read`、`grep`、`glob`、`list`、`webfetch`、`websearch` 使用 Guard 请求，子 Agent `task` 使用 `deny`。读取类 permission 的路径优先使用工具载荷中的绝对路径；缺少绝对路径时以项目工作区为基准解析。`full` 使用按路径对象规则：通配规则先写入，`*.env`、`*.env.*`、`.env*`、`*.pem`、`*.key`、`*.git/config`、`*.git/hooks/*` 后写入。`off` 和 `human-only` 不覆盖 `read` 键，让 OpenCode 保留默认保护。OpenCode 1.18.31 的 SDK 类型确认支持 `read` 对象配置。
 
 运行时同时处理 `permission.asked` 与 `permission.v2.asked`，并将请求交给同一个策略服务。允许时只回复 `once`，拒绝时回复 `reject`。同一 session 同时存在多个请求时，先发送全部 `once`，再发送 `reject`。拒绝之后 OpenCode 返回 Permission request not found 会记为预期事件。Guard 拒绝导致的空响应记录为 blocked_by_guard。系统永远不回复 `always`，防止一次批准变成会话级永久放行。取消或超时会清理该运行的待审批请求并回复 `reject`。
 
@@ -70,3 +70,7 @@ Guard 模式为 `full` 或 `human-only` 时，OpenCode 的 `bash`、`edit`、`we
 ### v1.1 修复记录
 
 G1 修复 terminal 复合命令逐段判定。G2 修复工作区 Git 恢复命令的 delete 与快照分类。G3 按 package manager 子命令区分脚本执行与依赖安装。G4 协调同一 session 的并发审批回复，并增加 blocked_by_guard 状态。G5 忽略 heredoc 定界符和正文，只检查重定向目标。
+
+### v1.3 修复记录
+
+R3-01 解析 dangling symlink 的已存在父目录和链接目标。R3-02 在路径分区前还原相邻引号拼接。R3-03 将 git clean 标记为不可逆操作。R3-04 将 OpenCode 的 read、grep、glob、list permission 统一按项目工作区和工具载荷绝对路径判定。L3-01 识别同一条命令中下载文件后交给解释器执行的关联。T-01 收窄 agentRunManager 的运行 session 类型。

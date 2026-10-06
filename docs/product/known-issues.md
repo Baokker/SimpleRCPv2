@@ -1,6 +1,6 @@
 # SimpleRCPv2 已知问题
 
-更新时间：2026-10-01
+更新时间：2026-10-06
 
 本文件记录基线明确接受的问题。每项都包含可观察现象、影响范围、当前处理和完整处理方向。开发过程中发现新的可复现问题时，应当在修复代码或接受该问题的同一次提交中更新本文件。
 
@@ -106,7 +106,7 @@ Agent 或命令修改这些路径时，浏览器不会显示文件变化，也�
 
 状态：当前存在。
 
-OpenCode 进程退出、DeepSeek 请求失败、网络中断或达到超时都会使当前 run 失败。队列继续执行下一项，既有 trace 保留。基线不自动重试修改类任务，避免同一任务重复写入文件。
+OpenCode 进程退出、模型服务请求失败、网络中断或达到超时都会使当前 run 失败。队列继续执行下一项，既有 trace 保留。基线不自动重试修改类任务，避免同一任务重复写入文件。
 ## KI-011 运行隔离的范围
 
 终端和 Agent 仍以服务端系统用户运行，绝对路径可以读取该系统用户有权限读取的其他文件，包括其他项目和仓库根目录的 `.env`。元数据移出工作区只阻止直接使用 `../` 访问，不能提供操作系统级隔离。当前没有 CPU、内存或进程数限制；需要每个项目一个系统用户或容器时，应在部署环境中增加。
@@ -130,17 +130,17 @@ OpenCode 进程需要通过 `DEEPSEEK_API_KEY` 调用 Provider，bash 工具会�
 `tar -x`、`unzip`、`docker run -v` 和 `npx` 的具体文件写入行为没有在 Guard 中建立独立的路径模型。这些命令按执行能力处理，可能需要人工审批。需要更精确的范围控制时，应当使用明确的文件编辑工具或命令。
 # Guard 限制
 
-guard-v1.2 已修复 G1 到 G5 以及 H1 到 H4。terminal 复合命令逐段判定，工作区 Git 恢复命令支持快照，package manager 脚本按子命令判定，同一 session 的并发审批先发送 once 再发送 reject，heredoc 正文不参与路径识别，重定向保留原命令能力，普通复合命令不再自动标记 dynamic，git stash 的只读子命令按 read 处理，网络上传文件参数纳入路径分区。Guard 拒绝导致的 OpenCode 空响应记录为 blocked_by_guard。
+guard-v1.3 已修复 G1 到 G5、H1 到 H4、R3-01 到 R3-04、L3-01 与 T-01。terminal 复合命令逐段判定，工作区 Git 恢复命令支持快照，git clean 按不可逆操作处理，package manager 脚本按子命令判定，同一 session 的并发审批先发送 once 再发送 reject，heredoc 正文不参与路径识别，重定向保留原命令能力，普通复合命令不再自动标记 dynamic，git stash 的只读子命令按 read 处理，网络上传文件参数纳入路径分区，OpenCode 的 read、grep、glob、list 读取路径交给 Guard 判定，下载文件后在同一条命令中交给解释器执行会进入网络加执行规则。Guard 拒绝导致的 OpenCode 空响应记录为 blocked_by_guard。
 
 - 成员可以自行填写角色，当前身份系统不会验证角色的真实性。
 - exec 类命令（`make`、`npm run`、`python` 脚本、`rg --pre`、`git -c alias`）不做语义分析。
-- OpenCode 的 grep、glob、list 工具不经过守卫。
 - 交互控制持有者在提示符上留下的半行会与后续命令拼接。
 - subagent 可以通过 `task: deny` 规避，当前没有实现子会话审批。
 - human-only 模式下 OpenCode 仍会发出 ask，由服务端自动放行，与 `main` 分支行为不同。
 - initiator 在审批中途离线不会自动拒绝。
 - Monaco 编辑器内的人工编辑不经过 Guard。
 - 交互控制期间的按键直接写入 pty，不经过逐次命令判定。
-- OpenCode 的 `read` 已配置受保护路径；`grep`、`glob`、`list`、`env`、`printenv` 仍可能通过工具或进程间接读取敏感内容。
+- OpenCode 的 `env`、`printenv` 仍可能通过工具或进程间接读取敏感内容。
+- 下载文件与后续执行分处不同命令时，Guard 仍无法建立两次调用之间的关联。
 - 同一系统用户下的绝对路径读取没有 OS 沙箱隔离。
 - 快照恢复只覆盖快照中的文件，不删除快照之后的新文件。
