@@ -22,6 +22,15 @@ export class PlatformClient {
     if (!status.enabled || status.fakeAgentRuntime) throw new Error("A real experiment server is required");
     return status;
   }
+  async verifyFor(directory: string) {
+    const status = await this.verify();
+    const file = path.join(directory, "server-configuration.json");
+    if (await exists(file)) {
+      if (JSON.stringify(await readJson(file)) !== JSON.stringify(status)) throw new Error("Server capture configuration changed during resume");
+    } else await writeJson(file, status);
+    await writeJson(path.join(directory, "runtime-status.json"), await this.request("/api/agent/status"));
+    return status;
+  }
   async create(task: Task, raw: string, key: string) {
     const saved = path.join(raw, "project.json");
     let created: {project: ProjectRecord; members: string[]; initialized?: boolean};
@@ -58,6 +67,24 @@ export class PlatformClient {
     const {run} = await this.request<{run: AgentRun}>(this.projectRoute(project, "agent/runs"), member, {prompt, ...(sessionId ? {sessionId} : {})});
     await writeJson(saved, run);
     return run;
+  }
+  async teamRun(project: ProjectRecord, member: string, handle: string, prompt: string, saved: string): Promise<AgentRun> {
+    if (await exists(saved)) return readJson<AgentRun>(saved);
+    const messageFile = `${saved}.message.json`;
+    let message: any;
+    if (await exists(messageFile)) message = await readJson(messageFile);
+    else {
+      message = (await this.request(this.projectRoute(project, "chat"), member, {text: `@${handle} ${prompt}`})).message;
+      await writeJson(messageFile, message);
+    }
+    const deadline = Date.now() + 15000;
+    while (Date.now() < deadline) {
+      const {runs} = await this.request<{runs: AgentRun[]}>(this.projectRoute(project, "agent/runs"), member);
+      const run = runs.find(item => item.chatMessageId === message.id);
+      if (run) {await writeJson(saved, run); return run;}
+      await pause(100);
+    }
+    throw new Error(`Team Agent did not accept chat: ${message.id}`);
   }
   async wait(project: ProjectRecord, member: string, run: AgentRun) {
     const deadline = Date.now() + this.config.timeoutMs + 30000;

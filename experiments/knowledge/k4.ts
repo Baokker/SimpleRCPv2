@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import {applyPatch, parsePatch} from "diff";
+import {applyPatch, parsePatch, diffChars} from "diff";
 import type {KnowledgeCard} from "@simplercp/knowledge";
 import type {AgentRun} from "@simplercp/shared";
 import {type Dataset, type ExperimentConfig, RunStore, root, digest, exists, pause, pool, readJson, writeJson} from "./common.js";
@@ -20,11 +20,11 @@ export async function reviewPatch(pairId: string, card: KnowledgeCard, gold: Kno
   }
   const patterns = card.appliesTo?.kind === "glob" ? card.appliesTo.patterns : [];
   if (rule.files.some(file => !patterns.includes(file))) patch.appliesTo = {kind: "glob", patterns: rule.files};
-  return {patch, changedFields: Object.keys(patch), changedChars: Object.entries(patch).reduce((sum, [field, value]) => sum + Math.abs(JSON.stringify(value).length - JSON.stringify((card as any)[field] ?? "").length), 0), rulesHash: digest(rules)};
+  return {patch, changedFields: Object.keys(patch), changedChars: Object.entries(patch).reduce((sum, [field, value]) => sum + diffChars(JSON.stringify((card as any)[field] ?? ""), JSON.stringify(value)).filter(part => part.added || part.removed).reduce((total, part) => total + part.value.length, 0), 0), rulesHash: digest(rules)};
 }
 
 export async function runK4(data: Dataset, config: ExperimentConfig, store: RunStore, combinations: Array<{pair: Dataset["transfers"][number]; condition: K4Condition; variant: "delayed" | "same-session"; repetition: number}>) {
-  const api = new PlatformClient(config); await api.verify();
+  const api = new PlatformClient(config); await api.verifyFor(store.directory);
   await pool(combinations, config.concurrency, async ({pair, condition, variant, repetition}) => {
     const key = `${pair.id}-${condition}-${variant}-${repetition}`;
     if (store.done(key)) return;
@@ -33,22 +33,25 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
     const a = members[0], b = members[1];
     const correcting = pair.correction.member.endsWith("member-b") ? b : a;
     const route = (suffix: string) => api.projectRoute(project, suffix);
+    const teamFile = path.join(raw, "team-agent.json");
+    const team = await exists(teamFile) ? await readJson(teamFile) : (await api.request(route("team-agents"), a, {name: "transfer-agent"})).agent;
+    if (!await exists(teamFile)) await writeJson(teamFile, team);
     const initialPath = path.join(raw, "ta-started.json");
     if (!await exists(initialPath)) {
       await api.configure(project, a, {injectEnabled: false, toolEnabled: false, proposeEnabled: false, recapMode: condition === "T5" ? "agent-self" : "server"});
       if (condition === "T0") await api.request(route("experiments/capture/disable"), a, {});
     }
-    const initial = await api.run(project, a, pair.ta.prompt, initialPath);
+    const initial = await api.teamRun(project, a, team.handle, pair.ta.prompt, initialPath);
     const correctionFile = path.join(raw, "correction-applied.json");
     let ta: AgentRun;
     if (!await exists(correctionFile)) {
       const scheduled = Date.parse(initial.createdAt) + pair.correction.atSeconds * 1000;
       if (scheduled > Date.now()) await pause(scheduled - Date.now());
-      if (pair.correction.mode === "interrupt") await api.request(route(`agent/runs/${initial.id}/cancel`), a, {});
-      ta = await api.wait(project, a, initial);
+      ta = (await api.request<{run: AgentRun}>(route(`agent/runs/${initial.id}`), a)).run;
       const before = await api.collect(project, a, ta, path.join(raw, "ta"));
       await writeJson(path.join(raw, "ta-judge.json"), await judge(pair.ta, before.snapshot, path.join(raw, "ta")));
       if (pair.correction.mode === "revise") {
+        ta = await api.wait(project, a, initial);
         const patchFile = path.join(pair.directory, pair.correction.patch ?? "correction.patch");
         const patches = parsePatch(await fs.readFile(patchFile, "utf8"));
         const collaboration = new CollaborationClient(api, project); await collaboration.join(correcting);
@@ -61,10 +64,12 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
           }
         } finally {await collaboration.close();}
       }
-      const chat = await api.request(route("chat"), correcting, {text: pair.correction.text});
-      await writeJson(correctionFile, {at: Date.now(), memberId: correcting, chat, text: pair.correction.text, interruptedStatus: ta.status});
+      const correction = await api.teamRun(project, correcting, team.handle, pair.correction.text, path.join(raw, "correction-run.json"));
+      ta = await api.wait(project, a, initial);
+      await writeJson(path.join(raw, "ta/run.json"), ta);
+      await writeJson(correctionFile, {at: Date.now(), memberId: correcting, correctionRunId: correction.id, text: pair.correction.text, interruptedStatus: ta.status});
     } else ta = await readJson(path.join(raw, "ta/run.json"));
-    const revised = await api.run(project, a, pair.correction.text, path.join(raw, "correction-run.json"), initial.sessionId);
+    const revised = await readJson<AgentRun>(path.join(raw, "correction-run.json"));
     const correctionRun = await api.wait(project, a, revised);
     await api.collect(project, a, correctionRun, path.join(raw, "correction"));
     const cardFile = path.join(raw, "confirmed-card.json");

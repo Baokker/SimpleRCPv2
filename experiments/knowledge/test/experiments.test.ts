@@ -8,6 +8,8 @@ import {retrievalMetrics} from "../k5.js";
 import {concurrentTrace, editKinds, evaluateStrategies} from "../k7.js";
 import {collectFrozenAnchorCorpus, createAnchorBenchmarkCases} from "../../../packages/knowledge/test/fixtures/anchor-benchmark.js";
 import {platformRoot} from "../common.js";
+import {draftMetrics} from "../k2.js";
+import {conditionCards, fixedCardVariableChars} from "../k3.js";
 
 test("冻结数据的全部文件哈希与卡片 schema", async () => {
   const data = await dataset();
@@ -51,4 +53,23 @@ test("真实文件追加结果后续跑跳过完成组合", async () => {
   assert.equal(second.done("finished"), true); assert.equal(second.done("pending"), false);
   await second.close(); assert.equal((await readJsonl(path.join(directory, "results.jsonl"))).length, 1);
   await fs.rm(directory, {recursive: true});
+});
+test("复盘评价检查原始响应中的全部引用", () => {
+  const evidence = {file: "orders.ts"};
+  const raw = JSON.stringify({type: "decision", title: "维护订单记录", summary: "订单更新应保留完整的审计信息。", whatHappened: "订单记录需要同步修改。", correction: "保留 orders.ts 中的审计字段。", rule: "所有订单更新均需要经过 orders.ts 中定义的统一更新入口，并保留完整审计信息。", notApplicable: "只读查询不需要修改审计记录。", appliesTo: {files: ["orders.ts"], globs: [], taskKinds: []}, scopeSuggestion: {scope: "team", reason: "适用于订单服务"}, confidence: 0.8, evidenceCitations: ["file", "missing"], unknowns: []});
+  const measured = draftMetrics(raw, "server", evidence, "orders.ts", ["decision"]);
+  assert.equal(measured.validStructure, true);
+  assert.equal(measured.validCitations, false);
+  assert.equal(draftMetrics("invalid JSON", "ordinary", evidence, "orders.ts", ["decision"]).validStructure, false);
+});
+test("C7 与 C5 的完整固定卡片字符预算一致", async () => {
+  const data = await dataset();
+  for (const task of data.tasks.filter(item => item.kind === "trap")) {
+    const correct = conditionCards(data, task, "C5");
+    const unrelated = conditionCards(data, task, "C7");
+    const target = correct.cards.find(card => card.id === correct.configuration.fixedCardIds[0])!;
+    const card = unrelated.cards.find(card => card.id === unrelated.configuration.fixedCardIds[0])!;
+    assert.equal(fixedCardVariableChars(card) + card.content.length, fixedCardVariableChars(target) + Math.min(800, target.content.length));
+    assert.equal(unrelated.lengthDifference, 0);
+  }
 });

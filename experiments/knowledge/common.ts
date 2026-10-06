@@ -120,8 +120,15 @@ export class RunStore {
 }
 export async function pool<T>(items: T[], concurrency: number, processItem: (item: T) => Promise<void>) {
   let cursor = 0;
-  await Promise.all(Array.from({length: concurrency}, async () => {
-    while (cursor < items.length) {const item = items[cursor++]; await processItem(item);}
-  }));
+  let failure: unknown;
+  const workers = Array.from({length: concurrency}, async () => {
+    while (cursor < items.length && failure === undefined) {
+      const item = items[cursor++];
+      try {await processItem(item);} catch (error) {failure = error; throw error;}
+    }
+  });
+  const results = await Promise.allSettled(workers);
+  const rejected = results.find(result => result.status === "rejected");
+  if (rejected?.status === "rejected") throw rejected.reason;
 }
 export const pause = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));

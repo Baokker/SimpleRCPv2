@@ -43,15 +43,17 @@ pnpm --filter @simplercp/experiments experiment k5 --source experiments/knowledg
 pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/runs/k7-pilot
 ```
 
-在线 K1 需要以 `EXPERIMENT_SPEED=10` 启动实例，并使用 `online.json`。在线人类动作经过真实协作接口，脚本中的 Agent 生命周期与工具事件经过实验接口；这条路径检验录制和捕获，不执行脚本中描述的模型任务。K3/K4 执行真实 OpenCode。
+在线 K1 需要以 `EXPERIMENT_SPEED=10` 启动实例，并使用 `online.json`，将 origin 设置为该实例的端口。在线人类动作经过真实协作接口，Yjs 编辑保留脚本指定的删除和插入范围；HTTP 文件写入前等待 Yjs 保存完成，随后等待所有打开的文档收到更新。脚本中的 Agent 生命周期与工具事件按各自时间经过实验接口；这条路径检验录制和捕获。K3/K4 执行真实 OpenCode。`recordedEqual` 比较服务端建议与录制事件回放的类型、成员、锚点，时间容许 300ms 计时误差；`scriptTypesEqual` 单独比较原脚本转换的类型序列。同源证据按照产品的规则去重，同时保存原始回放结果。
 
 每项组合创建独立项目。`raw/<组合>/` 保存项目身份、run、trace、注入、diff、快照和判定输出。`results.jsonl` 追加结果，包含代码提交、配置哈希、manifest 哈希、provider 与 model。`raw/` 和 `.work/` 由 gitignore 排除；结果与汇总提交。相同命令和输出目录再次运行会读取完成记录，跳过已完成组合；未结束的 Agent 按 run id 继续等待。活跃 runner 的进程锁禁止同目录并发执行，失效进程锁可恢复。续跑要求提交、配置、数据版本一致。
 
 判定使用冻结 `run-judge.mjs` 的逐字副本，执行前比较 SHA-256。副本放在 `.work/judge/tools/`，判定器的临时目录因此位于实验目录内。任务和隐藏测试仍从只读数据目录读取。
 
-K4 确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符数量和规则哈希。T4 保持个人范围。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。Ta 没有出现功能通过且陷阱失败时，结果显式标记。
+K4 的甲通过团队 Agent 聊天提交 Ta，纠正成员用原文继续向同一团队 Agent 发送消息，由平台处理打断和后续运行。纠正前保存 Ta 工作区并判定，Tb 由乙的个人 Agent 执行。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T4 保持个人范围。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。需要用数据原文触发纠正识别时，启动实验实例增加 `EXPERIMENT_CORRECTION_TERMS=dataset`；实际配置保存在结果目录。该设置包含四个迁移约定标识符。
 
-K2 的 grounded 沿用旧评价：结构完整、引用路径存在、正文覆盖指定对象。这个自动指标只检查证据引用与对象覆盖；规则语义由两名标注者评价。原始模型响应按输入哈希缓存。
+C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
+
+K2 的 grounded 沿用旧评价：结构完整、原始响应的全部引用路径存在、正文覆盖指定对象。结构解析采用产品解析器，引用评价直接读取原始 JSON 中的 evidenceCitations。这个自动指标只检查证据引用与对象覆盖；规则语义由两名标注者评价。原始模型响应按输入哈希缓存。
 
 K7 的真值由 Y.Text 的字符归属属性跟踪，所有被测策略只读取纯文本与旧锚点。移动操作给迁移后的文本保留归属标记；并发编辑在原位置保留的字符单独记录 fragmented。删除后的真值为请求复核。Yjs 加多策略使用平台 0.65 字符相似度及 0.5 行修改比例阈值。
 

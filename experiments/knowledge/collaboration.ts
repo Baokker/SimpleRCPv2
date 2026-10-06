@@ -37,7 +37,7 @@ export class CollaborationClient {
     let active = this.documents.get(key);
     if (!active) {
       const doc = new YRuntime.Doc();
-      const provider = new WebsocketProvider(`${this.api.config.origin.replace(/^http/u, "ws")}/yjs/${this.project.id}`, `${this.roomId}:${file}`, doc, {WebSocketPolyfill: WebSocket as any, params: {memberId: member}, disableBc: true});
+      const provider = new WebsocketProvider(`${this.api.config.origin.replace(/^http/u, "ws")}/yjs/${this.project.id}`, encodeURIComponent(`${this.roomId}:${file}`), doc, {WebSocketPolyfill: WebSocket as any, params: {memberId: member}, disableBc: true});
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error(`Yjs synchronization timed out: ${file}`)), 15000);
         provider.on("sync", (synced: boolean) => {if (synced) {clearTimeout(timer); resolve();}});
@@ -48,17 +48,29 @@ export class CollaborationClient {
     return active.doc;
   }
   async replace(member: string, file: string, before: string, after: string) {
+    let prefix = 0;
+    while (before[prefix] === after[prefix] && prefix < Math.min(before.length, after.length)) prefix++;
+    let endBefore = before.length, endAfter = after.length;
+    while (endBefore > prefix && endAfter > prefix && before[endBefore - 1] === after[endAfter - 1]) {endBefore--; endAfter--;}
+    await this.edit(member, file, before, prefix, endBefore - prefix, after.slice(prefix, endAfter));
+  }
+  async edit(member: string, file: string, before: string, start: number, deleteCount: number, insertText: string) {
     const doc = await this.document(member, file);
     const text = doc.getText("content");
     const deadline = Date.now() + 10000;
     while (text.toString() !== before && Date.now() < deadline) await pause(20);
     if (text.toString() !== before) throw new Error(`Yjs source differs: ${file}`);
-    let prefix = 0;
-    while (before[prefix] === after[prefix] && prefix < Math.min(before.length, after.length)) prefix++;
-    let endBefore = before.length, endAfter = after.length;
-    while (endBefore > prefix && endAfter > prefix && before[endBefore - 1] === after[endAfter - 1]) {endBefore--; endAfter--;}
-    doc.transact(() => {if (endBefore > prefix) text.delete(prefix, endBefore - prefix); if (endAfter > prefix) text.insert(prefix, after.slice(prefix, endAfter));});
+    doc.transact(() => {if (deleteCount) text.delete(start, deleteCount); if (insertText) text.insert(start, insertText);});
     await pause(30);
+    await this.api.request(this.api.projectRoute(this.project, "experiments/documents/flush"), member, {});
+  }
+  async externalWrite(member: string, file: string, content: string) {
+    await this.api.request(this.api.projectRoute(this.project, "experiments/documents/flush"), member, {});
+    await this.api.request(this.api.projectRoute(this.project, "workspace/file"), member, {path: file, content}, "PUT");
+    const deadline = Date.now() + 10000;
+    const active = [...this.documents.entries()].filter(([key]) => key.endsWith(`:${file}`)).map(([, entry]) => entry);
+    while (active.some(entry => entry.doc.getText("content").toString() !== content) && Date.now() < deadline) await pause(20);
+    if (active.some(entry => entry.doc.getText("content").toString() !== content)) throw new Error(`External edit was not synchronized: ${file}`);
   }
   async leave(member: string) {
     const socket = this.sockets.get(member); socket?.close(); this.sockets.delete(member);

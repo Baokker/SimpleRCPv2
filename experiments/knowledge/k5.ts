@@ -11,7 +11,7 @@ export function retrievalMetrics(ids: string[], relevant: string[]) {
   return {recall1: relevant.length ? ids.slice(0, 1).filter(id => relevance.has(id)).length / relevant.length : null,
     recall3: relevant.length ? ids.slice(0, 3).filter(id => relevance.has(id)).length / relevant.length : null,
     recall5: relevant.length ? ids.slice(0, 5).filter(id => relevance.has(id)).length / relevant.length : null,
-    mrr: rank < 0 ? 0 : 1 / (rank + 1), ndcg5: ideal ? dcg / ideal : null,
+    mrr: relevant.length ? rank < 0 ? 0 : 1 / (rank + 1) : null, ndcg5: ideal ? dcg / ideal : null,
     falseInjections: relevant.length ? null : Math.min(5, ids.length)};
 }
 

@@ -63,11 +63,16 @@ if (command === "verify") {
       if (!task || !values.workspace) throw new Error("--tasks and --workspace are required");
       const first = await judge(task, resolveInput(values.workspace), store.raw("first"));
       const second = await judge(task, resolveInput(values.workspace), store.raw("second"));
-      const outcome = (row: any) => ({functional: row.functional, trapAvoided: row.trapAvoided, jointSuccess: row.jointSuccess, tests: row.tests, trapEvidence: row.trapEvidence});
+      const outcome = (row: any) => ({functional: row.functional, trapAvoided: row.trapAvoided, jointSuccess: row.jointSuccess,
+        tests: Object.fromEntries(Object.entries(row.tests).map(([name, value]) => {const test = value as any; return [name, {status: test.status, passed: test.passed, failed: test.failed, signal: test.signal}];})),
+        trapEvidence: {status: row.trapEvidence.status, parsed: row.trapEvidence.parsed, signal: row.trapEvidence.signal}});
       const equal = JSON.stringify(outcome(first)) === JSON.stringify(outcome(second));
       await store.append({key: `${task.id}-stability`, completed: true, task: task.id, equal, first: outcome(first), second: outcome(second)});
       if (!equal) throw new Error("Judge output is not stable");
     }
     console.log(JSON.stringify({directory, complete: true}));
+  } catch (error) {
+    await writeJson(path.join(directory, "failure.json"), {at: new Date().toISOString(), command, message: error instanceof Error ? error.message : String(error)});
+    throw error;
   } finally {await store.close();}
 }

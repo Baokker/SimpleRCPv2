@@ -105,6 +105,22 @@ export async function normalizeScript(id: string, speed = 1) {
   return {...input, events};
 }
 const overlap = (candidate: any, ranges: any[]) => ranges.some(range => range.file === candidate.file && range.startLine <= candidate.endLine && candidate.startLine <= range.endLine);
+// 采用 captureService.ts 的同源证据去重规则，保留 replayEvents 的原始序列供核查。
+export function dedupeSuggestions(suggestions: CaptureSuggestion[]) {
+  const retained: CaptureSuggestion[] = [];
+  const sources: Set<string>[] = [];
+  for (const suggestion of suggestions) {
+    const ids = new Set(suggestion.actors.runIds.map(id => `run:${id}`));
+    for (const key of ["runId", "previousRunId", "suggestionId"] as const) if (typeof suggestion.evidence[key] === "string") ids.add(`${key}:${suggestion.evidence[key]}`);
+    const refs = suggestion.evidence.traceRefs as Array<{runId: string; seq: number}> | undefined;
+    if (Array.isArray(refs)) for (const ref of refs) if (ref && typeof ref.runId === "string" && Number.isInteger(ref.seq)) ids.add(`trace:${ref.runId}:${ref.seq}`);
+    const chats = suggestion.evidence.chatMessages as Array<{messageId: string}> | undefined;
+    if (Array.isArray(chats)) for (const chat of chats) if (typeof chat?.messageId === "string") ids.add(`message:${chat.messageId}`);
+    if (ids.size && sources.some(previous => [...ids].some(id => previous.has(id)))) continue;
+    retained.push(suggestion); sources.push(ids);
+  }
+  return retained;
+}
 export function triggerMetrics(suggestions: CaptureSuggestion[], labels: any, speed = 1, offset = 0) {
   const types = [...new Set([...suggestions.map(item => item.triggerType), ...labels.knowledgeMoments.map((item: any) => item.expectedTrigger)])];
   const matched = new Set<string>();
@@ -148,12 +164,13 @@ export async function runK1Offline(store: RunStore) {
     await writeJson(path.join(store.raw(key), "events.json"), input.events);
     await writeJson(path.join(store.raw(key), "suggestions.json"), suggestions);
     await writeJson(path.join(store.raw(key), "anchors.json"), anchors);
-    await store.append({key, completed: true, session: id, condition: "offline", ...metrics, anchors: {total: anchors.total, top1: anchors.top1, top3: anchors.top3}, artifacts: path.relative(store.directory, store.raw(key))});
+    const distractorHits = input.labels.distractors.map((label: any) => ({id: label.id, hits: suggestions.filter(item => item.createdAt >= label.tStart * 1000 && item.createdAt <= label.tEnd * 1000).map(item => item.triggerType)}));
+    await store.append({key, completed: true, session: id, condition: "offline", ...metrics, distractorHits, anchors: {total: anchors.total, top1: anchors.top1, top3: anchors.top3}, artifacts: path.relative(store.directory, store.raw(key))});
   }
 }
 export async function runK1Online(data: Dataset, config: ExperimentConfig, store: RunStore) {
   const api = new PlatformClient(config);
-  const status = await api.verify();
+  const status = await api.verifyFor(store.directory);
   if (status.speed !== config.speed) throw new Error("Online capture speed differs from run configuration");
   for (const id of ["S01", "S02"]) {
     const key = `${id}-online`;
@@ -166,16 +183,18 @@ export async function runK1Online(data: Dataset, config: ExperimentConfig, store
     const texts = new Map(input.texts);
     const clockStart = Date.now();
     const agentEvents = input.events.filter(event => ["agentRun", "agentTool"].includes(event.type));
-    let agentCursor = 0;
+    const timeline = [...input.actions.map(action => ({at: action.t * 1000 / config.speed, action})), ...agentEvents.map(event => ({at: event.at, event}))].sort((a, b) => a.at - b.at || Number("action" in a) - Number("action" in b));
     try {
-      for (const action of input.actions) {
-        const at = clockStart + action.t * 1000 / config.speed;
+      for (const item of timeline) {
+        const at = clockStart + item.at;
         if (at > Date.now()) await pause(at - Date.now());
-        const member = String(identities.get(action.member) ?? members[0]);
-        while (agentCursor < agentEvents.length && agentEvents[agentCursor].at <= action.t * 1000 / config.speed) {
-          const event = agentEvents[agentCursor++] as any;
-          await api.request(api.projectRoute(project, "experiments/capture/agent-event"), members[0], {event: {...event, memberId: identities.get(event.memberId), agentRanges: event.agentRanges?.map((range: any) => ({...range, ownerId: identities.get(range.ownerId)}))}});
+        if ("event" in item) {
+          const event = item.event as any;
+          await api.request(api.projectRoute(project, "experiments/capture/agent-event"), members[0], {event: {...event, memberId: identities.get(event.memberId), interruptedByMemberId: event.interruptedByMemberId && identities.get(event.interruptedByMemberId), agentRanges: event.agentRanges?.map((range: any) => ({...range, ownerId: identities.get(range.ownerId)}))}});
+          continue;
         }
+        const action = item.action;
+        const member = String(identities.get(action.member) ?? members[0]);
         if (action.type === "join") await client.join(member);
         if (action.type === "leave") await client.leave(member);
         if (action.type === "open") {await client.document(member, action.file); client.send(member, {type: "open_file", path: action.file});}
@@ -185,20 +204,21 @@ export async function runK1Online(data: Dataset, config: ExperimentConfig, store
           const before = texts.get(action.file)!;
           const start = editorOffset(before, action.at.line, action.at.column);
           const after = before.slice(0, start) + action.insert + before.slice(start + action.delete);
-          await client.replace(member, action.file, before, after); texts.set(action.file, after);
+          await client.edit(member, action.file, before, start, action.delete, action.insert); texts.set(action.file, after);
         }
         if (action.type === "agentRun") for (const write of action.writes) {
           const before = texts.get(write.file)!;
           const after = applyPatch(before, write.patch);
           if (after === false) throw new Error("Online script Agent patch cannot be applied");
-          await api.request(api.projectRoute(project, "workspace/file"), member, {path: write.file, content: after}, "PUT");
+          await client.externalWrite(member, write.file, after);
           texts.set(write.file, after);
         }
-        if (action.type === "fileExternal") {await api.request(api.projectRoute(project, "workspace/file"), members[0], {path: action.file, content: action.content}, "PUT"); texts.set(action.file, action.content);}
+        if (action.type === "fileExternal") {await client.externalWrite(members[0], action.file, action.content); texts.set(action.file, action.content);}
       }
       await pause(65000 / config.speed);
       const recording = await api.request(api.projectRoute(project, "experiments/recording"), members[0]);
-      const replayed = replayEvents(recording.events, recording.config, Date.now());
+      const replayedRaw = replayEvents(recording.events, recording.config, Date.now());
+      const replayed = dedupeSuggestions(replayedRaw);
       const fingerprint = (items: CaptureSuggestion[]) => items.map(item => ({type: item.triggerType, at: item.createdAt, actors: item.actors, anchors: item.suggestedAnchors})).sort((a, b) => a.at - b.at || a.type.localeCompare(b.type));
       const recorded = fingerprint(recording.suggestions), offline = fingerprint(replayed);
       const recordedEqual = recorded.length === offline.length && recorded.every((item, index) => {
@@ -209,9 +229,9 @@ export async function runK1Online(data: Dataset, config: ExperimentConfig, store
       const scriptSuggestions = replayEvents(input.events, recording.config, input.metadata.durationSeconds * 1000 / config.speed + 65000 / config.speed);
       const scriptTypesEqual = JSON.stringify(types(scriptSuggestions)) === JSON.stringify(types(recording.suggestions));
       await writeJson(path.join(store.raw(key), "recording.json"), recording);
-      await writeJson(path.join(store.raw(key), "comparison.json"), {recordedEqual, scriptTypesEqual, script: fingerprint(scriptSuggestions), online: fingerprint(recording.suggestions), recordedReplay: fingerprint(replayed)});
+      await writeJson(path.join(store.raw(key), "comparison.json"), {recordedEqual, scriptTypesEqual, script: fingerprint(scriptSuggestions), online: fingerprint(recording.suggestions), recordedReplay: fingerprint(replayed), rawReplay: fingerprint(replayedRaw)});
       await store.append({key, completed: true, session: id, condition: "online", recordedEqual, scriptTypesEqual,
-        onlineCount: recording.suggestions.length, replayCount: replayed.length, scriptCount: scriptSuggestions.length,
+        onlineCount: recording.suggestions.length, replayCount: replayed.length, rawReplayCount: replayedRaw.length, scriptCount: scriptSuggestions.length,
         agentSource: "script-schema-1", speed: config.speed, artifacts: path.relative(store.directory, store.raw(key))});
     } finally {await client.close();}
   }

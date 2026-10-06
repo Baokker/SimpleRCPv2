@@ -34,14 +34,13 @@ def paired_tests(left, right, bound=0.05):
     standard_error = difference.std(ddof=1) / np.sqrt(len(difference)) if len(difference) > 1 else np.nan
     tost = None
     if np.isfinite(standard_error):
-        if standard_error == 0:
-            tost = 0.0 if abs(difference.mean()) < bound else 1.0
-        else:
+        if standard_error > 0:
             lower = stats.t.sf((difference.mean() + bound) / standard_error, len(difference) - 1)
             upper = stats.t.cdf((difference.mean() - bound) / standard_error, len(difference) - 1)
             tost = float(max(lower, upper))
-    return {"tasks": len(left), "b": b, "c": c, "mcnemar_p": float(mcnemar), "difference": float(difference.mean()),
-            "difference_ci": bootstrap_tasks(difference), "tost_bound": bound, "tost_p": tost}
+    return {"tasks": len(left), "left_only": b, "right_only": c, "mcnemar_p": float(mcnemar), "difference": float(difference.mean()),
+            "difference_ci": bootstrap_tasks(difference), "tost_bound": bound, "tost_p": tost,
+            "tost_reason": None if tost is not None else "样本数量或差值方差不足"}
 
 
 def majority_table(frame):
@@ -77,11 +76,15 @@ def analyze_agent(frame, directory):
             pairs = wide[[a, b]].dropna()
             if pairs.empty:
                 continue
-            comparisons.append({"metric": field, "a": a, "b": b, **paired_tests(pairs[a], pairs[b])})
+            comparisons.append({"metric": field, "condition_a": a, "condition_b": b, **paired_tests(pairs[a], pairs[b])})
     if comparisons:
         adjusted = multipletests([item["mcnemar_p"] for item in comparisons], method="holm")[1]
         for item, value in zip(comparisons, adjusted):
             item["holm_p"] = float(value)
+        tost_items = [item for item in comparisons if item["tost_p"] is not None]
+        if tost_items:
+            for item, value in zip(tost_items, multipletests([item["tost_p"] for item in tost_items], method="holm")[1]):
+                item["tost_holm_p"] = float(value)
     model = {"available": False, "reason": "至少需要两个条件以及同时存在成功和失败"}
     if frame.condition.nunique() > 1 and frame.jointSuccess.nunique() > 1:
         observations = frame.copy()
@@ -155,6 +158,9 @@ def main():
     elif "recall1" in frame:
         table = frame.groupby("condition")[["recall1", "recall3", "recall5", "mrr", "ndcg5", "falseInjections"]].mean()
         (args.out / "retrieval.md").write_text(table.to_markdown())
+    elif "groundedPass" in frame:
+        table = frame.groupby("condition")[["validStructure", "validCitations", "mustMentionCovered", "groundedPass"]].mean()
+        (args.out / "recap.md").write_text(table.to_markdown())
     if args.ratings_a and args.ratings_b:
         analyze_ratings(args.ratings_a, args.ratings_b, args.out)
 

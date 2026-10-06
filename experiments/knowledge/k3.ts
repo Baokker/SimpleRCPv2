@@ -5,6 +5,11 @@ import {PlatformClient, judge} from "./client.js";
 
 export type K3Condition = "C0" | "C1" | "C2" | "C3" | "C4" | "C5" | "C6-stale" | "C6-contradiction" | "C7";
 export const allK3Conditions: K3Condition[] = ["C0", "C1", "C2", "C3", "C4", "C5", "C6-stale", "C6-contradiction", "C7"];
+// provider.ts 的固定卡片格式；导入后的 author 与 confirmedBy 在同一项目内长度一致。
+export function fixedCardVariableChars(card: KnowledgeCard) {
+  const anchors = card.anchors.map(anchor => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
+  return `[cardId=${card.id}] ${card.type} ${card.title} (score=1.000)\nsummary: ${card.summary}\ncontent: \nanchors: ${anchors || "none"}\nauthor: ; confirmedBy: `.length;
+}
 export function conditionCards(data: Dataset, task: Task, condition: K3Condition) {
   const variants = new Set(data.tasks.flatMap(item => item.variantCardIds ?? []));
   const library = data.library.filter(item => item.repository === task.repository).map(item => item.card);
@@ -25,12 +30,14 @@ export function conditionCards(data: Dataset, task: Task, condition: K3Condition
   }
   if (condition === "C5" && target) fixedCardIds = [target.id];
   if (condition === "C7" && target) {
-    const irrelevant = library.filter(card => task.irrelevantCardIds?.includes(card.id)).sort((a, b) => Math.abs(a.content.length - target.content.length) - Math.abs(b.content.length - target.content.length))[0];
+    const targetChars = fixedCardVariableChars(target) + Math.min(800, target.content.length);
+    const irrelevant = library.filter(card => task.irrelevantCardIds?.includes(card.id) && targetChars - fixedCardVariableChars(card) >= 40 && targetChars - fixedCardVariableChars(card) <= 800).sort((a, b) => Math.abs(fixedCardVariableChars(a) + a.content.length - targetChars) - Math.abs(fixedCardVariableChars(b) + b.content.length - targetChars))[0];
     if (!irrelevant) throw new Error(`Irrelevant card is absent: ${task.id}`);
     fixedCardIds = [irrelevant.id];
-    const matchedContent = (irrelevant.content + "\n").repeat(Math.ceil(target.content.length / (irrelevant.content.length + 1))).slice(0, target.content.length);
+    const required = targetChars - fixedCardVariableChars(irrelevant);
+    const matchedContent = (irrelevant.content + "\n").repeat(Math.ceil(required / (irrelevant.content.length + 1))).slice(0, required);
     cards = cards.map(card => card.id === irrelevant.id ? {...card, content: matchedContent} : card);
-    lengthDifference = matchedContent.length - target.content.length;
+    lengthDifference = fixedCardVariableChars(irrelevant) + matchedContent.length - targetChars;
   }
   const injectEnabled = ["C2", "C4", "C5", "C6-stale", "C6-contradiction", "C7"].includes(condition) && !(task.kind === "control" && ["C5", "C7"].includes(condition));
   return {cards, configuration: {
@@ -53,7 +60,7 @@ export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
 }
 export async function runK3(data: Dataset, config: ExperimentConfig, store: RunStore, combinations: Array<{task: Task; condition: K3Condition; repetition: number}>) {
   const client = new PlatformClient(config);
-  await client.verify();
+  await client.verifyFor(store.directory);
   await pool(combinations, config.concurrency, async ({task, condition, repetition}) => {
     const key = `${task.id}-${condition}-${repetition}`;
     if (store.done(key)) return;

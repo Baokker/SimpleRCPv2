@@ -1,0 +1,52 @@
+import path from "node:path";
+import fs from "node:fs/promises";
+import {root, readJson, readJsonl, writeJson, exists} from "./common.js";
+
+const folder = (name: string) => path.join(root, "runs", name);
+const k3 = await readJsonl(path.join(folder("k3-pilot"), "results.jsonl"));
+const k4Location = process.argv[2] ?? "k4-team-pilot";
+const k4 = await readJsonl(path.join(folder(k4Location), "results.jsonl"));
+const k1 = (await readJsonl(path.join(folder("k1-online-final"), "results.jsonl"))).filter(row => row.condition === "offline");
+const k5Location = process.argv[3] ?? "k5-final-pilot";
+const k5 = await readJsonl(path.join(folder(k5Location), "results.jsonl"));
+const k7 = await readJsonl(path.join(folder("k7-pilot"), "results.jsonl"));
+const mean = (items: number[]) => items.reduce((sum, value) => sum + value, 0) / items.length;
+const groups = (rows: any[], field: string) => [...new Set(rows.map(row => row[field]))].map(key => ({key, rows: rows.filter(row => row[field] === key)}));
+const online = await exists(path.join(folder("k1-online-final"), "results.jsonl")) ? await readJsonl(path.join(folder("k1-online-final"), "results.jsonl")) : [];
+const summaries = {
+  k3: groups(k3, "condition").map(({key, rows}) => ({condition: key, count: rows.length, functional: rows.filter(row => row.functional).length, avoided: rows.filter(row => row.trapAvoided).length,
+    joint: rows.filter(row => row.jointSuccess).length, targetInjected: rows.filter(row => row.targetInjected).length, totalEstimatedCNY: rows.reduce((sum, row) => sum + (row.usage?.estimatedCost ?? 0), 0), meanWallMs: mean(rows.map(row => row.wallMs))})),
+  calibration: await readJson(path.join(folder("k3-pilot"), "calibration.json")),
+  k4: k4.map(row => ({pair: row.pair, condition: row.condition, taFunctional: row.ta.functional, taTrapped: row.ta.actuallyTrapped, functional: row.functional, avoided: row.trapAvoided, targetInjected: row.targetInjected,
+    cardOwner: row.cardOwner, crossOwner: row.crossOwner, reuse: row.reuse})),
+  k1: {predicted: k1.reduce((sum, row) => sum + row.predicted, 0), annotated: k1.reduce((sum, row) => sum + row.annotated, 0), truePositives: k1.reduce((sum, row) => sum + row.truePositives, 0),
+    anchorTotal: k1.reduce((sum, row) => sum + row.anchors.total, 0), top1: mean(k1.map(row => row.anchors.top1)), top3: mean(k1.map(row => row.anchors.top3)), online: online.filter(row => row.condition === "online")},
+  k5: groups(k5, "condition").map(({key, rows}) => ({condition: key, traps: rows.filter(row => row.taskKind === "trap").length,
+    ...Object.fromEntries(["recall1", "recall3", "recall5", "mrr", "ndcg5"].map(field => [field, mean(rows.filter(row => row.taskKind === "trap").map(row => row[field]))])), falseInjections: rows.filter(row => row.taskKind === "control").reduce((sum, row) => sum + row.falseInjections, 0)})),
+  k7: ["range-only", "snapshot-only", "multi-strategy", "yjs-relative", "yjs-multi"].map(strategy => {
+    const locatable = k7.filter(row => row.truth !== null).map(row => row.results.find((item: any) => item.strategy === strategy));
+    const deletion = k7.filter(row => row.condition === "delete").map(row => row.results.find((item: any) => item.strategy === strategy));
+    return {strategy, locatable: locatable.length, survival: mean(locatable.map(row => Number(row.outcome === "correct"))), wrongMigration: mean(locatable.map(row => Number(row.outcome === "wrong"))), review: mean(locatable.map(row => Number(row.outcome === "review"))), deletionReview: mean(deletion.map(row => Number(row.outcome === "review")))};
+  })
+};
+const agentMs = mean(k3.map(row => row.wallMs));
+const agentCost = mean(k3.map(row => row.usage?.estimatedCost ?? 0));
+const k4Ms = mean(k4.map(row => row.wallMs));
+const k4Cost = mean(k4.map(row => (row.usage?.estimatedCost ?? 0) + (row.ta.usage?.estimatedCost ?? 0) + (row.correctionUsage?.estimatedCost ?? 0)));
+const estimates = {repetitions: 3, k3: {combinations: 14 * 9 * 3, meanRunSeconds: agentMs / 1000, sequentialHours: 14 * 9 * 3 * agentMs / 3600000, estimatedCNY: 14 * 9 * 3 * agentCost},
+  k4: {combinations: 4 * 6 * 2 * 3, agentRunsPerCombination: 3, meanCombinationSeconds: k4Ms / 1000, sequentialHours: 4 * 6 * 2 * 3 * k4Ms / 3600000, estimatedCNY: 4 * 6 * 2 * 3 * k4Cost},
+  price: {provider: "minimax", model: "MiniMax-M2", inputPerMillionCNY: 2.1, outputReasoningPerMillionCNY: 8.4, cacheReadPerMillionCNY: 0.21, cacheWritePerMillionCNY: 2.625},
+  limitations: ["费用使用 AgentRun.usage 的估算，尚未核对供应商账单", "K4 费用另需加复盘模型调用", "并发后的耗时受模型服务限速影响"]};
+await writeJson(path.join(root, "runs/pilot-summary.json"), {summaries, estimates});
+const inspections = [];
+for (const row of k3.filter(row => row.repetition === 1)) {
+  const directory = path.join(folder("k3-pilot"), row.artifacts);
+  const actual = await readJson(path.join(directory, "judge-output.json"));
+  const injection = await readJson(path.join(directory, "injection.json"));
+  const patch = await fs.readFile(path.join(directory, "workspace.patch"), "utf8");
+  inspections.push({key: row.key, diffBytes: Buffer.byteLength(patch), files: [...patch.matchAll(/^diff --git a\/(.+) b\/(.+)$/gmu)].map(match => match[2]),
+    injectedIds: injection.injected.flatMap((event: any) => event.data.cards.map((card: any) => card.id)), functional: actual.functional, trapAvoided: actual.trapAvoided,
+    projectTests: {passed: actual.tests.project.passed, failed: actual.tests.project.failed}, hiddenTests: {passed: actual.tests.hidden.passed, failed: actual.tests.hidden.failed}, failureText: actual.tests.hidden.status ? actual.tests.hidden.output : actual.trapEvidence.output});
+}
+await writeJson(path.join(root, "runs/artifact-inspection.json"), inspections);
+console.log(JSON.stringify({summaries, estimates}, null, 2));

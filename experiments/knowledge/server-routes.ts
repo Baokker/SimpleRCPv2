@@ -73,6 +73,12 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     runtime.events.append({type: "knowledge_config_updated", roomId: runtime.room.id, memberId: identity.memberId, payload: {experiment: "capture/disable"}});
     response.json({disabled: true});
   });
+  route("post", "documents/flush", async (request, response) => {
+    const identity = requireIdentity(request, response); if (!identity) return;
+    const runtime = manager.get(request.params.projectId);
+    await runtime.documents.awaitIdle();
+    response.json({flushed: true});
+  });
   route("post", "capture/agent-event", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;
     const event = request.body.event;

@@ -33,7 +33,10 @@ const timeFields = {
   historyMs: 1800000, agentInterruptWindowMs: 180000, agentRevisionWindowMs: 900000,
   agentRevisionCooldownMs: 300000, agentCorrectionWindowMs: 600000, agentRetryWindowMs: 1800000
 };
-configuration.captureConfig = Object.fromEntries(Object.entries(timeFields).map(([key, value]) => [key, value / speed]));
+configuration.captureConfig = {
+  ...Object.fromEntries(Object.entries(timeFields).map(([key, value]) => [key, value / speed])),
+  ...(process.env.EXPERIMENT_CORRECTION_TERMS === "dataset" ? {correctionTerms: ["改", "改成", "修改", "纠正", "不要", "换成", "重做", "修复", "transaction", "logicalId", "requestId", "redactSensitive", "actorId", "serverMember", "instead", "revert", "change", "correct", "fix", "do not"]} : {})
+};
 configuration.agent = {...upstream, apiKey: "experiment-local", baseUrl: `http://127.0.0.1:${configuration.port}/experiments/model/v1`};
 // 模型凭据由当前服务进程保管，OpenCode 使用本机代理地址。
 for (const name of Object.keys(process.env)) if (/KEY|TOKEN|SECRET|PASSWORD/u.test(name)) delete process.env[name];

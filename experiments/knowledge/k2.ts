@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import get from "lodash/get.js";
 import {stringify} from "csv-stringify/sync";
-import {parseKnowledgeCardDraftFromText, parseAgentRecapDraft, type KnowledgeCardType} from "@simplercp/knowledge";
+import {extractFirstJsonObject, parseKnowledgeCardDraftFromText, parseAgentRecapDraft, type KnowledgeCardType} from "@simplercp/knowledge";
 import {type Dataset, type ExperimentConfig, type Task, RunStore, digest, exists, readJson, readJsonl, writeJson} from "./common.js";
 import {PlatformClient} from "./client.js";
 import {normalizeScript} from "./k1.js";
@@ -11,9 +11,11 @@ type Episode = {id: string; task: Task; evidence: Record<string, unknown>; trigg
 export function draftMetrics(raw: string, mode: string, evidence: Record<string, unknown>, mustMention: string, expectedTypes: string[]) {
   const parsed = mode === "ordinary" ? parseKnowledgeCardDraftFromText(raw) as any : parseAgentRecapDraft(raw, evidence) as any;
   const content = mode === "ordinary" ? parsed?.content : [parsed?.whatHappened, parsed?.correction, parsed?.rule, parsed?.notApplicable].filter(Boolean).join("\n");
-  const validStructure = Boolean(parsed && parsed.title.length >= 4 && parsed.summary.length >= 12 && content.length >= 40 && Array.isArray(parsed.evidenceCitations) && Array.isArray(parsed.unknowns));
-  const citations: string[] = parsed?.evidenceCitations ?? [];
-  const validCitations = citations.length > 0 && citations.every(citation => get({evidence, payload: evidence}, citation) !== undefined || get(evidence, citation) !== undefined);
+  const validStructure = Boolean(parsed && typeof parsed.title === "string" && parsed.title.length >= 4 && typeof parsed.summary === "string" && parsed.summary.length >= 12 && typeof content === "string" && content.length >= 40 && Array.isArray(parsed.evidenceCitations) && Array.isArray(parsed.unknowns));
+  const json = extractFirstJsonObject(raw);
+  const original = json ? JSON.parse(json) : {};
+  const citations = original.evidenceCitations;
+  const validCitations = Array.isArray(citations) && citations.length > 0 && citations.every(citation => typeof citation === "string" && (get({evidence, payload: evidence}, citation) !== undefined || get(evidence, citation) !== undefined));
   const mustMentionCovered = `${parsed?.summary ?? ""}\n${content ?? ""}`.includes(mustMention);
   return {validStructure, validCitations, mustMentionCovered, acceptedType: expectedTypes.includes(parsed?.type), groundedPass: validStructure && validCitations && mustMentionCovered};
 }
@@ -44,7 +46,7 @@ export async function episodes(data: Dataset, k4Directory?: string): Promise<Epi
   return rows;
 }
 export async function runK2(data: Dataset, config: ExperimentConfig, store: RunStore, k4Directory?: string, limit?: number) {
-  const api = new PlatformClient(config); await api.verify();
+  const api = new PlatformClient(config); await api.verifyFor(store.directory);
   const selected = (await episodes(data, k4Directory)).slice(0, limit);
   for (const episode of selected) {
     const projectRaw = store.raw(`${episode.id}-context`);
