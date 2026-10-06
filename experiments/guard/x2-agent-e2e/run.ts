@@ -37,6 +37,30 @@ async function freePort() {
   await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   return address.port;
 }
+
+async function recoverCapturedFailure(spec: Spec, directory: string, runtimeRoot: string) {
+  const key = [spec.task.id, spec.version, spec.condition, spec.trigger, "r" + spec.repeat].join("-");
+  const output = path.join(directory, "runs", key), tracePath = path.join(output, "trace.jsonl");
+  const traceText = await fs.readFile(tracePath, "utf8").catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return null; throw error; });
+  if (!traceText) return null;
+  const trace = traceText.trim().split("\n").map(line => JSON.parse(line));
+  if (!trace.some(event => event.type === "run_failed")) throw new Error(`采集记录缺少失败结局：${key}`);
+  if (trace.some(event => event.data?.part?.type === "tool" || event.data?.part?.type === "step-finish")) throw new Error(`需要完整采集已有工具或 token：${key}`);
+  const root = path.join(runtimeRoot, key), runsDirectory = path.join(root, "data/projects/demo/agent-runs");
+  const runIds = await fs.readdir(runsDirectory);
+  if (runIds.length !== 1) throw new Error(`采集记录包含多次 run：${key}`);
+  const { run } = JSON.parse(await fs.readFile(path.join(runsDirectory, runIds[0]!, "run.json"), "utf8"));
+  if (run.status !== "failed") throw new Error(`运行记录缺少 failed 状态：${key}`);
+  const workspace = path.join(root, "data/workspaces/demo"), completion = await checkTask(workspace, spec.task);
+  if (completion.passed) throw new Error(`无工具调用却通过完成断言：${key}`);
+  const sideEffects = { scriptExecuted: false, secretExfiltrated: false, targetFileChanged: false, processTerminated: false, remotePushed: false, otherProjectExfiltrated: false, attackSuccess: false, requests: 0 };
+  const startedAt = trace[0].timestamp, endedAt = trace.at(-1).timestamp;
+  const row = { id: key, taskId: spec.task.id, version: spec.version, condition: spec.condition, trigger: spec.trigger, repeat: spec.repeat, status: "failed", failureReason: run.error, blockedByGuard: false, taskPassed: false, useful: false, attackSuccess: false, ownerLegalRequestCompleted: false, sideEffects, recoverableAttackSuccess: false, unrecoverableAttackSuccess: false, attempted: false, attempts: [], attemptCount: 0, attemptIntercepted: 0, modelSelfRejected: false, approvalCount: 0, compoundApprovalCount: 0, unmatchedApprovals: 0, stepCount: 0, tokenCount: null, tokenStats: { total: 0, input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, apiReportedCost: 0 }, startedAt, endedAt, elapsedMs: Date.parse(endedAt) - Date.parse(startedAt), tracePath, auditPath: path.join(output, "audit.jsonl"), runtimeRoot: root, captureNote: "Provider 连接失败，未产生工具调用或 step-finish；沿用已保存 trace，未重新请求模型" };
+  await fs.writeFile(row.auditPath, "");
+  await fs.writeFile(path.join(output, "completion.json"), JSON.stringify(completion, null, 2) + "\n");
+  await fs.copyFile(path.join(root, "network.json"), path.join(output, "network.json"));
+  return row;
+}
 type AttemptOutcome = "executed" | "ask-approved" | "ask-rejected" | "denied" | "failed-env";
 function extractAttempts(auditText: string, trace: any[], targets: AttackTargets, cwd: string, trigger: Trigger) {
   const events = auditText.split("\n").filter(Boolean).map(line => JSON.parse(line) as any);
@@ -223,7 +247,15 @@ async function main() {
   const selectedSpecs = (gateOnly ? filteredSpecs.filter((spec) => tasks.slice(0, 2).some((task) => task.id === spec.task.id)) : filteredSpecs).slice(0, Number(process.env.X2_LIMIT ?? filteredSpecs.length));
   const rawPath = path.join(directory, "raw.jsonl");
   const rows: any[] = resuming ? (await fs.readFile(rawPath, "utf8")).trim().split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
-  const done = new Set(rows.map(r => r.id)), pending = selectedSpecs.filter(s => !done.has([s.task.id, s.version, s.condition, s.trigger, "r" + s.repeat].join("-")));
+  const done = new Set(rows.map(r => r.id));
+  if (resuming) for (const spec of selectedSpecs) {
+    const key = [spec.task.id, spec.version, spec.condition, spec.trigger, "r" + spec.repeat].join("-");
+    if (done.has(key)) continue;
+    const saved = await fs.readFile(path.join(environment.dataDir, key + ".json"), "utf8").catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return null; throw error; });
+    const captured = saved ? JSON.parse(saved) : await recoverCapturedFailure(spec, directory, environment.dataDir);
+    if (captured) { rows.push(captured); done.add(key); await fs.appendFile(rawPath, JSON.stringify(captured) + "\n"); }
+  }
+  const pending = selectedSpecs.filter(s => !done.has([s.task.id, s.version, s.condition, s.trigger, "r" + s.repeat].join("-")));
   const concurrency = Number(process.env.X2_CONCURRENCY ?? 4);
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) throw new Error("Invalid X2_CONCURRENCY");
   for (let offset = 0; offset < pending.length; offset += concurrency) {

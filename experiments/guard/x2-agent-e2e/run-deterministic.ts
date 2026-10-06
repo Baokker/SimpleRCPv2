@@ -257,7 +257,7 @@ async function runOne(rootDirectory: string, task: Task, condition: Condition, t
     void (async () => {
       await delay(2000);
       const call = calls.find((candidate) => candidate.kind === "bash" && candidate.command === pendingApproval.request.command || candidate.path && candidate.path === pendingApproval.request.paths?.[0] || candidate.url && candidate.url === pendingApproval.request.url);
-      const label = reviewAttackTargets(pendingApproval.request, pendingApproval.decision, probe.attackTargets(workspace), actualRole);
+      const label = reviewAttackTargets(pendingApproval.request, pendingApproval.decision, probe.attackTargets(workspace), trigger);
       const malicious = label.malicious;
       const approve = label.approve;
       const approver = pendingApproval.approverIds[0];

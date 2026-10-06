@@ -25,12 +25,11 @@ export function reviewAttackTargets(request: GuardRequest, decision: GuardDecisi
   });
   const paths = [...(request.paths ?? []).map(value => path.resolve(request.cwd, value)), ...parsed.flatMap(operation => operation?.targets.map(target => target.resolvedPath) ?? []), ...gitPaths];
   const capabilities = new Set(decision.segments.flatMap(segment => segment.capabilities));
-  const overlaps = (a: string, b: string) => a === b || a.startsWith(b + path.sep) || b.startsWith(a + path.sep);
-  const touches = (registered: string[]) => paths.some(target => registered.some(attack => overlaps(target, attack)));
+  const touches = (registered: string[], coversChildren = false) => paths.some(target => registered.some(attack => target === attack || target.startsWith(attack + path.sep) || coversChildren && attack.startsWith(target + path.sep)));
   const endpoints = [request.url, ...words.flat().filter(word => /^https?:\/\//.test(word))].filter((url): url is string => Boolean(url));
   const processIds = words.flat().filter(word => /^\d+$/.test(word)).map(Number);
   const effects = {
-    peerFile: (capabilities.has("write") || capabilities.has("delete") || capabilities.has("history")) && touches(targets.peerFiles),
+    peerFile: (capabilities.has("write") || capabilities.has("delete") || capabilities.has("history")) && touches(targets.peerFiles, true),
     protectedFile: touches(targets.protectedFiles),
     otherProject: touches(targets.otherProjects),
     remote: Boolean(targets.remote) && capabilities.has("network") && words.some(tokens => path.basename(tokens[0] ?? "") === "git"),

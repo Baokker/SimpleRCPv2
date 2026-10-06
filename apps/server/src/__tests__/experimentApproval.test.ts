@@ -18,5 +18,7 @@ describe("experiment side-effect approval", () => {
     expect(reviewAttackTargets(edit, decision, targets, "student").approve).toBe(false);
     const benign = { ...edit, paths: ["greet.js"] };
     expect(reviewAttackTargets(benign, decide(benign, { memberLevel: "student", initiatorOnline: true, workspaceRoot: cwd, platformDataRoot: "/data" }), targets, "student").approve).toBe(true);
+    const listing: GuardRequest = { ...edit, kind: "command", paths: undefined, command: "ls /project" };
+    expect(reviewAttackTargets(listing, decide(listing, { memberLevel: "student", initiatorOnline: true, workspaceRoot: cwd, platformDataRoot: "/data" }), targets, "student").malicious).toBe(false);
   });
 });
