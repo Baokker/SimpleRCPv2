@@ -34,7 +34,13 @@
 
 `routing/classifier.ts` 提供纯逻辑 `classify(ZoneInput)`。规则按固定顺序返回 `white/allow`、`black/lock` 或 `grey/warn`，结果同时返回双方 `contractChanged`。`routing/typecheck.ts` 使用同一个 TypeScript LanguageService 检查 baseline、leftOnly、rightOnly、merged 四个状态，只记录合并状态新增的诊断，单次检查超过 500 毫秒返回跳过原因。`coordination/pairState.ts` 管理 `pending → judged → stale → judged` 和 `resolved/closed` 状态，保存修订号、判定、双方确认状态与冻结时间。
 
-规则编号依次为 `type-only-unchanged`、`same-symbol-concurrent-write`、`comment-format-only`、`observability-only`、`equivalent-refactor`、`referenced-symbol-removed`、`runtime-export-removed`、`call-signature-incompatible`、`consumed-return-property-removed`、`interface-required-member-incompatible`、`merge-only-type-error`、`unparsable-side` 和 `semantic-interaction-uncertain`。白区返回 `allow`，黑区返回 `lock`，灰区返回 `warn`。服务端在 `rules/full` 模式将黑区符号行交给写盘闸门，在 `observe` 模式只记录结果。
+规则编号依次为 `same-symbol-concurrent-write`、`type-only-unchanged`、`comment-format-only`、`observability-only`、`equivalent-refactor`、`referenced-symbol-removed`、`runtime-export-removed`、`call-signature-incompatible`、`consumed-return-property-removed`、`interface-required-member-incompatible`、`merge-only-type-error`、`unparsable-side` 和 `semantic-interaction-uncertain`。每条规则保存在 `routing/rules/` 的独立文件。白区返回 `allow`，黑区返回 `lock`，灰区返回 `warn`。服务端在 `rules/full` 模式暂停黑区文件写入，在 `observe` 模式只记录结果，撤回与确认接口返回 409。
+
+`coordination/session.ts` 的 `createSessionCoordinator` 由服务端与回放共同使用。它处理批次判定、当前文件的 `pending-judgement`、冻结范围、判定异常与 T0。进行中的批次一旦触及其他成员活跃修改的相关符号，文件写入立即暂停；删除声明时，批次开始的符号与路径保留到判定完成。单方接口变化在批次结束时登记，依赖方开始相关批次即可收到 T0。
+
+变更对的 `revision` 只取双方符号 before/after 的 SHA-256 与关系路径。行号、时间和无关编辑不影响修订号，双方确认在相同修订号下持续有效。冻结字符范围随每次编辑变换，服务端通过 `/ws` 通知当前范围。
+
+服务端保留有未写入内容、活跃修改、未关闭变更对或暂停写入的同一个 Y.Doc。UndoManager 按成员编号维护，关闭所有连接后仍可撤回。撤回必须改变文本；没有可撤回内容返回 409。外部文件输入使用最近一次写入的 Yjs 快照建立副本，在副本应用磁盘差异后将增量 update 合并到共享文档。
 
 四状态检查使用文件提供者的 `readLib()` 读取 `lib.es2022.d.ts`，单次检查耗时写入 `typecheck.durationMs`。变更对事件包含 `revision`、规则编号、双方符号键和判定证据，阶段 4 可以按事件顺序复现判定。客户端冻结只阻止冻结区域的键入、粘贴和拖放，服务端继续接受 Yjs update，并把越界修改记录为 `freeze_violation`。
 
@@ -42,21 +48,21 @@
 
 `replay/` 提供 `VirtualClock`、`MemoryFileProvider`、`replayTrace`、`checkReplay` 和四个 `ZoningPolicy`。主输入为 `doc_open`、`edit`、`cursor`，并支持 `mirror_resync`、文件退出和确认操作。批次关闭、候选关系和分区结果由同一套 tracker、语义索引、分区器和状态机产生。录制的派生事件只用于一致性校验。重同步与服务端共用 `textDiffOps`。
 
-P0 放行全部候选，P1 对同文件并发修改建立文件候选并锁定，包含无语义关系的情况；P2 对两跳内的候选关系锁定，P3 调用 `routing/classifier.ts`。文件文本与 lib 由调用者注入，回放不读取系统 lib 文件。批次参数从 `session_start.config` 取得，语义更新合并窗口为 25 毫秒，写盘防抖为 300 毫秒。
+P0 放行全部候选；P1 在首名成员开始修改时锁定其他成员对该文件的输入；P2 在开始修改时锁定两跳内的相关符号；P3 调用 `routing/classifier.ts`；P* 使用探针真值，在批次结束时锁定冲突候选。P1/P2 对另一成员首次输入即记录反事实。文件文本与 lib 由调用者注入，回放不读取系统 lib 文件。批次参数从 `session_start.config` 取得，语义更新合并窗口为 25 毫秒，文件写入防抖为 300 毫秒。
 
 结果包含判定序列、变更对状态、最终动作、冻结与闸门区间、持久记录及反事实编辑。冻结后的相交编辑记录 `shouldHaveBeenBlocked`，文本继续更新以保留坐标；其后的相应持久记录标记 `counterfactual`，统计不把它计为真实逃逸。
 
-基准生成器位于 `bench/`，包含七个种子项目与 18 个 IC、CP、SS、EB、SF 算子。`bench:generate` 写出 schema 3 轨迹、固定项目划分和哈希；`bench:label` 在真实子进程中对四种状态各执行三次，保存四类 probe 的原始结果。`bench:prepare` 顺序执行生成与标注。`replay:run` 以关系组为分母计算指标和 Wilson 95% 区间，并分别保存算子族和 detectability 分组。
+基准生成器位于 `bench/`，通过语义索引在七个业务种子项目中选择声明与调用方，IC、CP、SS、EB、SF 算子修改项目自身代码。`bench:generate` 写出 schema 3 轨迹、项目划分、程序去重统计和哈希；`bench:label` 在真实子进程中对四种状态各执行三次，并运行种子项目测试，保存四类 probe 的原始结果。`bench:prepare` 顺序执行生成与标注。`replay:run` 分别统计安全与冲突变体，按真值定义各指标分母，并保存 Wilson 95% 区间、算子族和 detectability 分组。完全相同的两个变体只统计一次。
 
 ```bash
 pnpm --filter @simplercp/conflict-guard build
 pnpm --filter @simplercp/conflict-guard bench:prepare --seeds bench/seeds --out ../../.test-workspaces/stage-4-small --groups 10 --seed 7 --concurrency 2
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy P0,P1,P2,P3 --repeat 2 --out ../../docs/conflict-guard/evidence/stage-4-dev-report
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy 'P0,P1,P2,P3,P*' --repeat 2 --out ../../docs/conflict-guard/evidence/checkpoint-a-dev-report
 pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/stage-4-live-traces/call-signature.jsonl
 pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../collaboration-tools
 ```
 
-回放结果只使用虚拟时间；报告的 `timing` 保存命令行实际耗时。`--repeat` 检查每个变体的逐字节确定性；去掉 timing 后，同一输入、配置和种子产生相同结果。`replay:check` 比较 pairId、revision、规则编号、动作与时间，时间容差为批次空闲阈值；没有录制判定时返回 `checked:false, valid:false`。
+回放结果只使用虚拟时间；报告的 `timing` 保存命令行实际耗时。`--repeat` 检查每个变体的逐字节确定性；去掉 timing 后，同一输入、配置和种子产生相同结果。`replay:check` 比较判定、闸门、文件写入与冻结事件；文件写入在各文件内比较顺序与文本哈希。没有录制判定时返回 `checked:false, valid:false`。类型检查跳过按轨迹记录重现，缺少记录时标记 `timeoutSimulation: unavailable`。
 
 真实界面回放命令为 `pnpm --filter @simplercp/conflict-guard replay:ui --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2 --hold 15000`，包命令转发到服务端 CLI。它注册 `Replay <memberId>` 成员，重置初始文件，通过真实 presence 与 Yjs 连接发送编辑和光标。最后等待批次判定并保留连接，随后释放连接。第三位成员可以观察输入、冻结与冲突卡片。请使用独立的演示项目执行文件重置。
 

@@ -1,5 +1,6 @@
 {
-  "trace": "d1-1-conflict",
+  "trace": "d1-0001-conflict",
+  "consumer": "src/subscription.ts",
   "ghostMembers": true,
   "freezeDecoration": true,
   "conflictCard": true,

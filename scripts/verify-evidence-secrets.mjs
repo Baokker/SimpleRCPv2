@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { gunzipSync } from "node:zlib";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(import.meta.url);
@@ -15,7 +16,8 @@ assert(sensitiveValues.length > 0, "Configured sensitive values are required");
 const { stdout } = await promisify(execFile)("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: repositoryRoot, maxBuffer: 8 * 1024 * 1024 });
 const files = [...new Set(stdout.split("\0").filter(Boolean))];
 for (const file of files) {
-  const source = await fs.readFile(path.join(repositoryRoot, file));
+  const content = await fs.readFile(path.join(repositoryRoot, file));
+  const source = file.endsWith(".gz") ? gunzipSync(content) : content;
   for (const value of sensitiveValues) assert(!source.includes(Buffer.from(value)), `Configured sensitive value found in ${file}`);
 }
 console.log(JSON.stringify({ checkedFiles: files.length, configuredValuesFound: 0 }));

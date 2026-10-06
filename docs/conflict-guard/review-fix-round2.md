@@ -19,7 +19,7 @@
 
 | 编号 | 修改位置 | 测试与变异检验 |
 |---|---|---|
-| session.diff | `agentRunManager.ts`、文档 | `fileChanges` 只取台账和工作区快照差集；`session.diff` 只写 `session_diff_observed`。`agentConcurrency.test.ts > keeps a late short run out of the earlier run's file changes` 与 `keeps different delayed concurrent runs attributed to their own files` 在恢复 session diff 合并逻辑时失败。 |
+| session.diff | `agentRunManager.ts`、文档 | `fileChanges` 只取台账和工作区快照差集；`session.diff` 只写 `session_diff_observed`。`agentConcurrency.test.ts > 同一 session 连续运行仅归属各自文件` 使用 200/50 ms 与 50/200 ms 两组顺序运行；将 runtime diff 并入文件集合后，两项均因第二个 run 多出 `session-first.ts` 失败；当前两项通过。 |
 | B2 | `createApp.ts` | observe 模式 Git 不可用时提交号为 `unknown`，服务继续启动。`conflictGuardOff.test.ts > starts in observe mode with an unknown Git commit when Git is unavailable` 覆盖 Git 故障；恢复直接抛出逻辑时该测试失败。 |
 | 取消竞态 | `recordStore.ts`、`agentRunStore.ts`、`agentRunManager.ts` | `queued` 到 `running` 使用条件更新，取消后按已取消处理。并发取消测试覆盖。 |
 | `run_cancelled` | `agentRunManager.ts`、trace validator | 取消请求写请求事件，完成阶段写最终重叠集合。取消并发测试覆盖。 |
@@ -29,7 +29,7 @@
 
 | 编号 | 修改位置 | 测试与变异检验 |
 |---|---|---|
-| resync | `projectConflictGuard.ts`、`collaborativeDocuments.ts` | filesystem 差异经 tracker 编辑操作处理，成员范围继续存在并移动；轨迹含 `mirror_resync`。`conflictGuardApi.integration.test.ts > tracks two members and filesystem replay without changing collaboration` 覆盖真实 Yjs resync；恢复 `openDocument` 逻辑时该测试失败。 |
+| resync | `projectConflictGuard.ts`、`collaborativeDocuments.ts` | filesystem 差异经 tracker 编辑操作处理，成员范围继续存在并移动；轨迹含 `mirror_resync`。`conflictGuardApi.integration.test.ts > 真实 observer 遗漏后 mirror_resync 保留双方范围并变换坐标` 暂时移除实际 Y.Text observer，插入前缀，恢复 observer 后追加后缀，检查两名成员范围按前缀长度移动且轨迹有效；`conflictGuardScenarios.integration.test.ts > B3 多文件观察者遗漏后 resync 保留范围与冻结` 使用生产参数验证相关范围、冻结和 revision。 |
 | 轨迹脱敏 | `projectConflictGuard.ts`、conflict guard route | 写入和导出都按等长占位字符处理，逐字输入的敏感值无法从导出轨迹拼回，验证结果跳过脱敏文件。恢复精确替换逻辑时逐字测试失败。 |
 | `revisionAfter` | `collaborativeDocuments.ts`、`projectConflictGuard.ts` | revision 在 Y.Text observer 中先递增，事件记录真实值。`conflictGuardApi.integration.test.ts > tracks two members and filesystem replay without changing collaboration` 校验真实 revision；恢复预测加一时该测试失败。 |
 
@@ -53,17 +53,17 @@
 | 问题 | 测试 | 失败断言与结果 |
 |---|---|---|
 | A1 跨项目模型切换 | `scripts/verify-agent-acceptance.mjs` 的 `crossProjectModelChange`；`agentConcurrency.test.ts` 的 `records the updated model on a run created after a switch` | 将全局引用计数改为单项目计数后，仍有活动 run 时提前释放进程，进程编号或模型断言失败；已核验测试失败。 |
-| A2 晚开始早结束 | `agentConcurrency.test.ts` 的 `keeps a late short run out of the earlier run's file changes` | 恢复会话差集合并逻辑后，早开始 run 会包含后开始 run 的文件，`fileChanges` 精确断言失败；已核验测试失败。 |
-| A3 不串味 | `agentConcurrency.test.ts` 的 `keeps different delayed concurrent runs attributed to their own files` | 恢复 `session.diff` 合并后，两个延迟不同的 run 会互相带入文件，双方文件集合断言失败；已核验测试失败。 |
+| A2 晚开始早结束 | `agentConcurrency.test.ts` 的 `keeps a late short run out of the earlier run's file changes`；`同一 session 连续运行仅归属各自文件（200 ms、50 ms）` | 并发用例验证 A 的文件集合只含本人文件、最终重叠集合包含 B。同 session 连续运行用例验证累计 diff 含双方文件，而第二次 `fileChanges` 只含第二个文件；将 runtime diff 并入时第二次文件集合精确断言失败，当前通过。 |
+| A3 不串味 | `agentConcurrency.test.ts` 的 `keeps different delayed concurrent runs attributed to their own files`；`同一 session 连续运行仅归属各自文件（50 ms、200 ms）` | 并发用例验证各自文件集合。同 session 连续运行用例在将 runtime diff 并入时因多出 `session-first.ts` 失败，当前通过。 |
 | 1.2.2 初始化提前释放 | `agentConcurrency.test.ts` 的 `releases workspace preparation before the team run finishes` | 将 `workspacePreparing` 保持到团队 run 结束后，个人 run 在团队 run 结束前仍为 `queued`，运行状态断言失败；已核验测试失败。 |
 | 1.2.3 模型切换 | `agentConcurrency.test.ts` 的 `records the updated model on a run created after a switch`；`openCodeRuntime.test.ts` 的 dispose 故障测试 | 将 `processModel` 在 dispose 前更新，故障注入时旧模型断言失败；恢复等待中的实际进程模型后，新 run 模型断言失败；已核验测试失败。 |
 | 用例 4：最多一个 running | `agentConcurrency.test.ts` 的 `keeps strict FIFO order when the limit is one` | 将调度器重复启动同一候选后，新增的运行数量断言失败；保留该测试作为并发上限的变异入口。 |
 | 用例 8：双方 `agent_overlap` | `agentConcurrency.test.ts` 的 `records overlap only for runs that actually overlap` | 删除反向写入时，新增的双方 `otherRunId` 断言失败；已加入并通过。 |
 | 用例 12：另一个团队 Agent | `agentConcurrency.test.ts` 的 `runs another team Agent concurrently and completes both runs` | 将团队 session 误设为项目级串行后，两个 run 无法同时进入 `running`，两项运行状态断言失败；已加入并通过。 |
-| B3 服务端 resync | `conflictGuardApi.integration.test.ts` 的 `tracks two members and filesystem replay without changing collaboration` | 恢复 `openDocument` 的关闭逻辑后，Alice 与 Bob 的活跃范围和 `mirror_resync` 轨迹断言失败；已核验测试失败。 |
+| B3 服务端 resync | `conflictGuardApi.integration.test.ts` 的 `真实 observer 遗漏后 mirror_resync 保留双方范围并变换坐标` | 实际 Y.Text observer 遗漏触发 `mirror_resync`，两名成员范围保留且坐标变化正确，轨迹验证通过。将 resync 的 `tracker.edit` 改为 `tracker.openDocument(file, after)` 后，双方活跃范围集合变为空，测试在成员集合断言处失败；恢复后通过。日志为 `.test-workspaces/checkpoint-a-b3-mutant.log` 与 `checkpoint-a-b3-restored.log`。 |
 | S1 增量索引 | `packages/conflict-guard/src/semantic/index.test.ts` 的 `随机混合版本变化时增量结果与全量结果一致` | 恢复只使用调用方 `changedFiles` 后，打开、编辑、关闭和磁盘版本混合探针中的符号或边集合与全量结果不一致，断言失败；已核验测试失败。 |
 
-用例 4 的变异检验同时由调度上限测试和完整服务端回归覆盖；用例 8、用例 12 使用故障前后运行状态与轨迹字段进行断言。所有变异检验只在临时工作区完成，当前代码保持修复状态。
+用例 4 使用调度上限测试；用例 8、用例 12 使用运行状态与轨迹字段进行断言。同 session 的两项变异在当前工作区以文件编辑工具切换后执行，并通过文件编辑工具恢复；测试数据位于 `.test-workspaces/`。
 
 ## 验证命令
 

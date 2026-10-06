@@ -1,0 +1,56 @@
+{
+  "mode": "rules",
+  "idleMs": 1500,
+  "persistDelayMs": 300,
+  "scenarios": [
+    {
+      "scenario": "sequential-retention-revert",
+      "checks": [
+        "01",
+        "02",
+        "03",
+        "10",
+        "sequential-disk",
+        "reopen-retention",
+        "switched-file-revert"
+      ]
+    },
+    {
+      "scenario": "confirmed",
+      "checks": [
+        "01",
+        "04"
+      ]
+    },
+    {
+      "scenario": "white",
+      "checks": [
+        "05"
+      ]
+    },
+    {
+      "scenario": "grey",
+      "checks": [
+        "06"
+      ]
+    },
+    {
+      "scenario": "merge-type-error",
+      "checks": [
+        "07"
+      ]
+    },
+    {
+      "scenario": "same-function",
+      "checks": [
+        "08"
+      ]
+    },
+    {
+      "scenario": "t0",
+      "checks": [
+        "09"
+      ]
+    }
+  ]
+}
