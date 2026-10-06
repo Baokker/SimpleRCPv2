@@ -1,0 +1,185 @@
+{
+  "state": {
+    "mode": "rules",
+    "version": 19,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 5,
+        "durationMs": 12.148042000000714,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "cdf91701-a444-441e-a098-eeaa0b3c93a5"
+        },
+        "status": "editing",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 116,
+                "end": 147
+              },
+              {
+                "start": 167,
+                "end": 189
+              }
+            ],
+            "firstTouchedAt": 1791277987525,
+            "lastTouchedAt": 1791277990647
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "cdf91701-a444-441e-a098-eeaa0b3c93a5"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791277990647
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "T2:a87cf7b292abd6e5e1bbb05f5b87f59a00c5204e29ac911f5d88ca460307e2a5",
+          "left": {
+            "actor": {
+              "kind": "agent",
+              "runId": "7WcpeFda-hPH",
+              "ownerId": "74fc8dd0-20cd-41dc-b00e-97c1e495dbe1"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "cdf91701-a444-441e-a098-eeaa0b3c93a5"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/cart.ts#Cart.total",
+            "to": "src/pricing.ts#applyDiscount",
+            "hops": [
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/pricing.ts#applyDiscount",
+                "kind": "call",
+                "direction": "forward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791277989289,
+          "updatedAt": 1791277989289,
+          "revisionKey": "ac5cdb58628292e3c6f29560ab4e04ac5308c159d56f9945ce55538ec87714b3"
+        },
+        "status": "judged",
+        "revision": 1,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791277989519,
+        "revisionKey": "ac5cdb58628292e3c6f29560ab4e04ac5308c159d56f9945ce55538ec87714b3",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "grey",
+          "decision": "warn",
+          "ruleId": "semantic-interaction-uncertain",
+          "summary": "修改可能互相影响，需要进一步判断。",
+          "evidence": [
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": true
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 225,
+            "mergeOnlyDiagnostics": []
+          }
+        },
+        "point": "T2",
+        "shadow": false
+      }
+    ],
+    "agentNotices": [],
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 0,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 0,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 0,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 0,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "content": {
+    "status": "text",
+    "path": "src/cart.ts",
+    "size": 378,
+    "content": "import type { CartItem } from \"./types.ts\";\nimport { applyDiscount } from \"./pricing.ts\";\n\nexport class Cart {\n  items: CartItem[] = [];\n\n  add(item: CartItem): void {\n    this.items = [...this.items, item];\n  }\n\n  total(): number {\n    let amount = 0;\n    for (const item of this.items) amount += item.price * item.quantity;\n    return applyDiscount(amount, 0.1, \"CNY\");\n  }\n}\n"
+  },
+  "checks": {
+    "rejection": true,
+    "shadow": false,
+    "humanEditable": true,
+    "noHumanFreeze": true,
+    "noHumanCard": true
+  }
+}

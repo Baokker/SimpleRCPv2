@@ -146,6 +146,12 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       continue;
     }
     if (["freeze_violation", "freeze", "persist", "persist_gate", "persist_conflict", "persist_error", "ui_action", "t0_warning", "provider_call"].includes(event.type)) continue;
+    if (event.type === "t3_incomplete") {
+      const actor = event.actor as { kind?: string; runId?: string } | undefined;
+      if (actor?.kind !== "agent" || typeof actor.runId !== "string" || !Array.isArray(event.files) || !event.files.length || event.files.some((entry) => !entry || typeof entry !== "object" || typeof entry.reason !== "string" || (entry.file !== undefined && typeof entry.file !== "string"))) throw new Error("t3_incomplete is incomplete");
+      continue;
+    }
+    if (["agent_run_started", "agent_write_attributed", "agent_guard_error", "t2_judged", "t2_rejected", "t2_shadow", "t3_shadow", "t3_revert"].includes(event.type)) continue;
     if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }

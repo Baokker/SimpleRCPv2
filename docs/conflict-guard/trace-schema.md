@@ -27,6 +27,15 @@
 - `ui_action`：已经接受的卡片动作、成员与变更对；拒绝请求不记录动作。
 - `t0_warning`：批次、接收成员、接口变化成员、源符号、`targetSymbol`、稳定 `pairId` 与 `revision`。卡片统计与后续同一变更对的通知按修订号去重。
 - `doc_retired`：被删除或停用的文件。
+- `agent_run_started`：Agent 参与者，包含 `runId`、`ownerId` 与可选 `teamAgent`。Agent 的 edit origin 使用相同参与者；活跃变更集在 T3 后关闭。
+- `agent_write_attributed`：参与者、文件与匹配批准记录的 `contentHash`。
+- Agent 的 `pair_candidate_*`、`pair_judged`、`pair_analyzing` 增加 `point: T2|T3`、`shadow`；pairId 使用时点前缀。`pair_judged.symbols` 包含双方 before/after 哈希。
+- `t2_judged`：参与者、决定、各文件 before/after 哈希和拒绝消息；`t2_rejected` 记录文件暂停写入时的拒绝原因。
+- `t2_shadow`、`t3_shadow`：observe 模式的参与者、决定与相关文件。
+- `t3_revert`：参与者、每文件的撤回块哈希、跳过位置与原因、总撤回及跳过计数。
+- `t3_incomplete`：Agent 参与者与无法核验的文件及原因；快照整体不可读取时只记录原因。结束检查结果为 warned，需要属主人工处理。
+- `agent_guard_error`：runId、时点与原因。权限分发器的 `permission_reply`、`permission_handler_error`、`permission_reply_error` 保存在 run trace，回复包含审批等待时间；回复值只允许 once、reject。
+- Agent `provider_call` 增加 `point`。原文权限事件保存在 run trace，经敏感值过滤；角色调用事件继续只保存元数据。
 - `mirror_resync`：文件、修改前文本哈希、替换后的全文和新文本哈希。该事件成为该文件的回放起点。
 - 脱敏按已配置的敏感值执行。写入轨迹时，已标记文件的编辑文本使用等长占位字符。导出接口会按事件顺序重放文件；一旦重建文本出现敏感值，就把该文件所有编辑、`doc_open` 与 `mirror_resync` 文本改为等长占位字符并标记 `redacted: true`。原始轨迹保留在磁盘。校验结果通过 `validateTraceDetailed` 返回 `redactedFiles` 和 `skippedFiles`，脱敏文件按跳过文本校验处理。
 

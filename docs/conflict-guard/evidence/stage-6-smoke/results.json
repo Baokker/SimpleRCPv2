@@ -1,0 +1,60 @@
+[
+  {
+    "name": "human-agent",
+    "runs": [
+      {
+        "id": "t2hHOQdPtGAj",
+        "status": "completed",
+        "conflictGuard": {
+          "rejectedEdits": 1,
+          "lastRejection": "Edit rejected: conflicts with human:6a52408c-8bb3-4c1b-85d6-6d4093f93cfd modifying src/pricing.ts#applyDiscount. Rule: call-signature-incompatible. 一侧调用无法满足另一侧修改后的函数签名。 src/cart.ts#Cart.discountedTotal: 符号新增或删除，外部接口发生变化; src/pricing.ts#applyDiscount: 对外接口发生变化; src/pricing.ts: applyDiscount 的调用参数数量与签名不兼容 Update your implementation to use the current signature and behavior, or defer this edit and retry later.",
+          "approvalWaitMs": 2223.4850009999973,
+          "warnings": [
+            "applyDiscount 新增了必填的 currency 参数，但 total() 和现有测试仍只传两个参数，合并后可能产生调用不兼容。"
+          ],
+          "t3": "passed"
+        }
+      }
+    ],
+    "tests": {
+      "exitCode": 0,
+      "total": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "traceValid": true
+  },
+  {
+    "name": "agent-agent",
+    "runs": [
+      {
+        "id": "1e4GW2L0FR-m",
+        "status": "completed",
+        "conflictGuard": {
+          "rejectedEdits": 0,
+          "approvalWaitMs": 28.87683300000208,
+          "warnings": [],
+          "t3": "passed"
+        }
+      },
+      {
+        "id": "c1soVoKYJ4so",
+        "status": "completed",
+        "conflictGuard": {
+          "rejectedEdits": 2,
+          "lastRejection": "Edit rejected: conflicts with agent:1e4GW2L0FR-m modifying src/pricing.ts#formatMoney. Rule: model-deep. formatMoney 修改了返回格式，导致 checkout 的解析逻辑和现有测试期望的 \"USD 18.00\" 不再一致，合并后会破坏行为。 src/pricing.ts#formatMoney: After edit, formatMoney returns `${amount.toFixed(2)} ${currency}`, changing the output order from \"USD 18.00\" to \"18.00 USD\".; src/checkout.ts#checkout: checkout splits the formatted string and finds the first numeric token; with the new format it still finds \"18.00\", so parsing succeeds but the returned string no longer matches the expected \"USD 18.00\".; test/shop.test.mjs:9: Test asserts checkout(cart) === \"USD 18.00\", which fails after the formatMoney edit.; src/checkout.ts#checkout: The caller's parsing logic was written for the old \"CURRENCY AMOUNT\" format; the new format silently changes the contract without updating the caller or test. Update your implementation to use the current signature and behavior, or defer this edit and retry later.",
+          "approvalWaitMs": 4902.9962510000005,
+          "warnings": [],
+          "t3": "warned"
+        }
+      }
+    ],
+    "tests": {
+      "exitCode": 1,
+      "total": 3,
+      "passed": 2,
+      "failed": 1
+    },
+    "traceValid": true
+  }
+]

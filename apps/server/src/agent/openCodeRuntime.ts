@@ -16,12 +16,14 @@ interface OpenCodeRuntimeOptions {
   port: number;
   apiKey?: string;
   baseUrl: string;
+  editPermission?: "allow" | "ask";
   getSettings(): AgentSettingsResponse;
   createProcess?: (options: {
     port: number;
     apiKey?: string;
     baseUrl: string;
     model: string;
+    editPermission?: "allow" | "ask";
   }) => {
     start(): Promise<{ url: string; version: string }>;
     dispose(): Promise<void>;
@@ -42,7 +44,8 @@ export function createOpenCodeRuntime(
       port: options.port,
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
-      model
+      model,
+      editPermission: options.editPermission
     });
   }
 
@@ -204,6 +207,10 @@ export function createOpenCodeRuntime(
         },
         { throwOnError: true }
       );
+    },
+    async replyPermission(input) {
+      const client = await getClient(input.workspacePath);
+      await client.permission.reply({ directory: input.workspacePath, requestID: input.requestId, reply: input.reply, message: input.message }, { throwOnError: true });
     },
     async subscribe(input, listener, onListenerError) {
       const client = await getClient(input.workspacePath);

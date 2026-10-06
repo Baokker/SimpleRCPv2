@@ -41,6 +41,10 @@ function presentTraceEvent(
       );
     }
     case "concurrent_change": return entry(event, "Concurrent edit detected", event.summary, "warning");
+    case "permission_reply": return entry(event, event.data?.reply === "reject" ? "修改被拒绝" : "修改已批准", typeof event.data?.message === "string" ? event.data.message : undefined, event.data?.reply === "reject" ? "warning" : "success");
+    case "t3_revert": return entry(event, "T3 撤回检查", `撤回 ${event.data?.reverted ?? 0} 处 · 保留 ${event.data?.skipped ?? 0} 处`, "warning");
+    case "t3_completed": return entry(event, "T3 检查完成", String(event.data?.result ?? "passed"));
+    case "t3_incomplete": return entry(event, "T3 检查不完整", "修改归属无法核验，需要人工处理", "warning");
     case "run_completed": return entry(event, "Run completed", undefined, "success");
     case "run_cancelled": return entry(event, "Run cancelled", event.summary, "warning");
     case "run_failed": return hasProviderError

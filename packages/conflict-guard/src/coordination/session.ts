@@ -97,7 +97,7 @@ export function createSessionCoordinator(options: {
     const sets = options.semantic.getActiveChangeSets();
     for (const batch of [...options.tracker.getOpenBatches(), ...awaitingBatches.values()].filter((entry) => entry.file === file && entry.actor.kind === "human")) {
       const keys = touchedKeys(batch);
-      for (const other of sets.filter((set) => actorKey(set.actor) !== actorKey(batch.actor))) {
+      for (const other of sets.filter((set) => set.actor.kind === "human" && actorKey(set.actor) !== actorKey(batch.actor))) {
         const otherKeys = [...other.files.values()].flatMap((change) => (change.symbols ?? []).map((symbol) => symbol.key));
         const paths = [...options.semantic.findPaths(keys, otherKeys, 2), ...(batchPaths.get(`${actorKey(batch.actor)}:${batch.file}`) ?? []).filter((entry) => entry.actor === actorKey(other.actor) && otherKeys.includes(entry.path.to)).map((entry) => entry.path)];
         for (const from of keys) for (const to of otherKeys) if (nested(from, to)) paths.push({ from, to, hops: [], typeOnly: false });
@@ -115,9 +115,10 @@ export function createSessionCoordinator(options: {
   }
   function gate(file: string) {
     if (!options.intervene) return { allowed: true, reason: undefined };
-    if (coordinator.records().some((record) => record.status === "analyzing" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "analyzing" };
-    if (coordinator.records().some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "lock" };
-    if (coordinator.records().some((record) => ["pending", "stale"].includes(record.status) && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "pending-judgement" };
+    const records = coordinator.records().filter((record) => humanPair(record.pair));
+    if (records.some((record) => record.status === "analyzing" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "analyzing" };
+    if (records.some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "lock" };
+    if (records.some((record) => ["pending", "stale"].includes(record.status) && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "pending-judgement" };
     if (options.enableSemanticPending !== false && pending(file)) return { allowed: false, reason: "pending-judgement" };
     return { allowed: true, reason: undefined };
   }
@@ -134,6 +135,7 @@ export function createSessionCoordinator(options: {
     const active = new Set<string>();
     const activeAnalysis = new Set<string>();
     if (options.intervene) for (const record of coordinator.records()) {
+      if (!humanPair(record.pair)) continue;
       const isAnalyzing = record.status === "analyzing";
       if (!isAnalyzing && (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock")) continue;
       for (const side of [record.pair.left, record.pair.right]) {
@@ -222,5 +224,6 @@ export function createSessionCoordinator(options: {
 }
 
 function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }
+function humanPair(pair: CandidatePair) { return pair.left.actor.kind === "human" && pair.right.actor.kind === "human"; }
 function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
 function nested(left: string, right: string) { return left === right || left.startsWith(`${right}.`) || right.startsWith(`${left}.`); }

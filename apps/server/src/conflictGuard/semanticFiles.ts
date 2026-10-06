@@ -24,7 +24,12 @@ export function createWorkspaceSemanticFiles(root: string, mirror: (file: string
   return {
     listFiles,
     contextFiles: () => listFiles("", true),
-    readFile: (file) => mirror(file)?.text ?? readFileSync(resolveWorkspacePath(root, file), "utf8"),
+    readFile(file) {
+      const current = mirror(file);
+      if (current) return current.text;
+      try { return readFileSync(resolveWorkspacePath(root, file), "utf8"); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; }
+    },
     version(file) {
       const current = mirror(file);
       if (current) return `mirror:${current.version}`;

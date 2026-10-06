@@ -51,6 +51,19 @@ describe("range transformation", () => {
 });
 
 describe("tracker", () => {
+  it("keeps an Agent change set until run completion and tracks its edit batch", () => {
+    const clock = new FakeClock();
+    const tracker = new ConflictGuardTracker({ clock, activeIdleMs: 100 });
+    const actor = { kind: "agent" as const, runId: "run-a", ownerId: "alice" };
+    tracker.startAgent(actor);
+    tracker.openDocument("a.ts", "a");
+    tracker.edit({ file: "a.ts", origin: actor, at: 0, ops: [{ from: 1, deleted: "", inserted: "A" }], revisionAfter: 1, textBefore: "a", textAfter: "aA" });
+    clock.advance(10_000);
+    expect(tracker.getActiveChangeSets()).toMatchObject([{ actor, status: "settled" }]);
+    expect(tracker.getActiveChangeSets()[0]?.files.get("a.ts")?.baseText).toBe("a");
+    tracker.markDone(actor);
+    expect(tracker.getActiveChangeSets()).toEqual([]);
+  });
   it("returns to editing when a settled actor starts editing another file", () => {
     const clock = new FakeClock();
     const tracker = new ConflictGuardTracker({ clock });

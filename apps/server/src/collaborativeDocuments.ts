@@ -1,8 +1,9 @@
 import { createRequire } from "node:module";
+import fs from "node:fs/promises";
 import { getYDoc, docs } from "y-websocket/bin/utils";
 import type * as Y from "yjs";
 import { applyTextDelta, FILESYSTEM_ORIGIN } from "./textDelta.js";
-import { readWorkspaceFile, writeWorkspaceFile } from "./workspace.js";
+import { readWorkspaceFile, writeWorkspaceFile, resolveWorkspacePath } from "./workspace.js";
 
 const require = createRequire(import.meta.url);
 const YRuntime = require("yjs") as typeof import("yjs");
@@ -21,6 +22,8 @@ export interface CollaborativeDocumentStoreOptions {
   onDocumentReleased?(filePath: string): void;
   shouldPinDocument?(filePath: string): boolean;
   onPersistenceGateOpened?(): void;
+  filesystemOrigin?(filePath: string, content: string): unknown;
+  onUnopenedGuardRevert?(filePath: string, before: string, after: string, ownerId: string): void;
 }
 
 export function createCollaborativeDocumentStore({
@@ -36,7 +39,9 @@ export function createCollaborativeDocumentStore({
   onDocumentRetired,
   onDocumentReleased,
   shouldPinDocument,
-  onPersistenceGateOpened
+  onPersistenceGateOpened,
+  filesystemOrigin,
+  onUnopenedGuardRevert
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
   const persistedContents = new Map<string, string>();
@@ -100,12 +105,12 @@ export function createCollaborativeDocumentStore({
     persistedContents.set(name, result.content);
     persistedSnapshots.set(name, YRuntime.encodeStateAsUpdate(document));
     text.observe((event) => {
-      if (event.transaction.origin !== FILESYSTEM_ORIGIN) {
+      if (!isExternalOrigin(event.transaction.origin)) {
         revisions.set(filePath, (revisions.get(filePath) ?? 0) + 1);
       }
     });
     document.on("update", (_update, origin) => {
-      if (origin !== FILESYSTEM_ORIGIN) {
+      if (!isExternalOrigin(origin)) {
         dirtyNames.add(name);
         schedulePersist(name, document);
       }
@@ -236,6 +241,7 @@ export function createCollaborativeDocumentStore({
       dropPath(filePath);
       return;
     }
+    const origin = filesystemOrigin?.(filePath, result.content) ?? FILESYSTEM_ORIGIN;
 
     await Promise.all(
       matches.map(async ([name, loading]) => {
@@ -247,7 +253,7 @@ export function createCollaborativeDocumentStore({
         if (!dirtyNames.has(name) && text.toString() === previousContent) {
           document.transact(() => {
             applyTextDelta(text, previousContent, result.content);
-          }, FILESYSTEM_ORIGIN);
+          }, origin);
           persistedContents.set(name, result.content);
           persistedSnapshots.set(name, YRuntime.encodeStateAsUpdate(document));
           return;
@@ -259,7 +265,7 @@ export function createCollaborativeDocumentStore({
         const vector = YRuntime.encodeStateVector(external);
         applyTextDelta(external.getText("content"), previousContent, result.content);
         const externalUpdate = YRuntime.encodeStateAsUpdate(external, vector);
-        YRuntime.applyUpdate(document, externalUpdate, FILESYSTEM_ORIGIN);
+        YRuntime.applyUpdate(document, externalUpdate, origin);
         persistedContents.set(name, result.content);
         persistedSnapshots.set(name, YRuntime.encodeStateAsUpdate(external));
         external.destroy();
@@ -358,7 +364,36 @@ export function createCollaborativeDocumentStore({
     return new Map(revisions);
   }
 
+  async function applyGuardRevert(filePath: string, expected: string, content: string, ownerId: string, remove = false) {
+    const entry = [...initialized].find(([name]) => parseDocumentName(name).filePath === filePath);
+    if (entry) {
+      const document = await entry[1];
+      const text = document.getText("content");
+      const restoring = retired.has(entry[0]) && expected === "";
+      if (restoring) {
+        try { await fs.stat(resolveWorkspacePath(workspaceRoot, filePath)); return false; }
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+      } else if (text.toString() !== expected) return false;
+      document.transact(() => applyTextDelta(text, text.toString(), content), { kind: "guard-revert", memberId: ownerId });
+      if (retired.has(entry[0])) retired.delete(entry[0]);
+      await flushDocument(entry[0], document);
+      if (restoring) { onUnopenedGuardRevert?.(filePath, expected, content, ownerId); onDocumentPrepared?.(entry[0], document, filePath); }
+      if (remove) { await fs.unlink(resolveWorkspacePath(workspaceRoot, filePath)); dropPath(filePath); }
+      return true;
+    }
+    let result;
+    try { result = await readWorkspaceFile(workspaceRoot, filePath, true); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT" || expected !== "") throw error; result = { status: "text" as const, content: "" }; }
+    if (result.status !== "text" || result.content !== expected) return false;
+    if (remove) await fs.unlink(resolveWorkspacePath(workspaceRoot, filePath));
+    else await writeWorkspaceFile(workspaceRoot, filePath, content);
+    onUnopenedGuardRevert?.(filePath, expected, content, ownerId);
+    onPersisted?.(filePath, content);
+    return true;
+  }
+
   return {
+    applyGuardRevert,
     getDocument,
     prepareDocument,
     flush,
@@ -380,6 +415,9 @@ export function createCollaborativeDocumentStore({
 
 function hasConnections(document: Y.Doc) {
   return ((document as Y.Doc & { conns?: Map<object, unknown> }).conns?.size ?? 0) > 0;
+}
+function isExternalOrigin(origin: unknown) {
+  return origin === FILESYSTEM_ORIGIN || Boolean(origin && typeof origin === "object" && "kind" in origin && origin.kind === "agent");
 }
 
 export type CollaborativeDocumentStore = ReturnType<

@@ -107,7 +107,7 @@ export function loadConfig(
       activeIdleMs: 600_000,
       cursorDebounceMs: 200,
       ...(conflictGuardMode === "full" ? { adjudication: {
-        settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: env.CONFLICT_GUARD_DEEP ?? "deepseek" }),
+        settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: env.CONFLICT_GUARD_DEEP ?? "deepseek", t2Strategy: (env.CONFLICT_GUARD_T2_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t3Strategy: (env.CONFLICT_GUARD_T3_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t2Reasoning: readBoolean(env.CONFLICT_GUARD_T2_REASONING, "CONFLICT_GUARD_T2_REASONING", false), t3Reasoning: readBoolean(env.CONFLICT_GUARD_T3_REASONING, "CONFLICT_GUARD_T3_REASONING", false) }),
         mode: (env.CONFLICT_GUARD_PROVIDER_MODE ?? "live") as "live" | "record" | "replay",
         cacheDirectory: path.resolve(repositoryRoot, "packages/conflict-guard/bench/model-cache"),
         jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: env.TYPESAFE_BASE_URL },

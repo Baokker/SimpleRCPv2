@@ -139,3 +139,31 @@ TYPESAFE_API_KEY=stage5-invalid-credential DEEPSEEK_API_KEY=stage5-invalid-crede
 ```
 
 上述失败命令检查 G3 的两个角色均失败路径。截图与状态断言存入 `evidence/stage-5-manual/`。普通 CI 跳过实际模型调用，服务端集成测试使用指定的注入适配器，批次空闲为 1500 ms、写入延迟为 300 ms。
+
+## 阶段 6
+
+使用 `CONFLICT_GUARD=full pnpm dev` 启动，导入 conflict-shop，两个独立浏览器窗口以 Alice、Bob 加入。打开 Agent 面板和“冲突预防”页签。默认 T2、T3 使用 G1；可以通过 `CONFLICT_GUARD_T2_STRATEGY`、`CONFLICT_GUARD_T3_STRATEGY` 配置角色策略。
+
+| 编号 | 操作 | 预期 |
+|---|---|---|
+| 1 | Alice 给 applyDiscount 增加必填 `currency: string` 并停顿。Bob 让个人 Agent 在 Cart 添加 discountedTotal，调用 applyDiscount；要求使用 edit 工具 | 不兼容调用被拒绝，Bob 的面板显示次数与原因。Agent 可以重新读取签名并调整调用。Alice 可以继续编辑，区域没有冻结，编辑器没有冲突卡片；页签记录 T2 结果。 |
+| 2 | 两个成员让各自的 Agent 同时修改 formatMoney 的格式和 checkout 对该格式的读取方式 | 后进入检查的不兼容修改被拒绝。面板包含另一方 run 与相关符号。 |
+| 3 | Bob 让 Agent 修改 Cart.total，编辑完成后等待一段时间；Alice 在等待期间改变 applyDiscount 的签名 | run 结束后执行 T3。保持 Agent 内容的完整行恢复原文，Bob 收到撤回数量。其他成员继续修改过的行保持当前内容并提示人工处理。 |
+| 4 | 用 `CONFLICT_GUARD=observe pnpm dev` 重启，重复第 1 项 | Agent 直接写入文件，面板拒绝次数为零；页签显示 T2 shadow 和“若启用将被拒绝”。 |
+
+真实调用验收命令：
+
+```bash
+pnpm --filter @simplercp/server exec tsx scripts/probe-agent-permission.ts
+pnpm --filter @simplercp/server exec tsx scripts/stage6-smoke.ts
+pnpm --filter @simplercp/server exec tsx scripts/verify-stage6-smoke.ts
+```
+
+两浏览器自动验收命令：
+
+```bash
+CONFLICT_GUARD=full SIMPLERCP_STAGE6_EVIDENCE=true pnpm test:e2e tests/e2e/conflict-guard-agent.spec.ts
+CONFLICT_GUARD=observe SIMPLERCP_STAGE6_EVIDENCE=true pnpm test:e2e tests/e2e/conflict-guard-agent.spec.ts
+```
+
+自动验收通过真实浏览器、Monaco、Yjs 和 DOM 断言验证编辑与页面行为。full 模式执行拒绝重试、两个 Agent 的依赖冲突和 T3 撤回通知三个用例；observe 模式执行直接写入与 shadow 提示用例。界面验收的 Agent 使用指定的 fake runtime；真实 OpenCode 调用证据位于 `evidence/stage-6-smoke/`，浏览器状态证据位于 `evidence/stage-6-manual/`。T3 全部结束路径、部分撤回、删除恢复与检查不完整使用生产时间参数的服务端集成测试验证。真实任务的项目测试结果见 `stage-6.md` 与证据中的 results.json。

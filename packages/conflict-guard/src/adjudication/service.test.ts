@@ -8,6 +8,19 @@ const input = { promptVersion: "pair-v1", left: { actorKind: "human", file: "a.t
 const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "可能互相影响", evidence: [], contractChanged: { left: false, right: false } };
 const result: JudgeResult = { decision: "allow", confidence: 0.9, latencyMs: 10, raw: {} };
 
+it("selects G4 T2 deep reasoning with its own budget and cache identity", async () => {
+  const cache = new Map<string, CachedCall>();
+  const received: boolean[] = [];
+  const dependencies = { clock: new VirtualClock(), mode: "record" as const, cache: { async get(key: string) { return cache.get(key); }, async put(value: CachedCall) { cache.set(value.key, value); } }, fast: { name: "jev", model: "jev-1.13.0", async judge() { throw new Error("T2 must select deep"); } }, deep: { name: "deepseek", model: "test", async judge(_input: unknown, options: { reasoning: boolean }) { received.push(options.reasoning); return result; } } };
+  const t1 = createAdjudicationService({ ...dependencies, config: { ...defaultAdjudicationConfig, strategy: "G1" } });
+  const t2 = createAdjudicationService({ ...dependencies, config: { ...defaultAdjudicationConfig, strategy: "G4", point: "T2", t2Strategy: "G1", reasoning: true, hardDeadlineMs: 30000 } });
+  await t1.judge(input, local, new AbortController().signal);
+  const verdict = await t2.judge(input, local, new AbortController().signal);
+  expect(received).toEqual([false, true]);
+  expect(cache.size).toBe(2);
+  expect(verdict.adjudication).toMatchObject({ source: "deep", point: "T2" });
+});
+
 it("coalesces concurrent calls, records and replays without network", async () => {
   const clock = new VirtualClock(); const cache = new Map<string, CachedCall>(); let requests = 0;
   const fast = { name: "jev", model: "jev-1.13.0", async judge() { requests += 1; return result; } };
@@ -138,4 +151,17 @@ it("retains completed request usage and cost when recording fails", async () => 
   expect(service.stats().costUsd).toBeCloseTo(0.000042, 8);
   expect(service.calls()[0]?.usage?.inputTokens).toBe(1000);
   expect(service.stats().infrastructureFailures).toBeGreaterThan(0);
+});
+
+for (const point of ["T2", "T3"] as const) it(`aborts the ${point} provider at the configured Agent deadline`, async () => {
+  const clock = new VirtualClock();
+  let providerSignal: AbortSignal | undefined;
+  const duration = point === "T2" ? 30000 : 60000;
+  const service = createAdjudicationService({ clock, config: { ...defaultAdjudicationConfig, strategy: "G4", point, hardDeadlineMs: duration }, mode: "live", fast: { name: "jev", model: "jev-1.13.0", async judge() { return result; } }, deep: { name: "deepseek", model: "test", judge(_input, _options, signal) { providerSignal = signal; return new Promise(() => {}); } } });
+  const pending = service.judge({ ...input, point }, local, new AbortController().signal);
+  for (let turn = 0; turn < 12; turn += 1) await Promise.resolve();
+  expect(providerSignal).toBeDefined();
+  clock.advanceTo(duration);
+  expect(await pending).toMatchObject({ adjudication: { status: "degraded", latencyMs: duration } });
+  expect(providerSignal?.aborted).toBe(true);
 });

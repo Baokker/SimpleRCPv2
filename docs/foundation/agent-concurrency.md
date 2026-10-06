@@ -17,3 +17,13 @@ OpenCode `session.diff` 核实脚本位于 `scripts/verify-opencode-concurrent-d
 调度循环位于 `agentScheduler.ts`，等待任务选择位于 `agentRunSelection.ts`。无效 session 的任务进入 failed。AgentPanel 顶部显示运行中任务，当前会话的对话仅包含自己的 run。
 
 本轮修复基于 `36c3ba7`，未推送。测试配置、完整命令和 runtime 证据见 [阶段 0 验收报告](../conflict-guard/stage-0.md) 与 [原始输出说明](../conflict-guard/evidence/self-acceptance/README.md)。
+
+## Agent 修改审批与结束检查
+
+`rules`、`full` 中，OpenCode 的 edit 类工具需要审批；`off`、`observe` 保持 allow。权限分发器按顺序执行处理函数，只回复 once 或 reject。审批时间单独累计，run 执行超时暂停计时。取消、删除项目与服务关闭中止当前权限检查。
+
+Agent 以 runId 为身份，ownerId 为触发成员。批准的路径与内容哈希用于文件回灌归属，Agent 活跃变更集保持至 T3 结束。T2 使用当前共享文本检查提案，已有审批预约参与并发检查；人与 Agent 冲突时只拒绝 Agent 并通知属主，人的编辑保持可用。
+
+完成、失败、取消及超时均执行 T3，只选择运行期间被他人改变的相关符号。未经过审批的文件变化由工作区快照补充，归属不明的变化需要人工检查。服务端按完整行撤回仍保持 Agent 版本的块，保存撤回及跳过原因，原 run 状态保持任务结果。observe 记录 shadow，不执行撤回。
+
+接口、配置、拒绝消息与使用限制见 [Agent 冲突预防](../conflict-guard/agent-guard.md)。

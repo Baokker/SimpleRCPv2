@@ -43,10 +43,11 @@ export async function createApp(config: ServerConfig) {
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
-    getSettings: () => agentSettings.get()
+    getSettings: () => agentSettings.get(),
+    editPermission: ["rules", "full"].includes(config.conflictGuard?.mode ?? "off") ? "ask" : "allow"
   });
   const agentRuntime = config.fakeAgentRuntime
-    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime(), Boolean(config.agent?.apiKey), () => agentSettings.get().model)
+    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime({ editPermission: ["rules", "full"].includes(config.conflictGuard?.mode ?? "off") ? "ask" : "allow" }), Boolean(config.agent?.apiKey), () => agentSettings.get().model)
     : openCodeRuntime;
   const agentRuns = createAgentRunManager({
     members,

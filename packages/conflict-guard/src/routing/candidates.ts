@@ -38,7 +38,7 @@ export class SemanticChangeTracker {
     this.changeSets = changeSets;
     for (const changeSet of this.changeSets) for (const change of changeSet.files.values()) change.symbols = isSemanticFile(change.file) ? mapSymbolChanges(change, this.options.readFile(change.file), this.options.index) : [];
     for (const { batch, change } of batches) {
-      if (batch.actor.kind !== "human" || !isSemanticFile(batch.file)) continue;
+      if (!["human", "agent"].includes(batch.actor.kind) || !isSemanticFile(batch.file)) continue;
       const changeSet = this.changeSets.find((set) => actorKey(set.actor) === actorKey(batch.actor));
       const cumulative = change ?? changeSet?.files.get(batch.file);
       const fileChange = cumulative ? {
@@ -54,7 +54,7 @@ export class SemanticChangeTracker {
       this.emit({ type: "change_unit", actor: batch.actor, batchId: batch.id, symbols: symbols.map((symbol) => ({ key: symbol.key, file: symbol.file, status: symbol.status, beforeHash: hash(symbol.before), afterHash: hash(symbol.after) })) });
       this.units.set(JSON.stringify([actorKey(batch.actor), batch.id]), { actor: actorKey(batch.actor), file: batch.file, generation: generation(fileChange!), symbols: symbols.map((symbol) => symbol.key) });
     }
-    const active = this.changeSets.filter((set) => set.actor.kind === "human" && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
+    const active = this.changeSets.filter((set) => ["human", "agent"].includes(set.actor.kind) && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
     const deletedKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => symbol.key)));
     for (const [key, edge] of this.staleEdges) if (edge.dangling || (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to))) this.staleEdges.delete(key);
     const deletedSymbols = active.flatMap((set) => [...set.files.values()].flatMap((file) => (file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => ({ actor: actorKey(set.actor), symbol }))));

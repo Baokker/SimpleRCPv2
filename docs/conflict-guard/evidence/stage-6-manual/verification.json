@@ -1,0 +1,32 @@
+{
+  "stage": 6,
+  "branch": "feature/conflict-guard",
+  "baseline": "f925263",
+  "integrationSettings": { "idleMs": 1500, "persistDelayMs": 300 },
+  "build": "passed",
+  "unitAndIntegration": {
+    "conflictGuard": { "files": 19, "passed": 179, "failed": 0 },
+    "server": { "files": 44, "passed": 222, "failed": 0 },
+    "agentIntegration": { "passed": 29, "failed": 0 },
+    "demo": { "passed": 2, "failed": 0 }
+  },
+  "browser": {
+    "rulesRegression": { "passed": 36, "failed": 0, "skipped": 8, "maxConcurrentRuns": 1, "liveModelTests": false },
+    "stage6Full": { "passed": 3, "failed": 0, "skipped": 0, "maxConcurrentRuns": 3 },
+    "stage6Observe": { "passed": 1, "failed": 0, "skipped": 2 },
+    "collaboration": {
+      "off": { "passed": 2, "failed": 0 },
+      "observe": { "passed": 2, "failed": 0 },
+      "rules": { "passed": 2, "failed": 0 },
+      "full": { "passed": 2, "failed": 0 }
+    },
+    "terminalDisabled": { "passed": 1, "failed": 0 }
+  },
+  "realOpenCode": {
+    "version": "1.18.31",
+    "permissionEvents": 3,
+    "humanAgent": { "completedRuns": 1, "rejectedEdits": 1, "t3": "passed", "testsPassed": 3, "testsFailed": 0, "traceValid": true },
+    "agentAgent": { "completedRuns": 2, "rejectedEdits": [0, 2], "t3": ["passed", "warned"], "testsPassed": 2, "testsFailed": 1, "traceValid": true, "testFailure": "The producer retained its requested new output format; the existing test expects the original format." }
+  },
+  "configuredSensitiveValueMatches": 0
+}

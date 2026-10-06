@@ -5,6 +5,8 @@ export type GreyStrategy = "G0" | "G1" | "G2" | "G3" | "G4";
 export type ProviderMode = "live" | "record" | "replay";
 export type ProviderStatus = "success" | "timeout" | "failed" | "invalid-format" | "cancelled" | "cache-hit";
 export interface AdjudicationInput {
+  point?: "T1" | "T2" | "T3";
+  reasoning?: boolean;
   promptVersion: string;
   left: { actorKind: string; file: string; symbol: string; before: string; after: string };
   right: AdjudicationInput["left"];
@@ -26,6 +28,7 @@ export interface JudgeResult {
 export interface FastJudge { name: string; model: string; judge(input: AdjudicationInput, signal: AbortSignal): Promise<JudgeResult> }
 export interface DeepJudge { name: string; model: string; judge(input: AdjudicationInput, options: { reasoning: boolean }, signal: AbortSignal): Promise<JudgeResult> }
 export interface ProviderCall {
+  point?: "T1" | "T2" | "T3";
   adapter: string;
   model: string;
   promptVersion: string;
@@ -38,6 +41,7 @@ export interface ProviderCall {
   costUsd: number;
 }
 export interface ModelVerdictMetadata {
+  point?: "T1" | "T2" | "T3";
   strategy: GreyStrategy;
   source: "fast" | "deep" | "fallback";
   adapter?: string;
@@ -62,6 +66,12 @@ export interface AdjudicationConfig {
   fastModel: string;
   threshold: number;
   t1Strategy: "G2" | "G3";
+  t2Strategy?: "G1" | "G2" | "G3";
+  t3Strategy?: "G1" | "G2" | "G3";
+  t2Reasoning?: boolean;
+  t3Reasoning?: boolean;
+  point?: "T1" | "T2" | "T3";
+  reasoning?: boolean;
   contextLimit: number;
   topK: number;
   invariants: boolean;

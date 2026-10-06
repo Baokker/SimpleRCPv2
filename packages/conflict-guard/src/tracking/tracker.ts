@@ -64,6 +64,7 @@ export class ConflictGuardTracker {
   }
 
   openDocument(file: string, text: string) {
+    if (this.files.get(file)?.text === text) return;
     if (this.files.has(file)) this.retireFile(file);
     this.files.set(file, { text, batches: new Map() });
   }
@@ -80,7 +81,7 @@ export class ConflictGuardTracker {
     for (const batch of state.batches.values()) batch.batch.ranges = transformRanges(batch.batch.ranges, edit.ops);
     this.emit({ type: "edit", edit });
 
-    if (edit.origin.kind === "human") {
+    if (edit.origin.kind === "human" || edit.origin.kind === "agent") {
       const actorKey = actorKeyOf(edit.origin);
       let activeState = this.active.get(actorKey);
       let change = activeState?.changeSet.files.get(edit.file);
@@ -148,7 +149,27 @@ export class ConflictGuardTracker {
     this.emit({ type: "cursor", cursor });
   }
 
-  markDone(actor: Extract<ActorRef, { kind: "human" }>) {
+  startAgent(actor: Extract<ActorRef, { kind: "agent" }>) {
+    const key = actorKeyOf(actor);
+    if (this.active.has(key)) return;
+    const changeSet: ActiveChangeSet = { actor: { ...actor }, files: new Map(), status: "editing" };
+    this.active.set(key, { changeSet, fileTimers: new Map() });
+    this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(changeSet) });
+  }
+
+  attributeAgentChange(actor: Extract<ActorRef, { kind: "agent" }>, change: FileChange) {
+    this.startAgent(actor);
+    const state = this.active.get(actorKeyOf(actor))!;
+    const previous = state.changeSet.files.get(change.file);
+    state.changeSet.files.set(change.file, { ...change, baseText: previous?.baseText ?? change.baseText, firstTouchedAt: previous?.firstTouchedAt ?? change.firstTouchedAt, ranges: [...(previous?.ranges ?? []), ...change.ranges] });
+  }
+
+  flushActorBatches(actor: Extract<ActorRef, { kind: "human" | "agent" }>) {
+    const key = actorKeyOf(actor);
+    for (const [file, state] of this.files) if (state.batches.has(key)) this.closeBatch(file, key, "flush");
+  }
+
+  markDone(actor: Extract<ActorRef, { kind: "human" | "agent" }>) {
     const key = actorKeyOf(actor);
     for (const [file, state] of this.files) if (state.batches.has(key)) this.closeBatch(file, key, "flush");
     this.closeActive(key);
@@ -213,6 +234,7 @@ export class ConflictGuardTracker {
   private resetActiveTimer(key: string, file: string) {
     const activeState = this.active.get(key);
     if (!activeState) return;
+    if (activeState.changeSet.actor.kind === "agent") return;
     const old = activeState.fileTimers.get(file);
     if (old !== undefined) this.options.clock.clearTimeout(old);
     activeState.fileTimers.set(file, this.options.clock.setTimeout(() => this.removeActiveFile(key, file, "idle"), this.activeIdleMs));

@@ -58,18 +58,51 @@ export function normalizeAgentContexts(
   return normalized.length ? normalized : undefined;
 }
 
+export function createApprovalBudget() {
+  let pending = 0;
+  let started = 0;
+  let waited = 0;
+  const listeners = new Set<(paused: boolean) => void>();
+  return {
+    paused: () => pending > 0,
+    pause() {
+      if (pending++ === 0) { started = performance.now(); for (const listener of listeners) listener(true); }
+      let resumed = false;
+      return () => {
+        if (resumed) return;
+        resumed = true;
+        if (--pending === 0) { waited += performance.now() - started; for (const listener of listeners) listener(false); }
+      };
+    },
+    waitMs: () => waited + (pending > 0 ? performance.now() - started : 0),
+    subscribe(listener: (paused: boolean) => void) { listeners.add(listener); return () => listeners.delete(listener); }
+  };
+}
+
 export async function runWithTimeout<T>(
   operation: Promise<T>,
   timeoutMs: number,
-  cancel: () => Promise<void>
+  cancel: () => Promise<void>,
+  approval?: ReturnType<typeof createApprovalBudget>
 ) {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let cancellation: Promise<void> | undefined;
+  let remaining = timeoutMs;
+  let started = performance.now();
+  let resumeTimer: (() => void) | undefined;
+  const unsubscribe = approval?.subscribe((paused) => {
+    if (paused) { if (timer) { clearTimeout(timer); timer = undefined; remaining -= performance.now() - started; } }
+    else resumeTimer?.();
+  });
   const timeout = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => {
-      cancellation = cancel();
-      reject(new Error(`Agent run exceeded ${timeoutMs} ms`));
-    }, timeoutMs);
+    resumeTimer = () => {
+      started = performance.now();
+      timer = setTimeout(() => {
+        cancellation = cancel();
+        reject(new Error(`Agent run exceeded ${timeoutMs} ms`));
+      }, Math.max(0, remaining));
+    };
+    if (!approval?.paused()) resumeTimer();
   });
   try {
     return await Promise.race([operation, timeout]);
@@ -78,6 +111,7 @@ export async function runWithTimeout<T>(
     throw error;
   } finally {
     if (timer) clearTimeout(timer);
+    unsubscribe?.();
   }
 }
 

@@ -1,0 +1,200 @@
+{
+  "checks": {
+    "reverted": true,
+    "ownerNotified": true,
+    "runCompleted": true
+  },
+  "state": {
+    "mode": "full",
+    "version": 18,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 4,
+        "durationMs": 2.2988339999974414,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "7517191c-a754-4f85-9271-45e84979c1c3"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 116,
+                "end": 147
+              }
+            ],
+            "firstTouchedAt": 1791281098782,
+            "lastTouchedAt": 1791281098782
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "7517191c-a754-4f85-9271-45e84979c1c3"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791281098782
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "T3:fbed2da559f655efc4ae25ead9489aca8b55a25fa0ab97d5d1084d506335b975",
+          "left": {
+            "actor": {
+              "kind": "agent",
+              "runId": "ELQHVupWZIVB",
+              "ownerId": "f4a1ce8e-d345-402a-9104-c51ae96dcb16"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "7517191c-a754-4f85-9271-45e84979c1c3"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/cart.ts#Cart.total",
+            "to": "src/pricing.ts#applyDiscount",
+            "hops": [
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/pricing.ts#applyDiscount",
+                "kind": "call",
+                "direction": "forward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791281103802,
+          "updatedAt": 1791281103802,
+          "revisionKey": "7b205737bfbb02d23d1ca17af94ac876cfd015e46e23b3bcff21f9f24192b1aa"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791281103803,
+        "revisionKey": "7b205737bfbb02d23d1ca17af94ac876cfd015e46e23b3bcff21f9f24192b1aa",
+        "analysisVisible": false,
+        "firstLockedAt": 1791281103803,
+        "verdict": {
+          "zone": "black",
+          "decision": "lock",
+          "ruleId": "call-signature-incompatible",
+          "summary": "一侧调用无法满足另一侧修改后的函数签名。",
+          "evidence": [
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "detail": "applyDiscount 的调用参数数量与签名不兼容"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": true
+          }
+        },
+        "point": "T3",
+        "shadow": false
+      }
+    ],
+    "agentNotices": [
+      {
+        "id": "1c7f0616-9f23-4d86-a6d6-8a7c6df1abb0",
+        "memberId": "f4a1ce8e-d345-402a-9104-c51ae96dcb16",
+        "runId": "ELQHVupWZIVB",
+        "summary": "Agent 结束检查存在无法核验的修改，需要人工处理。",
+        "at": 1791281103787
+      },
+      {
+        "id": "efdc5102-cd0c-4595-84d1-385af50c6291",
+        "memberId": "f4a1ce8e-d345-402a-9104-c51ae96dcb16",
+        "runId": "ELQHVupWZIVB",
+        "summary": "已撤回 Agent 的 1 处修改。",
+        "at": 1791281103832
+      }
+    ],
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 0,
+      "cacheHits": 0,
+      "judgements": 0,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0
+    },
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 0,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 0,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 0,
+      "frozenDurationMs": 3522,
+      "persistBlockedCount": 0,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  }
+}

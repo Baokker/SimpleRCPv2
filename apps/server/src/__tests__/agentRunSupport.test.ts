@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { buildRuntimePrompt } from "../agent/agentRunSupport.js";
+import { buildRuntimePrompt, createApprovalBudget, runWithTimeout } from "../agent/agentRunSupport.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 
 const roots: string[] = [];
@@ -11,6 +11,15 @@ afterEach(async () => {
 });
 
 describe("Agent runtime prompt scope", () => {
+  it("excludes approval waiting from the run timeout and records its duration", async () => {
+    const budget = createApprovalBudget();
+    const resume = budget.pause();
+    let cancelled = false;
+    const operation = new Promise<string>((resolve) => setTimeout(() => { resume(); setTimeout(() => resolve("completed"), 10); }, 80));
+    expect(await runWithTimeout(operation, 40, async () => { cancelled = true; }, budget)).toBe("completed");
+    expect(cancelled).toBe(false);
+    expect(budget.waitMs()).toBeGreaterThanOrEqual(70);
+  });
   it("adds workspace scope with selected file contexts", async () => {
     const root = await createTestWorkspace("agent-prompt-scope-");
     roots.push(root);

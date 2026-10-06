@@ -30,6 +30,7 @@ export interface AgentRuntime {
     workspacePath: string;
     sessionId: string;
   }): Promise<void>;
+  replyPermission?(input: { workspacePath: string; sessionId: string; requestId: string; reply: "once" | "reject"; message?: string }): Promise<void>;
   subscribe(
     input: { workspacePath: string; sessionId: string },
     listener: (event: AgentRuntimeEvent) => void | Promise<void>,

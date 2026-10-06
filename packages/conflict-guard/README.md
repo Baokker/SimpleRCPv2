@@ -104,3 +104,13 @@ pnpm --filter @simplercp/conflict-guard adjudication:verify
 `adjudication:verify` 按录制报告中已有的模型策略执行三轮重放，支持只录制 G3 的报告。完整录制配置保存为 `adjudication-config.json`，适配器与模型版本保存为 `adjudication-models.json`，通过 `replay:run --config <file> --models <file>` 使用。重放使用录制的模型版本；报告的 `model.httpCalls` 记录实际 HTTP 调用数，`model.calls` 保存调用事件。离线重放不要求存在 `.env` 文件。
 
 阈值、价格、完整提示词和配置见 `docs/conflict-guard/adjudication.md`。阶段五命令只读取开发集；保留集留至正式评价。模型录制用于离线确定性回放，实际服务端取消与截止时间另由集成及浏览器测试验证。
+
+## Agent T2 与 T3
+
+`coordination/agentGuard.ts` 提供纯逻辑的 `evaluateAgentChanges`、`mergeAgentProposal`、`selectAgentReverts`。提案使用相同的语义索引、候选对、分区器与状态机；共享文本合并保留其他区域的修改，删除符号保留依赖边。T3 使用当前共享视图，以 Agent 实际修改过的符号限定检查范围。撤回按完整行比较三个版本，其他参与者继续修改过的块返回 skipped。
+
+tracker 接受 Agent 参与者并维持其活跃变更集至 run 结束。候选支持人与 Agent、两个 Agent。会话干预对人与人的行为保持原有规则；Agent 的 T2/T3 记录使用独立时点编号，人的编辑区域不因 Agent 检查冻结。
+
+G4 在 T2/T3 分别使用 `t2Strategy`、`t3Strategy`，默认 G1；时间预算分别为 30000、60000 ms。`t2Reasoning`、`t3Reasoning` 默认 false，时点与 reasoning 进入角色输入哈希。失败与无效格式在 Agent 检查中使用 lock。
+
+权限事件解析、审批回复、计时暂停、批准写入归属、文件恢复、界面通知由服务端负责。配置与使用限制见 `docs/conflict-guard/agent-guard.md`，真实调用及回归结果见 `docs/conflict-guard/stage-6.md`。

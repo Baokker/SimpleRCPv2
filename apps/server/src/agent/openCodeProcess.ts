@@ -12,6 +12,7 @@ interface OpenCodeProcessOptions {
   apiKey?: string;
   baseUrl: string;
   model: string;
+  editPermission?: "allow" | "ask";
 }
 
 interface RunningOpenCodeProcess {
@@ -118,7 +119,7 @@ function openCodeConfig(options: OpenCodeProcessOptions): Config {
       }
     },
     permission: {
-      edit: "allow",
+      edit: options.editPermission ?? "allow",
       bash: "allow",
       webfetch: "allow",
       doom_loop: "allow",

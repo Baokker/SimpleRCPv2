@@ -521,6 +521,11 @@ function AgentMessage({
         </div>
       </details>
 
+      {run.conflictGuard ? <div data-testid="agent-guard-result">
+        <p>修改被拒绝 {run.conflictGuard.rejectedEdits} 次 · 审批等待 {Math.round(run.conflictGuard.approvalWaitMs ?? 0)} ms</p>
+        {run.conflictGuard.lastRejection ? <p data-testid="agent-last-rejection">{run.conflictGuard.lastRejection}</p> : null}
+        {run.conflictGuard.t3 ? <p>T3：{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</p> : null}
+      </div> : null}
       {run.output ? <div className="agent-run-output">{run.output}</div> : null}
       {run.error ? <p className="agent-run-error">{run.error}</p> : null}
       {run.fileChanges?.length ? (

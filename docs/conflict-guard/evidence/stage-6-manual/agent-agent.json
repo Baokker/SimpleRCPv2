@@ -1,0 +1,143 @@
+{
+  "checks": {
+    "laterEditRejected": true
+  },
+  "state": {
+    "mode": "full",
+    "version": 14,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 5,
+        "durationMs": 2.1566249999996217,
+        "full": false
+      }
+    },
+    "changeSets": [],
+    "activeSymbols": [],
+    "candidatePairs": [],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "T2:37f1b3095847e006a3ef54ec73b4df490457351375c771426c496e2ac10222a2",
+          "left": {
+            "actor": {
+              "kind": "agent",
+              "runId": "-Ht2fgm-FTqh",
+              "ownerId": "2b80bee9-2ed5-4fb8-a51d-47590f10934b"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "agent",
+              "runId": "nbwLCvKEdIxh",
+              "ownerId": "42283c84-576a-4d9a-b966-7c8942f0c190"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/cart.ts#Cart.total",
+            "to": "src/pricing.ts#applyDiscount",
+            "hops": [
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/pricing.ts#applyDiscount",
+                "kind": "call",
+                "direction": "forward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791281088566,
+          "updatedAt": 1791281088566,
+          "revisionKey": "b71d48598105554220e54f229fe8090bbd0441d6610427c459973867e5366da5"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791281088567,
+        "revisionKey": "b71d48598105554220e54f229fe8090bbd0441d6610427c459973867e5366da5",
+        "analysisVisible": false,
+        "firstLockedAt": 1791281088567,
+        "verdict": {
+          "zone": "black",
+          "decision": "lock",
+          "ruleId": "call-signature-incompatible",
+          "summary": "一侧调用无法满足另一侧修改后的函数签名。",
+          "evidence": [
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "detail": "applyDiscount 的调用参数数量与签名不兼容"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": true
+          }
+        },
+        "point": "T2",
+        "shadow": false
+      }
+    ],
+    "agentNotices": [],
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 0,
+      "cacheHits": 0,
+      "judgements": 0,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0
+    },
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 0,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 0,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 0,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 0,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 1,
+      "related": 0,
+      "unrelated": 1,
+      "unrelatedRatio": 1,
+      "typeOnly": 0
+    },
+    "cursors": []
+  }
+}

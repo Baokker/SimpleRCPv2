@@ -13,7 +13,7 @@ import {
   createAgentSessionStore,
   type AgentSessionStore
 } from "./agentSessionStore.js";
-import { createTraceStore, type TraceStore } from "./traceStore.js";
+import { createTraceStore, redactSensitive, type TraceStore } from "./traceStore.js";
 import { getProjectMetadataPath, type ProjectRegistry } from "../projects.js";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import {
@@ -24,13 +24,17 @@ import {
   buildRuntimePrompt,
   normalizeAgentContexts,
   previewPrompt,
-  runWithTimeout
+  runWithTimeout,
+  createApprovalBudget
 } from "./agentRunSupport.js";
 import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
 import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
 import { createAgentWriteLedger, hasUnattributedPatch, type AgentWriteLedger } from "./agentWriteLedger.js";
 import { selectRunnableAgentRun } from "./agentRunSelection.js";
+import { createPermissionDispatcher, type AgentPermissionRequest } from "./permissionDispatcher.js";
+import { conflictGuardEditHandler } from "./conflictGuardEditHandler.js";
+import fs from "node:fs/promises";
 import {
   createAgentScheduler,
   getCompletedOverlapGroup,
@@ -56,6 +60,7 @@ interface AgentRunManagerOptions {
 interface ActiveRun {
   workspacePath: string;
   runtimeSessionId: string;
+  cancelPermissions?: () => void;
 }
 
 export type AgentRunManagerEvent =
@@ -90,6 +95,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const traces = new Map<string, TraceStore>();
   const queues = new Map<string, AgentSchedulerQueue>();
   const activeRuns = new Map<string, ActiveRun>();
+  const guardRuns = new Set<string>();
   const writeLedger: AgentWriteLedger = createAgentWriteLedger();
   const runConcurrentIds = new Map<string, Set<string>>();
   const runOverlapIds = new Map<string, Set<string>>();
@@ -195,6 +201,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     return run;
   }
 
+  async function finishRunningRun(projectId: string, runId: string, update: Partial<AgentRun>) {
+    const run = await getStore(projectId).updateIfStatus(runId, "running", update);
+    if (run) emit({ type: "run_updated", projectId, run });
+    else if ((await getStore(projectId).get(runId))?.status === "cancelled") await recordCancellationCompletion(projectId, runId);
+    return run;
+  }
+
   async function appendTrace(
     projectId: string,
     runId: string,
@@ -280,9 +293,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   ) {
     try {
     let workspaceChanges: NonNullable<AgentRun["fileChanges"]> = [];
+    let workspaceAfter: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     if (workspaceBefore) {
       try {
-        workspaceChanges = compareAgentWorkspaceSnapshots(workspaceBefore, await createAgentWorkspaceSnapshot(workspacePath));
+        workspaceAfter = await createAgentWorkspaceSnapshot(workspacePath);
+        workspaceChanges = compareAgentWorkspaceSnapshots(workspaceBefore, workspaceAfter);
       } catch (error) {
         await recordAttributionError(projectId, runId, "workspace_after", error);
       }
@@ -330,6 +345,24 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed`,
         data: { files: fileChanges }
       });
+    }
+    if (guardRuns.delete(runId)) {
+      try {
+        const project = options.runtimeManager.get(projectId);
+        const net = fileChanges.filter((change) => change.attribution !== "ambiguous" && !memberChangedFiles.has(change.file) && !(runOverlapIds.get(runId)?.size)).flatMap((change) => {
+          const before = workspaceBefore?.get(change.file)?.content ?? "";
+          const after = workspaceAfter?.get(change.file)?.content;
+          return after === undefined && change.status !== "deleted" ? [] : [{ file: change.file, before, after: after ?? "", existedBefore: workspaceBefore?.has(change.file) ?? false, ...(change.status === "deleted" ? { deleted: true } : {}) }];
+        });
+        const checkedFiles = new Set(net.map((proposal) => proposal.file));
+        const changedFiles = new Set([...changes, ...fileChanges].map((change) => change.file));
+        const unverified: Array<{ file?: string; reason: string }> = [...changedFiles].filter((file) => !checkedFiles.has(file)).map((file) => ({ file, reason: memberChangedFiles.has(file) ? "Member edits prevent exclusive snapshot attribution" : "Concurrent activity prevents exclusive snapshot attribution" }));
+        if (!workspaceBefore || !workspaceAfter) unverified.push({ reason: "Run workspace snapshot could not be read" });
+        const t3 = await project.conflictGuard?.agentGuard.finish(runId, net, (file, expected, text, owner, remove) => project.documents.applyGuardRevert(file, expected, text, owner, remove), unverified);
+        const latest = await getStore(projectId).get(runId);
+        await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3 } });
+        await appendTrace(projectId, runId, { type: "t3_completed", data: { result: t3 } });
+      } catch (error) { await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) }); }
     }
     return fileChanges;
     } catch (error) {
@@ -423,6 +456,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let runtimeSessionIdForRun: string | undefined;
     let workspaceBeforeForRun: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     let revisionsBeforeForRun: Map<string, number> | undefined;
+    let stopGuardEvents: (() => void) | undefined;
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       workspacePathForRun = projectRuntime.project.workspacePath;
@@ -491,6 +525,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         return;
       }
       let run = runStarted;
+      if (projectRuntime.conflictGuard) {
+        stopGuardEvents = projectRuntime.conflictGuard.agentGuard.onEvent((event) => {
+          const actor = event.actor as { runId?: string } | undefined;
+          const pair = event.pair as { left?: { actor?: { runId?: string } }; right?: { actor?: { runId?: string } } } | undefined;
+          if (actor?.runId === runId || pair?.left?.actor?.runId === runId || pair?.right?.actor?.runId === runId) void appendTrace(projectId, runId, { type: String(event.type), data: event });
+        });
+        projectRuntime.conflictGuard.beginAgentRun({ kind: "agent", runId, ownerId: run.memberId, ...(session.scope === "team" ? { teamAgent: session.handle ?? session.title } : {}) }, new Map([...(workspaceBefore ?? [])].flatMap(([file, snapshot]) => snapshot.content === undefined ? [] : [[file, snapshot.content] as const])));
+        guardRuns.add(runId);
+      }
       if (workspacePrepared && run.runtimeSessionId) run = await updateRun(projectId, runId, { runtimeSessionId: undefined });
       await appendTrace(projectId, runId, {
         type: "run_started",
@@ -563,6 +606,21 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runPrompt: run.prompt
       });
 
+      const approval = createApprovalBudget();
+      const guard = projectRuntime.conflictGuard;
+      const dispatcher = createPermissionDispatcher({ handlers: guard && ["rules", "full"].includes(guard.mode) ? [conflictGuardEditHandler({ workspace: projectRuntime.project.workspacePath, judge: (proposals, signal) => guard.agentGuard.judge(runId, proposals, signal), approved: () => {} })] : [], pause: approval.pause, reply: async (reply) => {
+        if (!options.runtime.replyPermission) throw new Error("Runtime does not support permission replies");
+        await options.runtime.replyPermission({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId!, ...reply });
+      }, trace: async (type, data) => {
+        await appendTrace(projectId, runId, { type, data });
+        if (type === "permission_reply") {
+          const latest = await getStore(projectId).get(runId);
+          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, ...(data.reply === "reject" ? { rejectedEdits: (latest?.conflictGuard?.rejectedEdits ?? 0) + 1, lastRejection: String(redactSensitive(data.message ?? "Edit rejected", options.sensitiveValues)) } : {}), approvalWaitMs: approval.waitMs(), warnings: guard?.agentGuard.warnings(runId) } });
+        }
+      } });
+      const active = activeRuns.get(runId);
+      if (active) active.cancelPermissions = dispatcher.dispose;
+
       const stopEvents = await options.runtime.subscribe(
         {
           workspacePath: projectRuntime.project.workspacePath,
@@ -573,6 +631,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             type: `opencode.${event.type}`,
             data: event.data
           });
+          if (event.type === "permission.asked") {
+            await dispatcher.dispatch(event.data as unknown as AgentPermissionRequest);
+            return;
+          }
           if (hasUnattributedPatch(event.data)) {
             await appendTrace(projectId, runId, {
               type: "unattributed_change",
@@ -592,6 +654,21 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
               summary: `${entry.file} written by Agent tool`,
               data: { ...entry }
             });
+            for (const entry of entries) {
+              try {
+                if (guard?.mode === "observe") {
+                  const before = guard.agentGuard.baseline(runId, entry.file) ?? "";
+                  let after: string;
+                  let deleted = false;
+                  try { after = await fs.readFile(path.join(projectRuntime.project.workspacePath, entry.file), "utf8"); }
+                  catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; after = ""; deleted = true; }
+                  await guard.agentGuard.shadow(runId, [{ file: entry.file, before, after, ...(deleted ? { deleted } : {}) }]);
+                }
+                try { await projectRuntime.documents.reloadPath(entry.file); }
+                catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; projectRuntime.documents.dropPath(entry.file); }
+                guard?.workspaceChanged(entry.file);
+              } catch (error) { await appendTrace(projectId, runId, { type: "agent_guard_error", summary: error instanceof Error ? error.message : String(error) }); }
+            }
           }
         },
         async (error) => {
@@ -615,7 +692,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }), options.runTimeoutMs, () => options.runtime.cancel({
           workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId
-        })).finally(async () => {
+        }), approval).finally(async () => {
+          dispatcher.dispose();
           try {
             await stopEvents();
           } catch (error) {
@@ -643,17 +721,18 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         return;
       }
       const fileChanges = await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore, result.messageId);
-      await appendTrace(projectId, runId, {
-        type: "assistant_message",
-        summary: result.text,
-        data: { text: result.text }
-      });
       const finishedAt = new Date().toISOString();
-      await updateRun(projectId, runId, {
+      const completed = await finishRunningRun(projectId, runId, {
         status: "completed",
         output: result.text,
         fileChanges,
         finishedAt
+      });
+      if (!completed) return;
+      await appendTrace(projectId, runId, {
+        type: "assistant_message",
+        summary: result.text,
+        data: { text: result.text }
       });
       if (run.source === "chat" && session.scope === "team") {
         await projectRuntime.chat.createMessage({
@@ -691,11 +770,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       }
       if (workspacePathForRun && runtimeSessionIdForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
       const message = error instanceof Error ? error.message : "Agent run failed";
-      await updateRun(projectId, runId, {
+      const failed = await finishRunningRun(projectId, runId, {
         status: "failed",
         error: message,
         finishedAt: new Date().toISOString()
       });
+      if (!failed) return;
       appendActivity(projectId, {
         type: "agent_task_failed",
         memberId: current.memberId,
@@ -727,6 +807,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         data: { overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }
       });
     } finally {
+      activeRuns.get(runId)?.cancelPermissions?.();
+      if (guardRuns.delete(runId)) {
+        try {
+          const project = options.runtimeManager.get(projectId);
+          const t3 = await project.conflictGuard?.agentGuard.finish(runId, [], (file, expected, text, owner, remove) => project.documents.applyGuardRevert(file, expected, text, owner, remove));
+          const latest = await getStore(projectId).get(runId);
+          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3 } });
+        } catch (error) { await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) }); }
+      }
+      stopGuardEvents?.();
       activeRuns.delete(runId);
     }
   }
@@ -1026,6 +1116,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
       const active = activeRuns.get(runId);
       if (active) {
+        active.cancelPermissions?.();
         await options.runtime.cancel({
           workspacePath: active.workspacePath,
           sessionId: active.runtimeSessionId
@@ -1083,6 +1174,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       await Promise.all(
         active.flatMap((run) => {
           const running = activeRuns.get(run.id);
+          running?.cancelPermissions?.();
           return running
             ? [
                 options.runtime.cancel({
@@ -1117,6 +1209,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     async dispose() {
       disposing = true;
       for (const queue of queues.values()) queue.closing = true;
+      for (const active of activeRuns.values()) active.cancelPermissions?.();
       await Promise.all(
         [...activeRuns.values()].map((active) =>
           options.runtime.cancel({

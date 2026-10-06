@@ -157,6 +157,13 @@ export interface AgentRun {
   output?: string;
   error?: string;
   fileChanges?: AgentFileChange[];
+  conflictGuard?: {
+    rejectedEdits: number;
+    lastRejection?: string;
+    approvalWaitMs?: number;
+    warnings?: string[];
+    t3?: "reverted" | "partially-reverted" | "passed" | "warned";
+  };
   createdAt: string;
   startedAt?: string;
   finishedAt?: string;

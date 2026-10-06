@@ -12,6 +12,7 @@ export * from "./routing/classifier.js";
 export * from "./routing/typecheck.js";
 export * from "./coordination/pairState.js";
 export * from "./coordination/session.js";
+export * from "./coordination/agentGuard.js";
 export * from "./replay/clock.js";
 export * from "./replay/files.js";
 export * from "./replay/policies.js";

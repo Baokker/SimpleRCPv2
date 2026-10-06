@@ -108,4 +108,11 @@ describe("server config", () => {
     expect(() => loadConfig({ SIMPLERCP_IMPORT_ROOTS: "relative" })).toThrow("absolute paths");
     expect(loadConfig({ SIMPLERCP_IMPORT_ROOTS: "/srv/imports,/srv/examples" }).importRoots).toEqual(["/srv/imports", "/srv/examples"]);
   });
+
+  it("loads Agent adjudication strategies and reasoning settings", () => {
+    const config = loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_T2_STRATEGY: "G3", CONFLICT_GUARD_T3_STRATEGY: "G2", CONFLICT_GUARD_T2_REASONING: "true", CONFLICT_GUARD_T3_REASONING: "false" });
+    expect(config.conflictGuard?.adjudication?.settings).toMatchObject({ t2Strategy: "G3", t3Strategy: "G2", t2Reasoning: true, t3Reasoning: false });
+    expect(() => loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_T2_STRATEGY: "G9" })).toThrow();
+    expect(() => loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_T2_REASONING: "yes" })).toThrow();
+  });
 });

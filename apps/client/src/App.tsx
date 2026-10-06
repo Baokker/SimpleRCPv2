@@ -22,7 +22,7 @@ import {
 } from "./api";
 import { getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
-import { conflictWarning } from "./conflictGuardPresentation";
+import { conflictWarning, humanConflict } from "./conflictGuardPresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -519,6 +519,12 @@ function WorkspacePage({
       seenT0WarningsRef.current.add(warning.id);
       showWorkspaceNotice(warning.summary);
     }
+    for (const notice of state.agentNotices ?? []) {
+      const id = `agent:${notice.id}`;
+      if (seenT0WarningsRef.current.has(id)) continue;
+      seenT0WarningsRef.current.add(id);
+      showWorkspaceNotice(notice.summary);
+    }
     if (state.mode !== "rules" && state.mode !== "full") return;
     const memberId = sessionStorage.getItem(`simplercp.memberId.${projectId}`) ?? identity.memberId;
     const warnings = (state.pairDecisions ?? []).flatMap((record) => {
@@ -943,7 +949,7 @@ function WorkspacePage({
           onCursorChange={changeCursor}
           frozenRegions={conflictGuardState?.frozenFiles}
           analyzingRegions={conflictGuardState?.analyzingFiles}
-          conflictCards={(conflictGuardState?.pairDecisions ?? []).filter((record) => record.status === "judged" && record.verdict?.decision === "lock").map((record) => ({
+          conflictCards={(conflictGuardState?.pairDecisions ?? []).filter((record) => humanConflict(record.pair) && record.status === "judged" && record.verdict?.decision === "lock").map((record) => ({
             pairId: record.pair.id,
             summary: record.verdict?.adjudication ? `${record.verdict.adjudication.userExplanation} 建议：${record.verdict.adjudication.suggestedAction} · 由${record.verdict.adjudication.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(record.verdict.adjudication.latencyMs)} ms` : record.verdict?.summary ?? "修改之间存在冲突",
             files: [record.pair.left.symbol.split("#")[0] ?? "", record.pair.right.symbol.split("#")[0] ?? ""]

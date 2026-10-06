@@ -1,3 +1,5 @@
+export interface GuardActorRef { kind: string; memberId?: string; runId?: string; ownerId?: string; teamAgent?: string }
+
 export interface ActiveSymbol {
   key: string;
   file: string;
@@ -18,11 +20,11 @@ export interface ConflictGuardState {
   traceWriteFailures?: number;
   version: number;
   index: { files: number; symbols: number; edges: number; truncated: boolean; latestUpdate: { files: number; durationMs: number; full: boolean } };
-  activeSymbols: Array<{ actor: { kind: string; memberId?: string }; symbols: ActiveSymbol[] }>;
+  activeSymbols: Array<{ actor: GuardActorRef; symbols: ActiveSymbol[] }>;
   candidatePairs: Array<{
     id: string;
-    left: { actor: { kind: string; memberId?: string }; symbol: string; status: ActiveSymbol["status"] };
-    right: { actor: { kind: string; memberId?: string }; symbol: string; status: ActiveSymbol["status"] };
+    left: { actor: GuardActorRef; symbol: string; status: ActiveSymbol["status"] };
+    right: { actor: GuardActorRef; symbol: string; status: ActiveSymbol["status"] };
     distance: number;
     path: { hops: Array<{ from: string; to: string; kind: string; direction: "forward" | "backward" }>; typeOnly?: boolean } | null;
     firstSeenAt: number;
@@ -33,10 +35,12 @@ export interface ConflictGuardState {
     pair: ConflictGuardState["candidatePairs"][number];
     status: string;
     revision: number;
+    point?: "T2" | "T3";
+    shadow?: boolean;
     leftConfirmed?: boolean;
     rightConfirmed?: boolean;
     analysisVisible?: boolean;
-    verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean }; adjudication?: { source: "fast" | "deep" | "fallback"; confidence?: number; latencyMs: number; status: "success" | "degraded"; userExplanation: string; suggestedAction: string } };
+    verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean }; adjudication?: { point?: "T1" | "T2" | "T3"; source: "fast" | "deep" | "fallback"; confidence?: number; latencyMs: number; status: "success" | "degraded"; userExplanation: string; suggestedAction: string } };
     resolution?: string;
     totalLockMs?: number;
   }>;
@@ -58,12 +62,13 @@ export interface ConflictGuardState {
     uiActionCount: number;
   };
   t0Warnings?: Array<{ id: string; pairId: string; summary: string; at: number }>;
+  agentNotices?: Array<{ id: string; runId: string; summary: string; at: number }>;
 }
 
 export interface ConflictGuardSymbol {
   symbol?: { key: string; file: string; name: string; kind?: ActiveSymbol["kind"]; container?: string; startLine: number; endLine: number } | null;
   text: string;
-  changes: Array<ActiveSymbol & { actor: { kind: string; memberId?: string }; before: string; after: string }>;
+  changes: Array<ActiveSymbol & { actor: GuardActorRef; before: string; after: string }>;
   outgoing: Array<{ from: string; to: string; kind: string; via: string[] }>;
   incoming: Array<{ from: string; to: string; kind: string; via: string[] }>;
 }

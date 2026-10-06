@@ -1,0 +1,228 @@
+{
+  "state": {
+    "mode": "full",
+    "version": 21,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 5,
+        "durationMs": 4.732749999999214,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e8eb9f27-b349-4f87-a998-0d16b9085f88"
+        },
+        "status": "editing",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 116,
+                "end": 147
+              },
+              {
+                "start": 167,
+                "end": 189
+              }
+            ],
+            "firstTouchedAt": 1791281080780,
+            "lastTouchedAt": 1791281086116
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "e8eb9f27-b349-4f87-a998-0d16b9085f88"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791281086116
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "T2:43f9ad2925ebc982176b1be8fa2ad07808d52b91698c223e9a51f2add8f3dcc7",
+          "left": {
+            "actor": {
+              "kind": "agent",
+              "runId": "7c0IZZLK7Z3V",
+              "ownerId": "6a63c73a-d328-4eb1-9f22-9f48bd763680"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "e8eb9f27-b349-4f87-a998-0d16b9085f88"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/cart.ts#Cart.total",
+            "to": "src/pricing.ts#applyDiscount",
+            "hops": [
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/pricing.ts#applyDiscount",
+                "kind": "call",
+                "direction": "forward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791281082480,
+          "updatedAt": 1791281082480,
+          "revisionKey": "ac5cdb58628292e3c6f29560ab4e04ac5308c159d56f9945ce55538ec87714b3"
+        },
+        "status": "judged",
+        "revision": 1,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791281085042,
+        "revisionKey": "ac5cdb58628292e3c6f29560ab4e04ac5308c159d56f9945ce55538ec87714b3",
+        "verdict": {
+          "zone": "grey",
+          "decision": "warn",
+          "ruleId": "model-deep",
+          "summary": "applyDiscount 新增了必填的 currency 参数，但 PriceRule.apply 仍以两个参数调用它，且测试期望 USD 而 Cart.total 传入 CNY，合并后行为可能不一致。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "Signature changed from (price, rate) to (price, rate, currency), making currency a required parameter."
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "Updated to call applyDiscount(amount, 0.1, \"CNY\"), passing the new required currency argument."
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#PriceRule.apply",
+              "detail": "Still calls applyDiscount(price, 0.1) with only two arguments, which is incompatible with the new required currency parameter."
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "test/shop.test.mjs:9",
+              "detail": "Test expects checkout(cart) to return \"USD 18.00\", but Cart.total now passes \"CNY\", indicating a currency mismatch."
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "Calls formatMoney(cart.total()), relying on Cart.total's return value; behavior may change due to currency argument."
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": true
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 110,
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "point": "T2",
+            "strategy": "G4",
+            "source": "deep",
+            "adapter": "deepseek",
+            "model": "deepseek-flash",
+            "confidence": 0.55,
+            "latencyMs": 2440,
+            "status": "success",
+            "escalated": false,
+            "userExplanation": "applyDiscount 新增了必填的 currency 参数，但 PriceRule.apply 仍以两个参数调用它，且测试期望 USD 而 Cart.total 传入 CNY，合并后行为可能不一致。",
+            "suggestedAction": "请修改 src/pricing.ts 中 PriceRule.apply 的调用，为 applyDiscount 补上 currency 参数（例如 \"USD\"），并确认 Cart.total 传入的 \"CNY\" 是否与测试期望的 USD 一致。",
+            "inputHash": "5dbf1e56e35f4c89b86183ff7192552803084933fd89973039041b552669b498",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "analysisStartedAt": 1791281082592,
+        "analysisVisible": false,
+        "point": "T2",
+        "shadow": false
+      }
+    ],
+    "agentNotices": [],
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 0,
+      "cacheHits": 0,
+      "judgements": 0,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0
+    },
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 0,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 0,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 0,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 0,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "content": {
+    "status": "text",
+    "path": "src/cart.ts",
+    "size": 378,
+    "content": "import type { CartItem } from \"./types.ts\";\nimport { applyDiscount } from \"./pricing.ts\";\n\nexport class Cart {\n  items: CartItem[] = [];\n\n  add(item: CartItem): void {\n    this.items = [...this.items, item];\n  }\n\n  total(): number {\n    let amount = 0;\n    for (const item of this.items) amount += item.price * item.quantity;\n    return applyDiscount(amount, 0.1, \"CNY\");\n  }\n}\n"
+  },
+  "checks": {
+    "rejection": true,
+    "shadow": false,
+    "humanEditable": true,
+    "noHumanFreeze": true,
+    "noHumanCard": true
+  }
+}

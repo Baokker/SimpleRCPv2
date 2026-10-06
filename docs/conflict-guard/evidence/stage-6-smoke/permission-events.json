@@ -1,0 +1,74 @@
+{
+  "version": "1.18.31",
+  "events": [
+    {
+      "id": "evt_11056ffa2002nHi9g3XZuCNi53",
+      "type": "permission.asked",
+      "properties": {
+        "id": "per_11056ffa2001LlZ5T1DFGdu0AU",
+        "sessionID": "ses_eefa9167fffePSzrvKrQmFuYdP",
+        "permission": "edit",
+        "patterns": [
+          ".test-workspaces/stage6-permission-probe/probe.ts"
+        ],
+        "metadata": {
+          "filepath": "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/probe.ts",
+          "diff": "Index: /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/probe.ts\n===================================================================\n--- /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/probe.ts\n+++ /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/probe.ts\n@@ -1,1 +1,1 @@\n-export const probeValue = 1;\n+export const probeValue = 2;\n"
+        },
+        "always": [
+          "*"
+        ],
+        "tool": {
+          "messageID": "msg_11056f97e001s7CF9bU6MmZG9g",
+          "callID": "call_00_96CzTmrPNy0Xzqu97l1O0189"
+        }
+      }
+    },
+    {
+      "id": "evt_110570045002hhgIjk1k22JBmr",
+      "type": "permission.asked",
+      "properties": {
+        "id": "per_1105700450012IObL4eY3qqBiZ",
+        "sessionID": "ses_eefa9167fffePSzrvKrQmFuYdP",
+        "permission": "edit",
+        "patterns": [
+          ".test-workspaces/stage6-permission-probe/written.ts"
+        ],
+        "metadata": {
+          "filepath": "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/written.ts",
+          "diff": "Index: /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/written.ts\n===================================================================\n--- /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/written.ts\n+++ /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/written.ts\n@@ -0,0 +1,1 @@\n+export const writtenValue = 3;\n"
+        },
+        "always": [
+          "*"
+        ],
+        "tool": {
+          "messageID": "msg_11056f97e001s7CF9bU6MmZG9g",
+          "callID": "call_01_nWUmJllUmp2Y2IK38OYg5361"
+        }
+      }
+    },
+    {
+      "id": "evt_110570571002Gr79Fuo5QW85Ba",
+      "type": "permission.asked",
+      "properties": {
+        "id": "per_1105705710015XVSx8nOE65NX6",
+        "sessionID": "ses_eefa9167fffePSzrvKrQmFuYdP",
+        "permission": "edit",
+        "patterns": [
+          ".test-workspaces/stage6-permission-probe/patched.ts"
+        ],
+        "metadata": {
+          "filepath": "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/patched.ts",
+          "diff": "Index: /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/patched.ts\n===================================================================\n--- /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/patched.ts\n+++ /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/stage6-permission-probe/patched.ts\n@@ -0,0 +1,1 @@\n+export const patchedValue = 4;\n"
+        },
+        "always": [
+          "*"
+        ],
+        "tool": {
+          "messageID": "msg_1105700db001Rh5WHiPtGCLYmF",
+          "callID": "call_00_tXc7TROEnMBct3HC55cl7259"
+        }
+      }
+    }
+  ]
+}

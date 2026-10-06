@@ -30,7 +30,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
       void promise.finally(() => { if (inFlight.get(key)?.promise === promise) inFlight.delete(key); }).catch(() => undefined);
       async function execute(): Promise<CachedCall> {
         const started = options.clock.now();
-        const base = { adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input) };
+        const base = { ...(input.point ? { point: input.point } : {}), adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input) };
         let timer: unknown;
         let abortListener: (() => void) | undefined;
         let entry: CachedCall;
@@ -51,7 +51,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
           }
           if (options.mode === "replay") throw new ProviderError("failed", "provider replay cache miss");
           requests += 1;
-          const request = fast ? options.fast.judge(input, controller.signal) : options.deep.judge(input, { reasoning: false }, controller.signal);
+          const request = fast ? options.fast.judge(input, controller.signal) : options.deep.judge(input, { reasoning: config.reasoning ?? false }, controller.signal);
           const result = sanitize(await Promise.race([request, timeout, abortPromise]), options.sensitiveValues ?? []);
           completedResult = result;
           const call: ProviderCall = { ...base, status: "success", latencyMs: result.latencyMs, decision: result.decision, confidence: result.confidence, usage: result.usage, costUsd: cost(result, fast) };
@@ -95,8 +95,8 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     if (signal.aborted) throw new ProviderError("cancelled");
     judgements += 1;
     const started = options.clock.now();
-    const input = sanitize(rawInput, options.sensitiveValues ?? []);
-    const strategy = config.strategy === "G4" ? config.t1Strategy : config.strategy;
+    const input = sanitize(config.point && config.point !== "T1" ? { ...rawInput, point: config.point, reasoning: config.reasoning ?? false } : rawInput, options.sensitiveValues ?? []);
+    const strategy = config.strategy === "G4" ? config.point === "T2" ? config.t2Strategy ?? "G1" : config.point === "T3" ? config.t3Strategy ?? "G1" : config.t1Strategy : config.strategy;
     let source: "fast" | "deep" = strategy === "G1" ? "deep" : "fast";
     let elapsed = 0; let escalated = false;
     const first = await provider(input, source === "fast", signal, config.hardDeadlineMs);
@@ -114,7 +114,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     const explanation = result?.userExplanation ?? (result ? result.decision === "lock" ? "模型发现双方修改可能破坏共同使用的行为。" : result.decision === "allow" ? "模型认为双方修改可以共同继续。" : "模型建议双方检查关联修改的影响。" : "研判失败，已降级为警告。 ");
     const action = result?.suggestedAction ?? `请双方检查 ${input.left.symbol} 与 ${input.right.symbol} 的共同使用方式。`;
     adjudicationLatencies.push(Math.min(Math.max(elapsed, options.clock.now() - started), config.hardDeadlineMs));
-    return { ...local, decision: result?.decision ?? "warn", ruleId: result ? `model-${source}` : "model-unavailable", summary: explanation, evidence: result?.evidence?.map((item) => ({ file: item.path, symbol: item.symbol, detail: item.reason })) ?? local.evidence, adjudication: { strategy: config.strategy, source: result ? source : "fallback", adapter: final.call.adapter, model: final.call.model, confidence: result?.confidence, latencyMs: Math.min(elapsed, config.hardDeadlineMs), status: result ? "success" : "degraded", escalated, userExplanation: explanation, suggestedAction: action, inputHash: inputHash(input), promptVersion: config.promptVersion } };
+    return { ...local, decision: result?.decision ?? "warn", ruleId: result ? `model-${source}` : "model-unavailable", summary: explanation, evidence: result?.evidence?.map((item) => ({ file: item.path, symbol: item.symbol, detail: item.reason })) ?? local.evidence, adjudication: { ...(config.point ? { point: config.point } : {}), strategy: config.strategy, source: result ? source : "fallback", adapter: final.call.adapter, model: final.call.model, confidence: result?.confidence, latencyMs: Math.min(elapsed, config.hardDeadlineMs), status: result ? "success" : "degraded", escalated, userExplanation: explanation, suggestedAction: action, inputHash: inputHash(input), promptVersion: config.promptVersion } };
   }
   return { judge, calls: () => [...calls], stats() {
     const latency = [...adjudicationLatencies].sort((left, right) => left - right);

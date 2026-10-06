@@ -52,6 +52,8 @@ export function createProjectRuntime(
     onDocumentPrepared: (name, document, filePath) => conflictGuard?.documentPrepared(name, document, filePath),
     onDocumentRetired: (filePath) => conflictGuard?.retirePath(filePath),
     onDocumentReleased: (filePath) => conflictGuard?.releaseDocument(filePath),
+    filesystemOrigin: (filePath, content) => conflictGuard?.resolveFilesystemOrigin(filePath, content),
+    onUnopenedGuardRevert: (filePath, before, after, ownerId) => conflictGuard?.workspaceReverted(filePath, before, after, ownerId),
     shouldPinDocument: (filePath) => conflictGuard?.shouldPinDocument(filePath) ?? false,
     onPersistenceGateOpened: () => conflictGuard?.persistenceGateChanged(),
     ...(conflictGuard ? {
@@ -93,7 +95,7 @@ export function createProjectRuntime(
     if (change.type === "unlink" || change.type === "unlinkDir") {
       documents.dropPath(change.path);
     }
-    conflictGuard?.workspaceChanged(change.path);
+    conflictGuard?.workspaceChanged(change.path, change.type === "addDir" || change.type === "unlinkDir");
     if (change.type !== "change" && !isSuppressedWorkspaceChange(change)) {
       for (const listener of workspaceListeners) listener(change);
     }
@@ -170,7 +172,7 @@ export function createProjectRuntime(
       suppressWatcherDuplicates(change);
     },
     announceWorkspaceChange(change: WorkspaceChange) {
-      conflictGuard?.workspaceChanged(change.path);
+      conflictGuard?.workspaceChanged(change.path, change.type === "addDir" || change.type === "unlinkDir");
       for (const listener of workspaceListeners) listener(change);
     },
     onFileSaved(listener: (path: string) => void) {
