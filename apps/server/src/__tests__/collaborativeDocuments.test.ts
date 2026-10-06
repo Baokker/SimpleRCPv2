@@ -146,4 +146,24 @@ describe("collaborative document store", () => {
       fs.readFile(path.join(root, "src", "hello.ts"))
     ).resolves.toEqual(Buffer.from([1, 0, 2, 3]));
   });
+
+  it("保留闸门锁定期间的文档并在解除后释放", async () => {
+    let pinned = true;
+    const released: string[] = [];
+    const store = createCollaborativeDocumentStore({
+      workspaceRoot: root,
+      persistDelayMs: 300,
+      shouldPinDocument: () => pinned,
+      onDocumentReleased: (file) => released.push(file)
+    });
+    const document = await store.getDocument("room-pinned", "src/hello.ts");
+    const name = "room-pinned:src/hello.ts";
+    expect(store.release(name)).toBe(false);
+    expect(await store.getDocument("room-pinned", "src/hello.ts")).toBe(document);
+    const pending = store.waitForRelease(name, document);
+    pinned = false;
+    store.releaseUnpinned();
+    await pending;
+    expect(released).toEqual(["src/hello.ts"]);
+  });
 });

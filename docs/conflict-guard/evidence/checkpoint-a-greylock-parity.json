@@ -1,0 +1,2204 @@
+{
+  "sourceFile": "packages/open-collaboration-vscode/test/pair-zone-classifier.test.ts",
+  "sourceSha256": "ee17458de796fbd9ad29fe40c51fae6dfb531abef3d8c8af26d513cee968cf5b",
+  "cases": 47,
+  "matchedZones": 27,
+  "matchedRules": 27,
+  "rows": [
+    {
+      "title": "classifies a strict proposal observability change as white despite an origin policy change",
+      "line": 17,
+      "binding": "result",
+      "sample": {
+        "title": "classifies a strict proposal observability change as white despite an origin policy change",
+        "line": 17,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function approveRefund(user: User, amount: number): boolean {\n    if (user.role !== 'admin') throw new Error('forbidden');\n    return canApproveRefund(user, amount);\n}",
+            "afterSource": "function approveRefund(user: User, amount: number): boolean {\n    return canApproveRefund(user, amount);\n}"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function canApproveRefund(user: User, amount: number): boolean {\n    return user.role === 'admin' && amount <= 500;\n}",
+            "afterSource": "function canApproveRefund(user: User, amount: number): boolean {\n    audit.debug('refund-check', user.id);\n    return user.role === 'admin' && amount <= 500;\n}"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "white",
+        "ruleId": "strict-observability"
+      },
+      "current": {
+        "zone": "white",
+        "ruleId": "observability-only"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies a bounded single-use local extraction as an equivalent white refactor",
+      "line": 43,
+      "binding": "result",
+      "sample": {
+        "title": "classifies a bounded single-use local extraction as an equivalent white refactor",
+        "line": 43,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]): number {\n    return items.reduce((sum, item) => sum + item, 0);\n}",
+            "afterSource": "function calculateTotal(items: number[]): number {\n    const total = items.reduce((sum, item) => sum + item, 0);\n    return total;\n}"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "white",
+        "ruleId": "equivalent-refactor"
+      },
+      "current": {
+        "zone": "white",
+        "ruleId": "equivalent-refactor"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "does not treat moving module initialization into a function call as an equivalent refactor",
+      "line": 60,
+      "binding": "result",
+      "sample": {
+        "title": "does not treat moving module initialization into a function call as an equivalent refactor",
+        "line": 60,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "const total = calculateTotal();\nexport function readTotal() { return total; }",
+            "afterSource": "export function readTotal() { return calculateTotal(); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies an after-call that cannot satisfy the proposal after-signature as black",
+      "line": 73,
+      "binding": "result",
+      "sample": {
+        "title": "classifies an after-call that cannot satisfy the proposal after-signature as black",
+        "line": 73,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return calculateTotal(items); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[], currency: string) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "does not make a compatible optional-parameter signature change black",
+      "line": 88,
+      "binding": "result",
+      "sample": {
+        "title": "does not make a compatible optional-parameter signature change black",
+        "line": 88,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return calculateTotal(items); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[], currency?: string) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "binds an imported alias to a required-parameter addition across files",
+      "line": 102,
+      "binding": "result",
+      "sample": {
+        "title": "binds an imported alias to a required-parameter addition across files",
+        "line": 102,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return price(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(price(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "export function calculateTotal(items: number[], currency: string) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { calculateTotal as price } from './pricing.js';\n                    export function checkout(items: number[]) { return Math.floor(price(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function calculateTotal(items: number[]) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "classifies a newly required interface member with a stale object consumer as black",
+      "line": 124,
+      "binding": "result",
+      "sample": {
+        "title": "classifies a newly required interface member with a stale object consumer as black",
+        "line": 124,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/consumer.ts",
+            "path": "/consumer.ts",
+            "name": "createHandler",
+            "beforeSource": "import type { Handler } from './contract.js';\n                export function createHandler(): Handler {\n                    const handler: Handler = { run() {} };\n                    return handler;\n                }",
+            "afterSource": "import type { Handler } from './contract.js';\n                export function createHandler(): Handler {\n                    const handler: Handler = { run() {} };\n                    return handler;\n                }"
+          },
+          "proposal": {
+            "fileName": "/contract.ts",
+            "path": "/contract.ts",
+            "name": "Handler",
+            "beforeSource": "export interface Handler { run(): void; }",
+            "afterSource": "export interface Handler { run(): void; stop(): void; }"
+          },
+          "relationship": {
+            "kind": "type-reference",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/consumer.ts",
+              "source": "import type { Handler } from './contract.js';\n                        export function createHandler(): Handler {\n                            const handler: Handler = { run() {} };\n                            return handler;\n                        }"
+            },
+            {
+              "path": "/contract.ts",
+              "source": "export interface Handler { run(): void; }"
+            }
+          ]
+        },
+        "interface": true
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "interface-required-member-incompatible"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "interface-required-member-incompatible"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps optional interface additions and spread objects grey",
+      "line": 165,
+      "binding": "optional",
+      "sample": {
+        "title": "keeps optional interface additions and spread objects grey",
+        "line": 165,
+        "binding": "optional",
+        "options": {
+          "origin": {
+            "fileName": "/consumer.ts",
+            "path": "/consumer.ts",
+            "name": "createHandler",
+            "beforeSource": "import type { Handler } from './contract.js';\n                export function createHandler(): Handler {\n                    const handler: Handler = { run() {} };\n                    return handler;\n                }",
+            "afterSource": "import type { Handler } from './contract.js';\n                export function createHandler(): Handler {\n                    const handler: Handler = { run() {} };\n                    return handler;\n                }"
+          },
+          "proposal": {
+            "fileName": "/contract.ts",
+            "path": "/contract.ts",
+            "name": "Handler",
+            "beforeSource": "export interface Handler { run(): void; }",
+            "afterSource": "export interface Handler { run(): void; stop?(): void; }"
+          },
+          "relationship": {
+            "kind": "type-reference",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/consumer.ts",
+              "source": "import type { Handler } from './contract.js'; export function createHandler(): Handler { const handler: Handler = { run() {} }; return handler; }"
+            },
+            {
+              "path": "/contract.ts",
+              "source": "export interface Handler { run(): void; }"
+            }
+          ]
+        },
+        "interface": true
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps optional interface additions and spread objects grey",
+      "line": 190,
+      "binding": "spread",
+      "sample": {
+        "title": "keeps optional interface additions and spread objects grey",
+        "line": 190,
+        "binding": "spread",
+        "options": {
+          "origin": {
+            "fileName": "/consumer.ts",
+            "path": "/consumer.ts",
+            "name": "createHandler",
+            "beforeSource": "import type { Handler } from './contract.js';\n                const defaults = { stop() {} };\n                export function createHandler(): Handler { const handler: Handler = { ...defaults, run() {} }; return handler; }",
+            "afterSource": "import type { Handler } from './contract.js';\n                const defaults = { stop() {} };\n                export function createHandler(): Handler { const handler: Handler = { ...defaults, run() {} }; return handler; }"
+          },
+          "proposal": {
+            "fileName": "/contract.ts",
+            "path": "/contract.ts",
+            "name": "Handler",
+            "beforeSource": "export interface Handler { run(): void; }",
+            "afterSource": "export interface Handler { run(): void; stop(): void; }"
+          },
+          "relationship": {
+            "kind": "type-reference",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/consumer.ts",
+              "source": "import type { Handler } from './contract.js'; const defaults = { stop() {} }; export function createHandler(): Handler { const handler: Handler = { ...defaults, run() {} }; return handler; }"
+            },
+            {
+              "path": "/contract.ts",
+              "source": "export interface Handler { run(): void; }"
+            }
+          ]
+        },
+        "interface": true
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "interface-required-member-incompatible"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "classifies a removed runtime export with a still-bound imported call as black",
+      "line": 213,
+      "binding": "result",
+      "sample": {
+        "title": "classifies a removed runtime export with a still-bound imported call as black",
+        "line": 213,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return price(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(price(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { calculateTotal as price } from './pricing.js';\n                    export function checkout(items: number[]) { return Math.floor(price(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps a removed export grey when the other file only has an unrelated same-name call",
+      "line": 235,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a removed export grey when the other file only has an unrelated same-name call",
+        "line": 235,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "function calculateTotal(items: number[]) { return 0; }\n                    export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps a shared-field writer and reader Pair grey for model adjudication",
+      "line": 262,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a shared-field writer and reader Pair grey for model adjudication",
+        "line": 262,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/state.ts",
+            "path": "/state.ts",
+            "name": "add",
+            "beforeSource": "class Cart {\n    private total = 0;\n    add(value: number) { this.total += value; }\n    read() { return this.total; }\n}",
+            "afterSource": "class Cart {\n    private total = 0;\n    add(value: number) { this.total += Math.max(value, 0); }\n    read() { return this.total; }\n}"
+          },
+          "proposal": {
+            "fileName": "/state.ts",
+            "path": "/state.ts",
+            "name": "read",
+            "beforeSource": "class Cart {\n    private total = 0;\n    add(value: number) { this.total += value; }\n    read() { return this.total; }\n}",
+            "afterSource": "class Cart {\n    private total = 0;\n    add(value: number) { this.total += value; }\n    read() { return Math.round(this.total); }\n}"
+          },
+          "relationship": {
+            "kind": "state-read",
+            "depth": 1,
+            "symbolPath": {
+              "from": {
+                "path": "/state.ts",
+                "name": "read"
+              },
+              "to": {
+                "path": "/state.ts",
+                "name": "total"
+              },
+              "relationKind": "state-read",
+              "reference": "this.total",
+              "via": []
+            }
+          },
+          "projectSources": [
+            {
+              "path": "/state.ts",
+              "source": "class Cart {\n    private total = 0;\n    add(value: number) { this.total += value; }\n    read() { return this.total; }\n}"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps same-file calls valid when only the runtime export is removed",
+      "line": 297,
+      "binding": "result",
+      "sample": {
+        "title": "keeps same-file calls valid when only the runtime export is removed",
+        "line": 297,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "checkout",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }\n                export function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "export function calculateTotal(items: number[]) { return items.length; }\n                export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }\n                export function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }\n                export function checkout(items: number[]) { return calculateTotal(items); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/pricing.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length; }\n                    export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "uses a TypeChecker binding path for runtime export removal through a re-export barrel",
+      "line": 324,
+      "binding": "result",
+      "sample": {
+        "title": "uses a TypeChecker binding path for runtime export removal through a re-export barrel",
+        "line": 324,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "calculateOrderTotal",
+            "beforeSource": "import * as formatters from './index';\n                export function calculateOrderTotal(total: number) { return formatters.formatTotal(total); }",
+            "afterSource": "import * as formatters from './index';\n                export function calculateOrderTotal(total: number) { return Math.floor(formatters.formatTotal(total)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "formatTotal",
+            "beforeSource": "export function formatTotal(total: number) { return total.toFixed(2); }",
+            "afterSource": "function formatTotal(total: number) { return total.toFixed(2); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1,
+            "symbolPath": {
+              "from": {
+                "path": "/checkout.ts",
+                "name": "calculateOrderTotal"
+              },
+              "to": {
+                "path": "/pricing.ts",
+                "name": "formatTotal"
+              },
+              "relationKind": "call",
+              "reference": "formatters.formatTotal",
+              "via": [
+                "/index.ts"
+              ]
+            }
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import * as formatters from './index';\n                        export function calculateOrderTotal(total: number) { return Math.floor(formatters.formatTotal(total)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "function formatTotal(total: number) { return total.toFixed(2); }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "detects runtime export removal when the producer is the origin edit",
+      "line": 360,
+      "binding": "result",
+      "sample": {
+        "title": "detects runtime export removal when the producer is the origin edit",
+        "line": 360,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }\n                export { calculateTotal as priceTotal };",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return price(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(price(items)); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { priceTotal as price } from './pricing';\n                    export function checkout(items: number[]) { return Math.floor(price(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "detects removal of the specific public alias still imported by the consumer",
+      "line": 387,
+      "binding": "result",
+      "sample": {
+        "title": "detects removal of the specific public alias still imported by the consumer",
+        "line": 387,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }\n                export { calculateTotal as priceTotal };",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }\n                export { calculateTotal as total };"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return price(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(price(items)); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { priceTotal as price } from './pricing';\n                    export function checkout(items: number[]) { return Math.floor(price(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length; }\n                    export { calculateTotal as total };"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "does not treat a local declaration name as exported when only an alias was public",
+      "line": 416,
+      "binding": "result",
+      "sample": {
+        "title": "does not treat a local declaration name as exported when only an alias was public",
+        "line": 416,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }\n                export { calculateTotal as priceTotal };",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { calculateTotal } from './pricing';\n                    export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps runtime export removal grey when project binding evidence is unavailable",
+      "line": 443,
+      "binding": "result",
+      "sample": {
+        "title": "keeps runtime export removal grey when project binding evidence is unavailable",
+        "line": 443,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[]) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "runtime-export-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "uses a TypeChecker binding path for a namespace call through a re-export barrel",
+      "line": 457,
+      "binding": "result",
+      "sample": {
+        "title": "uses a TypeChecker binding path for a namespace call through a re-export barrel",
+        "line": 457,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "formatTotal",
+            "beforeSource": "export function formatTotal(total: number) { return total.toFixed(2); }",
+            "afterSource": "export function formatTotal(total: number, currency: string) { return total.toFixed(2); }"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "calculateOrderTotal",
+            "beforeSource": "import * as formatters from './index';\n                export function calculateOrderTotal(total: number) { return formatters.formatTotal(total); }",
+            "afterSource": "import * as formatters from './index';\n                export function calculateOrderTotal(total: number) { return Math.floor(formatters.formatTotal(total)); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1,
+            "symbolPath": {
+              "from": {
+                "path": "/checkout.ts",
+                "name": "calculateOrderTotal"
+              },
+              "to": {
+                "path": "/pricing.ts",
+                "name": "formatTotal"
+              },
+              "relationKind": "call",
+              "reference": "formatters.formatTotal",
+              "via": [
+                "/index.ts"
+              ]
+            }
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import * as formatters from './index';\n                        export function calculateOrderTotal(total: number) { return Math.floor(formatters.formatTotal(total)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function formatTotal(total: number) { return total.toFixed(2); }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "does not trust a stale TypeChecker binding path when the call target changed",
+      "line": 493,
+      "binding": "result",
+      "sample": {
+        "title": "does not trust a stale TypeChecker binding path when the call target changed",
+        "line": 493,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "formatTotal",
+            "beforeSource": "export function formatTotal(total: number) { return total.toFixed(2); }",
+            "afterSource": "export function formatTotal(total: number, currency: string) { return total.toFixed(2); }"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "calculateOrderTotal",
+            "beforeSource": "import * as formatters from './index';\n                export function calculateOrderTotal(total: number) { return formatters.formatTotal(total); }",
+            "afterSource": "import * as other from './other';\n                export function calculateOrderTotal(total: number) { return other.formatTotal(total); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1,
+            "symbolPath": {
+              "from": {
+                "path": "/checkout.ts",
+                "name": "calculateOrderTotal"
+              },
+              "to": {
+                "path": "/pricing.ts",
+                "name": "formatTotal"
+              },
+              "relationKind": "call",
+              "reference": "formatters.formatTotal",
+              "via": [
+                "/index.ts"
+              ]
+            }
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import * as other from './other';\n                        export function calculateOrderTotal(total: number) { return other.formatTotal(total); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function formatTotal(total: number) { return total.toFixed(2); }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "does not trust a stale binding path when an import keeps its local name but changes module",
+      "line": 528,
+      "binding": "result",
+      "sample": {
+        "title": "does not trust a stale binding path when an import keeps its local name but changes module",
+        "line": 528,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "formatTotal",
+            "beforeSource": "export function formatTotal(total: number) { return total.toFixed(2); }",
+            "afterSource": "export function formatTotal(total: number, currency: string) { return total.toFixed(2); }"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "calculateOrderTotal",
+            "beforeSource": "import { formatTotal as renderTotal } from './pricing';\n                export function calculateOrderTotal(total: number) { return renderTotal(total); }",
+            "afterSource": "import { formatTotal as renderTotal } from './other-pricing';\n                export function calculateOrderTotal(total: number) { return renderTotal(total); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1,
+            "symbolPath": {
+              "from": {
+                "path": "/checkout.ts",
+                "name": "calculateOrderTotal"
+              },
+              "to": {
+                "path": "/pricing.ts",
+                "name": "formatTotal"
+              },
+              "relationKind": "call",
+              "reference": "renderTotal",
+              "via": []
+            }
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { formatTotal as renderTotal } from './other-pricing';\n                    export function calculateOrderTotal(total: number) { return renderTotal(total); }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "does not fall back to a same-name guess when the binding path belongs to another consumer",
+      "line": 560,
+      "binding": "result",
+      "sample": {
+        "title": "does not fall back to a same-name guess when the binding path belongs to another consumer",
+        "line": 560,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[], currency: string) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1,
+            "symbolPath": {
+              "from": {
+                "path": "/other-checkout.ts",
+                "name": "checkout"
+              },
+              "to": {
+                "path": "/pricing.ts",
+                "name": "calculateTotal"
+              },
+              "relationKind": "call",
+              "reference": "calculateTotal",
+              "via": []
+            }
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps an unrelated same-name cross-file call grey when project binding evidence is available",
+      "line": 578,
+      "binding": "result",
+      "sample": {
+        "title": "keeps an unrelated same-name cross-file call grey when project binding evidence is available",
+        "line": 578,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "export function calculateTotal(items: number[], currency: string) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "function calculateTotal(items: number[]) { return items.length * 2; }\n                    export function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function calculateTotal(items: number[]) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps an unrelated same-name return-property consumer grey with project binding evidence",
+      "line": 600,
+      "binding": "result",
+      "sample": {
+        "title": "keeps an unrelated same-name return-property consumer grey with project binding evidence",
+        "line": 600,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout() { return loadPrice().amount; }",
+            "afterSource": "export function checkout() { return Math.floor(loadPrice().amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "export function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "export function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "function loadPrice() { return { amount: 20 }; }\n                    export function checkout() { return Math.floor(loadPrice().amount); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function loadPrice() { return { currency: \"CNY\" }; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "binds an imported alias before classifying a removed consumed return property",
+      "line": 626,
+      "binding": "result",
+      "sample": {
+        "title": "binds an imported alias before classifying a removed consumed return property",
+        "line": 626,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout() { return price().amount; }",
+            "afterSource": "export function checkout() { return Math.floor(price().amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "export function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "export function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { loadPrice as price } from './pricing';\n                    export function checkout() { return Math.floor(price().amount); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function loadPrice() { return { currency: \"CNY\" }; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "detects the same imported-call conflict when the producer is the origin edit",
+      "line": 652,
+      "binding": "result",
+      "sample": {
+        "title": "detects the same imported-call conflict when the producer is the origin edit",
+        "line": 652,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "export function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "export function calculateTotal(items: number[], currency: string) { return items.length; }"
+          },
+          "proposal": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "export function checkout(items: number[]) { return price(items); }",
+            "afterSource": "export function checkout(items: number[]) { return Math.floor(price(items)); }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/checkout.ts",
+              "source": "import { calculateTotal as price } from './pricing';\n                    export function checkout(items: number[]) { return price(items); }"
+            },
+            {
+              "path": "/pricing.ts",
+              "source": "export function calculateTotal(items: number[], currency: string) { return items.length; }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "binds this-method calls within the same class without accepting arbitrary receivers",
+      "line": 690,
+      "binding": "result",
+      "sample": {
+        "title": "binds this-method calls within the same class without accepting arbitrary receivers",
+        "line": 690,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "class Pricing {\n            loadPrice(currency: string) { return 10; }\n            checkout(currency: string) { return this.loadPrice(currency); }\n        }",
+            "afterSource": "class Pricing {\n            loadPrice(currency: string, region: string) { return 10; }\n            checkout(currency: string) { return this.loadPrice(currency); }\n        }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "checkout",
+            "beforeSource": "class Pricing {\n            loadPrice(currency: string) { return 10; }\n            checkout(currency: string) { return this.loadPrice(currency); }\n        }",
+            "afterSource": "class Pricing {\n            loadPrice(currency: string) { return 10; }\n            checkout(currency: string) { return Math.floor(this.loadPrice(currency)); }\n        }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          },
+          "projectSources": [
+            {
+              "path": "/pricing.ts",
+              "source": "class Pricing {\n            loadPrice(currency: string, region: string) { return 10; }\n            checkout(currency: string) { return this.loadPrice(currency); }\n        }"
+            }
+          ]
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies removal of a still-called proposal symbol as black",
+      "line": 709,
+      "binding": "result",
+      "sample": {
+        "title": "classifies removal of a still-called proposal symbol as black",
+        "line": 709,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateSubtotal(items: number[]) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "referenced-symbol-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "referenced-symbol-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "uses an observed direct call even when the declared relationship has a semantic label",
+      "line": 721,
+      "binding": "result",
+      "sample": {
+        "title": "uses an observed direct call even when the declared relationship has a semantic label",
+        "line": 721,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return calculateTotal(items); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[], currency: string) { return items.length; }"
+          },
+          "relationship": {
+            "kind": "security-filter",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "call-signature-incompatible"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies removal of a directly consumed return-object property as black",
+      "line": 736,
+      "binding": "result",
+      "sample": {
+        "title": "classifies removal of a directly consumed return-object property as black",
+        "line": 736,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { return loadPrice().amount; }",
+            "afterSource": "function checkout() { return Math.floor(loadPrice().amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies removal of a return-object property consumed through a local const as black",
+      "line": 751,
+      "binding": "result",
+      "sample": {
+        "title": "classifies removal of a return-object property consumed through a local const as black",
+        "line": 751,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const price = loadPrice(); return price.amount; }",
+            "afterSource": "function checkout() { const price = loadPrice(); return Math.floor(price.amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies removal of a destructured return-object property as black",
+      "line": 766,
+      "binding": "result",
+      "sample": {
+        "title": "classifies removal of a destructured return-object property as black",
+        "line": 766,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const { amount } = loadPrice(); return amount; }",
+            "afterSource": "function checkout() { const { amount } = loadPrice(); return Math.floor(amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "classifies removal of a directly consumed awaited return-object property as black",
+      "line": 781,
+      "binding": "result",
+      "sample": {
+        "title": "classifies removal of a directly consumed awaited return-object property as black",
+        "line": 781,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "async function checkout() { return (await loadPrice()).amount; }",
+            "afterSource": "async function checkout() { return Math.floor((await loadPrice()).amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "async function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "async function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "classifies removal of an awaited return-object property consumed through a const as black",
+      "line": 796,
+      "binding": "result",
+      "sample": {
+        "title": "classifies removal of an awaited return-object property consumed through a const as black",
+        "line": 796,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "async function checkout() { const price = await loadPrice(); return price.amount; }",
+            "afterSource": "async function checkout() { const price = await loadPrice(); return Math.floor(price.amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "async function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "async function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps an awaited return-object property with a nullish fallback in grey",
+      "line": 811,
+      "binding": "result",
+      "sample": {
+        "title": "keeps an awaited return-object property with a nullish fallback in grey",
+        "line": 811,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "async function checkout() { const price = await loadPrice(); return price.amount ?? 0; }",
+            "afterSource": "async function checkout() { const price = await loadPrice(); return Math.floor(price.amount ?? 0); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "async function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "async function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps an optional read from an awaited return object in grey",
+      "line": 826,
+      "binding": "result",
+      "sample": {
+        "title": "keeps an optional read from an awaited return object in grey",
+        "line": 826,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "async function checkout() { return (await loadPrice())?.amount; }",
+            "afterSource": "async function checkout() { return (await loadPrice())?.amount?.toFixed(2); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "async function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "async function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps a reassigned call-result variable in grey",
+      "line": 841,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a reassigned call-result variable in grey",
+        "line": 841,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { let price = loadPrice(); price = fallbackPrice(); return price.amount; }",
+            "afterSource": "function checkout() { let price = loadPrice(); price = fallbackPrice(); return Math.floor(price.amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps an unused destructured return-object property in grey",
+      "line": 856,
+      "binding": "result",
+      "sample": {
+        "title": "keeps an unused destructured return-object property in grey",
+        "line": 856,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const { amount } = loadPrice(); return 10; }",
+            "afterSource": "function checkout() { const { amount } = loadPrice(); return 11; }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps a destructured property with a local default in grey",
+      "line": 871,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a destructured property with a local default in grey",
+        "line": 871,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const { amount = 0 } = loadPrice(); return amount; }",
+            "afterSource": "function checkout() { const { amount = 0 } = loadPrice(); return Math.floor(amount); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps a local alias that writes the property in grey",
+      "line": 902,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a local alias that writes the property in grey",
+        "line": 902,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const price = loadPrice(); price.amount = 10; return price; }",
+            "afterSource": "function checkout() { const price = loadPrice(); price.amount = 11; return price; }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps a local alias that deletes the property in grey",
+      "line": 902,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a local alias that deletes the property in grey",
+        "line": 902,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const price = loadPrice(); delete price.amount; return price; }",
+            "afterSource": "function checkout() { const price = loadPrice(); delete price.amount; return Object.freeze(price); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps a local alias that provides a nullish fallback in grey",
+      "line": 902,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a local alias that provides a nullish fallback in grey",
+        "line": 902,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { const price = loadPrice(); return price.amount ?? 0; }",
+            "afterSource": "function checkout() { const price = loadPrice(); return Math.floor(price.amount ?? 0); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps a direct property read with a nullish fallback in grey",
+      "line": 917,
+      "binding": "result",
+      "sample": {
+        "title": "keeps a direct property read with a nullish fallback in grey",
+        "line": 917,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { return loadPrice().amount ?? 0; }",
+            "afterSource": "function checkout() { return Math.floor(loadPrice().amount ?? 0); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
+      },
+      "matchedZone": false,
+      "matchedRule": false
+    },
+    {
+      "title": "keeps an unconsumed return-object property removal grey",
+      "line": 932,
+      "binding": "result",
+      "sample": {
+        "title": "keeps an unconsumed return-object property removal grey",
+        "line": 932,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout() { return loadPrice().currency; }",
+            "afterSource": "function checkout() { return loadPrice().currency.toLowerCase(); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "loadPrice",
+            "beforeSource": "function loadPrice() { return { amount: 10, currency: \"CNY\" }; }",
+            "afterSource": "function loadPrice() { return { currency: \"CNY\" }; }"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps authorization policy in grey instead of pretending local syntax proves a conflict",
+      "line": 967,
+      "binding": "result",
+      "sample": {
+        "title": "keeps authorization policy in grey instead of pretending local syntax proves a conflict",
+        "line": 967,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function canApproveRefund(user: User, amount: number) {\n    return user.role === 'admin' && amount <= 500;\n}",
+            "afterSource": "function canApproveRefund(user: User, amount: number) {\n    return (user.role === 'admin' || user.role === 'manager') && amount <= 500;\n}"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps unit without machine-readable metadata in grey instead of pretending local syntax proves a conflict",
+      "line": 967,
+      "binding": "result",
+      "sample": {
+        "title": "keeps unit without machine-readable metadata in grey instead of pretending local syntax proves a conflict",
+        "line": 967,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function readCache() {\n    return { ageMs: Date.now() - savedAt };\n}",
+            "afterSource": "function readCache() {\n    const ageSeconds = Math.floor((Date.now() - savedAt) / 1000);\n    return { ageMs: ageSeconds };\n}"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "semantic-interaction-uncertain"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    },
+    {
+      "title": "keeps syntactically incomplete batches grey with an explicit unknown dimension",
+      "line": 976,
+      "binding": "result",
+      "sample": {
+        "title": "keeps syntactically incomplete batches grey with an explicit unknown dimension",
+        "line": 976,
+        "binding": "result",
+        "options": {
+          "origin": {
+            "fileName": "/checkout.ts",
+            "path": "/checkout.ts",
+            "name": "checkout",
+            "beforeSource": "function checkout(items: number[]) { return calculateTotal(items); }",
+            "afterSource": "function checkout(items: number[]) { return Math.floor(calculateTotal(items)); }"
+          },
+          "proposal": {
+            "fileName": "/pricing.ts",
+            "path": "/pricing.ts",
+            "name": "calculateTotal",
+            "beforeSource": "function calculateTotal(items: number[]) { return items.length; }",
+            "afterSource": "function calculateTotal(items: number[]) { return"
+          },
+          "relationship": {
+            "kind": "call",
+            "depth": 1
+          }
+        },
+        "interface": false
+      },
+      "source": {
+        "zone": "grey",
+        "ruleId": "unparseable-edit-batch"
+      },
+      "current": {
+        "zone": "grey",
+        "ruleId": "unparsable-side"
+      },
+      "matchedZone": true,
+      "matchedRule": true
+    }
+  ]
+}

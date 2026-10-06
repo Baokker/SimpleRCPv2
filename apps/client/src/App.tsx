@@ -366,6 +366,9 @@ function WorkspacePage({
           if (message.type === "team_agents_changed") {
             setTeamAgents(message.agents);
           }
+          if (message.type === "conflict_guard_state_changed") {
+            void getConflictGuardState(projectId).then((state) => setConflictGuardState((previous) => previous && previous.version > state.version ? previous : state)).catch(showWorkspaceError);
+          }
           if (message.type === "event") {
             setEvents((current) => current.some((event) => event.id === message.event.id)
               ? current
@@ -493,25 +496,7 @@ function WorkspacePage({
         if (info.features.conflictGuard === "off") { if (active) setConflictGuardState(undefined); return; }
         const state = await getConflictGuardState(projectId);
         if (active) {
-          setConflictGuardState(state);
-          for (const warning of state.t0Warnings ?? []) {
-            if (seenT0WarningsRef.current.has(warning.id)) continue;
-            seenT0WarningsRef.current.add(warning.id);
-            showWorkspaceNotice(warning.summary);
-          }
-          if (state.mode === "rules" || state.mode === "full") {
-            const memberId = sessionStorage.getItem(`simplercp.memberId.${projectId}`) ?? identity.memberId;
-            const warnings = (state.pairDecisions ?? []).flatMap((record) => {
-              if (record.status !== "judged" || record.verdict?.decision !== "warn") return [];
-              if (record.pair.left.actor.memberId !== memberId && record.pair.right.actor.memberId !== memberId) return [];
-              const id = `${record.pair.id}:${record.revision}`;
-              if (seenConflictWarningsRef.current.has(id)) return [];
-              seenConflictWarningsRef.current.add(id);
-              const path = relationPathText(record.pair.path);
-              return [{ id, summary: record.verdict.summary, path }];
-            });
-            if (warnings.length > 0) setConflictWarnings((previous) => [...previous, ...warnings]);
-          }
+          setConflictGuardState((previous) => previous && previous.version > state.version ? previous : state);
         }
       } catch {
         // 面板轮询失败时保留上一次冻结状态，下一次继续请求。
@@ -522,6 +507,27 @@ function WorkspacePage({
     void refresh();
     return () => { active = false; if (timer !== undefined) window.clearTimeout(timer); };
   }, [projectId]);
+
+  useEffect(() => {
+    const state = conflictGuardState;
+    if (!state) return;
+    for (const warning of state.t0Warnings ?? []) {
+      if (seenT0WarningsRef.current.has(warning.id)) continue;
+      seenT0WarningsRef.current.add(warning.id);
+      showWorkspaceNotice(warning.summary);
+    }
+    if (state.mode !== "rules" && state.mode !== "full") return;
+    const memberId = sessionStorage.getItem(`simplercp.memberId.${projectId}`) ?? identity.memberId;
+    const warnings = (state.pairDecisions ?? []).flatMap((record) => {
+      if (record.status !== "judged" || record.verdict?.decision !== "warn") return [];
+      if (record.pair.left.actor.memberId !== memberId && record.pair.right.actor.memberId !== memberId) return [];
+      const id = `${record.pair.id}:${record.revision}`;
+      if (seenConflictWarningsRef.current.has(id)) return [];
+      seenConflictWarningsRef.current.add(id);
+      return [{ id, summary: record.verdict.summary, path: relationPathText(record.pair.path) }];
+    });
+    if (warnings.length > 0) setConflictWarnings((previous) => [...previous, ...warnings]);
+  }, [conflictGuardState, projectId, identity.memberId, showWorkspaceNotice]);
 
   useEffect(() => {
     if (!followingMemberId) return;

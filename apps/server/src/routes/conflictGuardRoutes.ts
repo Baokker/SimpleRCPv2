@@ -65,7 +65,7 @@ export function registerConflictGuardRoutes(app: Express, runtimeManager: Projec
       if (!requireIdentity(req, res)) return;
       const runtime = runtimeManager.get(req.params.projectId);
       if (!runtime.conflictGuard) { res.sendStatus(404); return; }
-      if (!runtime.conflictGuard.revertPair(req.params.pairId, req.identity!.memberId)) { res.status(409).json({ error: "当前成员不能撤回该变更对" }); return; }
+      if (!runtime.conflictGuard.revertPair(req.params.pairId, req.identity!.memberId)) { res.status(409).json({ error: "没有可撤回的修改，或当前状态不允许撤回" }); return; }
       res.status(204).end();
     } catch (error) { next(error); }
   });

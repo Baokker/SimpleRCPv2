@@ -15,8 +15,16 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
   onError(error: unknown): void;
   onChat(text: string, pairId: string): void;
 }) {
+  const [actionErrors, setActionErrors] = useState<Record<string, string | undefined>>({});
   const memberName = (id?: string) => members.find((member) => member.id === id)?.displayName ?? id ?? "成员";
   const symbolKinds = new Map(state.activeSymbols.flatMap((group) => group.symbols.map((symbol) => [symbol.key, symbol.kind] as const)));
+  const performAction = (pairId: string, action: () => Promise<unknown>) => {
+    setActionErrors((current) => ({ ...current, [pairId]: undefined }));
+    void action().catch((error) => {
+      setActionErrors((current) => ({ ...current, [pairId]: error instanceof Error ? error.message : String(error) }));
+      onError(error);
+    });
+  };
   return <section className="collab-section conflict-guard-panel" data-testid="conflict-guard-panel">
     <h3>正在修改</h3>
     {state.activeSymbols.filter((group) => group.symbols.length > 0).map((group) => <div key={group.actor.memberId}>
@@ -40,10 +48,11 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
           <p>黑区 · {state.mode === "observe" ? "观察" : "冻结"} · {ruleName(record.verdict?.ruleId)}：{record.verdict?.summary}</p>
           {participant && (state.mode === "rules" || state.mode === "full") ? <div className="conflict-card-actions">
             <p>{ownConfirmed ? "你已确认，等待对方确认" : otherConfirmed ? "对方已确认，等待你的确认" : "双方尚未确认"}</p>
-            <button type="button" onClick={() => { if (window.confirm("将撤回你在该文件本轮的全部修改，是否继续？")) void revertConflictPair(projectId, record.pair.id).catch(onError); }}>我来改</button>
-            <button type="button" disabled={ownConfirmed} onClick={() => { void confirmConflictPair(projectId, record.pair.id).catch(onError); }}>双方确认后继续</button>
+            <button type="button" onClick={() => { if (window.confirm("将撤回你在该文件本轮的全部修改，是否继续？")) performAction(record.pair.id, () => revertConflictPair(projectId, record.pair.id)); }}>我来改</button>
+            <button type="button" disabled={ownConfirmed} onClick={() => performAction(record.pair.id, () => confirmConflictPair(projectId, record.pair.id))}>双方确认后继续</button>
             <button type="button" onClick={() => onChat(`@${memberName(record.pair.left.actor.memberId)} @${memberName(record.pair.right.actor.memberId)} 冲突摘要：${record.verdict?.summary ?? ""}`, record.pair.id)}>去聊天里商量</button>
           </div> : null}
+          {actionErrors[record.pair.id] ? <p role="alert" data-testid="conflict-action-error">{actionErrors[record.pair.id]}</p> : null}
         </article>;
       })}
       {(state.blockedPersists ?? []).map((entry) => <p key={entry.file} className="conflict-lock">{entry.file} · 写盘已暂停（{entry.reason}）</p>)}
@@ -52,7 +61,7 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
     <h3>相互关联的修改</h3>
     <div data-testid="conflict-candidates">{[...state.candidatePairs].sort((left, right) => Number(Boolean(left.path?.typeOnly)) - Number(Boolean(right.path?.typeOnly)) || right.updatedAt - left.updatedAt).map((pair) => {
       const record = (state.pairDecisions ?? []).find((record) => record.pair.id === pair.id);
-      return <Candidate key={pair.id} pair={pair} projectId={projectId} memberName={memberName} symbolKinds={symbolKinds} onError={onError} onChat={onChat} decision={record?.verdict} recordStatus={record?.status} memberId={memberId} interventionEnabled={state.mode === "rules" || state.mode === "full"} />;
+      return <Candidate key={pair.id} pair={pair} projectId={projectId} memberName={memberName} symbolKinds={symbolKinds} onError={onError} onChat={onChat} onAction={performAction} actionError={actionErrors[pair.id]} decision={record?.verdict} recordStatus={record?.status} memberId={memberId} interventionEnabled={state.mode === "rules" || state.mode === "full"} />;
     })}</div>
     {state.candidatePairs.length === 0 ? <p>当前没有相互关联的修改。</p> : null}
     <h3>统计</h3>
@@ -64,8 +73,8 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
   </section>;
 }
 
-function Candidate({ pair, projectId, memberName, symbolKinds, onError, onChat, decision, recordStatus, memberId, interventionEnabled }: {
-  pair: ConflictGuardState["candidatePairs"][number]; projectId: string; memberName(id?: string): string; symbolKinds: Map<string, ActiveSymbol["kind"]>; onError(error: unknown): void; onChat(text: string, pairId: string): void; decision?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string }; recordStatus?: string; memberId?: string; interventionEnabled: boolean;
+function Candidate({ pair, projectId, memberName, symbolKinds, onError, onChat, onAction, actionError, decision, recordStatus, memberId, interventionEnabled }: {
+  pair: ConflictGuardState["candidatePairs"][number]; projectId: string; memberName(id?: string): string; symbolKinds: Map<string, ActiveSymbol["kind"]>; onError(error: unknown): void; onChat(text: string, pairId: string): void; onAction(pairId: string, action: () => Promise<unknown>): void; actionError?: string; decision?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string }; recordStatus?: string; memberId?: string; interventionEnabled: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [texts, setTexts] = useState<ConflictGuardSymbol[]>();
@@ -86,7 +95,8 @@ function Candidate({ pair, projectId, memberName, symbolKinds, onError, onChat, 
     </button>
     <small>{decision ? `${zoneName(decision.zone)} · ${recordStatus === "resolved" ? "已解除" : recordStatus === "stale" ? "等待重新判定" : decisionName(decision.decision)} · ${ruleName(decision.ruleId)}：${decision.summary}` : null}<br />{pair.path?.typeOnly ? "仅类型关联：" : ""}{path}</small>
     {detailError ? <p role="alert">读取符号详情失败：{detailError}</p> : null}
-    {expanded ? <div className="conflict-pair-texts">{recordStatus === "judged" && decision?.decision === "lock" && memberId && (memberId === pair.left.actor.memberId || memberId === pair.right.actor.memberId) && interventionEnabled ? <div className="conflict-card-actions"><button type="button" onClick={() => { if (window.confirm("将撤回你在该文件本轮的全部修改，是否继续？")) void revertConflictPair(projectId, pair.id).catch(onError); }}>我来改</button><button type="button" onClick={() => { void confirmConflictPair(projectId, pair.id).catch(onError); }}>双方确认后继续</button><button type="button" onClick={() => onChat(`@${memberName(pair.left.actor.memberId)} @${memberName(pair.right.actor.memberId)} 冲突摘要：${decision.summary}`, pair.id)}>去聊天里商量</button></div> : null}{[pair.left, pair.right].map((side, index) => {
+    {actionError ? <p role="alert">{actionError}</p> : null}
+    {expanded ? <div className="conflict-pair-texts">{recordStatus === "judged" && decision?.decision === "lock" && memberId && (memberId === pair.left.actor.memberId || memberId === pair.right.actor.memberId) && interventionEnabled ? <div className="conflict-card-actions"><button type="button" onClick={() => { if (window.confirm("将撤回你在该文件本轮的全部修改，是否继续？")) onAction(pair.id, () => revertConflictPair(projectId, pair.id)); }}>我来改</button><button type="button" onClick={() => onAction(pair.id, () => confirmConflictPair(projectId, pair.id))}>双方确认后继续</button><button type="button" onClick={() => onChat(`@${memberName(pair.left.actor.memberId)} @${memberName(pair.right.actor.memberId)} 冲突摘要：${decision.summary}`, pair.id)}>去聊天里商量</button></div> : null}{[pair.left, pair.right].map((side, index) => {
       const change = texts?.[index]?.changes.find((change) => change.actor.memberId === side.actor.memberId);
       return <div key={`${side.actor.memberId}-${side.symbol}`}>
         <strong>{memberName(side.actor.memberId)} · {displayName(side.symbol, texts?.[index]?.symbol?.kind)}</strong>

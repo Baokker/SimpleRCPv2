@@ -191,6 +191,26 @@ describe("Agent concurrency with fake runtime", () => {
     ]));
   });
 
+  it.each([[200, 50], [50, 200]])("同一 session 连续运行仅归属各自文件（%i ms、%i ms）", async (firstDelay, secondDelay) => {
+    const response = await fetch(`${origin}/api/projects/demo/agent/sessions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "X-SimpleRCP-Member": memberId },
+      body: JSON.stringify({ title: "Sequential attribution" })
+    });
+    expect(response.status).toBe(201);
+    const { session } = await response.json() as { session: { id: string } };
+    const first = await createRun(`fake-delay=${firstDelay} fake-write=session-first.ts`, session.id);
+    await waitFor(async () => (await getRuns()).find((run) => run.id === first.id)?.status === "completed");
+    const second = await createRun(`fake-delay=${secondDelay} fake-write=session-second.ts`, session.id);
+    await waitFor(async () => (await getRuns()).find((run) => run.id === second.id)?.status === "completed");
+
+    const runs = await getRuns();
+    expect(runs.find((run) => run.id === first.id)?.fileChanges?.map((change) => change.file)).toEqual(["session-first.ts"]);
+    expect(runs.find((run) => run.id === second.id)?.fileChanges?.map((change) => change.file)).toEqual(["session-second.ts"]);
+    const secondTrace = await getTrace(second.id);
+    expect(secondTrace.find((event) => event.type === "session_diff_observed")?.data?.files).toEqual(expect.arrayContaining(["session-first.ts", "session-second.ts"]));
+  });
+
   it("records overlap only for runs that actually overlap", async () => {
     const [first, second] = await Promise.all([
       createRun("fake-delay=250 fake-write=shared.ts"),

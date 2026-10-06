@@ -49,4 +49,58 @@ describe("变更对状态机", () => {
     coordinator.update([]);
     expect(coordinator.get(pair.id)).toMatchObject({ status: "closed", totalLockMs: 10 });
   });
+  test("只在符号内容或关系路径变化时增加修订号", () => {
+    let current = { ...pair, revisionKey: "same", updatedAt: 1 };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([current]);
+    current = { ...current, updatedAt: 99 };
+    coordinator.update([current]);
+    expect(coordinator.get(pair.id)?.revision).toBe(0);
+    current = { ...current, revisionKey: "changed" };
+    coordinator.update([current]);
+    expect(coordinator.get(pair.id)?.revision).toBe(1);
+  });
+  test("变更对重新出现时延续修订号", () => {
+    const current = { ...pair, revisionKey: "same" };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([current]);
+    coordinator.markChanged(pair.id);
+    coordinator.update([]);
+    coordinator.update([current]);
+    expect(coordinator.get(pair.id)?.revision).toBe(1);
+  });
+  test("灰区同一修订只计算一次", () => {
+    let count = 0;
+    const current = { ...pair, revisionKey: "same" };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => { count += 1; return { ...verdict, zone: "grey", decision: "warn", ruleId: "semantic-interaction-uncertain" }; } });
+    coordinator.update([current]);
+    coordinator.update([{ ...current, updatedAt: 50 }]);
+    expect(count).toBe(1);
+  });
+  test("双方确认的修订在变更对关闭后重新出现时继续有效", () => {
+    const current = { ...pair, revisionKey: "same" };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([current]);
+    coordinator.confirm(pair.id, "left");
+    coordinator.confirm(pair.id, "right");
+    coordinator.update([]);
+    coordinator.update([{ ...current, updatedAt: 10 }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "resolved", resolution: "overridden", revision: 0 });
+  });
+  test("关闭后不同内容重新出现时继续增加修订号", () => {
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([{ ...pair, revisionKey: "first" }]);
+    coordinator.update([]);
+    coordinator.update([{ ...pair, revisionKey: "second" }]);
+    expect(coordinator.get(pair.id)?.revision).toBe(1);
+  });
+  test("撤回后仍有候选关系时不保留撤回完成请求", () => {
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([{ ...pair, revisionKey: "first" }]);
+    coordinator.requestResolution(pair.id, "reverted");
+    coordinator.update([{ ...pair, revisionKey: "second" }]);
+    coordinator.update([]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "closed" });
+    expect(coordinator.get(pair.id)?.resolution).toBeUndefined();
+  });
 });

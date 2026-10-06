@@ -154,6 +154,12 @@ export class ConflictGuardTracker {
     this.closeActive(key);
   }
 
+  closeMemberFile(actor: Extract<ActorRef, { kind: "human" }>, file: string) {
+    const key = actorKeyOf(actor);
+    if (!this.active.get(key)?.changeSet.files.has(file)) return;
+    this.removeActiveFile(key, file, "idle");
+  }
+
   retireFile(file: string) {
     const state = this.files.get(file);
     if (!state) return;
@@ -180,6 +186,14 @@ export class ConflictGuardTracker {
 
   getLatestCursors() {
     return [...this.latestCursors.values()].map((cursor) => ({ ...cursor, actor: { ...cursor.actor }, selection: cursor.selection ? { ...cursor.selection } : undefined }));
+  }
+
+  getOpenBatches() {
+    return [...this.files.entries()].flatMap(([file, state]) => [...state.batches.values()].map(({ batch }) => ({
+      actor: { ...batch.actor },
+      file,
+      ranges: batch.ranges.map((range) => ({ ...range }))
+    })));
   }
 
   onEvent(listener: (event: ConflictGuardEvent) => void) {

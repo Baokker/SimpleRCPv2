@@ -1,0 +1,201 @@
+import { createHash } from "node:crypto";
+import type { ActorRef, EditBatch, FileChange, TextEditOp } from "../model/types.js";
+import type { ConflictGuardTracker } from "../tracking/tracker.js";
+import type { SemanticChangeTracker, CandidatePair } from "../routing/candidates.js";
+import type { SemanticIndex } from "../semantic/types.js";
+import type { RelationPath } from "../semantic/types.js";
+import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
+import { transformRanges } from "../tracking/rangeTransform.js";
+import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
+import { createPairCoordinator, type PairEvent } from "./pairState.js";
+
+export interface FrozenRegion {
+  pairId: string;
+  actor: ActorRef;
+  symbol: string;
+  file: string;
+  start: number;
+  end: number;
+  summary: string;
+}
+
+export function createSessionCoordinator(options: {
+  tracker: ConflictGuardTracker;
+  semantic: SemanticChangeTracker;
+  index: SemanticIndex;
+  now(): number;
+  intervene: boolean;
+  enableT0?: boolean;
+  enableSemanticPending?: boolean;
+  classify(pair: CandidatePair): ZoneVerdict;
+  onError(error: unknown, pairId: string): void;
+  onEvent?(event: Record<string, unknown>): void;
+}) {
+  const frozen = new Map<string, FrozenRegion>();
+  const gates = new Map<string, string>();
+  const contracts = new Map<string, { actor: ActorRef; symbol: string }>();
+  const warnings = new Set<string>();
+  const awaitingBatches = new Map<string, EditBatch>();
+  const batchSymbols = new Map<string, Set<string>>();
+  const batchPaths = new Map<string, Array<{ actor: string; path: RelationPath }>>();
+  let lastFrozen = "[]";
+  const coordinator = createPairCoordinator({ now: options.now, classify(pair) {
+    try { return options.classify(pair); }
+    catch (error) {
+      options.onError(error, pair.id);
+      return { zone: "grey", decision: "warn", ruleId: "policy-error", summary: "判定计算失败，请共同检查修改。", evidence: [], contractChanged: { left: false, right: false }, typecheck: { ran: false, skipped: "规则判定异常" } };
+    }
+  } });
+  const emit = (event: Record<string, unknown>) => options.onEvent?.({ at: options.now(), ...event });
+  coordinator.onEvent((event: PairEvent) => {
+    const record = event.record;
+    const sides = [record.pair.left, record.pair.right].map((side) => {
+      const symbol = symbolFor(side.actor, side.symbol);
+      return { key: side.symbol, beforeHash: symbol ? hash(symbol.before) : undefined, afterHash: symbol ? hash(symbol.after) : undefined };
+    });
+    emit({ type: event.type, pairId: record.pair.id, revision: record.revision, status: record.status, verdict: record.verdict, resolution: record.resolution, pair: record.pair, symbols: sides });
+    syncFrozen();
+    refreshGates();
+  });
+
+  function symbolFor(actor: ActorRef, key: string) {
+    return options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(actor))?.files && [...(options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(actor))?.files.values() ?? [])].flatMap((file) => file.symbols ?? []).find((symbol) => symbol.key === key);
+  }
+  function touchedKeys(batch: { file: string; ranges: Array<{ start: number; end: number }> }) {
+    const cached = "actor" in batch ? batchSymbols.get(`${actorKey(batch.actor as ActorRef)}:${batch.file}`) : undefined;
+    return [...new Set([...(cached ?? []), ...batch.ranges.flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key)])];
+  }
+  function relevantBatch(pair: CandidatePair) {
+    return options.tracker.getOpenBatches().some((batch) => [pair.left, pair.right].some((side) => actorKey(batch.actor) === actorKey(side.actor) && touchedKeys(batch).some((key) => nested(key, side.symbol))));
+  }
+  function refresh(batches: Array<{ batch: EditBatch; change?: FileChange }> = [], pairs?: (pairs: CandidatePair[]) => CandidatePair[]) {
+    options.semantic.update(options.tracker.getActiveChangeSets(), batches);
+    for (const { batch } of batches) if (batch.actor.kind === "human") {
+      const set = options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(batch.actor));
+      for (const symbol of set?.files.get(batch.file)?.symbols ?? []) {
+        const key = `${actorKey(batch.actor)}:${symbol.key}`;
+        if (symbolContractChanged(symbol)) contracts.set(key, { actor: batch.actor, symbol: symbol.key });
+        else contracts.delete(key);
+      }
+    }
+    for (const [key, entry] of contracts) if (!symbolFor(entry.actor, entry.symbol)) contracts.delete(key);
+    coordinator.update(pairs ? pairs(options.semantic.getCandidatePairs()) : options.semantic.getCandidatePairs(), (pair) => !relevantBatch(pair));
+    for (const { batch } of batches) {
+      awaitingBatches.delete(batch.id);
+      if (!options.tracker.getOpenBatches().some((open) => open.file === batch.file && actorKey(open.actor) === actorKey(batch.actor))) {
+        const key = `${actorKey(batch.actor)}:${batch.file}`;
+        batchSymbols.delete(key);
+        batchPaths.delete(key);
+      }
+    }
+    syncFrozen();
+    refreshGates();
+  }
+  function pending(file: string) {
+    const sets = options.semantic.getActiveChangeSets();
+    for (const batch of [...options.tracker.getOpenBatches(), ...awaitingBatches.values()].filter((entry) => entry.file === file && entry.actor.kind === "human")) {
+      const keys = touchedKeys(batch);
+      for (const other of sets.filter((set) => actorKey(set.actor) !== actorKey(batch.actor))) {
+        const otherKeys = [...other.files.values()].flatMap((change) => (change.symbols ?? []).map((symbol) => symbol.key));
+        const paths = [...options.semantic.findPaths(keys, otherKeys, 2), ...(batchPaths.get(`${actorKey(batch.actor)}:${batch.file}`) ?? []).filter((entry) => entry.actor === actorKey(other.actor) && otherKeys.includes(entry.path.to)).map((entry) => entry.path)];
+        for (const from of keys) for (const to of otherKeys) if (nested(from, to)) paths.push({ from, to, hops: [], typeOnly: false });
+        for (const path of paths) {
+          const record = coordinator.records().find((record) => [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(batch.actor) && side.symbol === path.from) && [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(other.actor) && side.symbol === path.to));
+          if (!record || record.status === "pending" || record.status === "stale" || record.status === "closed") return true;
+          const current = symbolFor(batch.actor, path.from);
+          const text = options.index.readFile?.(file);
+          const symbol = options.index.symbolsInFile(file).find((symbol) => symbol.key === path.from);
+          if (current && text !== undefined && symbol && current.after !== text.slice(symbol.start, symbol.end)) return true;
+        }
+      }
+    }
+    return false;
+  }
+  function gate(file: string) {
+    if (!options.intervene) return { allowed: true, reason: undefined };
+    if (coordinator.records().some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "lock" };
+    if (coordinator.records().some((record) => ["pending", "stale"].includes(record.status) && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "pending-judgement" };
+    if (options.enableSemanticPending !== false && pending(file)) return { allowed: false, reason: "pending-judgement" };
+    return { allowed: true, reason: undefined };
+  }
+  function refreshGates() {
+    const files = new Set([...gates.keys(), ...options.tracker.getActiveChangeSets().flatMap((set) => [...set.files.keys()])]);
+    for (const file of files) {
+      const result = gate(file);
+      const previous = gates.get(file);
+      if (result.allowed) gates.delete(file); else gates.set(file, result.reason!);
+      if (previous !== result.reason) emit({ type: "persist_gate", file, allowed: result.allowed, reason: result.reason });
+    }
+  }
+  function syncFrozen() {
+    const active = new Set<string>();
+    if (options.intervene) for (const record of coordinator.records()) {
+      if (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock") continue;
+      for (const side of [record.pair.left, record.pair.right]) {
+        const key = `${record.pair.id}:${actorKey(side.actor)}:${side.symbol}`;
+        active.add(key);
+        if (frozen.has(key)) continue;
+        const file = side.symbol.slice(0, side.symbol.indexOf("#"));
+        const symbol = options.index.symbolsInFile(file).find((entry) => entry.key === side.symbol);
+        if (!symbol) continue;
+        frozen.set(key, { pairId: record.pair.id, actor: side.actor, symbol: side.symbol, file, start: symbol.start, end: symbol.end, summary: record.verdict.summary });
+      }
+    }
+    for (const key of frozen.keys()) if (!active.has(key)) frozen.delete(key);
+    emitFrozen();
+  }
+  function edit(file: string, ops: TextEditOp[], human: boolean) {
+    const violations = regions().filter((region) => region.file === file && ops.some((op) => op.from < region.end && op.from + op.deleted.length >= region.start));
+    if (human && violations.length > 0) emit({ type: "freeze_violation", file, pairIds: [...new Set(violations.map((region) => region.pairId))] });
+    let changed = false;
+    for (const region of frozen.values()) if (region.file === file) {
+      const range = transformRanges([{ start: region.start, end: region.end }], ops)[0];
+      if (range) { changed ||= region.start !== range.start || region.end !== range.end; region.start = range.start; region.end = range.end; }
+    }
+    if (changed) emitFrozen();
+    refreshGates();
+  }
+  function batchOpened(batch: EditBatch) {
+    if (batch.actor.kind !== "human") return;
+    const beforeRanges = batch.deletionEdits?.flatMap((edit) => edit.ops.filter((op) => op.deleted.length > 0).map((op) => ({ start: op.from, end: op.from + op.deleted.length }))) ?? [];
+    const touched = [...new Set([...batch.ranges, ...beforeRanges].flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key))];
+    const batchKey = `${actorKey(batch.actor)}:${batch.file}`;
+    batchSymbols.set(batchKey, new Set(touched));
+    batchPaths.set(batchKey, options.semantic.getActiveChangeSets().filter((set) => actorKey(set.actor) !== actorKey(batch.actor)).flatMap((set) => {
+      const otherKeys = [...set.files.values()].flatMap((file) => (file.symbols ?? []).map((symbol) => symbol.key));
+      return options.semantic.findPaths(touched, otherKeys, 2).map((path) => ({ actor: actorKey(set.actor), path }));
+    }));
+    if (options.enableT0 === false) return;
+    const symbols = parseSymbols(batch.file, batch.textAfter);
+    const keys = batch.ranges.flatMap((range) => innermostSymbols(symbols, range.start, range.end)).map((symbol) => symbol.key);
+    for (const entry of contracts.values()) {
+      if (actorKey(entry.actor) === actorKey(batch.actor)) continue;
+      for (const targetSymbol of [...new Set(keys)]) {
+        if (!options.semantic.findPaths([targetSymbol], [entry.symbol], 2).length && targetSymbol !== entry.symbol) continue;
+        const sides = [{ actor: actorKey(batch.actor), symbol: targetSymbol }, { actor: actorKey(entry.actor), symbol: entry.symbol }].sort((left, right) => left.actor.localeCompare(right.actor));
+        const pairId = hash(JSON.stringify([sides[0]!.actor, sides[0]!.symbol, sides[1]!.actor, sides[1]!.symbol]));
+        const revision = coordinator.get(pairId)?.revision ?? 0;
+        const id = `${batch.id}:${pairId}`;
+        if (warnings.has(id)) continue;
+        warnings.add(id);
+        emit({ type: "t0_warning", id, pairId, revision, targetSymbol, batchId: batch.id, memberId: batch.actor.memberId, actor: entry.actor, symbol: entry.symbol, summary: `正在修改你依赖的 ${entry.symbol.slice(entry.symbol.indexOf("#") + 1)}：外部接口已改变。` });
+      }
+    }
+  }
+  function batchClosed(batch: EditBatch) {
+    awaitingBatches.set(batch.id, batch);
+    refreshGates();
+  }
+  function regions() { return [...frozen.values()].map((region) => ({ ...region })); }
+  function emitFrozen() {
+    const current = JSON.stringify(regions());
+    if (current === lastFrozen) return;
+    lastFrozen = current;
+    emit({ type: "freeze", regions: regions() });
+  }
+  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, regions, symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })) };
+}
+
+function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }
+function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
+function nested(left: string, right: string) { return left === right || left.startsWith(`${right}.`) || right.startsWith(`${left}.`); }

@@ -4,6 +4,7 @@ import type { RelationEdge, SemanticIndex, RelationPath } from "../semantic/type
 import { mapSymbolChanges, type SymbolChange } from "../semantic/changes.js";
 import { isSemanticFile } from "../semantic/index.js";
 import { parseSymbols } from "../semantic/symbols.js";
+import { parseChangeSource, referencesName } from "./contracts.js";
 
 export interface CandidatePair {
   id: string;
@@ -13,6 +14,8 @@ export interface CandidatePair {
   path: RelationPath | null;
   firstSeenAt: number;
   updatedAt: number;
+  /** 双方符号内容与关系路径的稳定指纹，用于变更对修订号。 */
+  revisionKey?: string;
 }
 
 export interface ChangeUnitStatistics { total: number; related: number; unrelated: number; unrelatedRatio: number; typeOnly: number }
@@ -55,6 +58,14 @@ export class SemanticChangeTracker {
     const active = this.changeSets.filter((set) => set.actor.kind === "human" && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
     const deletedKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => symbol.key)));
     for (const [key, edge] of this.staleEdges) if (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to)) this.staleEdges.delete(key);
+    const deletedSymbols = active.flatMap((set) => [...set.files.values()].flatMap((file) => (file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => ({ actor: actorKey(set.actor), symbol }))));
+    for (const set of active) for (const change of set.files.values()) for (const symbol of change.symbols ?? []) {
+      if (symbol.status === "deleted") continue;
+      for (const deleted of deletedSymbols) {
+        if (deleted.actor === actorKey(set.actor) || !referencesName(parseChangeSource(symbol, symbol.after), deleted.symbol.name)) continue;
+        this.staleEdges.set(`${symbol.key}:${deleted.symbol.key}:value-reference`, { from: symbol.key, to: deleted.symbol.key, kind: "value-reference", via: [], stale: true, dangling: true });
+      }
+    }
     const nextPairs = new Map<string, CandidatePair>();
     for (let leftIndex = 0; leftIndex < active.length; leftIndex += 1) for (const rightSet of active.slice(leftIndex + 1)) {
       const leftSet = active[leftIndex]!;
@@ -75,10 +86,14 @@ export class SemanticChangeTracker {
         const rightSymbol = rightSymbols.get(path.to)!;
         const id = hash(JSON.stringify([actorKey(leftSet.actor), path.from, actorKey(rightSet.actor), path.to]));
         const previous = this.pairs.get(id);
-        const fingerprint = hash(JSON.stringify([leftSymbol, rightSymbol, path]));
+        const fingerprint = hash(JSON.stringify([
+          { key: leftSymbol.key, before: hash(leftSymbol.before), after: hash(leftSymbol.after) },
+          { key: rightSymbol.key, before: hash(rightSymbol.before), after: hash(rightSymbol.after) },
+          path
+        ]));
         const changed = this.fingerprints.get(id) !== fingerprint;
         const at = this.options.now();
-        const pair: CandidatePair = { id, left: { actor: leftSet.actor, symbol: path.from, status: leftSymbol.status }, right: { actor: rightSet.actor, symbol: path.to, status: rightSymbol.status }, distance: path.hops.length as 0 | 1 | 2, path: path.hops.length === 0 ? null : path, firstSeenAt: previous?.firstSeenAt ?? at, updatedAt: changed ? at : previous!.updatedAt };
+        const pair: CandidatePair = { id, left: { actor: leftSet.actor, symbol: path.from, status: leftSymbol.status }, right: { actor: rightSet.actor, symbol: path.to, status: rightSymbol.status }, distance: path.hops.length as 0 | 1 | 2, path: path.hops.length === 0 ? null : path, firstSeenAt: previous?.firstSeenAt ?? at, updatedAt: changed ? at : previous!.updatedAt, revisionKey: fingerprint };
         nextPairs.set(id, pair);
         this.fingerprints.set(id, fingerprint);
         if (!previous || changed) this.emit({ type: previous ? "pair_candidate_updated" : "pair_candidate_opened", pair });

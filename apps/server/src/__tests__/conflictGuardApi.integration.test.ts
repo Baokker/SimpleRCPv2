@@ -12,6 +12,7 @@ import type { ProjectConflictGuard } from "../conflictGuard/projectConflictGuard
 import { attachRealtimeServer } from "../realtime.js";
 import { joinMember } from "./memberTestHelper.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import { FILESYSTEM_ORIGIN } from "../textDelta.js";
 
 describe("conflict guard API", () => {
   let root: string;
@@ -165,6 +166,57 @@ describe("conflict guard API", () => {
     bobProvider.disconnect();
     aliceProvider.destroy();
     bobProvider.destroy();
+  });
+
+  it("真实 observer 遗漏后 mirror_resync 保留双方范围并变换坐标", async () => {
+    const bob = await joinMember(origin, "demo", { name: "Bob" });
+    const aliceDocument = new Y.Doc();
+    const bobDocument = new Y.Doc();
+    const aliceProvider = createProvider(origin, roomId, aliceDocument, memberId);
+    const bobProvider = createProvider(origin, roomId, bobDocument, bob.member.id);
+    try {
+      await Promise.all([waitForSync(aliceProvider), waitForSync(bobProvider)]);
+      aliceDocument.getText("content").insert(0, "Alice line\n");
+      await wait(100);
+      bobDocument.getText("content").insert(bobDocument.getText("content").length, "Bob line\n");
+      await wait(100);
+
+      const runtime = app.locals.runtimeManager.get("demo");
+      const guard = runtime.conflictGuard as ProjectConflictGuard;
+      const before = guard.state().changeSets.map((changeSet) => ({
+        actor: changeSet.actor,
+        ranges: changeSet.files.find((file) => file.file === "README.md")!.ranges
+      }));
+      expect(before).toHaveLength(2);
+      const document = await runtime.documents.getDocument(roomId, "README.md");
+      const text = document.getText("content");
+      const observers = (text as unknown as { _eH: { l: Array<(event: Y.YTextEvent, transaction: Y.Transaction) => void> } })._eH.l;
+      expect(observers).toHaveLength(2);
+      const guardObserver = observers[1]!;
+      const prefix = "resync prefix\n";
+      text.unobserve(guardObserver);
+      try {
+        document.transact(() => text.insert(0, prefix), FILESYSTEM_ORIGIN);
+      } finally {
+        text.observe(guardObserver);
+      }
+      document.transact(() => text.insert(text.length, "resync suffix\n"), FILESYSTEM_ORIGIN);
+      await wait(100);
+
+      const after = guard.state().changeSets;
+      expect(after.map((changeSet) => changeSet.actor)).toEqual(expect.arrayContaining(before.map((changeSet) => changeSet.actor)));
+      expect(after).toHaveLength(before.length);
+      for (const expected of before) {
+        expect(after.find((changeSet) => JSON.stringify(changeSet.actor) === JSON.stringify(expected.actor))?.files.find((file) => file.file === "README.md")?.ranges).toEqual(expected.ranges.map((range) => ({ start: range.start + prefix.length, end: range.end + prefix.length })));
+      }
+      await guard.waitForTrace();
+      const events = readTrace(await fs.readFile(guard.tracePath, "utf8"));
+      expect(events.filter((event) => event.type === "mirror_resync")).toEqual([expect.objectContaining({ file: "README.md", text: text.toString() })]);
+      expect(validateTraceDetailed(events).valid).toBe(true);
+    } finally {
+      aliceProvider.destroy();
+      bobProvider.destroy();
+    }
   });
 
   it("moves Bob's range by the exact size of Alice's earlier insertion", async () => {

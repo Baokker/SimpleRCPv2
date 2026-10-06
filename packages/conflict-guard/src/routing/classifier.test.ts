@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { classify, type PairSide } from "./classifier.js";
+import { classify, symbolContractChanged, type PairSide } from "./classifier.js";
 import { createFourStateTypeChecker } from "./typecheck.js";
 import type { SymbolChange } from "../semantic/changes.js";
 
@@ -155,5 +155,38 @@ describe("阶段 3 分区规则", () => {
     files.set("validation.ts", "export function verify(value: string) { return value; }");
     versions.set("validation.ts", 2);
     expect(checker(request).mergeOnlyDiagnostics?.some((diagnostic) => diagnostic.includes("2345"))).toBe(true);
+  });
+  test("内部箭头函数变化不报告外部接口变化", () => {
+    const change = side("a.ts", "run", "export function run(): number { const helper = () => 'x'; return 1; }", "export function run(): number { const helper = (value: string) => value; return 1; }").symbol;
+    expect(symbolContractChanged(change)).toBe(false);
+  });
+  test("新增符号的空文本按新增处理", () => {
+    const left = side("a.ts", "run", "", "export function run() { return 1; }", { status: "added" });
+    const right = side("b.ts", "call", "function call() { return 1; }", "function call() { return run(); }");
+    expect(classify(input(left, right)).ruleId).not.toBe("unparsable-side");
+  });
+  test("返回局部对象变量保留其属性集合", () => {
+    const left = side("a.ts", "result", "function result() { return { total: 1, label: 'x' }; }", "function result() { const value = { total: 2, label: 'x' }; return value; }");
+    const right = side("b.ts", "use", "function use() { return result().label; }", "function use() { return result().label + '!'; }");
+    expect(classify(input(left, right)).ruleId).not.toBe("consumed-return-property-removed");
+  });
+  test("同一符号的类型关联仍然冻结", () => {
+    const left = side("a.ts", "run", "function run() { return 1; }", "function run() { return 2; }");
+    expect(classify({ ...input(left, { ...left, actor: { kind: "human", memberId: "b" } }), path: null, typeOnly: true }).ruleId).toBe("same-symbol-concurrent-write");
+  });
+  test("返回未知对象变量时保留返回属性的不确定性", () => {
+    const left = side("a.ts", "result", "function result() { return { total: 1, label: 'x' }; }", "function result() { const value = readResult(); return value; }");
+    const right = side("b.ts", "use", "function use() { return result().label; }", "function use() { return result().label + '!'; }");
+    expect(classify(input(left, right)).ruleId).not.toBe("consumed-return-property-removed");
+  });
+  test("调用签名规则在返回属性规则之前求值", () => {
+    const left = side("a.ts", "result", "function result() { return { total: 1, label: 'x' }; }", "function result(currency: string) { return { total: 2 }; }");
+    const right = side("b.ts", "use", "function use() { return result().label; }", "function use() { return result().label + '!'; }");
+    expect(classify(input(left, right)).ruleId).toBe("call-signature-incompatible");
+  });
+  test("接口新增必需成员冻结旧对象消费者", () => {
+    const left = side("contract.ts", "Handler", "export interface Handler { run(): void; }", "export interface Handler { run(): void; stop(): void; }", { kind: "interface" });
+    const right = side("consumer.ts", "createHandler", "function createHandler(): Handler { const handler: Handler = { run() {} }; return handler; }", "function createHandler(): Handler { const handler: Handler = { run() {} }; return handler; }");
+    expect(classify({ ...input(left, right), typeOnly: true }).ruleId).toBe("interface-required-member-incompatible");
   });
 });

@@ -317,6 +317,10 @@ export type ServerMessage =
       type: "team_agents_changed";
       projectId: string;
       agents: AgentSession[];
+    }
+  | {
+      type: "conflict_guard_state_changed";
+      version: number;
     };
 
 export type TerminalClientMessage =

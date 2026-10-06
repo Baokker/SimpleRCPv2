@@ -43,7 +43,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
     useCaseSensitiveFileNames: () => true
   };
   const service = ts.createLanguageService(host);
-  const checkFourStates = createFourStateTypeChecker({ files: options.files, now: options.now });
+  const checkFourStates = createFourStateTypeChecker({ files: { listFiles: () => files, readFile: (file) => options.files.readFile(file), version: (file) => options.files.version(file), ...(options.files.readLib ? { readLib: (name: string) => options.files.readLib!(name) } : {}) }, now: options.now });
 
   function outgoing(key: string) { return [...edges.values()].flat().filter((edge) => edge.from === key); }
   function incoming(key: string) { return [...edges.values()].flat().filter((edge) => edge.to === key); }

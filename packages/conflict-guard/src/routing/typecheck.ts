@@ -10,7 +10,9 @@ export interface TypecheckFileProvider {
 }
 
 export function createFourStateTypeChecker(options: { files: TypecheckFileProvider; now(): number; timeoutMs?: number }) {
-  const files = () => options.files.listFiles().filter((file) => /\.(?:ts|tsx|js|jsx|mts|cts)$/i.test(file));
+  let fileNames: string[] = [];
+  let knownFiles = new Set<string>();
+  const files = () => fileNames;
   const versions = new Map<string, string>();
   let projectVersion = 0;
   const snapshots = new Map<string, ts.IScriptSnapshot>();
@@ -18,7 +20,11 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
   const host: ts.LanguageServiceHost = {
     getCompilationSettings: () => ({ allowJs: true, checkJs: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, lib: ["lib.es2022.d.ts"], types: [], skipLibCheck: true }),
     getScriptFileNames: () => files().map((file) => `/${file}`),
-    getScriptVersion: (file) => String(versions.get(file.replace(/^\//, "")) ?? 0),
+    getScriptVersion: (file) => {
+      const name = file.replace(/^\//, "");
+      if (!knownFiles.has(name)) return "0";
+      return overrides.has(name) ? `override:${projectVersion}` : String(options.files.version?.(name) ?? 0);
+    },
     getProjectVersion: () => String(projectVersion),
     getScriptSnapshot: (file) => {
       const name = file.replace(/^\//, "");
@@ -26,7 +32,7 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
         const text = options.files.readLib?.(name);
         return text === undefined ? undefined : ts.ScriptSnapshot.fromString(text);
       }
-      if (!files().includes(name)) return undefined;
+      if (!knownFiles.has(name)) return undefined;
       const version = overrides.has(name) ? `override:${projectVersion}` : String(options.files.version?.(name) ?? 0);
       const previous = snapshots.get(name);
       if (previous && versions.get(name) === version) return previous;
@@ -37,8 +43,8 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
     },
     getCurrentDirectory: () => "/",
     getDefaultLibFileName: () => "/lib.es2022.d.ts",
-    fileExists: (file) => file.startsWith("/lib.") || files().includes(file.replace(/^\//, "")),
-    readFile: (file) => file.startsWith("/lib.") ? options.files.readLib?.(file.replace(/^\//, "")) : files().includes(file.replace(/^\//, "")) ? options.files.readFile(file.replace(/^\//, "")) : undefined,
+    fileExists: (file) => file.startsWith("/lib.") || knownFiles.has(file.replace(/^\//, "")),
+    readFile: (file) => file.startsWith("/lib.") ? options.files.readLib?.(file.replace(/^\//, "")) : knownFiles.has(file.replace(/^\//, "")) ? options.files.readFile(file.replace(/^\//, "")) : undefined,
     directoryExists: () => true,
     useCaseSensitiveFileNames: () => true
   };
@@ -46,6 +52,8 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
 
   return (input: FourStateInput): FourStateResult => {
     const started = options.now();
+    fileNames = options.files.listFiles().filter((file) => /\.(?:ts|tsx|js|jsx|mts|cts)$/i.test(file));
+    knownFiles = new Set(fileNames);
     const timeout = options.timeoutMs ?? 500;
     const affected = new Set([input.left.symbol.file, input.right.symbol.file]);
     for (const hop of input.path?.hops ?? []) { affected.add(hop.from.slice(0, hop.from.indexOf("#"))); affected.add(hop.to.slice(0, hop.to.indexOf("#"))); }

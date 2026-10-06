@@ -59,15 +59,52 @@ export function callsTo(source: ts.SourceFile | undefined, name: string) {
 }
 
 export function returnedProperties(source: ts.SourceFile | undefined) {
+  return returnedPropertyShape(source).properties;
+}
+
+export function returnedPropertyShape(source: ts.SourceFile | undefined) {
   const properties = new Set<string>();
-  if (source) visit(source, (node) => {
-    const expression = ts.isReturnStatement(node) ? node.expression : ts.isArrowFunction(node) && !ts.isBlock(node.body) ? node.body : undefined;
-    const value = expression && ts.isParenthesizedExpression(expression) ? expression.expression : expression;
-    if (value && ts.isObjectLiteralExpression(value)) for (const property of value.properties) {
-      if (!ts.isSpreadAssignment(property)) { const name = nameOf(property.name); if (name) properties.add(name); }
+  let known = true;
+  if (!source) return { properties, known: false };
+  for (const node of source.statements.flatMap((statement) => declarationNodes(statement))) {
+    const body = (node as ts.FunctionLikeDeclaration).body;
+    if (ts.isVariableDeclaration(node) && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
+      if (ts.isBlock(node.initializer.body)) known = collectDirectReturnProperties(node.initializer.body, properties) && known;
+      else known = addObjectProperties(node.initializer.body, properties) && known;
     }
-  });
-  return properties;
+    if (body && ts.isBlock(body)) known = collectDirectReturnProperties(body, properties) && known;
+  }
+  return { properties, known };
+}
+
+function collectDirectReturnProperties(body: ts.Block, properties: Set<string>) {
+  let known = true;
+  const variables = new Map<string, ts.Expression>();
+  for (const statement of body.statements) if (ts.isVariableStatement(statement)) {
+    for (const declaration of statement.declarationList.declarations) if (ts.isIdentifier(declaration.name) && declaration.initializer) variables.set(declaration.name.text, declaration.initializer);
+  }
+  const visitStatement = (statement: ts.Statement) => {
+    if (ts.isReturnStatement(statement) && statement.expression) {
+      const expression = ts.isIdentifier(statement.expression) ? variables.get(statement.expression.text) ?? statement.expression : statement.expression;
+      known = addObjectProperties(expression, properties) && known;
+    }
+    if (ts.isBlock(statement)) for (const child of statement.statements) visitStatement(child);
+    else if (ts.isIfStatement(statement)) { visitStatement(statement.thenStatement); if (statement.elseStatement) visitStatement(statement.elseStatement); }
+    else if (ts.isTryStatement(statement)) { visitStatement(statement.tryBlock); if (statement.catchClause) visitStatement(statement.catchClause.block); if (statement.finallyBlock) visitStatement(statement.finallyBlock); }
+  };
+  for (const statement of body.statements) visitStatement(statement);
+  return known;
+}
+
+function addObjectProperties(expression: ts.Expression, properties: Set<string>) {
+  const value = ts.isParenthesizedExpression(expression) ? expression.expression : expression;
+  if (!ts.isObjectLiteralExpression(value)) return ts.isStringLiteralLike(value) || ts.isNumericLiteral(value) || [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword].includes(value.kind);
+  let known = true;
+  for (const property of value.properties) {
+    if (!ts.isSpreadAssignment(property)) { const name = nameOf(property.name); if (name) properties.add(name); }
+    else known = false;
+  }
+  return known;
 }
 
 export function readsProperty(source: ts.SourceFile | undefined, name: string) {
@@ -94,18 +131,55 @@ export function hasTypeAnnotation(source: ts.SourceFile | undefined) {
 }
 
 export function contractFingerprint(source: ts.SourceFile) {
-  const values = [`export:${isExported(source)}`, `properties:${[...returnedProperties(source)].sort().join(",")}`];
-  visit(source, (node) => {
-    if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isMethodSignature(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
-      values.push(`fn:${node.type?.getText(source) ?? ""}:${node.parameters.map((parameter) => `${parameter.dotDotDotToken ? "..." : ""}${parameter.questionToken || parameter.initializer ? "?" : "!"}${parameter.type?.getText(source) ?? ""}`).join(",")}`);
+  const values = [`export:${isExported(source)}`];
+  const declarations = source.statements.flatMap((statement) => declarationNodes(statement));
+  for (const node of declarations) {
+    if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isMethodSignature(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
+      values.push(`fn:${node.type?.getText(source) ?? ""}:${parametersFingerprint(node.parameters, source)}`);
+      values.push(...directReturnFingerprint(node, source));
+    } else if (ts.isVariableDeclaration(node)) {
+      const initializer = node.initializer;
+      if (initializer && (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer))) {
+        values.push(`fn:${initializer.type?.getText(source) ?? ""}:${parametersFingerprint(initializer.parameters, source)}`);
+        values.push(...directReturnFingerprint(initializer, source));
+      } else if (node.type) values.push(`variable:${node.type.getText(source)}`);
+    } else if (ts.isPropertySignature(node)) {
+      values.push(`member:${node.name.getText(source)}:${node.questionToken ? "?" : "!"}:${node.type?.getText(source) ?? ""}`);
+    } else if (ts.isPropertyDeclaration(node)) {
+      values.push(`member:${node.name.getText(source)}:${node.questionToken ? "?" : "!"}:${node.type?.getText(source) ?? ""}`);
     }
-    if (ts.isPropertySignature(node)) values.push(`member:${node.name.getText(source)}:${node.questionToken ? "?" : "!"}:${node.type?.getText(source) ?? ""}`);
-    if (ts.isReturnStatement(node) && node.expression) {
-      const expression = node.expression;
+  }
+  values.push(`properties:${[...returnedProperties(source)].sort().join(",")}`);
+  return [...new Set(values)].sort().join("|");
+}
+
+function declarationNodes(node: ts.Node): ts.Node[] {
+  if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) return [node, ...node.members.flatMap((member) => declarationNodes(member))];
+  if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isMethodSignature(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node) || ts.isPropertyDeclaration(node) || ts.isPropertySignature(node)) return [node];
+  if (ts.isVariableStatement(node)) return node.declarationList.declarations.flatMap((declaration) => [declaration]);
+  return [];
+}
+
+function parametersFingerprint(parameters: ts.NodeArray<ts.ParameterDeclaration>, source: ts.SourceFile) {
+  return parameters.map((parameter) => `${parameter.dotDotDotToken ? "..." : ""}${parameter.questionToken || parameter.initializer ? "?" : "!"}${parameter.type?.getText(source) ?? ""}`).join(",");
+}
+
+function directReturnFingerprint(node: ts.Node, source: ts.SourceFile) {
+  const values: string[] = [];
+  const body = (node as ts.FunctionLikeDeclaration).body;
+  if (!body || !ts.isBlock(body)) return values;
+  const visitStatement = (statement: ts.Statement) => {
+    if (ts.isReturnStatement(statement) && statement.expression) {
+      const expression = statement.expression;
       if (ts.isStringLiteralLike(expression)) values.push("return:string");
       if (ts.isNumericLiteral(expression)) values.push("return:number");
       if (expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword) values.push("return:boolean");
+      if (ts.isObjectLiteralExpression(expression)) values.push(`return:object:${expression.properties.map((property) => property.name?.getText(source) ?? "").sort().join(",")}`);
     }
-  });
-  return [...new Set(values)].sort().join("|");
+    if (ts.isBlock(statement)) for (const child of statement.statements) visitStatement(child);
+    else if (ts.isIfStatement(statement)) { visitStatement(statement.thenStatement); if (statement.elseStatement) visitStatement(statement.elseStatement); }
+    else if (ts.isTryStatement(statement)) { visitStatement(statement.tryBlock); if (statement.catchClause) visitStatement(statement.catchClause.block); if (statement.finallyBlock) visitStatement(statement.finallyBlock); }
+  };
+  for (const statement of body.statements) visitStatement(statement);
+  return values;
 }

@@ -26,6 +26,7 @@ export interface RelationEdge {
   kind: RelationKind;
   via: string[];
   stale?: boolean;
+  dangling?: boolean;
 }
 
 export interface RelationPath {

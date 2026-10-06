@@ -61,6 +61,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
     await expect(page.locator(".conflict-pair-texts")).toContainText("formatMoney(cart.total())");
     await expect(page.locator(".conflict-pair-texts")).toContainText("formatMoney(cart.total() + 1)");
   }
+  await expect.poll(async () => (await guardRequest(alice, projectId, "state")).statistics.total).toBe(2);
   const relatedState = await guardRequest(alice, projectId, "state");
   await capture(alice, "03-related-before-after");
   await capture(bob, "03-bob-related-before-after");
@@ -91,7 +92,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
     await expect(page.getByTestId("conflict-statistics")).toContainText("6 个文件");
     await expect(page.getByTestId("conflict-statistics")).toContainText("最近更新");
   }
-  await expect.poll(async () => (await guardRequest(alice, projectId, "state")).statistics.total).toBe(5);
+  await expect.poll(async () => (await guardRequest(alice, projectId, "state")).statistics.total).toBe(unrelatedState.statistics.total + 2);
   const sameSymbolState = await guardRequest(alice, projectId, "state");
   await capture(alice, "05-same-symbol");
   await openFile(alice, "src/report.ts");

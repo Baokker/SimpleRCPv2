@@ -74,7 +74,8 @@ describe("rules 模式冲突干预", () => {
     const events = readTrace(await (await alice.request("/conflict-guard/trace")).text());
     expect(events.some((event) => event.type === "pair_judged")).toBe(true);
     expect(validateTraceDetailed(events).valid).toBe(true);
-    expect(checkReplay(events)).toMatchObject({ checked: true, valid: true, differences: [] });
+    const replay = checkReplay(events);
+    expect(replay, JSON.stringify(replay)).toMatchObject({ checked: true, valid: true, differences: [] });
     await saveReplayEvidence("same-symbol", events);
   });
 

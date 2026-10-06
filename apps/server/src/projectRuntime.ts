@@ -27,6 +27,7 @@ export function createProjectRuntime(
     expiresAt: number;
   }> = [];
   const fileSavedListeners = new Set<(path: string) => void>();
+  const conflictGuardStateListeners = new Set<(version: number) => void>();
   let documents: ReturnType<typeof createCollaborativeDocumentStore>;
   const conflictGuard = options.conflictGuard
     ? createProjectConflictGuard({
@@ -36,18 +37,23 @@ export function createProjectRuntime(
         config: options.conflictGuard,
         gitCommit: options.gitCommit,
         sensitiveValues: options.sensitiveValues,
-        getRevision: (file) => documents.getRevision(file)
+        getRevision: (file) => documents.getRevision(file),
+        onPersistenceStateChanged: () => documents?.persistenceStateChanged(),
+        onStateChanged: (version) => { for (const listener of conflictGuardStateListeners) listener(version); }
       })
     : undefined;
   documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
     projectId: project.id,
-    onPersisted(path) {
+    onPersisted(path, content) {
+      conflictGuard?.persisted(path, content);
       for (const listener of fileSavedListeners) listener(path);
     },
     onDocumentPrepared: (name, document, filePath) => conflictGuard?.documentPrepared(name, document, filePath),
     onDocumentRetired: (filePath) => conflictGuard?.retirePath(filePath),
     onDocumentReleased: (filePath) => conflictGuard?.releaseDocument(filePath),
+    shouldPinDocument: (filePath) => conflictGuard?.shouldPinDocument(filePath) ?? false,
+    onPersistenceGateOpened: () => conflictGuard?.persistenceGateChanged(),
     ...(conflictGuard ? {
       persistGate: (filePath: string) => conflictGuard.persistGate(filePath),
       onPersistBlocked: (filePath: string, reason?: string) => conflictGuard.persistBlocked(filePath, reason),
@@ -171,6 +177,10 @@ export function createProjectRuntime(
       fileSavedListeners.add(listener);
       return () => fileSavedListeners.delete(listener);
     },
+    onConflictGuardStateChanged(listener: (version: number) => void) {
+      conflictGuardStateListeners.add(listener);
+      return () => conflictGuardStateListeners.delete(listener);
+    },
     onTerminalData(listener: (data: string) => void) {
       terminalListeners.add(listener);
       return () => terminalListeners.delete(listener);
@@ -179,6 +189,7 @@ export function createProjectRuntime(
       workspaceListeners.clear();
       suppressedWorkspaceChanges = [];
       fileSavedListeners.clear();
+      conflictGuardStateListeners.clear();
       terminalListeners.clear();
       removeTerminalListener();
       removeTerminalInputListener();
@@ -188,6 +199,7 @@ export function createProjectRuntime(
       await events.awaitIdle();
       terminal.dispose();
       await watcher.close();
+      await documents.dispose();
       conflictGuard?.dispose();
       await conflictGuard?.waitForTrace();
     }

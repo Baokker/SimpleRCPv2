@@ -1,6 +1,7 @@
 import type http from "node:http";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { setPersistence, setupWSConnection } from "y-websocket/bin/utils";
+import * as yWebsocketUtils from "y-websocket/bin/utils";
 import { parseDocumentName } from "./collaborativeDocuments.js";
 import type { EventLog } from "./eventLog.js";
 import type { AgentRunManager } from "./agent/agentRunManager.js";
@@ -16,6 +17,8 @@ import type {
 } from "./types.js";
 import type { MemberStore, Identity } from "./auth/identity.js";
 import { can } from "./auth/permissions.js";
+
+const yWebsocketDocs = (yWebsocketUtils as unknown as { docs: Map<string, unknown> }).docs;
 
 interface SocketIdentity {
   projectId: string;
@@ -250,11 +253,15 @@ export function attachRealtimeServer(
         message
       });
     });
+    const removeConflictGuardListener = runtime.onConflictGuardStateChanged((version) => {
+      broadcastToProject(projectSockets, runtime.project.id, { type: "conflict_guard_state_changed", version });
+    });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,
       removeFileSavedListener,
       removeTerminalListener,
-      removeChatListener
+      removeChatListener,
+      removeConflictGuardListener
     ]);
   }
 
@@ -265,8 +272,12 @@ export function attachRealtimeServer(
       const { projectId } = parseDocumentName(name);
       if (!projectId) throw new Error("Project document is missing projectId");
       const documents = runtimeManager.get(projectId).documents;
+      if (documents.shouldDeferRelease(name)) queueMicrotask(() => yWebsocketDocs.set(name, document));
       await documents.flushDocument(name, document);
-      documents.release(name);
+      if (documents.shouldDeferRelease(name)) {
+        yWebsocketDocs.set(name, document);
+        return;
+      }
     }
   });
 

@@ -145,7 +145,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       }
       continue;
     }
-    if (["freeze_violation", "persist_conflict", "persist_error", "ui_action", "t0_warning"].includes(event.type)) continue;
+    if (["freeze_violation", "freeze", "persist", "persist_gate", "persist_conflict", "persist_error", "ui_action", "t0_warning"].includes(event.type)) continue;
     if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }
