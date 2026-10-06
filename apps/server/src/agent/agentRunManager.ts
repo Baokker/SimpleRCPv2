@@ -644,12 +644,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         async (event) => {
           const part = event.data.part as { callID?: string; tool?: string; state?: { input?: Record<string, unknown> } } | undefined;
           if (part?.callID && part.tool && part.state?.input) toolInputs.set(part.callID, { tool: part.tool, input: part.state.input });
+          if (event.type === "permission.asked") {
+            void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
+          }
           await appendTrace(projectId, runId, {
             type: `opencode.${event.type}`,
             data: event.data
           });
           if (event.type === "permission.asked") {
-            void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
             return;
           }
           if (hasUnattributedPatch(event.data)) {

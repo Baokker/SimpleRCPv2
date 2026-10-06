@@ -12,7 +12,7 @@ OpenCode 固定使用 1.18.31。`rules`、`full` 将 `edit` 权限配置为 `ask
 
 工作区根在项目加载时使用 realpath 解析并缓存，请求路径从最近存在的父目录解析。T2、台账、快照、T3 与回灌共用 workspacePath 工具。
 
-`conflictGuardEditHandler.ts` 优先通过 tool.callID 取得工具输入：edit 使用 oldString、newString、replaceAll，write 使用 content。缺少输入时由 `diff` 库解析 unified diff；支持公共缩进被 trimDiff 移除的 hunk，以及 apply_patch 的 patch 字段。回复 once 前再次核验磁盘 before。文件已变化时要求重新读取。内部错误连续两次后停止同文件审批并通知属主。
+`conflictGuardEditHandler.ts` 收到审批事件后立即保存涉及文件的 before，再通过 tool.callID 取得工具输入：edit 使用 oldString、newString、replaceAll，write 使用 content。缺少输入时由 `diff` 库解析 unified diff；支持公共缩进被 trimDiff 移除的 hunk，以及 apply_patch 的 patch 字段。回复 once 前核验磁盘内容与最初保存的 before 相同，并检查请求仍然有效；文件已变化时要求重新读取。正常处理完成或内容已经变化的拒绝会清除连续内部错误计数，原始路径与规范化路径使用相同的清理规则。连续两次内部错误后，第三次起停止同文件审批并通知属主。
 
 Agent 参与者包含 `kind: agent`、`runId`、`ownerId`，团队 Agent 另含 `teamAgent`。`ownerId` 使用本次 run 的触发成员编号。
 

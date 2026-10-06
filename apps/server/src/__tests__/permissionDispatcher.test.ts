@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { createPermissionDispatcher } from "../agent/permissionDispatcher.js";
+import { canonicalWorkspacePath } from "../workspacePath.js";
+import { createTestWorkspace } from "./testWorkspace.js";
 
 describe("Agent permission dispatcher", () => {
   it("runs handlers in registration order and rejects on a handler failure without failing the run", async () => {
@@ -165,6 +169,44 @@ describe("Agent permission dispatcher", () => {
     expect(replies[0]).toContain("Cannot reconstruct edit");
     expect(replies[2]).toContain("冲突检查暂不可用，请停止修改此文件并向用户报告");
     expect(notices).toEqual(["src/cart.ts"]);
+  });
+  it("counts internal failures consecutively across ordinary conflict rejections", async () => {
+    const replies: string[] = [];
+    let handled = 0;
+    const dispatcher = createPermissionDispatcher({ handlers: [async () => {
+      handled += 1;
+      if (handled === 1 || handled === 3) throw new Error("检查组件不可用");
+      return { reply: handled === 2 ? "reject" : "once" };
+    }], reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
+    for (const id of ["first", "conflict", "third", "last"]) await dispatcher.dispatch({ id, sessionID: "session", permission: "edit", metadata: { filepath: "src/cart.ts" } });
+    expect(handled).toBe(4);
+    expect(replies).toEqual(["reject", "reject", "reject", "once"]);
+    dispatcher.dispose();
+  });
+
+  it("clears a normalization failure after the same path resolves successfully", async () => {
+    const root = await createTestWorkspace("permission-normalization-");
+    const workspace = path.join(root, "workspace");
+    const inside = path.join(workspace, "src");
+    const outside = path.join(root, "outside");
+    const link = path.join(workspace, "access");
+    const replies: string[] = [];
+    await fs.mkdir(inside, { recursive: true });
+    await fs.mkdir(outside);
+    await fs.writeFile(path.join(inside, "source.ts"), "export const value = 1;\n");
+    await fs.writeFile(path.join(outside, "source.ts"), "export const value = 2;\n");
+    const dispatcher = createPermissionDispatcher({ handlers: [async () => ({ reply: "once" })], fileKey: (request) => canonicalWorkspacePath(workspace, String(request.metadata.filepath)).relative, reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
+    try {
+      for (const [index, destination] of [outside, inside, outside, inside].entries()) {
+        if (index > 0) await fs.unlink(link);
+        await fs.symlink(destination, link, "dir");
+        await dispatcher.dispatch({ id: `normalize-${index}`, sessionID: "session", permission: "edit", metadata: { filepath: path.join(link, "source.ts") } });
+      }
+      expect(replies).toEqual(["reject", "once", "reject", "once"]);
+    } finally {
+      dispatcher.dispose();
+      await fs.rm(root, { recursive: true, force: true });
+    }
   });
   it("limits failures raised while normalizing a permission's file path", async () => {
     let normalizations = 0;

@@ -46,7 +46,8 @@ export function createPermissionDispatcher(options: {
     const rejections: NonNullable<PermissionDecision["onRejected"]>[] = [];
     let resume: (() => void) | undefined;
     const signal = controller.signal;
-    let file = String(request.metadata.filepath ?? request.metadata.filePath ?? request.patterns?.[0] ?? "unknown");
+    const requestedFile = String(request.metadata.filepath ?? request.metadata.filePath ?? request.patterns?.[0] ?? "unknown");
+    let file = requestedFile;
     const awaitSignal = async <T>(work: Promise<T>, incoming: AbortSignal): Promise<T> => {
       let fail!: () => void;
       const abort = new Promise<never>((_resolve, reject) => {
@@ -84,10 +85,17 @@ export function createPermissionDispatcher(options: {
       }
       if (signal.aborted) throw new Error("审批分析已取消");
       if (decision.reply === "once") for (const approve of approvals) await awaitSignal(Promise.resolve().then(approve), signal);
-      if (decision.reply === "once") internalFailures.delete(file);
+      if ((internalFailures.get(file) ?? 0) < 2) {
+        internalFailures.delete(file);
+        internalFailures.delete(requestedFile);
+      }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      if (!(error instanceof PermissionEditRejected) && !signal.aborted) internalFailures.set(file, (internalFailures.get(file) ?? 0) + 1);
+      if (error instanceof PermissionEditRejected) {
+        internalFailures.delete(file);
+        internalFailures.delete(requestedFile);
+      }
+      else if (!signal.aborted) internalFailures.set(file, (internalFailures.get(file) ?? 0) + 1);
       decision = { reply: "reject", message: error instanceof PermissionEditRejected ? reason : `冲突检查拒绝本次修改，原因：${reason}。请停止重复提交同一修改并向用户报告。` };
       await trace(error instanceof PermissionEditRejected ? "permission_rejected" : "permission_handler_error", { requestId: request.id, file, reason });
     } finally {

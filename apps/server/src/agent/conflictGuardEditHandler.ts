@@ -7,23 +7,32 @@ import { AGENT_EDIT_PERMISSIONS, PermissionEditRejected, type PermissionHandler 
 export interface AgentEditProposal { file: string; before: string; after: string; deleted?: boolean; existedBefore?: boolean }
 
 export interface AgentToolInput { tool: string; input: Record<string, unknown> }
+interface AgentEditBaseline { before: string; existedBefore: boolean }
 
-export async function reconstructAgentEdit(workspace: string, metadata: Record<string, unknown>, toolInput?: AgentToolInput): Promise<AgentEditProposal[]> {
+function editFiles(workspace: string, metadata: Record<string, unknown>) {
   const entries = Array.isArray(metadata.files) ? metadata.files : [metadata];
   if (entries.length === 0) throw new Error("修改元数据没有提供文件，请停止重复提交同一修改并向用户报告");
-  const proposals: AgentEditProposal[] = [];
-  for (const entry of entries) {
+  return entries.map((entry) => {
     if (!entry || typeof entry !== "object") throw new Error("修改文件的元数据格式无效");
     const data = entry as Record<string, unknown>;
     const filepath = data.filepath ?? data.filePath;
-    const diff = data.patch ?? data.diff;
     if (typeof filepath !== "string") throw new Error("修改元数据缺少文件路径");
     const file = canonicalWorkspacePath(workspace, filepath).relative;
     const absolute = resolveWorkspacePath(workspace, file);
-    let before: string;
-    let existedBefore = true;
-    try { before = await fs.readFile(absolute, "utf8"); }
-    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; before = ""; existedBefore = false; }
+    return { data, file, absolute };
+  });
+}
+
+async function readBaseline(absolute: string): Promise<AgentEditBaseline> {
+  try { return { before: await fs.readFile(absolute, "utf8"), existedBefore: true }; }
+  catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return { before: "", existedBefore: false }; }
+}
+
+export async function reconstructAgentEdit(workspace: string, metadata: Record<string, unknown>, toolInput?: AgentToolInput, baselines?: ReadonlyMap<string, AgentEditBaseline>): Promise<AgentEditProposal[]> {
+  const proposals: AgentEditProposal[] = [];
+  for (const { data, file, absolute } of editFiles(workspace, metadata)) {
+    const diff = data.patch ?? data.diff;
+    const { before, existedBefore } = baselines?.get(file) ?? await readBaseline(absolute);
     const exactInput = toolInput?.tool === "edit" && typeof toolInput.input.oldString === "string" && typeof toolInput.input.newString === "string" || toolInput?.tool === "write" && typeof toolInput.input.content === "string";
     const patches = !exactInput && typeof diff === "string" ? parsePatch(diff) : [];
     let after: string | false;
@@ -81,7 +90,8 @@ export function conflictGuardEditHandler(options: {
 }): PermissionHandler {
   return async (request, signal) => {
     if (!AGENT_EDIT_PERMISSIONS.has(request.permission)) return { reply: "once" };
-    const proposals = await reconstructAgentEdit(options.workspace, request.metadata, await options.toolInput?.(request));
+    const baselines = new Map(await Promise.all(editFiles(options.workspace, request.metadata).map(async ({ file, absolute }) => [file, await readBaseline(absolute)] as const)));
+    const proposals = await reconstructAgentEdit(options.workspace, request.metadata, await options.toolInput?.(request), baselines);
     const result = await options.judge(proposals, signal);
     if (signal.aborted) { result.onRejected?.(); return { reply: "reject", message: "冲突分析超过时间预算或已取消，本次修改未获批准。" }; }
     return result.decision === "lock" ? { reply: "reject", message: result.message ?? "本次修改与其他参与者冲突，请重新读取关联符号并使用兼容实现。" } : { reply: "once", onApproved: async () => {
@@ -91,6 +101,7 @@ export function conflictGuardEditHandler(options: {
         catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; current = ""; }
         if (current !== proposal.before) throw new PermissionEditRejected("文件在你修改期间已被他人更新，请重新读取后再修改");
       }
+      if (signal.aborted) throw new PermissionEditRejected("审批分析已取消，本次修改未获批准。");
       result.onApproved?.();
       options.approved(proposals);
     }, onRejected: result.onRejected };

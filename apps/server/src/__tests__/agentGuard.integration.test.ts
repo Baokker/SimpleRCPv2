@@ -78,6 +78,62 @@ it("accepts and rejects Agent edits through a symbolic workspace using productio
   expect(rejected.message).not.toContain("could not verify");
 }, 15000);
 
+it("captures the disk baseline before awaiting tool input with production persistence timings", async () => {
+  const context = await setup();
+  const file = "src/cart.ts";
+  const before = await context.disk(file);
+  const document = await context.connect(file);
+  const guard = context.runtime.conflictGuard!;
+  const runId = "delayed-tool-input";
+  guard.beginAgentRun({ kind: "agent", runId, ownerId: context.bob.member.id }, new Map([[file, before]]));
+  let reading!: () => void;
+  const started = new Promise<void>((resolve) => { reading = resolve; });
+  const oldString = "let amount = 0;";
+  const newString = "let amount = 10;";
+  const toolFile = path.join(context.workspacePath, "tool-input.json");
+  await fs.writeFile(toolFile, JSON.stringify({ tool: "edit", input: { oldString, newString } }));
+  const replies: Array<{ reply: string; message?: string }> = [];
+  const handler = conflictGuardEditHandler({ workspace: context.workspacePath, judge: (proposals, signal) => guard.agentGuard.judge(runId, proposals, signal), approved: () => {}, async toolInput() {
+    reading();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return JSON.parse(await fs.readFile(toolFile, "utf8"));
+  } });
+  const dispatcher = createPermissionDispatcher({ handlers: [handler], trace: async () => {}, reply: async (reply) => {
+    replies.push(reply);
+    if (reply.reply === "once") await fs.writeFile(path.join(context.workspacePath, file), before.replace(oldString, newString));
+  } });
+  const permission = dispatcher.dispatch({ id: "delayed-input", sessionID: "session", permission: "edit", metadata: { filepath: file, diff: createPatch(file, before, before.replace(oldString, newString)) } });
+  await started;
+  replace(document, "this.items = [...this.items, item];", "this.items = [item, ...this.items];");
+  await waitFor(async () => (await context.disk(file)).includes("this.items = [item, ...this.items];"));
+  await permission;
+  expect(replies).toEqual([expect.objectContaining({ reply: "reject", message: "文件在你修改期间已被他人更新，请重新读取后再修改" })]);
+  expect(await context.disk(file)).toContain("this.items = [item, ...this.items];");
+  expect(guard.agentGuard.pendingFile(file)).toBe(false);
+  dispatcher.dispose();
+}, 15000);
+
+it("does not activate a write reservation after approval is cancelled during disk validation", async () => {
+  const context = await setup();
+  const guard = context.runtime.conflictGuard!;
+  const file = "src/cart.ts";
+  const before = await context.disk(file);
+  const runId = "cancelled-disk-validation";
+  guard.beginAgentRun({ kind: "agent", runId, ownerId: context.bob.member.id }, new Map([[file, before]]));
+  const controller = new AbortController();
+  let approved = 0;
+  const handler = conflictGuardEditHandler({ workspace: context.workspacePath, judge: (proposals, signal) => guard.agentGuard.judge(runId, proposals, signal), approved: () => { approved += 1; } });
+  const decision = await handler({ id: "cancel-validation", sessionID: "session", permission: "edit", metadata: { filepath: file, diff: createPatch(file, before, before.replace("let amount = 0;", "let amount = 10;")) } }, controller.signal);
+  expect(decision.reply).toBe("once");
+  const approval = Promise.resolve(decision.onApproved?.());
+  controller.abort();
+  await expect(approval).rejects.toThrow("审批分析已取消，本次修改未获批准。");
+  expect(approved).toBe(0);
+  expect(guard.agentGuard.pendingFile(file)).toBe(false);
+  expect(await context.disk(file)).toBe(before);
+  await decision.onRejected?.();
+}, 15000);
+
 it("rejects an Agent signature conflict, accepts a compatible retry and keeps the human editable", async () => {
   const context = await setup();
   const pricing = await context.connect("src/pricing.ts");
