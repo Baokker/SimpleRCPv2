@@ -85,12 +85,13 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   const actors = [...new Map(events.filter((event) => event.type === "edit" && (event.origin as ActorRef).kind === "human").map((event) => { const actor = event.origin as ActorRef; return [actorKey(actor), actor] as const; })).values()];
   const semanticRelations = new Set<string>();
   let judgementBatches: Array<{ batch: EditBatch; symbols: string[] }> = [];
+  const analysisTriggers = new Map<string, number>();
   let persistBlockedCount = 0;
   let updateTimer: unknown;
   let candidatePairs: CandidatePair[] = [];
   const closedBatches: Array<{ batch: EditBatch; change?: FileChange }> = [];
   const recordedChecks = events.filter((event) => event.type === "pair_judged" && (event.verdict as ZoneVerdict | undefined)?.typecheck);
-  const session = createSessionCoordinator({ tracker, semantic, index, now: () => clock.now(), intervene, enableT0: policy.id === "P3", enableSemanticPending: policy.id !== "P1", onError(error, pairId) { errors.push({ at: clock.now(), pairId, message: error instanceof Error ? error.message : String(error) }); }, classify(pair) {
+  const session = createSessionCoordinator({ tracker, semantic, index, now: () => clock.now(), clock: trackerClock, ...(policy.adjudicate ? { adjudicate(pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict) => void) { policy.adjudicate!({ pair, activeFiles: activeFiles(), project: index, symbols: (side) => session.symbolFor(side.actor, side.symbol) }, local, trackerClock, signal, complete); } } : {}), intervene, enableT0: policy.id === "P3" || policy.id.startsWith("G"), enableSemanticPending: policy.id !== "P1", onError(error, pairId) { errors.push({ at: clock.now(), pairId, message: error instanceof Error ? error.message : String(error) }); }, classify(pair) {
     const revision = session.coordinator.get(pair.id)?.revision ?? 0;
     const recorded = recordedChecks.find((event) => event.pairId === pair.id && event.revision === revision);
     const recordedCheck = (recorded?.verdict as ZoneVerdict | undefined)?.typecheck;
@@ -106,7 +107,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
     const list = recordMap.get(event.record.pair.id) ?? [];
     list.push(cloneRecord(event.record));
     recordMap.set(event.record.pair.id, list);
-    if (event.type === "pair_judged" && event.record.verdict) {
+    if ((event.type === "pair_judged" || event.type === "pair_analyzing") && event.record.verdict) {
       const keys = [event.record.pair.left.symbol, event.record.pair.right.symbol].map((key) => key.slice(0, key.indexOf("#")));
       const batchTriggers = judgementBatches.filter(({ batch, symbols }) => [event.record.pair.left, event.record.pair.right].some((side) => {
         if (actorKey(batch.actor) !== actorKey(side.actor) || !side.symbol.startsWith(`${batch.file}#`)) return false;
@@ -117,7 +118,9 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
         return gate?.reason === "pending-judgement" ? [gate.start] : [];
       });
       const triggers = batchTriggers.length > 0 ? batchTriggers : pendingTriggers;
-      const triggerAt = triggers.length > 0 ? Math.max(...triggers) : clock.now();
+      const requestKey = `${event.record.pair.id}:${event.record.revision}`;
+      const triggerAt = analysisTriggers.get(requestKey) ?? (triggers.length > 0 ? Math.max(...triggers) : clock.now());
+      if (event.type === "pair_analyzing") { analysisTriggers.set(requestKey, triggerAt); return; }
       judgements.push({ pairId: event.record.pair.id, revision: event.record.revision, at: clock.now(), triggerAt, verdict: event.record.verdict, pair: event.record.pair });
     }
   });
@@ -219,7 +222,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       }
     }
   }
-  clock.advanceTo(options.endAt ?? clock.now() + (options.idleMs ?? config.idleMs ?? 1500) + 25);
+  clock.advanceTo(options.endAt ?? clock.now() + (options.idleMs ?? config.idleMs ?? 1500) + 25 + (policy.maxLatencyMs ?? 0));
   for (const [file, gate] of openGates) gateIntervals.push({ file, start: gate.start, end: clock.now(), reason: gate.reason });
   for (const interval of freezeIntervals) if (interval.end === undefined) interval.end = clock.now();
   const pairs = [...recordMap].sort(([left], [right]) => left.localeCompare(right)).map(([id, records]) => ({ id, records, final: records.at(-1) }));

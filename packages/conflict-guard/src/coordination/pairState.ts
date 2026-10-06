@@ -1,7 +1,7 @@
 import type { CandidatePair } from "../routing/candidates.js";
 import type { ZoneVerdict } from "../routing/classifier.js";
 
-export type PairStatus = "pending" | "judged" | "stale" | "resolved" | "closed";
+export type PairStatus = "pending" | "analyzing" | "judged" | "stale" | "resolved" | "closed";
 export type Resolution = "reverted" | "overridden" | "auto-cleared";
 
 export interface PairRecord {
@@ -16,20 +16,26 @@ export interface PairRecord {
   totalLockMs: number;
   updatedAt: number;
   revisionKey?: string;
+  analysisStartedAt?: number;
+  analysisVisible?: boolean;
 }
 
 export type PairEvent =
+  | { type: "pair_analyzing" | "pair_analysis_progress"; record: PairRecord }
   | { type: "pair_judged"; record: PairRecord }
   | { type: "pair_stale"; record: PairRecord }
   | { type: "pair_resolved"; record: PairRecord }
   | { type: "pair_closed"; record: PairRecord };
 
-export function createPairCoordinator(options: { now(): number; classify(pair: CandidatePair): ZoneVerdict }) {
+export type PairAdjudicator = (pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict) => void) => void;
+
+export function createPairCoordinator(options: { now(): number; classify(pair: CandidatePair): ZoneVerdict; adjudicate?: PairAdjudicator }) {
   const records = new Map<string, PairRecord>();
   const revisionHistory = new Map<string, number>();
   const finalized = new Map<string, { revisionKey?: string; verdict: ZoneVerdict; resolution: Resolution }>();
   const requestedResolutions = new Map<string, Resolution>();
   const listeners = new Set<(event: PairEvent) => void>();
+  const analyses = new Map<string, AbortController>();
   const emit = (event: PairEvent) => { for (const listener of listeners) { try { listener(event); } catch { /* 事件监听器隔离 */ } } };
   const ensure = (pair: CandidatePair) => {
     const previous = records.get(pair.id);
@@ -64,6 +70,29 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   function judge(record: PairRecord) {
     const previous = record.verdict;
     const verdict = options.classify(record.pair);
+    if (verdict.zone === "grey" && options.adjudicate) {
+      const request = new AbortController();
+      analyses.set(record.pair.id, request);
+      const revision = record.revision;
+      record.status = "analyzing";
+      record.verdict = verdict;
+      record.analysisStartedAt = options.now();
+      record.analysisVisible = false;
+      if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; }
+      emit({ type: "pair_analyzing", record: { ...record } });
+      const complete = (result: ZoneVerdict) => {
+        if (request.signal.aborted || record.revision !== revision || record.status !== "analyzing" || analyses.get(record.pair.id) !== request) return;
+        analyses.delete(record.pair.id);
+        applyVerdict(record, result, previous);
+      };
+      try { options.adjudicate(record.pair, verdict, request.signal, complete); }
+      catch { complete({ ...verdict, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); }
+      return;
+    }
+    applyVerdict(record, verdict, previous);
+  }
+  function applyVerdict(record: PairRecord, verdict: ZoneVerdict, previous = record.verdict) {
+    record.analysisVisible = false;
     const autoCleared = previous?.decision === "lock" && verdict.decision !== "lock";
     if (autoCleared) record.verdict = verdict;
     if (autoCleared) { resolve(record, "auto-cleared"); return; }
@@ -77,6 +106,8 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   function markChanged(id: string) {
     const record = records.get(id);
     if (!record || record.status === "closed") return;
+    analyses.get(id)?.abort();
+    analyses.delete(id);
     record.revision += 1;
     revisionHistory.set(id, record.revision);
     finalized.delete(id);
@@ -107,13 +138,15 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     requestedResolutions.set(id, resolution);
     return true;
   }
-  function close(record: PairRecord) { if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; } record.status = "closed"; record.updatedAt = options.now(); emit({ type: "pair_closed", record: { ...record } }); }
+  function close(record: PairRecord) { analyses.get(record.pair.id)?.abort(); analyses.delete(record.pair.id); if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; } record.status = "closed"; record.updatedAt = options.now(); emit({ type: "pair_closed", record: { ...record } }); }
   return {
     update,
     markChanged,
     confirm,
     resolve(id: string, resolution: Resolution) { const record = records.get(id); if (record) resolve(record, resolution); },
     requestResolution,
+    showAnalysis(id: string, revision: number) { const record = records.get(id); if (record?.status === "analyzing" && record.revision === revision) { record.analysisVisible = true; emit({ type: "pair_analysis_progress", record: { ...record } }); } },
+    dispose() { for (const request of analyses.values()) request.abort(); analyses.clear(); },
     records() { return [...records.values()]; },
     get(id: string) { return records.get(id); },
     onEvent(listener: (event: PairEvent) => void) { listeners.add(listener); return () => listeners.delete(listener); }

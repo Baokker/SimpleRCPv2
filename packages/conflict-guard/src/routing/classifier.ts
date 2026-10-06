@@ -47,6 +47,7 @@ export interface ZoneVerdict {
   evidence: Array<{ file: string; symbol?: string; detail: string }>;
   contractChanged: { left: boolean; right: boolean };
   typecheck?: { ran: boolean; skipped?: string; durationMs?: number; mergeOnlyDiagnostics?: string[] };
+  adjudication?: import("../adjudication/types.js").ModelVerdictMetadata;
 }
 
 export interface FourStateInput {

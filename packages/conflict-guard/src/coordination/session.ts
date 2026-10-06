@@ -7,7 +7,8 @@ import type { RelationPath } from "../semantic/types.js";
 import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
 import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
-import { createPairCoordinator, type PairEvent } from "./pairState.js";
+import { createPairCoordinator, type PairEvent, type PairAdjudicator } from "./pairState.js";
+import type { ConflictGuardClock } from "../tracking/tracker.js";
 
 export interface FrozenRegion {
   pairId: string;
@@ -28,10 +29,15 @@ export function createSessionCoordinator(options: {
   enableT0?: boolean;
   enableSemanticPending?: boolean;
   classify(pair: CandidatePair): ZoneVerdict;
+  adjudicate?: PairAdjudicator;
+  clock?: ConflictGuardClock;
+  softDeadlineMs?: number;
   onError(error: unknown, pairId: string): void;
   onEvent?(event: Record<string, unknown>): void;
 }) {
   const frozen = new Map<string, FrozenRegion>();
+  const analyzing = new Map<string, FrozenRegion>();
+  const analysisTimers = new Map<string, unknown>();
   const gates = new Map<string, string>();
   const contracts = new Map<string, { actor: ActorRef; symbol: string }>();
   const warnings = new Set<string>();
@@ -39,7 +45,7 @@ export function createSessionCoordinator(options: {
   const batchSymbols = new Map<string, Set<string>>();
   const batchPaths = new Map<string, Array<{ actor: string; path: RelationPath }>>();
   let lastFrozen = "[]";
-  const coordinator = createPairCoordinator({ now: options.now, classify(pair) {
+  const coordinator = createPairCoordinator({ now: options.now, adjudicate: options.adjudicate, classify(pair) {
     try { return options.classify(pair); }
     catch (error) {
       options.onError(error, pair.id);
@@ -49,6 +55,8 @@ export function createSessionCoordinator(options: {
   const emit = (event: Record<string, unknown>) => options.onEvent?.({ at: options.now(), ...event });
   coordinator.onEvent((event: PairEvent) => {
     const record = event.record;
+    if (event.type === "pair_analyzing" && options.clock) analysisTimers.set(record.pair.id, options.clock.setTimeout(() => coordinator.showAnalysis(record.pair.id, record.revision), options.softDeadlineMs ?? 2000));
+    if (event.type !== "pair_analyzing" && event.type !== "pair_analysis_progress") { options.clock?.clearTimeout(analysisTimers.get(record.pair.id)); analysisTimers.delete(record.pair.id); }
     const sides = [record.pair.left, record.pair.right].map((side) => {
       const symbol = symbolFor(side.actor, side.symbol);
       return { key: side.symbol, beforeHash: symbol ? hash(symbol.before) : undefined, afterHash: symbol ? hash(symbol.after) : undefined };
@@ -94,7 +102,7 @@ export function createSessionCoordinator(options: {
         for (const from of keys) for (const to of otherKeys) if (nested(from, to)) paths.push({ from, to, hops: [], typeOnly: false });
         for (const path of paths) {
           const record = coordinator.records().find((record) => [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(batch.actor) && side.symbol === path.from) && [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(other.actor) && side.symbol === path.to));
-          if (!record || record.status === "pending" || record.status === "stale" || record.status === "closed") return true;
+          if (!record || record.status === "pending" || record.status === "stale" || record.status === "closed" || record.status === "analyzing") return true;
           const current = symbolFor(batch.actor, path.from);
           const text = options.index.readFile?.(file);
           const symbol = options.index.symbolsInFile(file).find((symbol) => symbol.key === path.from);
@@ -106,6 +114,7 @@ export function createSessionCoordinator(options: {
   }
   function gate(file: string) {
     if (!options.intervene) return { allowed: true, reason: undefined };
+    if (coordinator.records().some((record) => record.status === "analyzing" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "analyzing" };
     if (coordinator.records().some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "lock" };
     if (coordinator.records().some((record) => ["pending", "stale"].includes(record.status) && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "pending-judgement" };
     if (options.enableSemanticPending !== false && pending(file)) return { allowed: false, reason: "pending-judgement" };
@@ -122,19 +131,23 @@ export function createSessionCoordinator(options: {
   }
   function syncFrozen(reconcile = false) {
     const active = new Set<string>();
+    const activeAnalysis = new Set<string>();
     if (options.intervene) for (const record of coordinator.records()) {
-      if (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock") continue;
+      const isAnalyzing = record.status === "analyzing";
+      if (!isAnalyzing && (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock")) continue;
       for (const side of [record.pair.left, record.pair.right]) {
         const key = `${record.pair.id}:${actorKey(side.actor)}:${side.symbol}`;
-        active.add(key);
-        if (frozen.has(key) && !reconcile) continue;
+        const target = isAnalyzing ? analyzing : frozen;
+        (isAnalyzing ? activeAnalysis : active).add(key);
+        if (target.has(key) && !reconcile) continue;
         const file = side.symbol.slice(0, side.symbol.indexOf("#"));
         const symbol = options.index.symbolsInFile(file).find((entry) => entry.key === side.symbol);
         if (!symbol) continue;
-        frozen.set(key, { pairId: record.pair.id, actor: side.actor, symbol: side.symbol, file, start: symbol.start, end: symbol.end, summary: record.verdict.summary });
+        target.set(key, { pairId: record.pair.id, actor: side.actor, symbol: side.symbol, file, start: symbol.start, end: symbol.end, summary: isAnalyzing ? "分析中，文本继续同步。" : record.verdict!.summary });
       }
     }
     for (const key of frozen.keys()) if (!active.has(key)) frozen.delete(key);
+    for (const key of analyzing.keys()) if (!activeAnalysis.has(key)) analyzing.delete(key);
     emitFrozen();
   }
   function edit(file: string, ops: TextEditOp[], human: boolean) {
@@ -149,7 +162,7 @@ export function createSessionCoordinator(options: {
         previous.inserted += op.inserted;
       } else replacements.push({ ...op });
     }
-    for (const region of frozen.values()) if (region.file === file) {
+    for (const region of [...frozen.values(), ...analyzing.values()]) if (region.file === file) {
       const range = transformRanges([{ start: region.start, end: region.end }], replacements)[0];
       if (range) { changed ||= region.start !== range.start || region.end !== range.end; region.start = range.start; region.end = range.end; }
     }
@@ -204,7 +217,7 @@ export function createSessionCoordinator(options: {
     lastFrozen = current;
     emit({ type: "freeze", regions: regions() });
   }
-  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, regions, symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })) };
+  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, regions, analyzingRegions: () => [...analyzing.values()].map((region) => ({ ...region })), symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })), dispose() { coordinator.dispose(); for (const timer of analysisTimers.values()) options.clock?.clearTimeout(timer); analysisTimers.clear(); } };
 }
 
 function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }

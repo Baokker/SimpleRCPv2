@@ -6,6 +6,18 @@ const pair: CandidatePair = { id: "p", left: { actor: { kind: "human", memberId:
 const verdict = { zone: "black" as const, decision: "lock" as const, ruleId: "call-signature-incompatible", summary: "冲突", evidence: [], contractChanged: { left: true, right: false } };
 
 describe("变更对状态机", () => {
+  test("grey analysis aborts on revision change and ignores late results", () => {
+    const requests: Array<{ signal: AbortSignal; complete(value: typeof verdict): void }> = [];
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => ({ ...verdict, zone: "grey", decision: "warn" }), adjudicate(_pair, _local, signal, complete) { requests.push({ signal, complete }); } });
+    coordinator.update([{ ...pair, revisionKey: "one" }]);
+    expect(coordinator.get(pair.id)?.status).toBe("analyzing");
+    coordinator.update([{ ...pair, revisionKey: "two" }]);
+    expect(requests[0]?.signal.aborted).toBe(true);
+    requests[0]?.complete(verdict);
+    expect(coordinator.get(pair.id)?.status).toBe("analyzing");
+    requests[1]?.complete(verdict);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", revision: 1, verdict: { decision: "lock" } });
+  });
   test("pending judged stale judged and confirmed resolution", () => {
     let now = 1;
     const events: string[] = [];

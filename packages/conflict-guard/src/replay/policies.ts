@@ -2,6 +2,11 @@ import type { ActorRef } from "../model/types.js";
 import type { CandidatePair } from "../routing/candidates.js";
 import { classify, type SemanticIndexReadonly, type ZoneVerdict } from "../routing/classifier.js";
 import type { SymbolChange } from "../semantic/changes.js";
+import type { PairAdjudicator } from "../coordination/pairState.js";
+import type { ConflictGuardClock } from "../tracking/tracker.js";
+import type { AdjudicationConfig, AdjudicationInput, GreyStrategy } from "../adjudication/types.js";
+import { buildAdjudicationInput } from "../adjudication/invariants.js";
+import { inputHash } from "../adjudication/prompts.js";
 
 export interface ActiveFileChange {
   actor: ActorRef;
@@ -17,8 +22,10 @@ export interface PolicyInput {
 }
 
 export interface ZoningPolicy {
-  id: "P0" | "P1" | "P2" | "P3" | "P*";
+  id: "P0" | "P1" | "P2" | "P3" | "P*" | GreyStrategy;
   decide(input: PolicyInput): ZoneVerdict;
+  adjudicate?(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]): void;
+  maxLatencyMs?: number;
 }
 
 const verdict = (decision: ZoneVerdict["decision"], ruleId: string, summary: string): ZoneVerdict => ({
@@ -84,6 +91,7 @@ export function createOraclePolicy(truth: "allow" | "warn" | "lock"): ZoningPoli
 }
 
 export function policyFor(id: ZoningPolicy["id"], options: { oracleTruth?: "allow" | "warn" | "lock" } = {}): ZoningPolicy {
+  if (id.startsWith("G")) { if (id === "G0") return { ...createP3Policy(), id: "G0" }; throw new Error("模型策略需要录放配置"); }
   if (id === "P0") return createP0Policy();
   if (id === "P1") return createP1Policy();
   if (id === "P2") return createP2Policy();
@@ -92,6 +100,23 @@ export function policyFor(id: ZoningPolicy["id"], options: { oracleTruth?: "allo
     return createOraclePolicy(options.oracleTruth);
   }
   return createP3Policy();
+}
+
+export function createReplayModelPolicy(config: AdjudicationConfig, responses: Map<string, ZoneVerdict>, onInput?: (input: AdjudicationInput, local: ZoneVerdict) => void, contextFiles: string[] = []): ZoningPolicy {
+  return { ...createP3Policy(), id: config.strategy, maxLatencyMs: config.strategy === "G0" ? 0 : config.hardDeadlineMs,
+    ...(config.strategy === "G0" ? {} : { adjudicate(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]) {
+      const left = input.pair && input.symbols(input.pair.left); const right = input.pair && input.symbols(input.pair.right);
+      if (!input.pair || !left || !right) { complete({ ...local, decision: "warn", ruleId: "model-unavailable" }); return; }
+      const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles);
+      onInput?.(request, local);
+      const response = responses.get(inputHash(request));
+      const verdict = response ?? { ...local, decision: "warn" as const, ruleId: "model-unavailable", summary: "研判录放缓存未命中，已降级为警告。" };
+      const timer = clock.setTimeout(() => { signal.removeEventListener("abort", abort); if (!signal.aborted) complete(verdict); }, verdict.adjudication?.latencyMs ?? 0);
+      const abort = () => clock.clearTimeout(timer);
+      signal.addEventListener("abort", abort, { once: true });
+      if (signal.aborted) abort();
+    } })
+  };
 }
 
 function actorKey(actor: ActorRef) {

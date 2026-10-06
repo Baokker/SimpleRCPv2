@@ -137,7 +137,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       if (typeof event.memberId !== "string" || typeof event.file !== "string" || !event.position) throw new Error("cursor is incomplete");
       continue;
     }
-    if (["pair_judged", "pair_stale", "pair_resolved", "pair_closed"].includes(event.type)) {
+    if (["pair_judged", "pair_stale", "pair_resolved", "pair_closed", "pair_analyzing", "pair_analysis_progress"].includes(event.type)) {
       if (typeof event.pairId !== "string" || !Number.isInteger(event.revision) || !event.pair) throw new Error("pair coordination event is incomplete");
       if (event.type === "pair_judged") {
         const verdict = event.verdict as { zone?: string; decision?: string; ruleId?: string } | undefined;
@@ -145,7 +145,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       }
       continue;
     }
-    if (["freeze_violation", "freeze", "persist", "persist_gate", "persist_conflict", "persist_error", "ui_action", "t0_warning"].includes(event.type)) continue;
+    if (["freeze_violation", "freeze", "persist", "persist_gate", "persist_conflict", "persist_error", "ui_action", "t0_warning", "provider_call"].includes(event.type)) continue;
     if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }
