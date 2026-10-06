@@ -446,9 +446,9 @@ function computeCochranQ(
     const methodTotals = ANCHOR_BENCHMARK_METHODS.map((_, methodIndex) =>
         rows.reduce((sum, row) => sum + row[methodIndex], 0)
     );
-    const rowTotals = rows.map(row => row.reduce((sum, value) => sum + value, 0));
+    const rowTotals = rows.map(row => row.reduce<number>((sum, value) => sum + value, 0));
     const k = ANCHOR_BENCHMARK_METHODS.length;
-    const total = methodTotals.reduce((sum, value) => sum + value, 0);
+    const total = methodTotals.reduce<number>((sum, value) => sum + value, 0);
     const denominator = k * total - rowTotals.reduce((sum, value) => sum + value * value, 0);
     const numerator = (k - 1) * (
         k * methodTotals.reduce((sum, value) => sum + value * value, 0) - total * total

@@ -1,0 +1,6 @@
+{
+  "P01": {"requiredTokens": ["transaction"], "files": ["src/services/inventory-service.ts"], "scope": "team"},
+  "P02": {"requiredTokens": ["redactSensitive"], "files": ["src/security/redaction.ts"], "scope": "team"},
+  "P03": {"requiredTokens": ["logicalId"], "files": ["src/services/notification-outbox.ts"], "scope": "team"},
+  "P04": {"requiredTokens": ["serverMember", "actorId"], "files": ["src/security/identity.ts"], "scope": "team"}
+}

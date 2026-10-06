@@ -17,3 +17,7 @@ packages/knowledge/bench/results/*/raw/
 .superpowers/
 .claude/logs/
 docs/.claude/
+experiments/knowledge/.work/
+experiments/knowledge/runs/*/raw/
+experiments/knowledge/analysis/.venv/
+experiments/knowledge/analysis/__pycache__/

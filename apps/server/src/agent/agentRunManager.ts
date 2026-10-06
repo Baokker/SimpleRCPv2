@@ -846,6 +846,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   }
 
   return {
+    requestAgentSelfRecap,
     async initialize() {
       const projects = await options.registry.listProjects();
       for (const project of projects) {
