@@ -1,0 +1,193 @@
+{
+  "status": "已完成",
+  "mode": "offline-replay",
+  "sourceDirectory": "/Users/baokker/Documents/SimpleRCPv2/.experiment-data/x4-source-v13",
+  "datasetCount": 86,
+  "models": [
+    "deepseek-flash",
+    "deepseek-v4-pro",
+    "MiniMax-M3",
+    "MiniMax-M2.7"
+  ],
+  "repeats": 3,
+  "completedJudgments": 1212,
+  "plannedJudgments": 1212,
+  "modelQualityMetrics": "沿用 sourceDirectory 中保存的模型输出，未重新调用模型",
+  "metricsByModel": {
+    "deepseek-flash": {
+      "precision": 1,
+      "recall": 0.9074074074074074,
+      "f1": 0.9514563106796117,
+      "calibration": [
+        {
+          "count": 5,
+          "meanConfidence": 0.7460000000000001,
+          "accuracy": 0.4
+        },
+        {
+          "count": 26,
+          "meanConfidence": 0.8430769230769232,
+          "accuracy": 0.7692307692307693
+        },
+        {
+          "count": 317,
+          "meanConfidence": 0.9763091482649846,
+          "accuracy": 0.9968454258675079
+        }
+      ],
+      "expectedCalibrationError": 0.029195402298850252,
+      "count": 348,
+      "latencyMs": {
+        "p50": 1587.07,
+        "p95": 4403.186708,
+        "p99": 6759.236709
+      },
+      "injectionBetrayalRate": 0,
+      "finalAutoReleaseRate": 0,
+      "inputTokens": 87909,
+      "outputTokens": 109534
+    },
+    "deepseek-v4-pro": {
+      "precision": 0.9555555555555556,
+      "recall": 0.7962962962962963,
+      "f1": 0.8686868686868687,
+      "calibration": [
+        {
+          "count": 7,
+          "meanConfidence": 0.7142857142857143,
+          "accuracy": 0.5714285714285714
+        },
+        {
+          "count": 26,
+          "meanConfidence": 0.8192307692307694,
+          "accuracy": 0.2692307692307692
+        },
+        {
+          "count": 315,
+          "meanConfidence": 0.9746984126984123,
+          "accuracy": 0.9873015873015873
+        }
+      ],
+      "expectedCalibrationError": 0.05537356321839124,
+      "count": 348,
+      "latencyMs": {
+        "p50": 4470.292083,
+        "p95": 13334.180791,
+        "p99": 20221.284042
+      },
+      "injectionBetrayalRate": 0,
+      "finalAutoReleaseRate": 0,
+      "inputTokens": 105657,
+      "outputTokens": 150939
+    },
+    "MiniMax-M3": {
+      "precision": 1,
+      "recall": 0.9444444444444444,
+      "f1": 0.9714285714285714,
+      "calibration": [
+        {
+          "count": 1,
+          "meanConfidence": 0.65,
+          "accuracy": 1
+        },
+        {
+          "count": 7,
+          "meanConfidence": 0.7214285714285714,
+          "accuracy": 1
+        },
+        {
+          "count": 9,
+          "meanConfidence": 0.8311111111111109,
+          "accuracy": 0.8888888888888888
+        },
+        {
+          "count": 241,
+          "meanConfidence": 0.9819087136929463,
+          "accuracy": 1
+        }
+      ],
+      "expectedCalibrationError": 0.027829457364340865,
+      "count": 258,
+      "latencyMs": {
+        "p50": 4711.818958,
+        "p95": 11440.143041,
+        "p99": 17636.901667
+      },
+      "injectionBetrayalRate": 0,
+      "finalAutoReleaseRate": 0,
+      "inputTokens": 149044,
+      "outputTokens": 66454
+    },
+    "MiniMax-M2.7": {
+      "precision": 1,
+      "recall": 0.9444444444444444,
+      "f1": 0.9714285714285714,
+      "calibration": [
+        {
+          "count": 1,
+          "meanConfidence": 0.65,
+          "accuracy": 1
+        },
+        {
+          "count": 1,
+          "meanConfidence": 0.75,
+          "accuracy": 1
+        },
+        {
+          "count": 7,
+          "meanConfidence": 0.8542857142857142,
+          "accuracy": 0.8571428571428571
+        },
+        {
+          "count": 249,
+          "meanConfidence": 0.9759839357429697,
+          "accuracy": 1
+        }
+      ],
+      "expectedCalibrationError": 0.02558139534883931,
+      "count": 258,
+      "latencyMs": {
+        "p50": 5576.90025,
+        "p95": 8118.481542,
+        "p99": 10973.012166
+      },
+      "injectionBetrayalRate": 0,
+      "finalAutoReleaseRate": 0,
+      "inputTokens": 88828,
+      "outputTokens": 78152
+    }
+  },
+  "finalAutoReleaseRate": 0,
+  "floor": {
+    "initialDeny": 0,
+    "denyLowered": 0,
+    "ineligibleAsk": 252,
+    "ineligibleAutoReleased": 0,
+    "maliciousAutoReleased": 0
+  },
+  "tokenStats": {
+    "input": 431438,
+    "output": 405079,
+    "cacheRead": 107221
+  },
+  "estimatedCostCny": 4.12855212,
+  "budget": {
+    "model": "MiniMax-M3",
+    "currency": "CNY",
+    "period": "standard",
+    "reason": "官方按量计费，输入不超过 512k tokens，永久五折价格，未请求 priority",
+    "pricesPerMillionTokens": {
+      "cacheHitInput": 0.42,
+      "cacheMissInput": 2.1,
+      "output": 8.4
+    },
+    "source": "https://platform.minimaxi.com/docs/guides/pricing-paygo.md",
+    "checkedAt": "2026-10-06",
+    "models": [
+      "MiniMax-M3",
+      "MiniMax-M2.7"
+    ],
+    "counting": "Chat Completions prompt_tokens 含缓存，completion_tokens 含 reasoning；验证与重试中未返回 usage 的费用未计入，账户账单未核实"
+  },
+  "cost": "按已返回 token 和公开价格计算，账户账单未核实"
+}

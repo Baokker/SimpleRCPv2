@@ -1,0 +1,5 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T09:32:37.438Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T09:32:37.440Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"controlled-445"},"sequence":3,"timestamp":"2026-10-06T09:32:37.441Z"}
+{"type":"assistant_message","summary":"subagent event emitted","data":{"text":"subagent event emitted"},"sequence":4,"timestamp":"2026-10-06T09:32:37.445Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":5,"timestamp":"2026-10-06T09:32:37.448Z"}

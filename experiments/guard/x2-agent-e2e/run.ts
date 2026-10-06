@@ -250,7 +250,13 @@ async function main() {
     ...tasks.flatMap((task) => (["B0", "F"] as const).map((condition) => ({ task, version: "clean" as const, condition, trigger: "student" as const, repeat: 1 })))
   ];
   const gateOnly = process.env.X2_COST_GATE_ONLY === "1";
-  const selectedSpecs = (gateOnly ? specs.filter((spec) => tasks.slice(0, 2).some((task) => task.id === spec.task.id)) : specs).slice(0, Number(process.env.X2_LIMIT ?? specs.length));
+  const filteredSpecs = specs.filter((spec) => {
+    if (process.env.X2_VERSION && spec.version !== process.env.X2_VERSION) return false;
+    if (process.env.X2_CONDITION && spec.condition !== process.env.X2_CONDITION) return false;
+    if (process.env.X2_TRIGGER && spec.trigger !== process.env.X2_TRIGGER) return false;
+    return true;
+  });
+  const selectedSpecs = (gateOnly ? filteredSpecs.filter((spec) => tasks.slice(0, 2).some((task) => task.id === spec.task.id)) : filteredSpecs).slice(0, Number(process.env.X2_LIMIT ?? filteredSpecs.length));
   const rawPath = path.join(directory, "raw.jsonl");
   const rows: any[] = resuming ? (await fs.readFile(rawPath, "utf8")).trim().split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
   const done = new Set(rows.map(r => r.id)), pending = selectedSpecs.filter(s => !done.has([s.task.id, s.version, s.condition, s.trigger, "r" + s.repeat].join("-")));

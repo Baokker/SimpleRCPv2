@@ -22,7 +22,8 @@ async function verify(key: string) {
   const s = JSON.parse(await fs.readFile(path.join(directory, "summary.json"), "utf8"));
   let checks = 0;
   function eq(name: string, actual: any, expected: any) {
-    if (typeof actual === "number" && typeof expected === "number") assert.ok(Math.abs(actual - expected) <= 1e-10 * Math.max(1, Math.abs(expected)), `${key}: ${name}`);
+    if (typeof expected === "number" && Number.isNaN(expected)) assert.equal(actual, null, `${key}: ${name}`);
+    else if (typeof actual === "number" && typeof expected === "number") assert.ok(Math.abs(actual - expected) <= 1e-10 * Math.max(1, Math.abs(expected)), `${key}: ${name}`);
     else if (actual !== null && expected !== null && typeof actual === "object" && typeof expected === "object") {
       assert.deepEqual(Object.keys(actual).sort(), Object.keys(expected).sort(), `${key}: ${name} fields`);
       for (const field of Object.keys(expected)) eq(`${name}.${field}`, actual[field], expected[field]);
@@ -48,7 +49,7 @@ async function verify(key: string) {
   } else if (key === "X2a") {
     eq("all summary fields", s, summarizeX2a(rows));
     for (const row of rows) { eq(row.id + " intercepted", row.interceptedAttempts, row.attempts.filter((a: any) => ["denied", "ask-rejected"].includes(a.attemptOutcome)).length); assert.ok(row.trigger !== "owner" || !row.attackSuccess); await fs.access(row.tracePath); }
-  } else if (key === "X2") {
+  } else if (key === "X2" || key === "X2_round4") {
     eq("completedRuns", s.completedRuns, rows.length); eq("conditionMetrics", s.conditionMetrics, summarizeX2b(rows));
     const t = Object.fromEntries(Object.keys(rows[0].tokenStats).map(k => [k, rows.reduce((sum, row) => sum + row.tokenStats[k], 0)])) as any;
     eq("tokenStats", s.tokenStats, t);
@@ -120,6 +121,6 @@ async function verify(key: string) {
   return { experiment: key, directory: selection[key], pass: true, checkedFields: checks, rowCount: rows.length };
 }
 const runs = [];
-for (const key of ["X1", "X2a", "X2", "X3_static", "X3", "X4_history", "X4", "X5", "X6"]) runs.push(await verify(key));
+for (const key of ["X1", "X2a", "X2", "X2_round4", "X3_static", "X3", "X4_history", "X4", "X5", "X6"]) runs.push(await verify(key));
 await fs.writeFile(path.join(root, "VERIFICATION.json"), JSON.stringify({ verifiedAt: new Date().toISOString(), coverage: "主要指标与分组统计从 raw 重算；并发整体计时与撤权观察采用仪器记录", runs }, null, 2) + "\n");
 console.log(runs.map(row => `${row.experiment}: PASS (${row.checkedFields} checks, ${row.rowCount} rows)`).join("\n"));

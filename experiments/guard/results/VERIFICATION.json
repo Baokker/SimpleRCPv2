@@ -1,19 +1,19 @@
 {
-  "verifiedAt": "2026-10-06T04:40:52.146Z",
+  "verifiedAt": "2026-10-06T10:00:24.755Z",
   "coverage": "主要指标与分组统计从 raw 重算；并发整体计时与撤权观察采用仪器记录",
   "runs": [
     {
       "experiment": "X1",
-      "directory": "X1/x1-20261006041559",
+      "directory": "X1/x1-20261006092733",
       "pass": true,
-      "checkedFields": 14885,
+      "checkedFields": 14875,
       "rowCount": 3585
     },
     {
       "experiment": "X2a",
-      "directory": "X2a/x2a-20261006040056",
+      "directory": "X2a/x2a-20261006093613",
       "pass": true,
-      "checkedFields": 1407,
+      "checkedFields": 1550,
       "rowCount": 720
     },
     {
@@ -24,43 +24,50 @@
       "rowCount": 60
     },
     {
-      "experiment": "X3_static",
-      "directory": "X3/x3-20261006034607",
+      "experiment": "X2_round4",
+      "directory": "X2/x2-20261006094123",
       "pass": true,
-      "checkedFields": 2166,
-      "rowCount": 3168
+      "checkedFields": 314,
+      "rowCount": 20
+    },
+    {
+      "experiment": "X3_static",
+      "directory": "X3/x3-20261006093725",
+      "pass": true,
+      "checkedFields": 2454,
+      "rowCount": 19800
     },
     {
       "experiment": "X3",
-      "directory": "X3/x3-20261006042118",
+      "directory": "X3/x3-20261006093725",
       "pass": true,
       "checkedFields": 2454,
       "rowCount": 19800
     },
     {
       "experiment": "X4_history",
-      "directory": "X4/x4-20261006032303",
+      "directory": "X4/x4-20261006092724",
       "pass": true,
-      "checkedFields": 51,
-      "rowCount": 696
+      "checkedFields": 103,
+      "rowCount": 1212
     },
     {
       "experiment": "X4",
-      "directory": "X4/x4-20261006035105",
+      "directory": "X4/x4-20261006092724",
       "pass": true,
-      "checkedFields": 59,
-      "rowCount": 516
+      "checkedFields": 103,
+      "rowCount": 1212
     },
     {
       "experiment": "X5",
-      "directory": "X5/x5-20261006032146",
+      "directory": "X5/x5-20261006093122",
       "pass": true,
       "checkedFields": 157,
       "rowCount": 13020
     },
     {
       "experiment": "X6",
-      "directory": "X6/x6-20261006043938",
+      "directory": "X6/x6-20261006093147",
       "pass": true,
       "checkedFields": 26,
       "rowCount": 40500

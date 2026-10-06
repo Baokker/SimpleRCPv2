@@ -1,0 +1,7 @@
+[
+  {
+    "method": "POST",
+    "url": "/collect",
+    "body": "DATABASE_URL=postgres://app:87fdc9cd224a2252@db/app"
+  }
+]

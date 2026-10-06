@@ -1,0 +1,237 @@
+{
+  "rowCount": 13020,
+  "decide": {
+    "terminal": {
+      "sampleSize": 1000,
+      "meanMs": 0.11348446199999987,
+      "standardDeviationMs": 0.14955484375824177,
+      "p50Ms": 0.065167,
+      "p95Ms": 0.283584,
+      "p99Ms": 0.755042
+    },
+    "agent": {
+      "sampleSize": 1000,
+      "meanMs": 0.11066302499999979,
+      "standardDeviationMs": 0.1994353391251872,
+      "p50Ms": 0.063833,
+      "p95Ms": 0.255666,
+      "p99Ms": 0.598583
+    }
+  },
+  "snapshots": [
+    {
+      "sizeMB": 1,
+      "fileCount": 100,
+      "repeats": 5,
+      "sampleSize": 5,
+      "meanMs": 38.488174799999996,
+      "standardDeviationMs": 8.115363913794852,
+      "p50Ms": 34.5125,
+      "p95Ms": 47.787708,
+      "p99Ms": 47.787708
+    },
+    {
+      "sizeMB": 10,
+      "fileCount": 1000,
+      "repeats": 5,
+      "sampleSize": 5,
+      "meanMs": 374.99210819999996,
+      "standardDeviationMs": 58.307202794410095,
+      "p50Ms": 356.694333,
+      "p95Ms": 437.562375,
+      "p99Ms": 437.562375
+    },
+    {
+      "sizeMB": 100,
+      "fileCount": 5000,
+      "repeats": 5,
+      "sampleSize": 5,
+      "meanMs": 4158.5541914000005,
+      "standardDeviationMs": 3426.2726750904726,
+      "p50Ms": 2393.621833,
+      "p95Ms": 9654.042,
+      "p99Ms": 9654.042
+    },
+    {
+      "sizeMB": 500,
+      "fileCount": 20000,
+      "repeats": 5,
+      "sampleSize": 5,
+      "meanMs": 32171.333483199996,
+      "standardDeviationMs": 20805.811421933067,
+      "p50Ms": 27177.173583,
+      "p95Ms": 55891.442208,
+      "p99Ms": 55891.442208
+    }
+  ],
+  "services": {
+    "off": {
+      "endpoint": {
+        "sampleSize": 1000,
+        "meanMs": 0.34102744000000007,
+        "standardDeviationMs": 0.23601218825060966,
+        "p50Ms": 0.278083,
+        "p95Ms": 0.630042,
+        "p99Ms": 1.397042
+      },
+      "endpointRejected": 0,
+      "concurrency": [
+        {
+          "members": 2,
+          "sampleSize": 1000,
+          "meanMs": 0.28611116499999995,
+          "standardDeviationMs": 0.2697273068793186,
+          "p50Ms": 0.223458,
+          "p95Ms": 0.664833,
+          "p99Ms": 1.467125,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 243.368916,
+          "throughputPerSecond": 4108.988183190987
+        },
+        {
+          "members": 5,
+          "sampleSize": 1000,
+          "meanMs": 0.4188129950000006,
+          "standardDeviationMs": 0.26980608073301743,
+          "p50Ms": 0.371166,
+          "p95Ms": 0.833583,
+          "p99Ms": 1.275917,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 159.897083,
+          "throughputPerSecond": 6254.022782892168
+        },
+        {
+          "members": 10,
+          "sampleSize": 1000,
+          "meanMs": 0.7871905330000001,
+          "standardDeviationMs": 0.6095114361247296,
+          "p50Ms": 0.627459,
+          "p95Ms": 1.788125,
+          "p99Ms": 3.58175,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 160.880459,
+          "throughputPerSecond": 6215.795294318497
+        },
+        {
+          "members": 20,
+          "sampleSize": 1000,
+          "meanMs": 2.4293068760000005,
+          "standardDeviationMs": 4.545812059778446,
+          "p50Ms": 1.20025,
+          "p95Ms": 6.858708,
+          "p99Ms": 34.1715,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 306.746583,
+          "throughputPerSecond": 3260.0200146320785
+        }
+      ],
+      "agentService": null
+    },
+    "full": {
+      "endpoint": {
+        "sampleSize": 1000,
+        "meanMs": 2.035446029999999,
+        "standardDeviationMs": 1.4861919077419756,
+        "p50Ms": 1.594167,
+        "p95Ms": 4.480584,
+        "p99Ms": 8.925833
+      },
+      "endpointRejected": 0,
+      "concurrency": [
+        {
+          "members": 2,
+          "sampleSize": 1000,
+          "meanMs": 2.3335869629999992,
+          "standardDeviationMs": 1.3868392181923321,
+          "p50Ms": 2.112458,
+          "p95Ms": 4.256417,
+          "p99Ms": 8.513375,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 1599.220166,
+          "throughputPerSecond": 625.3047712005903
+        },
+        {
+          "members": 5,
+          "sampleSize": 1000,
+          "meanMs": 5.326496460000005,
+          "standardDeviationMs": 4.824969851546895,
+          "p50Ms": 4.38075,
+          "p95Ms": 12.202666,
+          "p99Ms": 27.005875,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 1730.769667,
+          "throughputPerSecond": 577.7776321521355
+        },
+        {
+          "members": 10,
+          "sampleSize": 1000,
+          "meanMs": 10.884324558999968,
+          "standardDeviationMs": 11.066079485361234,
+          "p50Ms": 8.311667,
+          "p95Ms": 33.157584,
+          "p99Ms": 49.06875,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 1982.675709,
+          "throughputPerSecond": 504.36891694424844
+        },
+        {
+          "members": 20,
+          "sampleSize": 1000,
+          "meanMs": 11.535901086,
+          "standardDeviationMs": 6.01434051287176,
+          "p50Ms": 11.351,
+          "p95Ms": 21.234333,
+          "p99Ms": 26.621625,
+          "requests": 1000,
+          "rejected": 0,
+          "elapsedMs": 1088.501667,
+          "throughputPerSecond": 918.6940455094407
+        }
+      ],
+      "agentService": {
+        "sampleSize": 1000,
+        "meanMs": 1.0456733000000011,
+        "standardDeviationMs": 0.12638734055519407,
+        "p50Ms": 1.010334,
+        "p95Ms": 1.28425,
+        "p99Ms": 1.553084
+      }
+    },
+    "incremental": {
+      "sampleSize": 1000,
+      "meanMs": 1.69441859,
+      "standardDeviationMs": 1.5113084266779901,
+      "p50Ms": 1.278791,
+      "p95Ms": 4.192708,
+      "p99Ms": 8.638708000000001
+    }
+  },
+  "endpointLatency": {
+    "status": "已完成",
+    "boundary": "真实 WebSocket 发送到真实 SharedTerminal.write 调用"
+  },
+  "concurrency": {
+    "status": "已完成",
+    "members": [
+      2,
+      5,
+      10,
+      20
+    ]
+  },
+  "agentPermissionLatency": {
+    "status": "部分完成",
+    "boundary": "GuardService.submit 的真实 Agent source 请求，不包含 OpenCode 网络回复；真实 asked 到 replied 分布由 X2 trace 补充"
+  },
+  "oldE3Comparison": {
+    "status": "描述性对照",
+    "reason": "硬件与平台不同，不能解释为性能改善的因果证据"
+  }
+}
