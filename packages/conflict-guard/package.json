@@ -21,12 +21,15 @@
     "bench:import-greylock": "node --experimental-strip-types scripts/bench-import-greylock.ts",
     "replay:run": "node --experimental-strip-types scripts/replay-run.ts",
     "replay:check": "node --experimental-strip-types scripts/replay-check.ts",
+    "replay:agents": "node --experimental-strip-types scripts/replay-agents.ts",
     "replay:ui": "node --experimental-strip-types scripts/replay-ui.ts",
     "adjudication:smoke": "node --experimental-strip-types scripts/adjudication-smoke.ts",
     "adjudication:prepare-dev": "node --experimental-strip-types scripts/adjudication-prepare-dev.ts",
     "adjudication:calibrate": "node --experimental-strip-types scripts/adjudication-calibrate.ts",
     "adjudication:verify": "node --experimental-strip-types scripts/adjudication-verify.ts",
-    "adjudication:evidence": "node --experimental-strip-types scripts/adjudication-evidence.ts"
+    "adjudication:evidence": "node --experimental-strip-types scripts/adjudication-evidence.ts",
+    "bench:agents": "pnpm --filter @simplercp/server bench:agents",
+    "bench:validate-d3": "node --experimental-strip-types scripts/validate-d3.ts"
   },
   "dependencies": {
     "diff": "8.0.2",

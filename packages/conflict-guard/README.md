@@ -116,3 +116,17 @@ tracker 接受 Agent 参与者并维持其活跃变更集至 run 结束。候选
 G4 在 T2/T3 分别使用 `t2Strategy`、`t3Strategy`，默认 G1；时间预算分别为 30000、60000 ms。`t2Reasoning`、`t3Reasoning` 默认 false，时点与 reasoning 进入角色输入哈希。失败与无效格式在 Agent 检查中使用 lock。
 
 权限事件解析、审批回复、计时暂停、批准写入归属、文件恢复、界面通知由服务端负责。配置与使用限制见 `docs/conflict-guard/agent-guard.md`，真实调用及回归结果见 `docs/conflict-guard/stage-6.md`。
+
+## 意图与属主仲裁
+
+`coordination/intents.ts` 管理计划、实际范围、任务修订与相关协作者上下文；`arbitration.ts` 提供纯函数 `arbitrate`；`ownerCards.ts` 管理双方采纳、让路、超时与打扰统计。默认 owner 模式按属主关系处理，all-human 与 all-auto 提供实验对照。意图注入可以独立关闭。
+
+服务端通过项目 Y.Map 同步意图。跨属主相关审批等待双方处理；建议由深判角色生成。T3 采纳后调用真实 Agent 追加执行并再次检查。同属主后到 Agent 自动等待前者结束，最多两次。人的编辑在默认模式下继续。
+
+```bash
+pnpm --filter @simplercp/conflict-guard bench:validate-d3
+pnpm --filter @simplercp/conflict-guard bench:agents --dataset d3 --injection on --repeat 3
+pnpm --filter @simplercp/conflict-guard replay:agents --trace <trace.jsonl> --out <directory> --arbitration owner,all-human,all-auto --repeat 3
+```
+
+D3-v0 包含十个跨属主任务对、三个同属主任务对及各自 node:test 验收。真实运行次数上限为四十，预算存储在忽略的工作目录；批量命令对每个任务对使用独立项目。临时文件使用仓库 `.test-workspaces/`。阶段七冒烟只选择三个跨属主任务对，分别开启和关闭注入。

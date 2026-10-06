@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { confirmConflictPair, getConflictGuardSymbol, revertConflictPair } from "../api";
-import type { ActiveSymbol, ConflictGuardState, ConflictGuardSymbol, GuardActorRef, GuardConflict } from "../conflictGuardTypes";
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
+import { actOnOwnerCard, confirmConflictPair, getConflictGuardSymbol, revertConflictPair } from "../api";
+import type { ActiveSymbol, AgentIntent, ConflictGuardState, ConflictGuardSymbol, GuardActorRef, GuardConflict } from "../conflictGuardTypes";
 import type { RoomMember } from "../types";
 import { relationPathText, guardActorName, guardActorKey, humanConflict } from "../conflictGuardPresentation";
 
@@ -16,6 +18,17 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
   onChat(text: string, pairId: string): void;
 }) {
   const [actionErrors, setActionErrors] = useState<Record<string, string | undefined>>({});
+  const [intents, setIntents] = useState<AgentIntent[]>(state.intents ?? []);
+  useEffect(() => {
+    if (!memberId) return;
+    const document = new Y.Doc();
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const provider = new WebsocketProvider(`${protocol}://${window.location.host}/yjs/${encodeURIComponent(projectId)}`, "conflict-guard-intents", document, { disableBc: true, params: { memberId } });
+    const map = document.getMap<AgentIntent>("intents");
+    const update = () => setIntents([...map.values()]);
+    map.observe(update);
+    return () => { map.unobserve(update); provider.destroy(); document.destroy(); };
+  }, [projectId, memberId]);
   const memberName = (id?: string) => members.find((member) => member.id === id)?.displayName ?? id ?? "成员";
   const actorName = (actor: GuardActorRef) => guardActorName(actor, members);
   const symbolKinds = new Map(state.activeSymbols.flatMap((group) => group.symbols.map((symbol) => [symbol.key, symbol.kind] as const)));
@@ -27,6 +40,20 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
     });
   };
   return <section className="collab-section conflict-guard-panel" data-testid="conflict-guard-panel">
+    <h3>意图板</h3>
+    <div data-testid="intent-board">{intents.filter((intent) => !["done", "reverted"].includes(intent.status)).map((intent) => <article key={intent.actor.runId} className="conflict-candidate" data-testid="agent-intent">
+      <strong>{actorName(intent.actor)} · {({ planning: "正在规划", running: "正在执行", waiting: "等待审批", blocked: "等待属主处理", done: "已经完成", reverted: "已经撤回" })[intent.status]}</strong>
+      <p>{intent.task}</p><small>计划范围：{intent.plannedScope.join("、") || "尚未声明"}<br />实际范围：{intent.actualScope.join("、") || "尚未修改"}<br />任务修订 {intent.taskRevision}</small>
+      {intent.actualScope.some((key) => !intent.plannedScope.includes(key)) ? <p>超出计划：{intent.actualScope.filter((key) => !intent.plannedScope.includes(key)).join("、")}</p> : null}
+    </article>)}</div>
+    <div data-testid="owner-cards">{state.ownerCards?.filter((card) => card.status === "waiting").map((card) => <article className="conflict-card" key={card.id} data-testid="owner-intent-card">
+      <strong>跨属主意图差异</strong>
+      {card.intents.map((intent) => <div key={intent.actor.runId}><p>{actorName(intent.actor)}：{intent.task}</p><small>计划：{intent.plannedScope.join("、") || "尚未声明"}<br />已修改：{intent.actualScope.join("、") || "尚未修改"}</small></div>)}
+      <p>{card.conflict.symbols.self} ⟷ {card.conflict.symbols.other}<br />{card.path}<br />{card.explanation}</p>
+      <p>{card.suggestionStatus === "analyzing" ? "正在生成折中建议" : card.suggestion ? `折中建议：${card.suggestion}` : "当前没有模型建议，请协商修改方式。"}</p>
+      <div className="conflict-card-actions"><button disabled={!card.suggestion || Boolean(memberId && card.accepted.includes(memberId))} onClick={() => performAction(card.id, () => actOnOwnerCard(projectId, card.id, "accept"))}>{memberId && card.accepted.includes(memberId) ? "已采纳，等待对方" : "采纳建议"}</button><button onClick={() => performAction(card.id, () => actOnOwnerCard(projectId, card.id, "yield"))}>让我的 Agent 让路</button><button onClick={() => performAction(card.id, () => actOnOwnerCard(projectId, card.id, "chat"))}>去聊天里商量</button></div>
+      {actionErrors[card.id] ? <p role="alert">{actionErrors[card.id]}</p> : null}
+    </article>)}</div>
     <h3>正在修改</h3>
     {state.activeSymbols.filter((group) => group.symbols.length > 0).map((group) => <div key={guardActorKey(group.actor)}>
       <strong>{actorName(group.actor)}</strong>
@@ -40,7 +67,7 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
     {state.activeSymbols.every((group) => group.symbols.length === 0) ? <p>当前没有符号修改。</p> : null}
     <h3>当前冲突</h3>
     <div data-testid="conflict-current">
-      {(state.pairDecisions ?? []).filter((record) => humanConflict(record.pair) && record.status === "judged" && record.verdict?.decision === "lock").map((record) => {
+      {(state.pairDecisions ?? []).filter((record) => state.arbitration?.mode !== "all-auto" && humanConflict(record.pair) && record.status === "judged" && record.verdict?.decision === "lock").map((record) => {
         const participant = Boolean(memberId && (record.pair.left.actor.memberId === memberId || record.pair.right.actor.memberId === memberId));
         const ownConfirmed = record.pair.left.actor.memberId === memberId ? record.leftConfirmed : record.rightConfirmed;
         const otherConfirmed = record.pair.left.actor.memberId === memberId ? record.rightConfirmed : record.leftConfirmed;
@@ -74,6 +101,8 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
       <ModelDetail metadata={record.verdict?.adjudication} conflict={record.conflict} />
     </article>)}
     <h3>统计</h3>
+    {state.arbitration ? <div data-testid="arbitration-statistics">{state.arbitration.members.map((entry) => <p key={entry.memberId}>{memberName(entry.memberId)}：每小时打扰 {entry.perHour} 次 · 累计 {entry.interruptions} 次 · 轻提示 {entry.light} 次<br />{Object.entries(entry.byKind).map(([kind, count]) => `${kind}: ${count}`).join(" · ")}</p>)}<p>等待属主处理 {Math.round(state.arbitration.suspendedMs / 1000)} 秒 · {Object.entries(state.arbitration.outcomes).map(([outcome, count]) => `${outcome}: ${count}`).join(" · ")}</p></div> : null}
+    {state.arbitration?.automaticRetries ? <p>同属主自动处理 {state.arbitration.automaticRetries} 次</p> : null}
     {state.adjudication ? <p data-testid="adjudication-statistics">模型调用 {state.adjudication.calls} 次 · 缓存命中 {state.adjudication.cacheHits} 次 · 升级比例 {(state.adjudication.escalationRatio * 100).toFixed(1)}%<br />延迟 p50/p95 {Math.round(state.adjudication.p50Ms)}/{Math.round(state.adjudication.p95Ms)} ms · 失败 {state.adjudication.failures} 次 · 费用估算 ${state.adjudication.costUsd.toFixed(6)}</p> : null}
     <p data-testid="conflict-statistics">{state.index.files} 个文件 · {state.index.symbols} 个符号 · {state.index.edges} 条关系<br />最近更新 {state.index.latestUpdate.durationMs.toFixed(1)} ms<br />变更单元 {state.statistics.total} 个 · 无关系 {state.statistics.unrelated} 个（{(state.statistics.unrelatedRatio * 100).toFixed(1)}%） · 仅类型关联 {state.statistics.typeOnly ?? 0} 个<br />变更对 {state.intervention?.decisions ?? (state.pairDecisions ?? []).length} 个 · 白区 {state.intervention?.white ?? (state.pairDecisions ?? []).filter((record) => record.verdict?.zone === "white").length} · 黑区 {state.intervention?.black ?? (state.pairDecisions ?? []).filter((record) => record.verdict?.zone === "black").length} · 灰区 {state.intervention?.grey ?? (state.pairDecisions ?? []).filter((record) => record.verdict?.zone === "grey").length}<br />本地决定比例 {((state.intervention?.localDecisionRatio ?? 0) * 100).toFixed(1)}% · 冻结总时长 {Math.round(state.intervention?.frozenDurationMs ?? 0)} ms<br />写盘被挡 {state.intervention?.persistBlockedCount ?? state.persistBlockedCount ?? 0} 次 · 卡片操作 {state.intervention?.uiActionCount ?? state.uiActionCount ?? 0} 次 · 轨迹写盘冲突 {state.persistConflicts ?? 0} 次</p>
     {state.indexing ? <p>语义索引正在建立。</p> : null}

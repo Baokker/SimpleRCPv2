@@ -200,3 +200,26 @@ pnpm --filter @simplercp/conflict-guard adjudication:verify --record ../../docs/
 ```
 
 开发集主表与阈值曲线位于 evidence/checkpoint-b-dev-report/。G1、G2 的三轮真实录制使用不同缓存目录，保留集没有执行策略评价。
+
+## 阶段 7
+
+使用 CONFLICT_GUARD=full、CONFLICT_GUARD_ARBITRATION=owner、CONFLICT_GUARD_INTENT_INJECTION=on，以 Alice、Bob 分别加入真实浏览器上下文。Agent 使用真实 OpenCode 和配置的 DeepSeek。
+
+1. Alice 与 Bob 启动接口相关任务。“冲突预防”顶部意图板显示双方属主、任务、计划和实际范围；审批通过后实际范围更新。执行证据：01-cross-accept。
+2. 发生跨属主冲突，双方出现意图差异卡片；核验任务、符号、关系路径和折中建议。双方点击“采纳建议”，后到 Agent 接收追加指令、重新读取并继续修改。执行证据：01-cross-accept。
+3. 创建新的跨属主冲突，Bob 点击“让我的 Agent 让路”。核验 Bob 的 Agent 被取消，先前写入的 marker 恢复，Alice 的 Agent 继续。执行证据：01-cross-yield。
+4. Alice 启动两个相关任务。后到任务等待、重新检查并读取当前版本；Alice 没有处理卡片，页签显示同属主自动处理次数。执行证据：02-same-owner。
+5. Alice 在编辑器中修改相关符号，Bob 的 Agent 与之发生冲突。核验 Alice 没有冻结和处理卡片，Bob 收到轻提示，页签保留关联判定。执行证据：03-human-priority。
+6. 核验双方累计打扰、每小时打扰、轻提示、冲突双方类型、卡片处理方式和挂起时长；两个属主接收一张卡片时各计一次。上述四个流程均包含统计断言。
+
+四个流程已执行。JSON、JSONL 与双方截图位于 evidence/stage-7-manual/；验收依据为 DOM、Monaco、接口、轨迹与文件内容。
+
+```bash
+SIMPLERCP_STAGE7_LIVE=1 TMPDIR=.test-workspaces/runtime pnpm exec playwright test --config tests/playwright.stage7.config.ts
+pnpm --filter @simplercp/conflict-guard bench:validate-d3
+pnpm --filter @simplercp/conflict-guard bench:agents --dataset d3 --tasks d3-01,d3-02,d3-03 --injection on --repeat 1
+pnpm --filter @simplercp/conflict-guard bench:agents --dataset d3 --tasks d3-01,d3-02,d3-03 --injection off --repeat 1
+pnpm --filter @simplercp/conflict-guard replay:agents --trace ../../docs/conflict-guard/evidence/stage-7-smoke/d3-01-on-1.jsonl --out ../../.test-workspaces/stage7-replay --repeat 3
+```
+
+真实 Agent 计数为 39/40。浏览器验收与 bench:agents 命令会创建新的 run，当前剩余次数不足以完整重跑这些流程；已有录制可以离线重复核验。

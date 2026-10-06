@@ -1,0 +1,327 @@
+{
+  "realAgentRuns": 39,
+  "acceptedTaskPairs": 6,
+  "manualScenarios": [
+    "cross-accept",
+    "cross-yield",
+    "same-owner",
+    "human-priority"
+  ],
+  "review": {
+    "spec": "passed",
+    "standards": "passed"
+  },
+  "configuredValuesFound": 0,
+  "replayModes": [
+    "owner",
+    "all-human",
+    "all-auto"
+  ],
+  "replayRepetitions": 3,
+  "holdoutExecuted": false,
+  "checks": [
+    {
+      "name": "build",
+      "passed": true
+    },
+    {
+      "name": "conflict-guard",
+      "passed": true,
+      "tests": 209
+    },
+    {
+      "name": "server",
+      "passed": true,
+      "tests": 272
+    },
+    {
+      "name": "arbitration-production",
+      "passed": true,
+      "tests": 8
+    },
+    {
+      "name": "demo",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "guard-playwright",
+      "passed": true,
+      "tests": 15
+    },
+    {
+      "name": "agent-owner-playwright",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "agent-auto-playwright",
+      "passed": true,
+      "tests": 1
+    },
+    {
+      "name": "agent-observe-playwright",
+      "passed": true,
+      "tests": 1
+    },
+    {
+      "name": "model-playwright",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "model-authentication-playwright",
+      "passed": true,
+      "tests": 1
+    },
+    {
+      "name": "core-playwright",
+      "passed": true,
+      "tests": 19
+    },
+    {
+      "name": "collaboration-off",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-observe",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-rules",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-full",
+      "passed": true,
+      "tests": 2
+    }
+  ],
+  "rows": [
+    {
+      "name": "d3-01-on-1",
+      "accepted": true,
+      "statuses": [
+        "completed",
+        "completed"
+      ],
+      "t3": [
+        "passed",
+        "warned"
+      ],
+      "cards": 1,
+      "continuations": 1,
+      "replay": {
+        "owner": {
+          "interruptions": 2,
+          "light": 0,
+          "actions": 1,
+          "injections": 2,
+          "errors": []
+        },
+        "all-human": {
+          "interruptions": 2,
+          "light": 0,
+          "actions": 1,
+          "injections": 2,
+          "errors": []
+        },
+        "all-auto": {
+          "interruptions": 0,
+          "light": 0,
+          "actions": 1,
+          "injections": 2,
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "d3-02-on-1",
+      "accepted": true,
+      "statuses": [
+        "completed",
+        "completed"
+      ],
+      "t3": [
+        "passed",
+        "warned"
+      ],
+      "cards": 1,
+      "continuations": 1,
+      "replay": {
+        "owner": {
+          "interruptions": 2,
+          "light": 0,
+          "actions": 1,
+          "injections": 2,
+          "errors": []
+        },
+        "all-human": {
+          "interruptions": 2,
+          "light": 0,
+          "actions": 1,
+          "injections": 2,
+          "errors": []
+        },
+        "all-auto": {
+          "interruptions": 0,
+          "light": 0,
+          "actions": 1,
+          "injections": 2,
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "d3-03-on-1",
+      "accepted": true,
+      "statuses": [
+        "completed",
+        "completed"
+      ],
+      "t3": [
+        "warned",
+        "passed"
+      ],
+      "cards": 0,
+      "continuations": 0,
+      "replay": {
+        "owner": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 2,
+          "errors": []
+        },
+        "all-human": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 2,
+          "errors": []
+        },
+        "all-auto": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 2,
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "d3-01-off-1",
+      "accepted": true,
+      "statuses": [
+        "completed",
+        "completed"
+      ],
+      "t3": [
+        "passed",
+        "warned"
+      ],
+      "cards": 0,
+      "continuations": 0,
+      "replay": {
+        "owner": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        },
+        "all-human": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        },
+        "all-auto": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "d3-02-off-1",
+      "accepted": true,
+      "statuses": [
+        "completed",
+        "completed"
+      ],
+      "t3": [
+        "passed",
+        "passed"
+      ],
+      "cards": 0,
+      "continuations": 0,
+      "replay": {
+        "owner": {
+          "interruptions": 0,
+          "light": 0,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        },
+        "all-human": {
+          "interruptions": 0,
+          "light": 0,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        },
+        "all-auto": {
+          "interruptions": 0,
+          "light": 0,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "d3-03-off-1",
+      "accepted": true,
+      "statuses": [
+        "completed",
+        "completed"
+      ],
+      "t3": [
+        "passed",
+        "warned"
+      ],
+      "cards": 0,
+      "continuations": 0,
+      "replay": {
+        "owner": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        },
+        "all-human": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        },
+        "all-auto": {
+          "interruptions": 0,
+          "light": 1,
+          "actions": 0,
+          "injections": 0,
+          "errors": []
+        }
+      }
+    }
+  ]
+}

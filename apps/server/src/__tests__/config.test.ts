@@ -17,6 +17,8 @@ describe("server config", () => {
       sensitiveValues: [],
       conflictGuard: {
         mode: "off",
+        arbitration: "owner",
+        intentInjection: true,
         idleMs: 1_500,
         cursorLeaveLines: 3,
         maxBatchDurationMs: 5_000,
@@ -59,6 +61,8 @@ describe("server config", () => {
       sensitiveValues: ["configured-key"],
       conflictGuard: {
         mode: "off",
+        arbitration: "owner",
+        intentInjection: true,
         idleMs: 1_500,
         cursorLeaveLines: 3,
         maxBatchDurationMs: 5_000,

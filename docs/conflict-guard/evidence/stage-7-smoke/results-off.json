@@ -1,0 +1,99 @@
+[
+  {
+    "name": "d3-01-off-1",
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "d25a90ee-2575-4c16-8e56-888cbbae1846",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "budgetUsed": 26
+  },
+  {
+    "name": "d3-02-off-1",
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "budgetUsed": 28
+  },
+  {
+    "name": "d3-03-off-1",
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "411860af-21ba-4bf8-b6d7-a3c99d40572b",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "budgetUsed": 30
+  }
+]

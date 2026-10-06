@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "replay:ui": "tsx scripts/replay-ui.ts"
+    "replay:ui": "tsx scripts/replay-ui.ts",
+    "bench:agents": "node --import tsx scripts/bench-agents.ts"
   },
   "dependencies": {
     "@opencode-ai/sdk": "1.18.31",

@@ -1,0 +1,139 @@
+[
+  {
+    "name": "d3-01-on-1",
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "55df4417-b100-445c-ada9-e78ac02a92f2",
+          "interruptions": 1,
+          "perHour": 1,
+          "light": 0,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 1,
+            "agent-system": 0
+          }
+        },
+        {
+          "memberId": "6d0192aa-3d14-41e4-9e23-0440fefed699",
+          "interruptions": 1,
+          "perHour": 1,
+          "light": 0,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 1,
+            "agent-system": 0
+          }
+        }
+      ],
+      "outcomes": {
+        "accepted": 1,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 2278
+    },
+    "budgetUsed": 20
+  },
+  {
+    "name": "d3-02-on-1",
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "7107c840-7311-4ca2-b362-031b586d6f02",
+          "interruptions": 1,
+          "perHour": 1,
+          "light": 0,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 1,
+            "agent-system": 0
+          }
+        },
+        {
+          "memberId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+          "interruptions": 1,
+          "perHour": 1,
+          "light": 0,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 1,
+            "agent-system": 0
+          }
+        }
+      ],
+      "outcomes": {
+        "accepted": 1,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 2117
+    },
+    "budgetUsed": 22
+  },
+  {
+    "name": "d3-03-on-1",
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "budgetUsed": 24
+  }
+]

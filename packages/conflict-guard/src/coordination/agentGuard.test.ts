@@ -1,6 +1,9 @@
 import { expect, it } from "vitest";
-import { evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalSymbolKeys, symbolSignature } from "./agentGuard.js";
+import { agentInputRevision, evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalFileChange, proposalSymbolKeys, symbolSignature } from "./agentGuard.js";
 import { VirtualClock } from "../replay/clock.js";
+import { MemoryFileProvider } from "../replay/files.js";
+import { replayLibraries } from "../../scripts/replay-libs.ts";
+import { ConflictGuardTracker } from "../tracking/tracker.js";
 
 it("includes multiline parameters in function and method signatures", () => {
   expect(symbolSignature("export function price(\n value: number,\n currency: string\n): number { return value; }")).toBe("export function price( value: number, currency: string ): number");
@@ -62,4 +65,24 @@ it("rejects an Agent proposal when grey adjudication throws synchronously", asyn
   const result = await evaluateAgentChanges({ actor: { kind: "agent", runId: "error-run", ownerId: "bob" }, proposals: [{ file: "cart.ts", before: consumer, after: consumer.replace("price(10)", "price(20)") }], active: [{ actor: { kind: "human", memberId: "alice" }, status: "settled", files: new Map([["pricing.ts", { file: "pricing.ts", baseText: baseline, ranges: [{ start: 0, end: current.length }], firstTouchedAt: 0, lastTouchedAt: 1 }]]) }], files: { listFiles: () => [...files.keys()], readFile: (file) => files.get(file)!, version: () => 1 }, now: () => 2, signal: new AbortController().signal, adjudicate() { throw new Error("研判输入生成失败"); } });
   expect(result.decision).toBe("lock");
   expect(result.records[0]?.verdict?.ruleId).toBe("agent-analysis-unavailable");
+});
+
+it("preserves TypeScript libraries from an in-memory provider during Agent checks", async () => {
+  const before = "export function price(value: number) { return value; }\n";
+  const after = before.replace("return value", "return value * 2");
+  const consumer = 'import { price } from "./pricing";\nexport function total() { return price(10); }\n';
+  const files = new MemoryFileProvider({ "pricing.ts": after, "cart.ts": consumer }, await replayLibraries());
+  const result = await evaluateAgentChanges({ actor: { kind: "agent", runId: "consumer", ownerId: "bob" }, proposals: [{ file: "cart.ts", before: consumer, after: consumer.replace("price(10)", "Number(price(10).toFixed(2))") }], active: [{ actor: { kind: "human", memberId: "alice" }, status: "settled", files: new Map([["pricing.ts", proposalFileChange({ file: "pricing.ts", before, after }, 1)]]) }], files, now: () => 2, signal: new AbortController().signal });
+  expect(result.records[0]?.verdict?.typecheck).toMatchObject({ ran: true, mergeOnlyDiagnostics: [] });
+  expect(result.decision).toBe("warn");
+});
+
+it("changes the Agent input revision when an active participant finishes", () => {
+  const actor = { kind: "agent" as const, runId: "producer", ownerId: "alice" };
+  const proposal = { file: "pricing.ts", before: "export const price = 1;", after: "export const price = 2;" };
+  const tracker = new ConflictGuardTracker({ clock: new VirtualClock(), createId: () => "revision-test" });
+  tracker.startAgent(actor); tracker.attributeAgentChange(actor, proposalFileChange(proposal, 0));
+  const before = agentInputRevision([proposal], tracker.getActiveChangeSets(), () => proposal.after);
+  tracker.markDone(actor);
+  expect(agentInputRevision([proposal], tracker.getActiveChangeSets(), () => proposal.after)).not.toBe(before);
 });

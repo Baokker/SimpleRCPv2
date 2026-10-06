@@ -1,0 +1,215 @@
+{
+  "owner": {
+    "mode": "owner",
+    "actions": [],
+    "injections": [],
+    "interruptions": [],
+    "statistics": [],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "RkWFfjrM4pqB",
+          "ownerId": "8945fa86-84ae-4fa8-9489-ed5a21cd923a"
+        },
+        "owner": "8945fa86-84ae-4fa8-9489-ed5a21cd923a",
+        "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity"
+        ],
+        "actualScope": [
+          "src/intervals.ts#Capacity",
+          "src/intervals.ts#Capacity.available",
+          "src/intervals.ts#Capacity.occupied",
+          "src/intervals.ts#Capacity.used",
+          "src/intervals.ts#capacity"
+        ],
+        "baseRevision": {
+          "src/availability.ts#roomSummary": 0,
+          "src/availability.ts#roomPressure": 0
+        },
+        "taskRevision": 3,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "KOwssEWsa8Nl",
+          "ownerId": "deb4aaf4-30c9-4349-bffe-7d6da5a0b074"
+        },
+        "owner": "deb4aaf4-30c9-4349-bffe-7d6da5a0b074",
+        "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "baseRevision": {
+          "src/intervals.ts#Capacity.available": 0,
+          "src/intervals.ts#Capacity.occupied": 0,
+          "src/intervals.ts#capacity": 0
+        },
+        "taskRevision": 3,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  },
+  "all-human": {
+    "mode": "all-human",
+    "actions": [],
+    "injections": [],
+    "interruptions": [],
+    "statistics": [],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "RkWFfjrM4pqB",
+          "ownerId": "8945fa86-84ae-4fa8-9489-ed5a21cd923a"
+        },
+        "owner": "8945fa86-84ae-4fa8-9489-ed5a21cd923a",
+        "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity"
+        ],
+        "actualScope": [
+          "src/intervals.ts#Capacity",
+          "src/intervals.ts#Capacity.available",
+          "src/intervals.ts#Capacity.occupied",
+          "src/intervals.ts#Capacity.used",
+          "src/intervals.ts#capacity"
+        ],
+        "baseRevision": {
+          "src/availability.ts#roomSummary": 0,
+          "src/availability.ts#roomPressure": 0
+        },
+        "taskRevision": 3,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "KOwssEWsa8Nl",
+          "ownerId": "deb4aaf4-30c9-4349-bffe-7d6da5a0b074"
+        },
+        "owner": "deb4aaf4-30c9-4349-bffe-7d6da5a0b074",
+        "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "baseRevision": {
+          "src/intervals.ts#Capacity.available": 0,
+          "src/intervals.ts#Capacity.occupied": 0,
+          "src/intervals.ts#capacity": 0
+        },
+        "taskRevision": 3,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  },
+  "all-auto": {
+    "mode": "all-auto",
+    "actions": [],
+    "injections": [],
+    "interruptions": [],
+    "statistics": [],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "RkWFfjrM4pqB",
+          "ownerId": "8945fa86-84ae-4fa8-9489-ed5a21cd923a"
+        },
+        "owner": "8945fa86-84ae-4fa8-9489-ed5a21cd923a",
+        "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity"
+        ],
+        "actualScope": [
+          "src/intervals.ts#Capacity",
+          "src/intervals.ts#Capacity.available",
+          "src/intervals.ts#Capacity.occupied",
+          "src/intervals.ts#Capacity.used",
+          "src/intervals.ts#capacity"
+        ],
+        "baseRevision": {
+          "src/availability.ts#roomSummary": 0,
+          "src/availability.ts#roomPressure": 0
+        },
+        "taskRevision": 3,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "KOwssEWsa8Nl",
+          "ownerId": "deb4aaf4-30c9-4349-bffe-7d6da5a0b074"
+        },
+        "owner": "deb4aaf4-30c9-4349-bffe-7d6da5a0b074",
+        "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "baseRevision": {
+          "src/intervals.ts#Capacity.available": 0,
+          "src/intervals.ts#Capacity.occupied": 0,
+          "src/intervals.ts#capacity": 0
+        },
+        "taskRevision": 3,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  }
+}

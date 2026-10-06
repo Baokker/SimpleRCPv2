@@ -30,6 +30,8 @@ import { FILESYSTEM_ORIGIN } from "../textDelta.js";
 import { createWorkspaceSemanticFiles } from "./semanticFiles.js";
 import { createServerAdjudication, type ServerAdjudicationConfig } from "./adjudicationRuntime.js";
 import { createProjectAgentGuard } from "./projectAgentGuard.js";
+import { createProjectArbitration } from "./projectArbitration.js";
+import type { ArbitrationMode } from "@simplercp/conflict-guard";
 import { resolveWorkspacePath } from "../workspace.js";
 
 const require = createRequire(import.meta.url);
@@ -43,6 +45,8 @@ export interface ProjectConflictGuardConfig {
   activeIdleMs: number;
   cursorDebounceMs: number;
   adjudication?: ServerAdjudicationConfig;
+  arbitration?: ArbitrationMode;
+  intentInjection?: boolean;
 }
 
 interface ConnectionIdentity {
@@ -118,7 +122,7 @@ export function createProjectConflictGuard(options: {
     stateVersion += 1;
     options.onStateChanged?.(stateVersion);
   }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); }) : undefined;
-  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
+  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, arbitrationMode: options.config.arbitration, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
     if (pair.left.actor.kind !== "human" || pair.right.actor.kind !== "human") { complete(local); return; }
     try {
       const left = session.symbolFor(pair.left.actor, pair.left.symbol);
@@ -204,9 +208,55 @@ export function createProjectConflictGuard(options: {
     readDisk: async (file) => { try { return await fs.readFile(resolveWorkspacePath(options.workspacePath, file), "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return ""; } },
     reconcile: options.reconcileAgentFile, displayActor: options.displayActor,
     notificationsPath: path.join(options.metadataPath, "conflict-guard", "notifications.json"), sensitiveValues: options.sensitiveValues,
+    onT3Conflict: (runId, conflict, input) => arbitration.review(runId, conflict, input),
     ...(agentAdjudication ? { adjudicate(point, input, local, signal) { return agentAdjudication[point].judge(buildAdjudicationInput(input, local, { ...adjudicationSettings, point }, semanticFiles.contextFiles()), local, signal); } } : {}),
     emit: (event) => { void appendTrace(event); },
     changed: () => { stateVersion += 1; options.onStateChanged?.(stateVersion); options.onPersistenceStateChanged?.(); }
+  });
+  const advice = options.config.mode === "full" && options.config.adjudication ? createServerAdjudication({ ...options.config.adjudication, settings: { ...adjudicationSettings, strategy: "G1", point: "T2", hardDeadlineMs: 30_000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call, purpose: "compromise" }); }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription, purpose: "compromise" }); }) : undefined;
+  const arbitration = createProjectArbitration({ projectId: options.projectId, clock, mode: options.config.arbitration ?? "owner", injection: options.config.intentInjection ?? true, guard: agentGuard, index: semanticIndex, active: () => semantic.getActiveChangeSets(), display: options.displayActor ?? (() => "协作成员"), sensitiveValues: options.sensitiveValues ?? [], emit: (event) => { void appendTrace(event); }, changed: () => { stateVersion += 1; options.onStateChanged?.(stateVersion); },
+    resolveHuman(conflict, yielding) {
+      const human = [conflict.self, conflict.other].find((actor) => actor.kind === "human" && actor.memberId === yielding);
+      if (human) { if (!revertPair(conflict.pairId, human, true)) throw new Error(revertFailure); }
+      else pairCoordinator.resolve(conflict.pairId, "overridden");
+    },
+    ...(advice ? { async suggest(conflict, intents, analysisInput, signal) {
+      const record = agentGuard.records().find((entry) => entry.pair.id === conflict.pairId) ?? pairCoordinator.get(conflict.pairId);
+      const local = record?.verdict;
+      if (!local) return undefined;
+      const side = (actor: ActorRef, key: string) => {
+        const change = semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(actor))?.files.get(key.split("#")[0]!)?.symbols?.find((symbol) => symbol.key === key);
+        return { actorKind: actor.kind, file: key.split("#")[0]!, symbol: key, before: change?.before ?? "", after: change?.after ?? (key === conflict.symbols.other ? conflict.afterSignature : "") };
+      };
+      const input = analysisInput ? buildAdjudicationInput(analysisInput, local, { ...adjudicationSettings, point: "T2" }, semanticFiles.contextFiles()) : { point: "T2" as const, promptVersion: adjudicationSettings.promptVersion, left: side(conflict.self, conflict.symbols.self), right: side(conflict.other, conflict.symbols.other), relationship: "", invariants: "", local: { excludedRules: [] } };
+      input.relationship = `提供一个双方属主能够采纳的兼容修改建议。${input.relationship}`;
+      input.invariants = [intents.map((intent) => `${intent.owner}: ${intent.task}; ${[...intent.plannedScope, ...intent.actualScope].join(", ")}`).join("\n"), input.invariants].join("\n").slice(0, 3000);
+      const verdict = await advice.judge(input, { ...local, zone: "grey" }, signal);
+      if (verdict.adjudication?.status !== "success") return undefined;
+      return { explanation: verdict.adjudication.userExplanation, suggestion: verdict.adjudication.suggestedAction };
+    } } : {})
+  });
+  const removeArbitrationListener = pairCoordinator.onEvent((event) => {
+    if (event.type !== "pair_judged" || event.record.verdict?.decision !== "lock" || !["rules", "full"].includes(options.config.mode)) return;
+    const record = event.record;
+    if (record.pair.left.actor.kind !== "human" || record.pair.right.actor.kind !== "human") {
+      const human = [record.pair.left, record.pair.right].find((side) => side.actor.kind === "human");
+      const other = [record.pair.left, record.pair.right].find((side) => side.actor.kind === "agent");
+      if (!human || !other) return;
+      if (options.config.arbitration === "all-auto") {
+        queueMicrotask(() => { if (!revertPair(record.pair.id, human.actor, true)) void appendTrace({ type: "arbitration_error", pairId: record.pair.id, reason: revertFailure }); });
+        return;
+      }
+      const left = session.symbolFor(record.pair.left.actor, record.pair.left.symbol);
+      const right = session.symbolFor(record.pair.right.actor, record.pair.right.symbol);
+      const conflict = createGuardConflict({ record, self: human.actor, otherDisplayName: options.displayActor?.(other.actor) ?? "另一位成员的 Agent", otherChange: session.symbolFor(other.actor, other.symbol) });
+      if (conflict) arbitration.observe(conflict, left && right ? { left: { actor: record.pair.left.actor, symbol: left }, right: { actor: record.pair.right.actor, symbol: right }, path: record.pair.path, nested: false, typeOnly: false, project: semanticIndex } : undefined);
+      return;
+    }
+    if (options.config.arbitration === "all-auto") {
+      const latest = [record.pair.left, record.pair.right].sort((left, right) => (session.symbolFor(right.actor, right.symbol)?.lastTouchedAt ?? 0) - (session.symbolFor(left.actor, left.symbol)?.lastTouchedAt ?? 0))[0]!;
+      queueMicrotask(() => { if (!revertPair(record.pair.id, latest.actor, true)) void appendTrace({ type: "arbitration_error", pairId: record.pair.id, reason: revertFailure }); });
+    } else for (const actor of [record.pair.left.actor, record.pair.right.actor]) arbitration.recordInterruption({ memberId: actor.memberId, at: clock.now(), kind: "human-human", level: "action", pairId: record.pair.id, revision: record.revision });
   });
 
   traceOperations = initializeTraceSequence().then(() => undefined).catch((error) => {
@@ -218,6 +268,8 @@ export function createProjectConflictGuard(options: {
   void appendTrace({
     type: "session_start",
     mode: options.config.mode,
+    arbitration: options.config.arbitration ?? "owner",
+    intentInjection: options.config.intentInjection ?? true,
     pairRevisionMode: "judged-input",
     config: {
       idleMs: options.config.idleMs,
@@ -230,7 +282,12 @@ export function createProjectConflictGuard(options: {
     gitCommit: options.gitCommit
   });
 
-  const removeSemanticListener = semantic.onEvent((event) => { void appendTrace({ ...event }); });
+  void appendTrace({ type: "project_snapshot", files: Object.fromEntries(semanticFiles.contextFiles().map((file) => [file, semanticFiles.readFile(file)])) });
+
+  const removeSemanticListener = semantic.onEvent((event) => {
+    void appendTrace({ ...event });
+    if (event.type === "change_unit") for (const symbol of event.symbols) arbitration.basis(event.actor, [symbol.key], options.getRevision(symbol.file));
+  });
 
   function scheduleSemanticUpdate(file?: string) {
     if (file) changedFiles.add(file);
@@ -539,7 +596,7 @@ export function createProjectConflictGuard(options: {
       changeSets: tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) })),
       activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, beforeComments: _comments, ...symbol }) => symbol) })),
       candidatePairs: semantic.getCandidatePairs(),
-      pairDecisions: [...pairCoordinator.records().filter((record) => record.status !== "closed" && record.pair.left.actor.kind === "human" && record.pair.right.actor.kind === "human"), ...agentGuard.records()].map((record) => {
+      pairDecisions: [...pairCoordinator.records().filter((record) => record.status !== "closed" && [record.pair.left.actor, record.pair.right.actor].some((actor) => actor.kind === "human")), ...agentGuard.records()].map((record) => {
         const self = [record.pair.left, record.pair.right].find((side) => side.actor.kind === "human" && side.actor.memberId === memberId) ?? record.pair.left;
         const other = actorKey(self.actor) === actorKey(record.pair.left.actor) ? record.pair.right : record.pair.left;
         const otherChange = sets.find((set) => actorKey(set.actor) === actorKey(other.actor))?.files.get(other.symbol.split("#")[0]!)?.symbols?.find((symbol) => symbol.key === other.symbol);
@@ -547,6 +604,9 @@ export function createProjectConflictGuard(options: {
         return { ...record, conflict };
       }),
       agentNotices: agentGuard.notices(memberId),
+      intents: arbitration.board.list(),
+      ownerCards: arbitration.cards.list(memberId),
+      arbitration: { mode: options.config.arbitration ?? "owner", ...arbitration.stats() },
       frozenFiles: frozenFiles(),
       analyzingFiles: analyzingFiles(),
       adjudication: adjudication?.stats(),
@@ -650,12 +710,12 @@ export function createProjectConflictGuard(options: {
     void appendTrace({ type: "ui_action", action: "chat_pair", pairId, actor: actorRef });
     return true;
   }
-  function revertPair(pairId: string, identity: ActorRef | string) {
+  function revertPair(pairId: string, identity: ActorRef | string, automatic = false) {
     revertFailure = "当前状态不允许撤回";
     if (options.config.mode !== "rules" && options.config.mode !== "full") return false;
     const record = pairCoordinator.get(pairId);
     if (!record || record.status !== "judged" || record.verdict?.decision !== "lock") return false;
-    if (record.pair.left.actor.kind !== "human" || record.pair.right.actor.kind !== "human") return false;
+    if ((record.pair.left.actor.kind !== "human" || record.pair.right.actor.kind !== "human") && !automatic && options.config.arbitration !== "all-human") return false;
     const actorRef: ActorRef = typeof identity === "string" ? { kind: "human", memberId: identity } : identity;
     if (actorRef.kind !== "human") return false;
     const memberId = actorRef.memberId;
@@ -702,8 +762,8 @@ export function createProjectConflictGuard(options: {
     if (!changed) { revertFailure = "没有可撤回的修改"; return false; }
     pairCoordinator.requestResolution(pairId, "reverted");
     updateSemantic();
-    uiActionCount += 1;
-    void appendTrace({ type: "ui_action", action: "revert_pair", pairId, memberId });
+    if (!automatic) uiActionCount += 1;
+    void appendTrace({ type: "ui_action", action: "revert_pair", pairId, memberId, automatic });
     return true;
   }
 
@@ -770,6 +830,7 @@ export function createProjectConflictGuard(options: {
     tracePath,
     semanticIndex,
     agentGuard,
+    arbitration,
     beginAgentRun(actor: Extract<ActorRef, { kind: "agent" }>, baseline: Map<string, string>) {
       try {
         for (const [file, mirror] of mirrors) baseline.set(file, mirror.text);
@@ -829,7 +890,10 @@ export function createProjectConflictGuard(options: {
     pairCoordinator,
     async dispose() {
       session.dispose();
+      removeArbitrationListener();
       adjudication?.dispose();
+      advice?.dispose();
+      await arbitration.dispose();
       for (const service of Object.values(agentAdjudication ?? {})) service.dispose();
       try {
         if (semanticTimer !== undefined) clearTimeout(semanticTimer);

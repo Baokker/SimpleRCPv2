@@ -108,3 +108,11 @@ P1 在编辑开始时锁定文件，P2 在编辑开始时锁定符号两跳内�
 D2 包含 GreyLock 的 51 个规则案例与六个交付场景的 schema 3 轨迹，37 份来源文件与 57 份轨迹均校验 SHA-256。`sourceDecision` 为原本地动作，`sourceTruth` 为原真值，`actual` 为当前 P3 的判定序列；47 个规则案例的动作一致，另外四个等价重构样例产生 `semantic-interaction-uncertain/warn`。当前结果为 6 个 allow、45 个 warn，具体差异见 D2 的 `verification.json`。六个交付场景保留来源内容，`unavailable` 记录一方未修改或缺少静态关系的情况。黑区规则的移植对照另外使用 GreyLock 测试样例。
 
 合成项目只能代表写明的业务与修改方式。探针通过表示当前输入与共享测试均满足要求，完整行为仍需要后续真实数据与人工抽检。清单保留项目、算子、声明位置与原始结果，供后续分析按来源分组与检查样本独立性。
+
+## D3-v0 多 Agent 任务
+
+`bench/datasets/d3-v0/manifest.json` 包含十个跨属主任务对与三个同属主任务对，来源为 D1 的 commerce、calendar、cache、text、events、billing 六个项目。任务覆盖金额单位、折扣接口、分页、缓存失效、字符串处理、事件发布、日程和账单数据流。两个自然语言任务共享接口，验收脚本直接加载任务完成后的源码。
+
+`bench:validate-d3` 验证种子原有测试全部通过，并确认十三个任务对的原始项目均需要新增功能才能满足验收。`bench:agents --dataset d3 --injection on|off --repeat 3` 使用真实 OpenCode 与 DeepSeek，在独立项目中同时启动两个 Agent，记录审批、意图、仲裁、通知及最终验收结果。批量运行的自动属主动作默认双方采纳可用建议；建议不可用时后到者让路，配置 card-action=yield 可以固定选择让路。
+
+阶段七真实冒烟使用 d3-01、d3-02、d3-03，注入开启和关闭各一轮。当前记录用于验证命令与流程，样本数量不足以判断注入效果。保留集没有执行，CooperBench 数据引入和正式重复留至阶段八。

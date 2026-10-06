@@ -3,6 +3,24 @@ import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import { requireIdentity } from "../auth/permissions.js";
 
 export function registerConflictGuardRoutes(app: Express, runtimeManager: ProjectRuntimeManager) {
+  app.post("/api/projects/:projectId/conflict-guard/cards/:cardId/:action", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId);
+      const guard = runtime.conflictGuard;
+      if (!guard || !["rules", "full"].includes(guard.mode)) { res.status(409).json({ error: "当前模式不允许仲裁操作" }); return; }
+      const action = req.params.action;
+      if (!["accept", "yield", "chat"].includes(action)) { res.status(400).json({ error: "无效的卡片操作" }); return; }
+      let card;
+      try { card = guard.arbitration.act(req.params.cardId, identity.memberId, action as "accept" | "yield" | "chat"); }
+      catch (error) { res.status(409).json({ error: error instanceof Error ? error.message : String(error) }); return; }
+      if (action === "chat") {
+        const names = card.owners.map((owner) => runtime.room.members.find((member) => member.id === owner)?.displayName ?? "协作成员");
+        await runtime.chat.createMessage({ roomId: runtime.room.id, authorId: "system", authorName: "System", kind: "system", text: `${names.map((name) => `@${name}`).join(" ")} 意图差异：${card.explanation}；${card.path}` });
+      }
+      res.json({ card });
+    } catch (error) { next(error); }
+  });
   app.patch("/api/projects/:projectId/conflict-guard/notifications/:noticeId", (req, res, next) => {
     try {
       const identity = requireIdentity(req, res);

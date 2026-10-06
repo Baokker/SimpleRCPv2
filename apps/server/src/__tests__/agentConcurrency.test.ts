@@ -235,6 +235,7 @@ describe("Agent concurrency with fake runtime", () => {
     await waitFor(async () => (await getRuns()).filter((run) => [first.id, second.id].includes(run.id)).every((run) => run.status === "completed"));
     const firstRun = (await getRuns()).find((run) => run.id === first.id)!;
     expect(firstRun.fileChanges?.map((change) => change.file)).toEqual(["round2-first.ts"]);
+    await waitFor(async () => (await getTrace(first.id)).some((event) => event.type === "run_completed"));
     const firstCompleted = (await getTrace(first.id)).find((event) => event.type === "run_completed");
     expect(firstCompleted?.data).toMatchObject({ overlappingRunIds: [second.id] });
   });

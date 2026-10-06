@@ -35,6 +35,7 @@ import { selectRunnableAgentRun } from "./agentRunSelection.js";
 import { createPermissionDispatcher, type AgentPermissionRequest } from "./permissionDispatcher.js";
 import { conflictGuardEditHandler } from "./conflictGuardEditHandler.js";
 import fs from "node:fs/promises";
+import { agentPlanInstruction } from "@simplercp/conflict-guard";
 import { canonicalWorkspacePath } from "../workspacePath.js";
 import {
   createAgentScheduler,
@@ -333,7 +334,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         data: { path: change.file, previousRevision, currentRevision }
       });
     }
-    const fileChanges = await attributeFileChanges(
+    let fileChanges = await attributeFileChanges(
       projectId,
       runId,
       changes,
@@ -366,6 +367,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         const latest = await getStore(projectId).get(runId);
         await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3 } });
         await appendTrace(projectId, runId, { type: "t3_completed", data: { result: t3 } });
+        if (workspaceBefore) {
+          const finalSnapshot = await createAgentWorkspaceSnapshot(workspacePath);
+          const runFiles = new Set([...fileChanges.map((change) => change.file), ...writeLedger.list(projectId, runId).map((entry) => entry.file)]);
+          fileChanges = await attributeFileChanges(projectId, runId, compareAgentWorkspaceSnapshots(workspaceBefore, finalSnapshot).filter((change) => runFiles.has(change.file)), runOverlapIds.get(runId) ?? new Set(), memberChangedFiles);
+          await updateRun(projectId, runId, { fileChanges });
+        }
       } catch (error) { await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) }); }
     }
     return fileChanges;
@@ -461,6 +468,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let workspaceBeforeForRun: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     let revisionsBeforeForRun: Map<string, number> | undefined;
     let stopGuardEvents: (() => void) | undefined;
+    let stopRuntimeEvents: (() => Promise<void>) | undefined;
+    let drainPermissions: (() => Promise<void>) | undefined;
+    const continuationOutputs: string[] = [];
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       workspacePathForRun = projectRuntime.project.workspacePath;
@@ -600,7 +610,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         : undefined;
       const runtimePrompt = await buildRuntimePrompt(
         projectRuntime.project.workspacePath,
-        [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
+        [interruptionPrompt, run.extraPrompt, projectRuntime.conflictGuard ? agentPlanInstruction : undefined, projectRuntime.conflictGuard?.arbitration.injection(runId, run.contexts?.flatMap((context) => projectRuntime.conflictGuard?.semanticIndex.symbolsInFile(context.path).map((symbol) => symbol.key) ?? [])), run.prompt].filter(Boolean).join("\n\n"),
         run.contexts,
         projectRuntime.project.name
       );
@@ -615,7 +625,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const toolInputs = new Map<string, { tool: string; input: Record<string, unknown> }>();
       const handlers = guard && ["rules", "full"].includes(guard.mode) ? [{ handle: conflictGuardEditHandler({
         workspace: projectRuntime.project.workspacePath,
-        judge: (proposals, signal) => guard.agentGuard.judge(runId, proposals, signal),
+        judge: (proposals, signal, request) => guard.arbitration.judge(runId, request, proposals, signal),
+        rejectionContext: () => guard.arbitration.injection(runId),
         approved: () => {},
         async toolInput(request) {
           if (!request.tool) return undefined;
@@ -635,6 +646,29 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } });
       const active = activeRuns.get(runId);
       if (active) active.cancelPermissions = dispatcher.dispose;
+      drainPermissions = dispatcher.drain;
+      guard?.arbitration.attach(runId, { resolve: dispatcher.resolve, cancel: async () => {
+        const latest = await store.get(runId);
+        if (latest && ["completed", "failed", "cancelled"].includes(latest.status) && !activeRuns.has(runId)) {
+          const t3 = await guard.agentGuard.withdraw(runId);
+          const finalSnapshot = await createAgentWorkspaceSnapshot(projectRuntime.project.workspacePath);
+          const previousChanges = new Map(latest.fileChanges?.map((change) => [change.file, change]));
+          const fileChanges = workspaceBefore ? compareAgentWorkspaceSnapshots(workspaceBefore, finalSnapshot).filter((change) => previousChanges.has(change.file)).map((change) => ({ ...previousChanges.get(change.file)!, ...change })) : latest.fileChanges;
+          await updateRun(projectId, runId, { fileChanges, conflictGuard: { rejectedEdits: 0, ...latest.conflictGuard, t3 } });
+          guard.arbitration.finish(runId, t3 === "reverted" || t3 === "partially-reverted");
+          return;
+        }
+        await updateRun(projectId, runId, { status: "cancelled", finishedAt: new Date().toISOString() });
+        dispatcher.dispose();
+        await options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId! });
+      }, continue: async (instruction) => {
+        if ((await store.get(runId))?.status === "cancelled" || disposing) throw new Error("Agent 追加执行已经取消");
+        const continued = await runWithTimeout(options.runtime.run({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId!, prompt: instruction }), options.runTimeoutMs, () => options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId! }), approval);
+        continuationOutputs.push(continued.text);
+        await appendTrace(projectId, runId, { type: "arbitration_continuation", summary: continued.text, data: { messageId: continued.messageId } });
+        await projectRuntime.documents.awaitIdle();
+      } });
+      const assistantTexts = new Map<string, string>();
 
       const stopEvents = await options.runtime.subscribe(
         {
@@ -643,6 +677,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         },
         async (event) => {
           const part = event.data.part as { callID?: string; tool?: string; state?: { input?: Record<string, unknown> } } | undefined;
+          const textPart = event.data.part as { id?: string; type?: string; text?: string } | undefined;
+          if (textPart?.type === "text" && textPart.id && typeof textPart.text === "string") { assistantTexts.set(textPart.id, textPart.text); guard?.arbitration.board.plan(runId, textPart.text); }
+          if (event.type === "message.part.delta" && typeof event.data.partID === "string" && typeof event.data.delta === "string") {
+            const text = (assistantTexts.get(event.data.partID) ?? "") + event.data.delta;
+            assistantTexts.set(event.data.partID, text);
+            if (text.includes("END_PLAN")) guard?.arbitration.board.plan(runId, text);
+          }
           if (part?.callID && part.tool && part.state?.input) toolInputs.set(part.callID, { tool: part.tool, input: part.state.input });
           if (event.type === "permission.asked") {
             void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
@@ -698,6 +739,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           });
         }
       );
+      stopRuntimeEvents = stopEvents;
 
       const processModel = options.runtime.getCurrentModel?.();
       if (processModel && processModel !== run.model) run = await updateRun(projectId, runId, { model: processModel });
@@ -711,20 +753,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }), options.runTimeoutMs, () => options.runtime.cancel({
           workspacePath: projectRuntime.project.workspacePath,
           sessionId: runtimeSessionId
-        }), approval).finally(async () => {
-          dispatcher.dispose();
-          await dispatcher.drain();
-          try {
-            await stopEvents();
-          } catch (error) {
-            recordInternalError(projectId, runId, "listener", error);
-            await appendTrace(projectId, runId, {
-              type: "listener_error",
-              summary: error instanceof Error ? error.message : String(error),
-              data: { phase: "stop", error: error instanceof Error ? error.stack ?? error.message : String(error) }
-            });
-          }
-        });
+        }), approval);
       } catch (error) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
@@ -735,12 +764,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         throw error;
       }
       const latest = await store.get(runId);
+      guard?.arbitration.board.plan(runId, result.text);
       if (latest?.status === "cancelled") {
         await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore, result.messageId);
         await recordCancellationCompletion(projectId, runId);
         return;
       }
       const fileChanges = await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore, result.messageId);
+      if (continuationOutputs.length) result.text = [result.text, ...continuationOutputs].join("\n\n");
       const finishedAt = new Date().toISOString();
       const completed = await finishRunningRun(projectId, runId, {
         status: "completed",
@@ -827,16 +858,22 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         data: { overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }
       });
     } finally {
-      activeRuns.get(runId)?.cancelPermissions?.();
       if (guardRuns.delete(runId)) {
         try {
           const project = options.runtimeManager.get(projectId);
           const t3 = await project.conflictGuard?.agentGuard.finish(runId, [], (file, expected, text, owner, remove) => project.documents.applyGuardRevert(file, expected, text, owner, remove));
           const latest = await getStore(projectId).get(runId);
           await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3 } });
+          project.conflictGuard?.arbitration.finish(runId, t3 === "reverted" || t3 === "partially-reverted");
         } catch (error) { await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) }); }
       }
+      activeRuns.get(runId)?.cancelPermissions?.();
+      await drainPermissions?.();
+      try { await stopRuntimeEvents?.(); }
+      catch (error) { recordInternalError(projectId, runId, "listener", error); await appendTrace(projectId, runId, { type: "listener_error", data: { phase: "stop", error: error instanceof Error ? error.message : String(error) } }); }
       stopGuardEvents?.();
+      const completedRun = await getStore(projectId).get(runId);
+      options.runtimeManager.get(projectId).conflictGuard?.arbitration.finish(runId, completedRun?.conflictGuard?.t3 === "reverted" || completedRun?.conflictGuard?.t3 === "partially-reverted");
       activeRuns.delete(runId);
     }
   }
@@ -976,6 +1013,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         extraPrompt: input.extraPrompt?.trim() || undefined,
         interruptsRunId: input.interruptsRunId
       }, input.runId);
+      projectRuntime.conflictGuard?.arbitration.board.create({ kind: "agent", runId: run.id, ownerId: run.memberId, ...(session.scope === "team" ? { teamAgent: session.handle ?? session.title } : {}) }, prompt, Object.fromEntries(projectRuntime.documents.getRevisions()));
       emit({ type: "run_updated", projectId: input.projectId, run });
       await appendTrace(input.projectId, run.id, {
         type: "run_queued",
@@ -1136,6 +1174,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
       const active = activeRuns.get(runId);
       if (active) {
+        projectRuntime.conflictGuard?.arbitration.cancel(runId);
         active.cancelPermissions?.();
         await options.runtime.cancel({
           workspacePath: active.workspacePath,
@@ -1143,6 +1182,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         });
       } else {
         await recordCancellationCompletion(projectId, runId);
+        projectRuntime.conflictGuard?.arbitration.finish(runId, false);
       }
       return cancelled;
     },
@@ -1169,6 +1209,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       queue.runIds = queue.runIds.filter((runId) => !activeIds.has(runId));
 
       for (const run of active) {
+        options.runtimeManager.get(projectId).conflictGuard?.arbitration.cancel(run.id);
+        if (!activeRuns.has(run.id)) options.runtimeManager.get(projectId).conflictGuard?.arbitration.finish(run.id, false);
         await updateRun(projectId, run.id, {
           status: "cancelled",
           finishedAt: new Date().toISOString()
@@ -1230,6 +1272,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       disposing = true;
       for (const queue of queues.values()) queue.closing = true;
       for (const active of activeRuns.values()) active.cancelPermissions?.();
+      for (const [runId] of activeRuns) for (const projectId of queues.keys()) options.runtimeManager.get(projectId).conflictGuard?.arbitration.cancel(runId);
       await Promise.all(
         [...activeRuns.values()].map((active) =>
           options.runtime.cancel({

@@ -151,9 +151,9 @@ describe("Agent permission dispatcher", () => {
     expect(replies.at(-1)).toMatchObject({ requestId: "deferred", sessionId: "child", reply: "reject" });
   });
 
-  it("resolves a deferred permission and applies the handler-specific deadline", async () => {
+  it("resolves a deferred permission and applies its independent waiting deadline", async () => {
     const replies: string[] = [];
-    const dispatcher = createPermissionDispatcher({ handlers: [{ handle: async () => ({ reply: "defer" }), budgetMs: 30 }], reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
+    const dispatcher = createPermissionDispatcher({ handlers: [{ handle: async () => ({ reply: "defer" }), budgetMs: 30 }], deferBudgetMs: 30, reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
     const first = dispatcher.dispatch({ id: "resolve", sessionID: "root", permission: "edit", metadata: {} });
     await new Promise<void>((resolve) => setImmediate(resolve));
     expect(dispatcher.resolve("resolve", { reply: "once" })).toBe(true);

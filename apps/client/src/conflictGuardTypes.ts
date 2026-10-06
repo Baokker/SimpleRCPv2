@@ -30,6 +30,9 @@ export interface ActiveSymbol {
 }
 
 export interface ConflictGuardState {
+  intents?: AgentIntent[];
+  ownerCards?: OwnerCard[];
+  arbitration?: { mode: string; automaticRetries: number; members: Array<{ memberId: string; interruptions: number; perHour: number; light: number; byKind: Record<string, number> }>; outcomes: Record<string, number>; suspendedMs: number };
   mode: string;
   indexing?: boolean;
   degraded?: boolean;
@@ -81,6 +84,30 @@ export interface ConflictGuardState {
   };
   t0Warnings?: Array<{ id: string; pairId: string; summary: string; at: number }>;
   agentNotices?: Array<{ id: string; runId: string; summary: string; at: number }>;
+}
+
+export interface AgentIntent {
+  actor: GuardActorRef;
+  owner: string;
+  task: string;
+  plannedScope: string[];
+  actualScope: string[];
+  baseRevision: Record<string, number>;
+  taskRevision: number;
+  status: "planning" | "running" | "waiting" | "blocked" | "done" | "reverted";
+}
+export interface OwnerCard {
+  id: string;
+  conflict: GuardConflict;
+  owners: string[];
+  intents: AgentIntent[];
+  path: string;
+  accepted: string[];
+  status: string;
+  explanation: string;
+  suggestion?: string;
+  suggestionStatus: string;
+  expiresAt: number;
 }
 
 export interface ConflictGuardSymbol {

@@ -35,6 +35,9 @@ export function getServerInfo() {
 export function getConflictGuardState(projectId: string) {
   return request<ConflictGuardState>(`${projectPath(projectId)}/conflict-guard/state`);
 }
+export function actOnOwnerCard(projectId: string, cardId: string, action: "accept" | "yield" | "chat") {
+  return request(`${projectPath(projectId)}/conflict-guard/cards/${encodeURIComponent(cardId)}/${action}`, { method: "POST" });
+}
 
 export function getConflictGuardSymbol(projectId: string, key: string) {
   return request<ConflictGuardSymbol>(`${projectPath(projectId)}/conflict-guard/symbol?key=${encodeURIComponent(key)}`);

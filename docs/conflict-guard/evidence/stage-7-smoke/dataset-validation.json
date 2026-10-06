@@ -1,0 +1,108 @@
+{
+  "version": "d3-v0",
+  "seeds": [
+    {
+      "project": "commerce",
+      "passed": true,
+      "tests": 0,
+      "output": "✔ 订单从库存预约经过付款进入配送 (1.241792ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.181709ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.841833ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.240417ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 112.813333\n"
+    },
+    {
+      "project": "calendar",
+      "passed": true,
+      "tests": 0,
+      "output": "✔ adjacent intervals and resource booking lifecycle (8.860292ms)\n✔ recurrence retains weekday identity after shifts (0.821125ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 115.692083\n"
+    },
+    {
+      "project": "cache",
+      "passed": true,
+      "tests": 0,
+      "output": "✔ weighted eviction follows recent access and expiration (1.2155ms)\n✔ list promotion and concurrent computation preserve identity (0.21575ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 99.935583\n"
+    },
+    {
+      "project": "text",
+      "passed": true,
+      "tests": 0,
+      "output": "✔ Unicode columns and paragraph breaking retain all words (1.449541ms)\n✔ document edits, indexed search, and page rendering compose (0.498958ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 103.81675\n"
+    },
+    {
+      "project": "events",
+      "passed": true,
+      "tests": 0,
+      "output": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.085959ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.102334ms)\n✔ delivery pipeline (1.681792ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 104.477375\n"
+    },
+    {
+      "project": "billing",
+      "passed": true,
+      "tests": 0,
+      "output": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.15825ms)\n  ✔ meter resets count new readings without negative usage (0.148167ms)\n✔ immutable accounting (1.815375ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 99.869667\n"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "d3-01",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-02",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-03",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-04",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-05",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-06",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-07",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-08",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-09",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-10",
+      "ownership": "cross",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-11",
+      "ownership": "same",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-12",
+      "ownership": "same",
+      "baselineFails": true
+    },
+    {
+      "id": "d3-13",
+      "ownership": "same",
+      "baselineFails": true
+    }
+  ]
+}

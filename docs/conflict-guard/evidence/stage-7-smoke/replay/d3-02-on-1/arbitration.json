@@ -1,0 +1,635 @@
+{
+  "owner": {
+    "mode": "owner",
+    "actions": [
+      {
+        "at": 1791315219992,
+        "point": "T3",
+        "conflict": {
+          "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+          "revision": 0,
+          "self": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          },
+          "other": {
+            "kind": "agent",
+            "runId": "hnCroGGTskaE",
+            "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+          },
+          "otherDisplayName": "agent:hnCroGGTskaE",
+          "symbols": {
+            "self": "src/availability.ts#roomPressure",
+            "other": "src/availability.ts#roomPressure"
+          },
+          "beforeSignature": "",
+          "afterSignature": "",
+          "ruleId": "same-symbol-concurrent-write",
+          "zone": "black",
+          "decision": "lock",
+          "summaryZh": "双方正在同时修改同一个声明。"
+        },
+        "action": {
+          "type": "owner-card",
+          "kind": "agent-agent-cross-owner",
+          "recipients": [
+            "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+            "7107c840-7311-4ca2-b362-031b586d6f02"
+          ],
+          "lightRecipients": [],
+          "later": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          }
+        }
+      }
+    ],
+    "injections": [
+      {
+        "at": 1791315184620,
+        "runId": "hnCroGGTskaE",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "at": 1791315184634,
+        "runId": "mbSJeyx27nd1",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interruptions": [
+      {
+        "memberId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "at": 1791315219992,
+        "level": "action",
+        "kind": "agent-agent-cross-owner",
+        "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+        "revision": 0
+      },
+      {
+        "memberId": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "at": 1791315219992,
+        "level": "action",
+        "kind": "agent-agent-cross-owner",
+        "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+        "revision": 0
+      }
+    ],
+    "statistics": [
+      {
+        "memberId": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "interruptions": 1,
+        "perHour": 1,
+        "light": 0,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 1,
+          "agent-system": 0
+        }
+      },
+      {
+        "memberId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "interruptions": 1,
+        "perHour": 1,
+        "light": 0,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 1,
+          "agent-system": 0
+        }
+      }
+    ],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 1,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 2287
+    },
+    "cards": [
+      {
+        "id": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074:0",
+        "conflict": {
+          "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+          "revision": 0,
+          "self": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          },
+          "other": {
+            "kind": "agent",
+            "runId": "hnCroGGTskaE",
+            "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+          },
+          "otherDisplayName": "agent:hnCroGGTskaE",
+          "symbols": {
+            "self": "src/availability.ts#roomPressure",
+            "other": "src/availability.ts#roomPressure"
+          },
+          "beforeSignature": "",
+          "afterSignature": "",
+          "ruleId": "same-symbol-concurrent-write",
+          "zone": "black",
+          "decision": "lock",
+          "summaryZh": "双方正在同时修改同一个声明。"
+        },
+        "owners": [
+          "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+          "7107c840-7311-4ca2-b362-031b586d6f02"
+        ],
+        "intents": [
+          {
+            "actor": {
+              "kind": "agent",
+              "runId": "hnCroGGTskaE",
+              "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+            },
+            "owner": "7107c840-7311-4ca2-b362-031b586d6f02",
+            "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+            "plannedScope": [
+              "src/availability.ts#roomPressure",
+              "src/intervals.ts#capacity"
+            ],
+            "actualScope": [
+              "src/availability.ts#roomPressure",
+              "src/intervals.ts#capacity.occupied"
+            ],
+            "baseRevision": {},
+            "taskRevision": 1,
+            "status": "done"
+          },
+          {
+            "actor": {
+              "kind": "agent",
+              "runId": "mbSJeyx27nd1",
+              "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+            },
+            "owner": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+            "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+            "plannedScope": [
+              "src/availability.ts#roomPressure",
+              "src/availability.ts#roomSummary"
+            ],
+            "actualScope": [
+              "src/availability.ts#roomPressure",
+              "src/availability.ts#roomSummary"
+            ],
+            "baseRevision": {
+              "src/intervals.ts#capacity": 0,
+              "src/intervals.ts#capacity.occupied": 0,
+              "src/availability.ts#roomPressure": 0
+            },
+            "taskRevision": 3,
+            "status": "running"
+          }
+        ],
+        "path": "",
+        "createdAt": 1791315219992,
+        "expiresAt": 1791315519992,
+        "accepted": [
+          "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+          "7107c840-7311-4ca2-b362-031b586d6f02"
+        ],
+        "status": "accepted",
+        "explanation": "两处修改最终都改为解构 { used, available } 并计算 used / (available + 1)，结果一致且符合 capacity 接口重命名要求，因此可以安全合并。",
+        "suggestionStatus": "ready",
+        "suggestion": "无需修改；若需进一步统一，可让 src/availability.ts#roomPressure 的属主确认 intervals.capacity 已返回 used 而非 occupied，并同步更新任何仍引用 occupied 的调用方。",
+        "resolvedAt": 1791315222279
+      }
+    ],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "hnCroGGTskaE",
+          "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+        },
+        "owner": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity.occupied"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "mbSJeyx27nd1",
+          "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+        },
+        "owner": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.\n追加指令：无需修改；若需进一步统一，可让 src/availability.ts#roomPressure 的属主确认 intervals.capacity 已返回 used 而非 occupied，并同步更新任何仍引用 occupied 的调用方。",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "baseRevision": {
+          "src/intervals.ts#capacity": 0,
+          "src/intervals.ts#capacity.occupied": 0,
+          "src/availability.ts#roomPressure": 0
+        },
+        "taskRevision": 4,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  },
+  "all-human": {
+    "mode": "all-human",
+    "actions": [
+      {
+        "at": 1791315219992,
+        "point": "T3",
+        "conflict": {
+          "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+          "revision": 0,
+          "self": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          },
+          "other": {
+            "kind": "agent",
+            "runId": "hnCroGGTskaE",
+            "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+          },
+          "otherDisplayName": "agent:hnCroGGTskaE",
+          "symbols": {
+            "self": "src/availability.ts#roomPressure",
+            "other": "src/availability.ts#roomPressure"
+          },
+          "beforeSignature": "",
+          "afterSignature": "",
+          "ruleId": "same-symbol-concurrent-write",
+          "zone": "black",
+          "decision": "lock",
+          "summaryZh": "双方正在同时修改同一个声明。"
+        },
+        "action": {
+          "type": "owner-card",
+          "kind": "agent-agent-cross-owner",
+          "recipients": [
+            "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+            "7107c840-7311-4ca2-b362-031b586d6f02"
+          ],
+          "lightRecipients": [],
+          "later": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          }
+        }
+      }
+    ],
+    "injections": [
+      {
+        "at": 1791315184620,
+        "runId": "hnCroGGTskaE",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "at": 1791315184634,
+        "runId": "mbSJeyx27nd1",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interruptions": [
+      {
+        "memberId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "at": 1791315219992,
+        "level": "action",
+        "kind": "agent-agent-cross-owner",
+        "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+        "revision": 0
+      },
+      {
+        "memberId": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "at": 1791315219992,
+        "level": "action",
+        "kind": "agent-agent-cross-owner",
+        "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+        "revision": 0
+      }
+    ],
+    "statistics": [
+      {
+        "memberId": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "interruptions": 1,
+        "perHour": 1,
+        "light": 0,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 1,
+          "agent-system": 0
+        }
+      },
+      {
+        "memberId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "interruptions": 1,
+        "perHour": 1,
+        "light": 0,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 1,
+          "agent-system": 0
+        }
+      }
+    ],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 1,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 2287
+    },
+    "cards": [
+      {
+        "id": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074:0",
+        "conflict": {
+          "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+          "revision": 0,
+          "self": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          },
+          "other": {
+            "kind": "agent",
+            "runId": "hnCroGGTskaE",
+            "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+          },
+          "otherDisplayName": "agent:hnCroGGTskaE",
+          "symbols": {
+            "self": "src/availability.ts#roomPressure",
+            "other": "src/availability.ts#roomPressure"
+          },
+          "beforeSignature": "",
+          "afterSignature": "",
+          "ruleId": "same-symbol-concurrent-write",
+          "zone": "black",
+          "decision": "lock",
+          "summaryZh": "双方正在同时修改同一个声明。"
+        },
+        "owners": [
+          "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+          "7107c840-7311-4ca2-b362-031b586d6f02"
+        ],
+        "intents": [
+          {
+            "actor": {
+              "kind": "agent",
+              "runId": "hnCroGGTskaE",
+              "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+            },
+            "owner": "7107c840-7311-4ca2-b362-031b586d6f02",
+            "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+            "plannedScope": [
+              "src/availability.ts#roomPressure",
+              "src/intervals.ts#capacity"
+            ],
+            "actualScope": [
+              "src/availability.ts#roomPressure",
+              "src/intervals.ts#capacity.occupied"
+            ],
+            "baseRevision": {},
+            "taskRevision": 1,
+            "status": "done"
+          },
+          {
+            "actor": {
+              "kind": "agent",
+              "runId": "mbSJeyx27nd1",
+              "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+            },
+            "owner": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+            "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+            "plannedScope": [
+              "src/availability.ts#roomPressure",
+              "src/availability.ts#roomSummary"
+            ],
+            "actualScope": [
+              "src/availability.ts#roomPressure",
+              "src/availability.ts#roomSummary"
+            ],
+            "baseRevision": {
+              "src/intervals.ts#capacity": 0,
+              "src/intervals.ts#capacity.occupied": 0,
+              "src/availability.ts#roomPressure": 0
+            },
+            "taskRevision": 3,
+            "status": "running"
+          }
+        ],
+        "path": "",
+        "createdAt": 1791315219992,
+        "expiresAt": 1791315519992,
+        "accepted": [
+          "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+          "7107c840-7311-4ca2-b362-031b586d6f02"
+        ],
+        "status": "accepted",
+        "explanation": "两处修改最终都改为解构 { used, available } 并计算 used / (available + 1)，结果一致且符合 capacity 接口重命名要求，因此可以安全合并。",
+        "suggestionStatus": "ready",
+        "suggestion": "无需修改；若需进一步统一，可让 src/availability.ts#roomPressure 的属主确认 intervals.capacity 已返回 used 而非 occupied，并同步更新任何仍引用 occupied 的调用方。",
+        "resolvedAt": 1791315222279
+      }
+    ],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "hnCroGGTskaE",
+          "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+        },
+        "owner": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity.occupied"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "mbSJeyx27nd1",
+          "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+        },
+        "owner": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.\n追加指令：无需修改；若需进一步统一，可让 src/availability.ts#roomPressure 的属主确认 intervals.capacity 已返回 used 而非 occupied，并同步更新任何仍引用 occupied 的调用方。",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "baseRevision": {
+          "src/intervals.ts#capacity": 0,
+          "src/intervals.ts#capacity.occupied": 0,
+          "src/availability.ts#roomPressure": 0
+        },
+        "taskRevision": 4,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  },
+  "all-auto": {
+    "mode": "all-auto",
+    "actions": [
+      {
+        "at": 1791315219992,
+        "point": "T3",
+        "conflict": {
+          "pairId": "T3:847ab3d478d3360544816d8b9bdb367bd74c1b17f32849dcb6288493514da074",
+          "revision": 0,
+          "self": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          },
+          "other": {
+            "kind": "agent",
+            "runId": "hnCroGGTskaE",
+            "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+          },
+          "otherDisplayName": "agent:hnCroGGTskaE",
+          "symbols": {
+            "self": "src/availability.ts#roomPressure",
+            "other": "src/availability.ts#roomPressure"
+          },
+          "beforeSignature": "",
+          "afterSignature": "",
+          "ruleId": "same-symbol-concurrent-write",
+          "zone": "black",
+          "decision": "lock",
+          "summaryZh": "双方正在同时修改同一个声明。"
+        },
+        "action": {
+          "type": "reject-later",
+          "kind": "agent-agent-cross-owner",
+          "recipients": [],
+          "lightRecipients": [],
+          "later": {
+            "kind": "agent",
+            "runId": "mbSJeyx27nd1",
+            "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+          }
+        }
+      }
+    ],
+    "injections": [
+      {
+        "at": 1791315184620,
+        "runId": "hnCroGGTskaE",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "at": 1791315184634,
+        "runId": "mbSJeyx27nd1",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interruptions": [],
+    "statistics": [],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "hnCroGGTskaE",
+          "ownerId": "7107c840-7311-4ca2-b362-031b586d6f02"
+        },
+        "owner": "7107c840-7311-4ca2-b362-031b586d6f02",
+        "task": "In src/intervals.ts rename capacity's returned occupied property to used. Preserve existing callers through a compatible interface when collaborators need it. Keep available unchanged.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/intervals.ts#capacity.occupied"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "mbSJeyx27nd1",
+          "ownerId": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6"
+        },
+        "owner": "7ec790bb-3467-4d7b-8b42-eb9c3fac9ae6",
+        "task": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.\n追加指令：无需修改；若需进一步统一，可让 src/availability.ts#roomPressure 的属主确认 intervals.capacity 已返回 used 而非 occupied，并同步更新任何仍引用 occupied 的调用方。",
+        "plannedScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "actualScope": [
+          "src/availability.ts#roomPressure",
+          "src/availability.ts#roomSummary"
+        ],
+        "baseRevision": {
+          "src/intervals.ts#capacity": 0,
+          "src/intervals.ts#capacity.occupied": 0,
+          "src/availability.ts#roomPressure": 0
+        },
+        "taskRevision": 4,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "used": 39,
+  "runs": [
+    {
+      "taskId": "d3-01",
+      "injection": "on",
+      "round": 1,
+      "runId": "BeAXmrkYou10"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "on",
+      "round": 1,
+      "runId": "tQysNTgrGvhK"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "on",
+      "round": 1,
+      "runId": "umBxgZsaUxOb"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "on",
+      "round": 1,
+      "runId": "7ke3pM7v3ZYm"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "on",
+      "round": 1,
+      "runId": "7RLX8-hz2qg5"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "on",
+      "round": 1,
+      "runId": "kfxaVIXtcrUi"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "off",
+      "round": 1,
+      "runId": "DmCel8zu0gQs"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "off",
+      "round": 1,
+      "runId": "rQICSu6ccdhs"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "off",
+      "round": 1,
+      "runId": "G7cZdHjji6lI"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "off",
+      "round": 1,
+      "runId": "2bwxHUIXcG1t"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "off",
+      "round": 1,
+      "runId": "8O60j1sD7262"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "off",
+      "round": 1,
+      "runId": "pfb5MsK-Iqnd"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "on",
+      "round": 1,
+      "runId": "dTSGLJUbjlw_"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "on",
+      "round": 1,
+      "runId": "GNqDLlhLWO7d"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "on",
+      "round": 1,
+      "runId": "NHgcPayiSS0o"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "on",
+      "round": 1,
+      "runId": "gLFEbQSICHsu"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "on",
+      "round": 1,
+      "runId": "BH9blBG9FX9I"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "on",
+      "round": 1,
+      "runId": "vqdfF56ySQ2M"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "on",
+      "round": 1,
+      "runId": "HCWFuaZb_k3C"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "on",
+      "round": 1,
+      "runId": "pu2NGwq_lLcs"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "on",
+      "round": 1,
+      "runId": "hnCroGGTskaE"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "on",
+      "round": 1,
+      "runId": "mbSJeyx27nd1"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "on",
+      "round": 1,
+      "runId": "C3CjBa5ZOXR8"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "on",
+      "round": 1,
+      "runId": "0lQhPgG0fVFo"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "off",
+      "round": 1,
+      "runId": "QpAayooGnrNx"
+    },
+    {
+      "taskId": "d3-01",
+      "injection": "off",
+      "round": 1,
+      "runId": "Rbst0phn0Hz5"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "off",
+      "round": 1,
+      "runId": "RkWFfjrM4pqB"
+    },
+    {
+      "taskId": "d3-02",
+      "injection": "off",
+      "round": 1,
+      "runId": "KOwssEWsa8Nl"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "off",
+      "round": 1,
+      "runId": "mKE5eV1HicA1"
+    },
+    {
+      "taskId": "d3-03",
+      "injection": "off",
+      "round": 1,
+      "runId": "AXJAvMrgpvQo"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "jaOvmyo7nWVi"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "2ONvvnyAmejn"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "eh_Nmc31IODc"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "NneZL5CZfQ7V"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "zKnJcl1CwPo4"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "8zCPpprkO6tm"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "12CuuI46cdxn"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "PAoRZGRQ-eb1"
+    },
+    {
+      "taskId": "browser",
+      "injection": "on",
+      "round": 1,
+      "runId": "vkdi6h5OOSlA"
+    }
+  ]
+}

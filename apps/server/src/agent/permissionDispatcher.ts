@@ -34,6 +34,7 @@ export function createPermissionDispatcher(options: {
   const requests = new Map<string, Promise<void>>();
   const controller = new AbortController();
   const deferred = new Map<string, (decision: PermissionDecision) => void>();
+  const earlyResolutions = new Map<string, PermissionDecision>();
   const internalFailures = new Map<string, number>();
   const trace = async (type: string, data: Record<string, unknown>) => {
     try { await options.trace(type, data); }
@@ -73,9 +74,13 @@ export function createPermissionDispatcher(options: {
         if (decision.onRejected) rejections.push(decision.onRejected);
         const approval = decision.onApproved;
         if (decision.reply === "defer") {
-          const pending = new Promise<PermissionDecision>((resolve) => deferred.set(request.id, resolve));
+          const pending = new Promise<PermissionDecision>((resolve) => {
+            const early = earlyResolutions.get(request.id);
+            if (early) { earlyResolutions.delete(request.id); resolve(early); }
+            else deferred.set(request.id, resolve);
+          });
           await trace("permission_deferred", { requestId: request.id, sessionId: request.sessionID });
-          const deferredSignal = AbortSignal.any([incoming, AbortSignal.timeout(options.deferBudgetMs ?? options.budgetMs ?? 30_000)]);
+          const deferredSignal = AbortSignal.any([signal, AbortSignal.timeout(options.deferBudgetMs ?? 300_000)]);
           decision = await awaitSignal(pending, deferredSignal);
           if (decision.onRejected) rejections.push(decision.onRejected);
         }
@@ -100,6 +105,7 @@ export function createPermissionDispatcher(options: {
       await trace(error instanceof PermissionEditRejected ? "permission_rejected" : "permission_handler_error", { requestId: request.id, file, reason });
     } finally {
       deferred.delete(request.id);
+      earlyResolutions.delete(request.id);
     }
     try {
       if (signal.aborted && decision.reply === "once") decision = { reply: "reject", message: "审批分析已取消，本次修改未获批准。" };
@@ -128,7 +134,11 @@ export function createPermissionDispatcher(options: {
     },
     resolve(requestId: string, decision: { reply: "once" | "reject"; message?: string }) {
       const resolve = deferred.get(requestId);
-      if (!resolve) return false;
+      if (!resolve) {
+        if (!requests.has(requestId)) return false;
+        earlyResolutions.set(requestId, decision);
+        return true;
+      }
       deferred.delete(requestId);
       resolve(decision);
       return true;

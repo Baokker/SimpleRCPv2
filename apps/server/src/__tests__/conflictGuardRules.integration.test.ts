@@ -32,7 +32,7 @@ describe("rules 模式冲突干预", () => {
   beforeEach(async () => {
     root = await createTestWorkspace("rules-api-");
     await fs.mkdir(path.join(root, "demo"));
-    app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: path.join(root, "demo"), terminalEnabled: false, importRoots: [path.dirname(shopRoot)], conflictGuard: { mode: "rules", idleMs: 50, cursorLeaveLines: 3, maxBatchDurationMs: 500, activeIdleMs: 30_000, cursorDebounceMs: 20 } });
+    app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: path.join(root, "demo"), terminalEnabled: false, importRoots: [path.dirname(shopRoot)], conflictGuard: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } });
     const project = await app.locals.registry.importDirectory("Conflict shop", shopRoot);
     projectId = project.id;
     roomId = app.locals.runtimeManager.get(projectId).room.id;

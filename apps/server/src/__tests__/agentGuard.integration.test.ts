@@ -20,7 +20,7 @@ import { conflictGuardEditHandler } from "../agent/conflictGuardEditHandler.js";
 const shop = fileURLToPath(new URL("../../../../demo/conflict-shop/", import.meta.url));
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => { for (const dispose of cleanup.reverse()) await dispose(); cleanup.length = 0; });
-async function setup(mode: "off" | "observe" | "rules" | "full" = "rules", model?: { decision: "allow" | "warn" | "lock"; delay?: number; timeout?: boolean; runTimeoutMs?: number }, linked = false) {
+async function setup(mode: "off" | "observe" | "rules" | "full" = "rules", model?: { decision: "allow" | "warn" | "lock"; delay?: number; timeout?: boolean; runTimeoutMs?: number }, linked = false, arbitration: "owner" | "all-human" | "all-auto" = "owner") {
   const root = await createTestWorkspace("agent-guard-");
   const accessRoot = linked ? `${root}-link` : root;
   if (linked) {
@@ -29,7 +29,7 @@ async function setup(mode: "off" | "observe" | "rules" | "full" = "rules", model
   }
   let modelCalls = 0;
   const judge = async (): Promise<JudgeResult> => { modelCalls += 1; await new Promise((resolve) => setTimeout(resolve, model?.delay ?? 1)); if (model?.timeout) throw new ProviderError("timeout"); return { decision: model?.decision ?? "warn", confidence: 0.9, latencyMs: model?.delay ?? 1, raw: {}, userExplanation: "关联计算需要检查。", suggestedAction: "请 Agent 检查调用方式。" }; };
-  const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(accessRoot, "data"), demoProjectRoot: shop, terminalEnabled: false, fakeAgentRuntime: true, agent: { runTimeoutMs: model?.runTimeoutMs ?? 600000, maxConcurrentRuns: 3, model: "fake-agent", openCodePort: 4199, baseUrl: "http://127.0.0.1:4199" }, importRoots: [path.dirname(shop)], conflictGuard: { mode, idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 5000, activeIdleMs: 600000, cursorDebounceMs: 100, ...(model ? { adjudication: { settings: defaultAdjudicationConfig, jev: {}, deepseek: { model: "test" }, judges: { fast: { name: "test-fast", model: "test", judge }, deep: { name: "test-deep", model: "test", judge } } } } : {}) } });
+  const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(accessRoot, "data"), demoProjectRoot: shop, terminalEnabled: false, fakeAgentRuntime: true, agent: { runTimeoutMs: model?.runTimeoutMs ?? 600000, maxConcurrentRuns: 3, model: "fake-agent", openCodePort: 4199, baseUrl: "http://127.0.0.1:4199" }, importRoots: [path.dirname(shop)], conflictGuard: { mode, arbitration, idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 5000, activeIdleMs: 600000, cursorDebounceMs: 100, ...(model ? { adjudication: { settings: defaultAdjudicationConfig, jev: {}, deepseek: { model: "test" }, judges: { fast: { name: "test-fast", model: "test", judge }, deep: { name: "test-deep", model: "test", judge } } } } : {}) } });
   const project = await app.locals.registry.importDirectory("Agent shop", shop);
   const runtime = app.locals.runtimeManager.get(project.id) as ProjectRuntime;
   const server = http.createServer(app);
@@ -441,7 +441,7 @@ it("pauses a short run timeout while a T2 model request is pending", async () =>
 }, 15000);
 
 it("rejects the later dependent edit from another active Agent run", async () => {
-  const context = await setup();
+  const context = await setup("rules", undefined, false, "all-auto");
   const first = await context.run(`fake-edit=${edit("src/pricing.ts", "rate: number)", "rate: number, currency: string)")} fake-delay=2500`, context.alice.member.id);
   await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.actor.kind === "agent" && set.actor.runId === first.id && set.symbols.some((symbol) => symbol.key.endsWith("#applyDiscount"))));
   const second = await context.run(`fake-edit=${edit("src/cart.ts", "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)")}`);

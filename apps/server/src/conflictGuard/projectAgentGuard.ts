@@ -3,7 +3,7 @@ import { PermissionEditRejected } from "../agent/permissionDispatcher.js";
 import type { AgentRun } from "@simplercp/shared";
 import type { GuardConflict } from "@simplercp/conflict-guard";
 import { createGuardNotificationStore } from "./notificationStore.js";
-import { evaluateAgentChanges, proposalFileChange, proposalSymbolKeys, selectAgentReverts, parseSymbols, createGuardConflict, sanitize, type ActiveChangeSet, type ActorRef, type AgentTextProposal, type ConflictGuardClock, type ConflictGuardTracker, type PairRecord, type SemanticFileProvider, type ZoneInput, type ZoneVerdict } from "@simplercp/conflict-guard";
+import { agentInputRevision, evaluateAgentChanges, changedAgentDependencies, mergeActiveChanges, proposalFileChange, proposalSymbolKeys, selectAgentReverts, createGuardConflict, sanitize, type ActiveChangeSet, type ActorRef, type AgentTextProposal, type ConflictGuardClock, type ConflictGuardTracker, type PairRecord, type SemanticFileProvider, type ZoneInput, type ZoneVerdict } from "@simplercp/conflict-guard";
 
 type AgentActor = Extract<ActorRef, { kind: "agent" }>;
 interface RunState {
@@ -13,6 +13,7 @@ interface RunState {
   files: Map<string, AgentTextProposal>;
   writes: AgentTextProposal[];
   warnings: string[];
+  forceRevert?: boolean;
 }
 export interface AgentGuardNotice { id: string; memberId: string; runId: string; summary: string; at: number }
 
@@ -31,10 +32,12 @@ export function createProjectAgentGuard(options: {
   notificationsPath?: string;
   sensitiveValues?: string[];
   adjudicate?(point: "T2" | "T3", input: ZoneInput, local: ZoneVerdict, signal: AbortSignal): Promise<ZoneVerdict>;
+  onT3Conflict?(runId: string, conflict: GuardConflict, input: ZoneInput | undefined): Promise<"revert" | "continue" | "retry" | "warn">;
   emit(event: Record<string, unknown>): void;
   changed(): void;
 }) {
   const runs = new Map<string, RunState>();
+  const completed = new Map<string, { run: RunState; revert: Parameters<typeof finish>[2] }>();
   type Reservation = { actor: AgentActor; proposal: AgentTextProposal; hash: string; pending: boolean; timer?: ReturnType<typeof setTimeout> };
   const approved = new Map<string, Reservation[]>();
   const decisions = new Map<string, PairRecord & { point: "T2" | "T3"; shadow?: boolean }>();
@@ -43,14 +46,16 @@ export function createProjectAgentGuard(options: {
   const listeners = new Set<(event: Record<string, unknown>) => void>();
   const emit = (event: Record<string, unknown>) => { try { options.emit(event); } catch { console.error("Agent guard trace failed"); } for (const listener of listeners) { try { listener(event); } catch { console.error("Agent guard event listener failed"); } } };
   const queues = new Map<string, Promise<unknown>>();
-  const notify = (run: RunState, summary: string, conflict?: GuardConflict) => {
-    noticeStore.add({ id: crypto.randomUUID(), memberId: run.actor.ownerId, runId: run.actor.runId, summary: summary.trim(), at: options.clock.now(), ...(conflict ? { conflict } : {}) });
+  const notify = (run: RunState, summary: string, conflict?: GuardConflict, level: "light" | "action" = "light") => {
+    const notice = { id: crypto.randomUUID(), memberId: run.actor.ownerId, runId: run.actor.runId, summary: summary.trim(), at: options.clock.now(), ...(conflict ? { conflict } : {}) };
+    noticeStore.add(notice);
+    emit({ type: "agent_notice", actor: run.actor, notice, level });
     options.changed();
   };
   function start(actor: AgentActor, baseline: Map<string, string>) {
     runs.set(actor.runId, { actor, startedAt: options.clock.now(), baseline, files: new Map(), writes: [], warnings: [] });
     options.tracker.startAgent(actor);
-    emit({ type: "agent_run_started", actor });
+    emit({ type: "agent_run_started", actor, baseline: Object.fromEntries(baseline) });
   }
   function remember(set: ActiveChangeSet, at: number) {
     history.push({ at, set: { ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })), symbols: change.symbols?.map((symbol) => ({ ...symbol })) }])) } });
@@ -59,7 +64,7 @@ export function createProjectAgentGuard(options: {
   }
   async function evaluate(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: ActiveChangeSet[], shadow = false, changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>) {
     const reservations = new Map([...approved.values()].flat().map((entry) => [entry.proposal.file, entry.proposal.after]));
-    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, active: mergeChangeSets(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
+    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, active: mergeActiveChanges(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
       const key = `${point}:${event.record.pair.id}`;
       const previous = decisions.get(key);
       const pair = { ...event.record.pair, id: key };
@@ -117,7 +122,7 @@ export function createProjectAgentGuard(options: {
       options.changed();
     } };
   }
-  function conflictFor(run: RunState, result: Awaited<ReturnType<typeof evaluate>>, point: "T2" | "T3"): GuardConflict | undefined {
+  function conflictFor(run: RunState, result: Pick<Awaited<ReturnType<typeof evaluate>>, "decision" | "records" | "inputs">, point: "T2" | "T3"): GuardConflict | undefined {
     const record = result.records.find((record) => record.verdict?.decision === result.decision);
     const other = record && [record.pair.left, record.pair.right].find((side) => actorKey(side.actor) !== actorKey(run.actor));
     const verdict = record?.verdict;
@@ -134,11 +139,7 @@ export function createProjectAgentGuard(options: {
     }).filter((set) => set.files.size > 0);
   }
   function inputRevision(proposals: AgentTextProposal[], active: ActiveChangeSet[]) {
-    const files = [...new Set([...active.flatMap((set) => [...set.files.keys()]), ...proposals.map((proposal) => proposal.file)])].sort();
-    return hash(JSON.stringify([
-      files.map((file) => [file, hash(options.current(file))]),
-      active.map((set) => [actorKey(set.actor), [...set.files].map(([file, change]) => [file, hash(change.baseText), [...new Set(change.ranges.map((range) => `${range.start}:${range.end}`))].sort()])])
-    ]));
+    return agentInputRevision(proposals, active, options.current);
   }
   async function evaluateCurrent(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: () => ActiveChangeSet[], changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>) {
     for (;;) {
@@ -150,18 +151,9 @@ export function createProjectAgentGuard(options: {
     }
   }
   function changedDependencies(run: RunState) {
-    const relevant = [...history, ...options.active().map((set) => ({ at: options.clock.now(), set }))].filter((entry) => entry.at >= run.startedAt && actorKey(entry.set.actor) !== actorKey(run.actor)).map((entry) => ({ ...entry.set, files: new Map([...entry.set.files].flatMap(([file, change]) => {
-      if (change.lastTouchedAt <= run.startedAt) return [];
-      const baseline = run.baseline.get(file) ?? "";
-      const beforeSymbols = new Map(parseSymbols(file, baseline).map((symbol) => [symbol.key, baseline.slice(symbol.start, symbol.end)]));
-      const keys = new Set((change.symbols ?? []).filter((symbol) => (beforeSymbols.get(symbol.key) ?? "") !== symbol.after).map((symbol) => symbol.key));
-      const ranges = parseSymbols(file, options.current(file)).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
-      if ([...keys].some((key) => change.symbols?.some((symbol) => symbol.key === key && symbol.status === "deleted"))) ranges.push(...change.ranges);
-      return ranges.length ? [[file, { ...change, baseText: baseline, ranges }] as const] : [];
-    })) })).filter((set) => set.files.size > 0);
-    return mergeChangeSets(relevant);
+    return changedAgentDependencies({ actor: run.actor, startedAt: run.startedAt, baseline: run.baseline, history, active: options.active(), now: options.clock.now(), current: options.current });
   }
-  function judge(runId: string, proposals: AgentTextProposal[], signal: AbortSignal) {
+  function judge(runId: string, proposals: AgentTextProposal[], signal: AbortSignal): Promise<{ decision: "allow" | "warn" | "lock"; message?: string; conflict?: GuardConflict; input?: ZoneInput; onApproved?: () => void; onRejected?: () => void }> {
     const keys = [...new Set(proposals.map((proposal) => proposal.file))].sort();
     const waiting = Promise.all(keys.map((key) => queues.get(key)?.catch(() => undefined)));
     const task = waiting.then(async () => {
@@ -191,9 +183,9 @@ export function createProjectAgentGuard(options: {
       const message = result.decision === "lock" ? conflict ? `修改被拒绝：与 ${conflict.otherDisplayName} 修改的 ${conflict.symbols.other} 存在冲突。规则 ${conflict.ruleId}。${conflict.summaryZh} 对方修改后：${conflict.afterSignature || "请重新读取关联符号"}。${conflict.suggestionZh ?? "请使用当前接口与行为调整实现，或暂停修改此处。"}${recent}` : "冲突检查未完成，请停止重复同一修改并向用户报告。" : undefined;
       emit({ type: "t2_judged", actor: run.actor, decision: result.decision, files: proposals.map((proposal) => ({ file: proposal.file, beforeHash: hash(proposal.before), afterHash: hash(proposal.after) })), message, conflict });
       if (result.decision === "warn") run.warnings.push(verdict?.summary.trim() ?? "关联修改需要检查。");
-      if (result.decision !== "allow") notify(run, `Agent ${result.decision === "lock" ? "修改被拒绝" : "修改警告"}：${conflict?.summaryZh ?? "请检查关联修改。"}`, conflict);
+      if (result.decision === "warn") notify(run, `Agent 修改警告：${conflict?.summaryZh ?? "请检查关联修改。"}`, conflict);
       const reservation = result.decision !== "lock" ? reserve(run, proposals) : undefined;
-      return { decision: result.decision, message, ...reservation };
+      return { decision: result.decision, message, conflict, input: result.inputs[result.records.indexOf(record!)], ...reservation };
     }).catch((error) => {
       emit({ type: "agent_guard_error", runId, point: "T2", reason: error instanceof Error ? error.message : String(error) });
       throw error;
@@ -257,20 +249,32 @@ export function createProjectAgentGuard(options: {
         proposals.set(proposal.file, { ...proposal, before: previous?.before ?? proposal.before });
         remainingWrites.push({ ...proposal, before: previous?.after ?? proposal.before, existedBefore: previous ? true : proposal.existedBefore });
       }
+      run.writes.push(...remainingWrites);
+      for (const [file, proposal] of proposals) run.files.set(file, proposal);
       const changedSymbols = new Map<string, Set<string>>();
-      for (const proposal of [...run.writes, ...remainingWrites]) {
+      for (const proposal of run.writes) {
         const keys = changedSymbols.get(proposal.file) ?? new Set<string>();
         for (const key of proposalSymbolKeys(proposal)) keys.add(key);
         changedSymbols.set(proposal.file, keys);
       }
-      const result = await evaluateCurrent(run, [...proposals.values()], "T3", signal, () => changedDependencies(run), changedSymbols);
+      emit({ type: "agent_review", actor: run.actor, proposals: [...proposals.values()], writes: run.writes, forceRevert: Boolean(run.forceRevert) });
+      const result: Pick<Awaited<ReturnType<typeof evaluate>>, "decision" | "records" | "inputs"> = run.forceRevert ? { decision: "lock", records: [], inputs: [] } : await evaluateCurrent(run, [...proposals.values()], "T3", signal, () => changedDependencies(run), changedSymbols);
       const conflict = conflictFor(run, result, "T3");
       if (options.mode === "observe") { emit({ type: "t3_shadow", actor: run.actor, decision: result.decision }); return result.decision === "allow" && !incomplete.length ? "passed" : "warned"; }
       if (result.decision === "allow") return incomplete.length ? "warned" : "passed";
       if (result.decision === "warn") { notify(run, "Agent 结束检查提示关联修改需要共同检查。", conflict); return "warned"; }
+      if (conflict && options.onT3Conflict) {
+        const record = result.records.find((record) => record.verdict?.decision === "lock");
+        const action = await options.onT3Conflict(runId, conflict, result.inputs[result.records.indexOf(record!)]);
+        if (action === "retry") {
+          return await finish(runId, [], revert, unverified);
+        }
+        if (action === "continue") return incomplete.length ? "warned" : "passed";
+        if (action === "warn") return "warned";
+      }
       const blocks: Array<Record<string, unknown>> = [];
       let reverted = 0; let skipped = 0;
-      const writes = [...run.writes, ...remainingWrites];
+      const writes = [...run.writes];
       for (const proposal of writes.reverse()) {
         const current = options.current(proposal.file);
         const selected = selectAgentReverts(proposal.before, proposal.after, current);
@@ -290,32 +294,22 @@ export function createProjectAgentGuard(options: {
       return "warned";
     } finally {
       options.tracker.markDone(run.actor);
+      completed.set(runId, { run, revert });
       runs.delete(runId);
       for (const [file, entries] of approved) { for (const entry of entries) if (entry.actor.runId === runId) clearTimeout(entry.timer); const remaining = entries.filter((entry) => entry.actor.runId !== runId); if (remaining.length) approved.set(file, remaining); else approved.delete(file); }
       options.refresh();
     }
   }
-  return { completeOrigin, start, remember, judge, resolveOrigin, shadow, finish, updateNotice: noticeStore.update, flushNotices: noticeStore.flush, unavailable(runId: string, file: string) { const run = runs.get(runId); if (run) notify(run, `冲突检查暂不可用，Agent 已停止修改 ${file}，请检查错误记录。`); }, pendingFile: (file: string) => approved.get(file)?.some((entry) => entry.pending) ?? false, warnings: (runId: string) => [...(runs.get(runId)?.warnings ?? [])], onEvent(listener: (event: Record<string, unknown>) => void) { listeners.add(listener); return () => listeners.delete(listener); }, actor: (runId: string) => runs.get(runId)?.actor, baseline: (runId: string, file: string) => runs.get(runId)?.files.get(file)?.after ?? runs.get(runId)?.baseline.get(file), records: () => [...decisions.values()], notices: noticeStore.list };
+  return { completeOrigin, start, remember, judge, resolveOrigin, shadow, finish, updateNotice: noticeStore.update, flushNotices: noticeStore.flush,
+    notifyOwner(runId: string, summary: string, conflict?: GuardConflict, level: "light" | "action" = "light") { const run = runs.get(runId) ?? completed.get(runId)?.run; if (run) notify(run, summary, conflict, level); },
+    async withdraw(runId: string) {
+      const archived = completed.get(runId); if (!archived) throw new Error("Agent 修改记录不可用");
+      runs.set(runId, archived.run); archived.run.forceRevert = true;
+      return finish(runId, [], archived.revert);
+    },
+    requestRevert(runId: string) { const run = runs.get(runId); if (run) run.forceRevert = true; },
+    actualScope(runId: string) { return [...new Set([...(runs.get(runId)?.files.values() ?? [])].flatMap((proposal) => [...proposalSymbolKeys(proposal)]))]; },
+    unavailable(runId: string, file: string) { const run = runs.get(runId); if (run) notify(run, `冲突检查暂不可用，Agent 已停止修改 ${file}，请检查错误记录。`); }, pendingFile: (file: string) => approved.get(file)?.some((entry) => entry.pending) ?? false, warnings: (runId: string) => [...(runs.get(runId)?.warnings ?? [])], onEvent(listener: (event: Record<string, unknown>) => void) { listeners.add(listener); return () => listeners.delete(listener); }, actor: (runId: string) => runs.get(runId)?.actor, baseline: (runId: string, file: string) => runs.get(runId)?.files.get(file)?.after ?? runs.get(runId)?.baseline.get(file), records: () => [...decisions.values()], notices: noticeStore.list };
 }
 function hash(value: string) { return crypto.createHash("sha256").update(value).digest("hex"); }
 function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
-function mergeChangeSets(sets: ActiveChangeSet[]) {
-  const result = new Map<string, ActiveChangeSet>();
-  for (const set of sets) {
-    const key = actorKey(set.actor);
-    const previous = result.get(key);
-    if (!previous) { result.set(key, { ...set, files: new Map(set.files), status: "settled" }); continue; }
-    for (const [file, change] of set.files) {
-      const earlier = previous.files.get(file);
-      previous.files.set(file, earlier ? {
-        ...change,
-        baseText: earlier.baseText,
-        ranges: [...earlier.ranges, ...change.ranges],
-        deletedSymbolKeys: [...new Set([...(earlier.deletedSymbolKeys ?? []), ...(change.deletedSymbolKeys ?? [])])],
-        firstTouchedAt: Math.min(earlier.firstTouchedAt, change.firstTouchedAt),
-        lastTouchedAt: Math.max(earlier.lastTouchedAt, change.lastTouchedAt)
-      } : change);
-    }
-  }
-  return [...result.values()];
-}

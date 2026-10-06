@@ -159,6 +159,32 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       continue;
     }
     if (["agent_run_started", "agent_write_attributed", "agent_guard_error", "t2_judged", "t2_rejected", "t2_shadow", "t3_shadow", "t3_revert"].includes(event.type)) continue;
+    if (["intent_created", "intent_updated", "intent_closed"].includes(event.type)) {
+      const intent = event.intent as Record<string, unknown> | undefined;
+      if (!intent || !intent.actor || typeof intent.owner !== "string" || typeof intent.task !== "string" || !Array.isArray(intent.plannedScope) || !Array.isArray(intent.actualScope) || !Number.isInteger(intent.taskRevision) || !["planning", "running", "waiting", "blocked", "done", "reverted"].includes(String(intent.status))) throw new Error("intent event is incomplete");
+      actorKey(intent.actor);
+      continue;
+    }
+    if (event.type === "intent_injected") {
+      if (!event.actor || typeof event.inputHash !== "string" || !/^[a-f0-9]{64}$/.test(event.inputHash) || !Number.isInteger(event.count) || Number(event.count) < 0 || Number(event.count) > 5) throw new Error("intent_injected is incomplete");
+      actorKey(event.actor);
+      continue;
+    }
+    if (event.type === "project_snapshot") {
+      if (!event.files || typeof event.files !== "object" || Array.isArray(event.files) || Object.values(event.files).some((value) => typeof value !== "string")) throw new Error("project_snapshot is incomplete");
+      continue;
+    }
+    if (event.type === "agent_proposal" || event.type === "agent_review") {
+      if (!event.actor || event.type === "agent_proposal" && typeof event.requestId !== "string" || !Array.isArray(event.proposals) || event.proposals.some((proposal) => !proposal || typeof proposal.file !== "string" || typeof proposal.before !== "string" || typeof proposal.after !== "string")) throw new Error("Agent proposal is incomplete");
+      actorKey(event.actor);
+      continue;
+    }
+    if (["arbitration_opened", "arbitration_updated", "arbitration_resolved", "arbitration_chat"].includes(event.type)) {
+      const card = event.card as Record<string, unknown> | undefined;
+      if (!card || typeof card.id !== "string" || !Array.isArray(card.owners) || !Array.isArray(card.intents) || !["waiting", "accepted", "yielded", "timeout", "closed"].includes(String(card.status))) throw new Error("arbitration card is incomplete");
+      continue;
+    }
+    if (["arbitration_action", "arbitration_retry", "arbitration_continuation", "arbitration_error", "arbitration_suggestion_error", "interruption", "agent_notice"].includes(event.type)) continue;
     if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }

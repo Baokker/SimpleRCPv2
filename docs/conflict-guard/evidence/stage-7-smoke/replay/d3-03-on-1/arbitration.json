@@ -1,0 +1,290 @@
+{
+  "owner": {
+    "mode": "owner",
+    "actions": [],
+    "injections": [
+      {
+        "at": 1791315247982,
+        "runId": "C3CjBa5ZOXR8",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "at": 1791315247997,
+        "runId": "0lQhPgG0fVFo",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interruptions": [
+      {
+        "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "at": 1791315270254,
+        "kind": "agent-agent-cross-owner",
+        "level": "light",
+        "pairId": "T3:fda28709742cf82316890dc687c4e60041c93cd940c09edd78810bed57968d30",
+        "revision": 0
+      }
+    ],
+    "statistics": [
+      {
+        "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "interruptions": 0,
+        "perHour": 0,
+        "light": 1,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 0,
+          "agent-system": 0
+        }
+      }
+    ],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "C3CjBa5ZOXR8",
+          "ownerId": "b77c1cc1-d673-49e3-a292-28c1a704de1c"
+        },
+        "owner": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "task": "In src/weights.ts add weightDetails(bytes, overhead, category), returning {bytes: entryWeight(bytes, overhead, category)}. Refactor entryWeight's internal calculation into weightDetails so the new result object is the implementation source. Preserve the public numeric entryWeight API.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [],
+        "actualScope": [
+          "src/weights.ts#entryWeight",
+          "src/weights.ts#weightDetails",
+          "src/weights.ts#weightDetails.bytes"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "0lQhPgG0fVFo",
+          "ownerId": "3852f701-5aee-4296-b11f-a3e121670c50"
+        },
+        "owner": "3852f701-5aee-4296-b11f-a3e121670c50",
+        "task": "In src/lru.ts add exported admittedLabel(bytes) using the weight calculation from weights.ts for image entries at overhead 0.1. Return the allocated byte count followed by ' bytes'. Refactor admittedBytes to share the chosen calculation. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/lru.ts#admittedBytes",
+          "src/lru.ts#admittedLabel"
+        ],
+        "actualScope": [
+          "src/lru.ts#admittedBytes",
+          "src/lru.ts#admittedLabel",
+          "src/lru.ts#imageAllocation"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  },
+  "all-human": {
+    "mode": "all-human",
+    "actions": [],
+    "injections": [
+      {
+        "at": 1791315247982,
+        "runId": "C3CjBa5ZOXR8",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "at": 1791315247997,
+        "runId": "0lQhPgG0fVFo",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interruptions": [
+      {
+        "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "at": 1791315270254,
+        "kind": "agent-agent-cross-owner",
+        "level": "light",
+        "pairId": "T3:fda28709742cf82316890dc687c4e60041c93cd940c09edd78810bed57968d30",
+        "revision": 0
+      }
+    ],
+    "statistics": [
+      {
+        "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "interruptions": 0,
+        "perHour": 0,
+        "light": 1,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 0,
+          "agent-system": 0
+        }
+      }
+    ],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "C3CjBa5ZOXR8",
+          "ownerId": "b77c1cc1-d673-49e3-a292-28c1a704de1c"
+        },
+        "owner": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "task": "In src/weights.ts add weightDetails(bytes, overhead, category), returning {bytes: entryWeight(bytes, overhead, category)}. Refactor entryWeight's internal calculation into weightDetails so the new result object is the implementation source. Preserve the public numeric entryWeight API.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [],
+        "actualScope": [
+          "src/weights.ts#entryWeight",
+          "src/weights.ts#weightDetails",
+          "src/weights.ts#weightDetails.bytes"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "0lQhPgG0fVFo",
+          "ownerId": "3852f701-5aee-4296-b11f-a3e121670c50"
+        },
+        "owner": "3852f701-5aee-4296-b11f-a3e121670c50",
+        "task": "In src/lru.ts add exported admittedLabel(bytes) using the weight calculation from weights.ts for image entries at overhead 0.1. Return the allocated byte count followed by ' bytes'. Refactor admittedBytes to share the chosen calculation. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/lru.ts#admittedBytes",
+          "src/lru.ts#admittedLabel"
+        ],
+        "actualScope": [
+          "src/lru.ts#admittedBytes",
+          "src/lru.ts#admittedLabel",
+          "src/lru.ts#imageAllocation"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  },
+  "all-auto": {
+    "mode": "all-auto",
+    "actions": [],
+    "injections": [
+      {
+        "at": 1791315247982,
+        "runId": "C3CjBa5ZOXR8",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "at": 1791315247997,
+        "runId": "0lQhPgG0fVFo",
+        "count": 0,
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interruptions": [
+      {
+        "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "at": 1791315270254,
+        "kind": "agent-agent-cross-owner",
+        "level": "light",
+        "pairId": "T3:fda28709742cf82316890dc687c4e60041c93cd940c09edd78810bed57968d30",
+        "revision": 0
+      }
+    ],
+    "statistics": [
+      {
+        "memberId": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "interruptions": 0,
+        "perHour": 0,
+        "light": 1,
+        "byKind": {
+          "human-human": 0,
+          "human-agent": 0,
+          "agent-agent-same-owner": 0,
+          "agent-agent-cross-owner": 0,
+          "agent-system": 0
+        }
+      }
+    ],
+    "outcomes": {
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "cards": [],
+    "intents": [
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "C3CjBa5ZOXR8",
+          "ownerId": "b77c1cc1-d673-49e3-a292-28c1a704de1c"
+        },
+        "owner": "b77c1cc1-d673-49e3-a292-28c1a704de1c",
+        "task": "In src/weights.ts add weightDetails(bytes, overhead, category), returning {bytes: entryWeight(bytes, overhead, category)}. Refactor entryWeight's internal calculation into weightDetails so the new result object is the implementation source. Preserve the public numeric entryWeight API.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [],
+        "actualScope": [
+          "src/weights.ts#entryWeight",
+          "src/weights.ts#weightDetails",
+          "src/weights.ts#weightDetails.bytes"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      },
+      {
+        "actor": {
+          "kind": "agent",
+          "runId": "0lQhPgG0fVFo",
+          "ownerId": "3852f701-5aee-4296-b11f-a3e121670c50"
+        },
+        "owner": "3852f701-5aee-4296-b11f-a3e121670c50",
+        "task": "In src/lru.ts add exported admittedLabel(bytes) using the weight calculation from weights.ts for image entries at overhead 0.1. Return the allocated byte count followed by ' bytes'. Refactor admittedBytes to share the chosen calculation. Preserve existing tests.\nUse edit or write tools for all code changes. Do not use bash to write files. Do not inspect parent directories, environment files, credentials, or other projects. If permission is rejected, read the reason, reread the affected files, and adapt your change. Before finishing run the existing tests. Use the files supplied as context; keep your task scope small.",
+        "plannedScope": [
+          "src/lru.ts#admittedBytes",
+          "src/lru.ts#admittedLabel"
+        ],
+        "actualScope": [
+          "src/lru.ts#admittedBytes",
+          "src/lru.ts#admittedLabel",
+          "src/lru.ts#imageAllocation"
+        ],
+        "baseRevision": {},
+        "taskRevision": 1,
+        "status": "done"
+      }
+    ],
+    "errors": [],
+    "modelSimulation": "provider"
+  }
+}

@@ -106,6 +106,8 @@ export function loadConfig(
       maxBatchDurationMs: 5_000,
       activeIdleMs: 600_000,
       cursorDebounceMs: 200,
+      arbitration: (() => { const mode = env.CONFLICT_GUARD_ARBITRATION ?? "owner"; if (!["owner", "all-human", "all-auto"].includes(mode)) throw new Error("CONFLICT_GUARD_ARBITRATION must be owner, all-human, or all-auto"); return mode as "owner" | "all-human" | "all-auto"; })(),
+      intentInjection: (() => { const value = env.CONFLICT_GUARD_INTENT_INJECTION ?? "on"; if (!["on", "off"].includes(value)) throw new Error("CONFLICT_GUARD_INTENT_INJECTION must be on or off"); return value === "on"; })(),
       ...(conflictGuardMode === "full" ? { adjudication: {
         settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: env.CONFLICT_GUARD_DEEP ?? "deepseek", t2Strategy: (env.CONFLICT_GUARD_T2_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t3Strategy: (env.CONFLICT_GUARD_T3_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t2Reasoning: readBoolean(env.CONFLICT_GUARD_T2_REASONING, "CONFLICT_GUARD_T2_REASONING", false), t3Reasoning: readBoolean(env.CONFLICT_GUARD_T3_REASONING, "CONFLICT_GUARD_T3_REASONING", false) }),
         mode: (env.CONFLICT_GUARD_PROVIDER_MODE ?? "live") as "live" | "record" | "replay",

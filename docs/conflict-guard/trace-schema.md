@@ -46,6 +46,23 @@
 
 full 轨迹包含 `provider_subscription` 时，核验按输入哈希、请求次数与角色恢复各自的等待结果；相同输入的不同请求可以分别超时、取消或完成。缺少订阅事件的已有轨迹继续使用 `provider_call` 与响应缓存。
 
+## 阶段七输入与仲裁
+
+- `project_snapshot`：首次启动的语义源文件与相关测试内容，供 Agent 回放恢复项目视图。
+- `agent_run_started`：Agent ActorRef 与开始时的 baseline 文件内容。
+- `agent_proposal`：requestId、Agent ActorRef、文件级 before/after 提案。
+- `agent_review`：Agent ActorRef、结束提案、实际 writes 与 forceRevert。
+- `intent_created`、`intent_updated`、`intent_closed`：完整意图记录与更新原因。
+- `intent_injected`：runId、条数与内容 SHA-256，不保存注入原文。
+- `arbitration_action`：时点、结构化 conflict 与纯函数仲裁结果。
+- `arbitration_opened`、`arbitration_updated`、`arbitration_resolved`、`arbitration_chat`：卡片状态与建议。
+- `arbitration_retry`：同属主 run、关联 run 与自动检查次数。
+- `arbitration_continuation`：实际追加执行完成信息，保存于 run trace。
+- `ui_action` 的 arbitration_accept、arbitration_yield、arbitration_chat：成员、pairId、cardId 与双方 ActorRef。
+- `agent_notice`：持久通知与 light/action 级别；`interruption`：接收人、时间、类型、pairId、revision 与级别。
+
+session_start 记录 arbitration 与 intentInjection。Agent 回放从输入事件重新计算 T1/T2/T3 判定与仲裁。provider 缓存经 SHA-256 检查后使用录制延迟；建议内容与成员操作作为输入保留。不同仲裁配置使用同一录制行为，意图注入效果另由真实 Agent 执行评价。旧轨迹缺少 intentInjection 时，由 intent_injected 事件的存在恢复开关。
+
 `reservation_mismatch` 保存 Agent ActorRef、文件、预计内容哈希与磁盘实际内容哈希，表示批准后的两秒确认期限内出现格式变化。`permission_deferred` 保存请求和子会话 ID；后续回复使用 `permission_reply`。内部检查异常保存原因，重复同文件异常会产生属主通知。
 
 T2/T3 的结构化 `conflict` 包含 pairId、revision、self、other、otherDisplayName、symbols、beforeSignature、afterSignature、ruleId、zone、decision、summaryZh 及可选解释和建议。持久通知包含 id、memberId、runId、at、summary、read、handled，保存到项目的 `conflict-guard/notifications.json`。

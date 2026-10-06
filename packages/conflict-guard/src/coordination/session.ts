@@ -26,6 +26,7 @@ export function createSessionCoordinator(options: {
   index: SemanticIndex;
   now(): number;
   intervene: boolean;
+  arbitrationMode?: "owner" | "all-human" | "all-auto";
   enableT0?: boolean;
   enableSemanticPending?: boolean;
   classify(pair: CandidatePair): ZoneVerdict;
@@ -115,7 +116,7 @@ export function createSessionCoordinator(options: {
   }
   function gate(file: string) {
     if (!options.intervene) return { allowed: true, reason: undefined };
-    const records = coordinator.records().filter((record) => humanPair(record.pair));
+    const records = coordinator.records().filter((record) => coordinateHumans(record.pair));
     if (records.some((record) => record.status === "analyzing" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "analyzing" };
     if (records.some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "lock" };
     if (records.some((record) => ["pending", "stale"].includes(record.status) && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "pending-judgement" };
@@ -135,10 +136,11 @@ export function createSessionCoordinator(options: {
     const active = new Set<string>();
     const activeAnalysis = new Set<string>();
     if (options.intervene) for (const record of coordinator.records()) {
-      if (!humanPair(record.pair)) continue;
+      if (!coordinateHumans(record.pair) || options.arbitrationMode === "all-auto") continue;
       const isAnalyzing = record.status === "analyzing";
       if (!isAnalyzing && (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock")) continue;
       for (const side of [record.pair.left, record.pair.right]) {
+        if (side.actor.kind !== "human") continue;
         const key = `${record.pair.id}:${actorKey(side.actor)}:${side.symbol}`;
         const target = isAnalyzing ? analyzing : frozen;
         (isAnalyzing ? activeAnalysis : active).add(key);
@@ -214,6 +216,7 @@ export function createSessionCoordinator(options: {
     }
   }
   function regions() { return [...frozen.values()].map((region) => ({ ...region })); }
+  function coordinateHumans(pair: CandidatePair) { return humanPair(pair) || options.arbitrationMode === "all-human" && [pair.left.actor, pair.right.actor].some((actor) => actor.kind === "human"); }
   function emitFrozen() {
     const current = JSON.stringify(regions());
     if (current === lastFrozen) return;

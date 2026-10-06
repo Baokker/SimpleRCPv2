@@ -12,6 +12,16 @@ import { createPairCoordinator, type PairEvent, type PairRecord } from "./pairSt
 
 export interface AgentTextProposal { file: string; before: string; after: string; deleted?: boolean; existedBefore?: boolean }
 
+export function agentInputRevision(proposals: AgentTextProposal[], active: ActiveChangeSet[], current: (file: string) => string) {
+  const hash = (text: string) => createHash("sha256").update(text).digest("hex");
+  const actorKey = (actor: ActorRef) => actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind;
+  const files = [...new Set([...active.flatMap((set) => [...set.files.keys()]), ...proposals.map((proposal) => proposal.file)])].sort();
+  return hash(JSON.stringify([
+    files.map((file) => [file, hash(current(file))]),
+    active.map((set) => [actorKey(set.actor), [...set.files].map(([file, change]) => [file, hash(change.baseText), [...new Set(change.ranges.map((range) => `${range.start}:${range.end}`))].sort()])])
+  ]));
+}
+
 export function symbolSignature(text: string | undefined) {
   if (!text) return "";
   const read = (source: ts.SourceFile) => {
@@ -65,7 +75,7 @@ export async function evaluateAgentChanges(options: {
 }) {
   const proposals = options.proposals.map((proposal) => options.mergeShared ? mergeAgentProposal(proposal, options.files.readFile(proposal.file)) : proposal);
   const overlay = new Map(proposals.filter((proposal) => isSemanticFile(proposal.file)).map((proposal) => [proposal.file, proposal.before]));
-  const files: SemanticFileProvider = { ...options.files, listFiles: () => [...new Set([...options.files.listFiles(), ...overlay.keys()])], readFile: (file) => overlay.get(file) ?? options.files.readFile(file), version: (file) => overlay.has(file) ? `proposal:${hash(overlay.get(file)!)}` : options.files.version(file) };
+  const files: SemanticFileProvider = { readLib: options.files.readLib?.bind(options.files), listFiles: () => [...new Set([...options.files.listFiles(), ...overlay.keys()])], readFile: (file) => overlay.get(file) ?? options.files.readFile(file), version: (file) => overlay.has(file) ? `proposal:${hash(overlay.get(file)!)}` : options.files.version(file) };
   const index = createSemanticIndex({ files, now: options.now });
   index.update();
   const semantic = new SemanticChangeTracker({ index, readFile: files.readFile, now: options.now });
@@ -225,3 +235,28 @@ function textEdits(before: string, after: string) {
 
 function hash(text: string) { return createHash("sha256").update(text).digest("hex"); }
 function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
+
+export function mergeActiveChanges(sets: ActiveChangeSet[]) {
+  const result = new Map<string, ActiveChangeSet>();
+  for (const set of sets) {
+    const key = actorKey(set.actor);
+    const previous = result.get(key);
+    if (!previous) { result.set(key, { ...set, files: new Map(set.files), status: "settled" }); continue; }
+    for (const [file, change] of set.files) {
+      const earlier = previous.files.get(file);
+      previous.files.set(file, earlier ? { ...change, baseText: earlier.baseText, ranges: [...earlier.ranges, ...change.ranges], deletedSymbolKeys: [...new Set([...(earlier.deletedSymbolKeys ?? []), ...(change.deletedSymbolKeys ?? [])])], firstTouchedAt: Math.min(earlier.firstTouchedAt, change.firstTouchedAt), lastTouchedAt: Math.max(earlier.lastTouchedAt, change.lastTouchedAt) } : change);
+    }
+  }
+  return [...result.values()];
+}
+export function changedAgentDependencies(options: { actor: ActorRef; startedAt: number; baseline: ReadonlyMap<string, string>; history: Array<{ at: number; set: ActiveChangeSet }>; active: ActiveChangeSet[]; now: number; current(file: string): string }): ActiveChangeSet[] {
+  return mergeActiveChanges([...options.history, ...options.active.map((set) => ({ at: options.now, set }))].filter((entry) => entry.at >= options.startedAt && actorKey(entry.set.actor) !== actorKey(options.actor)).map((entry) => ({ ...entry.set, files: new Map([...entry.set.files].flatMap(([file, change]) => {
+    if (change.lastTouchedAt <= options.startedAt) return [];
+    const baseline = options.baseline.get(file) ?? "";
+    const beforeSymbols = new Map(parseSymbols(file, baseline).map((symbol) => [symbol.key, baseline.slice(symbol.start, symbol.end)]));
+    const keys = new Set((change.symbols ?? []).filter((symbol) => (beforeSymbols.get(symbol.key) ?? "") !== symbol.after).map((symbol) => symbol.key));
+    const ranges = parseSymbols(file, options.current(file)).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
+    if ([...keys].some((key) => change.symbols?.some((symbol) => symbol.key === key && symbol.status === "deleted"))) ranges.push(...change.ranges);
+    return ranges.length ? [[file, { ...change, baseText: baseline, ranges }] as const] : [];
+  })) })).filter((set) => set.files.size > 0));
+}

@@ -31,6 +31,10 @@ export class VirtualClock {
     this.timers.delete(timer);
   }
 
+  nextTimerAt() {
+    return [...this.timers].filter((timer) => !timer.cancelled).sort((left, right) => left.at - right.at || left.order - right.order)[0]?.at;
+  }
+
   advanceTo(at: number) {
     if (at < this.current) throw new Error("虚拟时钟不能向后移动");
     while (true) {
@@ -48,4 +52,3 @@ export class VirtualClock {
     if (last) this.advanceTo(last.at);
   }
 }
-

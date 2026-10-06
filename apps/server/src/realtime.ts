@@ -17,6 +17,7 @@ import type {
 } from "./types.js";
 import type { MemberStore, Identity } from "./auth/identity.js";
 import { can } from "./auth/permissions.js";
+import { connectIntentBoard } from "./conflictGuard/intentConnection.js";
 
 const yWebsocketDocs = (yWebsocketUtils as unknown as { docs: Map<string, unknown> }).docs;
 
@@ -320,6 +321,15 @@ export function attachRealtimeServer(
       void authenticateUpgrade(request, projectId, options?.members).then((identity) => {
         if (!identity) { socket.destroy(); return; }
         ensureRuntimeSubscriptions(runtime);
+        if (documentPart === "conflict-guard-intents") {
+          if (!runtime.rooms.getMember(runtime.room.id, identity.memberId) || !runtime.conflictGuard) { socket.destroy(); return; }
+          documentWss.handleUpgrade(request, socket, head, (webSocket) => {
+            documentProjects.set(webSocket, projectId);
+            webSocket.on("close", () => documentProjects.delete(webSocket));
+            connectIntentBoard(webSocket, runtime.conflictGuard!.arbitration.document);
+          });
+          return;
+        }
         const { roomId } = parseDocumentName(documentName);
         if (!runtime.rooms.getMember(roomId, identity.memberId)) { socket.destroy(); return; }
         void runtime.documents.prepareDocument(documentName).then(() => {
