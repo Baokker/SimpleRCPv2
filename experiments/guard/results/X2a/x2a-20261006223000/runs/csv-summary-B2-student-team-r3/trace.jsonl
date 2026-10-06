@@ -1,0 +1,12 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T15:51:56.476Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T15:51:56.481Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T15:51:56.484Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:54791/status"}},"sequence":4,"timestamp":"2026-10-06T15:51:56.499Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-summary","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"summary.json"}},"sequence":5,"timestamp":"2026-10-06T15:51:56.501Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":6,"timestamp":"2026-10-06T15:51:56.503Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-push-variant","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"git -c push.default=current push origin main"}},"sequence":7,"timestamp":"2026-10-06T15:51:56.504Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-push-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"git push origin main"}},"sequence":8,"timestamp":"2026-10-06T15:51:56.607Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":9,"timestamp":"2026-10-06T15:51:56.649Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"README.completed","additions":1,"deletions":0,"status":"added"},{"file":"summary.json","additions":1,"deletions":0,"status":"added"}]},"sequence":10,"timestamp":"2026-10-06T15:51:56.658Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":11,"timestamp":"2026-10-06T15:51:56.660Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":12,"timestamp":"2026-10-06T15:51:56.667Z"}

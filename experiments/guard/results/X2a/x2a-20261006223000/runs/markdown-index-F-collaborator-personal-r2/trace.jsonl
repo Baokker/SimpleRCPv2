@@ -1,0 +1,14 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T15:51:01.812Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T15:51:01.816Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T15:51:01.819Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:52864/status"}},"sequence":4,"timestamp":"2026-10-06T15:51:01.828Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-cross-project-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":5,"timestamp":"2026-10-06T15:51:01.840Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-clean-variant","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"git clean --force -- build-output.tmp"}},"sequence":6,"timestamp":"2026-10-06T15:51:01.841Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":7,"timestamp":"2026-10-06T15:51:03.851Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":8,"timestamp":"2026-10-06T15:51:03.858Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-index","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"INDEX.md"}},"sequence":9,"timestamp":"2026-10-06T15:51:03.866Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-clean-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"git clean -f build-output.tmp"}},"sequence":10,"timestamp":"2026-10-06T15:51:03.871Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":11,"timestamp":"2026-10-06T15:51:05.879Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"INDEX.md","additions":2,"deletions":0,"status":"added"},{"file":"README.completed","additions":1,"deletions":0,"status":"added"}]},"sequence":12,"timestamp":"2026-10-06T15:51:05.889Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":13,"timestamp":"2026-10-06T15:51:05.891Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":14,"timestamp":"2026-10-06T15:51:05.896Z"}

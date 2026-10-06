@@ -1,0 +1,258 @@
+{
+  "verifiedRuns": 24,
+  "verifiedSnapshots": 36,
+  "observations": [
+    {
+      "runId": "todo-cli-F-student-team-r1",
+      "snapshotId": "1791301607440-8e0d2871",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-student-personal-r1",
+      "snapshotId": "1791301609406-6241402f",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-personal-r1",
+      "snapshotId": "1791301612271-3e2fe42a",
+      "restoredHash": "70ff6be0c19bd348aeedddfb9ef93b6b5f6ca1e51fe621c43742339d5f9b2c78",
+      "manifestHash": "70ff6be0c19bd348aeedddfb9ef93b6b5f6ca1e51fe621c43742339d5f9b2c78",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-personal-r1",
+      "snapshotId": "1791301612247-c749e072",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-team-r1",
+      "snapshotId": "1791301612363-1d377791",
+      "restoredHash": "",
+      "manifestHash": "",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-team-r1",
+      "snapshotId": "1791301612297-b47682e0",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-student-team-r1",
+      "snapshotId": "1791301749072-3b71afcd",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-student-personal-r1",
+      "snapshotId": "1791301749068-8e788a63",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-personal-r1",
+      "snapshotId": "1791301751762-c7403b0f",
+      "restoredHash": "949c95f01a419223da087afecac56560a2d0aaaf2416d47892316eb716695bf7",
+      "manifestHash": "949c95f01a419223da087afecac56560a2d0aaaf2416d47892316eb716695bf7",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-personal-r1",
+      "snapshotId": "1791301751734-636d1465",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-team-r1",
+      "snapshotId": "1791301751751-36de9e3f",
+      "restoredHash": "480aea127ad6d14e5ef754aacc5ff0d0e4ccbace6d1f614c87fbeedd33083884",
+      "manifestHash": "480aea127ad6d14e5ef754aacc5ff0d0e4ccbace6d1f614c87fbeedd33083884",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-team-r1",
+      "snapshotId": "1791301751739-c49c4fb4",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-student-personal-r2",
+      "snapshotId": "1791301763551-4508b330",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-student-team-r2",
+      "snapshotId": "1791301763568-cdfe7621",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-personal-r2",
+      "snapshotId": "1791301766238-9fb5432c",
+      "restoredHash": "",
+      "manifestHash": "",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-personal-r2",
+      "snapshotId": "1791301766187-a3bba940",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-team-r2",
+      "snapshotId": "1791301766219-e3a92690",
+      "restoredHash": "",
+      "manifestHash": "",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-team-r2",
+      "snapshotId": "1791301766198-8af8fc70",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-student-personal-r2",
+      "snapshotId": "1791301899447-f006724a",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-student-team-r2",
+      "snapshotId": "1791301899453-e21a56e2",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-team-r2",
+      "snapshotId": "1791301900157-36e8c0ea",
+      "restoredHash": "949c95f01a419223da087afecac56560a2d0aaaf2416d47892316eb716695bf7",
+      "manifestHash": "949c95f01a419223da087afecac56560a2d0aaaf2416d47892316eb716695bf7",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-team-r2",
+      "snapshotId": "1791301900112-f828003b",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-personal-r2",
+      "snapshotId": "1791301900142-eac4d111",
+      "restoredHash": "480aea127ad6d14e5ef754aacc5ff0d0e4ccbace6d1f614c87fbeedd33083884",
+      "manifestHash": "480aea127ad6d14e5ef754aacc5ff0d0e4ccbace6d1f614c87fbeedd33083884",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-personal-r2",
+      "snapshotId": "1791301900128-0c361fc7",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-student-personal-r3",
+      "snapshotId": "1791301912118-13461e2c",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-student-team-r3",
+      "snapshotId": "1791301910140-6c0ab5b5",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-personal-r3",
+      "snapshotId": "1791301914758-70971571",
+      "restoredHash": "70ff6be0c19bd348aeedddfb9ef93b6b5f6ca1e51fe621c43742339d5f9b2c78",
+      "manifestHash": "70ff6be0c19bd348aeedddfb9ef93b6b5f6ca1e51fe621c43742339d5f9b2c78",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-personal-r3",
+      "snapshotId": "1791301914749-033804f2",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-team-r3",
+      "snapshotId": "1791301914782-45b74b96",
+      "restoredHash": "",
+      "manifestHash": "",
+      "restored": true
+    },
+    {
+      "runId": "todo-cli-F-collaborator-team-r3",
+      "snapshotId": "1791301914744-a75ac386",
+      "restoredHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "manifestHash": "c5cb83f7fe3c585f934e03d17b79167badc29b156ad592fa699eec1788982858",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-student-personal-r3",
+      "snapshotId": "1791302044970-34969611",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-student-team-r3",
+      "snapshotId": "1791302042939-5057946d",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-team-r3",
+      "snapshotId": "1791302045661-01c0feea",
+      "restoredHash": "949c95f01a419223da087afecac56560a2d0aaaf2416d47892316eb716695bf7",
+      "manifestHash": "949c95f01a419223da087afecac56560a2d0aaaf2416d47892316eb716695bf7",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-team-r3",
+      "snapshotId": "1791302045613-6257f1dc",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-personal-r3",
+      "snapshotId": "1791302045658-a94f1b8b",
+      "restoredHash": "480aea127ad6d14e5ef754aacc5ff0d0e4ccbace6d1f614c87fbeedd33083884",
+      "manifestHash": "480aea127ad6d14e5ef754aacc5ff0d0e4ccbace6d1f614c87fbeedd33083884",
+      "restored": true
+    },
+    {
+      "runId": "team-greeting-F-collaborator-personal-r3",
+      "snapshotId": "1791302045642-85d2c6ca",
+      "restoredHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "manifestHash": "0326bc118f44c794d26fef19e9ebe2656877dccc9b72b978355a218efe832922",
+      "restored": true
+    }
+  ]
+}
