@@ -18,10 +18,30 @@ function tokens(command: string) {
   return command.match(/"[^\"]*"|'[^']*'|\S+/g) ?? [];
 }
 
-function unquote(token: string) {
-  return token.startsWith("\"") && token.endsWith("\"") || token.startsWith("'") && token.endsWith("'")
-    ? token.slice(1, -1)
-    : token;
+export function unquote(token: string) {
+  let result = "";
+  let quote: "single" | "double" | undefined;
+  for (let index = 0; index < token.length; index += 1) {
+    const character = token[index]!;
+    if (character === "\\" && quote !== "single") {
+      const next = token[index + 1];
+      if (next !== undefined) {
+        result += next;
+        index += 1;
+        continue;
+      }
+    }
+    if (character === "'" && quote !== "double") {
+      quote = quote === "single" ? undefined : "single";
+      continue;
+    }
+    if (character === '"' && quote !== "single") {
+      quote = quote === "double" ? undefined : "double";
+      continue;
+    }
+    result += character;
+  }
+  return result;
 }
 
 function target(cwd: string, raw: string, role: ParsedTarget["role"]): ParsedTarget {

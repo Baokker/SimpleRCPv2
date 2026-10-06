@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { GuardRequest, GuardSegment, PathZone, Reversibility, Capability } from "./types.js";
 import { commandName, legacyRisk } from "./legacy/classifier.js";
-import { hasDynamicSyntax, hasNetworkUpload, parseCommandPaths } from "./legacy/parser.js";
+import { hasDynamicSyntax, hasNetworkUpload, parseCommandPaths, unquote } from "./legacy/parser.js";
 
 export interface Characterization {
   segments: GuardSegment[];
@@ -11,6 +11,7 @@ export interface Characterization {
   dynamic: boolean;
   gitContext: boolean;
   plainDownloadToShell: boolean;
+  downloadExecute: boolean;
 }
 
 const plainDownloadToShellPattern = /^\s*(curl|wget)\s+[^;&|<>`$()]*\|\s*(sh|bash|zsh)\s*$/i;
@@ -85,19 +86,63 @@ function zoneFor(target: string, request: GuardRequest, platformDataRoot: string
 }
 
 function resolveExistingPrefix(target: string) {
-  let candidate = path.resolve(target);
+  return resolvePathWithLinks(path.resolve(target), new Set<string>());
+}
+
+function resolvePathWithLinks(target: string, visited: Set<string>): string {
+  if (visited.has(target)) throw new Error(`Symbolic link cycle while resolving ${target}`);
+  visited.add(target);
+  let candidate = target;
   const suffix: string[] = [];
-  while (!fs.existsSync(candidate)) {
-    const parent = path.dirname(candidate);
-    if (parent === candidate) return path.resolve(target);
-    suffix.unshift(path.basename(candidate));
-    candidate = parent;
+  while (true) {
+    try {
+      const stats = fs.lstatSync(candidate);
+      if (stats.isSymbolicLink()) {
+        const link = fs.readlinkSync(candidate);
+        const linked = path.isAbsolute(link) ? link : path.resolve(path.dirname(candidate), link);
+        return resolvePathWithLinks(path.join(linked, ...suffix), visited);
+      }
+      return path.resolve(fs.realpathSync(candidate), ...suffix);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      const parent = path.dirname(candidate);
+      if (parent === candidate) return path.resolve(target);
+      suffix.unshift(path.basename(candidate));
+      candidate = parent;
+    }
   }
-  try {
-    return path.resolve(fs.realpathSync(candidate), ...suffix);
-  } catch {
-    return path.resolve(target);
+}
+
+function downloadOutputPath(command: string): string | undefined {
+  const input = command.match(/"[^\"]*"|'[^']*'|\S+/g) ?? [];
+  const name = commandName(command);
+  if (!["curl", "wget"].includes(name)) return undefined;
+  const options = name === "curl" ? new Set(["-o", "--output"]) : new Set(["-o", "-O", "--output-document"]);
+  for (let index = 1; index < input.length; index += 1) {
+    const token = input[index]!;
+    const equal = token.indexOf("=");
+    const option = (equal >= 0 ? token.slice(0, equal) : token).toLowerCase();
+    if (!options.has(option)) continue;
+    const value = equal >= 0 ? token.slice(equal + 1) : input[index + 1];
+    if (equal < 0) index += 1;
+    if (value) return unquote(value);
   }
+  return undefined;
+}
+
+function interpreterRunsPath(command: string, target: string): boolean {
+  const input = (command.match(/"[^\"]*"|'[^']*'|\S+/g) ?? []).map(unquote);
+  const executable = path.basename(input[0] ?? "").toLowerCase();
+  if (!["sh", "bash", "zsh", "fish", "python", "python3", "node", "perl", "ruby", "php", "powershell", "pwsh"].includes(executable)) return false;
+  return input.slice(1).some((value) => path.normalize(value) === path.normalize(target));
+}
+
+function hasDownloadExecute(command: string, parts: string[]): boolean {
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    const output = downloadOutputPath(parts[index]!);
+    if (output && parts.slice(index + 1).some((part) => interpreterRunsPath(part, output))) return true;
+  }
+  return false;
 }
 
 function gitSubcommand(command: string) {
@@ -180,7 +225,7 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
 function reversibilityFor(name: string, command: string, capabilities: Capability[], kind: GuardRequest["kind"]): Reversibility {
   if (kind === "read" || kind === "fetch" && !/\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "reversible";
   const subcommand = name === "git" ? gitSubcommand(command) : "";
-  if (name === "git" && (subcommand === "push" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
+  if (name === "git" && (subcommand === "push" || subcommand === "clean" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
   if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && (name === "scp" || name === "rsync" || hasNetworkUpload(command))) return "irreversible";
@@ -201,7 +246,8 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
       unknown: results.some((result) => result.unknown),
       dynamic: results.some((result) => result.dynamic),
       gitContext: results.some((result) => result.gitContext),
-      plainDownloadToShell: false
+      plainDownloadToShell: false,
+      downloadExecute: results.some((result) => result.downloadExecute)
     };
   }
   if (request.source === "agent" && request.kind === "command") {
@@ -218,14 +264,16 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
           unknown: false,
           dynamic: /["'\\$`]/.test(prefix[1]!),
           gitContext: false,
-          plainDownloadToShell: false
+          plainDownloadToShell: false,
+          downloadExecute: false
         };
       }
       const rest = characterize({ ...request, command: prefix[2], cwd: directory }, platformDataRoot, protectedPaths, otherWorkspaceRoots);
       return {
         ...rest,
         segments: [{ text: prefix[1]!, capabilities: ["exec"], zone: "workspace", reversibility: "reversible" }, ...rest.segments],
-        plainDownloadToShell: false
+        plainDownloadToShell: false,
+        downloadExecute: rest.downloadExecute
       };
     }
   }
@@ -234,20 +282,22 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     const parts = splitShellCommands(command);
     if (parts.length > 1) {
       const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
+      const downloadExecute = hasDownloadExecute(command, parts);
       return {
-        segments: results.flatMap((result) => result.segments),
+        segments: [...results.flatMap((result) => result.segments), ...(downloadExecute ? [{ text: command, capabilities: ["network", "exec"] as Capability[], zone: "workspace" as PathZone, reversibility: "irreversible" as Reversibility }] : [])],
         legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
         unknown: results.some((result) => result.unknown),
         dynamic: results.some((result) => result.dynamic) || hasInterpreterPipe(command) || hasEvalCommand(command),
         gitContext: results.some((result) => result.gitContext),
-        plainDownloadToShell: false
+        plainDownloadToShell: false,
+        downloadExecute
       };
     }
   }
   const name = request.kind === "command" ? commandName(command) : request.kind;
   const parsed = request.kind === "command" ? parseCommandPaths(command, request.cwd) : undefined;
   const dynamic = request.kind === "command" && (hasDynamicSyntax(command) || parsed?.dynamic === true);
-  const targetItems = parsed?.targets ?? request.paths?.map((target) => ({ raw: target, resolvedPath: path.resolve(request.cwd, target), role: "target" as const })) ?? [];
+  const targetItems = parsed?.targets ?? request.paths?.map((target) => ({ raw: target, resolvedPath: path.resolve(request.cwd, unquote(target)), role: "target" as const })) ?? [];
   const metadataReference = request.kind === "command" && command.includes("$SIMPLERCP_DATA_DIR");
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
   let capabilities: Capability[] = baseCapabilities;
@@ -271,6 +321,7 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     };
   });
   if (dynamic) segments.push({ text: command, capabilities: ["exec"], zone: "outside", reversibility: "irreversible" });
+  if (hasDownloadExecute(command, [command])) segments.push({ text: command, capabilities: ["network", "exec"], zone: "workspace", reversibility: "irreversible" });
   if (metadataReference) segments.push({ text: "$SIMPLERCP_DATA_DIR", capabilities: ["read"], zone: "metadata", reversibility: "reversible" });
-  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command), plainDownloadToShell };
+  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command), plainDownloadToShell, downloadExecute: hasDownloadExecute(command, [command]) };
 }
