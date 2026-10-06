@@ -4,8 +4,8 @@ import path from "node:path";
 import { createSnapshotStore } from "../../../apps/server/src/guard/snapshots.js";
 
 const projectRoot = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
-const runRoot = path.join(projectRoot, "experiments/guard/results/X2a/x2a-20261006091559");
-const runtimeRoot = path.join(projectRoot, ".experiment-data/x2a-20261006091559/todo-cli-F-collaborator-personal-r2");
+const runRoot = path.join(projectRoot, "experiments/guard/results/X2a/x2a-20261006182000");
+const runtimeRoot = path.join(projectRoot, ".experiment-data/x2a-20261006182000/todo-cli-F-collaborator-personal-r2");
 const workspace = path.join(runtimeRoot, "data/workspaces/demo");
 const metadata = path.join(runtimeRoot, "data/projects/demo");
 const store = createSnapshotStore(metadata, workspace);
