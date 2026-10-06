@@ -38,9 +38,9 @@ d3-01、d3-02、d3-03 在注入开启和关闭下各执行一次。每对启动�
 | 检查 | 结果 |
 |---|---|
 | pnpm -r build | 通过 |
-| conflict-guard 测试 | 209 项通过 |
-| 服务端测试 | 272 项通过 |
-| 生产时间参数的仲裁集成 | 8 项通过，idleMs=1500、文件写入延迟 300 ms |
+| conflict-guard 测试 | 214 项通过 |
+| 服务端测试 | 273 项通过 |
+| 生产时间参数的仲裁集成 | 9 项通过，idleMs=1500、文件写入延迟 300 ms |
 | pnpm test:demo | 2 项通过 |
 | test:collab，off/observe/rules/full | 每种模式 2 项通过 |
 | 阶段二、三 Playwright 回归 | 15 项通过 |
@@ -51,7 +51,9 @@ d3-01、d3-02、d3-03 在注入开启和关闭下各执行一次。每对启动�
 | D3 初始项目与验收前提 | 六个项目、十三个任务对通过检查 |
 | 录制缓存回放 | 六份轨迹 × 三种模式 × 三次，确定性与错误检查通过 |
 
-两路最终复核未发现新的明确功能问题。密钥扫描比较根目录 .env 的精确值，只输出匹配计数；验证记录见 evidence/stage-7-smoke/verification.json。
+两路最终复核未发现新的明确功能问题。密钥扫描比较根目录 .env 的精确值，只输出匹配计数；测试与回放验证记录见 evidence/stage-7-review/verification.json，真实冒烟记录见 evidence/stage-7-smoke/verification.json。
+
+意图范围、多个卡片的活动状态与录制证据的复核验证见 [review-stage-7.md](review-stage-7.md)。
 
 ## 局限与阶段八
 

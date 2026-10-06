@@ -44,6 +44,8 @@ it("parses complete plans and advances task revisions for all three causes", () 
   expect(board.get(first.runId)?.taskRevision).toBe(3);
   expect(baseRevision).toEqual({});
   board.status(first.runId, "done"); expect(events.at(-1)?.[0]).toBe("intent_closed");
+  board.statusForActors([first, alice], "blocked");
+  expect(board.get(first.runId)?.status).toBe("done");
 });
 it("filters injected context with the semantic index and enforces both limits", () => {
   const files = new MemoryFileProvider({ "a.ts": "export function price() { return 1; }\nexport function total() { return price(); }\nexport function other() { return 0; }" });

@@ -60,6 +60,14 @@ export function createIntentBoard(options: { changed(type: "intent_created" | "i
       if (intent.baseRevision[symbol] !== revision) { intent.baseRevision[symbol] = revision; intent.taskRevision += 1; }
     }, "basis"); },
     status(runId: string, status: IntentStatus) { return update(runId, (intent) => { intent.status = status; }, "status"); },
+    statusForActors(actors: ActorRef[], status: IntentStatus, waitingActors: ActorRef[] = []) {
+      const blocked = new Set(waitingActors.map(participantKey));
+      for (const actor of actors) {
+        if (actor.kind !== "agent") continue;
+        const intent = records.get(actor.runId);
+        if (intent && !["done", "reverted"].includes(intent.status)) update(actor.runId, (current) => { current.status = blocked.has(participantKey(actor)) ? "blocked" : status; }, "status");
+      }
+    },
     get(runId: string) { const intent = records.get(runId); return intent && copy(intent); },
     list() { return [...records.values()].map(copy); }
   };

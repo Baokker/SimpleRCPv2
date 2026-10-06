@@ -1,0 +1,73 @@
+{
+  "baseline": "e983871",
+  "review": {
+    "standards": "passed",
+    "spec": "passed"
+  },
+  "checks": [
+    {
+      "name": "build",
+      "passed": true
+    },
+    {
+      "name": "conflict-guard",
+      "passed": true,
+      "tests": 214
+    },
+    {
+      "name": "server",
+      "passed": true,
+      "tests": 273
+    },
+    {
+      "name": "targeted",
+      "passed": true,
+      "tests": 14
+    },
+    {
+      "name": "demo",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-off",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-observe",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-rules",
+      "passed": true,
+      "tests": 2
+    },
+    {
+      "name": "collaboration-full",
+      "passed": true,
+      "tests": 2
+    }
+  ],
+  "productionTiming": {
+    "idleMs": 1500,
+    "persistenceDelayMs": 300,
+    "arbitrationIntegrationTests": 9
+  },
+  "replays": {
+    "traces": 8,
+    "modes": [
+      "owner",
+      "all-human",
+      "all-auto"
+    ],
+    "repetitions": 3,
+    "errors": 0
+  },
+  "realAgentRunsAdded": 0,
+  "realAgentRunsUsed": 39,
+  "realAgentRunsLimit": 40,
+  "holdoutExecuted": false,
+  "configuredValuesFound": 0
+}

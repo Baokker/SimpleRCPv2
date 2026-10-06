@@ -91,6 +91,7 @@ export function createOwnerCards(options: {
       for (const card of cards.values()) if ([card.conflict.self, card.conflict.other].every((actor) => actor.kind === "agent" && completedRuns.has(actor.runId))) finish(card, "closed");
     },
     list(memberId?: string) { return [...cards.values()].filter((card) => !memberId || card.owners.includes(memberId)).map(copy); },
+    waitingActors() { return [...cards.values()].filter((card) => card.status === "waiting").flatMap((card) => [card.conflict.self, card.conflict.other]).map((actor) => ({ ...actor })); },
     stats() { const list = [...cards.values()]; return { outcomes: Object.fromEntries(["accepted", "yielded", "timeout", "closed"].map((status) => [status, list.filter((card) => card.status === status).length])), suspendedMs: list.reduce((sum, card) => sum + (card.resolvedAt ?? options.clock.now()) - card.createdAt, 0) }; },
     async dispose() { for (const card of cards.values()) finish(card, "closed"); await Promise.all(operations); }
   };

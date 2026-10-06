@@ -112,6 +112,7 @@ it("suspends a cross-owner approval and completes every request when an owner yi
   await until(() => context.guard.arbitration.cards.list()[0]?.suggestionStatus === "unavailable");
   context.guard.arbitration.cards.act(card.id, context.bob, "yield"); await approval;
   expect(second.replies).toMatchObject([{ reply: "reject" }]);
+  expect(context.guard.arbitration.board.get("first")?.status).toBe("running");
   expect(context.guard.arbitration.stats().members.map((member) => member.interruptions)).toEqual([1, 1]);
   expect(context.guard.state().frozenFiles).toEqual([]);
 }, 20_000);
@@ -130,6 +131,31 @@ it("waits for a same-owner run and retries through the product classifier", asyn
   await second.edit("src/cart.ts", "applyDiscount(amount, 0.1)", 'applyDiscount(amount, 0.1, "CNY")');
   expect(second.replies.at(-1)?.reply).toBe("once");
   expect(context.guard.arbitration.stats().members).toHaveLength(0);
+}, 20_000);
+
+it("retains the shared Agent's blocked status until all of its owner cards are handled", async () => {
+  const context = await setup();
+  const first = await context.start("first", context.alice);
+  await first.edit("src/pricing.ts", "rate: number)", "rate: number, currency: string)");
+  await until(() => context.guard.state().activeSymbols.some((set) => set.actor.kind === "agent" && set.symbols.length > 0));
+  const second = await context.start("second", context.bob);
+  const secondApproval = second.edit("src/cart.ts", "let amount = 0;", "let amount = 10;");
+  await until(() => context.guard.arbitration.cards.list().length === 1);
+  const third = await context.start("third", context.bob);
+  const thirdApproval = third.edit("src/cart.ts", "let amount = 0;", "let amount = 20;");
+  await until(() => context.guard.arbitration.cards.list().length === 2);
+  const cards = context.guard.arbitration.cards.list();
+  const cardFor = (runId: string) => cards.find((card) => card.conflict.self.kind === "agent" && card.conflict.self.runId === runId)!;
+  context.guard.arbitration.act(cardFor("second").id, context.bob, "yield");
+  await secondApproval;
+  expect(context.guard.arbitration.board.get("first")?.status).toBe("blocked");
+  expect(third.replies).toHaveLength(0);
+  expect(context.guard.arbitration.cards.list().find((card) => card.id === cardFor("third").id)?.status).toBe("waiting");
+  context.guard.arbitration.act(cardFor("third").id, context.bob, "yield");
+  await thirdApproval;
+  expect(context.guard.arbitration.board.get("first")?.status).toBe("running");
+  expect(second.replies.at(-1)?.reply).toBe("reject");
+  expect(third.replies.at(-1)?.reply).toBe("reject");
 }, 20_000);
 
 it("withdraws an archived Agent after completion without changing unrelated files", async () => {

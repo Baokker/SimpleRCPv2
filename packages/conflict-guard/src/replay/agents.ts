@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { ActiveChangeSet, ActorRef, AgentIntent, AgentTextProposal, ArbitrationMode, Interruption, PairRecord, Participant, TraceEvent, ZoneInput, ZoneVerdict } from "../index.js";
 import { arbitrate, participantKey } from "../coordination/arbitration.js";
 import { buildIntentInjection, createIntentBoard } from "../coordination/intents.js";
@@ -35,6 +36,7 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
   const seen = new Set<string>();
   const proposals = new Map<string, AgentTextProposal[]>();
   const requests = new Map<string, string>();
+  const pendingAttributions = new Set<string>();
   const reservations = new Map<string, { actor: Extract<ActorRef, { kind: "agent" }>; changes: AgentTextProposal[] }>();
   const revisions = new Map<string, { key?: string; revision: number }>();
   const errors: string[] = [];
@@ -43,7 +45,9 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
   const pendingJudgements: Promise<void>[] = [];
   const scheduled: Array<{ at: number; order: number; complete(): Promise<void> }> = [];
   let schedulingOrder = 0;
-  const cards = createOwnerCards({ clock, changed() {}, notify(event) { interruptions.push(event); }, resolve() {}, error(error) { throw error; } });
+  const cards = createOwnerCards({ clock, changed(_type, card) {
+    board.statusForActors([card.conflict.self, card.conflict.other], card.status === "waiting" ? "blocked" : "running", cards.waitingActors());
+  }, notify(event) { interruptions.push(event); }, resolve() {}, error(error) { throw error; } });
   const related = (left: string[], right: string[]) => left.some((key) => right.includes(key)) || index.findPaths(left, right, 2).length > 0;
   function inject(actor: Extract<ActorRef, { kind: "agent" }>, scope?: string[]) {
     if (!injectionEnabled) return;
@@ -126,8 +130,10 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
     } } : {}) });
     scheduled.push({ at: clock.now() + latencyMs, order: ++schedulingOrder, async complete() {
       if (before !== view() && clock.now() - startedAt < (point === "T2" ? 30000 : 60000)) { refresh(); await evaluate(point, actor, build, accepted, startedAt); return; }
+      if (point === "T2") board.statusForActors([actor], "running", cards.waitingActors());
       if (result.decision !== "lock") accepted?.();
       const arbitration = result.records.filter((record) => record.verdict?.decision === "lock").map((record) => recordAction(record, actor, point));
+      if (point === "T2" && arbitration.some((action) => action.type === "retry-agent")) board.statusForActors([actor], "waiting", cards.waitingActors());
       if (point === "T2" && result.decision === "lock" && arbitration.every((action) => action.type !== "owner-card")) inject(actor, build().proposals.flatMap((proposal) => [...proposalSymbolKeys(proposal)]));
     } });
   }
@@ -162,12 +168,15 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
         let current = before; let shift = 0;
         for (const op of ops) { const position = op.from + shift; if (current.slice(position, position + op.deleted.length) !== op.deleted) throw new Error("Agent replay edit does not match current text"); current = current.slice(0, position) + op.inserted + current.slice(position + op.deleted.length); shift += op.inserted.length - op.deleted.length; }
         files.set(file, current); tracker.edit({ file, origin, at: event.at, ops: textDiffOps(before, current), textBefore: before, textAfter: current, revisionAfter: Number(event.revisionAfter ?? 0) }); refresh();
+        const attributionKey = `${participantKey(origin)}:${file}`;
+        if (origin.kind === "agent" && pendingAttributions.delete(attributionKey) && board.get(origin.runId)) board.actual(origin.runId, [...proposalSymbolKeys({ file, before, after: current })]);
         const changed = semantic.getActiveChangeSets().find((set) => participantKey(set.actor) === participantKey(origin))?.files.get(file)?.symbols ?? [];
         for (const intent of board.list().filter((intent) => !["done", "reverted"].includes(intent.status) && participantKey(intent.actor) !== participantKey(origin))) for (const symbol of changed) if (related([...intent.plannedScope, ...intent.actualScope], [symbol.key])) board.basis(intent.actor.runId, symbol.key, Number(event.revisionAfter ?? 0));
       }
       if (event.type === "agent_proposal") {
         const actor = event.actor as Extract<ActorRef, { kind: "agent" }>;
         const changes = event.proposals as AgentTextProposal[];
+        board.statusForActors([actor], "waiting", cards.waitingActors());
         for (const proposal of changes) if (!files.listFiles().includes(proposal.file)) { files.open(proposal.file, proposal.before); tracker.openDocument(proposal.file, proposal.before); }
         refresh();
         await evaluate("T2", actor, () => {
@@ -188,8 +197,9 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
       }
       if (event.type === "agent_write_attributed") {
         const actor = event.actor as Extract<ActorRef, { kind: "agent" }>;
-        const accepted = [...proposals].filter(([id]) => requests.get(id) === actor.runId).flatMap(([, list]) => list).filter((proposal) => proposal.file === event.file);
-        if (board.get(actor.runId)) board.actual(actor.runId, accepted.flatMap((proposal) => [...proposalSymbolKeys(proposal)]));
+        const confirmed = [...proposals].filter(([id]) => requests.get(id) === actor.runId).flatMap(([, list]) => list).filter((proposal) => proposal.file === event.file && createHash("sha256").update(proposal.after).digest("hex") === event.contentHash).at(-1);
+        if (confirmed && board.get(actor.runId)) board.actual(actor.runId, [...proposalSymbolKeys(confirmed)]);
+        else pendingAttributions.add(`${participantKey(actor)}:${String(event.file)}`);
         for (const [id, reservation] of reservations) if (reservation.actor.runId === actor.runId && reservation.changes.some((proposal) => proposal.file === event.file)) reservations.delete(id);
       }
       if (event.type === "arbitration_updated") {
@@ -213,6 +223,7 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
       await Promise.all(pendingJudgements.splice(0));
     }
     await advanceTo(clock.now());
+    for (const attribution of pendingAttributions) errors.push(`unmatched-attribution:${attribution}`);
     return { mode: options.mode, actions, injections, interruptions, statistics: interruptionStats(interruptions, clock.now()), outcomes: cards.stats(), cards: cards.list(), intents: board.list(), errors, modelSimulation: options.adjudicate ? "provider" : "local-rules" };
   } finally { await cards.dispose(); tracker.flush(); session.dispose(); }
 }

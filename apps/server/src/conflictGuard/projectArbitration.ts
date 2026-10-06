@@ -61,7 +61,7 @@ export function createProjectArbitration(options: {
   } });
   const cards = createOwnerCards({ clock: options.clock, changed(type, card) {
     emit({ type, card });
-    for (const intent of card.intents) if (board.get(intent.actor.runId) && card.status === "waiting") board.status(intent.actor.runId, "blocked");
+    board.statusForActors([card.conflict.self, card.conflict.other], card.status === "waiting" ? "blocked" : "running", cards.waitingActors());
     options.changed();
   }, notify(event) {
     interruptions.push(event); emit({ type: "interruption", ...event });
@@ -81,7 +81,7 @@ export function createProjectArbitration(options: {
         const message = card.status === "accepted" ? request.runId === (card.conflict.self.kind === "agent" ? card.conflict.self.runId : undefined) ? `双方属主已采纳建议。追加指令：${card.suggestion}。请重新读取文件后按建议修改。` : "双方已完成仲裁，请重新读取相关文件并继续你的原任务。" : card.status === "closed" ? `与 ${card.conflict.otherDisplayName} 的冲突处理已经结束，请重新读取文件后继续。` : request.runId === (yielding?.kind === "agent" ? yielding.runId : undefined) ? "属主仲裁要求本 Agent 让路，请停止相关修改。" : "另一方已让路，请重新读取文件后继续。";
         hooks.get(request.runId)?.resolve(request.requestId, { reply: "reject", message });
         pending.delete(`${request.runId}:${request.requestId}`);
-        if (board.get(request.runId)) board.status(request.runId, "running");
+        setRunStatus(request.runId, "running");
       }
       if (yielding?.kind === "agent") { options.guard.requestRevert(yielding.runId); const hook = hooks.get(yielding.runId) ?? completedHooks.get(yielding.runId); if (hook) await hook.cancel(); else await options.guard.withdraw(yielding.runId); }
       if (card.status === "accepted" && card.suggestion && card.conflict.self.kind === "agent" && reviewWaiters.has(card.id)) {
@@ -105,6 +105,10 @@ export function createProjectArbitration(options: {
     }
   }, error(error) { emit({ type: "arbitration_error", reason: error instanceof Error ? error.message : String(error) }); } });
   function related(left: string[], right: string[]) { return left.some((key) => right.includes(key)) || options.index.findPaths(left, right, 2).length > 0; }
+  function setRunStatus(runId: string, status: "running" | "waiting" | "blocked") {
+    const intent = board.get(runId);
+    if (intent) board.statusForActors([intent.actor], status, cards.waitingActors());
+  }
   function injection(runId: string, scope?: string[]) {
     const intent = board.get(runId); if (!intent) return "";
     const inferred = options.index.listFiles?.().flatMap((file) => options.index.symbolsInFile(file).filter((symbol) => intent.task.includes(symbol.name) || intent.task.includes(file)).map((symbol) => symbol.key)) ?? [];
@@ -114,7 +118,7 @@ export function createProjectArbitration(options: {
   }
   function pause(runId: string, request: AgentPermissionRequest, card: OwnerCard) {
     const key = `${runId}:${request.id}`;
-    pending.set(key, { runId, requestId: request.id, cardId: card.id }); board.status(runId, "blocked");
+    pending.set(key, { runId, requestId: request.id, cardId: card.id }); setRunStatus(runId, "blocked");
     return { decision: "lock" as const, defer: true, onRejected: () => { pending.delete(key); } };
   }
   function openCard(conflict: GuardConflict, input: Judgement["input"], recipients: string[]) {
@@ -128,13 +132,13 @@ export function createProjectArbitration(options: {
   }
   async function judge(runId: string, request: AgentPermissionRequest, proposals: AgentTextProposal[], signal: AbortSignal): Promise<Judgement & { defer?: boolean }> {
     emit({ type: "agent_proposal", actor: options.guard.actor(runId), requestId: request.id, proposals });
-    board.status(runId, "waiting");
+    setRunStatus(runId, "waiting");
     const scope = [...new Set(proposals.flatMap((proposal) => [...proposalSymbolKeys(proposal)]))];
     const existing = cards.list().find((card) => card.status === "waiting" && [card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId) && related(scope, [card.conflict.symbols.self, card.conflict.symbols.other]));
     if (existing) return pause(runId, request, existing);
     let result = await options.guard.judge(runId, proposals, signal);
     if (!result.conflict || result.decision !== "lock") {
-      board.status(runId, "running");
+      setRunStatus(runId, "running");
       const approve = result.onApproved;
       return { ...result, ...(result.decision === "lock" ? { message: [result.message, injection(runId, scope)].filter(Boolean).join("\n\n") } : {}), onApproved: () => { approve?.(); board.actual(runId, scope); } };
     }
@@ -159,7 +163,7 @@ export function createProjectArbitration(options: {
       }
       if (result.decision === "lock") options.guard.notifyOwner(runId, "同属主自动处理未完成，请检查关联任务。", conflict);
       else {
-        result.onRejected?.(); board.status(runId, "running");
+        result.onRejected?.(); setRunStatus(runId, "running");
         return { decision: "lock", message: "前一个同属主任务已经结束，本次提案需要基于当前版本重新生成。请重新读取关联文件后继续修改。" };
       }
     }
@@ -167,7 +171,7 @@ export function createProjectArbitration(options: {
       const event: Interruption = { memberId, at: options.clock.now(), level: "light", kind: action.kind, pairId: conflict.pairId, revision: conflict.revision };
       if (!interruptions.some((entry) => entry.memberId === memberId && entry.pairId === event.pairId && entry.revision === event.revision && entry.level === "light")) options.guard.notifyOwner(runId, conflict.summaryZh, conflict);
     }
-    board.status(runId, "running");
+    setRunStatus(runId, "running");
     const context = injection(runId, scope);
     return { ...result, message: [result.message, context].filter(Boolean).join("\n\n") };
   }

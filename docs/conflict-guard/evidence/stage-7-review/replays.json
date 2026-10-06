@@ -1,0 +1,464 @@
+{
+  "traces": 8,
+  "repetitions": 3,
+  "providerMode": "replay",
+  "realAgentRunsAdded": 0,
+  "summaries": [
+    {
+      "name": "d3-01-on-1",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 2,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "HCWFuaZb_k3C",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "pu2NGwq_lLcs",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 2,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "HCWFuaZb_k3C",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "pu2NGwq_lLcs",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "HCWFuaZb_k3C",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "pu2NGwq_lLcs",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "d3-02-on-1",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 2,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "hnCroGGTskaE",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "mbSJeyx27nd1",
+              "status": "done",
+              "taskRevision": 4
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 2,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "hnCroGGTskaE",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "mbSJeyx27nd1",
+              "status": "done",
+              "taskRevision": 4
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "hnCroGGTskaE",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "mbSJeyx27nd1",
+              "status": "done",
+              "taskRevision": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "d3-03-on-1",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "C3CjBa5ZOXR8",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "0lQhPgG0fVFo",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "C3CjBa5ZOXR8",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "0lQhPgG0fVFo",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "C3CjBa5ZOXR8",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "0lQhPgG0fVFo",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "d3-01-off-1",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "QpAayooGnrNx",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "Rbst0phn0Hz5",
+              "status": "done",
+              "taskRevision": 2
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "QpAayooGnrNx",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "Rbst0phn0Hz5",
+              "status": "done",
+              "taskRevision": 2
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "QpAayooGnrNx",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "Rbst0phn0Hz5",
+              "status": "done",
+              "taskRevision": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "d3-02-off-1",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "RkWFfjrM4pqB",
+              "status": "done",
+              "taskRevision": 3
+            },
+            {
+              "runId": "KOwssEWsa8Nl",
+              "status": "done",
+              "taskRevision": 3
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "RkWFfjrM4pqB",
+              "status": "done",
+              "taskRevision": 3
+            },
+            {
+              "runId": "KOwssEWsa8Nl",
+              "status": "done",
+              "taskRevision": 3
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "RkWFfjrM4pqB",
+              "status": "done",
+              "taskRevision": 3
+            },
+            {
+              "runId": "KOwssEWsa8Nl",
+              "status": "done",
+              "taskRevision": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "d3-03-off-1",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "mKE5eV1HicA1",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "AXJAvMrgpvQo",
+              "status": "done",
+              "taskRevision": 3
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "mKE5eV1HicA1",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "AXJAvMrgpvQo",
+              "status": "done",
+              "taskRevision": 3
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 1,
+          "intentStatuses": [
+            {
+              "runId": "mKE5eV1HicA1",
+              "status": "done",
+              "taskRevision": 1
+            },
+            {
+              "runId": "AXJAvMrgpvQo",
+              "status": "done",
+              "taskRevision": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "cross-accept",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 2,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "jaOvmyo7nWVi",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "2ONvvnyAmejn",
+              "status": "running",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 2,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "jaOvmyo7nWVi",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "2ONvvnyAmejn",
+              "status": "running",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "jaOvmyo7nWVi",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "2ONvvnyAmejn",
+              "status": "running",
+              "taskRevision": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "same-owner",
+      "repetitions": 3,
+      "modes": {
+        "owner": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "12CuuI46cdxn",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "PAoRZGRQ-eb1",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-human": {
+          "errors": 0,
+          "interruptions": 1,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "12CuuI46cdxn",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "PAoRZGRQ-eb1",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        },
+        "all-auto": {
+          "errors": 0,
+          "interruptions": 0,
+          "light": 0,
+          "intentStatuses": [
+            {
+              "runId": "12CuuI46cdxn",
+              "status": "done",
+              "taskRevision": 0
+            },
+            {
+              "runId": "PAoRZGRQ-eb1",
+              "status": "done",
+              "taskRevision": 1
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
