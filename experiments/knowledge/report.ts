@@ -44,10 +44,17 @@ const agentMs = mean([...k3, ...supplements].map(row => row.wallMs));
 const agentCost = mean([...k3, ...supplements].map(row => row.usage?.estimatedCost ?? 0));
 const k4Ms = mean(k4.map(row => row.wallMs));
 const k4Cost = mean(k4.map(row => (row.usage?.estimatedCost ?? 0) + (row.ta.usage?.estimatedCost ?? 0) + (row.correctionUsage?.estimatedCost ?? 0)));
+const k4Configuration = await readJson(path.join(folder(k4Location), "configuration.json"));
+const contextRun = (await readJson(path.join(folder("k2-pilot"), "raw/P01-context/context-run-completed.json"))).run;
+const draftCosts = await Promise.all(k2.map(async row => {
+  const response = (await readJson(path.join(folder("k2-pilot"), row.artifacts, "response.json"))).response;
+  return {mode: row.condition, cost: response.calls.reduce((sum: number, call: any) => sum + (call.usage.estimatedCost ?? (call.usage.promptTokens * 2.1 + call.usage.completionTokens * 8.4) / 1000000), 0)};
+}));
 const estimates = {repetitions: 3, k3: {combinations: 14 * 9 * 3, meanRunSeconds: agentMs / 1000, sequentialHours: 14 * 9 * 3 * agentMs / 3600000, estimatedCNY: 14 * 9 * 3 * agentCost},
-  k4: {combinations: 4 * 6 * 2 * 3, agentRunsPerCombination: 3, meanCombinationSeconds: k4Ms / 1000, sequentialHours: 4 * 6 * 2 * 3 * k4Ms / 3600000, estimatedCNY: 4 * 6 * 2 * 3 * k4Cost},
+  k4: {combinations: 4 * 6 * 2 * 3, agentRunsPerCombination: 3, delayedMeanSeconds: k4Ms / 1000, sameSessionEstimatedSeconds: (k4Ms - k4Configuration.config.delayMs) / 1000, sequentialHours: (4 * 6 * 2 * 3 * k4Ms - 4 * 6 * 3 * k4Configuration.config.delayMs) / 3600000, estimatedCNY: 4 * 6 * 2 * 3 * k4Cost, recapEstimatedCNY: 4 * 3 * 2 * 3 * draftCosts.find(item => item.mode === "server")!.cost + 4 * 2 * 3 * draftCosts.find(item => item.mode === "agent-self")!.cost},
+  k2: {episodes: contexts.length, drafts: contexts.length * 3, sequentialHours: contexts.length * (k2.reduce((sum, row) => sum + row.latencyMs, 0) + Date.parse(contextRun.finishedAt) - Date.parse(contextRun.startedAt)) / 3600000, estimatedCNY: contexts.length * (draftCosts.reduce((sum, item) => sum + item.cost, 0) + contextRun.usage.estimatedCost)},
   price: {provider: "minimax", model: "MiniMax-M2", inputPerMillionCNY: 2.1, outputReasoningPerMillionCNY: 8.4, cacheReadPerMillionCNY: 0.21, cacheWritePerMillionCNY: 2.625},
-  limitations: ["费用使用 AgentRun.usage 的估算，尚未核对供应商账单", "K4 费用另需加复盘模型调用", "并发后的耗时受模型服务限速影响"]};
+  limitations: ["费用使用 AgentRun.usage 的估算，尚未核对供应商账单", "K2 与 K4 的复盘费用按 P01 的真实调用估算", "同会话变体的耗时由延时变体减去固定间隔估算", "并发后的耗时受模型服务限速影响"]};
 await writeJson(path.join(root, "runs/pilot-summary.json"), {summaries, estimates});
 const inspections = [];
 for (const row of k3.filter(row => row.repetition === 1)) {

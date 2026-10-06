@@ -185,6 +185,13 @@ def main():
         analyze_anchors(frame, args.out)
     elif "jointSuccess" in frame:
         analyze_agent(frame, args.out)
+        if "ta" in frame:
+            eligible = frame.ta.map(lambda value: value["actuallyTrapped"])
+            frame[["key", "pair", "condition"]].assign(taActuallyTrapped=eligible).to_csv(args.out / "transfer-eligibility.csv", index=False)
+            if eligible.any():
+                eligible_directory = args.out / "ta-trapped"
+                eligible_directory.mkdir(exist_ok=True)
+                analyze_agent(frame[eligible], eligible_directory)
     elif "recall1" in frame:
         table = frame.groupby("condition")[["recall1", "recall3", "recall5", "mrr", "ndcg5", "falseInjections"]].mean()
         (args.out / "retrieval.md").write_text(table.to_markdown())

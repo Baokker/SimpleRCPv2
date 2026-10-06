@@ -24,8 +24,11 @@ export function rankBounded(results: KnowledgeSearchResult[], activeFiles: strin
 }
 export async function runK5(data: Dataset, config: ExperimentConfig, store: RunStore, k3Directory?: string) {
   const toolQueries: Array<{task: string; query: string; source: string}> = [];
+  const activity = new Map<string, {files: string[]; source: string}>();
   if (k3Directory) for (const row of await readJsonl(path.join(k3Directory, "results.jsonl"))) {
     const trace = await readJson<any[]>(path.join(k3Directory, row.artifacts, "trace.json"));
+    const injection = trace.find(event => event.type === "knowledge_injected" && Array.isArray(event.data.activeFiles) && event.data.activeFiles.length);
+    if (injection && !activity.has(row.task)) activity.set(row.task, {files: injection.data.activeFiles, source: row.key});
     for (const event of trace.filter(item => item.type === "knowledge_tool_call" && item.data.tool === "knowledge_search")) {
       if (typeof event.data.query === "string") toolQueries.push({task: row.task, query: event.data.query, source: row.key});
     }
@@ -34,8 +37,9 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
   const variants = new Set(data.tasks.flatMap(task => task.variantCardIds ?? []));
   for (const task of data.tasks) {
     const cards = data.library.filter(item => item.repository === task.repository && item.card.status === "reviewed" && !variants.has(item.card.id)).map(item => item.card);
-    const activeFiles = cards.find(card => card.id === task.targetCardId)?.anchors.map(anchor => anchor.file.workspaceRelativePath) ?? [];
-    const wrongFile = cards.find(card => !activeFiles.includes(card.anchors[0]?.file.workspaceRelativePath))?.anchors[0]?.file.workspaceRelativePath;
+    const activeFiles = activity.get(task.id)?.files ?? [...new Set(task.prompt.match(/src\/[A-Za-z0-9_./-]+\.(?:[cm]?[jt]sx?)/gu) ?? [])];
+    const targetFiles = cards.find(card => card.id === task.targetCardId)?.anchors.map(anchor => anchor.file.workspaceRelativePath) ?? [];
+    const wrongFile = cards.find(card => !activeFiles.includes(card.anchors[0]?.file.workspaceRelativePath) && !targetFiles.includes(card.anchors[0]?.file.workspaceRelativePath))?.anchors[0]?.file.workspaceRelativePath;
     const queries = [{condition: "R1", query: task.prompt, active: []}, {condition: "R2", query: task.prompt, active: activeFiles}, {condition: "R3", query: task.prompt, active: activeFiles},
       {condition: "R2-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []}, {condition: "R3-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []},
       ...toolQueries.filter(item => item.task === task.id).map((item, index) => ({condition: `R4-${index}`, query: item.query, active: activeFiles})),
@@ -56,7 +60,7 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
       const ranked = bounded ? rankBounded(results, item.active) : results;
       await writeJson(path.join(store.raw(key), "ranking.json"), ranked);
       await store.append({key, completed: true, task: task.id, taskKind: task.kind, repository: task.repository, condition: item.condition,
-        ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, artifacts: path.relative(store.directory, store.raw(key))});
+        ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, activitySource: activity.get(task.id)?.source ?? "prompt-file-paths", artifacts: path.relative(store.directory, store.raw(key))});
     }
   }
   await writeJson(path.join(store.directory, "availability.json"), {R4: {queries: toolQueries.length, reason: toolQueries.length ? null : "K3 记录中没有实际工具查询"}, R5: {configured: Boolean(config.embedding), reason: config.embedding ? null : "没有配置 embedding 服务"}});

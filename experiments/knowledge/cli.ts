@@ -1,6 +1,6 @@
 import path from "node:path";
 import {parseArgs} from "node:util";
-import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl} from "./common.js";
+import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl, digest, exists} from "./common.js";
 import {allK3Conditions, runK3, calibration, type K3Condition} from "./k3.js";
 import {allK4Conditions, runK4, type K4Condition} from "./k4.js";
 import {runK1Offline, runK1Online, compareK1Recordings} from "./k1.js";
@@ -35,6 +35,14 @@ if (command === "verify") {
   const directory = values.out ? resolveInput(values.out) : path.join(root, "runs", `${command}-${new Date().toISOString().replace(/[:.]/gu, "-")}`);
   const store = await new RunStore(directory).open(command, config, data);
   try {
+    if (values.source) {
+      const source = resolveInput(values.source);
+      const input = {source, resultsHash: digest(await readJsonl(path.join(source, "results.jsonl")))};
+      const saved = path.join(directory, "source.json");
+      if (await exists(saved) && digest(await readJson(saved)) !== digest(input)) throw new Error("Source experiment changed during resume");
+      await writeJson(saved, input);
+      store.metadata.sourceResultsHash = input.resultsHash;
+    }
     if (command === "k1") {await runK1Offline(store); if (values.online) await runK1Online(data, config, store);}
     if (command === "k1-compare") {
       if (!values.source) throw new Error("--source is required");
