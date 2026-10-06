@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { evaluateAgentChanges, selectAgentReverts, mergeAgentProposal } from "./agentGuard.js";
+import { evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalSymbolKeys } from "./agentGuard.js";
 import { VirtualClock } from "../replay/clock.js";
 
 it("uses the product signature rule and state machine for an Agent proposal against a human", async () => {
@@ -40,6 +40,13 @@ it("keeps dependency edges when the proposal deletes an exported file", async ()
   const result = await evaluateAgentChanges({ actor: { kind: "agent", runId: "delete-run", ownerId: "bob" }, proposals: [{ file: "pricing.ts", before: producer, after: "", deleted: true }], active: [{ actor: { kind: "human", memberId: "alice" }, status: "settled", files: new Map([["cart.ts", { file: "cart.ts", baseText: before, ranges: [{ start: 0, end: current.length }], firstTouchedAt: 0, lastTouchedAt: 1 }]]) }], files: { listFiles: () => [...files.keys()], readFile: (file) => files.get(file)!, version: () => 1 }, now: () => 2, signal: new AbortController().signal });
   expect(result.decision).toBe("lock");
   expect(result.records).toHaveLength(1);
+});
+
+it("keeps container declarations in added and deleted Agent symbol sets", () => {
+  const declaration = "export class Cart { total() { return 1; } }\n";
+  const expected = new Set(["cart.ts#Cart", "cart.ts#Cart.total"]);
+  expect(proposalSymbolKeys({ file: "cart.ts", before: declaration, after: "" })).toEqual(expected);
+  expect(proposalSymbolKeys({ file: "cart.ts", before: "", after: declaration })).toEqual(expected);
 });
 
 it("rejects an Agent proposal when grey adjudication throws synchronously", async () => {

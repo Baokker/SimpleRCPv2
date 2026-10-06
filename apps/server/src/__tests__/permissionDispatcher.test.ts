@@ -50,4 +50,86 @@ describe("Agent permission dispatcher", () => {
     expect(calls).toBe(2);
     expect(replies).toEqual(["once", "once"]);
   });
+
+  it("shares a repeated request while its permission reply is pending", async () => {
+    let release!: () => void;
+    let replied!: () => void;
+    const replyStarted = new Promise<void>((resolve) => { replied = resolve; });
+    const replyFinished = new Promise<void>((resolve) => { release = resolve; });
+    let handled = 0;
+    const replies: string[] = [];
+    const dispatcher = createPermissionDispatcher({
+      handlers: [async () => { handled += 1; return { reply: "once" }; }],
+      reply: async ({ reply }) => { replies.push(reply); replied(); await replyFinished; },
+      trace: async () => {}
+    });
+    const request = { id: "pending-reply", sessionID: "session-1", permission: "edit", metadata: {} };
+    const first = dispatcher.dispatch(request);
+    await replyStarted;
+    const second = dispatcher.dispatch(request);
+    release();
+    await Promise.all([first, second]);
+    expect(handled).toBe(1);
+    expect(replies).toEqual(["once"]);
+  });
+
+  it("processes another empty-handler request after the earlier reply completes", async () => {
+    const replies: string[] = [];
+    const dispatcher = createPermissionDispatcher({ handlers: [], reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
+    const request = { id: "empty-reused", sessionID: "session-1", permission: "edit", metadata: {} };
+    await dispatcher.dispatch(request);
+    await dispatcher.dispatch(request);
+    expect(replies).toEqual(["once", "once"]);
+  });
+
+  it("rejects after cancellation during approval and releases the proposal", async () => {
+    let approving!: () => void;
+    let release!: () => void;
+    const started = new Promise<void>((resolve) => { approving = resolve; });
+    const pending = new Promise<void>((resolve) => { release = resolve; });
+    const replies: string[] = [];
+    let discarded = 0;
+    const dispatcher = createPermissionDispatcher({
+      handlers: [async () => ({ reply: "once", onApproved: async () => { approving(); await pending; }, onRejected: () => { discarded += 1; } })],
+      reply: async ({ reply }) => { replies.push(reply); },
+      trace: async () => {}
+    });
+    const completion = dispatcher.dispatch({ id: "cancel-approval", sessionID: "session-1", permission: "edit", metadata: {} });
+    await started;
+    dispatcher.dispose();
+    await completion;
+    release();
+    expect(replies).toEqual(["reject"]);
+    expect(discarded).toBe(1);
+  });
+
+  it("rejects and replies when pausing approval throws", async () => {
+    const replies: Array<{ requestId: string; reply: string; message?: string }> = [];
+    const dispatcher = createPermissionDispatcher({
+      handlers: [async () => ({ reply: "once" })],
+      pause: () => { throw new Error("pause unavailable"); },
+      reply: async (reply) => { replies.push(reply); },
+      trace: async () => {}
+    });
+
+    await dispatcher.dispatch({ id: "pause-error", sessionID: "session-1", permission: "edit", metadata: {} });
+
+    expect(replies).toEqual([{ requestId: "pause-error", reply: "reject", message: expect.stringContaining("retry") }]);
+  });
+
+  it("keeps the permission reply when resuming approval throws", async () => {
+    const replies: string[] = [];
+    const traces: string[] = [];
+    const dispatcher = createPermissionDispatcher({
+      handlers: [],
+      pause: () => () => { throw new Error("resume unavailable"); },
+      reply: async ({ reply }) => { replies.push(reply); },
+      trace: async (type) => { traces.push(type); }
+    });
+
+    await dispatcher.dispatch({ id: "resume-error", sessionID: "session-1", permission: "edit", metadata: {} });
+
+    expect(replies).toEqual(["once"]);
+    expect(traces).toContain("permission_resume_error");
+  });
 });

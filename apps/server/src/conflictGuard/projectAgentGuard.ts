@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { AgentRun } from "@simplercp/shared";
-import { evaluateAgentChanges, proposalFileChange, selectAgentReverts, parseSymbols, type ActiveChangeSet, type ActorRef, type AgentTextProposal, type ConflictGuardClock, type ConflictGuardTracker, type PairRecord, type SemanticFileProvider, type ZoneInput, type ZoneVerdict } from "@simplercp/conflict-guard";
+import { evaluateAgentChanges, proposalFileChange, proposalSymbolKeys, selectAgentReverts, parseSymbols, type ActiveChangeSet, type ActorRef, type AgentTextProposal, type ConflictGuardClock, type ConflictGuardTracker, type PairRecord, type SemanticFileProvider, type ZoneInput, type ZoneVerdict } from "@simplercp/conflict-guard";
 
 type AgentActor = Extract<ActorRef, { kind: "agent" }>;
 interface RunState {
@@ -49,9 +49,9 @@ export function createProjectAgentGuard(options: {
     const earliest = Math.min(...[...runs.values()].map((run) => run.startedAt));
     while (history.length && history[0]!.at < earliest) history.shift();
   }
-  async function evaluate(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: ActiveChangeSet[], shadow = false) {
+  async function evaluate(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: ActiveChangeSet[], shadow = false, changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>) {
     const reservations = new Map([...approved.values()].flat().map((entry) => [entry.proposal.file, entry.proposal.after]));
-    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", active: mergeChangeSets(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
+    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, active: mergeChangeSets(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
       const key = `${point}:${event.record.pair.id}`;
       const previous = decisions.get(key);
       const pair = { ...event.record.pair, id: key };
@@ -65,17 +65,57 @@ export function createProjectAgentGuard(options: {
     return result;
   }
   function reserve(run: RunState, proposals: AgentTextProposal[]) {
+    const reservations: Array<{ actor: AgentActor; proposal: AgentTextProposal; hash: string }> = [];
     for (const proposal of proposals) {
       const entries = approved.get(proposal.file) ?? [];
-      entries.push({ actor: run.actor, proposal, hash: hash(proposal.after) });
+      const reservation = { actor: run.actor, proposal, hash: hash(proposal.after) };
+      entries.push(reservation);
+      reservations.push(reservation);
       approved.set(proposal.file, entries);
     }
+    return () => {
+      for (const reservation of reservations) {
+        const entries = approved.get(reservation.proposal.file);
+        if (!entries) continue;
+        const index = entries.indexOf(reservation);
+        if (index >= 0) entries.splice(index, 1);
+        if (!entries.length) approved.delete(reservation.proposal.file);
+      }
+    };
   }
   function reservationSets(except: string): ActiveChangeSet[] {
     return [...runs.values()].filter((run) => run.actor.runId !== except).map((run) => {
       const proposals = [...approved.values()].flat().filter((entry) => entry.actor.runId === run.actor.runId).map((entry) => entry.proposal);
       return { actor: run.actor, status: "editing" as const, files: new Map(proposals.map((proposal) => [proposal.file, proposalFileChange(proposal, options.clock.now())])) };
     }).filter((set) => set.files.size > 0);
+  }
+  function inputRevision(proposals: AgentTextProposal[], active: ActiveChangeSet[]) {
+    const files = [...new Set([...active.flatMap((set) => [...set.files.keys()]), ...proposals.map((proposal) => proposal.file)])].sort();
+    return hash(JSON.stringify([
+      files.map((file) => [file, hash(options.current(file))]),
+      active.map((set) => [actorKey(set.actor), [...set.files].map(([file, change]) => [file, hash(change.baseText), [...new Set(change.ranges.map((range) => `${range.start}:${range.end}`))].sort()])])
+    ]));
+  }
+  async function evaluateCurrent(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: () => ActiveChangeSet[], changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>) {
+    for (;;) {
+      const changeSets = active();
+      const revision = inputRevision(proposals, changeSets);
+      const result = await evaluate(run, proposals, point, signal, changeSets, false, changedSymbols);
+      options.refresh();
+      if (signal.aborted || revision === inputRevision(proposals, active())) return result;
+    }
+  }
+  function changedDependencies(run: RunState) {
+    const relevant = [...history, ...options.active().map((set) => ({ at: options.clock.now(), set }))].filter((entry) => entry.at >= run.startedAt && actorKey(entry.set.actor) !== actorKey(run.actor)).map((entry) => ({ ...entry.set, files: new Map([...entry.set.files].flatMap(([file, change]) => {
+      if (change.lastTouchedAt <= run.startedAt) return [];
+      const baseline = run.baseline.get(file) ?? "";
+      const beforeSymbols = new Map(parseSymbols(file, baseline).map((symbol) => [symbol.key, baseline.slice(symbol.start, symbol.end)]));
+      const keys = new Set((change.symbols ?? []).filter((symbol) => (beforeSymbols.get(symbol.key) ?? "") !== symbol.after).map((symbol) => symbol.key));
+      const ranges = parseSymbols(file, options.current(file)).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
+      if ([...keys].some((key) => change.symbols?.some((symbol) => symbol.key === key && symbol.status === "deleted"))) ranges.push(...change.ranges);
+      return ranges.length ? [[file, { ...change, baseText: baseline, ranges }] as const] : [];
+    })) })).filter((set) => set.files.size > 0);
+    return mergeChangeSets(relevant);
   }
   function judge(runId: string, proposals: AgentTextProposal[], signal: AbortSignal) {
     const task = queue.catch(() => undefined).then(async () => {
@@ -91,8 +131,11 @@ export function createProjectAgentGuard(options: {
           return { decision: "lock" as const, message: `Edit rejected: ${proposal.file} is paused (${gate.reason}). Wait for the related conflict to be resolved, then reread and retry.` };
         }
       }
-      const active = [...options.active(), ...reservationSets(runId)];
-      const result = await evaluate(run, proposals, "T2", signal, active);
+      const result = await evaluateCurrent(run, proposals, "T2", signal, () => [...options.active(), ...reservationSets(runId)]);
+      for (const proposal of proposals) {
+        const gate = options.gate(proposal.file);
+        if (!gate.allowed) return { decision: "lock" as const, message: `Edit rejected: ${proposal.file} is paused (${gate.reason}). Reread and retry after the conflict is resolved.` };
+      }
       const record = result.records.find((record) => record.verdict?.decision === result.decision);
       const other = record && [record.pair.left, record.pair.right].find((side) => side.actor.kind !== "agent" || side.actor.runId !== runId);
       const verdict = record?.verdict;
@@ -101,8 +144,8 @@ export function createProjectAgentGuard(options: {
       emit({ type: "t2_judged", actor: run.actor, decision: result.decision, files: proposals.map((proposal) => ({ file: proposal.file, beforeHash: hash(proposal.before), afterHash: hash(proposal.after) })), message });
       if (result.decision === "warn") run.warnings.push(verdict?.summary ?? "关联修改需要检查。 ");
       if (result.decision !== "allow") notify(run, `Agent ${result.decision === "lock" ? "修改被拒绝" : "修改警告"}：${verdict?.summary ?? "请检查关联修改。"}`);
-      if (result.decision !== "lock") reserve(run, proposals);
-      return { decision: result.decision, message };
+      const onRejected = result.decision !== "lock" ? reserve(run, proposals) : undefined;
+      return { decision: result.decision, message, onRejected };
     }).catch((error) => {
       emit({ type: "agent_guard_error", runId, point: "T2", reason: error instanceof Error ? error.message : String(error) });
       return { decision: "lock" as const, message: `Conflict guard could not verify the edit; please retry later. ${error instanceof Error ? error.message : ""}` };
@@ -157,17 +200,13 @@ export function createProjectAgentGuard(options: {
         proposals.set(proposal.file, { ...proposal, before: previous?.before ?? proposal.before });
         remainingWrites.push({ ...proposal, before: previous?.after ?? proposal.before, existedBefore: previous ? true : proposal.existedBefore });
       }
-      const relevant = [...history, ...options.active().map((set) => ({ at: options.clock.now(), set }))].filter((entry) => entry.at >= run.startedAt && actorKey(entry.set.actor) !== actorKey(run.actor)).map((entry) => ({ ...entry.set, files: new Map([...entry.set.files].flatMap(([file, change]) => {
-        if (change.lastTouchedAt <= run.startedAt) return [];
-        const baseline = run.baseline.get(file) ?? "";
-        const beforeSymbols = new Map(parseSymbols(file, baseline).map((symbol) => [symbol.key, baseline.slice(symbol.start, symbol.end)]));
-        const keys = new Set((change.symbols ?? []).filter((symbol) => (beforeSymbols.get(symbol.key) ?? "") !== symbol.after).map((symbol) => symbol.key));
-        const ranges = parseSymbols(file, options.current(file)).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
-        if ([...keys].some((key) => change.symbols?.some((symbol) => symbol.key === key && symbol.status === "deleted"))) ranges.push(...change.ranges);
-        return ranges.length ? [[file, { ...change, ranges }] as const] : [];
-      })) })).filter((set) => set.files.size > 0);
-      const active = mergeChangeSets(relevant);
-      const result = await evaluate(run, [...proposals.values()], "T3", signal, active);
+      const changedSymbols = new Map<string, Set<string>>();
+      for (const proposal of [...run.writes, ...remainingWrites]) {
+        const keys = changedSymbols.get(proposal.file) ?? new Set<string>();
+        for (const key of proposalSymbolKeys(proposal)) keys.add(key);
+        changedSymbols.set(proposal.file, keys);
+      }
+      const result = await evaluateCurrent(run, [...proposals.values()], "T3", signal, () => changedDependencies(run), changedSymbols);
       if (options.mode === "observe") { emit({ type: "t3_shadow", actor: run.actor, decision: result.decision }); return result.decision === "allow" && !incomplete.length ? "passed" : "warned"; }
       if (result.decision === "allow") return incomplete.length ? "warned" : "passed";
       if (result.decision === "warn") { notify(run, "Agent 结束检查提示关联修改需要共同检查。 "); return "warned"; }
@@ -204,6 +243,21 @@ function hash(value: string) { return crypto.createHash("sha256").update(value).
 function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
 function mergeChangeSets(sets: ActiveChangeSet[]) {
   const result = new Map<string, ActiveChangeSet>();
-  for (const set of sets) { const key = actorKey(set.actor); const previous = result.get(key); if (previous) for (const [file, change] of set.files) previous.files.set(file, change); else result.set(key, { ...set, files: new Map(set.files), status: "settled" }); }
+  for (const set of sets) {
+    const key = actorKey(set.actor);
+    const previous = result.get(key);
+    if (!previous) { result.set(key, { ...set, files: new Map(set.files), status: "settled" }); continue; }
+    for (const [file, change] of set.files) {
+      const earlier = previous.files.get(file);
+      previous.files.set(file, earlier ? {
+        ...change,
+        baseText: earlier.baseText,
+        ranges: [...earlier.ranges, ...change.ranges],
+        deletedSymbolKeys: [...new Set([...(earlier.deletedSymbolKeys ?? []), ...(change.deletedSymbolKeys ?? [])])],
+        firstTouchedAt: Math.min(earlier.firstTouchedAt, change.firstTouchedAt),
+        lastTouchedAt: Math.max(earlier.lastTouchedAt, change.lastTouchedAt)
+      } : change);
+    }
+  }
   return [...result.values()];
 }

@@ -13,6 +13,9 @@ import { attachRealtimeServer } from "../realtime.js";
 import { joinMember } from "./memberTestHelper.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 import type { ProjectRuntime } from "../projectRuntime.js";
+import { createPatch } from "diff";
+import { createPermissionDispatcher } from "../agent/permissionDispatcher.js";
+import { conflictGuardEditHandler } from "../agent/conflictGuardEditHandler.js";
 
 const shop = fileURLToPath(new URL("../../../../demo/conflict-shop/", import.meta.url));
 const cleanup: Array<() => Promise<void>> = [];
@@ -188,6 +191,22 @@ it("rejects a timed out T2 without failing the run", async () => {
   expect(context.runtime.conflictGuard!.state().frozenFiles).toEqual([]);
 }, 15000);
 
+it("rechecks a dependency changed while T2 is awaiting a model verdict", async () => {
+  const context = await setup("full", { decision: "allow", delay: 700 });
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "return price * (1 - rate);", "return price - rate;");
+  await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.symbols.some((symbol) => symbol.key.endsWith("#applyDiscount"))));
+  const original = await context.disk("src/cart.ts");
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)")}`);
+  await waitFor(() => context.modelCalls() === 1);
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect((await context.getRun(created.id)).conflictGuard?.rejectedEdits).toBe(1);
+  expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("signature");
+  expect(await context.disk("src/cart.ts")).toBe(original);
+  expect(context.runtime.conflictGuard!.state().frozenFiles).toEqual([]);
+}, 15000);
+
 it("pauses a short run timeout while a T2 model request is pending", async () => {
   const context = await setup("full", { decision: "allow", delay: 600, runTimeoutMs: 300 });
   const pricing = await context.connect("src/pricing.ts");
@@ -210,6 +229,29 @@ it("rejects the later dependent edit from another active Agent run", async () =>
   await waitFor(async () => (await context.getRun(first.id)).status === "completed");
 }, 15000);
 
+for (const failure of ["handler-reject", "reply-failure"] as const) it(`clears an unwritten approval reservation after ${failure}`, async () => {
+  const context = await setup();
+  const guard = context.runtime.conflictGuard!;
+  const pricing = await context.disk("src/pricing.ts");
+  const cart = await context.disk("src/cart.ts");
+  const first = "unwritten-producer";
+  const second = "independent-consumer";
+  const baseline = new Map([["src/pricing.ts", pricing], ["src/cart.ts", cart]]);
+  guard.beginAgentRun({ kind: "agent", runId: first, ownerId: context.alice.member.id }, baseline);
+  guard.beginAgentRun({ kind: "agent", runId: second, ownerId: context.bob.member.id }, baseline);
+  const handler = conflictGuardEditHandler({ workspace: context.runtime.project.workspacePath, judge: (proposals, signal) => guard.agentGuard.judge(first, proposals, signal), approved: () => {} });
+  const dispatcher = createPermissionDispatcher({
+    handlers: [handler, ...(failure === "handler-reject" ? [async () => ({ reply: "reject" as const, message: "Rejected by another permission handler" })] : [])],
+    reply: async () => { if (failure === "reply-failure") throw new Error("Permission reply unavailable"); },
+    trace: async () => {}
+  });
+  await dispatcher.dispatch({ id: failure, sessionID: "producer-session", permission: "edit", metadata: { filepath: "src/pricing.ts", diff: createPatch("src/pricing.ts", pricing, pricing.replace("rate: number)", "rate: number, currency: string)")) } });
+  const result = await guard.agentGuard.judge(second, [{ file: "src/cart.ts", before: cart, after: cart.replace("applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)") }], new AbortController().signal);
+  expect(result.decision).toBe("allow");
+  expect(await context.disk("src/pricing.ts")).toBe(pricing);
+  dispatcher.dispose();
+}, 15000);
+
 it("T3 reverts an unchanged block and skips the block edited by Bob", async () => {
   const context = await setup();
   const original = await context.disk("src/cart.ts");
@@ -226,6 +268,34 @@ it("T3 reverts an unchanged block and skips the block edited by Bob", async () =
   expect(cart.getText("content").toString()).toContain("applyDiscount(amount, 0.25)");
   expect((await context.trace(created.id)).some((event: { type: string }) => event.type === "t3_revert")).toBe(true);
   expect(validateTrace(readTrace(await context.runtime.conflictGuard!.exportTrace()))).toBe(true);
+}, 15000);
+
+it("keeps another member's symbol out of an Agent's repeated-edit T3 change set", async () => {
+  const context = await setup();
+  const file = "src/isolated.ts";
+  const baseline = "export function first() { return 1; }\nexport function second() { return 2; }\n";
+  await fs.writeFile(path.join(context.runtime.project.workspacePath, file), baseline);
+  const document = await context.connect(file);
+  const guard = context.runtime.conflictGuard!;
+  const runId = "repeat-edit-run";
+  guard.beginAgentRun({ kind: "agent", runId, ownerId: context.bob.member.id }, new Map([[file, baseline]]));
+  const write = async (before: string, after: string) => {
+    const result = await guard.agentGuard.judge(runId, [{ file, before, after }], new AbortController().signal);
+    expect(result.decision).toBe("allow");
+    await fs.writeFile(path.join(context.runtime.project.workspacePath, file), after);
+    await context.runtime.documents.reloadPath(file);
+    await waitFor(() => document.getText("content").toString() === after);
+  };
+  await write(baseline, baseline.replace("first() { return 1; }", "first() { return 10; }"));
+  replace(document, "second() { return 2; }", "second() { return 20; }");
+  await waitFor(() => guard.state().activeSymbols.some((set) => set.actor.kind === "human" && set.symbols.some((symbol) => symbol.key.endsWith("#second"))));
+  await waitFor(async () => (await context.disk(file)).includes("second() { return 20; }"));
+  const before = await context.disk(file);
+  await write(before, before.replace("first() { return 10; }", "first() { return 11; }"));
+  const result = await guard.agentGuard.finish(runId, [], (target, expected, content, owner, remove) => context.runtime.documents.applyGuardRevert(target, expected, content, owner, remove));
+  expect(result).toBe("passed");
+  expect(document.getText("content").toString()).toContain("first() { return 11; }");
+  expect(document.getText("content").toString()).toContain("second() { return 20; }");
 }, 15000);
 
 for (const mode of ["off", "observe"] as const) it(`${mode} preserves permission allow and ${mode === "observe" ? "records T2 shadow" : "has no guard processing"}`, async () => {
@@ -299,6 +369,38 @@ it("uses a changed dependency in the same file during T3", async () => {
   expect(document.getText("content").toString()).toContain("currency: string");
 }, 15000);
 
+it("retains dependency changes from an earlier completed human change set during T3", async () => {
+  const context = await setup();
+  const file = "src/pricing.ts";
+  const original = await context.disk("src/cart.ts");
+  await fs.appendFile(path.join(context.runtime.project.workspacePath, file), "\nexport function unrelated() { return 1; }\n");
+  const pricing = await context.connect(file);
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")} fake-delay=5500`);
+  await waitFor(async () => (await context.disk("src/cart.ts")).includes("let amount = 10;"));
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.actor.kind === "human" && set.symbols.some((symbol) => symbol.key.endsWith("#applyDiscount"))));
+  context.runtime.conflictGuard!.markDone(context.alice.member.id);
+  replace(pricing, "function unrelated() { return 1; }", "function unrelated() { return 2; }");
+  await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.actor.kind === "human" && set.symbols.some((symbol) => symbol.key.endsWith("#unrelated"))));
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect((await context.getRun(created.id)).conflictGuard?.t3).toBe("reverted");
+  expect(await context.disk("src/cart.ts")).toBe(original);
+}, 15000);
+
+it("rechecks a dependency changed while T3 is awaiting a model verdict", async () => {
+  const context = await setup("full", { decision: "allow", delay: 700 });
+  const original = await context.disk("src/cart.ts");
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")} fake-delay=2300`);
+  await waitFor(async () => (await context.disk("src/cart.ts")).includes("let amount = 10;"));
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "return price * (1 - rate);", "return price - rate;");
+  await waitFor(async () => (await context.trace(created.id)).some((event: { type: string; data?: { point?: string } }) => event.type === "pair_analyzing" && event.data?.point === "T3"));
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect((await context.getRun(created.id)).conflictGuard?.t3).toBe("reverted");
+  expect(await context.disk("src/cart.ts")).toBe(original);
+}, 15000);
+
 it("records a shadow conflict between two observe Agent runs", async () => {
   const context = await setup("observe");
   const first = await context.run(`fake-edit=${edit("src/pricing.ts", "rate: number)", "rate: number, currency: string)")} fake-delay=5000`, context.alice.member.id);
@@ -332,6 +434,35 @@ it("restores an Agent-deleted file after its dependent symbol changes during the
   expect((await context.getRun(created.id)).conflictGuard?.t3).toBe("reverted");
   expect(await context.disk("src/pricing.ts")).toBe(original);
   expect(cart.getText("content").toString()).toContain("amount + 1");
+}, 15000);
+
+it("restores an Agent-deleted file whose Yjs document remained open", async () => {
+  const context = await setup();
+  const pricing = await context.connect("src/pricing.ts");
+  const original = await context.disk("src/pricing.ts");
+  const created = await context.run(`fake-edit=${edit("src/pricing.ts", original, "")} fake-delete=true fake-delay=2700`);
+  await waitFor(async () => { try { await context.disk("src/pricing.ts"); return false; } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return true; } });
+  const cart = await context.connect("src/cart.ts");
+  replace(cart, "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)");
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect((await context.getRun(created.id)).conflictGuard?.t3).toBe("reverted");
+  expect(await context.disk("src/pricing.ts")).toBe(original);
+  expect(pricing.getText("content").toString()).toBe(original);
+  expect(validateTrace(readTrace(await context.runtime.conflictGuard!.exportTrace()))).toBe(true);
+}, 15000);
+
+it("persists a T3 revert through an already open document", async () => {
+  const context = await setup();
+  const cart = await context.connect("src/cart.ts");
+  const original = await context.disk("src/cart.ts");
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")} fake-delay=2700`);
+  await waitFor(() => cart.getText("content").toString().includes("let amount = 10;"));
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect((await context.getRun(created.id)).conflictGuard?.t3).toBe("reverted");
+  expect(cart.getText("content").toString()).toBe(original);
+  expect(await context.disk("src/cart.ts")).toBe(original);
 }, 15000);
 
 it("records observe shadow for a deleted file", async () => {

@@ -1,0 +1,25 @@
+{
+  "reviewedCommit": "1d6cf71",
+  "branch": "feature/conflict-guard",
+  "integrationSettings": { "idleMs": 1500, "persistDelayMs": 300 },
+  "build": "passed",
+  "unitAndIntegration": {
+    "conflictGuard": { "files": 19, "passed": 180, "failed": 0 },
+    "server": { "files": 44, "passed": 237, "failed": 0 },
+    "agentIntegration": { "passed": 37, "failed": 0 },
+    "demo": { "passed": 2, "failed": 0 }
+  },
+  "browser": {
+    "stage6Full": { "passed": 3, "failed": 0, "skipped": 0 },
+    "stage6Observe": { "passed": 1, "failed": 0, "skipped": 2 },
+    "intervention": { "passed": 6, "failed": 0 },
+    "semanticPanel": { "passed": 1, "failed": 0 },
+    "collaboration": {
+      "off": { "passed": 2, "failed": 0 },
+      "observe": { "passed": 2, "failed": 0 },
+      "rules": { "passed": 2, "failed": 0 },
+      "full": { "passed": 2, "failed": 0 }
+    }
+  },
+  "configuredSensitiveValueMatches": 0
+}

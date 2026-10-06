@@ -110,7 +110,7 @@ export function createCollaborativeDocumentStore({
       }
     });
     document.on("update", (_update, origin) => {
-      if (!isExternalOrigin(origin)) {
+      if (!isExternalOrigin(origin) || isGuardRevertOrigin(origin)) {
         dirtyNames.add(name);
         schedulePersist(name, document);
       }
@@ -376,7 +376,16 @@ export function createCollaborativeDocumentStore({
       } else if (text.toString() !== expected) return false;
       document.transact(() => applyTextDelta(text, text.toString(), content), { kind: "guard-revert", memberId: ownerId });
       if (retired.has(entry[0])) retired.delete(entry[0]);
-      await flushDocument(entry[0], document);
+      if (restoring) {
+        await writeWorkspaceFile(workspaceRoot, filePath, content);
+        persistedContents.set(entry[0], content);
+        persistedSnapshots.set(entry[0], YRuntime.encodeStateAsUpdate(document));
+        dirtyNames.delete(entry[0]);
+        onPersisted?.(filePath, content);
+      } else {
+        dirtyNames.add(entry[0]);
+        await flushDocument(entry[0], document);
+      }
       if (restoring) { onUnopenedGuardRevert?.(filePath, expected, content, ownerId); onDocumentPrepared?.(entry[0], document, filePath); }
       if (remove) { await fs.unlink(resolveWorkspacePath(workspaceRoot, filePath)); dropPath(filePath); }
       return true;
@@ -417,7 +426,11 @@ function hasConnections(document: Y.Doc) {
   return ((document as Y.Doc & { conns?: Map<object, unknown> }).conns?.size ?? 0) > 0;
 }
 function isExternalOrigin(origin: unknown) {
-  return origin === FILESYSTEM_ORIGIN || Boolean(origin && typeof origin === "object" && "kind" in origin && origin.kind === "agent");
+  return origin === FILESYSTEM_ORIGIN || Boolean(origin && typeof origin === "object" && "kind" in origin && ["agent", "guard-revert"].includes(origin.kind as string));
+}
+
+function isGuardRevertOrigin(origin: unknown) {
+  return Boolean(origin && typeof origin === "object" && "kind" in origin && origin.kind === "guard-revert");
 }
 
 export type CollaborativeDocumentStore = ReturnType<

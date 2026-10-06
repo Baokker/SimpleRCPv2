@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import type { ActiveChangeSet, ActorRef, FileChange } from "../model/types.js";
 import { createSemanticIndex, isSemanticFile } from "../semantic/index.js";
 import type { SemanticFileProvider } from "../semantic/types.js";
-import { parseSymbols } from "../semantic/symbols.js";
+import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
 import { SemanticChangeTracker } from "../routing/candidates.js";
 import { classify, type Decision, type ZoneInput, type ZoneVerdict } from "../routing/classifier.js";
 import { createPairCoordinator, type PairEvent, type PairRecord } from "./pairState.js";
@@ -18,6 +18,7 @@ export async function evaluateAgentChanges(options: {
   files: SemanticFileProvider;
   mergeShared?: boolean;
   currentView?: boolean;
+  changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>;
   now(): number;
   signal: AbortSignal;
   adjudicate?(input: ZoneInput, local: ZoneVerdict, signal: AbortSignal): Promise<ZoneVerdict>;
@@ -36,9 +37,11 @@ export async function evaluateAgentChanges(options: {
   index.update();
   if (options.currentView) for (const proposal of proposals) {
     const before = new Map(parseSymbols(proposal.file, proposal.before).map((symbol) => [symbol.key, proposal.before.slice(symbol.start, symbol.end)]));
-    const keys = new Set(parseSymbols(proposal.file, proposal.after).filter((symbol) => before.get(symbol.key) !== proposal.after.slice(symbol.start, symbol.end)).map((symbol) => symbol.key));
+    const allowed = options.changedSymbols?.get(proposal.file);
+    const keys = new Set(parseSymbols(proposal.file, proposal.after).filter((symbol) => (!allowed || allowed.has(symbol.key)) && before.get(symbol.key) !== proposal.after.slice(symbol.start, symbol.end)).map((symbol) => symbol.key));
     const change = own.files.get(proposal.file)!;
     change.ranges = index.symbolsInFile(proposal.file).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
+    if (allowed) change.deletedSymbolKeys = change.deletedSymbolKeys?.filter((key) => allowed.has(key));
     for (const symbol of parseSymbols(proposal.file, proposal.before)) if (change.deletedSymbolKeys?.includes(symbol.key)) change.ranges.push({ start: symbol.start, end: symbol.end });
   }
   const active = options.active.filter((set) => actorKey(set.actor) !== actorKey(options.actor)).map((set) => ({ ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })) }])) }));
@@ -80,6 +83,20 @@ export async function evaluateAgentChanges(options: {
 export function proposalFileChange(proposal: AgentTextProposal, at: number): FileChange {
   const currentKeys = new Set(parseSymbols(proposal.file, proposal.after).map((symbol) => symbol.key));
   return { file: proposal.file, baseText: proposal.before, ranges: [{ start: 0, end: Math.max(proposal.before.length, proposal.after.length) }], firstTouchedAt: at, lastTouchedAt: at, deletedSymbolKeys: parseSymbols(proposal.file, proposal.before).filter((symbol) => !currentKeys.has(symbol.key)).map((symbol) => symbol.key) };
+}
+
+export function proposalSymbolKeys(proposal: AgentTextProposal): Set<string> {
+  const baseline = parseSymbols(proposal.file, proposal.before);
+  const before = new Map(baseline.map((symbol) => [symbol.key, proposal.before.slice(symbol.start, symbol.end)]));
+  const current = parseSymbols(proposal.file, proposal.after);
+  const currentKeys = new Set(current.map((symbol) => symbol.key));
+  const changed = current.filter((symbol) => before.get(symbol.key) !== proposal.after.slice(symbol.start, symbol.end));
+  const deleted = baseline.filter((symbol) => !currentKeys.has(symbol.key));
+  return new Set([
+    ...current.filter((symbol) => !before.has(symbol.key)).map((symbol) => symbol.key),
+    ...innermostSymbols(changed, 0, proposal.after.length).map((symbol) => symbol.key),
+    ...deleted.map((symbol) => symbol.key)
+  ]);
 }
 
 export function selectAgentReverts(baseline: string, agent: string, current: string) {

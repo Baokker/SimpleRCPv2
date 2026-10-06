@@ -124,6 +124,19 @@ describe("collaborative document store", () => {
     expect(store.getRevision("src/hello.ts")).toBe(1);
   });
 
+  it("does not count a guard revert as a member revision", async () => {
+    await fs.writeFile(path.join(root, "src", "hello.ts"), "agent text");
+    const store = createCollaborativeDocumentStore({ workspaceRoot: root, persistDelayMs: 1 });
+    const document = await store.getDocument("room", "src/hello.ts");
+
+    await store.applyGuardRevert("src/hello.ts", "agent text", "original text", "member-1");
+
+    expect(document.getText("content").toString()).toBe("original text");
+    expect(store.getRevision("src/hello.ts")).toBe(0);
+    await expect(fs.readFile(path.join(root, "src", "hello.ts"), "utf8")).resolves.toBe("original text");
+    await store.dispose();
+  });
+
   it("retires an active document when its file becomes binary", async () => {
     const store = createCollaborativeDocumentStore({
       workspaceRoot: root,

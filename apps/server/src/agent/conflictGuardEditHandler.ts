@@ -41,14 +41,14 @@ export async function reconstructAgentEdit(workspace: string, metadata: Record<s
 
 export function conflictGuardEditHandler(options: {
   workspace: string;
-  judge(proposals: AgentEditProposal[], signal: AbortSignal): Promise<{ decision: "allow" | "warn" | "lock"; message?: string }>;
+  judge(proposals: AgentEditProposal[], signal: AbortSignal): Promise<{ decision: "allow" | "warn" | "lock"; message?: string; onRejected?: () => void }>;
   approved(proposals: AgentEditProposal[]): void;
 }): PermissionHandler {
   return async (request, signal) => {
     if (!AGENT_EDIT_PERMISSIONS.has(request.permission)) return { reply: "once" };
     const proposals = await reconstructAgentEdit(options.workspace, request.metadata);
     const result = await options.judge(proposals, signal);
-    if (signal.aborted) return { reply: "reject", message: "Conflict analysis timed out or was cancelled; retry later." };
-    return result.decision === "lock" ? { reply: "reject", message: result.message ?? "This edit conflicts with another participant. Reread the related symbols and retry with a compatible implementation." } : { reply: "once", onApproved: () => options.approved(proposals) };
+    if (signal.aborted) { result.onRejected?.(); return { reply: "reject", message: "Conflict analysis timed out or was cancelled; retry later." }; }
+    return result.decision === "lock" ? { reply: "reject", message: result.message ?? "This edit conflicts with another participant. Reread the related symbols and retry with a compatible implementation." } : { reply: "once", onApproved: () => options.approved(proposals), onRejected: result.onRejected };
   };
 }
