@@ -169,14 +169,20 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       const before = currentText.get(file) ?? files.readFile(file);
       const ops = event.ops as TextEditOp[];
       const origin = event.origin as ActorRef;
-      const shouldBlock = isFrozen(file, origin, ops) || isPrelocked(file, origin, ops);
+      if (policy.id === "P2" && changedFiles.size > 0) {
+        semantic.captureStaleEdges(tracker.getActiveChangeSets());
+        index.update([...changedFiles]);
+        changedFiles.clear();
+      }
+      const prelocked = ["P1", "P2"].includes(policy.id);
+      const shouldBlock = prelocked ? isPrelocked(file, origin, ops) : isFrozen(file, origin, ops);
       if (shouldBlock) counterfactualFiles.add(file);
       blockedEdits.push({ seq: event.seq, at: clock.now(), file, actor: origin, shouldHaveBeenBlocked: shouldBlock });
       const after = applyOps(before, ops);
       currentText.set(file, after); files.set(file, after); changedFiles.add(file);
       tracker.edit({ file, origin, at: event.at, ops, revisionAfter: Number(event.revisionAfter ?? 0), textBefore: before, textAfter: after });
       session.edit(file, ops, origin.kind === "human");
-      recordPrelock(file, origin, ops);
+      if (!shouldBlock) recordPrelock(file, origin, ops);
       scheduleRefresh();
       if (origin.kind !== "filesystem") {
         dirtyFiles.add(file);
@@ -249,11 +255,12 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   }
   function recordPrelock(file: string, actor: ActorRef, ops: TextEditOp[]) {
     if (actor.kind !== "human" || !["P1", "P2"].includes(policy.id)) return;
-    for (const op of ops) for (const symbol of index.symbolsInRange(file, op.from, op.from + Math.max(op.inserted.length, 1))) {
-      const key = policy.id === "P1" ? file : symbol.key;
+    const symbols = policy.id === "P1" ? [`${file}#file`] : [...new Set(ops.flatMap((op) => index.symbolsInRange(file, op.from, op.from + Math.max(op.inserted.length, 1)).map((symbol) => symbol.key)))];
+    for (const symbol of symbols) {
+      const key = policy.id === "P1" ? file : symbol;
       if (owners.has(key)) continue;
-      owners.set(key, { actor, file, symbol: symbol.key });
-      const targets = policy.id === "P1" ? [{ key: `${file}#file`, file, start: 0, end: files.readFile(file).length }] : files.listFiles().flatMap((name) => index.symbolsInFile(name)).filter((entry) => semantic.findPaths([symbol.key], [entry.key], 2).length > 0);
+      owners.set(key, { actor, file, symbol });
+      const targets = policy.id === "P1" ? [{ key: `${file}#file`, file, start: 0, end: files.readFile(file).length }] : files.listFiles().flatMap((name) => index.symbolsInFile(name)).filter((entry) => semantic.findPaths([symbol], [entry.key], 2).length > 0);
       for (const target of targets) for (const other of actors.filter((other) => actorKey(other) !== actorKey(actor))) freezeIntervals.push({ pairId: `prelock:${key}`, actor: other, symbol: target.key, file: target.file, startOffset: target.start, endOffset: target.end, start: clock.now() });
     }
   }
