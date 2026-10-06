@@ -89,7 +89,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
   for (const page of [alice, bob]) {
     await expect(page.getByTestId("conflict-candidate")).toHaveCount(1);
     await expect(page.getByTestId("conflict-candidate")).toContainText("两人在改同一个函数");
-    await expect(page.getByTestId("conflict-statistics")).toContainText("6 个文件");
+    await expect(page.getByTestId("conflict-statistics")).toContainText("7 个文件");
     await expect(page.getByTestId("conflict-statistics")).toContainText("最近更新");
   }
   await expect.poll(async () => (await guardRequest(alice, projectId, "state")).statistics.total).toBe(unrelatedState.statistics.total + 2);

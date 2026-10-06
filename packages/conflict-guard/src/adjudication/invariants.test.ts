@@ -31,3 +31,29 @@ it("topK bounds call sites even when one caller invokes a symbol repeatedly", ()
   const result = extractInvariants(input, defaultAdjudicationConfig);
   expect(result.usage).toHaveLength(3);
 });
+
+it("caller and test evidence resolves the modified method across namesakes", () => {
+  const files = new MemoryFileProvider({
+    "price.ts": "export class Price { apply(value: number){ return value * 2; } }",
+    "format.ts": "export class Format { apply(value: number){ return `USD ${value}`; } }",
+    "buy.ts": 'import { Price } from "./price"; import { Format } from "./format"; export function buy(){ const formatter = new Format(); const price = new Price(); const label = formatter.apply(10); return price.apply(10); }',
+    "test/buy.test.mjs": 'import { Price } from "../price.ts"; import { Format } from "../format.ts"; test("formatter", () => { expect(new Format().apply(5)).toBe("USD 5"); }); test("price", () => { expect(new Price().apply(5)).toBe(10); });'
+  });
+  const index = createSemanticIndex({ files, now: () => 0 }); index.update();
+  const make = (file: string, name: string) => { const symbol = index.symbolsInFile(file).find((entry) => entry.name === name)!; const before = files.readFile(file).slice(symbol.start, symbol.end); return { ...symbol, before, after: before, status: "modified" as const, lastTouchedAt: 0 }; };
+  const input: ZoneInput = { left: { actor: { kind: "human", memberId: "a" }, symbol: make("price.ts", "apply") }, right: { actor: { kind: "human", memberId: "b" }, symbol: make("buy.ts", "buy") }, project: index, path: null, nested: false, typeOnly: false };
+  const result = extractInvariants(input, { ...defaultAdjudicationConfig, topK: 1 }, ["test/buy.test.mjs"]);
+  expect(result.usage).toEqual(["buy.ts:1 returned by caller: return price.apply(10);"]);
+  expect(result.tests.join("\n")).toContain('"price"');
+  expect(result.tests.join("\n")).not.toContain('"formatter"');
+});
+
+it("anonymous default functions retain their caller and test evidence", () => {
+  const files = new MemoryFileProvider({ "price.ts": "export default function (value: number){ return value * 2; }", "buy.ts": 'import price from "./price"; export function buy(){ return price(10); }', "test/price.test.mjs": 'import price from "../price.ts"; test("default price", () => { expect(price(5)).toBe(10); });' });
+  const index = createSemanticIndex({ files, now: () => 0 }); index.update();
+  const make = (file: string, name: string) => { const symbol = index.symbolsInFile(file).find((entry) => entry.name === name)!; const before = files.readFile(file).slice(symbol.start, symbol.end); return { ...symbol, before, after: before, status: "modified" as const, lastTouchedAt: 0 }; };
+  const input: ZoneInput = { left: { actor: { kind: "human", memberId: "a" }, symbol: make("price.ts", "default") }, right: { actor: { kind: "human", memberId: "b" }, symbol: make("buy.ts", "buy") }, project: index, path: null, nested: false, typeOnly: false };
+  const result = extractInvariants(input, defaultAdjudicationConfig);
+  expect(result.usage).toEqual(["buy.ts:1 returned by caller: return price(10);"]);
+  expect(result.tests.join("\n")).toContain('"default price"');
+});

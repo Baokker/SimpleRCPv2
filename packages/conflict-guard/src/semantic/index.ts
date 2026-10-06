@@ -5,7 +5,7 @@ import type { RelationEdge, RelationPath, SemanticFileProvider, SemanticIndex } 
 import { createFourStateTypeChecker } from "../routing/typecheck.js";
 
 export function isSemanticFile(file: string) {
-  return /\.(ts|tsx|js|jsx|mts|cts)$/i.test(file) && !file.split("/").some((part) => ["node_modules", ".git", "dist", "build", "coverage"].includes(part));
+  return /\.(ts|tsx|js|jsx|mts|cts|mjs|cjs)$/i.test(file) && !file.split("/").some((part) => ["node_modules", ".git", "dist", "build", "coverage"].includes(part));
 }
 
 export function createSemanticIndex(options: { files: SemanticFileProvider; now(): number; maxFiles?: number }): SemanticIndex {
@@ -137,6 +137,23 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
     symbolsInRange: (file, start, end) => innermostSymbols((symbols.get(file) ?? []).map(symbolInfo), start, end),
     outgoing,
     incoming,
+    referenceTargets(file, position) {
+      if (!files.includes(file)) return [];
+      const program = service.getProgram();
+      const source = program?.getSourceFile(`/${file}`);
+      if (!program || !source) return [];
+      let target: ts.Node = source;
+      const visit = (node: ts.Node) => {
+        if (position < node.getStart(source) || position >= node.end) return;
+        target = node;
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
+      const checker = program.getTypeChecker();
+      const reference = checker.getSymbolAtLocation(target);
+      const resolved = reference && reference.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(reference) : reference;
+      return [...new Set((resolved?.declarations ?? []).flatMap((declaration) => (symbols.get(relative(declaration.getSourceFile().fileName)) ?? []).filter((symbol) => symbol.start === declaration.getStart() && symbol.end === declaration.end).map((symbol) => symbol.key)))];
+    },
     unresolvedReferences: (key) => (unresolved.get(key.slice(0, key.indexOf("#")))?.get(key) ?? []).map((reference) => ({ ...reference, via: [...reference.via] })),
     findPaths(fromKeys, toKeys, maxHops = 2) {
       if (!Number.isInteger(maxHops) || maxHops < 0) throw new Error("maxHops 必须为非负整数");

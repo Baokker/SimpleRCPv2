@@ -25,6 +25,7 @@ export interface PairSide {
 }
 
 export interface SemanticIndexReadonly extends Pick<SemanticIndex, "symbolsInFile" | "outgoing" | "incoming"> {
+  referenceTargets?(file: string, position: number): string[];
   readFile?(file: string): string;
   listFiles?(): string[];
   checkFourStates?(input: FourStateInput): FourStateResult;

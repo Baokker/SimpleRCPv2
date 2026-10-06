@@ -50,7 +50,7 @@ export function parseSymbols(file: string, text: string) {
 export function scriptKind(file: string) {
   if (/\.tsx$/i.test(file)) return ts.ScriptKind.TSX;
   if (/\.jsx$/i.test(file)) return ts.ScriptKind.JSX;
-  return /\.js$/i.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  return /\.[cm]?js$/i.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
 }
 
 function namedDeclaration(node: ts.Node): { name: string; nameNode?: ts.Node; kind: SymbolInfo["kind"] } | undefined {

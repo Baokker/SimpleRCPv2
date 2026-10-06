@@ -5,11 +5,16 @@ import type { AdjudicationConfig, AdjudicationInput } from "./types.js";
 export interface InvariantContext { callers: string[]; tests: string[]; comments: string[]; usage: string[] }
 const fileFor = (key: string) => key.slice(0, key.indexOf("#"));
 function source(file: string, text: string) { return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, /\.[cm]?jsx?$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS); }
-function calls(node: ts.Node, name: string): ts.CallExpression[] {
+function calls(node: ts.Node, key: string, project: ZoneInput["project"]): ts.CallExpression[] {
   const found: ts.CallExpression[] = [];
-  const names = new Set([name]);
-  for (const statement of node.getSourceFile().statements) if (ts.isImportDeclaration(statement) && statement.importClause?.namedBindings && ts.isNamedImports(statement.importClause.namedBindings)) for (const element of statement.importClause.namedBindings.elements) if ((element.propertyName ?? element.name).text === name) names.add(element.name.text);
-  const visit = (entry: ts.Node) => { if (ts.isCallExpression(entry) && (ts.isIdentifier(entry.expression) ? names.has(entry.expression.text) : ts.isPropertyAccessExpression(entry.expression) && names.has(entry.expression.name.text))) found.push(entry); ts.forEachChild(entry, visit); };
+  const file = node.getSourceFile().fileName;
+  const visit = (entry: ts.Node) => {
+    if (ts.isCallExpression(entry)) {
+      const target = ts.isPropertyAccessExpression(entry.expression) ? entry.expression.name : entry.expression;
+      if (project.referenceTargets?.(file, target.getStart()).includes(key)) found.push(entry);
+    }
+    ts.forEachChild(entry, visit);
+  };
   visit(node); return found;
 }
 function usageOf(call: ts.CallExpression, tree: ts.SourceFile) {
@@ -51,7 +56,7 @@ export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, 
       const body = text.slice(symbol.start, symbol.end);
       const declaration = source(file, body).statements[0];
       const signature = declaration && ts.isFunctionDeclaration(declaration) && declaration.body ? body.slice(0, declaration.body.getStart()) : body.split("{")[0];
-      for (const call of calls(tree, side.symbol.name).filter((call) => call.getStart() >= symbol.start && call.end <= symbol.end).slice(0, config.topK - callCount)) {
+      for (const call of calls(tree, side.symbol.key, input.project).filter((call) => call.getStart() >= symbol.start && call.end <= symbol.end).slice(0, config.topK - callCount)) {
         callCount += 1;
         const line = tree.getLineAndCharacterOfPosition(call.getStart()).line;
         result.callers.push(`${file}:${line + 1} ${signature}\n${text.split("\n").slice(Math.max(0, line - 3), line + 4).join("\n")}`);
@@ -68,7 +73,7 @@ export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, 
     for (const file of testFiles) {
       const text = input.project.readFile?.(file) ?? ""; const tree = source(file, text);
       const visitTest = (node: ts.Node) => {
-        if (ts.isCallExpression(node) && /^(test|it)$/.test(node.expression.getText(tree)) && calls(node, side.symbol.name).length > 0) {
+        if (ts.isCallExpression(node) && /^(test|it)$/.test(node.expression.getText(tree)) && calls(node, side.symbol.key, input.project).length > 0) {
           const testName = node.arguments[0]?.getText(tree) ?? "unnamed test";
           const assertions: string[] = [];
           const collect = (entry: ts.Node) => { if (ts.isCallExpression(entry) && /^(assert\.|expect\()/u.test(entry.getText(tree))) assertions.push(entry.getText(tree)); ts.forEachChild(entry, collect); };
