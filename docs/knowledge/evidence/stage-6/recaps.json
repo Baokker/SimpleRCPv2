@@ -1,0 +1,291 @@
+[
+  {
+    "scenario": "revised",
+    "attempt": 1,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "durationMs": 9151,
+    "fallback": false,
+    "citationCount": 5,
+    "draft": {
+      "type": "negative",
+      "title": "保留 src/session.ts 中的共享 helper 函数",
+      "summary": "Agent 在更新 session setup 时错误地移除了已有的 sharedHelper 函数，团队成员 Bob 提醒后恢复。",
+      "whatHappened": "Agent 在 src/session.ts 中将 sharedHelper 函数改为 setup 函数，实际上移除了原有的共享 helper。",
+      "correction": "Bob 指出共享 helper 需要保留，要求恢复 sharedHelper 函数。",
+      "rule": "在 src/session.ts 中更新 session setup 时，必须保留现有的共享辅助函数 sharedHelper，不得将其移除或替换为其他名称的函数。",
+      "appliesTo": {
+        "files": [
+          "src/session.ts"
+        ],
+        "globs": [],
+        "taskKinds": [
+          "session-update",
+          "refactor"
+        ]
+      },
+      "notApplicable": "当 sharedHelper 已被正式标记为废弃并有明确的移除计划时，或代码审查同意移除时。",
+      "scopeSuggestion": {
+        "scope": "team",
+        "reason": "共享 helper 影响多个使用者，不应被单方面移除。"
+      },
+      "checkSuggestion": {
+        "kind": "regex-absent",
+        "pattern": "sharedHelper",
+        "fileGlob": "src/session.ts"
+      },
+      "confidence": 0.95,
+      "evidenceCitations": [
+        "evidence.agentDiff",
+        "evidence.memberDiff",
+        "evidence.whatHappened",
+        "evidence.correction",
+        "evidence.chatMessages[0].text"
+      ],
+      "unknowns": [
+        "当 sharedHelper 确实需要被重构时的正确处理流程",
+        "是否应在移除前创建替代方案或进行团队讨论"
+      ],
+      "fallback": false
+    }
+  },
+  {
+    "scenario": "revised",
+    "attempt": 2,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "durationMs": 8914,
+    "fallback": false,
+    "citationCount": 6,
+    "draft": {
+      "type": "negative",
+      "title": "在src/session.ts中修改session setup时必须保留sharedHelper函数",
+      "summary": "Agent在更新session setup时错误地移除了sharedHelper函数，团队成员Bob要求恢复该共享helper。证据显示sharedHelper是团队共享的辅助函数，不应在未确认的情况下被删除。",
+      "whatHappened": "Agent将src/session.ts中的sharedHelper函数替换为setup函数，导致共享helper被移除",
+      "correction": "Bob恢复了sharedHelper函数，在src/session.ts中添加回原来的sharedHelper实现",
+      "rule": "在src/session.ts中修改session setup时，必须保留现有的sharedHelper函数。不得通过重命名、替换或删除的方式移除共享helper。如需添加新功能，应保留原有sharedHelper并扩展功能，而非直接替换。",
+      "appliesTo": {
+        "files": [
+          "src/session.ts"
+        ],
+        "globs": [],
+        "taskKinds": [
+          "session",
+          "update",
+          "setup"
+        ]
+      },
+      "notApplicable": "当sharedHelper功能完全被新的等效实现替代且经团队确认不影响其他模块时，或sharedHelper已迁移到独立模块时除外",
+      "scopeSuggestion": {
+        "scope": "team",
+        "reason": "sharedHelper是团队共享的辅助函数，其修改影响团队其他成员的工作，需要团队共识"
+      },
+      "checkSuggestion": {
+        "kind": "regex-absent",
+        "pattern": "-export function sharedHelper",
+        "fileGlob": "src/session.ts"
+      },
+      "confidence": 0.9,
+      "evidenceCitations": [
+        "evidence.file",
+        "evidence.agentDiff",
+        "evidence.memberDiff",
+        "evidence.whatHappened",
+        "evidence.correction",
+        "evidence.chatMessages[0]"
+      ],
+      "unknowns": [
+        "是否还有其他文件依赖此sharedHelper函数",
+        "团队是否有sharedHelper的替代方案讨论记录"
+      ],
+      "fallback": false
+    }
+  },
+  {
+    "scenario": "revised",
+    "attempt": 3,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "durationMs": 6797,
+    "fallback": false,
+    "citationCount": 7,
+    "draft": {
+      "type": "negative",
+      "title": "不应移除共享 helper 函数",
+      "summary": "Agent 在修改 src/session.ts 时错误地删除了已有的 sharedHelper 函数，成员 Bob 发现后要求恢复。该共享函数应被保留。",
+      "whatHappened": "Agent 在更新 session 设置时，移除了 src/session.ts 中已有的 sharedHelper 函数。",
+      "correction": "成员 Bob 发现后要求恢复 sharedHelper，并将其重新添加回文件。",
+      "rule": "在 src/session.ts 中，保留现有的 sharedHelper 函数。删除或重命名共享工具函数前需获得团队共识。",
+      "appliesTo": {
+        "files": [
+          "src/session.ts"
+        ],
+        "globs": [],
+        "taskKinds": []
+      },
+      "notApplicable": "任务明确要求重构或移除该共享工具函数时；当 sharedHelper 存在安全漏洞或严重性能问题需要替换时。",
+      "scopeSuggestion": {
+        "scope": "team",
+        "reason": "共享代码的修改需要团队共识，单独移除可能影响其他依赖方"
+      },
+      "checkSuggestion": {
+        "kind": "regex-absent",
+        "pattern": "sharedHelper",
+        "fileGlob": "src/session.ts"
+      },
+      "confidence": 0.85,
+      "evidenceCitations": [
+        "evidence.file",
+        "evidence.agentDiff",
+        "evidence.memberDiff",
+        "evidence.whatHappened",
+        "evidence.correction",
+        "evidence.chatMessages",
+        "evidence.chatMessages[0].text"
+      ],
+      "unknowns": [
+        "是否还有其他文件依赖 sharedHelper 函数",
+        "移除前是否应该检查其他文件的引用情况"
+      ],
+      "fallback": false
+    }
+  },
+  {
+    "scenario": "corrected",
+    "attempt": 1,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "durationMs": 8327,
+    "fallback": false,
+    "citationCount": 5,
+    "draft": {
+      "type": "constraint",
+      "title": "在 src/session.ts 中使用 sharedHelper 处理状态变更",
+      "summary": "Agent 被纠正：不应直接修改 state 对象，应使用 sharedHelper 函数来处理 session 状态变更。",
+      "whatHappened": "Agent 在 src/session.ts 中直接写入了 state 状态突变 (`state.name = name;`)",
+      "correction": "Alice 要求使用 sharedHelper 函数来处理 session 状态变更。正确做法是调用 `sharedHelper(state, name)` 而非直接赋值。",
+      "rule": "在 src/session.ts 文件中，进行 session 状态变更时，禁止直接赋值 `state.xxx = value`，必须使用 sharedHelper 函数进行状态变更操作。",
+      "appliesTo": {
+        "files": [
+          "src/session.ts"
+        ],
+        "globs": [],
+        "taskKinds": []
+      },
+      "notApplicable": "当 sharedHelper 不可用或无法满足特定业务需求时，需要与团队确认替代方案后再实现。",
+      "scopeSuggestion": {
+        "scope": "team",
+        "reason": "sharedHelper 是一个团队共享的工具函数，涉及到跨 Agent 或多模块协作的状态管理模式。"
+      },
+      "checkSuggestion": {
+        "kind": "regex-absent",
+        "pattern": "state\\s*=\\s*[^=]",
+        "fileGlob": "src/session.ts"
+      },
+      "confidence": 0.9,
+      "evidenceCitations": [
+        "evidence.file",
+        "evidence.previousRun",
+        "evidence.nextRun",
+        "evidence.whatHappened",
+        "evidence.correction"
+      ],
+      "unknowns": [
+        "sharedHelper 函数的完整签名和所有可用方法",
+        "其他模块是否也要求使用 sharedHelper 而非直接状态修改",
+        "如果 sharedHelper 不存在时的处理流程"
+      ],
+      "fallback": false
+    }
+  },
+  {
+    "scenario": "corrected",
+    "attempt": 2,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "durationMs": 10563,
+    "fallback": false,
+    "citationCount": 5,
+    "draft": {
+      "type": "constraint",
+      "title": "在src/session.ts中修改session state必须使用sharedHelper",
+      "summary": "Alice要求在src/session.ts中使用sharedHelper函数修改session state，禁止直接写入state对象",
+      "whatHappened": "Agent在src/session.ts中直接写入session state（state.name = name）",
+      "correction": "Alice要求改用sharedHelper(state, name)进行session state变更",
+      "rule": "在src/session.ts中修改session state时，必须使用sharedHelper(state, name)函数调用，不能使用直接赋值语法如state.name = name",
+      "appliesTo": {
+        "files": [
+          "src/session.ts"
+        ],
+        "globs": [],
+        "taskKinds": []
+      },
+      "notApplicable": "读取session state而不进行修改时不需要使用sharedHelper",
+      "scopeSuggestion": {
+        "scope": "team",
+        "reason": "src/session.ts是团队共享的状态管理文件，使用统一的helper函数确保状态变更的一致性和可追踪性"
+      },
+      "checkSuggestion": {
+        "kind": "regex-absent",
+        "pattern": "state\\.\\w+\\s*=",
+        "fileGlob": "src/session.ts"
+      },
+      "confidence": 0.95,
+      "evidenceCitations": [
+        "evidence.file",
+        "evidence.previousRun.diff",
+        "evidence.nextRun.diff",
+        "evidence.whatHappened",
+        "evidence.correction"
+      ],
+      "unknowns": [],
+      "fallback": false
+    }
+  },
+  {
+    "scenario": "corrected",
+    "attempt": 3,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "durationMs": 8571,
+    "fallback": false,
+    "citationCount": 4,
+    "draft": {
+      "type": "negative",
+      "title": "不要直接修改 session state",
+      "summary": "在 src/session.ts 中，session 状态的变更必须通过 sharedHelper 进行，不得直接赋值 state",
+      "whatHappened": "Agent 在 src/session.ts 中直接写入了 state.name = name，而不是使用 sharedHelper",
+      "correction": "Alice 要求使用 sharedHelper 处理 session 状态变更",
+      "rule": "在 src/session.ts 文件中，session 状态的所有变更必须使用 sharedHelper(state, name) 方法，禁止直接对 state 对象进行属性赋值（如 state.name = name）",
+      "appliesTo": {
+        "files": [
+          "src/session.ts"
+        ],
+        "globs": [],
+        "taskKinds": []
+      },
+      "notApplicable": "当 sharedHelper 不可用或未定义时",
+      "scopeSuggestion": {
+        "scope": "team",
+        "reason": "session 状态管理是团队共享的基础设施，需要统一处理方式"
+      },
+      "checkSuggestion": {
+        "kind": "regex-absent",
+        "pattern": "state\\.[a-zA-Z_]+\\s*=",
+        "fileGlob": "src/session.ts"
+      },
+      "confidence": 0.9,
+      "evidenceCitations": [
+        "evidence.file",
+        "evidence.previousRun.diff",
+        "evidence.nextRun.diff",
+        "evidence.correction"
+      ],
+      "unknowns": [
+        "sharedHelper 的具体实现细节",
+        "是否还有其他文件需要遵循此规则"
+      ],
+      "fallback": false
+    }
+  }
+]

@@ -40,7 +40,19 @@
 
 确认请求的 `patch` 使用普通编辑接口的字段规则，作者必须属于当前项目，显示名称由服务端查询。可见团队草稿可以由其他成员提交修改并确认，属主保持原值，确认者加入 `confirmedBy`。字段校验失败时草稿保持原值；普通 `PATCH` 继续要求属主或既有确认人。实际内容、类型、标签、作用域、锚点或作者变化会记录 `editedBeforeConfirm: true`。
 
-## 视图接口
+## 规范文档导入与导出
+
+| 方法 | 路径 | 输入与结果 |
+| --- | --- | --- |
+| `POST` | `/import` | `{ files?: string[] }`，最多 50 个工作区文档。默认读取 AGENTS.md、CLAUDE.md、CONTRIBUTING.md、README.md 与 .cursor/rules 的直接文件。返回 `{ drafts: [{ suggestionId, file, startLine, endLine, suggestion }] }`。 |
+| `GET` | `/export?format=agents-md` | Markdown，只包含 reviewed/team 卡片。 |
+| `POST` | `/export/workspace` | `{}`，返回 `{ path, markdown }`，创建 AGENTS.md；已存在时写 AGENTS.knowledge.md。记录 knowledge_exported。 |
+
+导入使用项目知识模型（默认 MiniMax），验证原文行号，产生 preset.imported 建议。模型不可用时使用 Markdown 标题与列表条目生成确定性草稿。原文与行号保存在建议证据中；接受时生成原文锚点，确认仍遵守团队二次确认配置。导入和导出拒绝符号链接与工作区外路径，导入禁止读取 .env 文件。
+
+项目配置增加 `toolEnabled=true`、`proposeEnabled=false`、`recapLanguage=zh`。MCP 工具接口见 mcp.md。复用指标增加 `firstToolHitByOtherAt`，活动事件为 knowledge_reuse_tool_hit。工具建议使用 agent.proposed，作者为 Agent，确认成员必须属于项目。
+
+## 视图读取
 
 `GET /guide?file=` 返回 `{ items }`，使用阶段一的 Guide 排序。`GET /timeline?file=` 返回 `{ items }`，使用阶段一的 Timeline 排序。卡片可见性过滤在生成视图前完成。
 
@@ -103,6 +115,8 @@
 | `GET` | `/api/projects/:projectId/knowledge/metrics/reuse` | 返回知识时刻、确认、首次查看和首次注入时间点。 |
 
 知识配置当前不提供 `correctionClassifier` 与 `contradictionJudge`，`rules+llm` 和 `llm` 尚未实现。服务端知识模型由 `KNOWLEDGE_LLM_PROVIDER`、`MINIMAX_BASE_URL` 和 `MINIMAX_MODEL` 配置，模型调用记录 `provider` 与 `model`。
+
+阶段 6 的知识配置增加 `toolEnabled`、`proposeEnabled` 与 `recapLanguage`。`POST /api/projects/:projectId/knowledge/import` 导入工作区规范文件并创建 Inbox 草稿；`GET /api/projects/:projectId/knowledge/export?format=agents-md` 返回团队卡片 Markdown，`POST /api/projects/:projectId/knowledge/export/workspace` 写入工作区。`POST /mcp/knowledge` 提供 `knowledge_search`、`knowledge_get` 和受项目配置控制的 `knowledge_propose`。
 
 Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 不包含完整卡片正文，记录 `totalChars` 与 `estimatedInjectionTokens`；`usage_summary` 记录 OpenCode assistant 消息用量。 `knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。
 

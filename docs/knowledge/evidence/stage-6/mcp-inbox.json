@@ -1,0 +1,41 @@
+{
+  "suggestions": [
+    {
+      "id": "c40c173e-7140-4667-b95f-4e59711b4d65",
+      "triggerType": "agent.proposed",
+      "createdAt": 1791301157328,
+      "origin": "agent-self",
+      "state": "open",
+      "actors": {
+        "memberIds": [
+          "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce"
+        ],
+        "runIds": [
+          "MBCSkomX4tcT"
+        ]
+      },
+      "suggestedType": "constraint",
+      "suggestedTitle": "Session 状态修改入口",
+      "suggestedSummary": "session.js 的所有状态修改（含 renameSession）必须通过 sharedHelper.js 的 setSessionValue",
+      "evidence": {
+        "runId": "MBCSkomX4tcT",
+        "draft": {
+          "workspace": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/artifacts/stage6-mcp-real/data/workspaces/demo",
+          "title": "Session 状态修改入口",
+          "summary": "session.js 的所有状态修改（含 renameSession）必须通过 sharedHelper.js 的 setSessionValue",
+          "content": "修改 session.js 时必须通过 sharedHelper.js 的 setSessionValue 修改状态，保留共享 helper。新方法如 renameSession(state, name) 也应委托 setSessionValue(state, 'name', name)，以保持统一的状态修改入口。修改后运行 npm test 验证。",
+          "type": "constraint",
+          "files": [
+            "session.js",
+            "sharedHelper.js"
+          ]
+        }
+      },
+      "dedupe": {
+        "cardId": "059f8b0c-3777-4927-b099-8d9f2fc0d931",
+        "score": 1
+      }
+    }
+  ],
+  "warnings": []
+}

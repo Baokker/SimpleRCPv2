@@ -1,0 +1,147 @@
+{
+  "draft": {
+    "type": "constraint",
+    "title": "Session 状态修改入口",
+    "summary": "session.js 的所有状态修改（含 renameSession）必须通过 sharedHelper.js 的 setSessionValue",
+    "content": "修改 session.js 时必须通过 sharedHelper.js 的 setSessionValue 修改状态，保留共享 helper。新方法如 renameSession(state, name) 也应委托 setSessionValue(state, 'name', name)，以保持统一的状态修改入口。修改后运行 npm test 验证。",
+    "tags": [
+      "agent-self"
+    ],
+    "appliesTo": {
+      "kind": "glob",
+      "patterns": [
+        "session.js",
+        "sharedHelper.js"
+      ]
+    },
+    "fallback": false,
+    "source": "ai",
+    "scope": "personal",
+    "provenance": {
+      "origin": "agent-self",
+      "author": {
+        "kind": "agent",
+        "memberId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+        "displayName": "Bob Agent",
+        "agentRunId": "MBCSkomX4tcT"
+      },
+      "trigger": {
+        "type": "agent.proposed",
+        "suggestionId": "c40c173e-7140-4667-b95f-4e59711b4d65"
+      },
+      "evidenceRefs": {
+        "runIds": [
+          "MBCSkomX4tcT"
+        ],
+        "chatMessageIds": [],
+        "files": []
+      }
+    },
+    "schemaVersion": 3,
+    "id": "57da399b-19dd-4243-bc3d-2e2db3a9fe33",
+    "status": "draft",
+    "createdAt": 1791301168395,
+    "updatedAt": 1791301168395,
+    "metadata": {
+      "createdBy": {
+        "peerId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+        "name": "Bob"
+      },
+      "roomId": "jPrUltEMrG",
+      "relatedChatMessageIds": []
+    },
+    "ownerMemberId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+    "review": {
+      "confirmedBy": []
+    },
+    "anchors": [],
+    "evolution": [
+      {
+        "at": 1791301168395,
+        "action": "created",
+        "by": {
+          "peerId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+          "name": "Bob"
+        }
+      }
+    ]
+  },
+  "confirmed": {
+    "type": "constraint",
+    "title": "Session 状态修改入口",
+    "summary": "session.js 的所有状态修改（含 renameSession）必须通过 sharedHelper.js 的 setSessionValue",
+    "content": "修改 session.js 时必须通过 sharedHelper.js 的 setSessionValue 修改状态，保留共享 helper。新方法如 renameSession(state, name) 也应委托 setSessionValue(state, 'name', name)，以保持统一的状态修改入口。修改后运行 npm test 验证。",
+    "tags": [
+      "agent-self"
+    ],
+    "appliesTo": {
+      "kind": "glob",
+      "patterns": [
+        "session.js",
+        "sharedHelper.js"
+      ]
+    },
+    "fallback": false,
+    "source": "ai",
+    "scope": "personal",
+    "provenance": {
+      "origin": "agent-self",
+      "author": {
+        "kind": "agent",
+        "memberId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+        "displayName": "Bob Agent",
+        "agentRunId": "MBCSkomX4tcT"
+      },
+      "trigger": {
+        "type": "agent.proposed",
+        "suggestionId": "c40c173e-7140-4667-b95f-4e59711b4d65"
+      },
+      "evidenceRefs": {
+        "runIds": [
+          "MBCSkomX4tcT"
+        ],
+        "chatMessageIds": [],
+        "files": []
+      }
+    },
+    "schemaVersion": 3,
+    "id": "57da399b-19dd-4243-bc3d-2e2db3a9fe33",
+    "status": "reviewed",
+    "createdAt": 1791301168395,
+    "updatedAt": 1791301168400,
+    "metadata": {
+      "createdBy": {
+        "peerId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+        "name": "Bob"
+      },
+      "roomId": "jPrUltEMrG",
+      "relatedChatMessageIds": []
+    },
+    "ownerMemberId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+    "review": {
+      "confirmedBy": [
+        "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce"
+      ],
+      "confirmedAt": 1791301168400,
+      "editedBeforeConfirm": false
+    },
+    "anchors": [],
+    "evolution": [
+      {
+        "at": 1791301168395,
+        "action": "created",
+        "by": {
+          "peerId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce",
+          "name": "Bob"
+        }
+      },
+      {
+        "at": 1791301168400,
+        "action": "confirmed",
+        "by": {
+          "peerId": "52d1b7bd-d2d1-4ba3-a114-e855f8b0ecce"
+        }
+      }
+    ]
+  }
+}

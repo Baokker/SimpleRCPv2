@@ -21,3 +21,7 @@
 确认卡片时 provider 检查运行中的任务。上下文文件、任务文本路径、运行中 trace 的 `concurrent_change` 与 `file_changes`、项目级卡片或 glob 命中时，向发起人发送 `knowledge_update_available`，并向团队 Agent 的聊天线程追加系统消息。确认时间、其他成员首次查看时间和首次注入时间保存在 `reuse-metrics.json` 与活动日志中，知识时刻优先取捕获建议的创建时间，通过复用指标接口读取。Agent 面板和团队任务卡片中的卡片标题可以打开知识面板中的对应卡片。
 
 OpenCode SDK 1.18.31 的 `message.updated` 信息包含 `tokens.input`、`tokens.output`、`tokens.reasoning`、`tokens.cache.read`、`tokens.cache.write` 和 `cost`。服务端按消息编号去重后汇总到 `AgentRun.usage`，并写入 `usage_summary` trace；自我复盘调用的用量只写入 `knowledge_recap_self` 与 `llm-calls.jsonl`，不计入用户任务。
+
+`KNOWLEDGE=full` 且项目配置 `toolEnabled=true` 时，提示段告知 Agent 可以调用 `knowledge_search`，并要求传入当前工作区绝对路径。关闭卡片注入时仍保留工具提示。MCP 工具只返回 reviewed/team 卡片；工具调用记录在 `tool-calls.jsonl` 与 `knowledge_tool_call` trace 中。其他成员任务首次工具命中保存为 `firstToolHitByOtherAt`，通过复用指标接口返回。
+
+Agent provider 由 `AGENT_LLM_PROVIDER` 决定，默认 minimax。MiniMax-M2 的运行用量另外包含人民币 estimatedCost、estimatedCostCurrency 与价格来源，计算方法见 agent-model.md。用户任务与自我复盘继续分别统计。

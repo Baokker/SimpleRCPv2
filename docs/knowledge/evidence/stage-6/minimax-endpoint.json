@@ -1,0 +1,13 @@
+{
+  "baseUrl": "https://api.minimaxi.com/v1",
+  "model": "MiniMax-M2",
+  "status": 200,
+  "content": "OK",
+  "hasReasoningField": true,
+  "usage": {
+    "total_tokens": 132,
+    "total_characters": 0,
+    "prompt_tokens": 44,
+    "completion_tokens": 88
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "task": "escape",
+  "attempt": 1,
+  "state": "completed",
+  "wallMs": 8097,
+  "usage": {
+    "inputTokens": 18973,
+    "outputTokens": 737,
+    "reasoningTokens": 144,
+    "cacheReadTokens": 83200,
+    "cacheWriteTokens": 0,
+    "totalTokens": 103054,
+    "cost": 0
+  },
+  "toolErrors": 0,
+  "toolCalls": 9,
+  "ranTests": true,
+  "reasoningLeaks": 0,
+  "testsUnchanged": true,
+  "evaluation": {
+    "passed": true
+  },
+  "reply": "Done. `escapeHtml` now escapes `&`, `<`, `>`, `\"`, `'` (ampersand first, so exactly once), and `label` escapes the `title` attribute. Test passes."
+}

@@ -1,0 +1,120 @@
+{
+  "drafts": [
+    {
+      "suggestionId": "01d6bc02-3cf2-4e7a-a8df-c476c1beabd0",
+      "file": "CONTRIBUTING.md",
+      "startLine": 5,
+      "endLine": 5,
+      "suggestion": {
+        "id": "01d6bc02-3cf2-4e7a-a8df-c476c1beabd0",
+        "triggerType": "preset.imported",
+        "createdAt": 1791301171908,
+        "origin": "preset",
+        "state": "open",
+        "actors": {
+          "memberIds": [
+            "d3626dc6-09bb-48f9-bfbf-17e5a97011da"
+          ],
+          "runIds": []
+        },
+        "suggestedType": "constraint",
+        "suggestedTitle": "统一 Session 状态修改入口",
+        "suggestedSummary": "修改 session.js 状态必须使用 sharedHelper.js 的 setSessionValue 方法",
+        "suggestedAnchors": [
+          {
+            "file": "CONTRIBUTING.md",
+            "startLine": 5,
+            "endLine": 5,
+            "score": 1,
+            "reasons": [
+              "规范文档原文"
+            ]
+          }
+        ],
+        "evidence": {
+          "file": "CONTRIBUTING.md",
+          "lineRange": {
+            "start": 5,
+            "end": 5
+          },
+          "sourceText": "修改 session.js 的状态时使用 sharedHelper.js 的 setSessionValue，保持统一的状态修改入口。",
+          "draft": {
+            "type": "constraint",
+            "title": "统一 Session 状态修改入口",
+            "summary": "修改 session.js 状态必须使用 sharedHelper.js 的 setSessionValue 方法",
+            "content": "修改 session.js 的状态时使用 sharedHelper.js 的 setSessionValue，保持统一的状态修改入口。",
+            "startLine": 5,
+            "endLine": 5,
+            "files": [],
+            "fallback": false,
+            "file": "CONTRIBUTING.md",
+            "sourceText": "修改 session.js 的状态时使用 sharedHelper.js 的 setSessionValue，保持统一的状态修改入口。"
+          },
+          "fallback": false
+        },
+        "dedupe": {
+          "cardId": "059f8b0c-3777-4927-b099-8d9f2fc0d931",
+          "score": 1
+        }
+      }
+    },
+    {
+      "suggestionId": "748aa95b-97e7-4acb-831f-dcf8a457d825",
+      "file": "CONTRIBUTING.md",
+      "startLine": 9,
+      "endLine": 9,
+      "suggestion": {
+        "id": "748aa95b-97e7-4acb-831f-dcf8a457d825",
+        "triggerType": "preset.imported",
+        "createdAt": 1791301171914,
+        "origin": "preset",
+        "state": "open",
+        "actors": {
+          "memberIds": [
+            "d3626dc6-09bb-48f9-bfbf-17e5a97011da"
+          ],
+          "runIds": []
+        },
+        "suggestedType": "constraint",
+        "suggestedTitle": "修改 JavaScript 文件后必须执行测试",
+        "suggestedSummary": "JavaScript 文件变更后需运行 npm test 验证 Session 行为",
+        "suggestedAnchors": [
+          {
+            "file": "CONTRIBUTING.md",
+            "startLine": 9,
+            "endLine": 9,
+            "score": 1,
+            "reasons": [
+              "规范文档原文"
+            ]
+          }
+        ],
+        "evidence": {
+          "file": "CONTRIBUTING.md",
+          "lineRange": {
+            "start": 9,
+            "end": 9
+          },
+          "sourceText": "修改 JavaScript 文件后执行 npm test，确认 Session 行为通过验证。",
+          "draft": {
+            "type": "constraint",
+            "title": "修改 JavaScript 文件后必须执行测试",
+            "summary": "JavaScript 文件变更后需运行 npm test 验证 Session 行为",
+            "content": "修改 JavaScript 文件后执行 npm test，确认 Session 行为通过验证。",
+            "startLine": 9,
+            "endLine": 9,
+            "files": [],
+            "fallback": false,
+            "file": "CONTRIBUTING.md",
+            "sourceText": "修改 JavaScript 文件后执行 npm test，确认 Session 行为通过验证。"
+          },
+          "fallback": false
+        },
+        "dedupe": {
+          "cardId": "059f8b0c-3777-4927-b099-8d9f2fc0d931",
+          "score": 1
+        }
+      }
+    }
+  ]
+}

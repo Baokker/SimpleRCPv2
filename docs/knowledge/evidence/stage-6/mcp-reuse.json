@@ -1,0 +1,15 @@
+{
+  "metrics": [
+    {
+      "cardId": "059f8b0c-3777-4927-b099-8d9f2fc0d931",
+      "confirmedAt": 1791301146699,
+      "knowledgeAt": 1791301146699,
+      "firstToolHitByOtherAt": 1791301150080
+    },
+    {
+      "cardId": "57da399b-19dd-4243-bc3d-2e2db3a9fe33",
+      "confirmedAt": 1791301168400,
+      "knowledgeAt": 1791301157338
+    }
+  ]
+}

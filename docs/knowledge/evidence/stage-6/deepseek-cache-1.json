@@ -1,0 +1,26 @@
+{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "task": "cache",
+  "attempt": 1,
+  "state": "completed",
+  "wallMs": 8062,
+  "usage": {
+    "inputTokens": 19112,
+    "outputTokens": 811,
+    "reasoningTokens": 88,
+    "cacheReadTokens": 82944,
+    "cacheWriteTokens": 0,
+    "totalTokens": 102955,
+    "cost": 0
+  },
+  "toolErrors": 0,
+  "toolCalls": 8,
+  "ranTests": true,
+  "reasoningLeaks": 0,
+  "testsUnchanged": true,
+  "evaluation": {
+    "passed": true
+  },
+  "reply": "Done.\n\n- `cache.js:1` — `cacheKey` now `JSON.stringify([user, locale])`, so `('a:b','c')` and `('a','b:c')` no longer collide.\n- `service.js:6` — caches the in-flight promise, coalescing concurrent calls; deletes the entry on failure so errors aren't cached.\n\nTest passes."
+}
