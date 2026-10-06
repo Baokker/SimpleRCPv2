@@ -1,0 +1,22 @@
+{
+  "baseCommit": "b62f1f8",
+  "branch": "feature/conflict-guard",
+  "productionTimings": { "idleMs": 1500, "persistDelayMs": 300 },
+  "build": { "passed": true },
+  "conflictGuard": { "files": 22, "passed": 198 },
+  "server": { "files": 45, "passed": 264 },
+  "fullTraceChecks": { "passed": 4 },
+  "demo": { "passed": 2 },
+  "collaboration": { "off": 2, "observe": 2, "rules": 2, "full": 2 },
+  "playwright": { "passed": 39, "skipped": 9 },
+  "mutations": [
+    { "id": "A2", "change": "read-baseline-after-tool-input", "failedTests": 1, "log": "agent-mutation.log.gz" },
+    { "id": "A1", "change": "retain-count-after-normal-rejection", "failedTests": 1, "log": "agent-mutation.log.gz" },
+    { "id": "A1", "change": "retain-original-path-count", "failedTests": 1, "log": "normalization-mutation.log.gz" },
+    { "id": "E2", "change": "disable-subscription-replay", "failedTests": 1, "log": "model-mutation.log.gz" }
+  ],
+  "providerReplay": { "legacyRounds": 3, "subscriptionRounds": 3, "byteIdentical": true, "networkCalls": 0 },
+  "liveCallIncrement": { "fast": 0, "deep": 0, "agentRuns": 0 },
+  "holdoutEvaluated": false,
+  "secretMatches": 0
+}
