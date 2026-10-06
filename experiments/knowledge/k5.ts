@@ -21,13 +21,15 @@ export function summarizeRetrieval(rows: Array<ReturnType<typeof retrievalMetric
   const metrics = Object.fromEntries((["recall1", "recall3", "recall5", "mrr", "ndcg5"] as const).map(field => {
     const taskMeans = tasks.map(task => {
       const values = traps.filter(row => row.task === task).map(row => row[field]);
-      if (values.some(value => value === null)) throw new Error(`Missing ${field} for trap task ${task}`);
+      if (values.some(value => value === null || !Number.isFinite(value))) throw new Error(`Missing ${field} for trap task ${task}`);
       return values.reduce<number>((sum, value) => sum + value!, 0) / values.length;
     });
     return [field, taskMeans.length ? taskMeans.reduce((sum, value) => sum + value, 0) / taskMeans.length : null];
   })) as Pick<ReturnType<typeof retrievalMetrics>, "recall1" | "recall3" | "recall5" | "mrr" | "ndcg5">;
+  const controls = rows.filter(row => row.taskKind === "control");
+  if (controls.some(row => row.falseInjections === null || !Number.isFinite(row.falseInjections))) throw new Error("Missing falseInjections for control task");
   return {traps: tasks.length, queries: traps.length, ...metrics,
-    falseInjections: rows.filter(row => row.taskKind === "control").reduce((sum, row) => sum + (row.falseInjections ?? 0), 0)};
+    falseInjections: controls.reduce((sum, row) => sum + row.falseInjections!, 0)};
 }
 
 // 与 apps/server/src/knowledge/provider.ts 的 rankResults 保持同一排序规则。

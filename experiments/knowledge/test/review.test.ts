@@ -54,6 +54,8 @@ test("检索汇总给予每个任务相同权重，保留查询与误注入总�
   const result = summarizeRetrieval([found, found, found, missed, control]);
   assert.equal(result.traps, 2); assert.equal(result.queries, 4);
   assert.equal(result.recall1, 0.5); assert.equal(result.mrr, 0.5); assert.equal(result.falseInjections, 1);
+  assert.throws(() => summarizeRetrieval([{...found, mrr: null}]), /Missing mrr/);
+  assert.throws(() => summarizeRetrieval([{...control, falseInjections: null}]), /Missing falseInjections/);
 });
 
 test("T1 正文预算保留纠正原文与实际 diff 摘要", async () => {
