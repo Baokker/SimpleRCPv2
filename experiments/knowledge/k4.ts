@@ -10,6 +10,15 @@ import {knowledgeUsage} from "./k3.js";
 
 export type K4Condition = "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
 export const allK4Conditions: K4Condition[] = ["T0", "T1", "T2", "T3", "T4", "T5"];
+export function correctionContext(text: string, diff: string, limit = 800) {
+  const prefix = `${text}\n\nTa diff:\n`;
+  if (prefix.length > limit) throw new Error("Correction text exceeds the configured card budget");
+  const summary = parsePatch(diff).map(patch => [
+    patch.newFileName ?? patch.oldFileName,
+    ...patch.hunks.flatMap(hunk => hunk.lines.filter(line => line.startsWith("+") || line.startsWith("-")))
+  ].join("\n")).join("\n\n");
+  return prefix + summary.slice(0, limit - prefix.length);
+}
 export async function reviewPatch(pairId: string, card: KnowledgeCard, gold: KnowledgeCard) {
   const rules = await readJson<Record<string, {requiredTokens: string[]; files: string[]}>>(path.join(root, "review-rules.json"));
   const rule = rules[pairId];
@@ -80,7 +89,7 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
     if (!await exists(cardFile)) {
       if (condition === "T1") {
         const taDiff = await fs.readFile(path.join(raw, "ta/workspace.patch"), "utf8");
-        const response = await api.request(route("knowledge/cards"), a, {type: "context", title: "本次纠正上下文", summary: pair.correction.text, content: `${pair.ta.prompt}\n${pair.correction.text}\n${taDiff}`, tags: ["experiment:T1"], scope: "team"});
+        const response = await api.request(route("knowledge/cards"), a, {type: "context", title: "本次纠正上下文", summary: pair.correction.text, content: correctionContext(pair.correction.text, taDiff), tags: ["experiment:T1"], scope: "team"});
         card = response.card;
       } else if (condition !== "T0") {
         let suggestion: any;

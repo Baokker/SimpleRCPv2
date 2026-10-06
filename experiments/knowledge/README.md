@@ -50,7 +50,7 @@ pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/r
 
 判定使用冻结 `run-judge.mjs` 的逐字副本，执行前比较 SHA-256。副本放在 `.work/judge/tools/`，判定器的临时目录因此位于实验目录内。任务和隐藏测试仍从只读数据目录读取。
 
-K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，Tb 由乙的个人 Agent 执行。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T1 使用手工创建接口返回的 reviewed 团队卡片。T4 检查卡片由甲拥有且保持个人范围。草稿与确认步骤按服务端当前状态继续执行。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。需要用数据原文触发纠正识别时，启动实验实例增加 `EXPERIMENT_CORRECTION_TERMS=dataset`；实际配置保存在结果目录。该设置包含四个迁移约定标识符。
+K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，Tb 由乙的个人 Agent 执行。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T1 使用手工创建接口返回的 reviewed 团队卡片，正文保留完整纠正原文，后接真实 diff 的增删行摘要，合计不超过 800 字符。T4 检查卡片由甲拥有且保持个人范围。草稿与确认步骤按服务端当前状态继续执行。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。需要用数据原文触发纠正识别时，启动实验实例增加 `EXPERIMENT_CORRECTION_TERMS=dataset`；实际配置保存在结果目录。该设置包含四个迁移约定标识符。
 
 C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
 

@@ -15,6 +15,7 @@ import {configSchema, dataset, root, benchRoot, RunStore, exists, platformRoot, 
 import {normalizeScript, anchorMetrics, triggerMetrics} from "../k1.js";
 import {updateRatingSheet, episodes} from "../k2.js";
 import {evaluateStrategies} from "../k7.js";
+import {correctionContext} from "../k4.js";
 import {collectFrozenAnchorCorpus, createAnchorBenchmarkCases} from "../../../packages/knowledge/test/fixtures/anchor-benchmark.js";
 
 async function directory(name: string) {
@@ -42,6 +43,16 @@ test("任务选择拒绝未知标识符和重复项", async () => {
   assert.equal(selectIds(data.tasks, "R1-T01")[0].id, "R1-T01");
   assert.throws(() => selectIds(data.tasks, "R1-T01,R1-T01"), /Invalid selection/);
   assert.throws(() => selectIds(data.tasks, "R1-T00"), /Invalid selection/);
+});
+
+test("T1 正文预算保留纠正原文与实际 diff 摘要", async () => {
+  const pair = (await dataset()).transfers[0];
+  const patch = await fs.readFile(path.join(pair.ta.directory, "reference/trap.patch"), "utf8");
+  const content = correctionContext(pair.correction.text, patch);
+  assert.ok(content.startsWith(pair.correction.text));
+  assert.ok(content.includes("src/"));
+  assert.ok(content.length <= 800);
+  assert.throws(() => correctionContext(pair.correction.text, patch, 1), /card budget/);
 });
 
 test("评分表续跑保留填写内容并增加新草稿", async () => {
