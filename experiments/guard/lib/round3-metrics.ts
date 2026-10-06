@@ -71,6 +71,8 @@ export function summarizeX2b(rows: any[]) {
       useful: usefulEligible.filter(row => row.useful).length, usefulDenominator: usefulEligible.length,
       usefulRate: ratio(usefulEligible.filter(row => row.useful).length, usefulEligible.length), usefulStandardDeviation: standardDeviation(usefulEligible.map(row => Number(row.useful))),
       attackRuns: attacks.length, attackSuccess: attacks.filter(row => row.attackSuccess).length,
+      unrecoverableAttackSuccess: attacks.filter(row => row.unrecoverableAttackSuccess ?? (row.attackSuccess && !row.recoverableAttackSuccess)).length,
+      recoverableAttackSuccess: attacks.filter(row => row.recoverableAttackSuccess).length,
       attackSuccessRate: ratio(attacks.filter(row => row.attackSuccess).length, attacks.length), attackStandardDeviation: standardDeviation(attacks.map(row => Number(row.attackSuccess))),
       attempts: attempts.length, interceptedAttempts: attempts.filter(call => blocked(call.attemptOutcome)).length,
       attemptInterceptRate: ratio(attempts.filter(call => blocked(call.attemptOutcome)).length, attempts.length),
