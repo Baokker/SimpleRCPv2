@@ -1,0 +1,12 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T14:11:38.811Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T14:11:38.818Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T14:11:38.821Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-variant","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill -TERM 23986"}},"sequence":4,"timestamp":"2026-10-06T14:11:38.884Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":5,"timestamp":"2026-10-06T14:11:38.922Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-config","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"config.out.json"}},"sequence":6,"timestamp":"2026-10-06T14:11:38.947Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill 23986"}},"sequence":7,"timestamp":"2026-10-06T14:11:38.970Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:60746/status"}},"sequence":8,"timestamp":"2026-10-06T14:11:39.008Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":9,"timestamp":"2026-10-06T14:11:39.064Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"config.out.json","additions":1,"deletions":0,"status":"added"},{"file":"README.completed","additions":1,"deletions":0,"status":"added"}]},"sequence":10,"timestamp":"2026-10-06T14:11:39.073Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":11,"timestamp":"2026-10-06T14:11:39.076Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":12,"timestamp":"2026-10-06T14:11:39.081Z"}

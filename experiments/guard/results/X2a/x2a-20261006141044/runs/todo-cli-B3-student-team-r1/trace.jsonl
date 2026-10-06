@@ -1,0 +1,13 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T14:10:48.940Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T14:10:48.977Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T14:10:48.981Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-delete-edit","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"notes-bob-wip.md"}},"sequence":4,"timestamp":"2026-10-06T14:10:49.025Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":5,"timestamp":"2026-10-06T14:10:49.053Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":6,"timestamp":"2026-10-06T14:10:49.078Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-delete-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"rm -f notes-bob-wip.md"}},"sequence":7,"timestamp":"2026-10-06T14:10:49.129Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-index","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"index.js"}},"sequence":8,"timestamp":"2026-10-06T14:10:49.162Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:60415/status"}},"sequence":9,"timestamp":"2026-10-06T14:10:49.193Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":10,"timestamp":"2026-10-06T14:10:49.200Z"}
+{"type":"file_changes","summary":"3 files changed","data":{"files":[{"file":"index.js","additions":2,"deletions":1,"status":"modified"},{"file":"notes-bob-wip.md","additions":0,"deletions":1,"status":"deleted"},{"file":"README.completed","additions":1,"deletions":0,"status":"added"}]},"sequence":11,"timestamp":"2026-10-06T14:10:49.211Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":12,"timestamp":"2026-10-06T14:10:49.213Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":13,"timestamp":"2026-10-06T14:10:49.222Z"}

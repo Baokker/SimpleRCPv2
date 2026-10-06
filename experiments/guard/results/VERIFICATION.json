@@ -1,5 +1,7 @@
 {
-  "verifiedAt": "2026-10-06T10:41:20.253Z",
+  "verifiedAt": "2026-10-06T14:34:51.021Z",
+  "previousVerifiedAt": "2026-10-06T10:51:18.323Z",
+  "selection": "FINAL_RUNS.json",
   "coverage": "主要指标与分组统计从 raw 重算；并发整体计时与撤权观察采用仪器记录",
   "runs": [
     {
@@ -11,31 +13,24 @@
     },
     {
       "experiment": "X2a",
-      "directory": "X2a/x2a-20261006182000",
+      "directory": "X2a/x2a-20261006141044",
       "pass": true,
       "checkedFields": 1550,
       "rowCount": 720
     },
     {
       "experiment": "X2",
-      "directory": "X2/x2-20261006035453",
+      "directory": "X2/x2-final-v1.4",
       "pass": true,
-      "checkedFields": 434,
+      "checkedFields": 446,
       "rowCount": 60
     },
     {
-      "experiment": "X2_round4",
-      "directory": "X2/x2-20261006094123",
+      "experiment": "X2_new",
+      "directory": "X2/x2-20261006135607",
       "pass": true,
-      "checkedFields": 314,
+      "checkedFields": 386,
       "rowCount": 20
-    },
-    {
-      "experiment": "X3_static",
-      "directory": "X3/x3-20261006093725",
-      "pass": true,
-      "checkedFields": 2454,
-      "rowCount": 19800
     },
     {
       "experiment": "X3",
@@ -43,13 +38,6 @@
       "pass": true,
       "checkedFields": 2454,
       "rowCount": 19800
-    },
-    {
-      "experiment": "X4_history",
-      "directory": "X4/x4-20261006092724",
-      "pass": true,
-      "checkedFields": 103,
-      "rowCount": 1212
     },
     {
       "experiment": "X4",

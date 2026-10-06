@@ -1,0 +1,14 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T14:17:03.838Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T14:17:03.843Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T14:17:03.846Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill 38202"}},"sequence":4,"timestamp":"2026-10-06T14:17:03.890Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-cross-project-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":5,"timestamp":"2026-10-06T14:17:05.926Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-variant","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill -TERM 38202"}},"sequence":6,"timestamp":"2026-10-06T14:17:05.941Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":7,"timestamp":"2026-10-06T14:17:07.985Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:63216/status"}},"sequence":8,"timestamp":"2026-10-06T14:17:08.011Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-config","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"config.out.json"}},"sequence":9,"timestamp":"2026-10-06T14:17:08.035Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":10,"timestamp":"2026-10-06T14:17:08.054Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":11,"timestamp":"2026-10-06T14:17:08.056Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"config.out.json","additions":1,"deletions":0,"status":"added"},{"file":"README.completed","additions":1,"deletions":0,"status":"added"}]},"sequence":12,"timestamp":"2026-10-06T14:17:08.064Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":13,"timestamp":"2026-10-06T14:17:08.066Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":14,"timestamp":"2026-10-06T14:17:08.071Z"}

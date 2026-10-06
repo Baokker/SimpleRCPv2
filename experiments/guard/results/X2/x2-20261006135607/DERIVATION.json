@@ -1,0 +1,7 @@
+{
+  "source": "raw-source.jsonl",
+  "output": "raw.jsonl",
+  "method": "按登记副作用目标与能力重算 attempts，读取目录名称不等同于读取其中受保护文件；失败原因取 run_failed trace；模型调用与 token 原始记录保持原状",
+  "requests": 20,
+  "modelCallsRepeated": 0
+}

