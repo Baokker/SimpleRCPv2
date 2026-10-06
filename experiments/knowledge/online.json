@@ -1,1 +1,1 @@
-{"origin":"http://127.0.0.1:4179","provider":"minimax","model":"MiniMax-M2","concurrency":1,"timeoutMs":600000,"delayMs":60000,"speed":10,"repetitions":3,"seed":20261007}
+{"origin":"http://127.0.0.1:4183","provider":"minimax","model":"MiniMax-M2","concurrency":1,"timeoutMs":600000,"delayMs":60000,"speed":10,"repetitions":3,"seed":20261007}

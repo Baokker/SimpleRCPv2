@@ -3,7 +3,7 @@ import {parseArgs} from "node:util";
 import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl} from "./common.js";
 import {allK3Conditions, runK3, calibration, type K3Condition} from "./k3.js";
 import {allK4Conditions, runK4, type K4Condition} from "./k4.js";
-import {runK1Offline, runK1Online} from "./k1.js";
+import {runK1Offline, runK1Online, compareK1Recordings} from "./k1.js";
 import {runK2} from "./k2.js";
 import {runK5} from "./k5.js";
 import {runK7} from "./k7.js";
@@ -15,7 +15,7 @@ const {values, positionals} = parseArgs({allowPositionals: true, options: {
   source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}
 }});
 const command = positionals[0];
-if (!["verify", "k1", "k2", "k3", "k4", "k5", "k7", "judge-stability", "summarize"].includes(command)) throw new Error("Command: verify|k1|k2|k3|k4|k5|k7|judge-stability|summarize");
+if (!["verify", "k1", "k1-compare", "k2", "k3", "k4", "k5", "k7", "judge-stability", "summarize"].includes(command)) throw new Error("Command: verify|k1|k1-compare|k2|k3|k4|k5|k7|judge-stability|summarize");
 const resolveInput = (file: string) => path.resolve(platformRoot, file);
 const config = configSchema.parse(values.config ? await readJson(resolveInput(values.config)) : {});
 const data = await dataset();
@@ -36,6 +36,10 @@ if (command === "verify") {
   const store = await new RunStore(directory).open(command, config, data);
   try {
     if (command === "k1") {await runK1Offline(store); if (values.online) await runK1Online(data, config, store);}
+    if (command === "k1-compare") {
+      if (!values.source) throw new Error("--source is required");
+      await compareK1Recordings(config, store, resolveInput(values.source));
+    }
     if (command === "k2") await runK2(data, config, store, values.source && resolveInput(values.source), values.limit ? Number(values.limit) : undefined);
     if (command === "k3") {
       let tasks = values.tasks ? data.tasks.filter(task => values.tasks!.split(",").includes(task.id)) : data.tasks;

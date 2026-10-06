@@ -226,13 +226,38 @@ export async function runK1Online(data: Dataset, config: ExperimentConfig, store
         return item.type === counterpart.type && Math.abs(item.at - counterpart.at) <= 300 && JSON.stringify(item.actors) === JSON.stringify(counterpart.actors) && JSON.stringify(item.anchors) === JSON.stringify(counterpart.anchors);
       });
       const types = (items: CaptureSuggestion[]) => items.map(item => item.triggerType).sort();
-      const scriptSuggestions = replayEvents(input.events, recording.config, input.metadata.durationSeconds * 1000 / config.speed + 65000 / config.speed);
+      const scriptRaw = replayEvents(input.events, recording.config, input.metadata.durationSeconds * 1000 / config.speed + 65000 / config.speed);
+      const scriptSuggestions = dedupeSuggestions(scriptRaw);
       const scriptTypesEqual = JSON.stringify(types(scriptSuggestions)) === JSON.stringify(types(recording.suggestions));
       await writeJson(path.join(store.raw(key), "recording.json"), recording);
-      await writeJson(path.join(store.raw(key), "comparison.json"), {recordedEqual, scriptTypesEqual, script: fingerprint(scriptSuggestions), online: fingerprint(recording.suggestions), recordedReplay: fingerprint(replayed), rawReplay: fingerprint(replayedRaw)});
+      await writeJson(path.join(store.raw(key), "comparison.json"), {recordedEqual, scriptTypesEqual, script: fingerprint(scriptSuggestions), rawScript: fingerprint(scriptRaw), online: fingerprint(recording.suggestions), recordedReplay: fingerprint(replayed), rawReplay: fingerprint(replayedRaw)});
       await store.append({key, completed: true, session: id, condition: "online", recordedEqual, scriptTypesEqual,
-        onlineCount: recording.suggestions.length, replayCount: replayed.length, rawReplayCount: replayedRaw.length, scriptCount: scriptSuggestions.length,
+        onlineCount: recording.suggestions.length, replayCount: replayed.length, rawReplayCount: replayedRaw.length, scriptCount: scriptSuggestions.length, rawScriptCount: scriptRaw.length,
         agentSource: "script-schema-1", speed: config.speed, artifacts: path.relative(store.directory, store.raw(key))});
     } finally {await client.close();}
+  }
+}
+export async function compareK1Recordings(config: ExperimentConfig, store: RunStore, source: string) {
+  for (const id of ["S01", "S02"]) {
+    const key = `${id}-comparison`;
+    if (store.done(key)) continue;
+    const sourceFile = path.join(source, "raw", `${id}-online`, "recording.json");
+    const recording = await readJson(sourceFile);
+    const input = await normalizeScript(id, config.speed);
+    const finalAt = recording.events.at(-1).at + 65000 / config.speed;
+    const replayRaw = replayEvents(recording.events, recording.config, finalAt);
+    const replay = dedupeSuggestions(replayRaw);
+    const scriptRaw = replayEvents(input.events, recording.config, input.metadata.durationSeconds * 1000 / config.speed + 65000 / config.speed);
+    const script = dedupeSuggestions(scriptRaw);
+    const fingerprint = (items: CaptureSuggestion[]) => items.map(item => ({type: item.triggerType, at: item.createdAt, actors: item.actors, anchors: item.suggestedAnchors})).sort((a, b) => a.at - b.at || a.type.localeCompare(b.type));
+    const online = fingerprint(recording.suggestions), offline = fingerprint(replay);
+    const recordedEqual = online.length === offline.length && online.every((item, index) => item.type === offline[index].type && Math.abs(item.at - offline[index].at) <= 300 && JSON.stringify(item.actors) === JSON.stringify(offline[index].actors) && JSON.stringify(item.anchors) === JSON.stringify(offline[index].anchors));
+    const types = (items: CaptureSuggestion[]) => items.map(item => item.triggerType).sort();
+    const scriptTypesEqual = JSON.stringify(types(script)) === JSON.stringify(types(recording.suggestions));
+    const rawScriptTypesEqual = JSON.stringify(types(scriptRaw)) === JSON.stringify(types(replayRaw));
+    await writeJson(path.join(store.raw(key), "comparison.json"), {online, recordedReplay: offline, rawReplay: fingerprint(replayRaw), script: fingerprint(script), rawScript: fingerprint(scriptRaw)});
+    await store.append({key, completed: true, session: id, condition: "recording-comparison", recordedEqual, scriptTypesEqual, rawScriptTypesEqual,
+      onlineCount: online.length, replayCount: replay.length, rawReplayCount: replayRaw.length, scriptCount: script.length, rawScriptCount: scriptRaw.length,
+      sourceRecording: sourceFile, artifacts: path.relative(store.directory, store.raw(key))});
   }
 }

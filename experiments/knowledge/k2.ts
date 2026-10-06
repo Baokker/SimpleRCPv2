@@ -2,18 +2,20 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import get from "lodash/get.js";
 import {stringify} from "csv-stringify/sync";
+import {z} from "zod";
 import {extractFirstJsonObject, parseKnowledgeCardDraftFromText, parseAgentRecapDraft, type KnowledgeCardType} from "@simplercp/knowledge";
 import {type Dataset, type ExperimentConfig, type Task, RunStore, digest, exists, readJson, readJsonl, writeJson} from "./common.js";
 import {PlatformClient} from "./client.js";
 import {normalizeScript} from "./k1.js";
 
 type Episode = {id: string; task: Task; evidence: Record<string, unknown>; trigger: string; mustMention: string; expectedTypes: KnowledgeCardType[]};
+const ordinaryDraftSchema = z.object({type: z.enum(["decision", "constraint", "risk", "context", "negative", "tutorial"]), title: z.string().min(4), summary: z.string().min(12), content: z.string().min(40), tags: z.array(z.string()), confidence: z.number().min(0).max(1), evidenceCitations: z.array(z.string().min(1)).min(1), unknowns: z.array(z.string())});
 export function draftMetrics(raw: string, mode: string, evidence: Record<string, unknown>, mustMention: string, expectedTypes: string[]) {
   const parsed = mode === "ordinary" ? parseKnowledgeCardDraftFromText(raw) as any : parseAgentRecapDraft(raw, evidence) as any;
   const content = mode === "ordinary" ? parsed?.content : [parsed?.whatHappened, parsed?.correction, parsed?.rule, parsed?.notApplicable].filter(Boolean).join("\n");
-  const validStructure = Boolean(parsed && typeof parsed.title === "string" && parsed.title.length >= 4 && typeof parsed.summary === "string" && parsed.summary.length >= 12 && typeof content === "string" && content.length >= 40 && Array.isArray(parsed.evidenceCitations) && Array.isArray(parsed.unknowns));
   const json = extractFirstJsonObject(raw);
   const original = json ? JSON.parse(json) : {};
+  const validStructure = mode === "ordinary" ? ordinaryDraftSchema.safeParse(original).success : Boolean(parsed && typeof parsed.title === "string" && parsed.title.length >= 4 && typeof parsed.summary === "string" && parsed.summary.length >= 12 && typeof content === "string" && content.length >= 40 && Array.isArray(parsed.evidenceCitations) && Array.isArray(parsed.unknowns));
   const citations = original.evidenceCitations;
   const validCitations = Array.isArray(citations) && citations.length > 0 && citations.every(citation => typeof citation === "string" && (get({evidence, payload: evidence}, citation) !== undefined || get(evidence, citation) !== undefined));
   const mustMentionCovered = `${parsed?.summary ?? ""}\n${content ?? ""}`.includes(mustMention);
@@ -68,6 +70,7 @@ export async function runK2(data: Dataset, config: ExperimentConfig, store: RunS
           const run = await api.run(project, members[0], `阅读当前项目，了解下面这段协作证据涉及的内容。保持文件内容原样。\n${JSON.stringify(episode.evidence).slice(0, 16000)}`, path.join(projectRaw, "context-run.json"));
           const completed = await api.wait(project, members[0], run);
           if (completed.status !== "completed") throw new Error(`K2 Agent context failed: ${completed.status}`);
+          await api.collect(project, members[0], completed, path.join(projectRaw, "agent-context"));
           runId = run.id;
         }
         response = await api.request(api.projectRoute(project, "experiments/drafts"), members[0], {...request, runId});
@@ -76,6 +79,7 @@ export async function runK2(data: Dataset, config: ExperimentConfig, store: RunS
       const text = response.responses.at(-1) ?? "";
       const metrics = draftMetrics(text, mode, episode.evidence, episode.mustMention, episode.expectedTypes);
       await store.append({key, completed: true, episode: episode.id, condition: mode, ...metrics, fallback: response.fallback, latencyMs: response.latencyMs,
+        mustMention: episode.mustMention, evidenceHash: digest(episode.evidence), expectedTypes: episode.expectedTypes,
         calls: response.calls, outputHash: digest(response.draft), artifacts: path.relative(store.directory, raw)});
     }
   }

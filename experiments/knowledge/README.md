@@ -28,6 +28,7 @@ HTTP 默认端口 4179，OpenCode 默认端口 4181，数据目录为 `experimen
 | K3 | `k3 --pilot --calibration`；完整矩阵用 `--tasks`、`--conditions` | 四项陷阱与一项对照的 C0/C2，以及全部陷阱三次 C0；实际判定、usage、注入和调用记录 |
 | K4 | `k4 --pilot`；`--pairs`、`--conditions`、`--variants delayed,same-session` | Ta、纠正运行、Tb 的工作区与判定，草稿、确认修改量、复用延迟 |
 | K1 | `k1`；在线增加 `--online` | 触发指标、共现 Top-1/3、录制回放与脚本比较 |
+| K1 录制复核 | `k1-compare --source <在线结果目录>` | 对保存的真实录制重复计算两条路径的比较，保存原始与去重后的建议 |
 | K2 | `k2 --source <K4目录>`；小规模检查用 `--limit 1` | 三种草稿的原始响应、指标、两名标注者的 CSV |
 | K5 | `k5 --source <K3目录>` | R1/R2/R3 排名、错误活动文件扰动、实际工具查询 R4、可选 R5 |
 | K7 | `k7` | 48 个锚点、六类操作、五个种子、五种策略；真值、同步和重复生成检查 |
@@ -38,12 +39,12 @@ HTTP 默认端口 4179，OpenCode 默认端口 4181，数据目录为 `experimen
 
 ```sh
 pnpm --filter @simplercp/experiments experiment k3 --config experiments/knowledge/pilot.json --pilot --calibration --out experiments/knowledge/runs/k3-pilot
-pnpm --filter @simplercp/experiments experiment k4 --config experiments/knowledge/pilot.json --pilot --out experiments/knowledge/runs/k4-pilot
+pnpm --filter @simplercp/experiments experiment k4 --config experiments/knowledge/transfer-pilot.json --pilot --out experiments/knowledge/runs/k4-pilot
 pnpm --filter @simplercp/experiments experiment k5 --source experiments/knowledge/runs/k3-pilot --out experiments/knowledge/runs/k5-pilot
 pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/runs/k7-pilot
 ```
 
-在线 K1 需要以 `EXPERIMENT_SPEED=10` 启动实例，并使用 `online.json`，将 origin 设置为该实例的端口。在线人类动作经过真实协作接口，Yjs 编辑保留脚本指定的删除和插入范围；HTTP 文件写入前等待 Yjs 保存完成，随后等待所有打开的文档收到更新。脚本中的 Agent 生命周期与工具事件按各自时间经过实验接口；这条路径检验录制和捕获。K3/K4 执行真实 OpenCode。`recordedEqual` 比较服务端建议与录制事件回放的类型、成员、锚点，时间容许 300ms 计时误差；`scriptTypesEqual` 单独比较原脚本转换的类型序列。同源证据按照产品的规则去重，同时保存原始回放结果。
+在线 K1 需要以 `EXPERIMENT_SPEED=10` 启动实例，并使用 `online.json`，将 origin 设置为该实例的端口。在线人类动作经过真实协作接口，Yjs 编辑保留脚本指定的删除和插入范围；HTTP 文件写入前等待 Yjs 保存完成，随后等待所有打开的文档收到更新。脚本中的 Agent 生命周期与工具事件按各自时间经过实验接口；这条路径检验录制和捕获。K3/K4 执行真实 OpenCode。`recordedEqual` 比较服务端建议与录制事件回放的类型、成员、锚点，时间容许 300ms 计时误差；`scriptTypesEqual` 比较两边采用产品去重规则之后的类型序列，`rawScriptTypesEqual` 比较两边原始类型序列。同时保存全部原始建议。离线触发指标使用包的原始建议序列，服务端建议数量另列。
 
 每项组合创建独立项目。`raw/<组合>/` 保存项目身份、run、trace、注入、diff、快照和判定输出。`results.jsonl` 追加结果，包含代码提交、配置哈希、manifest 哈希、provider 与 model。`raw/` 和 `.work/` 由 gitignore 排除；结果与汇总提交。相同命令和输出目录再次运行会读取完成记录，跳过已完成组合；未结束的 Agent 按 run id 继续等待。活跃 runner 的进程锁禁止同目录并发执行，失效进程锁可恢复。续跑要求提交、配置、数据版本一致。
 
@@ -67,4 +68,4 @@ uv run analyze.py ../runs/k7-pilot/results.jsonl --out ../runs/k7-pilot/analysis
 uv run analyze.py ../runs/k2-pilot/results.jsonl --out ../runs/k2-pilot/analysis --ratings-a ../runs/k2-pilot/ratings-a.csv --ratings-b ../runs/k2-pilot/ratings-b.csv
 ```
 
-统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率、token 与成功、锚点策略结果。
+统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。对照任务的功能等价结果单独写入 controls.json；样本数量或差值方差不足时返回空值和原因。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率与置信区间、额外 token 与复犯率减少、锚点策略结果。运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 可读取已提交的试跑目录并生成 pilot-summary.json 与 artifact-inspection.json。
