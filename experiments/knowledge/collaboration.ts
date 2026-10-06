@@ -19,12 +19,12 @@ export class CollaborationClient {
     const {room} = await this.api.request(this.api.projectRoute(this.project, "room"), member);
     this.roomId = room.id;
     const socket = new WebSocket(`${this.api.config.origin.replace(/^http/u, "ws")}/ws?projectId=${this.project.id}&memberId=${member}`);
+    this.sockets.set(member, socket);
     await once(socket, "open");
     socket.on("message", data => {
       const message = JSON.parse(String(data));
       if (message.event?.type === "realtime_error") throw new Error(message.event.payload?.message);
     });
-    this.sockets.set(member, socket);
     this.send(member, {type: "ready"});
   }
   send(member: string, message: Record<string, unknown>) {
@@ -38,12 +38,12 @@ export class CollaborationClient {
     if (!active) {
       const doc = new YRuntime.Doc();
       const provider = new WebsocketProvider(`${this.api.config.origin.replace(/^http/u, "ws")}/yjs/${this.project.id}`, encodeURIComponent(`${this.roomId}:${file}`), doc, {WebSocketPolyfill: WebSocket as any, params: {memberId: member}, disableBc: true});
+      active = {doc, provider}; this.documents.set(key, active);
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error(`Yjs synchronization timed out: ${file}`)), 15000);
         provider.on("sync", (synced: boolean) => {if (synced) {clearTimeout(timer); resolve();}});
         provider.on("connection-error", (error: unknown) => {clearTimeout(timer); reject(error);});
       });
-      active = {doc, provider}; this.documents.set(key, active);
     }
     return active.doc;
   }
@@ -61,8 +61,7 @@ export class CollaborationClient {
     while (text.toString() !== before && Date.now() < deadline) await pause(20);
     if (text.toString() !== before) throw new Error(`Yjs source differs: ${file}`);
     doc.transact(() => {if (deleteCount) text.delete(start, deleteCount); if (insertText) text.insert(start, insertText);});
-    await pause(30);
-    await this.api.request(this.api.projectRoute(this.project, "experiments/documents/flush"), member, {});
+    await this.api.request(this.api.projectRoute(this.project, "experiments/documents/flush"), member, {file, expectedText: text.toString()});
   }
   async externalWrite(member: string, file: string, content: string) {
     await this.api.request(this.api.projectRoute(this.project, "experiments/documents/flush"), member, {});

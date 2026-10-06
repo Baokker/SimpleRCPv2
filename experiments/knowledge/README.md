@@ -19,7 +19,7 @@ SIMPLERCP_KNOWLEDGE_EXPERIMENTS=true EXPERIMENT_SPEED=1 pnpm --filter @simplercp
 
 HTTP 默认端口 4179，OpenCode 默认端口 4181，数据目录为 `experiments/knowledge/.work/server/data`。`PORT`、`SIMPLERCP_OPENCODE_PORT`、`SIMPLERCP_DATA_DIR` 可指定独立位置。凭据从平台 `.env` 读取，在服务端进程中保管。OpenCode 通过本机 HTTP 代理请求 MiniMax。固定 Agent 为 `minimax/MiniMax-M2`，启动后 runner 会核对模型设置。
 
-仅这个入口注册 `experiments/*` 接口，全部写入实验活动记录。接口涵盖 schema v3 卡片导入、T2 原草稿确认、独立项目停止捕获、脚本 Agent 事件、录制读取和 K2 草稿生成。正常产品入口保持原有接口与行为。
+仅这个入口注册 `experiments/*` 接口。修改配置、导入、确认与生成草稿写入实验活动记录。接口涵盖 schema v3 卡片导入、T2 原草稿确认、独立项目停止捕获、脚本 Agent 事件、录制读取、运行结束后的同步等待和 K2 草稿生成。卡片导入逐个检查快照与指定范围的文本相同。正常产品入口保持原有接口与行为。
 
 所有命令支持 `--config <JSON>` 与 `--out <目录>`。配置包括 origin、provider、model、concurrency、timeoutMs、delayMs、speed、repetitions、seed，可选 embedding 的 origin 和 model。embedding 地址应提供服务端代理接口，配置文件不保存凭据。
 
@@ -44,30 +44,31 @@ pnpm --filter @simplercp/experiments experiment k5 --source experiments/knowledg
 pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/runs/k7-pilot
 ```
 
-在线 K1 需要以 `EXPERIMENT_SPEED=10` 启动实例，并使用 `online.json`，将 origin 设置为该实例的端口。在线人类动作经过真实协作接口，Yjs 编辑保留脚本指定的删除和插入范围；HTTP 文件写入前等待 Yjs 保存完成，随后等待所有打开的文档收到更新。脚本中的 Agent 生命周期与工具事件按各自时间经过实验接口；这条路径检验录制和捕获。K3/K4 执行真实 OpenCode。`recordedEqual` 比较服务端建议与录制事件回放的类型、成员、锚点，时间容许 300ms 计时误差；`scriptTypesEqual` 比较两边采用产品去重规则之后的类型序列，`rawScriptTypesEqual` 比较两边原始类型序列。同时保存全部原始建议。离线触发指标使用包的原始建议序列，服务端建议数量另列。
+在线 K1 需要以 `EXPERIMENT_SPEED=10` 启动实例，并使用 `online.json`，将 origin 设置为该实例的端口。在线人类动作经过真实协作接口，Yjs 编辑保留脚本指定的删除和插入范围；每次编辑等待服务端文档与保存文件同时出现预期文本，随后才能执行下一项动作。HTTP 文件写入后等待打开的文档收到更新。脚本中的 Agent 生命周期与工具事件按各自时间经过实验接口；这条路径检验录制和捕获。K3/K4 执行真实 OpenCode。`recordedEqual` 比较服务端建议与录制事件回放的类型、成员、锚点，时间容许 300ms 计时误差；`scriptTypesEqual` 比较两边采用产品去重规则之后的类型序列，`rawScriptTypesEqual` 比较两边原始类型序列。同时保存全部原始建议。离线触发指标使用包的原始建议序列，服务端建议数量另列。触发匹配按建议时间和标注窗口结束时间进行一对一匹配；共现评价按标注时间执行。
 
-每项组合创建独立项目。`raw/<组合>/` 保存项目身份、run、trace、注入、diff、快照和判定输出。`results.jsonl` 追加结果，包含代码提交、配置哈希、manifest 哈希、provider 与 model。`raw/` 和 `.work/` 由 gitignore 排除；结果与汇总提交。相同命令和输出目录再次运行会读取完成记录，跳过已完成组合；未结束的 Agent 按 run id 继续等待。活跃 runner 的进程锁禁止同目录并发执行，失效进程锁可恢复。续跑要求提交、配置、数据版本一致。
+每项组合创建独立项目。`raw/<组合>/` 保存项目身份、run、trace、注入、diff、快照和判定输出。`results.jsonl` 追加结果，包含代码提交、配置哈希、manifest 哈希、provider 与 model。`raw/` 和 `.work/` 由 gitignore 排除；结果与汇总提交。相同命令和输出目录再次运行会读取完成记录，跳过已完成组合；未结束的 Agent 按 run id 继续等待。读取终态后等待该会话完成文件与 trace 写入，再保存快照；已有快照与当前 diff 不同会终止。活跃 runner 的进程锁禁止同目录并发执行，失效进程锁可恢复，校验失败释放本进程取得的锁。续跑要求提交、配置、数据版本与来源目录一致。中断的在线脚本保留原始目录并在独立新项目中重新执行。
 
 判定使用冻结 `run-judge.mjs` 的逐字副本，执行前比较 SHA-256。副本放在 `.work/judge/tools/`，判定器的临时目录因此位于实验目录内。任务和隐藏测试仍从只读数据目录读取。
 
-K4 的甲通过团队 Agent 聊天提交 Ta，纠正成员用原文继续向同一团队 Agent 发送消息，由平台处理打断和后续运行。纠正前保存 Ta 工作区并判定，Tb 由乙的个人 Agent 执行。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T4 保持个人范围。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。需要用数据原文触发纠正识别时，启动实验实例增加 `EXPERIMENT_CORRECTION_TERMS=dataset`；实际配置保存在结果目录。该设置包含四个迁移约定标识符。
+K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，Tb 由乙的个人 Agent 执行。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T1 使用手工创建接口返回的 reviewed 团队卡片。T4 检查卡片由甲拥有且保持个人范围。草稿与确认步骤按服务端当前状态继续执行。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。需要用数据原文触发纠正识别时，启动实验实例增加 `EXPERIMENT_CORRECTION_TERMS=dataset`；实际配置保存在结果目录。该设置包含四个迁移约定标识符。
 
 C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
 
-K2 的 grounded 沿用旧评价：结构完整、原始响应的全部引用路径存在、正文覆盖指定对象。结构解析采用产品解析器，引用评价直接读取原始 JSON 中的 evidenceCitations。这个自动指标只检查证据引用与对象覆盖；规则语义由两名标注者评价。原始模型响应按输入哈希缓存。
+K2 逐条读取来源 K4 中已经完成的纠正组合，以组合 key 区分重复与条件。缺少来源目录时仅评价脚本知识时刻。迁移草稿使用真实运行、diff、纠正原文或保存的建议证据，Agent 上下文使用纠正后的工作区；脚本代码证据取自对应知识时刻。自动 grounded 检查结构完整、原始响应的全部引用路径存在、正文覆盖指定对象；规则语义由两名标注者评价。结构解析采用产品解析器，引用评价直接读取原始 JSON 中的 evidenceCitations。原始模型响应按输入哈希缓存。续跑保留评分表的已填写内容，补充新增草稿；草稿文字改变时终止。
 
-K7 的真值由 Y.Text 的字符归属属性跟踪，所有被测策略只读取纯文本与旧锚点。移动操作给迁移后的文本保留归属标记；并发编辑在原位置保留的字符单独记录 fragmented。删除后的真值为请求复核。Yjs 加多策略使用平台 0.65 字符相似度及 0.5 行修改比例阈值。
+K7 的真值由 Y.Text 的字符归属属性跟踪，所有被测策略只读取纯文本与旧锚点。移动操作给迁移后的文本保留归属标记；并发编辑在原位置保留的字符单独记录 fragmented。删除后的真值为请求复核。两个相对位置均使用产品默认 assoc=0。Yjs 分支使用 0.65 字符相似度及 0.5 行修改比例阈值；文本分支使用包返回的 confidence 与行修改比例。
 
-K5 的活动文件取自 `--source` 中知识注入 trace 的 activeFiles；缺少记录时使用任务提示明确列出的 src 文件路径。每行记录 activitySource。错误活动文件使用另一张卡片的锚点文件，排除目标卡片的文件。目标卡片 id 只用于相关性评价和错误活动文件的选择。
+K5 的活动文件取自 `--source` 中知识注入 trace 的 activeFiles；缺少记录时使用任务提示明确列出的 src 文件路径。每行记录 activitySource。错误活动文件使用另一张卡片的锚点文件，排除目标卡片的文件。目标卡片 id 只用于相关性评价和错误活动文件的选择。实际工具查询统一记录为 R4，以 queryIndex 与 querySource 区分各次查询；明确属于多次运行的查询单独排除。R4 统计先求每个任务的查询均值，再求任务均值。
 
 统计工具：
 
 ```sh
 cd experiments/knowledge/analysis
 uv sync
+uv run python -m unittest test_analyze.py
 uv run analyze.py ../runs/k3-pilot/results.jsonl --out ../runs/k3-pilot/analysis
 uv run analyze.py ../runs/k7-pilot/results.jsonl --out ../runs/k7-pilot/analysis
 uv run analyze.py ../runs/k2-pilot/results.jsonl --out ../runs/k2-pilot/analysis --ratings-a ../runs/k2-pilot/ratings-a.csv --ratings-b ../runs/k2-pilot/ratings-b.csv
 ```
 
-统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。对照任务的功能等价结果单独写入 controls.json；样本数量或差值方差不足时返回空值和原因。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率与置信区间、额外 token 与复犯率减少、锚点策略结果。运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 可读取已提交的试跑目录并生成 pilot-summary.json 与 artifact-inspection.json。
+统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。K4 按 delayed 与 same-session 分别计算，输出到对应子目录。对照任务的功能等价结果单独写入 controls.json；样本数量或差值方差不足时返回空值和原因。统计入口拒绝重复 key 与未完成结果；两份评分表必须包含相同 id 和草稿正文。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率与置信区间、额外 token 与复犯率减少、锚点策略结果。运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 可读取已提交的试跑目录并生成 pilot-summary.json 与 artifact-inspection.json。

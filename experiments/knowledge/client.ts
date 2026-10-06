@@ -36,7 +36,7 @@ export class PlatformClient {
     let created: {project: ProjectRecord; members: string[]; initialized?: boolean};
     if (await exists(saved)) created = await readJson(saved);
     else {
-      const {project} = await this.request<{project: ProjectRecord}>("/api/projects/import", undefined, {name: `${key}-${Date.now()}`, path: path.join(benchRoot, "repos", task.repository)});
+      const {project} = await this.request<{project: ProjectRecord}>("/api/projects/import", undefined, {name: `${key}-${Date.now()}`, path: task.workspaceSource ?? path.join(benchRoot, "repos", task.repository)});
       created = {project, members: []};
       await writeJson(saved, created);
     }
@@ -52,6 +52,7 @@ export class PlatformClient {
     await fs.writeFile(path.join(raw, "install.txt"), installed.stdout + installed.stderr);
     if (!await exists(path.join(project.workspacePath, ".git"))) {
       await exec("git", ["init", "-q"], {cwd: project.workspacePath});
+      await fs.writeFile(path.join(project.workspacePath, ".git/info/exclude"), "node_modules/\n.test-data/\ndist/\n");
       await exec("git", ["add", "."], {cwd: project.workspacePath});
       await exec("git", ["-c", "user.name=Experiment", "-c", "user.email=experiment@example.invalid", "commit", "-qm", "baseline"], {cwd: project.workspacePath});
     }
@@ -90,13 +91,16 @@ export class PlatformClient {
     const deadline = Date.now() + this.config.timeoutMs + 30000;
     while (Date.now() < deadline) {
       const {run: current} = await this.request<{run: AgentRun}>(this.projectRoute(project, `agent/runs/${run.id}`), member);
-      if (["completed", "failed", "cancelled"].includes(current.status)) return current;
+      if (["completed", "failed", "cancelled"].includes(current.status)) {
+        return (await this.request<{run: AgentRun}>(this.projectRoute(project, `experiments/runs/${run.id}/settle`), member, {})).run;
+      }
       await pause(500);
     }
     await this.request(this.projectRoute(project, `agent/runs/${run.id}/cancel`), member, {});
     throw new Error(`Agent wait exceeded configured timeout: ${run.id}`);
   }
   async collect(project: ProjectRecord, member: string, run: AgentRun, raw: string) {
+    if (!["completed", "failed", "cancelled"].includes(run.status)) throw new Error("Only a finished Agent workspace can be collected");
     const {events} = await this.request<{events: AgentTraceEvent[]}>(this.projectRoute(project, `agent/runs/${run.id}/trace`), member);
     await writeJson(path.join(raw, "run.json"), run);
     await writeJson(path.join(raw, "trace.json"), events);
@@ -106,9 +110,17 @@ export class PlatformClient {
     await writeJson(path.join(raw, "injection.json"), {injected, tools, postCheck});
     await exec("git", ["add", "-N", "."], {cwd: project.workspacePath});
     const diff = (await exec("git", ["diff", "--no-ext-diff"], {cwd: project.workspacePath, maxBuffer: 20 * 1024 * 1024})).stdout;
-    await fs.writeFile(path.join(raw, "workspace.patch"), diff);
     const snapshot = path.join(raw, "workspace");
-    if (!await exists(snapshot)) await fs.cp(project.workspacePath, snapshot, {recursive: true, filter: source => !source.split(path.sep).includes(".git")});
+    const savedDiff = path.join(raw, "workspace.patch");
+    if (await exists(snapshot)) {
+      if (!await exists(savedDiff) || hash(await fs.readFile(savedDiff)) !== hash(diff)) throw new Error("Workspace changed after its saved snapshot");
+    } else {
+      const temporary = `${snapshot}.next`;
+      if (await exists(temporary)) await fs.rm(temporary, {recursive: true});
+      await fs.cp(project.workspacePath, temporary, {recursive: true, filter: source => !source.split(path.sep).includes(".git")});
+      await fs.writeFile(savedDiff, diff);
+      await fs.rename(temporary, snapshot);
+    }
     return {events, injected, tools, postCheck, snapshot, diffHash: hash(diff)};
   }
 }

@@ -3,7 +3,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import type {Express, Request, Response} from "express";
 import {
-  isCaptureEvent, isKnowledgeCard, createOpenAICompatibleClient,
+  isCaptureEvent, isKnowledgeCard, offsetsFromRange, normalizeWorkspaceRelativePath, createOpenAICompatibleClient,
   extractKnowledgeCardDraft, extractAgentRecapDraft, parseAgentRecapDraft, type KnowledgeCard
 } from "@simplercp/knowledge";
 import {requireIdentity} from "../../apps/server/src/auth/permissions.js";
@@ -31,7 +31,8 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     for (const source of sources) {
       for (const anchor of source.anchors) {
         const text = await fs.readFile(path.join(runtime.project.workspacePath, anchor.file.workspaceRelativePath), "utf8");
-        if (!text.includes(anchor.snapshot.text)) throw new Error(`Import snapshot is absent: ${source.id}`);
+        const offsets = anchor.rangeAtCapture && offsetsFromRange(text, anchor.rangeAtCapture);
+        if (!offsets || text.slice(offsets.startOffset, offsets.endOffset) !== anchor.snapshot.text) throw new Error(`Import snapshot differs from its range: ${source.id}`);
       }
       const created = await runtime.knowledge!.create(identity, {
         type: source.type, title: source.title, summary: source.summary, content: source.content, tags: source.tags,
@@ -76,8 +77,29 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
   route("post", "documents/flush", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;
     const runtime = manager.get(request.params.projectId);
+    const {file, expectedText} = request.body;
+    if (file !== undefined || expectedText !== undefined) {
+      if (typeof file !== "string" || typeof expectedText !== "string") throw new Error("Document path and expected text are required");
+      const normalized = normalizeWorkspaceRelativePath(file);
+      const name = `${runtime.project.id}|${runtime.room.id}:${normalized}`;
+      const deadline = Date.now() + 10000;
+      let document = await runtime.documents.getPreparedDocument(name);
+      while ((!document || document.getText("content").toString() !== expectedText) && Date.now() < deadline) {
+        await new Promise<void>(resolve => setTimeout(resolve, 20));
+        document = await runtime.documents.getPreparedDocument(name);
+      }
+      if (!document || document.getText("content").toString() !== expectedText) throw new Error("Server did not receive the expected Yjs edit");
+    }
     await runtime.documents.awaitIdle();
+    if (file !== undefined && await fs.readFile(path.join(runtime.project.workspacePath, normalizeWorkspaceRelativePath(file)), "utf8") !== expectedText) throw new Error("Persisted document differs from its acknowledged edit");
     response.json({flushed: true});
+  });
+  route("post", "runs/:id/settle", async (request, response) => {
+    const identity = requireIdentity(request, response); if (!identity) return;
+    const runtime = manager.get(request.params.projectId);
+    const run = await agentRuns.awaitRunIdle(runtime.project.id, request.params.id);
+    await runtime.documents.awaitIdle();
+    response.json({run});
   });
   route("post", "capture/agent-event", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;

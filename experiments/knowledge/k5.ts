@@ -23,14 +23,14 @@ export function rankBounded(results: KnowledgeSearchResult[], activeFiles: strin
     .sort((a, b) => priority(a.type) - priority(b.type) || b.score - a.score).slice(0, 25);
 }
 export async function runK5(data: Dataset, config: ExperimentConfig, store: RunStore, k3Directory?: string) {
-  const toolQueries: Array<{task: string; query: string; source: string}> = [];
+  const toolQueries: Array<{task: string; query: string; source: string; files?: string[]}> = [];
   const activity = new Map<string, {files: string[]; source: string}>();
   if (k3Directory) for (const row of await readJsonl(path.join(k3Directory, "results.jsonl"))) {
     const trace = await readJson<any[]>(path.join(k3Directory, row.artifacts, "trace.json"));
     const injection = trace.find(event => event.type === "knowledge_injected" && Array.isArray(event.data.activeFiles) && event.data.activeFiles.length);
     if (injection && !activity.has(row.task)) activity.set(row.task, {files: injection.data.activeFiles, source: row.key});
     for (const event of trace.filter(item => item.type === "knowledge_tool_call" && item.data.tool === "knowledge_search")) {
-      if (typeof event.data.query === "string") toolQueries.push({task: row.task, query: event.data.query, source: row.key});
+      if (typeof event.data.query === "string" && event.data.runId !== "ambiguous") toolQueries.push({task: row.task, query: event.data.query, source: row.key, files: event.data.files});
     }
   }
   await writeJson(path.join(store.directory, "tool-queries.json"), toolQueries);
@@ -40,19 +40,19 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
     const activeFiles = activity.get(task.id)?.files ?? [...new Set(task.prompt.match(/src\/[A-Za-z0-9_./-]+\.(?:[cm]?[jt]sx?)/gu) ?? [])];
     const targetFiles = cards.find(card => card.id === task.targetCardId)?.anchors.map(anchor => anchor.file.workspaceRelativePath) ?? [];
     const wrongFile = cards.find(card => !activeFiles.includes(card.anchors[0]?.file.workspaceRelativePath) && !targetFiles.includes(card.anchors[0]?.file.workspaceRelativePath))?.anchors[0]?.file.workspaceRelativePath;
-    const queries = [{condition: "R1", query: task.prompt, active: []}, {condition: "R2", query: task.prompt, active: activeFiles}, {condition: "R3", query: task.prompt, active: activeFiles},
+    const queries: Array<{condition: string; query: string; active: string[]; queryIndex?: number; source?: string}> = [{condition: "R1", query: task.prompt, active: []}, {condition: "R2", query: task.prompt, active: activeFiles}, {condition: "R3", query: task.prompt, active: activeFiles},
       {condition: "R2-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []}, {condition: "R3-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []},
-      ...toolQueries.filter(item => item.task === task.id).map((item, index) => ({condition: `R4-${index}`, query: item.query, active: activeFiles})),
+      ...toolQueries.filter(item => item.task === task.id).map((item, index) => ({condition: "R4", queryIndex: index, query: item.query, active: item.files ?? activeFiles, source: item.source})),
       ...(config.embedding ? [{condition: "R5", query: task.prompt, active: []}] : [])];
     for (const item of queries) {
-      const key = `${task.id}-${item.condition}`;
+      const key = `${task.id}-${item.condition}${item.queryIndex === undefined ? "" : `-${item.queryIndex}`}`;
       if (store.done(key)) continue;
       const vector = item.condition === "R5";
       const bounded = item.condition.startsWith("R3") || item.condition.startsWith("R4");
       const results = await searchKnowledgeCards({cards, query: item.query, workspaceId: task.repository, indexDir: path.join(store.raw(key), "index"), topK: 25,
         filters: {statuses: ["reviewed"]}, lexicalScoring: "legacy", ...(!bounded ? {activeFiles: item.active} : {}),
         ...(vector ? {strictEmbedding: true, embeddings: {model: config.embedding!.model, client: {async embed(texts: string[]) {
-          const response = await fetch(config.embedding!.origin + "/embeddings", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({model: config.embedding!.model, input: texts})});
+          const response = await fetch(config.embedding!.origin + "/embeddings", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({model: config.embedding!.model, input: texts}), signal: AbortSignal.timeout(config.timeoutMs)});
           if (!response.ok) throw new Error(`Embedding HTTP ${response.status}`);
           const body = await response.json() as any;
           return body.data.sort((a: any, b: any) => a.index - b.index).map((entry: any) => entry.embedding);
@@ -60,6 +60,7 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
       const ranked = bounded ? rankBounded(results, item.active) : results;
       await writeJson(path.join(store.raw(key), "ranking.json"), ranked);
       await store.append({key, completed: true, task: task.id, taskKind: task.kind, repository: task.repository, condition: item.condition,
+        query: item.query, queryIndex: item.queryIndex, querySource: item.source,
         ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, activitySource: activity.get(task.id)?.source ?? "prompt-file-paths", artifacts: path.relative(store.directory, store.raw(key))});
     }
   }

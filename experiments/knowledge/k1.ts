@@ -5,7 +5,7 @@ import {
   applyCaptureOps, createCaptureEngine, replayEvents, VirtualCaptureClock, isCaptureEvent,
   type CaptureEvent, type CaptureConfigInput, type CaptureSuggestion, type CaptureChatEvent
 } from "@simplercp/knowledge";
-import {benchRoot, type Dataset, type ExperimentConfig, type Task, RunStore, pause, readJson, readJsonl, writeJson} from "./common.js";
+import {benchRoot, type Dataset, type ExperimentConfig, type Task, RunStore, exists, hash, pause, readJson, readJsonl, writeJson} from "./common.js";
 import {PlatformClient} from "./client.js";
 import {CollaborationClient, editorOffset} from "./collaboration.js";
 
@@ -110,7 +110,15 @@ export function dedupeSuggestions(suggestions: CaptureSuggestion[]) {
   const retained: CaptureSuggestion[] = [];
   const sources: Set<string>[] = [];
   for (const suggestion of suggestions) {
-    const ids = new Set(suggestion.actors.runIds.map(id => `run:${id}`));
+    if (retained.some(item => item.id === suggestion.id)) continue;
+    const ids = new Set<string>();
+    if (suggestion.triggerType === "agent.proposed") {
+      const draft = suggestion.evidence.draft as {type: string; title: string; summary: string; content: string; files: string[]} | undefined;
+      if (draft) ids.add(`proposal:${hash(JSON.stringify([suggestion.actors.runIds[0], draft.type, draft.title, draft.summary, draft.content, [...new Set(draft.files)].sort()]))}`);
+      if (ids.size && sources.some(previous => [...ids].some(id => previous.has(id)))) continue;
+      retained.push(suggestion); sources.push(ids); continue;
+    }
+    for (const id of suggestion.actors.runIds) ids.add(`run:${id}`);
     for (const key of ["runId", "previousRunId", "suggestionId"] as const) if (typeof suggestion.evidence[key] === "string") ids.add(`${key}:${suggestion.evidence[key]}`);
     const refs = suggestion.evidence.traceRefs as Array<{runId: string; seq: number}> | undefined;
     if (Array.isArray(refs)) for (const ref of refs) if (ref && typeof ref.runId === "string" && Number.isInteger(ref.seq)) ids.add(`trace:${ref.runId}:${ref.seq}`);
@@ -125,8 +133,8 @@ export function triggerMetrics(suggestions: CaptureSuggestion[], labels: any, sp
   const types = [...new Set([...suggestions.map(item => item.triggerType), ...labels.knowledgeMoments.map((item: any) => item.expectedTrigger)])];
   const matched = new Set<string>();
   const rows = types.map(type => {
-    const truth = labels.knowledgeMoments.filter((item: any) => item.expectedTrigger === type);
-    const predicted = suggestions.filter(item => item.triggerType === type);
+    const truth = labels.knowledgeMoments.filter((item: any) => item.expectedTrigger === type).sort((a: any, b: any) => a.tEnd - b.tEnd || a.tStart - b.tStart || a.id.localeCompare(b.id));
+    const predicted = suggestions.filter(item => item.triggerType === type).sort((a, b) => a.createdAt - b.createdAt);
     const delays: number[] = [];
     for (const suggestion of predicted) {
       const label = truth.find((item: any) => !matched.has(item.id) && suggestion.createdAt >= offset + item.tStart * 1000 / speed && suggestion.createdAt <= offset + item.tEnd * 1000 / speed);
@@ -141,7 +149,12 @@ export function anchorMetrics(events: CaptureEvent[], labels: any, config: Captu
   const clock = new VirtualCaptureClock(0);
   const engine = createCaptureEngine({clock, config, onSuggestion() {}});
   let cursor = 0;
-  const rows = labels.anchorInference.map((item: any) => {
+  const ordered = [...labels.anchorInference].sort((a: any, b: any) => {
+    const end = (id: string) => labels.knowledgeMoments.find((label: any) => label.id === id)?.tEnd;
+    if (end(a.momentId) === undefined || end(b.momentId) === undefined) throw new Error("Anchor label references an absent moment");
+    return end(a.momentId) - end(b.momentId);
+  });
+  const rows = ordered.map((item: any) => {
     const moment = labels.knowledgeMoments.find((label: any) => label.id === item.momentId);
     const endAt = Math.round(moment.tEnd * 1000 / speed);
     while (cursor < events.length && events[cursor].at <= endAt) {const event = events[cursor++]; clock.advanceTo(event.at); engine.process(event);}
@@ -151,7 +164,7 @@ export function anchorMetrics(events: CaptureEvent[], labels: any, config: Captu
     return {moment: item.momentId, candidates, top1: candidates.slice(0, 1).some(candidate => overlap(candidate, item.discussedCode)), top3: candidates.slice(0, 3).some(candidate => overlap(candidate, item.discussedCode))};
   });
   engine.dispose();
-  return {total: rows.length, top1: rows.filter((row: any) => row.top1).length / rows.length, top3: rows.filter((row: any) => row.top3).length / rows.length, rows};
+  return {total: rows.length, top1: rows.length ? rows.filter((row: any) => row.top1).length / rows.length : null, top3: rows.length ? rows.filter((row: any) => row.top3).length / rows.length : null, rows};
 }
 export async function runK1Offline(store: RunStore) {
   for (const id of ["S01", "S02"]) {
@@ -175,6 +188,9 @@ export async function runK1Online(data: Dataset, config: ExperimentConfig, store
   for (const id of ["S01", "S02"]) {
     const key = `${id}-online`;
     if (store.done(key)) continue;
+    if (await exists(path.join(store.raw(key), "project.json"))) {
+      await fs.rename(store.raw(key), store.raw(`${key}-interrupted-${Date.now()}`));
+    }
     const input = await normalizeScript(id, config.speed);
     const task = data.tasks.find(task => task.repository === input.metadata.repository)!;
     const {project, members} = await api.create(task, store.raw(key), key);

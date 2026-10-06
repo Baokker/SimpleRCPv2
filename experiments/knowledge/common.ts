@@ -90,6 +90,7 @@ export class RunStore {
       await fs.unlink(lockPath);
     }
     this.lock = await fs.open(lockPath, "wx");
+    try {
     await this.lock.writeFile(String(process.pid));
     const commit = (await exec("git", ["rev-parse", "HEAD"], {cwd: platformRoot})).stdout.trim();
     this.metadata = {experiment, commit, configHash: digest(config), manifestHash: data.manifestHash, provider: config.provider, model: config.model};
@@ -103,11 +104,16 @@ export class RunStore {
     const resultsPath = path.join(this.directory, "results.jsonl");
     if (await exists(resultsPath)) for (const row of await readJsonl(resultsPath)) if (row.completed) this.completed.add(row.key);
     return this;
+    } catch (error) {
+      await this.close();
+      throw error;
+    }
   }
   done(key: string) { return this.completed.has(key); }
   raw(key: string) {return path.join(this.directory, "raw", key);}
   async append(row: Record<string, unknown>) {
     const result = this.queue.then(async () => {
+      if (row.completed && this.completed.has(String(row.key))) throw new Error(`Result is already complete: ${row.key}`);
       const file = await fs.open(path.join(this.directory, "results.jsonl"), "a", 0o600);
       try {await file.writeFile(JSON.stringify({...this.metadata, ...row}) + "\n"); await file.sync();}
       finally {await file.close();}
@@ -116,7 +122,16 @@ export class RunStore {
     this.queue = result;
     await result;
   }
-  async close() {await this.queue; await this.lock?.close(); await fs.unlink(path.join(this.directory, ".runner.lock"));}
+  async close() {
+    try {await this.queue;}
+    finally {
+      if (this.lock) {
+        await this.lock.close();
+        this.lock = undefined;
+        await fs.unlink(path.join(this.directory, ".runner.lock"));
+      }
+    }
+  }
 }
 export async function pool<T>(items: T[], concurrency: number, processItem: (item: T) => Promise<void>) {
   let cursor = 0;
@@ -132,3 +147,8 @@ export async function pool<T>(items: T[], concurrency: number, processItem: (ite
   if (rejected?.status === "rejected") throw rejected.reason;
 }
 export const pause = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+export function selectIds<T extends {id: string}>(items: T[], requested: string) {
+  const ids = requested.split(",");
+  if (new Set(ids).size !== ids.length || ids.some(id => !items.some(item => item.id === id))) throw new Error(`Invalid selection: ${requested}`);
+  return ids.map(id => items.find(item => item.id === id)!);
+}

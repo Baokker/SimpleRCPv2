@@ -16,7 +16,7 @@ export function concurrentTrace(sample: FrozenAnchorSample, kind: typeof editKin
   original.insert(0, sample.text, {anchor: false});
   original.format(sample.selectionStart, sample.selectionEnd - sample.selectionStart, {anchor: true});
   const start = Y.createRelativePositionFromTypeIndex(original, sample.selectionStart, 0);
-  const end = Y.createRelativePositionFromTypeIndex(original, sample.selectionEnd, -1);
+  const end = Y.createRelativePositionFromTypeIndex(original, sample.selectionEnd);
   const state = Y.encodeStateAsUpdate(base);
   const copies = [201, 202, 203].map(id => {const doc = new Y.Doc(); doc.clientID = id; Y.applyUpdate(doc, state); return doc;});
   const operations: Array<{member: number; start: number; deleted: number; inserted: string; tracked: boolean}> = [];
@@ -27,7 +27,7 @@ export function concurrentTrace(sample: FrozenAnchorSample, kind: typeof editKin
   };
   const s = sample.selectionStart, e = sample.selectionEnd;
   const midpoint = s + Math.floor(random() * Math.max(1, e - s));
-  const marker = `\n// concurrent ${Math.floor(random() * 100000)}\n`;
+  const marker = `\n// 并发编辑 ${Math.floor(random() * 100000)}\n`;
   if (kind === "insert-around") {apply(0, s, 0, marker); apply(1, e, 0, marker);}
   if (kind === "interleaved") {apply(0, midpoint, 1, "Q", true); apply(1, Math.max(0, s - 1), 0, marker);}
   if (kind === "move-and-edit") {
@@ -66,21 +66,22 @@ export function concurrentTrace(sample: FrozenAnchorSample, kind: typeof editKin
 }
 
 // 采用 knowledgeService.ts 的字符相似度与 changedLineRatio 检查。
-function acceptable(text: string, anchor: KnowledgeAnchor, range: Range) {
+function similarityAndChanges(text: string, anchor: KnowledgeAnchor, range: Range) {
   const before = anchor.snapshot.text, after = text.slice(range.startOffset, range.endOffset);
   const unchanged = diff(before, after).reduce((sum, [operation, value]) => sum + (operation === diff.EQUAL ? value.length : 0), 0);
   const similarity = unchanged / Math.max(1, before.length, after.length);
   const beforeLines = before.split(/\r?\n/u), afterLines = after.split(/\r?\n/u);
   const total = Math.max(beforeLines.length, afterLines.length);
   const changed = total === 1 ? 1 - similarity : Array.from({length: total}, (_, index) => beforeLines[index] === afterLines[index] ? 0 : 1).reduce((a: number, b) => a + b, 0) / total;
-  return similarity >= 0.65 && changed <= 0.5;
+  return {similarity, changed};
 }
 export function evaluateStrategies(text: string, anchor: KnowledgeAnchor, relative: Range | undefined, truth: Range | null) {
   const multi = resolveKnowledgeAnchorInText(text, anchor);
   const first = text.indexOf(anchor.snapshot.text);
   const snapshot = first >= 0 && text.indexOf(anchor.snapshot.text, first + 1) < 0 ? {startOffset: first, endOffset: first + anchor.snapshot.text.length} : undefined;
-  const platformText = multi && multi.confidence >= 0.65 && acceptable(text, anchor, multi) ? multi : undefined;
-  const platformYjs = relative && acceptable(text, anchor, relative) ? relative : undefined;
+  const platformText = multi && multi.confidence >= 0.65 && similarityAndChanges(text, anchor, multi).changed <= 0.5 ? multi : undefined;
+  const measured = relative && similarityAndChanges(text, anchor, relative);
+  const platformYjs = relative && measured && measured.similarity >= 0.65 && measured.changed <= 0.5 ? relative : undefined;
   const resolutions = [anchor.rangeAtCapture ? offsetsFromRange(text, anchor.rangeAtCapture) : undefined, snapshot, multi, relative, platformYjs ?? platformText];
   return strategies.map((strategy, index) => {
     const range = resolutions[index];

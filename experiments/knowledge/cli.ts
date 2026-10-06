@@ -1,6 +1,6 @@
 import path from "node:path";
 import {parseArgs} from "node:util";
-import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl, digest, exists} from "./common.js";
+import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl, digest, exists, selectIds} from "./common.js";
 import {allK3Conditions, runK3, calibration, type K3Condition} from "./k3.js";
 import {allK4Conditions, runK4, type K4Condition} from "./k4.js";
 import {runK1Offline, runK1Online, compareK1Recordings} from "./k1.js";
@@ -19,6 +19,7 @@ if (!["verify", "k1", "k1-compare", "k2", "k3", "k4", "k5", "k7", "judge-stabili
 const resolveInput = (file: string) => path.resolve(platformRoot, file);
 const config = configSchema.parse(values.config ? await readJson(resolveInput(values.config)) : {});
 const data = await dataset();
+if (values.limit && (!Number.isSafeInteger(Number(values.limit)) || Number(values.limit) <= 0)) throw new Error("--limit must be a positive integer");
 if (command === "verify") {
   console.log(JSON.stringify({manifestHash: data.manifestHash, filesChecked: data.filesChecked, traps: data.tasks.filter(task => task.kind === "trap").length,
     controls: data.tasks.filter(task => task.kind === "control").length, transfers: data.transfers.length, model: config.model, provider: config.provider}));
@@ -42,7 +43,7 @@ if (command === "verify") {
       if (await exists(saved) && digest(await readJson(saved)) !== digest(input)) throw new Error("Source experiment changed during resume");
       await writeJson(saved, input);
       store.metadata.sourceResultsHash = input.resultsHash;
-    }
+    } else if (await exists(path.join(directory, "source.json"))) throw new Error("Resume requires the original --source");
     if (command === "k1") {await runK1Offline(store); if (values.online) await runK1Online(data, config, store);}
     if (command === "k1-compare") {
       if (!values.source) throw new Error("--source is required");
@@ -50,10 +51,10 @@ if (command === "verify") {
     }
     if (command === "k2") await runK2(data, config, store, values.source && resolveInput(values.source), values.limit ? Number(values.limit) : undefined);
     if (command === "k3") {
-      let tasks = values.tasks ? data.tasks.filter(task => values.tasks!.split(",").includes(task.id)) : data.tasks;
+      let tasks = values.tasks ? selectIds(data.tasks, values.tasks) : data.tasks;
       if (values.pilot && !values.tasks) tasks = ["R1-T01", "R1-T02", "R2-T01", "R2-T02", "R1-C01"].map(id => data.tasks.find(task => task.id === id)!);
       const conditions = (values.conditions?.split(",") ?? (values.pilot ? ["C0", "C2"] : allK3Conditions)) as K3Condition[];
-      if (conditions.some(condition => !allK3Conditions.includes(condition))) throw new Error("Unknown K3 condition");
+      if (new Set(conditions).size !== conditions.length || conditions.some(condition => !allK3Conditions.includes(condition))) throw new Error("Invalid K3 conditions");
       const combinations = tasks.flatMap(task => conditions.flatMap(condition => Array.from({length: values.pilot ? 1 : config.repetitions}, (_, index) => ({task, condition, repetition: index + 1}))));
       if (values.calibration) for (const task of data.tasks.filter(task => task.kind === "trap")) for (let repetition = 1; repetition <= 3; repetition++) {
         if (!combinations.some(item => item.task.id === task.id && item.condition === "C0" && item.repetition === repetition)) combinations.push({task, condition: "C0", repetition});
@@ -61,11 +62,11 @@ if (command === "verify") {
       await runK3(data, config, store, combinations); if (values.calibration) console.log(JSON.stringify(await calibration(store)));
     }
     if (command === "k4") {
-      const pairs = data.transfers.filter(pair => values.pairs ? values.pairs.split(",").includes(pair.id) : values.pilot ? ["P01", "P03"].includes(pair.id) : true);
+      const pairs = values.pairs ? selectIds(data.transfers, values.pairs) : data.transfers.filter(pair => values.pilot ? ["P01", "P03"].includes(pair.id) : true);
       const conditions = (values.conditions?.split(",") ?? (values.pilot ? ["T0", "T3"] : allK4Conditions)) as K4Condition[];
-      if (conditions.some(condition => !allK4Conditions.includes(condition))) throw new Error("Unknown K4 condition");
+      if (new Set(conditions).size !== conditions.length || conditions.some(condition => !allK4Conditions.includes(condition))) throw new Error("Invalid K4 conditions");
       const variants = values.variants?.split(",") ?? (values.pilot ? ["delayed"] : ["delayed", "same-session"]);
-      if (variants.some(variant => !["delayed", "same-session"].includes(variant))) throw new Error("Unknown K4 variant");
+      if (new Set(variants).size !== variants.length || variants.some(variant => !["delayed", "same-session"].includes(variant))) throw new Error("Invalid K4 variants");
       await runK4(data, config, store, pairs.flatMap(pair => conditions.flatMap(condition => variants.flatMap(variant => Array.from({length: values.pilot ? 1 : config.repetitions}, (_, index) => ({pair, condition, variant: variant as "delayed" | "same-session", repetition: index + 1}))))));
     }
     if (command === "k5") await runK5(data, config, store, values.source && resolveInput(values.source));

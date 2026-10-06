@@ -847,6 +847,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
   return {
     requestAgentSelfRecap,
+    async awaitRunIdle(projectId: string, runId: string) {
+      const run = await getStore(projectId).get(runId);
+      if (!run) throw new Error("Agent run not found");
+      if (!["completed", "failed", "cancelled"].includes(run.status)) throw new Error("Agent run must finish before awaiting idle");
+      await sessionOperations.run(`${projectId}:${run.sessionId ?? run.id}`, async () => {});
+      return getStore(projectId).get(runId);
+    },
     async initialize() {
       const projects = await options.registry.listProjects();
       for (const project of projects) {

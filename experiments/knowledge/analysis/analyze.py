@@ -55,6 +55,20 @@ def majority_table(frame):
 
 
 def analyze_agent(frame, directory):
+    if "variant" in frame:
+        if frame.variant.isna().any() or not frame.variant.isin(["delayed", "same-session"]).all():
+            raise ValueError("Transfer timing variants are required")
+        rows = []
+        for variant, group in frame.groupby("variant"):
+            location = directory / variant
+            location.mkdir(exist_ok=True)
+            rows.extend({"variant": variant, **row} for row in analyze_agent_stratum(group, location))
+        (directory / "agent.md").write_text(pd.DataFrame(rows).to_markdown(index=False))
+        return rows
+    return analyze_agent_stratum(frame, directory)
+
+
+def analyze_agent_stratum(frame, directory):
     if "taskKind" in frame:
         controls = frame[frame.taskKind.eq("control")]
         if not controls.empty:
@@ -112,10 +126,11 @@ def analyze_agent(frame, directory):
     (directory / "statistics.json").write_text(json.dumps({"summary": summary, "comparisons": comparisons, "mixed_logistic": model}, ensure_ascii=False, indent=2))
     table = pd.DataFrame(summary)
     (directory / "agent.md").write_text(table.to_markdown(index=False) + "\n\n" + pd.DataFrame(comparisons).to_markdown(index=False))
-    plot = table[table.metric.eq("jointSuccess")]
+    plot = table[table.metric.eq("jointSuccess")] if not table.empty else pd.DataFrame()
     fig, axis = plt.subplots(figsize=(7, 4))
-    intervals = np.array(plot.ci.tolist())
-    axis.bar(plot.condition, plot["mean"], yerr=np.array([plot["mean"].to_numpy() - intervals[:, 0], intervals[:, 1] - plot["mean"].to_numpy()]), capsize=4, color=plt.get_cmap("tab10").colors[:len(plot)])
+    if not plot.empty:
+        intervals = np.array(plot.ci.tolist())
+        axis.bar(plot.condition, plot["mean"], yerr=np.array([plot["mean"].to_numpy() - intervals[:, 0], intervals[:, 1] - plot["mean"].to_numpy()]), capsize=4, color=plt.get_cmap("tab10").colors[:len(plot)])
     axis.set(ylim=(0, 1), ylabel="Joint success", xlabel="Condition")
     fig.tight_layout(); fig.savefig(directory / "conditions.png", dpi=180); plt.close(fig)
     frame = frame.copy()
@@ -157,7 +172,11 @@ def analyze_anchors(frame, directory):
 
 def analyze_ratings(a, b, directory):
     first, second = pd.read_csv(a), pd.read_csv(b)
+    if first.id.isna().any() or second.id.isna().any() or set(first.id) != set(second.id):
+        raise ValueError("Both rating sheets must contain the same draft ids")
     merged = first.merge(second, on="id", suffixes=("_a", "_b"), validate="one_to_one")
+    if not merged.draft_a.equals(merged.draft_b):
+        raise ValueError("Raters must evaluate identical draft text")
     rows = []
     for field in ["ruleCorrect", "checkable", "scopeSuitable", "boundariesReasonable"]:
         pairs = merged[[field + "_a", field + "_b"]].dropna()
@@ -181,6 +200,10 @@ def main():
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     frame = pd.read_json(args.results, lines=True)
+    if "completed" not in frame or not frame.completed.eq(True).all():
+        raise ValueError("Analysis requires completed results")
+    if frame.key.duplicated().any():
+        raise ValueError("Analysis contains duplicate result keys")
     if "results" in frame:
         analyze_anchors(frame, args.out)
     elif "jointSuccess" in frame:
@@ -193,7 +216,11 @@ def main():
                 eligible_directory.mkdir(exist_ok=True)
                 analyze_agent(frame[eligible], eligible_directory)
     elif "recall1" in frame:
-        table = frame.groupby("condition")[["recall1", "recall3", "recall5", "mrr", "ndcg5", "falseInjections"]].mean()
+        metrics = ["recall1", "recall3", "recall5", "mrr", "ndcg5"]
+        per_task = frame.groupby(["task", "condition"])[metrics].mean()
+        table = per_task.groupby("condition").mean()
+        table["falseInjections"] = frame.groupby("condition").falseInjections.sum(min_count=1)
+        table["queries"] = frame.groupby("condition").size()
         (args.out / "retrieval.md").write_text(table.to_markdown())
     elif "groundedPass" in frame:
         table = frame.groupby("condition")[["validStructure", "validCitations", "mustMentionCovered", "groundedPass"]].mean()

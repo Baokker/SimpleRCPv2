@@ -47,11 +47,14 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
     if (!await exists(correctionFile)) {
       const scheduled = Date.parse(initial.createdAt) + pair.correction.atSeconds * 1000;
       if (scheduled > Date.now()) await pause(scheduled - Date.now());
-      ta = (await api.request<{run: AgentRun}>(route(`agent/runs/${initial.id}`), a)).run;
-      const before = await api.collect(project, a, ta, path.join(raw, "ta"));
-      await writeJson(path.join(raw, "ta-judge.json"), await judge(pair.ta, before.snapshot, path.join(raw, "ta")));
-      if (pair.correction.mode === "revise") {
+      const taJudged = path.join(raw, "ta-judge.json");
+      if (!await exists(taJudged)) {
+        if (pair.correction.mode === "interrupt") await api.request(route(`agent/runs/${initial.id}/cancel`), correcting, {});
         ta = await api.wait(project, a, initial);
+        const before = await api.collect(project, a, ta, path.join(raw, "ta"));
+        await writeJson(taJudged, await judge(pair.ta, before.snapshot, path.join(raw, "ta")));
+      } else ta = await readJson(path.join(raw, "ta/run.json"));
+      if (pair.correction.mode === "revise") {
         const patchFile = path.join(pair.directory, pair.correction.patch ?? "correction.patch");
         const patches = parsePatch(await fs.readFile(patchFile, "utf8"));
         const collaboration = new CollaborationClient(api, project); await collaboration.join(correcting);
@@ -78,7 +81,7 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
       if (condition === "T1") {
         const taDiff = await fs.readFile(path.join(raw, "ta/workspace.patch"), "utf8");
         const response = await api.request(route("knowledge/cards"), a, {type: "context", title: "本次纠正上下文", summary: pair.correction.text, content: `${pair.ta.prompt}\n${pair.correction.text}\n${taDiff}`, tags: ["experiment:T1"], scope: "team"});
-        card = (await api.request(route(`knowledge/cards/${response.card.id}/confirm`), a, {})).card;
+        card = response.card;
       } else if (condition !== "T0") {
         let suggestion: any;
         const deadline = Date.now() + 30000;
@@ -89,24 +92,33 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
         }
         if (!suggestion) throw new Error(`Correction suggestion is absent: ${key}`);
         await writeJson(path.join(raw, "suggestion.json"), suggestion);
-        const drafted = await api.request(route(`knowledge/inbox/${suggestion.id}/ai-draft`), a, {});
-        await writeJson(path.join(raw, "draft.json"), drafted.card);
-        const owner = drafted.card.ownerMemberId;
-        if (condition === "T2") card = (await api.request(route(`experiments/cards/${drafted.card.id}/review`), owner, {})).card;
+        const draftFile = path.join(raw, "draft.json");
+        let draft: KnowledgeCard;
+        if (await exists(draftFile)) draft = await readJson(draftFile);
         else {
-          const reviewed = await reviewPatch(pair.id, drafted.card, pair.gold);
-          await writeJson(path.join(raw, "review.json"), reviewed);
-          card = (await api.request(route(`knowledge/cards/${drafted.card.id}/confirm`), owner, {patch: reviewed.patch, edited: reviewed.changedFields.length > 0})).card;
+          draft = (await api.request(route(`knowledge/inbox/${suggestion.id}/ai-draft`), a, {})).card;
+          await writeJson(draftFile, draft);
         }
-        if (condition !== "T4") {
-          await api.request(route(`knowledge/cards/${card!.id}/scope/request-team`), owner, {});
+        const owner = draft.ownerMemberId;
+        if (condition === "T4" && owner !== a) throw new Error("T4 requires a personal card owned by member-a");
+        card = (await api.request(route(`knowledge/cards/${draft.id}`), owner)).card;
+        if (!card) throw new Error("Transfer draft is absent");
+        if (card.status === "draft" && condition === "T2") card = (await api.request(route(`experiments/cards/${draft.id}/review`), owner, {})).card;
+        else if (card.status === "draft") {
+          const reviewed = await reviewPatch(pair.id, draft, pair.gold);
+          await writeJson(path.join(raw, "review.json"), reviewed);
+          card = (await api.request(route(`knowledge/cards/${draft.id}/confirm`), owner, {patch: {...reviewed.patch, ...(condition === "T4" ? {scope: "personal"} : {})}, edited: reviewed.changedFields.length > 0})).card;
+        }
+        if (condition !== "T4" && card!.scope !== "team") {
+          if (card!.scope === "personal") await api.request(route(`knowledge/cards/${card!.id}/scope/request-team`), owner, {});
           card = (await api.request(route(`knowledge/cards/${card!.id}/scope/confirm-team`), owner === a ? b : a, {})).card;
         }
       }
       await writeJson(cardFile, card);
     }
-    await api.configure(project, a, {injectEnabled: condition !== "T0", toolEnabled: false, fixedCardIds: condition === "T1" && card ? [card.id] : [], proposeEnabled: false});
+    if (card && (card.status !== "reviewed" || card.scope !== (condition === "T4" ? "personal" : "team"))) throw new Error("Transfer card has an unexpected review status or scope");
     const tbPath = path.join(raw, "tb-started.json");
+    if (!await exists(tbPath)) await api.configure(project, a, {injectEnabled: condition !== "T0", toolEnabled: false, fixedCardIds: condition === "T1" && card ? [card.id] : [], proposeEnabled: false});
     if (variant === "delayed" && !await exists(tbPath)) {
       const confirmedAt = card?.review?.confirmedAt ?? (await readJson(correctionFile)).at;
       if (confirmedAt + config.delayMs > Date.now()) await pause(confirmedAt + config.delayMs - Date.now());
@@ -114,14 +126,15 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
     const tbInitial = await api.run(project, b, pair.tb.prompt, tbPath);
     const tb = await api.wait(project, b, tbInitial);
     const output = await api.collect(project, b, tb, path.join(raw, "tb"));
+    for (const run of [ta, correctionRun, tb]) if (run.provider !== config.provider || run.model !== config.model || run.runtime !== "opencode") throw new Error("Transfer run used an unexpected model or runtime");
     const actual = await judge(pair.tb, output.snapshot, path.join(raw, "tb"));
     const taJudge = await readJson(path.join(raw, "ta-judge.json"));
     const metrics = await api.request(route("knowledge/metrics/reuse"), a);
     await writeJson(path.join(raw, "reuse.json"), metrics);
     await store.append({key, completed: true, pair: pair.id, task: pair.tb.id, condition, variant, repetition, crossOwner: pair.crossOwner,
-      ta: {runStatus: ta.status, functional: taJudge.functional, trapAvoided: taJudge.trapAvoided, actuallyTrapped: taJudge.functional && !taJudge.trapAvoided, usage: ta.usage},
-      functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess, runStatus: tb.status, usage: tb.usage,
-      correctionUsage: correctionRun.usage, ...knowledgeUsage(output.events, card ? [card.id] : []),
+      ta: {runStatus: ta.status, functional: taJudge.functional, trapAvoided: taJudge.trapAvoided, actuallyTrapped: taJudge.functional && !taJudge.trapAvoided, usage: ta.usage ?? null},
+      functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess, runStatus: tb.status, usage: tb.usage ?? null,
+      correctionUsage: correctionRun.usage ?? null, ...knowledgeUsage(output.events, card ? [card.id] : []),
       cardId: card?.id, cardScope: card?.scope, cardOwner: card?.ownerMemberId, reuse: metrics.metrics, wallMs: Date.now() - started,
       artifacts: path.relative(store.directory, raw)});
     console.log(JSON.stringify({key, functional: actual.functional, trapAvoided: actual.trapAvoided, taActuallyTrapped: taJudge.functional && !taJudge.trapAvoided}));
