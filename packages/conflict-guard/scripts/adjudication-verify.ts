@@ -11,7 +11,17 @@ const { values } = parseArgs({ options: { record: { type: "string", default: "..
 const directory = path.resolve(values.record!);
 const read = async (file: string) => JSON.parse(gunzipSync(await fs.readFile(file)).toString());
 const recorded = await read(path.join(directory, "results.json.gz"));
-const policies = ["G1", "G2", "G3"];
+const policies = Object.keys(recorded.policies).filter((id) => ["G1", "G2", "G3", "G4"].includes(id)).sort();
+if (!policies.length) throw new Error("录制报告没有模型策略");
+const configuration = path.join(directory, "adjudication-config.json");
+await fs.writeFile(configuration, JSON.stringify(recorded.config, null, 2) + "\n");
+const models: Record<string, string> = {};
+for (const id of policies) for (const call of recorded.policies[id].model.calls) {
+  if (models[call.adapter] && models[call.adapter] !== call.model) throw new Error("录制报告中同一适配器包含多个模型版本");
+  models[call.adapter] = call.model;
+}
+const identities = path.join(directory, "adjudication-models.json");
+await fs.writeFile(identities, JSON.stringify(models, null, 2) + "\n");
 const comparable = (report: typeof recorded) => canonicalJson(Object.fromEntries(policies.map((id) => {
   const row = report.policies[id];
   return [id, { metrics: row.metrics, groups: row.groups, inputHashes: row.inputHashes, t03: row.t03, model: { tasks: row.model.tasks, successful: row.model.successful, completionRatio: row.model.completionRatio, p50Ms: row.model.p50Ms, p95Ms: row.model.p95Ms } }];
@@ -20,9 +30,9 @@ const reference = comparable(recorded);
 const rounds: Array<{ round: number; recordMatches: boolean; sha256: string; networkCalls: number }> = [];
 for (let round = 1; round <= 3; round += 1) {
   const output = path.join(directory, `replay-${round}`);
-  await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", values.dataset!, "--policy", policies.join(","), "--provider-mode", "replay", "--threshold", String(recorded.config.threshold), "--cache", values.cache!, "--out", output], { cwd: process.cwd(), maxBuffer: 1024 * 1024 });
+  await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", values.dataset!, "--policy", policies.join(","), "--provider-mode", "replay", "--config", configuration, "--models", identities, "--cache", values.cache!, "--out", output], { cwd: process.cwd(), maxBuffer: 1024 * 1024 });
   const replayed = await read(path.join(output, "results.json.gz"));
-  const networkCalls = policies.reduce((sum, id) => sum + replayed.policies[id].model.calls.filter((call: { status: string }) => call.status !== "cache-hit").length, 0);
+  const networkCalls = policies.reduce((sum, id) => sum + replayed.policies[id].model.httpCalls, 0);
   const bytes = await fs.readFile(path.join(output, "results.json.gz"));
   const result = { round, recordMatches: comparable(replayed) === reference, sha256: createHash("sha256").update(bytes).digest("hex"), networkCalls };
   rounds.push(result);
