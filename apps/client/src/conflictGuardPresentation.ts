@@ -13,3 +13,14 @@ export function relationPathText(path: ConflictGuardState["candidatePairs"][numb
     return `${from.slice(from.indexOf("#") + 1)} ${relations[hop.kind] ?? hop.kind} ${to.slice(to.indexOf("#") + 1)}`;
   }).join("；") ?? "双方正在修改同一声明";
 }
+
+export function conflictWarning(record: NonNullable<ConflictGuardState["pairDecisions"]>[number], memberId?: string) {
+  if (record.verdict?.decision !== "warn" || !(record.status === "judged" || record.status === "resolved" && record.resolution === "auto-cleared")) return undefined;
+  if (record.pair.left.actor.memberId !== memberId && record.pair.right.actor.memberId !== memberId) return undefined;
+  const model = record.verdict.adjudication;
+  return {
+    id: `${record.pair.id}:${record.revision}`,
+    summary: model ? `${model.userExplanation} 建议：${model.suggestedAction} · ${model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(model.latencyMs)} ms`}` : record.verdict.summary,
+    path: relationPathText(record.pair.path)
+  };
+}

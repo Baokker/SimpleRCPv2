@@ -22,7 +22,7 @@ import {
 } from "./api";
 import { getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
-import { relationPathText } from "./conflictGuardPresentation";
+import { conflictWarning } from "./conflictGuardPresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -522,13 +522,10 @@ function WorkspacePage({
     if (state.mode !== "rules" && state.mode !== "full") return;
     const memberId = sessionStorage.getItem(`simplercp.memberId.${projectId}`) ?? identity.memberId;
     const warnings = (state.pairDecisions ?? []).flatMap((record) => {
-      if (record.status !== "judged" || record.verdict?.decision !== "warn") return [];
-      if (record.pair.left.actor.memberId !== memberId && record.pair.right.actor.memberId !== memberId) return [];
-      const id = `${record.pair.id}:${record.revision}`;
-      if (seenConflictWarningsRef.current.has(id)) return [];
-      seenConflictWarningsRef.current.add(id);
-      const model = record.verdict.adjudication;
-      return [{ id, summary: model ? `${model.userExplanation} 建议：${model.suggestedAction} · ${model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(model.latencyMs)} ms`}` : record.verdict.summary, path: relationPathText(record.pair.path) }];
+      const warning = conflictWarning(record, memberId);
+      if (!warning || seenConflictWarningsRef.current.has(warning.id)) return [];
+      seenConflictWarningsRef.current.add(warning.id);
+      return [warning];
     });
     if (warnings.length > 0) setConflictWarnings((previous) => [...previous, ...warnings]);
   }, [conflictGuardState, projectId, identity.memberId, showWorkspaceNotice]);
