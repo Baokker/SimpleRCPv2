@@ -1,0 +1,676 @@
+{
+  "d1-0025-conflict": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.246209ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 121.143375\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.246209ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 121.143375\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.197ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 195.596292\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.197ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 195.596292\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.190708ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 112.983417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.190708ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 112.983417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.334291ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 159.624291\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.334291ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 159.624291\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.202792ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 134.698417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.202792ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 134.698417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.432458ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 132.259667\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.432458ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 132.259667\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.168334ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 125.309125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.168334ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 125.309125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.24375ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 144.1135\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.24375ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 144.1135\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.994833ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 126.198291\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.994833ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 126.198291\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": false,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": false,
+            "error": "riskScore is not defined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": false,
+            "error": "riskScore is not defined"
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.156958ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 131.34875\n",
+          "stderr": ""
+        },
+        "typeError": true,
+        "diagnostics": [
+          "2552: Cannot find name 'riskScore'. Did you mean 'riskScoreV2'?"
+        ],
+        "stdout": "{\"passed\":false,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":false,\"error\":\"riskScore is not defined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":false,\"error\":\"riskScore is not defined\"}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.156958ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 131.34875\\n\",\"stderr\":\"\"},\"typeError\":true,\"diagnostics\":[\"2552: Cannot find name 'riskScore'. Did you mean 'riskScoreV2'?\"]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": false,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": false,
+            "error": "riskScore is not defined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": false,
+            "error": "riskScore is not defined"
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.194833ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 142.742583\n",
+          "stderr": ""
+        },
+        "typeError": true,
+        "diagnostics": [
+          "2552: Cannot find name 'riskScore'. Did you mean 'riskScoreV2'?"
+        ],
+        "stdout": "{\"passed\":false,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":false,\"error\":\"riskScore is not defined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":false,\"error\":\"riskScore is not defined\"}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.194833ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 142.742583\\n\",\"stderr\":\"\"},\"typeError\":true,\"diagnostics\":[\"2552: Cannot find name 'riskScore'. Did you mean 'riskScoreV2'?\"]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": false,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": false,
+            "error": "riskScore is not defined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": false,
+            "error": "riskScore is not defined"
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.213084ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 140.035708\n",
+          "stderr": ""
+        },
+        "typeError": true,
+        "diagnostics": [
+          "2552: Cannot find name 'riskScore'. Did you mean 'riskScoreV2'?"
+        ],
+        "stdout": "{\"passed\":false,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":false,\"error\":\"riskScore is not defined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":false,\"error\":\"riskScore is not defined\"}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.213084ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 140.035708\\n\",\"stderr\":\"\"},\"typeError\":true,\"diagnostics\":[\"2552: Cannot find name 'riskScore'. Did you mean 'riskScoreV2'?\"]}\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "d1-0025-safe": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.241792ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 140.922\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.241792ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 140.922\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.189875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.43675\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.189875ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 135.43675\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.217292ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 143.853875\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.217292ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 143.853875\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.269875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 241.131083\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.269875ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 241.131083\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.678958ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 137.369417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.678958ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 137.369417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (2.129708ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 179.181125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (2.129708ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 179.181125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.160458ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.750666\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.160458ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 135.750666\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.182875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 126.781625\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.182875ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 126.781625\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.201125ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 119.712875\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.201125ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 119.712875\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.16825ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 136.590625\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.16825ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 136.590625\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (2.918958ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 143.063375\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (2.918958ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 143.063375\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 80.8746284125034
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ role graph, deny precedence, scoped sessions, and audit history (1.286875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 143.779125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":80.8746284125034},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ role graph, deny precedence, scoped sessions, and audit history (1.286875ms)\\nℹ tests 1\\nℹ suites 0\\nℹ pass 1\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 143.779125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ]
+  }
+}

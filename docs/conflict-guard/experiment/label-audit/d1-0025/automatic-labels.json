@@ -1,0 +1,18 @@
+[
+  {
+    "id": "d1-0025-conflict",
+    "relationGroupId": "d1-0025",
+    "variant": "conflict",
+    "label": "lock",
+    "reason": "merged-probe-failed",
+    "detectability": "typecheck"
+  },
+  {
+    "id": "d1-0025-safe",
+    "relationGroupId": "d1-0025",
+    "variant": "safe",
+    "label": "allow",
+    "reason": "compatible",
+    "detectability": "none"
+  }
+]

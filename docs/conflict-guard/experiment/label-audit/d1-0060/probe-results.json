@@ -1,0 +1,336 @@
+{
+  "d1-0060-conflict": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (9.270959ms)\n✔ recurrence retains weekday identity after shifts (0.222375ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 133.930375\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (9.270959ms)\\n✔ recurrence retains weekday identity after shifts (0.222375ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 133.930375\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (8.9955ms)\n✔ recurrence retains weekday identity after shifts (0.214084ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 145.542416\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (8.9955ms)\\n✔ recurrence retains weekday identity after shifts (0.214084ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 145.542416\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (11.844125ms)\n✔ recurrence retains weekday identity after shifts (1.063208ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 127.941167\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (11.844125ms)\\n✔ recurrence retains weekday identity after shifts (1.063208ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 127.941167\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (15.214166ms)\n✔ recurrence retains weekday identity after shifts (1.621334ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 156.026166\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (15.214166ms)\\n✔ recurrence retains weekday identity after shifts (1.621334ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 156.026166\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (8.877834ms)\n✔ recurrence retains weekday identity after shifts (0.217541ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 132.179417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (8.877834ms)\\n✔ recurrence retains weekday identity after shifts (0.217541ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 132.179417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (29.442292ms)\n✔ recurrence retains weekday identity after shifts (0.228584ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 181.128166\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (29.442292ms)\\n✔ recurrence retains weekday identity after shifts (0.228584ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 181.128166\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (14.201625ms)\n✔ recurrence retains weekday identity after shifts (0.237792ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 143.331542\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (14.201625ms)\\n✔ recurrence retains weekday identity after shifts (0.237792ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 143.331542\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (11.619208ms)\n✔ recurrence retains weekday identity after shifts (1.472459ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 169.13675\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (11.619208ms)\\n✔ recurrence retains weekday identity after shifts (1.472459ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 169.13675\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (33.589583ms)\n✔ recurrence retains weekday identity after shifts (7.39025ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 222.708166\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (33.589583ms)\\n✔ recurrence retains weekday identity after shifts (7.39025ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 222.708166\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (9.240708ms)\n✔ recurrence retains weekday identity after shifts (0.221375ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 156.998084\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (9.240708ms)\\n✔ recurrence retains weekday identity after shifts (0.221375ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 156.998084\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (19.137917ms)\n✔ recurrence retains weekday identity after shifts (0.226292ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 166.682708\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (19.137917ms)\\n✔ recurrence retains weekday identity after shifts (0.226292ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 166.682708\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ adjacent intervals and resource booking lifecycle (13.550084ms)\n✔ recurrence retains weekday identity after shifts (3.608125ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 175.862125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ adjacent intervals and resource booking lifecycle (13.550084ms)\\n✔ recurrence retains weekday identity after shifts (3.608125ms)\\nℹ tests 2\\nℹ suites 0\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 175.862125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,336 @@
+{
+  "d1-0066-safe": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (3.11825ms)\n  ✔ meter resets count new readings without negative usage (0.202125ms)\n✔ immutable accounting (4.455584ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 153.703084\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (3.11825ms)\\n  ✔ meter resets count new readings without negative usage (0.202125ms)\\n✔ immutable accounting (4.455584ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 153.703084\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.838791ms)\n  ✔ meter resets count new readings without negative usage (1.0515ms)\n✔ immutable accounting (4.123042ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 127.7955\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.838791ms)\\n  ✔ meter resets count new readings without negative usage (1.0515ms)\\n✔ immutable accounting (4.123042ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 127.7955\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.152834ms)\n  ✔ meter resets count new readings without negative usage (0.154333ms)\n✔ immutable accounting (1.816291ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 125.670792\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.152834ms)\\n  ✔ meter resets count new readings without negative usage (0.154333ms)\\n✔ immutable accounting (1.816291ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 125.670792\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": 18810
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (2.189125ms)\n  ✔ meter resets count new readings without negative usage (0.204625ms)\n✔ immutable accounting (2.966541ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 131.780375\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":18810},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (2.189125ms)\\n  ✔ meter resets count new readings without negative usage (0.204625ms)\\n✔ immutable accounting (2.966541ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 131.780375\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": 18810
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.198708ms)\n  ✔ meter resets count new readings without negative usage (0.15ms)\n✔ immutable accounting (1.856166ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 162.310917\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":18810},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.198708ms)\\n  ✔ meter resets count new readings without negative usage (0.15ms)\\n✔ immutable accounting (1.856166ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 162.310917\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": 18810
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.134375ms)\n  ✔ meter resets count new readings without negative usage (2.067333ms)\n✔ immutable accounting (3.975125ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 119.731042\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":18810},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.134375ms)\\n  ✔ meter resets count new readings without negative usage (2.067333ms)\\n✔ immutable accounting (3.975125ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 119.731042\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 18.81
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.240916ms)\n  ✔ meter resets count new readings without negative usage (0.181208ms)\n✔ immutable accounting (1.940541ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 144.051208\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":18.81},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.240916ms)\\n  ✔ meter resets count new readings without negative usage (0.181208ms)\\n✔ immutable accounting (1.940541ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 144.051208\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 18.81
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (2.007292ms)\n  ✔ meter resets count new readings without negative usage (0.160667ms)\n✔ immutable accounting (2.686292ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 180.977375\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":18.81},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (2.007292ms)\\n  ✔ meter resets count new readings without negative usage (0.160667ms)\\n✔ immutable accounting (2.686292ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 180.977375\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 18.81
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.219708ms)\n  ✔ meter resets count new readings without negative usage (0.16325ms)\n✔ immutable accounting (2.615958ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 125.906208\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":18.81},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.219708ms)\\n  ✔ meter resets count new readings without negative usage (0.16325ms)\\n✔ immutable accounting (2.615958ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 125.906208\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": 18810
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 18.81
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (2.840375ms)\n  ✔ meter resets count new readings without negative usage (2.117ms)\n✔ immutable accounting (5.589166ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 156.231709\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":18810},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":18.81},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (2.840375ms)\\n  ✔ meter resets count new readings without negative usage (2.117ms)\\n✔ immutable accounting (5.589166ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 156.231709\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": 18810
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 18.81
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (9.907333ms)\n  ✔ meter resets count new readings without negative usage (0.220333ms)\n✔ immutable accounting (10.768959ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 137.862208\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":18810},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":18.81},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (9.907333ms)\\n  ✔ meter resets count new readings without negative usage (0.220333ms)\\n✔ immutable accounting (10.768959ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 137.862208\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": 18810
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 18.81
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ immutable accounting\n  ✔ balanced entries, credits and oldest debt allocation (1.13275ms)\n  ✔ meter resets count new readings without negative usage (0.257417ms)\n✔ immutable accounting (2.631666ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 119.30925\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":18810},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":18.81},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ immutable accounting\\n  ✔ balanced entries, credits and oldest debt allocation (1.13275ms)\\n  ✔ meter resets count new readings without negative usage (0.257417ms)\\n✔ immutable accounting (2.631666ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 119.30925\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "fraction": 0.2,
+  "seed": "checkpoint-c-label-audit-20261007",
+  "stratum": "project",
+  "reviewers": 2,
+  "groups": 40,
+  "totalGroups": 200,
+  "perProject": {
+    "access": 5,
+    "billing": 5,
+    "cache": 5,
+    "calendar": 5,
+    "commerce": 5,
+    "events": 5,
+    "text": 5,
+    "warehouse": 5
+  },
+  "perSplit": {
+    "dev": 15,
+    "holdout": 25
+  },
+  "selection": "SHA256(seed:groupId) 升序，每个项目选择前 20%，选择过程不读取标签。",
+  "samples": [
+    {
+      "id": "d1-0001",
+      "project": "access",
+      "split": "holdout",
+      "operator": "IC-1",
+      "variants": [
+        "d1-0001-conflict",
+        "d1-0001-safe"
+      ]
+    },
+    {
+      "id": "d1-0009",
+      "project": "access",
+      "split": "holdout",
+      "operator": "IC-2",
+      "variants": [
+        "d1-0009-conflict",
+        "d1-0009-safe"
+      ]
+    },
+    {
+      "id": "d1-0010",
+      "project": "billing",
+      "split": "dev",
+      "operator": "CP-2",
+      "variants": [
+        "d1-0010-conflict"
+      ]
+    },
+    {
+      "id": "d1-0012",
+      "project": "calendar",
+      "split": "holdout",
+      "operator": "SF-3",
+      "variants": [
+        "d1-0012-safe"
+      ]
+    },
+    {
+      "id": "d1-0015",
+      "project": "text",
+      "split": "holdout",
+      "operator": "CP-3",
+      "variants": [
+        "d1-0015-conflict"
+      ]
+    },
+    {
+      "id": "d1-0023",
+      "project": "text",
+      "split": "holdout",
+      "operator": "CP-5",
+      "variants": [
+        "d1-0023-conflict"
+      ]
+    },
+    {
+      "id": "d1-0025",
+      "project": "access",
+      "split": "holdout",
+      "operator": "IC-4",
+      "variants": [
+        "d1-0025-conflict",
+        "d1-0025-safe"
+      ]
+    },
+    {
+      "id": "d1-0029",
+      "project": "commerce",
+      "split": "dev",
+      "operator": "IC-4",
+      "variants": [
+        "d1-0029-conflict"
+      ]
+    },
+    {
+      "id": "d1-0046",
+      "project": "events",
+      "split": "holdout",
+      "operator": "EB-2",
+      "variants": [
+        "d1-0046-conflict",
+        "d1-0046-safe"
+      ]
+    },
+    {
+      "id": "d1-0050",
+      "project": "billing",
+      "split": "dev",
+      "operator": "SF-3",
+      "variants": [
+        "d1-0050-safe"
+      ]
+    },
+    {
+      "id": "d1-0056",
+      "project": "warehouse",
+      "split": "holdout",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0056-safe"
+      ]
+    },
+    {
+      "id": "d1-0060",
+      "project": "calendar",
+      "split": "holdout",
+      "operator": "IC-4",
+      "variants": [
+        "d1-0060-conflict"
+      ]
+    },
+    {
+      "id": "d1-0062",
+      "project": "events",
+      "split": "holdout",
+      "operator": "SF-2",
+      "variants": [
+        "d1-0062-safe"
+      ]
+    },
+    {
+      "id": "d1-0064",
+      "project": "warehouse",
+      "split": "holdout",
+      "operator": "IC-1",
+      "variants": [
+        "d1-0064-conflict",
+        "d1-0064-safe"
+      ]
+    },
+    {
+      "id": "d1-0066",
+      "project": "billing",
+      "split": "dev",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0066-safe"
+      ]
+    },
+    {
+      "id": "d1-0067",
+      "project": "cache",
+      "split": "dev",
+      "operator": "IC-3",
+      "variants": [
+        "d1-0067-conflict"
+      ]
+    },
+    {
+      "id": "d1-0069",
+      "project": "commerce",
+      "split": "dev",
+      "operator": "SF-2",
+      "variants": [
+        "d1-0069-safe"
+      ]
+    },
+    {
+      "id": "d1-0079",
+      "project": "text",
+      "split": "holdout",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0079-safe"
+      ]
+    },
+    {
+      "id": "d1-0084",
+      "project": "calendar",
+      "split": "holdout",
+      "operator": "SS-1",
+      "variants": [
+        "d1-0084-conflict"
+      ]
+    },
+    {
+      "id": "d1-0086",
+      "project": "events",
+      "split": "holdout",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0086-safe"
+      ]
+    },
+    {
+      "id": "d1-0098",
+      "project": "billing",
+      "split": "dev",
+      "operator": "IC-4",
+      "variants": [
+        "d1-0098-conflict"
+      ]
+    },
+    {
+      "id": "d1-0101",
+      "project": "commerce",
+      "split": "dev",
+      "operator": "IC-1",
+      "variants": [
+        "d1-0101-conflict",
+        "d1-0101-safe"
+      ]
+    },
+    {
+      "id": "d1-0102",
+      "project": "events",
+      "split": "holdout",
+      "operator": "IC-2",
+      "variants": [
+        "d1-0102-conflict"
+      ]
+    },
+    {
+      "id": "d1-0115",
+      "project": "cache",
+      "split": "dev",
+      "operator": "SF-2",
+      "variants": [
+        "d1-0115-safe"
+      ]
+    },
+    {
+      "id": "d1-0127",
+      "project": "text",
+      "split": "holdout",
+      "operator": "CP-3",
+      "variants": [
+        "d1-0127-conflict"
+      ]
+    },
+    {
+      "id": "d1-0128",
+      "project": "warehouse",
+      "split": "holdout",
+      "operator": "EB-2",
+      "variants": [
+        "d1-0128-conflict",
+        "d1-0128-safe"
+      ]
+    },
+    {
+      "id": "d1-0133",
+      "project": "commerce",
+      "split": "dev",
+      "operator": "CP-2",
+      "variants": [
+        "d1-0133-conflict"
+      ]
+    },
+    {
+      "id": "d1-0138",
+      "project": "billing",
+      "split": "dev",
+      "operator": "SF-2",
+      "variants": [
+        "d1-0138-safe"
+      ]
+    },
+    {
+      "id": "d1-0139",
+      "project": "cache",
+      "split": "dev",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0139-safe"
+      ]
+    },
+    {
+      "id": "d1-0142",
+      "project": "events",
+      "split": "holdout",
+      "operator": "SS-1",
+      "variants": [
+        "d1-0142-conflict"
+      ]
+    },
+    {
+      "id": "d1-0145",
+      "project": "access",
+      "split": "holdout",
+      "operator": "CP-2",
+      "variants": [
+        "d1-0145-conflict",
+        "d1-0145-safe"
+      ]
+    },
+    {
+      "id": "d1-0148",
+      "project": "calendar",
+      "split": "holdout",
+      "operator": "IC-2",
+      "variants": [
+        "d1-0148-conflict",
+        "d1-0148-safe"
+      ]
+    },
+    {
+      "id": "d1-0155",
+      "project": "cache",
+      "split": "dev",
+      "operator": "IC-2",
+      "variants": [
+        "d1-0155-conflict"
+      ]
+    },
+    {
+      "id": "d1-0163",
+      "project": "cache",
+      "split": "dev",
+      "operator": "IC-3",
+      "variants": [
+        "d1-0163-conflict"
+      ]
+    },
+    {
+      "id": "d1-0168",
+      "project": "warehouse",
+      "split": "holdout",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0168-safe"
+      ]
+    },
+    {
+      "id": "d1-0175",
+      "project": "text",
+      "split": "holdout",
+      "operator": "SF-3",
+      "variants": [
+        "d1-0175-safe"
+      ]
+    },
+    {
+      "id": "d1-0176",
+      "project": "warehouse",
+      "split": "holdout",
+      "operator": "IC-1",
+      "variants": [
+        "d1-0176-conflict"
+      ]
+    },
+    {
+      "id": "d1-0185",
+      "project": "access",
+      "split": "holdout",
+      "operator": "SF-1",
+      "variants": [
+        "d1-0185-safe"
+      ]
+    },
+    {
+      "id": "d1-0189",
+      "project": "commerce",
+      "split": "dev",
+      "operator": "SF-5",
+      "variants": [
+        "d1-0189-safe"
+      ]
+    },
+    {
+      "id": "d1-0196",
+      "project": "calendar",
+      "split": "holdout",
+      "operator": "EB-2",
+      "variants": [
+        "d1-0196-conflict"
+      ]
+    }
+  ]
+}

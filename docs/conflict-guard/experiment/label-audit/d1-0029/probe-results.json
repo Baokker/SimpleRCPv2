@@ -1,0 +1,336 @@
+{
+  "d1-0029-conflict": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.12325ms)\n✔ 取消订单恢复库存并保持原始购物车 (2.097375ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.902125ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.744334ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 145.103417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.12325ms)\\n✔ 取消订单恢复库存并保持原始购物车 (2.097375ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.902125ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.744334ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 145.103417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.124833ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.18575ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (1.013833ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.17325ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 136.738292\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.124833ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.18575ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (1.013833ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.17325ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 136.738292\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (9.912083ms)\n✔ 取消订单恢复库存并保持原始购物车 (1.72475ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.508ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (12.469458ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 171.781167\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (9.912083ms)\\n✔ 取消订单恢复库存并保持原始购物车 (1.72475ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.508ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (12.469458ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 171.781167\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (3.622791ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.254ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.246375ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.695208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 166.995791\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (3.622791ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.254ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.246375ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.695208ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 166.995791\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.163917ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.179ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.85225ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.038042ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 121.777667\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.163917ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.179ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.85225ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.038042ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 121.777667\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.907ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.2455ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.244708ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.796375ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 129.375709\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.907ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.2455ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.244708ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.796375ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 129.375709\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.67975ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.209125ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.322416ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (12.769334ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 147.158542\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.67975ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.209125ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.322416ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (12.769334ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 147.158542\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.142958ms)\n✔ 取消订单恢复库存并保持原始购物车 (6.485542ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.265166ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.556458ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 170.687417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.142958ms)\\n✔ 取消订单恢复库存并保持原始购物车 (6.485542ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.265166ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.556458ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 170.687417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.747167ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.204166ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.338708ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.02625ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 117.343834\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.747167ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.204166ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.338708ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.02625ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 117.343834\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (13.81625ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.229041ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.242917ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.337583ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 149.856458\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (13.81625ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.229041ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.242917ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (9.337583ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 149.856458\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.14125ms)\n✔ 取消订单恢复库存并保持原始购物车 (0.765333ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.239583ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (7.999042ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 142.776542\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.14125ms)\\n✔ 取消订单恢复库存并保持原始购物车 (0.765333ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.239583ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (7.999042ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 142.776542\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": "undefined"
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": "function"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "✔ 订单从库存预约经过付款进入配送 (1.117125ms)\n✔ 取消订单恢复库存并保持原始购物车 (2.683875ms)\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.254875ms)\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.754166ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 119.052667\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":\"undefined\"},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":\"function\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"✔ 订单从库存预约经过付款进入配送 (1.117125ms)\\n✔ 取消订单恢复库存并保持原始购物车 (2.683875ms)\\n✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.254875ms)\\n✔ 多种商品的预约保持原子性并合并同商品数量 (8.754166ms)\\nℹ tests 4\\nℹ suites 0\\nℹ pass 4\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 119.052667\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,676 @@
+{
+  "d1-0046-conflict": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.153834ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.108ms)\n✔ delivery pipeline (1.799333ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 127.971917\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.153834ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.108ms)\\n✔ delivery pipeline (1.799333ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 127.971917\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.355ms)\n  ✔ isolates subscriber failures and permits removal during publish (1.334958ms)\n✔ delivery pipeline (3.388125ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 148.995292\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.355ms)\\n  ✔ isolates subscriber failures and permits removal during publish (1.334958ms)\\n✔ delivery pipeline (3.388125ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 148.995292\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.133375ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.103333ms)\n✔ delivery pipeline (1.742958ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 190.597791\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.133375ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.103333ms)\\n✔ delivery pipeline (1.742958ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 190.597791\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.743417ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.136875ms)\n✔ delivery pipeline (2.392166ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 163.041375\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.743417ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.136875ms)\\n✔ delivery pipeline (2.392166ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 163.041375\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.161834ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.117ms)\n✔ delivery pipeline (1.81075ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 158.127333\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.161834ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.117ms)\\n✔ delivery pipeline (1.81075ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 158.127333\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.283416ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.120083ms)\n✔ delivery pipeline (1.924291ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.131125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.283416ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.120083ms)\\n✔ delivery pipeline (1.924291ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 135.131125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.113042ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.104334ms)\n✔ delivery pipeline (1.717541ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 147.859291\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.113042ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.104334ms)\\n✔ delivery pipeline (1.717541ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 147.859291\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.13125ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.111167ms)\n✔ delivery pipeline (1.778459ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 125.425125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.13125ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.111167ms)\\n✔ delivery pipeline (1.778459ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 125.425125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.528583ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.151292ms)\n✔ delivery pipeline (2.677708ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 187.026208\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.528583ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.151292ms)\\n✔ delivery pipeline (2.677708ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 187.026208\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": false,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": false,
+            "error": "Expected values to be strictly deep-equal:\n\nNaN !== 10000\n"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": false,
+            "error": "Expected values to be strictly deep-equal:\n\nfalse !== true\n"
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.203209ms)\n  ✔ isolates subscriber failures and permits removal during publish (1.261834ms)\n✔ delivery pipeline (3.017625ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 136.688375\n",
+          "stderr": ""
+        },
+        "typeError": true,
+        "diagnostics": [
+          "2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type."
+        ],
+        "stdout": "{\"passed\":false,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":false,\"error\":\"Expected values to be strictly deep-equal:\\n\\nNaN !== 10000\\n\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":false,\"error\":\"Expected values to be strictly deep-equal:\\n\\nfalse !== true\\n\"}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.203209ms)\\n  ✔ isolates subscriber failures and permits removal during publish (1.261834ms)\\n✔ delivery pipeline (3.017625ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 136.688375\\n\",\"stderr\":\"\"},\"typeError\":true,\"diagnostics\":[\"2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.\"]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": false,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": false,
+            "error": "Expected values to be strictly deep-equal:\n\nNaN !== 10000\n"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": false,
+            "error": "Expected values to be strictly deep-equal:\n\nfalse !== true\n"
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.183416ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.106792ms)\n✔ delivery pipeline (1.796291ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.142208\n",
+          "stderr": ""
+        },
+        "typeError": true,
+        "diagnostics": [
+          "2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type."
+        ],
+        "stdout": "{\"passed\":false,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":false,\"error\":\"Expected values to be strictly deep-equal:\\n\\nNaN !== 10000\\n\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":false,\"error\":\"Expected values to be strictly deep-equal:\\n\\nfalse !== true\\n\"}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.183416ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.106792ms)\\n✔ delivery pipeline (1.796291ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 135.142208\\n\",\"stderr\":\"\"},\"typeError\":true,\"diagnostics\":[\"2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.\"]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": false,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": false,
+            "error": "Expected values to be strictly deep-equal:\n\nNaN !== 10000\n"
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": false,
+            "error": "Expected values to be strictly deep-equal:\n\nfalse !== true\n"
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (7.976292ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.174542ms)\n✔ delivery pipeline (8.747833ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 151.517333\n",
+          "stderr": ""
+        },
+        "typeError": true,
+        "diagnostics": [
+          "2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type."
+        ],
+        "stdout": "{\"passed\":false,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":false,\"error\":\"Expected values to be strictly deep-equal:\\n\\nNaN !== 10000\\n\"},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":false,\"error\":\"Expected values to be strictly deep-equal:\\n\\nfalse !== true\\n\"}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (7.976292ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.174542ms)\\n✔ delivery pipeline (8.747833ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 151.517333\\n\",\"stderr\":\"\"},\"typeError\":true,\"diagnostics\":[\"2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.\"]}\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "d1-0046-safe": {
+    "baseline": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.113833ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.111458ms)\n✔ delivery pipeline (1.716917ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 127.438667\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.113833ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.111458ms)\\n✔ delivery pipeline (1.716917ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 127.438667\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.370083ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.111041ms)\n✔ delivery pipeline (2.00775ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 139.99425\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.370083ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.111041ms)\\n✔ delivery pipeline (2.00775ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 139.99425\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.122333ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.109375ms)\n✔ delivery pipeline (1.735375ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 187.396042\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.122333ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.109375ms)\\n✔ delivery pipeline (1.735375ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 187.396042\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "leftOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.222958ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.162708ms)\n✔ delivery pipeline (2.536125ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 136.188541\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.222958ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.162708ms)\\n✔ delivery pipeline (2.536125ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 136.188541\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.649167ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.11325ms)\n✔ delivery pipeline (4.1265ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 177.081417\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.649167ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.11325ms)\\n✔ delivery pipeline (4.1265ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 177.081417\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (3.078834ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.127791ms)\n✔ delivery pipeline (6.298291ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 141.464542\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (3.078834ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.127791ms)\\n✔ delivery pipeline (6.298291ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 141.464542\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "rightOnly": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.185291ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.720959ms)\n✔ delivery pipeline (2.562667ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 120.6595\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.185291ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.720959ms)\\n✔ delivery pipeline (2.562667ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 120.6595\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (3.318458ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.779625ms)\n✔ delivery pipeline (4.731334ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 152.118875\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (3.318458ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.779625ms)\\n✔ delivery pipeline (4.731334ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 152.118875\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.173458ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.115583ms)\n✔ delivery pipeline (1.813334ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 126.917125\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.173458ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.115583ms)\\n✔ delivery pipeline (1.813334ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 126.917125\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ],
+    "merged": [
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.707791ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.190542ms)\n✔ delivery pipeline (4.401292ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 137.481542\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.707791ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.190542ms)\\n✔ delivery pipeline (4.401292ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 137.481542\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.198334ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.646583ms)\n✔ delivery pipeline (2.392541ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 185.196458\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.198334ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.646583ms)\\n✔ delivery pipeline (2.392541ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 185.196458\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      },
+      {
+        "passed": true,
+        "observations": {},
+        "expectedMergedObservations": {},
+        "probes": {
+          "left-intent": {
+            "owner": "origin-intent",
+            "passed": true,
+            "value": true
+          },
+          "right-intent": {
+            "owner": "candidate-intent",
+            "passed": true,
+            "value": 10000
+          },
+          "shared-regression": {
+            "owner": "shared-regression",
+            "passed": true,
+            "value": true
+          }
+        },
+        "regression": {
+          "passed": true,
+          "tests": 1,
+          "stdout": "▶ delivery pipeline\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.141917ms)\n  ✔ isolates subscriber failures and permits removal during publish (0.1055ms)\n✔ delivery pipeline (1.749041ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 119.398416\n",
+          "stderr": ""
+        },
+        "typeError": false,
+        "diagnostics": [],
+        "stdout": "{\"passed\":true,\"observations\":{},\"expectedMergedObservations\":{},\"probes\":{\"left-intent\":{\"owner\":\"origin-intent\",\"passed\":true,\"value\":true},\"right-intent\":{\"owner\":\"candidate-intent\",\"passed\":true,\"value\":10000},\"shared-regression\":{\"owner\":\"shared-regression\",\"passed\":true,\"value\":true}},\"regression\":{\"passed\":true,\"tests\":1,\"stdout\":\"▶ delivery pipeline\\n  ✔ routes nested publication in sequence and acknowledges subscribers (1.141917ms)\\n  ✔ isolates subscriber failures and permits removal during publish (0.1055ms)\\n✔ delivery pipeline (1.749041ms)\\nℹ tests 2\\nℹ suites 1\\nℹ pass 2\\nℹ fail 0\\nℹ cancelled 0\\nℹ skipped 0\\nℹ todo 0\\nℹ duration_ms 119.398416\\n\",\"stderr\":\"\"},\"typeError\":false,\"diagnostics\":[]}\n",
+        "stderr": ""
+      }
+    ]
+  }
+}

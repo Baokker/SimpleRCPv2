@@ -1,0 +1,100 @@
+{
+  "basis": {
+    "developmentSamples": 79,
+    "developmentFastCalls": 52,
+    "holdoutUniqueSamples": 130,
+    "forecastCallsPerHoldoutRound": 86,
+    "cascadeObservedEscalations": 41,
+    "cascadeObservedJudgements": 52,
+    "smokeInitialRuns": 12,
+    "smokeFollowupEvents": 2,
+    "smokeAgentRequests": 92,
+    "smokeAgentTokens": {
+      "input": 2371521,
+      "output": 16276
+    },
+    "smokeGuardCalls": {
+      "fast": 0,
+      "deep": 18
+    },
+    "smokeGuardReportedCostUsd": 0.0135381,
+    "smokeVerificationSha256": "263fc46f03d39eb2c7050e703295e847336e954135150351f92607b358ed3fea",
+    "agentMeanUsdIncludingCacheAtInputPrice": 0.060915624999999994
+  },
+  "rows": [
+    {
+      "experiment": "X1",
+      "fast": 0,
+      "deep": 0,
+      "agentBaseRuns": 0,
+      "usd": 0
+    },
+    {
+      "experiment": "X2",
+      "fast": 0,
+      "deep": 0,
+      "agentBaseRuns": 0,
+      "usd": 0
+    },
+    {
+      "experiment": "X3",
+      "fast": 1032,
+      "deep": 888,
+      "agentBaseRuns": 0,
+      "usd": 0.7230297544615383
+    },
+    {
+      "experiment": "X3b",
+      "fast": 0,
+      "deep": 0,
+      "agentBaseRuns": 0,
+      "usd": 0
+    },
+    {
+      "experiment": "X4",
+      "fast": 0,
+      "deep": 0,
+      "agentBaseRuns": 0,
+      "usd": 0
+    },
+    {
+      "experiment": "X5",
+      "fast": 0,
+      "deep": 234,
+      "agentBaseRuns": 468,
+      "usd": 28.6845078
+    },
+    {
+      "experiment": "X6",
+      "fast": 0,
+      "deep": 180,
+      "agentBaseRuns": 120,
+      "usd": 7.445255999999999
+    },
+    {
+      "experiment": "X7",
+      "fast": 138,
+      "deep": 0,
+      "agentBaseRuns": 0,
+      "usd": 0.006947174769230769
+    }
+  ],
+  "totals": {
+    "fast": 1170,
+    "deep": 1302,
+    "agentBaseRuns": 588,
+    "agentExecutionsIncludingFollowups": 686,
+    "agentHttpRequests": 4508,
+    "usd": 36.859740729230765
+  },
+  "stopRatio": 1.2,
+  "uncertainty": "开发集与十二个冒烟 run 的均值外推；并发与任务难度可能改变调用次数。Agent 统计包含既有建议追加执行，不再对 token 重复乘追加次数。没有返回 usage 的请求费用未知。",
+  "stopBeforeExceeding": {
+    "fast": 1404,
+    "deep": 1562,
+    "agentBaseRuns": 705,
+    "agentExecutionsIncludingFollowups": 823,
+    "agentHttpRequests": 5409,
+    "usd": 44.23168887507692
+  }
+}

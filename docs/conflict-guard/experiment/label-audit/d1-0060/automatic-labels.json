@@ -1,0 +1,10 @@
+[
+  {
+    "id": "d1-0060-conflict",
+    "relationGroupId": "d1-0060",
+    "variant": "conflict",
+    "label": "allow",
+    "reason": "compatible",
+    "detectability": "none"
+  }
+]

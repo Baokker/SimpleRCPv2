@@ -1,0 +1,18 @@
+[
+  {
+    "id": "d1-0148-conflict",
+    "relationGroupId": "d1-0148",
+    "variant": "conflict",
+    "label": "exclude",
+    "reason": "invalid-side",
+    "detectability": "none"
+  },
+  {
+    "id": "d1-0148-safe",
+    "relationGroupId": "d1-0148",
+    "variant": "safe",
+    "label": "exclude",
+    "reason": "invalid-side",
+    "detectability": "none"
+  }
+]

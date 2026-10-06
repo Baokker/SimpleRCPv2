@@ -1,0 +1,12 @@
+{
+  "codeCommit": "d1725b162ac5511360eb769fed3468b6d341191f",
+  "checks": {
+    "workspaceBuild": { "command": "pnpm -r build", "passed": true },
+    "exportScriptTypes": { "command": "pnpm --filter @simplercp/conflict-guard exec tsc --noEmit --skipLibCheck --module NodeNext --moduleResolution NodeNext --target ES2023 --types node --allowImportingTsExtensions scripts/experiment-freeze.ts scripts/experiment-freeze-check.ts", "passed": true },
+    "integrity": { "command": "pnpm --filter @simplercp/conflict-guard experiment:verify", "passed": true, "deterministicExport": true, "byteHashes": true, "auditGroups": 40, "auditFraction": 0.2, "fourStatesThreeRuns": true, "modifiedPromptRejected": true },
+    "secretValues": { "command": "node scripts/verify-evidence-secrets.mjs", "configuredValuesFound": 0 }
+  },
+  "stage8ModelCalls": 0,
+  "stage8AgentRuns": 0,
+  "holdoutPolicyEvaluations": 0
+}

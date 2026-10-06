@@ -29,7 +29,9 @@
     "adjudication:verify": "node --experimental-strip-types scripts/adjudication-verify.ts",
     "adjudication:evidence": "node --experimental-strip-types scripts/adjudication-evidence.ts",
     "bench:agents": "pnpm --filter @simplercp/server bench:agents",
-    "bench:validate-d3": "node --experimental-strip-types scripts/validate-d3.ts"
+    "bench:validate-d3": "node --experimental-strip-types scripts/validate-d3.ts",
+    "experiment:freeze": "node --experimental-strip-types scripts/experiment-freeze.ts",
+    "experiment:verify": "node --experimental-strip-types scripts/experiment-freeze-check.ts"
   },
   "dependencies": {
     "diff": "8.0.2",

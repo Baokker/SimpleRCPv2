@@ -1,0 +1,20 @@
+{
+  "deep": {
+    "endpoint": "https://api.deepseek.com/v1",
+    "temperature": 0,
+    "response_format": {
+      "type": "json_object"
+    },
+    "thinking": true,
+    "role": "deep",
+    "reasoning": false,
+    "hardDeadlineMs": 8000
+  },
+  "fast": {
+    "endpoint": "https://api.typesafe.ai",
+    "questionType": "choice",
+    "role": "fast",
+    "reasoning": false,
+    "hardDeadlineMs": 8000
+  }
+}

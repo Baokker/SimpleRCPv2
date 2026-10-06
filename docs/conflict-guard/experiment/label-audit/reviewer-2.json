@@ -1,0 +1,349 @@
+{
+  "reviewer": "reviewer-2",
+  "independent": true,
+  "decisions": [
+    {
+      "relationGroupId": "d1-0001",
+      "id": "d1-0001-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0001",
+      "id": "d1-0001-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0009",
+      "id": "d1-0009-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0009",
+      "id": "d1-0009-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0010",
+      "id": "d1-0010-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0012",
+      "id": "d1-0012-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0015",
+      "id": "d1-0015-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0023",
+      "id": "d1-0023-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0025",
+      "id": "d1-0025-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0025",
+      "id": "d1-0025-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0029",
+      "id": "d1-0029-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0046",
+      "id": "d1-0046-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0046",
+      "id": "d1-0046-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0050",
+      "id": "d1-0050-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0056",
+      "id": "d1-0056-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0060",
+      "id": "d1-0060-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0062",
+      "id": "d1-0062-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0064",
+      "id": "d1-0064-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0064",
+      "id": "d1-0064-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0066",
+      "id": "d1-0066-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0067",
+      "id": "d1-0067-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0069",
+      "id": "d1-0069-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0079",
+      "id": "d1-0079-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0084",
+      "id": "d1-0084-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0086",
+      "id": "d1-0086-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0098",
+      "id": "d1-0098-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0101",
+      "id": "d1-0101-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0101",
+      "id": "d1-0101-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0102",
+      "id": "d1-0102-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0115",
+      "id": "d1-0115-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0127",
+      "id": "d1-0127-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0128",
+      "id": "d1-0128-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0128",
+      "id": "d1-0128-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0133",
+      "id": "d1-0133-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0138",
+      "id": "d1-0138-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0139",
+      "id": "d1-0139-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0142",
+      "id": "d1-0142-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0145",
+      "id": "d1-0145-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0145",
+      "id": "d1-0145-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0148",
+      "id": "d1-0148-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0148",
+      "id": "d1-0148-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0155",
+      "id": "d1-0155-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0163",
+      "id": "d1-0163-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0168",
+      "id": "d1-0168-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0175",
+      "id": "d1-0175-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0176",
+      "id": "d1-0176-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0185",
+      "id": "d1-0185-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0189",
+      "id": "d1-0189-safe",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    },
+    {
+      "relationGroupId": "d1-0196",
+      "id": "d1-0196-conflict",
+      "label": null,
+      "reason": "",
+      "notes": ""
+    }
+  ]
+}

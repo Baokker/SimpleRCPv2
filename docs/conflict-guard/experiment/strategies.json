@@ -1,0 +1,207 @@
+{
+  "baselines": {
+    "P0": {
+      "coordination": false
+    },
+    "P1": {
+      "prelock": "file"
+    },
+    "P2": {
+      "prelock": "symbol-neighborhood",
+      "k": 2
+    },
+    "P3": {
+      "rules": true,
+      "grey": "warn"
+    },
+    "P*": {
+      "truth": {
+        "allow": "allow",
+        "warn": "lock",
+        "lock": "lock"
+      },
+      "noCandidate": "allow"
+    }
+  },
+  "models": {
+    "G0": {
+      "version": "adjudication-v1",
+      "promptVersion": "pair-v1",
+      "strategy": "G0",
+      "fast": "jev",
+      "deep": "deepseek",
+      "fastModel": "jev-1.13.0",
+      "fastSamplingCount": 7,
+      "threshold": 0,
+      "t1Strategy": "G3",
+      "t2Strategy": "G1",
+      "t3Strategy": "G1",
+      "t2Reasoning": false,
+      "t3Reasoning": false,
+      "contextLimit": 3000,
+      "topK": 3,
+      "invariants": true,
+      "softDeadlineMs": 2000,
+      "hardDeadlineMs": 8000,
+      "prices": {
+        "date": "2026-10-06",
+        "fastInputPerMillion": 0.042,
+        "fastOutputPerMillion": 0,
+        "deepInputPerMillion": 0.3,
+        "deepOutputPerMillion": 1.2
+      }
+    },
+    "G1": {
+      "version": "adjudication-v1",
+      "promptVersion": "pair-v1",
+      "strategy": "G1",
+      "fast": "jev",
+      "deep": "deepseek",
+      "fastModel": "jev-1.13.0",
+      "fastSamplingCount": 7,
+      "threshold": 0,
+      "t1Strategy": "G3",
+      "t2Strategy": "G1",
+      "t3Strategy": "G1",
+      "t2Reasoning": false,
+      "t3Reasoning": false,
+      "contextLimit": 3000,
+      "topK": 3,
+      "invariants": true,
+      "softDeadlineMs": 2000,
+      "hardDeadlineMs": 8000,
+      "prices": {
+        "date": "2026-10-06",
+        "fastInputPerMillion": 0.042,
+        "fastOutputPerMillion": 0,
+        "deepInputPerMillion": 0.3,
+        "deepOutputPerMillion": 1.2
+      }
+    },
+    "G2": {
+      "version": "adjudication-v1",
+      "promptVersion": "pair-v1",
+      "strategy": "G2",
+      "fast": "jev",
+      "deep": "deepseek",
+      "fastModel": "jev-1.13.0",
+      "fastSamplingCount": 7,
+      "threshold": 0,
+      "t1Strategy": "G3",
+      "t2Strategy": "G1",
+      "t3Strategy": "G1",
+      "t2Reasoning": false,
+      "t3Reasoning": false,
+      "contextLimit": 3000,
+      "topK": 3,
+      "invariants": true,
+      "softDeadlineMs": 2000,
+      "hardDeadlineMs": 8000,
+      "prices": {
+        "date": "2026-10-06",
+        "fastInputPerMillion": 0.042,
+        "fastOutputPerMillion": 0,
+        "deepInputPerMillion": 0.3,
+        "deepOutputPerMillion": 1.2
+      }
+    },
+    "G3": {
+      "version": "adjudication-v1",
+      "promptVersion": "pair-v1",
+      "strategy": "G3",
+      "fast": "jev",
+      "deep": "deepseek",
+      "fastModel": "jev-1.13.0",
+      "fastSamplingCount": 7,
+      "threshold": 0,
+      "t1Strategy": "G3",
+      "t2Strategy": "G1",
+      "t3Strategy": "G1",
+      "t2Reasoning": false,
+      "t3Reasoning": false,
+      "contextLimit": 3000,
+      "topK": 3,
+      "invariants": true,
+      "softDeadlineMs": 2000,
+      "hardDeadlineMs": 8000,
+      "prices": {
+        "date": "2026-10-06",
+        "fastInputPerMillion": 0.042,
+        "fastOutputPerMillion": 0,
+        "deepInputPerMillion": 0.3,
+        "deepOutputPerMillion": 1.2
+      }
+    },
+    "G4": {
+      "version": "adjudication-v1",
+      "promptVersion": "pair-v1",
+      "strategy": "G4",
+      "fast": "jev",
+      "deep": "deepseek",
+      "fastModel": "jev-1.13.0",
+      "fastSamplingCount": 7,
+      "threshold": 0,
+      "t1Strategy": "G3",
+      "t2Strategy": "G1",
+      "t3Strategy": "G1",
+      "t2Reasoning": false,
+      "t3Reasoning": false,
+      "contextLimit": 3000,
+      "topK": 3,
+      "invariants": true,
+      "softDeadlineMs": 2000,
+      "hardDeadlineMs": 8000,
+      "prices": {
+        "date": "2026-10-06",
+        "fastInputPerMillion": 0.042,
+        "fastOutputPerMillion": 0,
+        "deepInputPerMillion": 0.3,
+        "deepOutputPerMillion": 1.2
+      }
+    }
+  },
+  "P5": {
+    "mode": "full",
+    "arbitration": "owner",
+    "injection": "on",
+    "adjudication": {
+      "version": "adjudication-v1",
+      "promptVersion": "pair-v1",
+      "strategy": "G4",
+      "fast": "jev",
+      "deep": "deepseek",
+      "fastModel": "jev-1.13.0",
+      "fastSamplingCount": 7,
+      "threshold": 0,
+      "t1Strategy": "G3",
+      "t2Strategy": "G1",
+      "t3Strategy": "G1",
+      "t2Reasoning": false,
+      "t3Reasoning": false,
+      "contextLimit": 3000,
+      "topK": 3,
+      "invariants": true,
+      "softDeadlineMs": 2000,
+      "hardDeadlineMs": 8000,
+      "prices": {
+        "date": "2026-10-06",
+        "fastInputPerMillion": 0.042,
+        "fastOutputPerMillion": 0,
+        "deepInputPerMillion": 0.3,
+        "deepOutputPerMillion": 1.2
+      }
+    }
+  },
+  "agentModes": [
+    "owner",
+    "all-human",
+    "all-auto"
+  ],
+  "ablations": [
+    "no-four-state-typecheck",
+    "no-invariants",
+    "no-T0",
+    "no-T3",
+    "all-history"
+  ]
+}

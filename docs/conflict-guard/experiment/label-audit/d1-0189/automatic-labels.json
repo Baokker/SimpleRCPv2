@@ -1,0 +1,10 @@
+[
+  {
+    "id": "d1-0189-safe",
+    "relationGroupId": "d1-0189",
+    "variant": "safe",
+    "label": "allow",
+    "reason": "compatible",
+    "detectability": "none"
+  }
+]

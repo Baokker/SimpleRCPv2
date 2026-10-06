@@ -1,0 +1,37 @@
+[
+  {
+    "id": "d1-0041-conflict",
+    "reason": "invalid-side",
+    "split": "holdout"
+  },
+  {
+    "id": "d1-0041-safe",
+    "reason": "invalid-side",
+    "split": "holdout"
+  },
+  {
+    "id": "d1-0044-conflict",
+    "reason": "invalid-side",
+    "split": "holdout"
+  },
+  {
+    "id": "d1-0148-conflict",
+    "reason": "invalid-side",
+    "split": "holdout"
+  },
+  {
+    "id": "d1-0148-safe",
+    "reason": "invalid-side",
+    "split": "holdout"
+  },
+  {
+    "id": "d1-0153-conflict",
+    "reason": "invalid-side",
+    "split": "holdout"
+  },
+  {
+    "id": "d1-0153-safe",
+    "reason": "invalid-side",
+    "split": "holdout"
+  }
+]
