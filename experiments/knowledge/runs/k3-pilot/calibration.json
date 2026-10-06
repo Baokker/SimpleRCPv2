@@ -1,0 +1,82 @@
+[
+  {
+    "task": "R1-T01",
+    "attempts": 3,
+    "functionalPassed": 3,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R1-T02",
+    "attempts": 3,
+    "functionalPassed": 1,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R2-T01",
+    "attempts": 3,
+    "functionalPassed": 1,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R2-T02",
+    "attempts": 3,
+    "functionalPassed": 0,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": true
+  },
+  {
+    "task": "R1-T03",
+    "attempts": 3,
+    "functionalPassed": 2,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R1-T04",
+    "attempts": 3,
+    "functionalPassed": 1,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R1-T05",
+    "attempts": 3,
+    "functionalPassed": 3,
+    "trapsAvoided": 1,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R2-T03",
+    "attempts": 3,
+    "functionalPassed": 2,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R2-T04",
+    "attempts": 3,
+    "functionalPassed": 2,
+    "trapsAvoided": 0,
+    "tooEasy": false,
+    "tooHard": false
+  },
+  {
+    "task": "R2-T05",
+    "attempts": 3,
+    "functionalPassed": 3,
+    "trapsAvoided": 1,
+    "tooEasy": false,
+    "tooHard": false
+  }
+]

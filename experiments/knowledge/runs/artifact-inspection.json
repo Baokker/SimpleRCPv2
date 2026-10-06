@@ -1,0 +1,349 @@
+[
+  {
+    "key": "R1-T01-C0-1",
+    "diffBytes": 1930,
+    "files": [
+      "src/http/reservation-batch-routes.ts",
+      "src/services/reservation-batch.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":8,\"reserved\":2,\"version\":2,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]'\n- '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":10,\"reserved\":0,\"version\":1,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]'\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T01-21087-1791310985517/test/.judge-trap-R1-T01.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":8,\"reserved\":2,\"version\":2,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]',\n  expected: '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":10,\"reserved\":0,\"version\":1,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R1-T01-C2-1",
+    "diffBytes": 1932,
+    "files": [
+      "src/http/reservation-batch-routes.ts",
+      "src/services/reservation-batch.ts"
+    ],
+    "injectedIds": [
+      "R1-I05",
+      "R1-I11",
+      "R1-I13",
+      "R1-I15",
+      "R1-I17"
+    ],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":8,\"reserved\":2,\"version\":2,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]'\n- '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":10,\"reserved\":0,\"version\":1,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]'\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T01-21400-1791310990191/test/.judge-trap-R1-T01.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":8,\"reserved\":2,\"version\":2,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]',\n  expected: '[{\"sku\":\"a\",\"warehouseId\":\"w\",\"available\":10,\"reserved\":0,\"version\":1,\"updatedAt\":1},{\"sku\":\"b\",\"warehouseId\":\"w\",\"available\":1,\"reserved\":0,\"version\":1,\"updatedAt\":1}]',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R1-T02-C2-1",
+    "diffBytes": 1018,
+    "files": [
+      "src/http/audit-routes.ts"
+    ],
+    "injectedIds": [
+      "R1-I01",
+      "R1-I03",
+      "R1-I05",
+      "R1-I07",
+      "R1-I09"
+    ],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nfile:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T02-23656-1791311025882/src/http/audit-routes.ts:1\nimport { AuditStore, AuditEntry } from '../storage/audit-store.ts';\n                     ^^^^^^^^^^\nSyntaxError: The requested module '../storage/audit-store.ts' does not provide an export named 'AuditEntry'\n    at #_instantiate (node:internal/modules/esm/module_job:254:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:363:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)\n    at async file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T02-23656-1791311025882/test/.judge-hidden-R1-T02.mjs:8:47\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R1-T02-C0-1",
+    "diffBytes": 1500,
+    "files": [
+      "src/http/audit-routes.ts"
+    ],
+    "injectedIds": [],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nfile:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T02-23914-1791311033186/src/http/audit-routes.ts:1\nimport { AuditStore, AuditEntry } from '../storage/audit-store.ts';\n                     ^^^^^^^^^^\nSyntaxError: The requested module '../storage/audit-store.ts' does not provide an export named 'AuditEntry'\n    at #_instantiate (node:internal/modules/esm/module_job:254:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:363:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)\n    at async file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T02-23914-1791311033186/test/.judge-hidden-R1-T02.mjs:8:47\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T01-C0-1",
+    "diffBytes": 1322,
+    "files": [
+      "src/extracted/agent/traceStore.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 4,
+      "failed": 0
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'curl -H \"Authorization: fixture-credential-for-test\"'\n- 'curl -H \"Authorization: [REDACTED:TOKEN]'\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T01-24934-1791311056271/test/.judge-trap-R2-T01.mjs:12:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'curl -H \"Authorization: fixture-credential-for-test\"',\n  expected: 'curl -H \"Authorization: [REDACTED:TOKEN]',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T01-C2-1",
+    "diffBytes": 1541,
+    "files": [
+      "src/extracted/agent/traceStore.ts"
+    ],
+    "injectedIds": [
+      "R2-T01-target",
+      "R2-I01",
+      "R2-I03",
+      "R2-I11",
+      "R2-I13"
+    ],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ {\n+   data: {\n+     label: '2'\n- [\n-   {\n-     data: {\n-       label: '2'\n-     },\n-     sequence: 2,\n-     timestamp: '2026-10-06T00:00:00.000Z',\n-     type: 'tool'\n    },\n+   sequence: 2,\n+   timestamp: '2026-10-06T00:00:00.000Z',\n+   type: 'tool'\n+ }\n- ]\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T01-25366-1791311064292/test/.judge-hidden-R2-T01.mjs:14:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: {\n    sequence: 2,\n    timestamp: '2026-10-06T00:00:00.000Z',\n    type: 'tool',\n    data: { label: '2' }\n  },\n  expected: [\n    {\n      sequence: 2,\n      timestamp: '2026-10-06T00:00:00.000Z',\n      type: 'tool',\n      data: { label: '2' }\n    }\n  ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T02-C0-1",
+    "diffBytes": 2120,
+    "files": [
+      "src/extracted/chat.ts",
+      "src/extracted/chatExport.ts"
+    ],
+    "injectedIds": [],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ {\n+   messages: [\n+     {\n+       authorId: 'a',\n+       authorName: 'Member',\n+       id: '2',\n+       roomId: 'current',\n+       sequence: 2,\n+       text: 'ordinary',\n+       timestamp: '2026-10-06T00:00:00.000Z'\n+     }\n+   ],\n+   version: 1\n+ }\n- [\n-   {\n-     authorId: 'a',\n-     authorName: 'Member',\n-     id: '2',\n-     roomId: 'current',\n-     sequence: 2,\n-     text: 'ordinary',\n-     timestamp: '2026-10-06T00:00:00.000Z'\n-   }\n- ]\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T02-27031-1791311106107/test/.judge-hidden-R2-T02.mjs:8:181 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: {\n    version: 1,\n    messages: [\n      {\n        id: '2',\n        sequence: 2,\n        timestamp: '2026-10-06T00:00:00.000Z',\n        authorId: 'a',\n        authorName: 'Member',\n        text: 'ordinary',\n        roomId: 'current'\n      }\n    ]\n  },\n  expected: [\n    {\n      id: '2',\n      sequence: 2,\n      timestamp: '2026-10-06T00:00:00.000Z',\n      authorId: 'a',\n      authorName: 'Member',\n      text: 'ordinary',\n      roomId: 'current'\n    }\n  ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T02-C2-1",
+    "diffBytes": 2090,
+    "files": [
+      "src/extracted/chat.ts",
+      "src/extracted/chatExport.ts"
+    ],
+    "injectedIds": [
+      "R2-I17",
+      "R2-I23",
+      "R2-I01",
+      "R2-I03",
+      "R2-I05"
+    ],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ {\n+   messages: [\n+     {\n+       authorId: 'a',\n+       authorName: 'Member',\n+       id: '2',\n+       roomId: 'current',\n+       sequence: 2,\n+       text: 'ordinary',\n+       timestamp: '2026-10-06T00:00:00.000Z'\n+     }\n+   ],\n+   version: 1\n+ }\n- [\n-   {\n-     authorId: 'a',\n-     authorName: 'Member',\n-     id: '2',\n-     roomId: 'current',\n-     sequence: 2,\n-     text: 'ordinary',\n-     timestamp: '2026-10-06T00:00:00.000Z'\n-   }\n- ]\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T02-27492-1791311122251/test/.judge-hidden-R2-T02.mjs:8:181 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: {\n    version: 1,\n    messages: [\n      {\n        id: '2',\n        sequence: 2,\n        timestamp: '2026-10-06T00:00:00.000Z',\n        authorId: 'a',\n        authorName: 'Member',\n        text: 'ordinary',\n        roomId: 'current'\n      }\n    ]\n  },\n  expected: [\n    {\n      id: '2',\n      sequence: 2,\n      timestamp: '2026-10-06T00:00:00.000Z',\n      authorId: 'a',\n      authorName: 'Member',\n      text: 'ordinary',\n      roomId: 'current'\n    }\n  ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R1-C01-C0-1",
+    "diffBytes": 2337,
+    "files": [
+      "src/http/stock-query-routes.ts",
+      "src/services/stock-query.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": true,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "failureText": "{\"rule\":\"control-input-preservation\",\"unchanged\":true}\n\n"
+  },
+  {
+    "key": "R1-C01-C2-1",
+    "diffBytes": 2291,
+    "files": [
+      "src/http/stock-query-routes.ts",
+      "src/services/stock-query.ts"
+    ],
+    "injectedIds": [
+      "R1-I03",
+      "R1-I05",
+      "R1-I11",
+      "R1-I15",
+      "R1-I19"
+    ],
+    "functional": true,
+    "trapAvoided": true,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "failureText": "{\"rule\":\"control-input-preservation\",\"unchanged\":true}\n\n"
+  },
+  {
+    "key": "R1-T03-C0-1",
+    "diffBytes": 2470,
+    "files": [
+      "src/http/payment-notice-routes.ts",
+      "src/services/payment-notices.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "failureText": "\nfile:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T03-32237-1791311292747/src/notifications/outbox.ts:28\n                throw new Error('Logical notification reused for a different recipient or template');\n                      ^\n\nError: Logical notification reused for a different recipient or template\n    at NotificationOutbox.enqueue (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T03-32237-1791311292747/src/notifications/outbox.ts:28:23)\n    at schedulePaymentNotice (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T03-32237-1791311292747/src/services/payment-notices.ts:16:28)\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T03-32237-1791311292747/test/.judge-trap-R1-T03.mjs:7:7\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R1-T04-C0-1",
+    "diffBytes": 3521,
+    "files": [
+      "src/http/order-note-routes.ts",
+      "src/services/order-notes.ts",
+      "src/services/order-service.ts"
+    ],
+    "injectedIds": [],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nfile:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T04-33536-1791311354551/src/services/order-notes.ts:2\nimport { EventStore, EventRecord } from '../storage/event-store.ts';\n                     ^^^^^^^^^^^\nSyntaxError: The requested module '../storage/event-store.ts' does not provide an export named 'EventRecord'\n    at #_instantiate (node:internal/modules/esm/module_job:254:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:363:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)\n    at async file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T04-33536-1791311354551/test/.judge-hidden-R1-T04.mjs:7:96\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R1-T05-C0-1",
+    "diffBytes": 2889,
+    "files": [
+      "src/http/monthly-order-routes.ts",
+      "src/services/monthly-orders.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 84,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n      count: 1,\n+     month: '2026-10',\n-     month: '2026-09',\n      totalCents: 1000\n    }\n  ]\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-T05-34263-1791311387654/test/.judge-trap-R1-T05.mjs:6:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ { month: '2026-10', count: 1, totalCents: 1000 } ],\n  expected: [ { month: '2026-09', count: 1, totalCents: 1000 } ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T03-C0-1",
+    "diffBytes": 1930,
+    "files": [
+      "src/extracted/auth/identity.ts",
+      "src/extracted/memberCsv.ts"
+    ],
+    "injectedIds": [],
+    "functional": false,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 0,
+      "failed": 1
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   {\n-     displayName: 'Member, \"A\"',\n-     memberId: 'cd73b719-ec76-403b-bcdb-7d3512f37fbe',\n-     role: 'participant'\n-   }\n- ]\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T03-46884-1791312120356/test/.judge-hidden-R2-T03.mjs:8:148 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [\n    {\n      memberId: 'cd73b719-ec76-403b-bcdb-7d3512f37fbe',\n      displayName: 'Member, \"A\"',\n      role: 'participant'\n    }\n  ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T04-C0-1",
+    "diffBytes": 2129,
+    "files": [
+      "src/extracted/activityExport.ts",
+      "src/extracted/eventLog.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "failureText": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      id: '0',\n      memberId: 'member',\n      payload: {\n...\n    },\n+   {\n+     id: '1',\n+     memberId: 'member',\n+     payload: {\n+       file: 'a.ts'\n+     },\n+     roomId: 'room',\n+     timestamp: '2026-10-06T00:00:01.000Z',\n+     type: 'cursor_moved'\n+   },\n+   {\n+     id: '2',\n+     memberId: 'member',\n+     payload: {\n+       file: 'a.ts'\n+     },\n+     roomId: 'room',\n+     timestamp: '2026-10-06T00:00:02.000Z',\n+     type: 'member_connected'\n+   }\n  ]\n\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T04-47745-1791312151360/test/.judge-trap-R2-T04.mjs:5:94 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [\n    {\n      id: '0',\n      timestamp: '2026-10-06T00:00:00.000Z',\n      type: 'file_changed',\n      roomId: 'room',\n      memberId: 'member',\n      payload: { file: 'a.ts' }\n    },\n    {\n      id: '1',\n      timestamp: '2026-10-06T00:00:01.000Z',\n      type: 'cursor_moved',\n      roomId: 'room',\n      memberId: 'member',\n      payload: { file: 'a.ts' }\n    },\n    {\n      id: '2',\n      timestamp: '2026-10-06T00:00:02.000Z',\n      type: 'member_connected',\n      roomId: 'room',\n      memberId: 'member',\n      payload: { file: 'a.ts' }\n    }\n  ],\n  expected: [\n    {\n      id: '0',\n      timestamp: '2026-10-06T00:00:00.000Z',\n      type: 'file_changed',\n      roomId: 'room',\n      memberId: 'member',\n      payload: { file: 'a.ts' }\n    }\n  ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.7.0\n"
+  },
+  {
+    "key": "R2-T05-C0-1",
+    "diffBytes": 2054,
+    "files": [
+      "src/extracted/agent/agentRunStore.ts",
+      "src/extracted/agent/runView.ts"
+    ],
+    "injectedIds": [],
+    "functional": true,
+    "trapAvoided": false,
+    "projectTests": {
+      "passed": 47,
+      "failed": 0
+    },
+    "hiddenTests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "failureText": "\nfile:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T05-49695-1791312224982/src/extracted/agent/agentRunStore.ts:63\n    throw new Error(\"Access denied: insufficient permissions to view this run\");\n          ^\n\nError: Access denied: insufficient permissions to view this run\n    at getRunForViewer (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T05-49695-1791312224982/src/extracted/agent/agentRunStore.ts:63:11)\n    at async file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R2-T05-49695-1791312224982/test/.judge-trap-R2-T05.mjs:5:18\n\nNode.js v24.7.0\n"
+  }
+]

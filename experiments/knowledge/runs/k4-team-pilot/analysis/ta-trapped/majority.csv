@@ -1,0 +1,3 @@
+task,condition,runs,trapAvoided,jointSuccess,functional
+P01-Tb,T0,1,1,1,1
+P01-Tb,T3,1,1,1,1

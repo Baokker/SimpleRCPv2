@@ -1,0 +1,19 @@
+{
+  "experiment": "k3",
+  "commit": "48d7a15747e1c30e946d59607f539ec11a347a4d",
+  "configHash": "b1b581e08d4e35609d695c6ef8d6a5482ea99356d9886c32e98814335d832bc3",
+  "manifestHash": "62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454",
+  "provider": "minimax",
+  "model": "MiniMax-M2",
+  "config": {
+    "origin": "http://127.0.0.1:4179",
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "concurrency": 2,
+    "timeoutMs": 600000,
+    "delayMs": 60000,
+    "speed": 1,
+    "repetitions": 3,
+    "seed": 20261007
+  }
+}

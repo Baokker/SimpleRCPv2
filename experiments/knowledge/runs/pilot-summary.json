@@ -1,0 +1,422 @@
+{
+  "summaries": {
+    "k2": [
+      {
+        "episode": "P01",
+        "condition": "ordinary",
+        "mustMention": "InventoryStore.transaction",
+        "validStructure": true,
+        "validCitations": true,
+        "mustMentionCovered": false,
+        "acceptedType": false,
+        "groundedPass": false,
+        "latencyMs": 11563,
+        "source": "raw/P01-ordinary"
+      },
+      {
+        "episode": "P01",
+        "condition": "server",
+        "mustMention": "InventoryStore.transaction",
+        "validStructure": true,
+        "validCitations": true,
+        "mustMentionCovered": false,
+        "acceptedType": true,
+        "groundedPass": false,
+        "latencyMs": 17434,
+        "source": "raw/P01-server"
+      },
+      {
+        "episode": "P01",
+        "condition": "agent-self",
+        "mustMention": "InventoryStore.transaction",
+        "validStructure": true,
+        "validCitations": true,
+        "mustMentionCovered": false,
+        "acceptedType": true,
+        "groundedPass": false,
+        "latencyMs": 10599,
+        "source": "raw/P01-agent-self"
+      }
+    ],
+    "supplemental": [
+      {
+        "condition": "C3",
+        "count": 5,
+        "functional": 2,
+        "avoided": 1,
+        "joint": 1,
+        "toolCalls": 0
+      },
+      {
+        "condition": "C5",
+        "count": 5,
+        "functional": 5,
+        "avoided": 4,
+        "joint": 4,
+        "toolCalls": 0
+      },
+      {
+        "condition": "C7",
+        "count": 5,
+        "functional": 3,
+        "avoided": 1,
+        "joint": 1,
+        "toolCalls": 0
+      }
+    ],
+    "k3": [
+      {
+        "condition": "C0",
+        "count": 31,
+        "functional": 19,
+        "avoided": 3,
+        "joint": 3,
+        "targetInjected": 0,
+        "totalEstimatedCNY": 26.535765900000005,
+        "meanWallMs": 39398
+      },
+      {
+        "condition": "C2",
+        "count": 5,
+        "functional": 2,
+        "avoided": 1,
+        "joint": 1,
+        "targetInjected": 1,
+        "totalEstimatedCNY": 3.5847651000000003,
+        "meanWallMs": 39552
+      }
+    ],
+    "calibration": [
+      {
+        "task": "R1-T01",
+        "attempts": 3,
+        "functionalPassed": 3,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R1-T02",
+        "attempts": 3,
+        "functionalPassed": 1,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R2-T01",
+        "attempts": 3,
+        "functionalPassed": 1,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R2-T02",
+        "attempts": 3,
+        "functionalPassed": 0,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": true
+      },
+      {
+        "task": "R1-T03",
+        "attempts": 3,
+        "functionalPassed": 2,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R1-T04",
+        "attempts": 3,
+        "functionalPassed": 1,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R1-T05",
+        "attempts": 3,
+        "functionalPassed": 3,
+        "trapsAvoided": 1,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R2-T03",
+        "attempts": 3,
+        "functionalPassed": 2,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R2-T04",
+        "attempts": 3,
+        "functionalPassed": 2,
+        "trapsAvoided": 0,
+        "tooEasy": false,
+        "tooHard": false
+      },
+      {
+        "task": "R2-T05",
+        "attempts": 3,
+        "functionalPassed": 3,
+        "trapsAvoided": 1,
+        "tooEasy": false,
+        "tooHard": false
+      }
+    ],
+    "k4": [
+      {
+        "pair": "P01",
+        "condition": "T0",
+        "taFunctional": true,
+        "taTrapped": true,
+        "functional": true,
+        "avoided": true,
+        "targetInjected": false,
+        "crossOwner": false,
+        "reuse": []
+      },
+      {
+        "pair": "P01",
+        "condition": "T3",
+        "taFunctional": true,
+        "taTrapped": true,
+        "functional": true,
+        "avoided": true,
+        "targetInjected": true,
+        "cardOwner": "448e342c-9874-4041-ae15-d52433fc2ff5",
+        "crossOwner": false,
+        "reuse": [
+          {
+            "cardId": "bb20014a-2d76-486d-a01a-788972367995",
+            "confirmedAt": 1791313803105,
+            "knowledgeAt": 1791313772495,
+            "firstInjectedByOtherAt": 1791313863151
+          }
+        ]
+      },
+      {
+        "pair": "P03",
+        "condition": "T0",
+        "taFunctional": false,
+        "taTrapped": false,
+        "functional": false,
+        "avoided": false,
+        "targetInjected": false,
+        "crossOwner": true,
+        "reuse": []
+      },
+      {
+        "pair": "P03",
+        "condition": "T3",
+        "taFunctional": false,
+        "taTrapped": false,
+        "functional": false,
+        "avoided": false,
+        "targetInjected": true,
+        "cardOwner": "1eb76209-a57e-43af-b44a-a696633ed7c9",
+        "crossOwner": true,
+        "reuse": [
+          {
+            "cardId": "088a100b-5d99-480d-a02a-930b36a324c0",
+            "confirmedAt": 1791313922079,
+            "knowledgeAt": 1791313906960,
+            "firstInjectedByOtherAt": 1791313982134
+          }
+        ]
+      }
+    ],
+    "k1": {
+      "predicted": 34,
+      "annotated": 52,
+      "truePositives": 17,
+      "anchorTotal": 52,
+      "top1": 0.15384615384615385,
+      "top3": 0.46153846153846156,
+      "online": [
+        {
+          "experiment": "k1-compare",
+          "commit": "5478762d7c858be3be024f88cd55a7c14ef64158",
+          "configHash": "4cb9110a806d66d55d7013552773341aa9b32fe4fa5581e367e1d93099e27446",
+          "manifestHash": "62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454",
+          "provider": "minimax",
+          "model": "MiniMax-M2",
+          "sourceResultsHash": "8fc5282c7eea6beef115eda2b90be42cec0e41f58cb6c8f48ec46490340b38a9",
+          "key": "S01-comparison",
+          "completed": true,
+          "session": "S01",
+          "condition": "recording-comparison",
+          "recordedEqual": true,
+          "scriptTypesEqual": true,
+          "rawScriptTypesEqual": true,
+          "onlineCount": 16,
+          "replayCount": 16,
+          "rawReplayCount": 18,
+          "scriptCount": 16,
+          "rawScriptCount": 18,
+          "sourceRecording": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/k1-online-final/raw/S01-online/recording.json",
+          "artifacts": "raw/S01-comparison"
+        },
+        {
+          "experiment": "k1-compare",
+          "commit": "5478762d7c858be3be024f88cd55a7c14ef64158",
+          "configHash": "4cb9110a806d66d55d7013552773341aa9b32fe4fa5581e367e1d93099e27446",
+          "manifestHash": "62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454",
+          "provider": "minimax",
+          "model": "MiniMax-M2",
+          "sourceResultsHash": "8fc5282c7eea6beef115eda2b90be42cec0e41f58cb6c8f48ec46490340b38a9",
+          "key": "S02-comparison",
+          "completed": true,
+          "session": "S02",
+          "condition": "recording-comparison",
+          "recordedEqual": true,
+          "scriptTypesEqual": true,
+          "rawScriptTypesEqual": true,
+          "onlineCount": 14,
+          "replayCount": 14,
+          "rawReplayCount": 16,
+          "scriptCount": 14,
+          "rawScriptCount": 16,
+          "sourceRecording": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/k1-online-final/raw/S02-online/recording.json",
+          "artifacts": "raw/S02-comparison"
+        }
+      ]
+    },
+    "k5": [
+      {
+        "condition": "R1",
+        "traps": 10,
+        "recall1": 0.2,
+        "recall3": 0.2,
+        "recall5": 0.5,
+        "mrr": 0.330515873015873,
+        "ndcg5": 0.32482059233813276,
+        "falseInjections": 20
+      },
+      {
+        "condition": "R2",
+        "traps": 10,
+        "recall1": 0.2,
+        "recall3": 0.2,
+        "recall5": 0.5,
+        "mrr": 0.32940476190476187,
+        "ndcg5": 0.32482059233813276,
+        "falseInjections": 20
+      },
+      {
+        "condition": "R3",
+        "traps": 10,
+        "recall1": 0.4,
+        "recall3": 0.6,
+        "recall5": 0.9,
+        "mrr": 0.5441666666666667,
+        "ndcg5": 0.6204382172542476,
+        "falseInjections": 20
+      },
+      {
+        "condition": "R2-wrong-file",
+        "traps": 10,
+        "recall1": 0.2,
+        "recall3": 0.2,
+        "recall5": 0.5,
+        "mrr": 0.32940476190476187,
+        "ndcg5": 0.32482059233813276,
+        "falseInjections": 20
+      },
+      {
+        "condition": "R3-wrong-file",
+        "traps": 10,
+        "recall1": 0,
+        "recall3": 0.2,
+        "recall5": 0.6,
+        "mrr": 0.23583333333333334,
+        "ndcg5": 0.27659884841873267,
+        "falseInjections": 20
+      }
+    ],
+    "k7": [
+      {
+        "strategy": "range-only",
+        "locatable": 1200,
+        "survival": 0,
+        "wrongMigration": 1,
+        "review": 0,
+        "deletionReview": 0
+      },
+      {
+        "strategy": "snapshot-only",
+        "locatable": 1200,
+        "survival": 0.4,
+        "wrongMigration": 0,
+        "review": 0.6,
+        "deletionReview": 1
+      },
+      {
+        "strategy": "multi-strategy",
+        "locatable": 1200,
+        "survival": 0.6208333333333333,
+        "wrongMigration": 0.32166666666666666,
+        "review": 0.0575,
+        "deletionReview": 1
+      },
+      {
+        "strategy": "yjs-relative",
+        "locatable": 1200,
+        "survival": 0.7941666666666667,
+        "wrongMigration": 0.20083333333333334,
+        "review": 0.005,
+        "deletionReview": 1
+      },
+      {
+        "strategy": "yjs-multi",
+        "locatable": 1200,
+        "survival": 0.8341666666666666,
+        "wrongMigration": 0.0025,
+        "review": 0.16333333333333333,
+        "deletionReview": 1
+      }
+    ]
+  },
+  "estimates": {
+    "repetitions": 3,
+    "k3": {
+      "combinations": 378,
+      "meanRunSeconds": 39.5031568627451,
+      "sequentialHours": 4.147831470588235,
+      "estimatedCNY": 318.6190394470588
+    },
+    "k4": {
+      "combinations": 144,
+      "agentRunsPerCombination": 3,
+      "delayedMeanSeconds": 125.36325,
+      "sameSessionEstimatedSeconds": 65.36325,
+      "sequentialHours": 3.81453,
+      "estimatedCNY": 175.4750088,
+      "recapEstimatedCNY": 3.313548
+    },
+    "k2": {
+      "episodes": 56,
+      "drafts": 168,
+      "sequentialHours": 0.8589466666666666,
+      "estimatedCNY": 20.9883072
+    },
+    "price": {
+      "provider": "minimax",
+      "model": "MiniMax-M2",
+      "inputPerMillionCNY": 2.1,
+      "outputReasoningPerMillionCNY": 8.4,
+      "cacheReadPerMillionCNY": 0.21,
+      "cacheWritePerMillionCNY": 2.625
+    },
+    "limitations": [
+      "费用使用 AgentRun.usage 的估算，尚未核对供应商账单",
+      "K2 与 K4 的复盘费用按 P01 的真实调用估算",
+      "同会话变体的耗时由延时变体减去固定间隔估算",
+      "并发后的耗时受模型服务限速影响"
+    ]
+  }
+}

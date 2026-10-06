@@ -1,0 +1,13 @@
+task,condition,runs,trapAvoided,jointSuccess,functional
+R1-T01,C3,1,0,0,0
+R1-T01,C5,1,1,1,1
+R1-T01,C7,1,0,0,1
+R1-T02,C3,1,0,0,1
+R1-T02,C5,1,1,1,1
+R1-T02,C7,1,0,0,1
+R2-T01,C3,1,0,0,0
+R2-T01,C5,1,1,1,1
+R2-T01,C7,1,0,0,0
+R2-T02,C3,1,0,0,0
+R2-T02,C5,1,0,0,1
+R2-T02,C7,1,0,0,0

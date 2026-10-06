@@ -1,0 +1,18 @@
+[
+  {
+    "condition_a": "C0",
+    "condition_b": "C2",
+    "tasks": 1,
+    "left_only": 0,
+    "right_only": 0,
+    "mcnemar_p": 1.0,
+    "difference": 0.0,
+    "difference_ci": [
+      0.0,
+      0.0
+    ],
+    "tost_bound": 0.05,
+    "tost_p": null,
+    "tost_reason": "样本数量或差值方差不足"
+  }
+]

@@ -1,0 +1,106 @@
+{
+  "summary": [
+    {
+      "condition": "T0",
+      "metric": "recurrence",
+      "mean": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T0",
+      "metric": "jointSuccess",
+      "mean": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T0",
+      "metric": "functional",
+      "mean": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T3",
+      "metric": "recurrence",
+      "mean": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T3",
+      "metric": "jointSuccess",
+      "mean": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T3",
+      "metric": "functional",
+      "mean": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "tasks": 1
+    }
+  ],
+  "comparisons": [
+    {
+      "metric": "trapAvoided",
+      "condition_a": "T0",
+      "condition_b": "T3",
+      "tasks": 1,
+      "left_only": 0,
+      "right_only": 0,
+      "mcnemar_p": 1.0,
+      "difference": 0.0,
+      "difference_ci": [
+        0.0,
+        0.0
+      ],
+      "tost_bound": 0.05,
+      "tost_p": null,
+      "tost_reason": "样本数量或差值方差不足",
+      "holm_p": 1.0
+    },
+    {
+      "metric": "jointSuccess",
+      "condition_a": "T0",
+      "condition_b": "T3",
+      "tasks": 1,
+      "left_only": 0,
+      "right_only": 0,
+      "mcnemar_p": 1.0,
+      "difference": 0.0,
+      "difference_ci": [
+        0.0,
+        0.0
+      ],
+      "tost_bound": 0.05,
+      "tost_p": null,
+      "tost_reason": "样本数量或差值方差不足",
+      "holm_p": 1.0
+    }
+  ],
+  "mixed_logistic": {
+    "available": false,
+    "reason": "至少需要两个条件以及同时存在成功和失败"
+  }
+}

@@ -1,0 +1,5 @@
+key,pair,condition,taActuallyTrapped
+P01-T0-delayed-1,P01,T0,True
+P01-T3-delayed-1,P01,T3,True
+P03-T0-delayed-1,P03,T0,False
+P03-T3-delayed-1,P03,T3,False
