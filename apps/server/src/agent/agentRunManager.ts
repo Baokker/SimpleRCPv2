@@ -31,6 +31,7 @@ import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
 import { normalizeHandle, validateHandle } from "./teamAgentSupport.js";
 import { OpenCodeEmptyResponseError } from "./openCodeRuntime.js";
+import { normalizePermissionPaths } from "./permissionPaths.js";
 
 interface AgentRunManagerOptions {
   members: MemberStore;
@@ -350,6 +351,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } else {
         await getSessionStore(projectId).update(run.sessionId!, { lastRunId: run.id });
       }
+      const activeRuntimeSessionId: string = runtimeSessionId;
 
       appendActivity(projectId, {
         type: "agent_task_started",
@@ -389,6 +391,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
       const permissionTasks = new Set<Promise<void>>();
       const handledPermissionIds = new Set<string>();
+      const toolInputs = new Map<string, unknown>();
       const permissionBatches = new Map<string, { active: number; deferredRejects: Array<{ requestId: string; message: string }>; flushing: boolean }>();
       let guardRejected = false;
       const batchFor = (sessionId: string) => {
@@ -426,10 +429,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       async function handlePermissionEvent(event: { type: string; data: Record<string, unknown> }) {
         const properties = event.data;
         const data = properties;
-        const requestId = typeof data.id === "string" ? data.id : typeof data.requestID === "string" ? data.requestID : undefined;
-        if (!requestId || handledPermissionIds.has(requestId)) return;
+        const requestIdValue = typeof data.id === "string" ? data.id : typeof data.requestID === "string" ? data.requestID : undefined;
+        if (typeof requestIdValue !== "string") return;
+        const requestId = requestIdValue;
+        if (handledPermissionIds.has(requestId)) return;
         handledPermissionIds.add(requestId);
-        const permissionBatch = batchFor(runtimeSessionId);
+        const permissionBatch = batchFor(activeRuntimeSessionId);
         permissionBatch.active += 1;
         const permission = typeof data.permission === "string" ? data.permission : typeof data.action === "string" ? data.action : "";
         const rawPatterns = Array.isArray(data.patterns) ? data.patterns : data.resources;
@@ -445,8 +450,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           return typeof movePath === "string" ? [movePath] : [];
         });
         const editPath = typeof metadata.filepath === "string" ? [metadata.filepath] : [];
-        const allPaths = [...patterns, ...movePaths, ...editPath];
-        const supported = ["bash", "edit", "read", "webfetch", "websearch"].includes(permission);
+        const tool = data.tool && typeof data.tool === "object" ? data.tool as Record<string, unknown> : {};
+        const callId = typeof tool.callID === "string" ? tool.callID : undefined;
+        const toolInput = callId ? toolInputs.get(callId) : undefined;
+        const readPermission = ["read", "grep", "glob", "list"].includes(permission);
+        const allPaths = readPermission
+          ? normalizePermissionPaths([...patterns, ...movePaths, ...editPath], toolInput, projectRuntime.project.workspacePath)
+          : [...patterns, ...movePaths, ...editPath];
+        const supported = ["bash", "edit", "read", "grep", "glob", "list", "webfetch", "websearch"].includes(permission);
         const commandValue = metadata.command ?? metadata.description ?? patterns[0];
         const request = {
           projectId,
@@ -455,9 +466,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           agentRunId: run.id,
           sessionScope: currentSession.scope ?? "personal",
           agentHandle: currentSession.handle,
-          kind: permission === "edit" ? "edit" as const : permission === "read" ? "read" as const : permission === "webfetch" || permission === "websearch" ? "fetch" as const : "command" as const,
+          kind: permission === "edit" ? "edit" as const : readPermission ? "read" as const : permission === "webfetch" || permission === "websearch" ? "fetch" as const : "command" as const,
           command: permission === "bash" ? String(commandValue ?? "") : undefined,
-          paths: permission === "edit" || permission === "read" ? allPaths : undefined,
+          paths: permission === "edit" || readPermission ? allPaths : undefined,
           url: permission === "webfetch" || permission === "websearch" ? String(metadata.url ?? patterns[0] ?? "") : undefined,
           cwd: projectRuntime.project.workspacePath,
           unknownTool: !supported
@@ -484,7 +495,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           permissionBatch.deferredRejects.push({ requestId, message: "Permission handling failed" });
         } finally {
           permissionBatch.active -= 1;
-          await flushRejectedPermissions(runtimeSessionId, permissionBatch);
+          await flushRejectedPermissions(activeRuntimeSessionId, permissionBatch);
         }
       }
 
@@ -494,6 +505,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: runtimeSessionId
         },
         (event) => {
+          const part = event.data.part;
+          if (part && typeof part === "object") {
+            const record = part as Record<string, unknown>;
+            const callId = typeof record.callID === "string" ? record.callID : undefined;
+            const state = record.state && typeof record.state === "object" ? record.state as Record<string, unknown> : undefined;
+            if (callId && state?.input && typeof state.input === "object") toolInputs.set(callId, state.input);
+          }
           void appendTrace(projectId, runId, {
             type: `opencode.${event.type}`,
             data: event.data
