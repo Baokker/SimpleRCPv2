@@ -6,6 +6,7 @@ import { openAs } from "./helpers";
 test("project home displays and saves the OpenCode settings", async ({ page }) => {
   const settingsResponse = await page.request.get("/api/agent/settings");
   const settings = await settingsResponse.json() as {
+    provider: "deepseek" | "minimax";
     model: string;
     apiKeyConfigured: boolean;
   };
@@ -14,7 +15,7 @@ test("project home displays and saves the OpenCode settings", async ({ page }) =
   await page.getByTestId("agent-settings-open").click();
   const dialog = page.getByTestId("agent-settings-dialog");
   await expect(dialog).toContainText("OpenCode Ready", { timeout: 20_000 });
-  await expect(dialog).toContainText("DeepSeek");
+  await expect(dialog).toContainText(settings.provider === "minimax" ? "MiniMax" : "DeepSeek");
   await expect(dialog).toContainText(
     settings.apiKeyConfigured ? "Configured" : "Missing"
   );
@@ -26,7 +27,7 @@ test("project home displays and saves the OpenCode settings", async ({ page }) =
 
   const savedResponse = await page.request.get("/api/agent/settings");
   await expect(savedResponse.json()).resolves.toMatchObject({
-    provider: "deepseek",
+    provider: settings.provider,
     model: settings.model,
     enabled: true,
     apiKeyConfigured: settings.apiKeyConfigured

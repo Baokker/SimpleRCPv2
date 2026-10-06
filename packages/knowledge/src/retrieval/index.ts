@@ -12,7 +12,7 @@ export interface KnowledgeIndexEntry { cardId: string; type: KnowledgeCardType; 
 export interface KnowledgeIndex { schemaVersion: 3; workspaceRoot: string; workspaceHash: string; embeddingModel: string; updatedAt: number; entries: KnowledgeIndexEntry[]; embeddingFallbackReason?: string; }
 export interface EnsureKnowledgeIndexOptions { workspaceRoot?: string; workspaceId?: string; cards?: unknown[]; cardsDirectory?: string; embeddings?: EmbeddingsConfig; indexDir: string; forceRebuild?: boolean; now?: () => number; strictEmbedding?: boolean; }
 export interface KnowledgeSearchFilters { types?: KnowledgeCardType[]; statuses?: KnowledgeCardStatus[]; }
-export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; viewerMemberId?: string; lexicalScoring?: 'legacy' | 'exact-boost'; }
+export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; activeFiles?: string[]; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; viewerMemberId?: string; lexicalScoring?: 'legacy' | 'exact-boost'; }
 export interface KnowledgeSearchResult { cardId: string; score: number; mode: KnowledgeSearchMode; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; excerpt: string; fallbackReason?: string; }
 
 const DEFAULT_EMBEDDINGS_MODEL = 'text-embedding-v4';
@@ -86,7 +86,7 @@ export async function searchKnowledgeCards(options: SearchKnowledgeCardsOptions)
     if (!query) return [];
     const index = await ensureKnowledgeIndex(options);
     const entries = applyFilters(index.entries, options.filters);
-    const activeFiles = normalizeActiveFileCandidates(options.activeFile);
+    const activeFiles = [...new Set([options.activeFile, ...(options.activeFiles ?? [])].flatMap(normalizeActiveFileCandidates))];
     const queryText = buildQueryText(query, String(options.selectionText ?? '').trim(), activeFiles[0]);
     const topK = clampInt(options.topK ?? 5, 1, 25);
     let fallbackReason = options.embeddings?.client ? index.embeddingFallbackReason : undefined;

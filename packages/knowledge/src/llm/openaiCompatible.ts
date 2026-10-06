@@ -1,6 +1,6 @@
 import type { LlmClient, LlmUsage } from './client.js';
 
-export interface OpenAICompatibleOptions { baseUrl: string; apiKey?: string; model: string; embeddingModel?: string; timeoutMs?: number; fetch?: typeof fetch; }
+export interface OpenAICompatibleOptions { baseUrl: string; apiKey?: string; model: string; provider?: "minimax" | "deepseek"; embeddingModel?: string; timeoutMs?: number; fetch?: typeof fetch; }
 
 export function createOpenAICompatibleClient(options: OpenAICompatibleOptions): LlmClient {
     const baseUrl = options.baseUrl.replace(/\/+$/, '');
@@ -10,6 +10,7 @@ export function createOpenAICompatibleClient(options: OpenAICompatibleOptions): 
             const payload = {
                 model: request.model || options.model,
                 messages: request.messages,
+                ...(options.provider === 'minimax' ? { reasoning_split: true } : {}),
                 ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
                 ...(request.responseFormat ? { response_format: request.responseFormat } : {})
             };

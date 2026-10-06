@@ -69,6 +69,16 @@ export function toLlmUsage(value: AgentRunUsage | undefined): LlmUsage | undefin
   };
 }
 
+export function estimateAgentUsageCost(usage: AgentRunUsage | undefined, provider: string, model: string): AgentRunUsage | undefined {
+  if (!usage || provider !== "minimax" || model !== "MiniMax-M2") return usage;
+  return {
+    ...usage,
+    estimatedCost: ((usage.inputTokens ?? 0) * 2.1 + ((usage.outputTokens ?? 0) + (usage.reasoningTokens ?? 0)) * 8.4 + (usage.cacheReadTokens ?? 0) * 0.21 + (usage.cacheWriteTokens ?? 0) * 2.625) / 1_000_000,
+    estimatedCostCurrency: "CNY",
+    estimatedCostSource: "MiniMax-M2 official token prices (2026-10-06)"
+  };
+}
+
 function numberOrUndefined(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
 }

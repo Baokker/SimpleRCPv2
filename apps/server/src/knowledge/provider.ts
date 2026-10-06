@@ -37,6 +37,9 @@ export interface KnowledgeInjectionRecord {
 
 export interface KnowledgeProviderConfig {
   injectEnabled: boolean;
+  toolEnabled: boolean;
+  proposeEnabled: boolean;
+  recapLanguage: "zh" | "en";
   topK: number;
   maxCharsPerCard: number;
   maxTotalChars: number;
@@ -63,6 +66,9 @@ export interface KnowledgeRiskWarningConfig {
 
 export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   injectEnabled: true,
+  toolEnabled: true,
+  proposeEnabled: false,
+  recapLanguage: "zh",
   topK: 5,
   maxCharsPerCard: 800,
   maxTotalChars: 4000,
@@ -114,6 +120,7 @@ interface ReuseMetric {
   confirmedAt?: number;
   firstViewedByOtherAt?: number;
   firstInjectedByOtherAt?: number;
+  firstToolHitByOtherAt?: number;
 }
 
 interface ProviderHooks {
@@ -202,8 +209,10 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const query = [input.run.prompt, input.run.extraPrompt].filter(Boolean).join("\n\n").trim();
     const excludedByUser = input.run.knowledge?.excludeCardIds ?? [];
     const activeFiles = await collectActiveFiles(input.run, input.initiator);
+    const toolHint = options.mode === "full" && config.toolEnabled
+      ? `Project knowledge_search and knowledge_get tools are available. When a project convention is uncertain, query knowledge_search. Pass workspace=${JSON.stringify(options.workspaceRoot)} when calling knowledge tools.` : undefined;
     if (!isInjectionMode(options.mode) || !config.injectEnabled || input.run.knowledge?.disabled) {
-      return { records: [], activeFiles, excludedByUser, query, totalChars: 0, estimatedInjectionTokens: 0, config: await getConfig(), mode: options.mode };
+      return { section: toolHint, records: [], activeFiles, excludedByUser, query, totalChars: toolHint?.length ?? 0, estimatedInjectionTokens: Math.ceil((toolHint?.length ?? 0) / 4), config: await getConfig(), mode: options.mode };
     }
 
     const visibleCards = await options.knowledge.list(
@@ -224,7 +233,8 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
           indexDir: path.join(root, "index"),
           query,
           topK: Math.max(config.topK, 25),
-          lexicalScoring: config.lexicalScoring
+          lexicalScoring: config.lexicalScoring,
+          ...(config.ranking === "legacy" && config.useActiveFiles ? { activeFiles } : {})
         });
     const cardById = new Map(reusable.map((card) => [card.id, card]));
     const ranked = rankResults(selected, activeFiles, config);
@@ -285,7 +295,9 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       totalChars += block.length;
       if (records.length >= config.topK) break;
     }
-    const section = records.length ? blocks.join("\n\n") : undefined;
+    if (toolHint) blocks.push(toolHint);
+    const section = records.length ? blocks.join("\n\n") : toolHint;
+    totalChars = section?.length ?? 0;
     if (recordUsage) {
       for (const record of records) {
         const injectedAt = Date.now();
@@ -400,7 +412,69 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     return card.createdAt;
   }
 
-  return { mode: options.mode, initialize, awaitIdle: awaitReady, bind, getConfig, updateConfig, buildContext, postRunCheck, onCardConfirmed, markViewed, reuseMetrics };
+  async function toolSearch(query: string, activeFiles: string[], limit = 5, types?: string[]) {
+    await awaitReady();
+    const member = options.room.members[0] ?? { id: "mcp", displayName: "MCP" };
+    const cards = (await options.knowledge.list({ memberId: member.id, displayName: member.displayName }, { scope: "team", status: "reviewed" }))
+      .filter((card) => !types?.length || types.includes(card.type));
+    const results = rankResults(await searchKnowledgeCards({ cards, workspaceId: options.project.id, indexDir: path.join(root, "index"), query, topK: Math.max(cards.length, 1), lexicalScoring: config.lexicalScoring, ...(config.ranking === "legacy" && config.useActiveFiles ? { activeFiles } : {}), filters: { statuses: ["reviewed"] } }), activeFiles, config).slice(0, Math.min(10, Math.max(1, limit)));
+    const cardById = new Map(cards.map((card) => [card.id, card]));
+    return Promise.all(results.map(async (result) => {
+      const card = cardById.get(result.cardId)!;
+      const item = { id: card.id, type: card.type, title: card.title, summary: card.summary, anchors: await toolAnchors(card), score: result.score };
+      return redactSensitive(item, options.sensitiveValues) as typeof item;
+    }));
+  }
+
+  async function toolAnchors(card: KnowledgeCard) {
+    const viewer = { memberId: "mcp", displayName: "MCP" };
+    return Promise.all(card.anchors.map(async (anchor, index) => {
+      const resolved = (await options.knowledge.resolveAnchors(viewer, anchor.file.workspaceRelativePath)).find((item) => item.cardId === card.id && item.anchorIndex === index);
+      return { file: anchor.file.workspaceRelativePath, startLine: resolved?.range?.startLine, endLine: resolved?.range?.endLine, status: resolved?.status };
+    }));
+  }
+
+  async function toolGet(id: string) {
+    await awaitReady();
+    const member = options.room.members[0] ?? { id: "mcp", displayName: "MCP" };
+    const card = await options.knowledge.get({ memberId: member.id, displayName: member.displayName }, id);
+    if (!card || card.scope !== "team" || card.status !== "reviewed") return undefined;
+    const team = await options.knowledge.list({ memberId: member.id, displayName: member.displayName }, { scope: "team", status: "reviewed" });
+    const relations = (card.relations ?? []).filter((relation) => team.some((other) => other.id === relation.cardId));
+    const result = { ...card, anchors: await toolAnchors(card), relations, contradiction: relations.some((relation) => relation.kind === "contradicts") ? "这些知识互相矛盾，尚未裁决" : undefined };
+    return redactSensitive(result, options.sensitiveValues) as typeof result;
+  }
+
+  async function recordToolCall(input: { tool: string; query?: string; files?: string[]; resultIds?: string[]; latencyMs: number; workspace: string; error?: string; startedAt?: number }) {
+    await awaitReady();
+    const activeRuns = hooks ? await hooks.listRuns(options.project.id) : [];
+    const at = input.startedAt ?? Date.now();
+    const running = knowledgeRunsAt(activeRuns, at);
+    const association = running.length === 1 ? running[0]!.id : running.length > 1 ? "ambiguous" : undefined;
+    const call = redactSensitive({ at: input.startedAt ?? Date.now(), ...input, runId: association, ...(association === "ambiguous" ? { candidates: running.map((run) => run.id) } : {}) }, options.sensitiveValues) as Record<string, unknown>;
+    await fs.appendFile(path.join(root, "tool-calls.jsonl"), `${JSON.stringify(call)}\n`, { encoding: "utf8", mode: 0o600 });
+    if (input.tool !== "knowledge_propose") for (const id of input.resultIds ?? []) {
+      const at = Number(call.at);
+      const card = await options.knowledge.recordToolHit(id, at);
+      if (card && running.length === 1 && card.ownerMemberId !== (running[0]!.initiatorMemberId ?? running[0]!.memberId)) {
+        const metric = metrics.get(id) ?? { cardId: id };
+        if (metric.firstToolHitByOtherAt === undefined) {
+          metric.firstToolHitByOtherAt = at;
+          options.events.append({ type: "knowledge_reuse_tool_hit", roomId: options.roomId, memberId: running[0]!.initiatorMemberId ?? running[0]!.memberId, payload: { cardId: id, runId: association, firstToolHitByOtherAt: at } });
+          metrics.set(id, metric);
+          await saveMetrics();
+        }
+      }
+    }
+    if (association && association !== "ambiguous") {
+      await hooks?.appendTrace(options.project.id, association, { type: "knowledge_tool_call", data: { ...call, runId: association } });
+    } else if (association === "ambiguous") {
+      await Promise.all(running.map((run) => hooks?.appendTrace(options.project.id, run.id, { type: "knowledge_tool_call", data: { ...call, runId: "ambiguous", candidates: running.map((candidate) => candidate.id) } })));
+    }
+    return association;
+  }
+
+  return { mode: options.mode, initialize, awaitIdle: awaitReady, bind, getConfig, updateConfig, buildContext, postRunCheck, onCardConfirmed, markViewed, reuseMetrics, toolSearch, toolGet, recordToolCall };
 
   async function collectActiveFiles(run: AgentRun, initiator: RoomMember) {
     const files = new Set<string>();
@@ -419,17 +493,25 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
   }
 }
 
+export function knowledgeRunsAt(runs: AgentRun[], at: number) {
+  return runs.filter(run => run.startedAt && Date.parse(run.startedAt) <= at && (!run.finishedAt || Date.parse(run.finishedAt) >= at));
+}
+
 function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProviderConfig {
   const numberValue = (input: unknown, fallback: number, min: number, max: number) => typeof input === "number" && Number.isFinite(input) ? Math.max(min, Math.min(max, Math.floor(input))) : fallback;
   const allowedStatuses = new Set<KnowledgeCardStatus>(["draft", "reviewed", "needsReview", "archived", "orphaned", "superseded"]);
   if (value.statuses !== undefined && (!Array.isArray(value.statuses) || value.statuses.some((status) => !allowedStatuses.has(status as KnowledgeCardStatus)))) throw new Error("Knowledge statuses are invalid");
   const statuses = value.statuses as KnowledgeCardStatus[] | undefined ?? defaultKnowledgeProviderConfig.statuses;
-  for (const key of ["injectEnabled", "useActiveFiles", "postRunCheck", "inflightNotify", "requireSecondConfirmForTeam"] as const) if (value[key] !== undefined && typeof value[key] !== "boolean") throw new Error(`Knowledge ${key} must be boolean`);
+  for (const key of ["injectEnabled", "toolEnabled", "proposeEnabled", "useActiveFiles", "postRunCheck", "inflightNotify", "requireSecondConfirmForTeam"] as const) if (value[key] !== undefined && typeof value[key] !== "boolean") throw new Error(`Knowledge ${key} must be boolean`);
+  if (value.recapLanguage !== undefined && value.recapLanguage !== "zh" && value.recapLanguage !== "en") throw new Error("Knowledge recapLanguage is invalid");
   if (value.recapMode !== undefined && value.recapMode !== "server" && value.recapMode !== "agent-self") throw new Error("Knowledge recapMode is invalid");
   if (value.lexicalScoring !== undefined && value.lexicalScoring !== "legacy" && value.lexicalScoring !== "exact-boost") throw new Error("Knowledge lexical scoring is invalid");
   if (value.ranking !== undefined && value.ranking !== "legacy" && value.ranking !== "bounded") throw new Error("Knowledge ranking is invalid");
   return {
     injectEnabled: value.injectEnabled ?? defaultKnowledgeProviderConfig.injectEnabled,
+    toolEnabled: value.toolEnabled ?? defaultKnowledgeProviderConfig.toolEnabled,
+    proposeEnabled: value.proposeEnabled ?? defaultKnowledgeProviderConfig.proposeEnabled,
+    recapLanguage: value.recapLanguage ?? defaultKnowledgeProviderConfig.recapLanguage,
     topK: numberValue(value.topK, defaultKnowledgeProviderConfig.topK, 1, 25),
     maxCharsPerCard: numberValue(value.maxCharsPerCard, defaultKnowledgeProviderConfig.maxCharsPerCard, 1, 20_000),
     maxTotalChars: numberValue(value.maxTotalChars, defaultKnowledgeProviderConfig.maxTotalChars, 1, 100_000),

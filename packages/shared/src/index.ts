@@ -93,7 +93,7 @@ export interface ChatMessage {
 }
 
 export interface AgentSettings {
-  provider: "deepseek";
+  provider: "deepseek" | "minimax";
   model: string;
   enabled: boolean;
 }
@@ -107,6 +107,7 @@ export interface AgentRuntimeStatus {
   state: "ready" | "disabled" | "unavailable";
   version?: string;
   model: string;
+  provider?: "deepseek" | "minimax";
   apiKeyConfigured: boolean;
 }
 
@@ -135,6 +136,9 @@ export interface AgentRunUsage {
   cacheWriteTokens?: number;
   totalTokens?: number;
   cost?: number;
+  estimatedCost?: number;
+  estimatedCostCurrency?: "CNY";
+  estimatedCostSource?: string;
 }
 
 export interface AgentPromptContext {
@@ -154,7 +158,7 @@ export interface AgentRun {
   contexts?: AgentPromptContext[];
   status: AgentRunStatus;
   runtime: "opencode";
-  provider: "deepseek";
+  provider: "deepseek" | "minimax";
   model: string;
   source?: "agent-panel" | "chat";
   chatMessageId?: string;

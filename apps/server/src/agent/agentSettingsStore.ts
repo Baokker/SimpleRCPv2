@@ -12,13 +12,14 @@ interface AgentSettingsFile {
 interface AgentSettingsStoreOptions {
   storagePath: string;
   defaultModel: string;
+  defaultProvider?: "deepseek" | "minimax";
   apiKeyConfigured: boolean;
 }
 
 export async function createAgentSettingsStore(
   options: AgentSettingsStoreOptions
 ) {
-  let settings = await loadSettings(options.storagePath, options.defaultModel);
+  let settings = await loadSettings(options.storagePath, options.defaultModel, options.defaultProvider);
   let operations = Promise.resolve();
 
   function get(): AgentSettingsResponse {
@@ -29,6 +30,7 @@ export async function createAgentSettingsStore(
     get,
     async update(input: unknown): Promise<AgentSettingsResponse> {
       const nextSettings = validateSettings(input);
+      if (options.defaultProvider && nextSettings.provider !== options.defaultProvider) throw new Error("Agent provider must match AGENT_LLM_PROVIDER; restart the server to change it");
       operations = operations.then(async () => {
         await saveSettings(options.storagePath, nextSettings);
         settings = nextSettings;
@@ -41,13 +43,15 @@ export async function createAgentSettingsStore(
 
 async function loadSettings(
   storagePath: string,
-  defaultModel: string
+  defaultModel: string,
+  defaultProvider: "deepseek" | "minimax" = "deepseek"
 ): Promise<AgentSettings> {
   const parsed = await readJsonFile<AgentSettingsFile>(storagePath);
   if (parsed === undefined) {
-    return { provider: "deepseek", model: defaultModel, enabled: true };
+    return { provider: defaultProvider, model: defaultModel, enabled: true };
   }
   validateSettingsFile(parsed);
+  if (parsed.settings.provider !== defaultProvider) return { provider: defaultProvider, model: defaultModel, enabled: parsed.settings.enabled };
   return parsed.settings;
 }
 
@@ -55,7 +59,7 @@ function validateSettingsFile(value: AgentSettingsFile) {
   if (
     !value ||
     value.version !== 1 ||
-    value.settings?.provider !== "deepseek" ||
+    (value.settings?.provider !== "deepseek" && value.settings?.provider !== "minimax") ||
     typeof value.settings.model !== "string" ||
     !value.settings.model.trim() ||
     typeof value.settings.enabled !== "boolean"
@@ -72,8 +76,8 @@ function validateSettings(value: unknown): AgentSettings {
   if ("apiKey" in input) {
     throw new Error("API Key must be configured through the server environment");
   }
-  if (input.provider !== "deepseek") {
-    throw new Error("provider must be deepseek");
+  if (input.provider !== "deepseek" && input.provider !== "minimax") {
+    throw new Error("provider must be deepseek or minimax");
   }
   if (typeof input.model !== "string" || !input.model.trim()) {
     throw new Error("model is required");
@@ -82,7 +86,7 @@ function validateSettings(value: unknown): AgentSettings {
     throw new Error("enabled must be a boolean");
   }
   return {
-    provider: "deepseek",
+    provider: input.provider,
     model: input.model.trim(),
     enabled: input.enabled
   };

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createAgentUsageCollector, normalizeAgentUsage } from "../agent/agentUsage.js";
+import { createAgentUsageCollector, normalizeAgentUsage, estimateAgentUsageCost } from "../agent/agentUsage.js";
 
 describe("Agent usage collection", () => {
+  it("prices uncached, cached and reasoning tokens separately for MiniMax-M2", () => {
+    const usage = { inputTokens: 1_000_000, outputTokens: 500_000, reasoningTokens: 500_000, cacheReadTokens: 1_000_000, cacheWriteTokens: 1_000_000, cost: 0 };
+    expect(estimateAgentUsageCost(usage, "minimax", "MiniMax-M2")).toMatchObject({ estimatedCost: 13.335, estimatedCostCurrency: "CNY", cost: 0 });
+    expect(estimateAgentUsageCost(usage, "deepseek", "deepseek-chat")).toBe(usage);
+  });
   it("uses the runtime total and replaces repeated message updates", () => {
     expect(normalizeAgentUsage({ role: "assistant", tokens: { total: 42, input: 10, output: 15, reasoning: 5, cache: { read: 2, write: 1 } }, cost: 0.2 })).toEqual({ inputTokens: 10, outputTokens: 15, reasoningTokens: 5, cacheReadTokens: 2, cacheWriteTokens: 1, totalTokens: 42, cost: 0.2 });
     const collector = createAgentUsageCollector();

@@ -105,6 +105,7 @@ export interface KnowledgeTimelineItem {
 export interface SuggestedKnowledgeAnchor { file: string; startLine: number; endLine: number; score: number; reasons: string[]; }
 export interface KnowledgeRiskWarning { id: string; cardId: string; file: string; createdAt: number; seen: boolean; }
 export interface KnowledgeSuggestion {
+  origin?: string; suggestedTitle?: string;
   id: string; triggerType: string; createdAt: number; state?: string;
   actors: { memberIds: string[]; runIds: string[] }; evidence: Record<string, unknown>;
   suggestedSummary?: string; suggestedAnchors?: SuggestedKnowledgeAnchor[];

@@ -82,7 +82,7 @@ export function createProjectRuntime(
       metadataRoot: projectRoot,
       workspaceRoot: project.workspacePath,
       sensitiveValues: [options.llm?.apiKey].filter((value): value is string => Boolean(value)),
-      onConfigUpdated(nextConfig) { capture?.setRiskWarningConfig(nextConfig.riskWarning); }
+      onConfigUpdated(nextConfig) { capture?.setRiskWarningConfig(nextConfig.riskWarning); capture?.setRecapLanguage(nextConfig.recapLanguage); }
     });
   }
   capture = knowledge ? createCaptureService({
@@ -91,7 +91,7 @@ export function createProjectRuntime(
       memberName(memberId) { return rooms.getMember(room.id, memberId)?.displayName ?? memberId; },
       onNotify(memberId, message) { for (const listener of knowledgeNotificationListeners) listener(memberId, message); }
     }) : undefined;
-  if (provider && capture) void provider.getConfig().then((nextConfig) => capture?.setRiskWarningConfig(nextConfig.riskWarning));
+  if (provider && capture) void provider.getConfig().then((nextConfig) => { capture?.setRiskWarningConfig(nextConfig.riskWarning); capture?.setRecapLanguage(nextConfig.recapLanguage); });
   const terminalListeners = new Set<(data: string) => void>();
   const inputWindows = new Map<string, { count: number; timer: ReturnType<typeof setTimeout> }>();
   function flushInput(memberId: string) {
@@ -185,6 +185,7 @@ export function createProjectRuntime(
     terminal,
     knowledge,
     knowledgeProvider: provider,
+    llm: options.llm,
     capture,
     room,
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
@@ -229,13 +230,13 @@ export function createProjectRuntime(
       removeTerminalListener();
       removeTerminalInputListener();
       for (const memberId of inputWindows.keys()) flushInput(memberId);
+      terminal.dispose();
+      await watcher.close();
       await documents.awaitIdle();
       await capture?.dispose();
       await knowledge?.awaitIdle();
       await chat.awaitIdle();
       await events.awaitIdle();
-      terminal.dispose();
-      await watcher.close();
     }
   };
 }

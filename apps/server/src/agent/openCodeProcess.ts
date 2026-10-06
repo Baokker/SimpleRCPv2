@@ -4,14 +4,16 @@ import path from "node:path";
 import { createOpencodeClient, type Config } from "@opencode-ai/sdk/v2";
 import { agentEnv } from "../processEnv.js";
 
-export const OPEN_CODE_PROVIDER_ID = "simplercp-deepseek";
+export function openCodeProviderId(provider: "deepseek" | "minimax") { return `simplercp-${provider}`; }
 const OPEN_CODE_VERSION = "1.18.31";
 
 interface OpenCodeProcessOptions {
+  provider?: "deepseek" | "minimax";
   port: number;
   apiKey?: string;
   baseUrl: string;
   model: string;
+  mcp?: { url: string | (() => string); token: string };
 }
 
 interface RunningOpenCodeProcess {
@@ -37,8 +39,8 @@ export function createOpenCodeProcess(options: OpenCodeProcessOptions) {
       ["serve", "--hostname=127.0.0.1", `--port=${options.port}`],
       {
         env: {
-          ...agentEnv(),
-          DEEPSEEK_API_KEY: options.apiKey ?? "",
+          ...agentEnv(process.env, options.provider ?? "deepseek"),
+          ...(options.provider === "minimax" ? { MINIMAX_API_KEY: options.apiKey ?? "" } : { DEEPSEEK_API_KEY: options.apiKey ?? "" }),
           OPENCODE_CONFIG_CONTENT: JSON.stringify(openCodeConfig(options))
         },
         stdio: ["ignore", "pipe", "pipe"]
@@ -94,25 +96,32 @@ function resolveOpenCodeExecutable() {
   return path.join(path.dirname(packagePath), "bin", "opencode.exe");
 }
 
-function openCodeConfig(options: OpenCodeProcessOptions): Config {
+export function openCodeConfig(options: OpenCodeProcessOptions): Config {
+  const providerId = openCodeProviderId(options.provider ?? "deepseek");
   return {
     autoupdate: false,
     share: "disabled",
-    enabled_providers: [OPEN_CODE_PROVIDER_ID],
-    model: `${OPEN_CODE_PROVIDER_ID}/${options.model}`,
-    small_model: `${OPEN_CODE_PROVIDER_ID}/${options.model}`,
+    enabled_providers: [providerId],
+    model: `${providerId}/${options.model}`,
+    small_model: `${providerId}/${options.model}`,
+    ...(options.mcp ? { mcp: { knowledge: { type: "remote", url: typeof options.mcp.url === "function" ? options.mcp.url() : options.mcp.url, headers: { Authorization: `Bearer ${options.mcp.token}` }, oauth: false, enabled: true } } } : {}),
     provider: {
-      [OPEN_CODE_PROVIDER_ID]: {
+      [providerId]: {
         npm: "@ai-sdk/openai-compatible",
-        name: "DeepSeek",
+        name: options.provider === "minimax" ? "MiniMax" : "DeepSeek",
         options: {
-          apiKey: "{env:DEEPSEEK_API_KEY}",
+          apiKey: options.provider === "minimax" ? "{env:MINIMAX_API_KEY}" : "{env:DEEPSEEK_API_KEY}",
           baseURL: options.baseUrl
         },
         models: {
           [options.model]: {
             name: options.model,
-            tool_call: true
+            tool_call: true,
+            ...(options.provider === "minimax" ? {
+              reasoning: true,
+              interleaved: { field: "reasoning_content" },
+              options: { reasoning_split: true }
+            } : {})
           }
         }
       }
@@ -122,7 +131,8 @@ function openCodeConfig(options: OpenCodeProcessOptions): Config {
       bash: "allow",
       webfetch: "allow",
       doom_loop: "allow",
-      external_directory: "deny"
+      external_directory: "deny",
+      ...(options.mcp ? { knowledge_knowledge_search: "allow", knowledge_knowledge_get: "allow", knowledge_knowledge_propose: "allow" } : {})
     }
   };
 }

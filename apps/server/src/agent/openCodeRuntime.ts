@@ -8,16 +8,18 @@ import type { AgentRuntime } from "./agentRuntime.js";
 import { normalizeAgentUsage } from "./agentUsage.js";
 import {
   createOpenCodeProcess,
-  OPEN_CODE_PROVIDER_ID
+  openCodeProviderId
 } from "./openCodeProcess.js";
 
 const execFileAsync = promisify(execFile);
 
 interface OpenCodeRuntimeOptions {
   port: number;
+  provider?: "deepseek" | "minimax";
   apiKey?: string;
   baseUrl: string;
   getSettings(): AgentSettingsResponse;
+  mcp?: { url: string | (() => string); token: string };
 }
 
 export function createOpenCodeRuntime(
@@ -30,21 +32,26 @@ export function createOpenCodeRuntime(
     const settings = options.getSettings();
     return createOpenCodeProcess({
       port: options.port,
+      provider: settings.provider,
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
-      model: settings.model
+      model: settings.model,
+      mcp: options.mcp
     });
   }
 
   async function ensureCurrentProcess() {
     const model = options.getSettings().model;
-    if (model !== processModel) {
+    const provider = options.getSettings().provider;
+    if (model !== processModel || provider !== (processProvider ?? provider)) {
       await process.dispose();
       process = createProcess();
       processModel = model;
+      processProvider = provider;
     }
     return process;
   }
+  let processProvider = options.getSettings().provider;
 
   async function getClient(workspacePath: string) {
     const current = await ensureCurrentProcess();
@@ -58,7 +65,7 @@ export function createOpenCodeRuntime(
   function requireAvailableSettings() {
     const settings = options.getSettings();
     if (!settings.enabled) throw new Error("Agent is disabled");
-    if (!options.apiKey) throw new Error("DEEPSEEK_API_KEY is required");
+    if (!options.apiKey) throw new Error(`${settings.provider === "minimax" ? "MINIMAX_API_KEY" : "DEEPSEEK_API_KEY"} is required`);
     return settings;
   }
 
@@ -73,6 +80,7 @@ export function createOpenCodeRuntime(
           runtime: "opencode",
           state: "disabled",
           model: settings.model,
+          provider: settings.provider,
           apiKeyConfigured: settings.apiKeyConfigured
         };
       }
@@ -83,6 +91,7 @@ export function createOpenCodeRuntime(
         state: "ready",
         version: running.version,
         model: settings.model,
+        provider: settings.provider,
         apiKeyConfigured: settings.apiKeyConfigured
       };
     },
@@ -96,7 +105,7 @@ export function createOpenCodeRuntime(
           agent: "build",
           model: {
             id: settings.model,
-            providerID: OPEN_CODE_PROVIDER_ID
+            providerID: openCodeProviderId(settings.provider)
           }
         },
         { throwOnError: true }
@@ -112,11 +121,11 @@ export function createOpenCodeRuntime(
           sessionID: input.sessionId,
           agent: "build",
           model: {
-            providerID: OPEN_CODE_PROVIDER_ID,
+            providerID: openCodeProviderId(settings.provider),
             modelID: input.model ?? settings.model
           },
           ...(input.purpose === "knowledge-recap" ? {
-            tools: { bash: false, edit: false, write: false, apply_patch: false, read: false, glob: false, grep: false, list: false, webfetch: false, websearch: false, task: false, question: false, todowrite: false }
+            tools: { bash: false, edit: false, write: false, apply_patch: false, read: false, glob: false, grep: false, list: false, webfetch: false, websearch: false, task: false, question: false, todowrite: false, knowledge_knowledge_search: false, knowledge_knowledge_get: false, knowledge_knowledge_propose: false }
           } : {}),
           parts: [{ type: "text", text: input.prompt }]
         },

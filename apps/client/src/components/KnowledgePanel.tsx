@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { confirmKnowledgeTeamScope, disputeKnowledgeSuggestion, getKnowledgeInbox, getKnowledgeRelationCandidates, getKnowledgeSuggestion, getPendingKnowledgeTeamCards, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, relateKnowledgeCards, requestKnowledgeTeamScope, resolveKnowledgeSuggestion } from "../api";
+import { importKnowledgeDocuments, exportKnowledgeToWorkspace } from "../api";
 import type {
   KnowledgeCard,
   KnowledgeCardType,
@@ -77,6 +78,54 @@ export function KnowledgePanel({
   const [relationTarget, setRelationTarget] = useState<Record<string, string>>({});
   const [relationCandidates, setRelationCandidates] = useState<Record<string, KnowledgeCard[]>>({});
   const openedAt = useRef(0);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importPaths, setImportPaths] = useState("");
+  const [imported, setImported] = useState<import("../types").KnowledgeSuggestion[]>([]);
+  const [importSelected, setImportSelected] = useState<string[]>([]);
+  const [importEdits, setImportEdits] = useState<Record<string, string>>({});
+  const importDrafts = useRef(new Map<string, KnowledgeCard>());
+  const importOpenedAt = useRef(0);
+  const [documentNotice, setDocumentNotice] = useState("");
+
+  async function importDocuments() {
+    setSaving(true); setFormError(undefined);
+    try {
+      const files = importPaths.split(/[\n,]/).map((file) => file.trim()).filter(Boolean);
+      const result = await importKnowledgeDocuments(projectId, files.length ? files : undefined);
+      const suggestions = result.drafts.map((draft) => draft.suggestion);
+      setImported(suggestions); setImportSelected(suggestions.map((suggestion) => suggestion.id));
+      setImportEdits({}); importDrafts.current.clear(); importOpenedAt.current = Date.now();
+      setDocumentNotice(`已生成 ${suggestions.length} 条规范草稿`);
+      await onRefresh();
+    } catch (error) { setFormError(String(error)); }
+    finally { setSaving(false); }
+  }
+
+  async function confirmImported() {
+    setSaving(true); setFormError(undefined);
+    try {
+      for (const suggestion of imported.filter((item) => importSelected.includes(item.id))) {
+        let card = importDrafts.current.get(suggestion.id);
+        if (!card) {
+          const result = await resolveKnowledgeSuggestion(projectId, suggestion.id, "accept");
+          if (!result.card) throw new Error("导入草稿没有生成卡片");
+          card = result.card; importDrafts.current.set(suggestion.id, card);
+        }
+        await onConfirm(card.id, importEdits[suggestion.id] !== undefined, Date.now() - importOpenedAt.current, { type: card.type, title: card.title, summary: card.summary, content: importEdits[suggestion.id] ?? card.content, tags: card.tags, scope: "team", appliesTo: card.appliesTo });
+        importDrafts.current.delete(suggestion.id);
+        setImported((items) => items.filter((item) => item.id !== suggestion.id));
+      }
+      await onRefresh();
+    } catch (error) { setFormError(String(error)); }
+    finally { setSaving(false); }
+  }
+
+  async function exportDocuments() {
+    setSaving(true); setFormError(undefined);
+    try { const result = await exportKnowledgeToWorkspace(projectId); setDocumentNotice(`团队知识已写入 ${result.path}`); }
+    catch (error) { setFormError(String(error)); }
+    finally { setSaving(false); }
+  }
 
   useEffect(() => {
     let active = true;
@@ -203,7 +252,7 @@ export function KnowledgePanel({
       const result = await resolveKnowledgeSuggestion(projectId, suggestion.id, action, mergeCardId || suggestion.dedupe?.cardId);
       setSuggestions(items => items.filter(item => item.id !== suggestion.id));
       await onRefresh();
-      if (result.card && action !== "merge") { openEdit(result.card); setDraftEvidence(result.suggestion ?? suggestion); setSelectedAnchors([]); }
+      if (result.card && action !== "merge") { openEdit(result.card); setDraftEvidence(result.suggestion ?? suggestion); setSelectedAnchors(suggestion.origin === "preset" ? (suggestion.suggestedAnchors ?? []).map((_, index) => index) : []); }
     } catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
     finally { setActionCardId(undefined); }
   }
@@ -311,7 +360,21 @@ export function KnowledgePanel({
       <div className="knowledge-actions">
         <button type="button" onClick={openCreate}>新建卡片</button>
         <button type="button" onClick={() => void onGenerateDemo()}>生成 Demo</button>
+        <button type="button" onClick={() => setImportOpen((open) => !open)}>导入规范文档</button>
+        <button type="button" disabled={saving} onClick={() => void exportDocuments()}>导出团队 AGENTS.md</button>
       </div>
+      {documentNotice ? <p role="status">{documentNotice}</p> : null}
+      {importOpen ? <div className="knowledge-document-import" data-testid="knowledge-import">
+        <label>工作区文档路径<textarea aria-label="规范文档路径" value={importPaths} onChange={(event) => setImportPaths(event.target.value)} placeholder="留空读取 AGENTS.md、CLAUDE.md、CONTRIBUTING.md、README.md 和 .cursor/rules/*；多个路径使用换行" /></label>
+        <button disabled={saving} onClick={() => void importDocuments()}>生成导入草稿</button>
+        <ol className="knowledge-list">{imported.map((suggestion) => <li className="knowledge-suggestion" key={suggestion.id}>
+          <label><input type="checkbox" checked={importSelected.includes(suggestion.id)} onChange={(event) => setImportSelected((ids) => event.target.checked ? [...ids, suggestion.id] : ids.filter((id) => id !== suggestion.id))} />{suggestion.suggestedTitle}</label>
+          <details open><summary>原文与行号</summary><pre>{String(suggestion.evidence.file)}:{JSON.stringify(suggestion.evidence.lineRange)}{"\n"}{String(suggestion.evidence.sourceText ?? "")}</pre></details>
+          <textarea aria-label={`导入草稿 ${suggestion.suggestedTitle}`} value={importEdits[suggestion.id] ?? String((suggestion.evidence.draft as { content?: string })?.content ?? "")} onChange={(event) => setImportEdits((edits) => ({ ...edits, [suggestion.id]: event.target.value }))} />
+          <button disabled={saving} onClick={() => { void resolveKnowledgeSuggestion(projectId, suggestion.id, "discard").then(async () => { setImported((items) => items.filter((item) => item.id !== suggestion.id)); await onRefresh(); }).catch((error) => setFormError(String(error))); }}>丢弃这条</button>
+        </li>)}</ol>
+        <button disabled={saving || !importSelected.some((id) => imported.some((item) => item.id === id))} onClick={() => void confirmImported()}>确认选中的草稿</button>
+      </div> : null}
       {formError ? <p className="knowledge-error" role="alert">{formError}</p> : null}
       {view === "inbox" ? <div data-testid="knowledge-inbox">
         {warnings.map(warning => <article className="knowledge-suggestion" key={warning.id} data-testid="knowledge-inbox-warning">

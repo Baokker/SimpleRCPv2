@@ -12,6 +12,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
   const [settings, setSettings] = useState<AgentSettingsResponse>();
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [model, setModel] = useState("");
+  const [provider, setProvider] = useState<"deepseek" | "minimax">("deepseek");
   const [enabled, setEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -24,6 +25,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
         setSettings(nextSettings);
         setRuntime(nextRuntime);
         setModel(nextSettings.model);
+        setProvider(nextSettings.provider);
         setEnabled(nextSettings.enabled);
       })
       .catch((nextError) => {
@@ -45,7 +47,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
     setError("");
     try {
       await updateAgentSettings({
-        provider: "deepseek",
+        provider,
         model,
         enabled
       });
@@ -93,7 +95,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
                 {runtime.version ? ` · v${runtime.version}` : ""}
               </dd>
             </div>
-            <div><dt>Provider</dt><dd>DeepSeek</dd></div>
+            <div><dt>Provider</dt><dd>{provider === "minimax" ? "MiniMax" : "DeepSeek"}</dd></div>
             <div>
               <dt>API Key</dt>
               <dd>{settings?.apiKeyConfigured ? "Configured" : "Missing"}</dd>

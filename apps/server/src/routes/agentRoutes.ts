@@ -27,12 +27,14 @@ export function registerAgentRoutes(
       if (!can(req.identity, "agent:settings")) { res.sendStatus(403); return; }
       const current = agentSettings.get();
       const nextSettings = req.body as {
+        provider?: unknown;
         model?: unknown;
         enabled?: unknown;
       };
       if (
         agentRuns.hasActiveTasks() &&
-        (nextSettings.model !== current.model ||
+        (nextSettings.provider !== undefined && nextSettings.provider !== current.provider ||
+          nextSettings.model !== current.model ||
           nextSettings.enabled !== current.enabled)
       ) {
         throw new Error("Agent settings cannot change while tasks are active");
@@ -318,7 +320,7 @@ export function registerAgentRoutes(
           knowledge: normalizeKnowledgeInput(req.body?.knowledge),
           status: "queued",
           runtime: "opencode",
-          provider: "deepseek",
+          provider: agentSettings.get().provider,
           model: "preview",
           createdAt: new Date().toISOString()
         },

@@ -25,6 +25,7 @@ export function watchWorkspace(
       pollInterval: 20
     }
   });
+  const pendingChanges = new Set<Promise<void>>();
 
   watcher.on("all", (type, absolutePath) => {
     if (!isWorkspaceChangeType(type)) return;
@@ -32,12 +33,19 @@ export function watchWorkspace(
       .relative(workspaceRoot, absolutePath)
       .split(path.sep)
       .join("/");
-    void Promise.resolve(onChange({ type, path: relativePath })).catch(
+    const pending = Promise.resolve().then(() => onChange({ type, path: relativePath })).catch(
       (error) => console.error("Workspace watcher failed", error)
-    );
+    ).finally(() => pendingChanges.delete(pending));
+    pendingChanges.add(pending);
   });
 
-  return watcher;
+  return {
+    ready: new Promise<void>((resolve) => watcher.once("ready", resolve)),
+    async close() {
+      await watcher.close();
+      await Promise.all(pendingChanges);
+    }
+  };
 }
 
 function isWorkspaceChangeType(value: string): value is WorkspaceChangeType {

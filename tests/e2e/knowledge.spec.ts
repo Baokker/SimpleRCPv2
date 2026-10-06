@@ -3,6 +3,35 @@ import { openAs } from "./helpers";
 
 const screenshotDirectory = "docs/knowledge/screenshots";
 
+test.describe("knowledge stage 6", () => {
+  test.skip((process.env.KNOWLEDGE ?? "off") !== "full", "Knowledge document flows use full mode");
+  test("导入规范草稿，编辑后批量确认并导出团队知识", async ({ page }) => {
+    test.setTimeout(90_000);
+    await openAs(page, "Document reviewer");
+    const headers = await memberHeaders(page);
+    const document = await page.request.post("/api/projects/demo/workspace/file", { headers, data: { path: "README.md", content: "# 项目规范\n\n## Session\n\n修改代码后执行项目测试，并检查 Session 行为。\n" } });
+    expect(document.status()).toBe(200);
+    const configured = await page.request.put("/api/projects/demo/knowledge/config", { headers, data: { requireSecondConfirmForTeam: false } });
+    expect(configured.status()).toBe(200);
+    await page.getByTestId("collab-tab-knowledge").click();
+    await page.getByRole("button", { name: "导入规范文档", exact: true }).click();
+    const panel = page.getByTestId("knowledge-import");
+    await panel.getByLabel("规范文档路径").fill("README.md");
+    const importedResponse = page.waitForResponse(response => response.url().endsWith("/knowledge/import") && response.request().method() === "POST", { timeout: 65_000 });
+    await panel.getByRole("button", { name: "生成导入草稿" }).click();
+    expect((await importedResponse).status()).toBe(201);
+    await expect(panel.locator(".knowledge-suggestion").first()).toBeVisible();
+    await expect(panel).toContainText("原文与行号");
+    const drafts = panel.locator("textarea[aria-label^='导入草稿']");
+    await drafts.first().fill("修改代码后执行项目测试，并检查 Session 行为。");
+    await panel.getByRole("button", { name: "确认选中的草稿" }).click();
+    await expect(panel.locator(".knowledge-suggestion")).toHaveCount(0);
+    await page.getByRole("button", { name: "导出团队 AGENTS.md", exact: true }).click();
+    await expect(page.getByTestId("knowledge-panel")).toContainText(/团队知识已写入 AGENTS(\.knowledge)?\.md/);
+    await page.request.put("/api/projects/demo/knowledge/config", { headers, data: { requireSecondConfirmForTeam: true } });
+  });
+});
+
 async function memberHeaders(page: Parameters<typeof openAs>[0], projectId = "demo") {
   return page.evaluate((id) => ({ "X-SimpleRCP-Member": sessionStorage.getItem(`simplercp.memberId.${id}`) ?? "" }), projectId);
 }

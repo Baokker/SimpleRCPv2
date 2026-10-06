@@ -20,6 +20,7 @@ import { isIgnoredPath } from "../workspacePolicy.js";
 import { readWorkspaceFile } from "../workspace.js";
 import { createEditAttribution, deltaOperations } from "./attribution.js";
 import { redactSensitive } from "../agent/traceStore.js";
+import type { ImportedDraft } from "./documentIO.js";
 
 type EventInput<T = CaptureEvent> = T extends CaptureEvent ? Omit<T, "seq" | "at" | "schemaVersion"> : never;
 export interface CaptureServiceOptions {
@@ -31,6 +32,7 @@ export interface CaptureServiceOptions {
   memberName(memberId: string): string;
   recapMode?: () => Promise<"server" | "agent-self">;
   agentSelfRecap?: (suggestion: CaptureSuggestion) => Promise<AgentSelfRecapResult>;
+  recapLanguage?: "zh" | "en";
 }
 export interface AgentSelfRecapResult { text: string; provider?: string; model?: string; promptHash?: string; usage?: LlmUsage; }
 export interface RiskWarningConfig {
@@ -91,6 +93,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   let operations: Promise<unknown> = Promise.resolve();
   let recapMode = options.recapMode;
   let agentSelfRecap = options.agentSelfRecap;
+  let recapLanguage = options.recapLanguage ?? "zh";
   const engine = createCaptureEngine({ clock, config: options.config,
     onSuggestion(suggestion) { if (!recovering) enqueue(() => storeSuggestion(suggestion)); },
     onCheckpoint(checkpoint) {
@@ -305,6 +308,11 @@ export function createCaptureService(options: CaptureServiceOptions) {
   }
   async function awaitIdle() { await ready; let pending; do { pending = operations; await pending; } while (pending !== operations); }
   async function generateDraft(suggestion: CaptureSuggestion, ai: boolean) {
+    if (suggestion.origin === "preset" || suggestion.origin === "agent-self") {
+      const stored = suggestion.evidence.draft as ImportedDraft;
+      if (!stored || typeof stored.content !== "string") throw new Error("Prepared knowledge draft is unavailable");
+      return { draft: { type: stored.type, title: stored.title, summary: stored.summary, content: stored.content, tags: [suggestion.origin], appliesTo: stored.files.length ? { kind: "glob" as const, patterns: stored.files } : { kind: "project" as const } }, fallback: false };
+    }
     const started = Date.now();
     const usage: LlmUsage = {};
     const promptHashes: string[] = [];
@@ -350,7 +358,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
             addLlmUsage(usage, result.usage);
             return result;
           } } : undefined,
-          onFallback() { fallback = true; }
+          onFallback() { fallback = true; }, language: recapLanguage
         });
         completed = true;
         return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
@@ -381,6 +389,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   return {
     ready, feed, attribution,
     setRiskWarningConfig(config: Partial<RiskWarningConfig>) { riskWarningConfig = { ...riskWarningConfig, ...config, files: config.files ?? riskWarningConfig.files }; },
+    setRecapLanguage(language: "zh" | "en") { recapLanguage = language; },
     bindAgentSelfRecap(callback: (suggestion: CaptureSuggestion) => Promise<AgentSelfRecapResult>, getMode?: () => Promise<"server" | "agent-self">) { agentSelfRecap = callback; recapMode = getMode ?? recapMode; },
     async agentRun(event: Omit<CaptureAgentRunEvent, "type" | "schemaVersion" | "seq" | "at">) {
       await feed({ type: "agentRun", ...event });
@@ -465,7 +474,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
           ? suggestion.evidence.traceRefs.filter((ref): ref is { runId: string; seq: number } => Boolean(ref) && typeof ref === "object" && typeof (ref as { runId?: unknown }).runId === "string" && Number.isInteger((ref as { seq?: unknown }).seq)).map((ref) => ({ runId: ref.runId, seq: ref.seq }))
           : [];
         const recapFallback = fallback && suggestion.origin === "human-agent" && ["agent.interrupted", "agent.revised", "agent.corrected"].includes(suggestion.triggerType);
-        const card = await options.knowledge.createDraft(actor, { ...draft, fallback: recapFallback, source: ai && !fallback ? "ai" : "event", scope: suggestion.origin === "human-agent" ? "personal" : "team", provenance: { origin: suggestion.origin, author: { kind: "human", memberId: authorId, displayName: options.memberName(authorId) }, trigger: { type: suggestion.triggerType, suggestionId: id }, evidenceRefs: { runIds: suggestion.actors.runIds, chatMessageIds: Array.isArray(suggestion.evidence.chatMessages) ? (suggestion.evidence.chatMessages as CaptureChatEvent[]).map(message => message.messageId) : [], ...(traceRefs.length ? { traceRefs } : {}), files: typeof suggestion.evidence.file === "string" ? [{ path: suggestion.evidence.file, revision: String(suggestion.evidence.revisionAfter ?? "") }] : [] } } });
+        const anchors = (suggestion.origin === "preset" ? suggestion.suggestedAnchors ?? [] : []).flatMap((anchor) => "startLine" in anchor && typeof anchor.file === "string" ? [{ file: anchor.file, startLine: anchor.startLine, endLine: anchor.endLine }] : []);
+        const card = await options.knowledge.createDraft(actor, { ...draft, ...(anchors.length ? { anchors } : {}), fallback: recapFallback, source: suggestion.origin === "agent-self" || ai && !fallback ? "ai" : "event", scope: suggestion.origin === "human-agent" || suggestion.origin === "agent-self" ? "personal" : "team", provenance: { origin: suggestion.origin, author: suggestion.origin === "agent-self" ? { kind: "agent", memberId: authorId, displayName: `${options.memberName(authorId)} Agent`, agentRunId: suggestion.actors.runIds[0] } : { kind: "human", memberId: authorId, displayName: options.memberName(authorId) }, trigger: { type: suggestion.triggerType, suggestionId: id }, evidenceRefs: { runIds: suggestion.actors.runIds, chatMessageIds: Array.isArray(suggestion.evidence.chatMessages) ? (suggestion.evidence.chatMessages as CaptureChatEvent[]).map(message => message.messageId) : [], ...(traceRefs.length ? { traceRefs } : {}), files: typeof suggestion.evidence.file === "string" ? [{ path: suggestion.evidence.file, revision: String(suggestion.evidence.revisionAfter ?? "") }] : [] } } });
         suggestion.draftCardId = card.id;
         await resolve(actor, suggestion, "accepted");
         return { card, suggestion };
@@ -498,6 +508,15 @@ export function createCaptureService(options: CaptureServiceOptions) {
       const primaryActor = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]![0];
       const suggestion: CaptureSuggestion = { id: crypto.randomUUID(), triggerType: "chat.dense", createdAt: at, origin: "human-human", state: "open", actors: { memberIds: [...new Set([actor.memberId, ...messages.map(message => message.authorId)])], runIds: [] }, suggestedType: "context", suggestedTitle: "选定的协作讨论", suggestedSummary: messages.map(message => message.text).join("\n").slice(0, 400), evidence: { chatMessages: messages, primaryActor }, suggestedAnchors: engine.infer(messages, at) };
       return storeSuggestion(suggestion);
+    },
+    async importPreset(actor: KnowledgeActor, input: ImportedDraft & { file: string; sourceText: string }) {
+      await awaitIdle();
+      const suggestion: CaptureSuggestion = { id: crypto.randomUUID(), triggerType: "preset.imported", createdAt: Date.now(), origin: "preset", state: "open", actors: { memberIds: [actor.memberId], runIds: [] }, suggestedType: input.type, suggestedTitle: input.title, suggestedSummary: input.summary, suggestedAnchors: [{ file: input.file, startLine: input.startLine, endLine: input.endLine, score: 1, reasons: ["规范文档原文"] }], evidence: { file: input.file, lineRange: { start: input.startLine, end: input.endLine }, sourceText: input.sourceText, draft: input, fallback: input.fallback } };
+      return enqueue(() => storeSuggestion(suggestion));
+    },
+    async propose(actor: KnowledgeActor, runId: string, input: Pick<ImportedDraft, "title" | "summary" | "content" | "type" | "files">) {
+      await awaitIdle();
+      return enqueue(() => storeSuggestion({ id: crypto.randomUUID(), triggerType: "agent.proposed", createdAt: Date.now(), origin: "agent-self", state: "open", actors: { memberIds: [actor.memberId], runIds: [runId] }, suggestedType: input.type, suggestedTitle: input.title, suggestedSummary: input.summary, evidence: { runId, draft: input } }));
     },
     async get(id: string) { await awaitIdle(); return suggestions.get(id); },
     awaitIdle,

@@ -12,6 +12,23 @@ import { ensureKnowledgeIndex, searchKnowledgeCards } from '../src/retrieval/ind
 import { buildKnowledgeContext, pickCardsWithinBudget } from '../src/retrieval/inject.js';
 
 describe('knowledge-index demo cards retrieval', () => {
+    test('applies legacy file boosts to every active file independently', async () => {
+        const artifactRoot = path.join(process.cwd(), '.test-artifacts');
+        await fs.mkdir(artifactRoot, { recursive: true });
+        const root = await fs.mkdtemp(path.join(artifactRoot, 'multiple-active-files-'));
+        try {
+            const [card] = createDemoKnowledgeCards({ workspaceRelativePath: 'src/second.ts', selectedText: 'const shared = 1;', now: 1_000 });
+            const options = { cards: [card], query: 'shared', indexDir: root, lexicalScoring: 'legacy' as const };
+            const single = await searchKnowledgeCards({ ...options, activeFile: 'src/first.ts' });
+            const multiple = await searchKnowledgeCards({ ...options, activeFiles: ['src/first.ts', 'src/second.ts'] });
+            expect(multiple[0]?.score).toBeCloseTo(single[0]!.score + 0.06);
+            const duplicated = await searchKnowledgeCards({ ...options, activeFiles: ['src/first.ts', 'src/second.ts', 'src/second.ts'] });
+            expect(duplicated).toEqual(multiple);
+        } finally {
+            await fs.rm(root, { recursive: true, force: true });
+        }
+    });
+
     test('refreshes cached scope and ownership without changing card text', async () => {
         const artifactRoot = path.join(process.cwd(), '.test-artifacts');
         await fs.mkdir(artifactRoot, { recursive: true });

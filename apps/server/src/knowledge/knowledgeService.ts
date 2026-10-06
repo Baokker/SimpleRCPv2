@@ -617,6 +617,17 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     });
   }
 
+  async function recordToolHit(id: string, at = Date.now()) {
+    return enqueue(async () => {
+      const stored = await readCard(id);
+      if (!stored) return undefined;
+      const usage = { injectedCount: 0, toolHitCount: 0, recurrenceCount: 0, ...stored.card.usage };
+      const updated: KnowledgeCard = { ...stored.card, usage: { ...usage, toolHitCount: usage.toolHitCount + 1, lastUsedAt: at }, updatedAt: stored.card.updatedAt };
+      await saveCard(updated);
+      return updated;
+    });
+  }
+
   async function archive(actor: KnowledgeActor, id: string, reason?: string) {
     return enqueue(async () => {
       const stored = await readCard(id);
@@ -757,7 +768,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     get,
     relationCandidates,
     create,
-    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; fallback?: boolean; provenance: KnowledgeProvenance; source: "ai" | "event"; scope?: KnowledgeScope; anchors?: Array<{ file: string; selection: KnowledgeAnchorSelection }>; appliesTo?: KnowledgeCard["appliesTo"]; check?: KnowledgeCard["check"] }) {
+    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; fallback?: boolean; provenance: KnowledgeProvenance; source: "ai" | "event"; scope?: KnowledgeScope; anchors?: Array<{ file: string; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }>; appliesTo?: KnowledgeCard["appliesTo"]; check?: KnowledgeCard["check"] }) {
       return enqueue(async () => {
         const now = Date.now();
         const anchors: KnowledgeAnchor[] = [];
@@ -788,6 +799,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       });
     },
     recordInjection,
+    recordToolHit,
     update,
     confirm,
     archive,

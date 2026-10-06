@@ -43,6 +43,10 @@ describe("Agent capture events", () => {
     expect(prompt).toContain("evidence.files[0]");
     expect(prompt).not.toMatch(/^- evidence\.file$/m);
     expect(prompt).not.toMatch(/^- evidence\.absent$/m);
+    expect(prompt).toContain("Output language: Chinese");
+    expect(prompt).toContain("checkable code-level action");
+    expect(prompt).toContain("concrete file, function, symbol, or code pattern");
+    expect(buildAgentRecapSystemPrompt({ file: "src/a.ts" }, "en")).toContain("Output language: English");
   });
 
   test("captures interruption and correction in one session", () => {

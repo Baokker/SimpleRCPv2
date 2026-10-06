@@ -16,8 +16,14 @@ import { registerWorkspaceRoutes } from "./routes/workspaceRoutes.js";
 import { registerKnowledgeRoutes } from "./routes/knowledgeRoutes.js";
 import { createMemberStore, createIdentityMiddleware } from "./auth/identity.js";
 import { requireIdentity } from "./auth/permissions.js";
+import { createKnowledgeMcpToken, registerKnowledgeMcp } from "./knowledge/mcpServer.js";
 
 export async function createApp(config: ServerConfig) {
+  if (config.knowledge === "full" && config.host !== "127.0.0.1") throw new Error("Knowledge MCP requires SIMPLERCP_HOST=127.0.0.1");
+  const app = express();
+  app.use(cors());
+  app.use(express.json({ limit: "5mb" }));
+  app.locals.knowledgeMcpUrl = `http://127.0.0.1:${config.port}/mcp/knowledge`;
   const registry = await createProjectRegistry({
     dataDir: config.dataDir,
     workspacesDir: config.workspacesDir ?? path.join(config.dataDir, "workspaces"),
@@ -25,6 +31,7 @@ export async function createApp(config: ServerConfig) {
     demoProjectRoot: config.demoProjectRoot
   });
   const members = createMemberStore({ projects: () => registry.listProjectsSync() });
+  const mcpToken = config.knowledge === "full" ? createKnowledgeMcpToken() : undefined;
   const runtimeManager = createProjectRuntimeManager(registry, {
     terminalEnabled: config.terminalEnabled !== false,
     knowledgeMode: config.knowledge ?? "off",
@@ -35,13 +42,16 @@ export async function createApp(config: ServerConfig) {
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
     defaultModel: config.agent?.model ?? "deepseek-chat",
+    defaultProvider: config.agent?.provider ?? "deepseek",
     apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
   });
   const openCodeRuntime = createOpenCodeRuntime({
     port: config.agent?.openCodePort ?? 4096,
+    provider: config.agent?.provider,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
-    getSettings: () => agentSettings.get()
+    getSettings: () => agentSettings.get(),
+    ...(mcpToken ? { mcp: { url: () => app.locals.knowledgeMcpUrl as string, token: mcpToken } } : {})
   });
   const agentRuntime = config.fakeAgentRuntime
     ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime(), Boolean(config.agent?.apiKey))
@@ -62,7 +72,6 @@ export async function createApp(config: ServerConfig) {
   await agentRuns.initialize();
   const chatAgentBridge = createChatAgentBridge({ agentRuns, runtimeManager });
 
-  const app = express();
   app.locals.registry = registry;
   app.locals.runtimeManager = runtimeManager;
   app.locals.agentSettings = agentSettings;
@@ -70,8 +79,10 @@ export async function createApp(config: ServerConfig) {
   app.locals.agentRuns = agentRuns;
   app.locals.chatAgentBridge = chatAgentBridge;
   app.locals.members = members;
-  app.use(cors());
-  app.use(express.json({ limit: "5mb" }));
+  if (config.knowledge === "full" && mcpToken) {
+    registerKnowledgeMcp(app, { runtimeManager, registry, agentRuns, token: mcpToken, enabled: true });
+    app.locals.knowledgeMcpToken = mcpToken;
+  }
   app.use(createIdentityMiddleware({ members, required: false }));
   app.use("/api/projects/:projectId", (req, res, next) => {
     const publicRequest = (req.method === "GET" && ["/", "/participants"].includes(req.path))

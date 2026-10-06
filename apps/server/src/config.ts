@@ -23,6 +23,7 @@ export interface ServerConfig {
   };
   importRoots?: string[];
   agent?: {
+    provider?: "deepseek" | "minimax";
     apiKey?: string;
     baseUrl: string;
     model: string;
@@ -53,13 +54,19 @@ export function loadConfig(
     throw new Error("SIMPLERCP_PUBLIC_URL must use http or https");
   }
 
-  const agentBaseUrl = new URL(
-    env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1"
-  );
+  const agentProvider = env.AGENT_LLM_PROVIDER?.trim() || "minimax";
+  if (agentProvider !== "minimax" && agentProvider !== "deepseek") throw new Error("AGENT_LLM_PROVIDER must be minimax or deepseek");
+  const agentApiKey = agentProvider === "minimax" ? env.MINIMAX_API_KEY?.trim() || undefined : env.DEEPSEEK_API_KEY?.trim() || undefined;
+  if (!agentApiKey && env.SIMPLERCP_FAKE_AGENT_RUNTIME !== "true") throw new Error(`${agentProvider === "minimax" ? "MINIMAX_API_KEY" : "DEEPSEEK_API_KEY"} is required for the Agent`);
+  const agentBaseUrl = new URL(agentProvider === "minimax"
+    ? (env.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1")
+    : (env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1"));
   if (!["http:", "https:"].includes(agentBaseUrl.protocol)) {
-    throw new Error("DEEPSEEK_BASE_URL must use http or https");
+    throw new Error("Agent base URL must use http or https");
   }
-  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
+  const agentModel = agentProvider === "minimax"
+    ? (env.AGENT_MINIMAX_MODEL?.trim() || env.MINIMAX_MODEL?.trim() || "MiniMax-M2")
+    : (env.DEEPSEEK_MODEL?.trim() || "deepseek-chat");
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
     throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");
@@ -102,7 +109,8 @@ export function loadConfig(
     ...(knowledge !== "off" ? { knowledgeRecordEvents: readBoolean(env.KNOWLEDGE_RECORD_EVENTS, "KNOWLEDGE_RECORD_EVENTS", true) } : {}),
     ...(knowledgeLlm ? { knowledgeLlm } : {}),
     agent: {
-      apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
+      provider: agentProvider,
+      apiKey: agentApiKey,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,

@@ -174,10 +174,11 @@ function isTextPosition(value: unknown): value is TextPosition { return !!value 
 function isRelativeTextPosition(value: unknown): value is RelativeTextPosition { return !!value && typeof value === 'object' && typeof (value as RelativeTextPosition).type === 'string' && ((value as RelativeTextPosition).item === undefined || typeof (value as RelativeTextPosition).item === 'string') && ((value as RelativeTextPosition).assoc === undefined || typeof (value as RelativeTextPosition).assoc === 'number'); }
 
 function isCaptureTriggerType(value: unknown): value is CaptureTriggerType {
-    return value === 'chat.dense' || value === 'todo.cleared' || value === 'magicNumber.added' || value === 'packageJson.dependencySwitch' || value === 'dependency.changed' || value === 'diagnostics.fixed' || value === 'rollback.detected' || value === 'edit.overwritten' || value === 'agent.interrupted' || value === 'agent.revised' || value === 'agent.corrected' || value === 'agent.retried' || value === 'agent.toolRecovered';
+    if (value === 'agent.proposed') return true;
+    return value === 'chat.dense' || value === 'preset.imported' || value === 'todo.cleared' || value === 'magicNumber.added' || value === 'packageJson.dependencySwitch' || value === 'dependency.changed' || value === 'diagnostics.fixed' || value === 'rollback.detected' || value === 'edit.overwritten' || value === 'agent.interrupted' || value === 'agent.revised' || value === 'agent.corrected' || value === 'agent.retried' || value === 'agent.toolRecovered';
 }
 
-export type CaptureTriggerType = 'chat.dense' | 'todo.cleared' | 'magicNumber.added' | 'packageJson.dependencySwitch' | 'dependency.changed' | 'diagnostics.fixed' | 'rollback.detected' | 'edit.overwritten' | 'agent.interrupted' | 'agent.revised' | 'agent.corrected' | 'agent.retried' | 'agent.toolRecovered';
+export type CaptureTriggerType = 'agent.proposed' | 'chat.dense' | 'preset.imported' | 'todo.cleared' | 'magicNumber.added' | 'packageJson.dependencySwitch' | 'dependency.changed' | 'diagnostics.fixed' | 'rollback.detected' | 'edit.overwritten' | 'agent.interrupted' | 'agent.revised' | 'agent.corrected' | 'agent.retried' | 'agent.toolRecovered';
 
 export interface SuggestedAnchor { file: string; startLine: number; endLine: number; score: number; reasons: string[]; }
 function isSuggestedAnchor(value: unknown): value is SuggestedAnchor {

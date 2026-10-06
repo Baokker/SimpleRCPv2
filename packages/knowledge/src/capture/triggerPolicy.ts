@@ -60,6 +60,9 @@ export function shouldTriggerCapture(signal: CaptureTriggerSignal, thresholds: C
     switch (signal.triggerType) {
         case 'chat.dense':
             return (signal.messageCount ?? 0) >= thresholds.chatMinMessages && (signal.windowMs ?? Infinity) <= thresholds.chatWindowMs;
+        case 'preset.imported':
+        case 'agent.proposed':
+            return true;
         case 'todo.cleared':
             return (signal.beforeTodos ?? 0) > 0 && (signal.afterTodos ?? 0) === 0;
         case 'magicNumber.added':

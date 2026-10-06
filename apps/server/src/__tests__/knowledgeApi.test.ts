@@ -334,8 +334,11 @@ describe("knowledge API", () => {
       const rebuiltEpoch = runtime.documents.getDocumentEpoch(rebuilt);
       expect(rebuiltEpoch).toBeTruthy();
       expect(rebuiltEpoch).not.toBe(oldEpoch);
-      const afterRebuild = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: { "X-SimpleRCP-Member": first } }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; strategy?: string; status: string }> };
-      expect(afterRebuild.resolutions.find((item) => item.cardId === epochCard.id)).toMatchObject({ strategy: "snapshot", status: "moved" });
+      const afterRebuild = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: { "X-SimpleRCP-Member": first } }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; strategy?: string; status: string; range?: { startLine: number; endLine: number } }> };
+      const rebuiltResolution = afterRebuild.resolutions.find((item) => item.cardId === epochCard.id);
+      expect(rebuiltResolution).toMatchObject({ range: { startLine: 4, endLine: 4 } });
+      // watcher 可以在请求之前通过 snapshot 更新相对位置。
+      expect(["snapshot", "yjs"]).toContain(rebuiltResolution?.strategy);
       const refreshedCard = await fetch(`${origin}/api/projects/demo/knowledge/cards/${epochCard.id}`, { headers: { "X-SimpleRCP-Member": first } }).then((response) => response.json()) as { card: { anchors: Array<{ yjsRelative?: { docEpoch?: string } }> } };
       expect(refreshedCard.card.anchors[0]?.yjsRelative?.docEpoch).toBe(rebuiltEpoch);
     } finally {

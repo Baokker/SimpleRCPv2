@@ -1,7 +1,15 @@
 import type { Express } from "express";
+import fs from "node:fs/promises";
+import path from "node:path";
+import crypto from "node:crypto";
+import { createOpenAICompatibleClient } from "@simplercp/knowledge";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import { requireIdentity } from "../auth/permissions.js";
 import type { MemberStore } from "../auth/identity.js";
+import { readWorkspaceFile } from "../workspace.js";
+import { splitImportedDocument, exportAgentsMarkdown, resolveKnowledgeDocument } from "../knowledge/documentIO.js";
+import { redactSensitive } from "../agent/traceStore.js";
+import { getProjectMetadataPath } from "../projects.js";
 
 export function registerKnowledgeRoutes(
   app: Express,
@@ -212,6 +220,66 @@ export function registerKnowledgeRoutes(
     } catch (error) { next(error); }
   });
 
+  app.post("/api/projects/:projectId/knowledge/import", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId); const service = serviceFor(req.params.projectId, res); if (!service) return;
+      const capture = runtime.capture; if (!capture) { res.sendStatus(404); return; }
+      const member = runtime.rooms.getMember(runtime.room.id, identity.memberId); if (!member) { res.status(403).json({ error: "Project membership is required" }); return; }
+      const rules = req.body?.files === undefined ? await resolveKnowledgeDocument(runtime.project.workspacePath, ".cursor/rules").then((directory) => fs.readdir(directory, { withFileTypes: true })).then(entries => entries.filter(entry => entry.isFile()).map(entry => entry.name)).catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return []; throw error; }) : [];
+      const requested = req.body?.files ?? ["AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "README.md", ...rules.map((file) => `.cursor/rules/${file}`)];
+      if (!Array.isArray(requested) || requested.length > 50 || requested.some((file: unknown) => typeof file !== "string" || !file || file.startsWith("/") || file.split(/[\\/]/).includes("..") || file.split(/[\\/]/).some((part: string) => part.startsWith(".env")))) throw new Error("Import requires up to 50 workspace document paths");
+      const files: string[] = [...new Set(requested.map((file: string) => file.replaceAll("\\", "/")))];
+      const drafts = [];
+      for (const file of files) {
+        const checked = await resolveKnowledgeDocument(runtime.project.workspacePath, file).catch((error: NodeJS.ErrnoException) => { if (req.body?.files === undefined && error.code === "ENOENT") return undefined; throw error; });
+        if (!checked) continue;
+        const loaded = await readWorkspaceFile(runtime.project.workspacePath, file, true).catch((error: NodeJS.ErrnoException) => { if (req.body?.files === undefined && error.code === "ENOENT") return undefined; throw error; });
+        if (!loaded || loaded.status !== "text") continue;
+        if (loaded.content.length > 100_000) throw new Error("Import document exceeds 100000 characters");
+        const source = redactSensitive(loaded.content, runtime.llm?.apiKey ? [runtime.llm.apiKey] : []) as string;
+        const started = Date.now();
+        let call: Record<string, unknown> | undefined;
+        const items = await splitImportedDocument(source, { file, model: runtime.llm?.model, client: runtime.llm?.apiKey ? createOpenAICompatibleClient(runtime.llm) : undefined, onCall(prompt, usage, completed) { call = { at: started, mode: "import", provider: runtime.llm?.provider, model: runtime.llm?.model, durationMs: Date.now() - started, promptHash: crypto.createHash("sha256").update(prompt).digest("hex"), usage, completed, fallback: !completed }; } });
+        if (call) {
+          await runtime.knowledgeProvider?.initialize();
+          await fs.appendFile(path.join(getProjectMetadataPath(runtime.project), "knowledge", "llm-calls.jsonl"), JSON.stringify(call) + "\n", { mode: 0o600 });
+        }
+        for (const item of items) {
+          const suggestion = await capture.importPreset({ memberId: member.id, displayName: member.displayName }, { ...item, file, sourceText: source.split("\n").slice(item.startLine - 1, item.endLine).join("\n") });
+          drafts.push({ suggestionId: suggestion.id, file, startLine: item.startLine, endLine: item.endLine, suggestion });
+        }
+      }
+      res.status(201).json({ drafts });
+    } catch (error) { next(error); }
+  });
+
+  app.get("/api/projects/:projectId/knowledge/export", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const service = serviceFor(req.params.projectId, res); if (!service) return;
+      if (req.query.format !== "agents-md") { res.status(400).json({ error: "Only agents-md export is supported" }); return; }
+      const cards = (await service.list({ memberId: identity.memberId, displayName: identity.memberId }, { scope: "team", status: "reviewed" }));
+      const markdown = redactSensitive(exportAgentsMarkdown(cards)) as string;
+      res.type("text/markdown").send(markdown);
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/export/workspace", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId); const service = serviceFor(req.params.projectId, res); if (!service) return;
+      const cards = await service.list({ memberId: identity.memberId, displayName: identity.memberId }, { scope: "team", status: "reviewed" });
+      const markdown = redactSensitive(exportAgentsMarkdown(cards)) as string;
+      const target = await resolveKnowledgeDocument(runtime.project.workspacePath, "AGENTS.md", true);
+      const exists = await fs.lstat(target).then(() => true).catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return false; throw error; });
+      const output = exists ? await resolveKnowledgeDocument(runtime.project.workspacePath, "AGENTS.knowledge.md", true) : target;
+      await fs.writeFile(output, markdown, { encoding: "utf8", mode: 0o600 });
+      runtime.events.append({ type: "knowledge_exported", roomId: runtime.room.id, memberId: identity.memberId, payload: { format: "agents-md", path: path.relative(runtime.project.workspacePath, output), cardIds: cards.map((card) => card.id) } });
+      res.json({ path: path.relative(runtime.project.workspacePath, output), markdown });
+    } catch (error) { next(error); }
+  });
+
   app.get("/api/projects/:projectId/knowledge/config", async (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
@@ -250,7 +318,7 @@ export function registerKnowledgeRoutes(
         knowledge: normalizeKnowledgeInput(req.body?.knowledge),
         status: "queued",
         runtime: "opencode",
-        provider: "deepseek",
+        provider: "minimax",
         model: "preview",
         createdAt: new Date().toISOString()
       } as const;

@@ -454,6 +454,12 @@ function projectPath(projectId: string) {
 export function getKnowledgeInbox(projectId: string, all = false) {
   return request<{ suggestions: import("./types").KnowledgeSuggestion[]; warnings: import("./types").KnowledgeRiskWarning[] }>(`${projectPath(projectId)}/knowledge/inbox${all ? "?view=all" : ""}`);
 }
+export function importKnowledgeDocuments(projectId: string, files?: string[]) {
+  return request<{ drafts: Array<{ suggestionId: string; suggestion: import("./types").KnowledgeSuggestion }> }>(`${projectPath(projectId)}/knowledge/import`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files }) });
+}
+export function exportKnowledgeToWorkspace(projectId: string) {
+  return request<{ path: string; markdown: string }>(`${projectPath(projectId)}/knowledge/export/workspace`, { method: "POST" });
+}
 export function getKnowledgeSuggestion(projectId: string, id: string) {
   return request<{ suggestion: import("./types").KnowledgeSuggestion }>(`${projectPath(projectId)}/knowledge/inbox/${encodeURIComponent(id)}`);
 }

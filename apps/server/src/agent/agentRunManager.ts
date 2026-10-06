@@ -12,7 +12,7 @@ import type {
 } from "@simplercp/shared";
 import { buildAgentRecapSystemPrompt, parseAgentRecapDraft } from "@simplercp/knowledge";
 import type { AgentRuntime } from "./agentRuntime.js";
-import { createAgentUsageCollector, toLlmUsage } from "./agentUsage.js";
+import { createAgentUsageCollector, estimateAgentUsageCost, toLlmUsage } from "./agentUsage.js";
 import { createAgentSessionOperations } from "./agentSessionOperations.js";
 import { executeRuntimePrompt } from "./agentRuntimeExecution.js";
 import { createAgentRunStore, type AgentRunStore } from "./agentRunStore.js";
@@ -255,7 +255,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const sessionId = run.runtimeSessionId ?? session?.runtimeSessionId;
     if (!sessionId) throw new Error("Agent runtime session is unavailable for self recap");
     const prompt = [
-      buildAgentRecapSystemPrompt(evidence),
+      buildAgentRecapSystemPrompt(evidence, (await projectRuntime.knowledgeProvider?.getConfig())?.recapLanguage ?? "zh"),
       "Review the completed Agent task using only this evidence.",
       `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}`
     ].join("\n\n");
@@ -275,11 +275,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         onSubscriptionError: async (error) => { await appendTrace(projectId, runId, { type: "runtime_subscription_error", summary: error instanceof Error ? error.message : String(error) }); }
       });
       if (!parseAgentRecapDraft(result.text, evidence)) throw new Error("Agent self recap returned invalid JSON");
-      const usage = observedUsage.total();
+      const usage = estimateAgentUsageCost(observedUsage.total(), provider, model);
       await appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider, model, usage, completed: true } });
       return { text: result.text, provider, model, promptHash, usage: toLlmUsage(usage) };
     } catch (error) {
-      const usage = observedUsage.total();
+      const usage = estimateAgentUsageCost(observedUsage.total(), provider, model);
       const recapError = Object.assign(new Error(error instanceof Error ? error.message : String(error)), {
         promptHash,
         provider,
@@ -460,7 +460,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const recordUsage = async (resultUsage?: AgentRunUsage, messageId?: string) => {
       observedUsage.addResult(resultUsage, messageId);
       if (usageRecorded) return;
-      const totalUsage = observedUsage.total();
+      const totalUsage = estimateAgentUsageCost(observedUsage.total(), current.provider, current.model);
       if (!totalUsage) return;
       usageRecorded = true;
       await updateRun(projectId, runId, { usage: totalUsage });
@@ -900,7 +900,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!prompt) throw new Error("prompt is required");
       const settings = options.getSettings();
       if (!settings.enabled) throw new Error("Agent is disabled");
-      if (!settings.apiKeyConfigured) throw new Error("DEEPSEEK_API_KEY is required");
+      if (!settings.apiKeyConfigured) throw new Error(`${settings.provider === "minimax" ? "MINIMAX_API_KEY" : "DEEPSEEK_API_KEY"} is required`);
       const projectRuntime = options.runtimeManager.get(input.projectId);
       bindKnowledgeProvider(input.projectId);
       const member = projectRuntime.rooms.getMember(
@@ -945,7 +945,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runtimeSessionId: session.runtimeSessionId,
         status: "queued",
         runtime: "opencode",
-        provider: "deepseek",
+        provider: settings.provider,
         model: settings.model,
         source: input.source ?? "agent-panel",
         chatMessageId: input.chatMessageId,

@@ -46,6 +46,7 @@ describe("OpenCode status", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
         runtime: "opencode",
+        provider: "deepseek",
         state: "ready",
         version: "1.18.31",
         model: "deepseek-chat",
