@@ -1,0 +1,284 @@
+{
+  "authenticationFailure": true,
+  "state": {
+    "mode": "full",
+    "version": 19,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 1,
+        "durationMs": 3.1364590000002863,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "b0b3cac2-40f7-412e-8f5a-b95b784e0cec"
+        },
+        "status": "editing",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 149,
+                "end": 165
+              }
+            ],
+            "firstTouchedAt": 1791269152250,
+            "lastTouchedAt": 1791269155669
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "d50743ff-d691-4d25-8171-e84cd493e8a4"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 164
+              }
+            ],
+            "firstTouchedAt": 1791269152312,
+            "lastTouchedAt": 1791269152312
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "b0b3cac2-40f7-412e-8f5a-b95b784e0cec"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791269152250
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "d50743ff-d691-4d25-8171-e84cd493e8a4"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "lastTouchedAt": 1791269152312
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "e3333484c86f1b8800cb73f00fcfc5bd460103a9a8c9651750055eb4bf134034",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "b0b3cac2-40f7-412e-8f5a-b95b784e0cec"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "d50743ff-d691-4d25-8171-e84cd493e8a4"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "status": "modified"
+        },
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791269152350,
+        "updatedAt": 1791269152350,
+        "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "e3333484c86f1b8800cb73f00fcfc5bd460103a9a8c9651750055eb4bf134034",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "b0b3cac2-40f7-412e-8f5a-b95b784e0cec"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "d50743ff-d691-4d25-8171-e84cd493e8a4"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "status": "modified"
+          },
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791269152350,
+          "updatedAt": 1791269152350,
+          "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791269154925,
+        "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42",
+        "verdict": {
+          "zone": "grey",
+          "decision": "warn",
+          "ruleId": "model-unavailable",
+          "summary": "研判失败，已降级为警告。 ",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 304.3713750000006,
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "strategy": "G3",
+            "source": "fallback",
+            "adapter": "deepseek",
+            "model": "deepseek-flash",
+            "latencyMs": 736,
+            "status": "degraded",
+            "escalated": true,
+            "userExplanation": "研判失败，已降级为警告。 ",
+            "suggestedAction": "请双方检查 src/pricing.ts#applyDiscount 与 src/checkout.ts#checkout 的共同使用方式。",
+            "inputHash": "de33e2b7f289a1cf9f5670f901de91365b6211b14b8bb6970b1329f7c2ee256e",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "analysisStartedAt": 1791269154158,
+        "analysisVisible": false
+      }
+    ],
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 2,
+      "cacheHits": 0,
+      "judgements": 1,
+      "escalations": 1,
+      "escalationRatio": 1,
+      "p50Ms": 745,
+      "p95Ms": 745,
+      "failures": 2,
+      "costUsd": 0
+    },
+    "blockedPersists": [
+      {
+        "file": "src/pricing.ts",
+        "reason": "pending-judgement"
+      }
+    ],
+    "persistConflicts": 0,
+    "persistBlockedCount": 3,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 1,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 3,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "editable": true
+}

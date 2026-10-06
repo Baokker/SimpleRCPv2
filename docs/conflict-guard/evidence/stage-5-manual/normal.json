@@ -1,0 +1,342 @@
+{
+  "mode": "full",
+  "state": {
+    "mode": "full",
+    "version": 18,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 4,
+        "durationMs": 2.686000000000604,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "75c508ec-49f8-4177-9b66-5137a0777176"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 149,
+                "end": 161
+              }
+            ],
+            "firstTouchedAt": 1791270943478,
+            "lastTouchedAt": 1791270943478
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "b572f696-9e15-42e4-9098-ecf97250e777"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 164
+              }
+            ],
+            "firstTouchedAt": 1791270943485,
+            "lastTouchedAt": 1791270943485
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "75c508ec-49f8-4177-9b66-5137a0777176"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791270943478
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "b572f696-9e15-42e4-9098-ecf97250e777"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "lastTouchedAt": 1791270943485
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "e46cb9dcf1f9bd635c36dfe49857017c4f72053aa8deb5139382c0f62f6cfa3d",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "75c508ec-49f8-4177-9b66-5137a0777176"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "b572f696-9e15-42e4-9098-ecf97250e777"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "status": "modified"
+        },
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791270943525,
+        "updatedAt": 1791270943525,
+        "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "e46cb9dcf1f9bd635c36dfe49857017c4f72053aa8deb5139382c0f62f6cfa3d",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "75c508ec-49f8-4177-9b66-5137a0777176"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "b572f696-9e15-42e4-9098-ecf97250e777"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "status": "modified"
+          },
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791270943525,
+          "updatedAt": 1791270943525,
+          "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791270948260,
+        "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42",
+        "verdict": {
+          "zone": "grey",
+          "decision": "lock",
+          "ruleId": "model-deep",
+          "summary": "这两处改动一起破坏了折扣计算和结账金额的既有约定，导致测试断言全部失败。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "applyDiscount",
+              "detail": "Changed from price * (1 - rate) to price - rate, so applyDiscount(100, 0.1) returns 99.9 instead of the tested 90."
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "checkout",
+              "detail": "Added +1 to cart.total(), so checkout no longer returns the cart's discounted total as the test expects."
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "Cart.total",
+              "detail": "Calls applyDiscount(amount, 0.1) and is relied on by checkout; the changed discount semantics propagate to checkout output."
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "折扣返回折后价格",
+              "detail": "Asserts applyDiscount(100, 0.1) === 90, which the merged applyDiscount violates."
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "结账使用购物车折后总价",
+              "detail": "Asserts cart.total() === 18 and checkout(cart) === \"USD 18.00\", both broken by the merged edits."
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 112.74825000000055,
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "strategy": "G3",
+            "source": "deep",
+            "adapter": "deepseek",
+            "model": "deepseek-flash",
+            "confidence": 0.95,
+            "latencyMs": 3109,
+            "status": "success",
+            "escalated": true,
+            "userExplanation": "这两处改动一起破坏了折扣计算和结账金额的既有约定，导致测试断言全部失败。",
+            "suggestedAction": "请将 src/pricing.ts 中 applyDiscount 恢复为 price * (1 - rate)，并移除 src/checkout.ts 中 checkout 对 cart.total() 的 +1 偏移。",
+            "inputHash": "de33e2b7f289a1cf9f5670f901de91365b6211b14b8bb6970b1329f7c2ee256e",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "analysisStartedAt": 1791270945136,
+        "analysisVisible": false,
+        "firstLockedAt": 1791270948260
+      }
+    ],
+    "frozenFiles": [
+      {
+        "file": "src/pricing.ts",
+        "regions": [
+          {
+            "pairId": "e46cb9dcf1f9bd635c36dfe49857017c4f72053aa8deb5139382c0f62f6cfa3d",
+            "actor": {
+              "kind": "human",
+              "memberId": "75c508ec-49f8-4177-9b66-5137a0777176"
+            },
+            "startLine": 3,
+            "endLine": 5,
+            "summary": "这两处改动一起破坏了折扣计算和结账金额的既有约定，导致测试断言全部失败。"
+          }
+        ]
+      },
+      {
+        "file": "src/checkout.ts",
+        "regions": [
+          {
+            "pairId": "e46cb9dcf1f9bd635c36dfe49857017c4f72053aa8deb5139382c0f62f6cfa3d",
+            "actor": {
+              "kind": "human",
+              "memberId": "b572f696-9e15-42e4-9098-ecf97250e777"
+            },
+            "startLine": 4,
+            "endLine": 6,
+            "summary": "这两处改动一起破坏了折扣计算和结账金额的既有约定，导致测试断言全部失败。"
+          }
+        ]
+      }
+    ],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 2,
+      "cacheHits": 0,
+      "judgements": 1,
+      "escalations": 1,
+      "escalationRatio": 1,
+      "p50Ms": 3114,
+      "p95Ms": 3114,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0.00077115
+    },
+    "blockedPersists": [
+      {
+        "file": "src/pricing.ts",
+        "reason": "lock"
+      },
+      {
+        "file": "src/checkout.ts",
+        "reason": "lock"
+      }
+    ],
+    "persistConflicts": 0,
+    "persistBlockedCount": 2,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 1,
+      "frozenDurationMs": 385,
+      "persistBlockedCount": 2,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "checks": {
+    "analyzing": true,
+    "explanation": true,
+    "suggestion": true,
+    "statistics": true
+  }
+}

@@ -1,0 +1,1206 @@
+{
+  "results": [
+    {
+      "relationGroupId": "d1-0001",
+      "sampleId": "d1-0001-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionCharge",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageQuote",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.13,
+          "latencyMs": 4978.170416999999,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageQuote 的共同使用方式。",
+          "inputHash": "75a7cf70ec1693179f2088ee94c0ecb2edf978a673a82d1734a3d18726b239ed",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0002",
+      "sampleId": "d1-0002-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#evaluate",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.3,
+          "latencyMs": 741.7420000000002,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#evaluate 的共同使用方式。",
+          "inputHash": "7404286a28b5f6f6ab06d35e1223b9f4dc50adffa946ecd05acdb97232766299",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0004",
+      "sampleId": "d1-0004-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.35,
+          "latencyMs": 382.0236249999998,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "dd7f2398dea056468fa67d2cde8c8128e84c97b1760c1e52ea870bda8c6d4f94",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0005",
+      "sampleId": "d1-0005-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionCharge",
+            "detail": "修改文本无法解析"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#chargeUnit",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": true,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.45,
+          "latencyMs": 399.0506660000001,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#chargeUnit 的共同使用方式。",
+          "inputHash": "d555d75520775d437113a0e587c8632b030072bf94edf84dcc6fb870d33ed49f",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0007",
+      "sampleId": "d1-0007-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionCharge",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#evaluate",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.28,
+          "latencyMs": 434.19341600000007,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#evaluate 的共同使用方式。",
+          "inputHash": "39d2ac289a23882cc3855b9a549a9c7ed2e5e7d89824dfbc4184eb82b5365275",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0008",
+      "sampleId": "d1-0008-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.39,
+          "latencyMs": 285.67733299999963,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "c2844e36eb114598df13faa570c14b08fd8447d8e5cc19a68a4859c0f0c1f5a0",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0010",
+      "sampleId": "d1-0010-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "对外接口发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": true
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.81,
+          "latencyMs": 269.8405839999996,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "86a889a502949648772a664fd3f5bded94462b75409a769fd0b93c1621de851c",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0011",
+      "sampleId": "d1-0011-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionCharge",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageCharge",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.21,
+          "latencyMs": 278.8506669999988,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageCharge 的共同使用方式。",
+          "inputHash": "cfe28d8f166d5f631a22967a64564082ebd65badef2bd44eba334f9c03a13e18",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0013",
+      "sampleId": "d1-0013-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionCharge",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageCharge",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.77,
+          "latencyMs": 480.2834579999999,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageCharge 的共同使用方式。",
+          "inputHash": "f15acfd45d7547104d41df61cc8c0723ca8366eafceea30f205eda27c9044217",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0017",
+      "sampleId": "d1-0017-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageQuote",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageCharge",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.43,
+          "latencyMs": 289.9626249999983,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/metering.ts#usageQuote 与 src/metering.ts#usageCharge 的共同使用方式。",
+          "inputHash": "ca6e2dff3fe07f856981d69f98bdf2d5844c7b84d916e57bbfb6421f45443f1d",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0024",
+      "sampleId": "d1-0024-safe",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "修改文本无法解析"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "修改文本无法解析"
+          }
+        ],
+        "contractChanged": {
+          "left": true,
+          "right": true
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.8,
+          "latencyMs": 308.02779100000043,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "68329bee8c8d719b4be1bf54c7e331a75ee6b713ed9a5cfeca0a2f499b35dd9a",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0031",
+      "sampleId": "d1-0031-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "lock",
+        "ruleId": "model-fast",
+        "summary": "模型发现双方修改可能破坏共同使用的行为。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionQuote",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageQuote",
+            "detail": "对外接口发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": true
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.55,
+          "latencyMs": 372.2644999999993,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionQuote 与 src/metering.ts#usageQuote 的共同使用方式。",
+          "inputHash": "f15e8b348f9b22fb9872f8176c2722084cbc744a9c198b7b699e3459676bdb8c",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0032",
+      "sampleId": "d1-0032-safe",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderUnit",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.23,
+          "latencyMs": 329.7317920000005,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderUnit 的共同使用方式。",
+          "inputHash": "73861e193b8774200f95dd23dad723f68467bb168113e05c1f5139d908e729ee",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0036",
+      "sampleId": "d1-0036-safe",
+      "verdict": {
+        "zone": "grey",
+        "decision": "allow",
+        "ruleId": "model-fast",
+        "summary": "模型认为双方修改可以共同继续。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledQuote",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderQuote",
+            "detail": "对外接口发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": true
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.81,
+          "latencyMs": 264.91333400000076,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型认为双方修改可以共同继续。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledQuote 与 src/reminders.ts#reminderQuote 的共同使用方式。",
+          "inputHash": "eaf21b541f39f3e6fc921cf9ba9a9da39442a0113808100ab5e74c5d0becdb20",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0042",
+      "sampleId": "d1-0042-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.28,
+          "latencyMs": 330.56674999999996,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "afa81608569a50da0e3076295987aa8c4425d7987bd6b46ee066afcb132adefc",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0044",
+      "sampleId": "d1-0044-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.22,
+          "latencyMs": 273.67470799999865,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "2eb3424065248e1f6b4b1673ffa5e3e192773ad905f7e0f8f77dca29e9c8b460",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0045",
+      "sampleId": "d1-0045-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageQuote",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageCharge",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.46,
+          "latencyMs": 364.8246670000008,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/metering.ts#usageQuote 与 src/metering.ts#usageCharge 的共同使用方式。",
+          "inputHash": "511266d347fc62f3621f5430a33cf8292e51d58a62ab267b671c59447927a7ef",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0050",
+      "sampleId": "d1-0050-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderQuote",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderDelay",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.36,
+          "latencyMs": 283.8902500000004,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/reminders.ts#reminderQuote 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+          "inputHash": "07c0a74dd92a2ea7aea6f618199ae755c3aeb987808b27e77ecbc38b32eb5a7e",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0072",
+      "sampleId": "d1-0072-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/scheduling.ts",
+            "symbol": "src/scheduling.ts#scheduledDelay",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/reminders.ts",
+            "symbol": "src/reminders.ts#reminderQuote",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.14,
+          "latencyMs": 299.20537499999955,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderQuote 的共同使用方式。",
+          "inputHash": "0a8658ce65631a6474ed716f6f01502a65e6318a4e7a438f6740eeecb23b6f5e",
+          "promptVersion": "pair-v1"
+        }
+      }
+    },
+    {
+      "relationGroupId": "d1-0093",
+      "sampleId": "d1-0093-conflict",
+      "verdict": {
+        "zone": "grey",
+        "decision": "warn",
+        "ruleId": "model-fast",
+        "summary": "模型建议双方检查关联修改的影响。",
+        "evidence": [
+          {
+            "file": "src/subscription.ts",
+            "symbol": "src/subscription.ts#subscriptionCharge",
+            "detail": "对外接口未发生变化"
+          },
+          {
+            "file": "src/metering.ts",
+            "symbol": "src/metering.ts#usageCharge",
+            "detail": "对外接口未发生变化"
+          }
+        ],
+        "contractChanged": {
+          "left": false,
+          "right": false
+        },
+        "typecheck": {
+          "ran": true,
+          "durationMs": 0,
+          "mergeOnlyDiagnostics": []
+        },
+        "adjudication": {
+          "strategy": "G2",
+          "source": "fast",
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "confidence": 0.46,
+          "latencyMs": 323.7521250000009,
+          "status": "success",
+          "escalated": false,
+          "userExplanation": "模型建议双方检查关联修改的影响。",
+          "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageCharge 的共同使用方式。",
+          "inputHash": "8e3030bd708dac03ea736bdf97f9668c6b65813462601d432272e3e4055771a6",
+          "promptVersion": "pair-v1"
+        }
+      }
+    }
+  ],
+  "calls": [
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "75a7cf70ec1693179f2088ee94c0ecb2edf978a673a82d1734a3d18726b239ed",
+      "status": "cache-hit",
+      "latencyMs": 4978.170416999999,
+      "decision": "warn",
+      "confidence": 0.13,
+      "usage": {
+        "inputTokens": 1174,
+        "outputTokens": 38
+      },
+      "costUsd": 0
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "7404286a28b5f6f6ab06d35e1223b9f4dc50adffa946ecd05acdb97232766299",
+      "status": "success",
+      "latencyMs": 741.7420000000002,
+      "decision": "warn",
+      "confidence": 0.3,
+      "usage": {
+        "inputTokens": 1067,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000044814
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "dd7f2398dea056468fa67d2cde8c8128e84c97b1760c1e52ea870bda8c6d4f94",
+      "status": "success",
+      "latencyMs": 382.0236249999998,
+      "decision": "warn",
+      "confidence": 0.35,
+      "usage": {
+        "inputTokens": 1167,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000049014
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "d555d75520775d437113a0e587c8632b030072bf94edf84dcc6fb870d33ed49f",
+      "status": "success",
+      "latencyMs": 399.0506660000001,
+      "decision": "lock",
+      "confidence": 0.45,
+      "usage": {
+        "inputTokens": 965,
+        "outputTokens": 38
+      },
+      "costUsd": 0.00004053
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "39d2ac289a23882cc3855b9a549a9c7ed2e5e7d89824dfbc4184eb82b5365275",
+      "status": "success",
+      "latencyMs": 434.19341600000007,
+      "decision": "warn",
+      "confidence": 0.28,
+      "usage": {
+        "inputTokens": 1094,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000045948
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "c2844e36eb114598df13faa570c14b08fd8447d8e5cc19a68a4859c0f0c1f5a0",
+      "status": "success",
+      "latencyMs": 285.67733299999963,
+      "decision": "lock",
+      "confidence": 0.39,
+      "usage": {
+        "inputTokens": 1182,
+        "outputTokens": 38
+      },
+      "costUsd": 0.00004964400000000001
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "86a889a502949648772a664fd3f5bded94462b75409a769fd0b93c1621de851c",
+      "status": "success",
+      "latencyMs": 269.8405839999996,
+      "decision": "lock",
+      "confidence": 0.81,
+      "usage": {
+        "inputTokens": 1175,
+        "outputTokens": 38
+      },
+      "costUsd": 0.00004935
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "cfe28d8f166d5f631a22967a64564082ebd65badef2bd44eba334f9c03a13e18",
+      "status": "success",
+      "latencyMs": 278.8506669999988,
+      "decision": "lock",
+      "confidence": 0.21,
+      "usage": {
+        "inputTokens": 1192,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000050064
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "f15acfd45d7547104d41df61cc8c0723ca8366eafceea30f205eda27c9044217",
+      "status": "success",
+      "latencyMs": 480.2834579999999,
+      "decision": "lock",
+      "confidence": 0.77,
+      "usage": {
+        "inputTokens": 1218,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000051156
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "ca6e2dff3fe07f856981d69f98bdf2d5844c7b84d916e57bbfb6421f45443f1d",
+      "status": "success",
+      "latencyMs": 289.9626249999983,
+      "decision": "warn",
+      "confidence": 0.43,
+      "usage": {
+        "inputTokens": 1324,
+        "outputTokens": 38
+      },
+      "costUsd": 0.00005560800000000001
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "68329bee8c8d719b4be1bf54c7e331a75ee6b713ed9a5cfeca0a2f499b35dd9a",
+      "status": "success",
+      "latencyMs": 308.02779100000043,
+      "decision": "lock",
+      "confidence": 0.8,
+      "usage": {
+        "inputTokens": 1170,
+        "outputTokens": 38
+      },
+      "costUsd": 0.00004914
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "f15e8b348f9b22fb9872f8176c2722084cbc744a9c198b7b699e3459676bdb8c",
+      "status": "success",
+      "latencyMs": 372.2644999999993,
+      "decision": "lock",
+      "confidence": 0.55,
+      "usage": {
+        "inputTokens": 1143,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000048006
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "73861e193b8774200f95dd23dad723f68467bb168113e05c1f5139d908e729ee",
+      "status": "success",
+      "latencyMs": 329.7317920000005,
+      "decision": "warn",
+      "confidence": 0.23,
+      "usage": {
+        "inputTokens": 944,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000039648000000000004
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "eaf21b541f39f3e6fc921cf9ba9a9da39442a0113808100ab5e74c5d0becdb20",
+      "status": "success",
+      "latencyMs": 264.91333400000076,
+      "decision": "allow",
+      "confidence": 0.81,
+      "usage": {
+        "inputTokens": 1112,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000046704
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "afa81608569a50da0e3076295987aa8c4425d7987bd6b46ee066afcb132adefc",
+      "status": "success",
+      "latencyMs": 330.56674999999996,
+      "decision": "warn",
+      "confidence": 0.28,
+      "usage": {
+        "inputTokens": 1167,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000049014
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "2eb3424065248e1f6b4b1673ffa5e3e192773ad905f7e0f8f77dca29e9c8b460",
+      "status": "success",
+      "latencyMs": 273.67470799999865,
+      "decision": "warn",
+      "confidence": 0.22,
+      "usage": {
+        "inputTokens": 1156,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000048552
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "511266d347fc62f3621f5430a33cf8292e51d58a62ab267b671c59447927a7ef",
+      "status": "success",
+      "latencyMs": 364.8246670000008,
+      "decision": "warn",
+      "confidence": 0.46,
+      "usage": {
+        "inputTokens": 1324,
+        "outputTokens": 38
+      },
+      "costUsd": 0.00005560800000000001
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "07c0a74dd92a2ea7aea6f618199ae755c3aeb987808b27e77ecbc38b32eb5a7e",
+      "status": "success",
+      "latencyMs": 283.8902500000004,
+      "decision": "warn",
+      "confidence": 0.36,
+      "usage": {
+        "inputTokens": 1288,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000054096000000000005
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "0a8658ce65631a6474ed716f6f01502a65e6318a4e7a438f6740eeecb23b6f5e",
+      "status": "success",
+      "latencyMs": 299.20537499999955,
+      "decision": "warn",
+      "confidence": 0.14,
+      "usage": {
+        "inputTokens": 1137,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000047754000000000004
+    },
+    {
+      "adapter": "jev",
+      "model": "jev-1.13.0",
+      "promptVersion": "pair-v1",
+      "inputHash": "8e3030bd708dac03ea736bdf97f9668c6b65813462601d432272e3e4055771a6",
+      "status": "success",
+      "latencyMs": 323.7521250000009,
+      "decision": "warn",
+      "confidence": 0.46,
+      "usage": {
+        "inputTokens": 1203,
+        "outputTokens": 38
+      },
+      "costUsd": 0.000050526000000000004
+    }
+  ]
+}

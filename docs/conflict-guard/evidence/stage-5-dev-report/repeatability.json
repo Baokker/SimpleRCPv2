@@ -1,0 +1,25 @@
+{
+  "compared": "judgements, outcomes, intervals, metrics, input hashes, completion, recorded latency, T03",
+  "rounds": [
+    {
+      "round": 1,
+      "recordMatches": true,
+      "sha256": "38cb1dc51a4dbca16b2488f0de8b2ba89bc55509c58a4531f5316fd8dd0b351d",
+      "networkCalls": 0
+    },
+    {
+      "round": 2,
+      "recordMatches": true,
+      "sha256": "38cb1dc51a4dbca16b2488f0de8b2ba89bc55509c58a4531f5316fd8dd0b351d",
+      "networkCalls": 0
+    },
+    {
+      "round": 3,
+      "recordMatches": true,
+      "sha256": "38cb1dc51a4dbca16b2488f0de8b2ba89bc55509c58a4531f5316fd8dd0b351d",
+      "networkCalls": 0
+    }
+  ],
+  "byteIdentical": true,
+  "valid": true
+}

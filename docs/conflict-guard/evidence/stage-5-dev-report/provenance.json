@@ -1,0 +1,32 @@
+{
+  "dataset": {
+    "version": "stage5-dev-smoke-v1",
+    "groups": 105,
+    "labelledVariants": 151,
+    "excluded": 0,
+    "projects": [
+      "billing",
+      "calendar"
+    ],
+    "holdoutProjectsUsed": 0,
+    "heldoutOperatorFamiliesUsed": 0,
+    "archiveSha256": "13aa73bb6b1064d95a1411165f78b55e9618ca647d4be7cdf743379e3d8ecb64"
+  },
+  "cliCalls": {
+    "fast": 161,
+    "deep": 143
+  },
+  "limits": {
+    "fast": 2000,
+    "deep": 800
+  },
+  "models": [
+    "deepseek-flash",
+    "jev-1.13.0"
+  ],
+  "thinkingDisabledCheck": {
+    "deepResponses": 143,
+    "nonemptyReasoningResponses": 0
+  },
+  "split": "dev"
+}

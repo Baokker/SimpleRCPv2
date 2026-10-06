@@ -1,0 +1,2651 @@
+{
+  "split": "dev",
+  "dataset": "bench/datasets/stage5-dev-smoke",
+  "config": {
+    "version": "adjudication-v1",
+    "promptVersion": "pair-v1",
+    "strategy": "G3",
+    "fast": "jev",
+    "deep": "deepseek",
+    "fastModel": "jev-1.13.0",
+    "threshold": 0,
+    "t1Strategy": "G3",
+    "contextLimit": 3000,
+    "topK": 3,
+    "invariants": true,
+    "softDeadlineMs": 2000,
+    "hardDeadlineMs": 8000,
+    "prices": {
+      "date": "2026-10-06",
+      "fastInputPerMillion": 0.042,
+      "fastOutputPerMillion": 0,
+      "deepInputPerMillion": 0.3,
+      "deepOutputPerMillion": 1.2
+    }
+  },
+  "groups": 20,
+  "providers": {
+    "G2": {
+      "planned": 20,
+      "completion": 1,
+      "p50Ms": 323.7521250000009,
+      "p95Ms": 741.7420000000002,
+      "decisions": {
+        "allow": 1,
+        "warn": 12,
+        "lock": 7
+      },
+      "calls": [
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "75a7cf70ec1693179f2088ee94c0ecb2edf978a673a82d1734a3d18726b239ed",
+          "status": "cache-hit",
+          "latencyMs": 4978.170416999999,
+          "decision": "warn",
+          "confidence": 0.13,
+          "usage": {
+            "inputTokens": 1174,
+            "outputTokens": 38
+          },
+          "costUsd": 0
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "7404286a28b5f6f6ab06d35e1223b9f4dc50adffa946ecd05acdb97232766299",
+          "status": "success",
+          "latencyMs": 741.7420000000002,
+          "decision": "warn",
+          "confidence": 0.3,
+          "usage": {
+            "inputTokens": 1067,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000044814
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "dd7f2398dea056468fa67d2cde8c8128e84c97b1760c1e52ea870bda8c6d4f94",
+          "status": "success",
+          "latencyMs": 382.0236249999998,
+          "decision": "warn",
+          "confidence": 0.35,
+          "usage": {
+            "inputTokens": 1167,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000049014
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "d555d75520775d437113a0e587c8632b030072bf94edf84dcc6fb870d33ed49f",
+          "status": "success",
+          "latencyMs": 399.0506660000001,
+          "decision": "lock",
+          "confidence": 0.45,
+          "usage": {
+            "inputTokens": 965,
+            "outputTokens": 38
+          },
+          "costUsd": 0.00004053
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "39d2ac289a23882cc3855b9a549a9c7ed2e5e7d89824dfbc4184eb82b5365275",
+          "status": "success",
+          "latencyMs": 434.19341600000007,
+          "decision": "warn",
+          "confidence": 0.28,
+          "usage": {
+            "inputTokens": 1094,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000045948
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "c2844e36eb114598df13faa570c14b08fd8447d8e5cc19a68a4859c0f0c1f5a0",
+          "status": "success",
+          "latencyMs": 285.67733299999963,
+          "decision": "lock",
+          "confidence": 0.39,
+          "usage": {
+            "inputTokens": 1182,
+            "outputTokens": 38
+          },
+          "costUsd": 0.00004964400000000001
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "86a889a502949648772a664fd3f5bded94462b75409a769fd0b93c1621de851c",
+          "status": "success",
+          "latencyMs": 269.8405839999996,
+          "decision": "lock",
+          "confidence": 0.81,
+          "usage": {
+            "inputTokens": 1175,
+            "outputTokens": 38
+          },
+          "costUsd": 0.00004935
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "cfe28d8f166d5f631a22967a64564082ebd65badef2bd44eba334f9c03a13e18",
+          "status": "success",
+          "latencyMs": 278.8506669999988,
+          "decision": "lock",
+          "confidence": 0.21,
+          "usage": {
+            "inputTokens": 1192,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000050064
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "f15acfd45d7547104d41df61cc8c0723ca8366eafceea30f205eda27c9044217",
+          "status": "success",
+          "latencyMs": 480.2834579999999,
+          "decision": "lock",
+          "confidence": 0.77,
+          "usage": {
+            "inputTokens": 1218,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000051156
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "ca6e2dff3fe07f856981d69f98bdf2d5844c7b84d916e57bbfb6421f45443f1d",
+          "status": "success",
+          "latencyMs": 289.9626249999983,
+          "decision": "warn",
+          "confidence": 0.43,
+          "usage": {
+            "inputTokens": 1324,
+            "outputTokens": 38
+          },
+          "costUsd": 0.00005560800000000001
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "68329bee8c8d719b4be1bf54c7e331a75ee6b713ed9a5cfeca0a2f499b35dd9a",
+          "status": "success",
+          "latencyMs": 308.02779100000043,
+          "decision": "lock",
+          "confidence": 0.8,
+          "usage": {
+            "inputTokens": 1170,
+            "outputTokens": 38
+          },
+          "costUsd": 0.00004914
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "f15e8b348f9b22fb9872f8176c2722084cbc744a9c198b7b699e3459676bdb8c",
+          "status": "success",
+          "latencyMs": 372.2644999999993,
+          "decision": "lock",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 1143,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000048006
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "73861e193b8774200f95dd23dad723f68467bb168113e05c1f5139d908e729ee",
+          "status": "success",
+          "latencyMs": 329.7317920000005,
+          "decision": "warn",
+          "confidence": 0.23,
+          "usage": {
+            "inputTokens": 944,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000039648000000000004
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "eaf21b541f39f3e6fc921cf9ba9a9da39442a0113808100ab5e74c5d0becdb20",
+          "status": "success",
+          "latencyMs": 264.91333400000076,
+          "decision": "allow",
+          "confidence": 0.81,
+          "usage": {
+            "inputTokens": 1112,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000046704
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "afa81608569a50da0e3076295987aa8c4425d7987bd6b46ee066afcb132adefc",
+          "status": "success",
+          "latencyMs": 330.56674999999996,
+          "decision": "warn",
+          "confidence": 0.28,
+          "usage": {
+            "inputTokens": 1167,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000049014
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "2eb3424065248e1f6b4b1673ffa5e3e192773ad905f7e0f8f77dca29e9c8b460",
+          "status": "success",
+          "latencyMs": 273.67470799999865,
+          "decision": "warn",
+          "confidence": 0.22,
+          "usage": {
+            "inputTokens": 1156,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000048552
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "511266d347fc62f3621f5430a33cf8292e51d58a62ab267b671c59447927a7ef",
+          "status": "success",
+          "latencyMs": 364.8246670000008,
+          "decision": "warn",
+          "confidence": 0.46,
+          "usage": {
+            "inputTokens": 1324,
+            "outputTokens": 38
+          },
+          "costUsd": 0.00005560800000000001
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "07c0a74dd92a2ea7aea6f618199ae755c3aeb987808b27e77ecbc38b32eb5a7e",
+          "status": "success",
+          "latencyMs": 283.8902500000004,
+          "decision": "warn",
+          "confidence": 0.36,
+          "usage": {
+            "inputTokens": 1288,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000054096000000000005
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "0a8658ce65631a6474ed716f6f01502a65e6318a4e7a438f6740eeecb23b6f5e",
+          "status": "success",
+          "latencyMs": 299.20537499999955,
+          "decision": "warn",
+          "confidence": 0.14,
+          "usage": {
+            "inputTokens": 1137,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000047754000000000004
+        },
+        {
+          "adapter": "jev",
+          "model": "jev-1.13.0",
+          "promptVersion": "pair-v1",
+          "inputHash": "8e3030bd708dac03ea736bdf97f9668c6b65813462601d432272e3e4055771a6",
+          "status": "success",
+          "latencyMs": 323.7521250000009,
+          "decision": "warn",
+          "confidence": 0.46,
+          "usage": {
+            "inputTokens": 1203,
+            "outputTokens": 38
+          },
+          "costUsd": 0.000050526000000000004
+        }
+      ],
+      "results": [
+        {
+          "relationGroupId": "d1-0001",
+          "sampleId": "d1-0001-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionCharge",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageQuote",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.13,
+              "latencyMs": 4978.170416999999,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageQuote 的共同使用方式。",
+              "inputHash": "75a7cf70ec1693179f2088ee94c0ecb2edf978a673a82d1734a3d18726b239ed",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0002",
+          "sampleId": "d1-0002-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#evaluate",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.3,
+              "latencyMs": 741.7420000000002,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#evaluate 的共同使用方式。",
+              "inputHash": "7404286a28b5f6f6ab06d35e1223b9f4dc50adffa946ecd05acdb97232766299",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0004",
+          "sampleId": "d1-0004-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.35,
+              "latencyMs": 382.0236249999998,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "dd7f2398dea056468fa67d2cde8c8128e84c97b1760c1e52ea870bda8c6d4f94",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0005",
+          "sampleId": "d1-0005-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionCharge",
+                "detail": "修改文本无法解析"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#chargeUnit",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": true,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.45,
+              "latencyMs": 399.0506660000001,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#chargeUnit 的共同使用方式。",
+              "inputHash": "d555d75520775d437113a0e587c8632b030072bf94edf84dcc6fb870d33ed49f",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0007",
+          "sampleId": "d1-0007-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionCharge",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#evaluate",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.28,
+              "latencyMs": 434.19341600000007,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#evaluate 的共同使用方式。",
+              "inputHash": "39d2ac289a23882cc3855b9a549a9c7ed2e5e7d89824dfbc4184eb82b5365275",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0008",
+          "sampleId": "d1-0008-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.39,
+              "latencyMs": 285.67733299999963,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "c2844e36eb114598df13faa570c14b08fd8447d8e5cc19a68a4859c0f0c1f5a0",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0010",
+          "sampleId": "d1-0010-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "对外接口发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.81,
+              "latencyMs": 269.8405839999996,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "86a889a502949648772a664fd3f5bded94462b75409a769fd0b93c1621de851c",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0011",
+          "sampleId": "d1-0011-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionCharge",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageCharge",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.21,
+              "latencyMs": 278.8506669999988,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageCharge 的共同使用方式。",
+              "inputHash": "cfe28d8f166d5f631a22967a64564082ebd65badef2bd44eba334f9c03a13e18",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0013",
+          "sampleId": "d1-0013-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionCharge",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageCharge",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.77,
+              "latencyMs": 480.2834579999999,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageCharge 的共同使用方式。",
+              "inputHash": "f15acfd45d7547104d41df61cc8c0723ca8366eafceea30f205eda27c9044217",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0017",
+          "sampleId": "d1-0017-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageQuote",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageCharge",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.43,
+              "latencyMs": 289.9626249999983,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/metering.ts#usageQuote 与 src/metering.ts#usageCharge 的共同使用方式。",
+              "inputHash": "ca6e2dff3fe07f856981d69f98bdf2d5844c7b84d916e57bbfb6421f45443f1d",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0024",
+          "sampleId": "d1-0024-safe",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "修改文本无法解析"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "修改文本无法解析"
+              }
+            ],
+            "contractChanged": {
+              "left": true,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.8,
+              "latencyMs": 308.02779100000043,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "68329bee8c8d719b4be1bf54c7e331a75ee6b713ed9a5cfeca0a2f499b35dd9a",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0031",
+          "sampleId": "d1-0031-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-fast",
+            "summary": "模型发现双方修改可能破坏共同使用的行为。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionQuote",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageQuote",
+                "detail": "对外接口发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.55,
+              "latencyMs": 372.2644999999993,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型发现双方修改可能破坏共同使用的行为。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionQuote 与 src/metering.ts#usageQuote 的共同使用方式。",
+              "inputHash": "f15e8b348f9b22fb9872f8176c2722084cbc744a9c198b7b699e3459676bdb8c",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0032",
+          "sampleId": "d1-0032-safe",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderUnit",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.23,
+              "latencyMs": 329.7317920000005,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderUnit 的共同使用方式。",
+              "inputHash": "73861e193b8774200f95dd23dad723f68467bb168113e05c1f5139d908e729ee",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0036",
+          "sampleId": "d1-0036-safe",
+          "verdict": {
+            "zone": "grey",
+            "decision": "allow",
+            "ruleId": "model-fast",
+            "summary": "模型认为双方修改可以共同继续。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledQuote",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderQuote",
+                "detail": "对外接口发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.81,
+              "latencyMs": 264.91333400000076,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型认为双方修改可以共同继续。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledQuote 与 src/reminders.ts#reminderQuote 的共同使用方式。",
+              "inputHash": "eaf21b541f39f3e6fc921cf9ba9a9da39442a0113808100ab5e74c5d0becdb20",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0042",
+          "sampleId": "d1-0042-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.28,
+              "latencyMs": 330.56674999999996,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "afa81608569a50da0e3076295987aa8c4425d7987bd6b46ee066afcb132adefc",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0044",
+          "sampleId": "d1-0044-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.22,
+              "latencyMs": 273.67470799999865,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "2eb3424065248e1f6b4b1673ffa5e3e192773ad905f7e0f8f77dca29e9c8b460",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0045",
+          "sampleId": "d1-0045-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageQuote",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageCharge",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.46,
+              "latencyMs": 364.8246670000008,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/metering.ts#usageQuote 与 src/metering.ts#usageCharge 的共同使用方式。",
+              "inputHash": "511266d347fc62f3621f5430a33cf8292e51d58a62ab267b671c59447927a7ef",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0050",
+          "sampleId": "d1-0050-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderQuote",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderDelay",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.36,
+              "latencyMs": 283.8902500000004,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/reminders.ts#reminderQuote 与 src/reminders.ts#reminderDelay 的共同使用方式。",
+              "inputHash": "07c0a74dd92a2ea7aea6f618199ae755c3aeb987808b27e77ecbc38b32eb5a7e",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0072",
+          "sampleId": "d1-0072-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "src/scheduling.ts#scheduledDelay",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "src/reminders.ts#reminderQuote",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.14,
+              "latencyMs": 299.20537499999955,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/scheduling.ts#scheduledDelay 与 src/reminders.ts#reminderQuote 的共同使用方式。",
+              "inputHash": "0a8658ce65631a6474ed716f6f01502a65e6318a4e7a438f6740eeecb23b6f5e",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0093",
+          "sampleId": "d1-0093-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-fast",
+            "summary": "模型建议双方检查关联修改的影响。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "src/subscription.ts#subscriptionCharge",
+                "detail": "对外接口未发生变化"
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "src/metering.ts#usageCharge",
+                "detail": "对外接口未发生变化"
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G2",
+              "source": "fast",
+              "adapter": "jev",
+              "model": "jev-1.13.0",
+              "confidence": 0.46,
+              "latencyMs": 323.7521250000009,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "模型建议双方检查关联修改的影响。",
+              "suggestedAction": "请双方检查 src/subscription.ts#subscriptionCharge 与 src/metering.ts#usageCharge 的共同使用方式。",
+              "inputHash": "8e3030bd708dac03ea736bdf97f9668c6b65813462601d432272e3e4055771a6",
+              "promptVersion": "pair-v1"
+            }
+          }
+        }
+      ],
+      "stats": {
+        "calls": 19,
+        "cacheHits": 1,
+        "judgements": 20,
+        "escalations": 0,
+        "escalationRatio": 0,
+        "p50Ms": 323.7521250000009,
+        "p95Ms": 741.7420000000002,
+        "failures": 0,
+        "costUsd": 0.0009251759999999999
+      }
+    },
+    "G1": {
+      "planned": 20,
+      "completion": 1,
+      "p50Ms": 2661.4374579999967,
+      "p95Ms": 3267.348833,
+      "decisions": {
+        "allow": 2,
+        "warn": 15,
+        "lock": 3
+      },
+      "calls": [
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "75a7cf70ec1693179f2088ee94c0ecb2edf978a673a82d1734a3d18726b239ed",
+          "status": "cache-hit",
+          "latencyMs": 2177.578125,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 838,
+            "outputTokens": 383
+          },
+          "costUsd": 0
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "7404286a28b5f6f6ab06d35e1223b9f4dc50adffa946ecd05acdb97232766299",
+          "status": "success",
+          "latencyMs": 3267.348833,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 750,
+            "outputTokens": 551
+          },
+          "costUsd": 0.0008862
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "dd7f2398dea056468fa67d2cde8c8128e84c97b1760c1e52ea870bda8c6d4f94",
+          "status": "success",
+          "latencyMs": 2249.428832999998,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 861,
+            "outputTokens": 408
+          },
+          "costUsd": 0.0007479
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "d555d75520775d437113a0e587c8632b030072bf94edf84dcc6fb870d33ed49f",
+          "status": "success",
+          "latencyMs": 2494.144166000002,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 625,
+            "outputTokens": 428
+          },
+          "costUsd": 0.0007011000000000001
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "39d2ac289a23882cc3855b9a549a9c7ed2e5e7d89824dfbc4184eb82b5365275",
+          "status": "success",
+          "latencyMs": 2924.4672500000015,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 752,
+            "outputTokens": 528
+          },
+          "costUsd": 0.0008592000000000001
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "c2844e36eb114598df13faa570c14b08fd8447d8e5cc19a68a4859c0f0c1f5a0",
+          "status": "success",
+          "latencyMs": 2312.1834579999995,
+          "decision": "lock",
+          "confidence": 0.9,
+          "usage": {
+            "inputTokens": 879,
+            "outputTokens": 367
+          },
+          "costUsd": 0.0007040999999999999
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "86a889a502949648772a664fd3f5bded94462b75409a769fd0b93c1621de851c",
+          "status": "success",
+          "latencyMs": 2777.4161249999997,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 869,
+            "outputTokens": 536
+          },
+          "costUsd": 0.0009038999999999999
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "cfe28d8f166d5f631a22967a64564082ebd65badef2bd44eba334f9c03a13e18",
+          "status": "success",
+          "latencyMs": 2470.9912909999985,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 859,
+            "outputTokens": 461
+          },
+          "costUsd": 0.0008108999999999998
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "f15acfd45d7547104d41df61cc8c0723ca8366eafceea30f205eda27c9044217",
+          "status": "success",
+          "latencyMs": 2661.4374579999967,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 888,
+            "outputTokens": 483
+          },
+          "costUsd": 0.000846
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "ca6e2dff3fe07f856981d69f98bdf2d5844c7b84d916e57bbfb6421f45443f1d",
+          "status": "success",
+          "latencyMs": 2734.8260410000003,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 993,
+            "outputTokens": 438
+          },
+          "costUsd": 0.0008235
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "68329bee8c8d719b4be1bf54c7e331a75ee6b713ed9a5cfeca0a2f499b35dd9a",
+          "status": "success",
+          "latencyMs": 2296.2194999999992,
+          "decision": "lock",
+          "confidence": 0.9,
+          "usage": {
+            "inputTokens": 866,
+            "outputTokens": 463
+          },
+          "costUsd": 0.0008154000000000001
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "f15e8b348f9b22fb9872f8176c2722084cbc744a9c198b7b699e3459676bdb8c",
+          "status": "success",
+          "latencyMs": 2200.642749999999,
+          "decision": "lock",
+          "confidence": 0.95,
+          "usage": {
+            "inputTokens": 800,
+            "outputTokens": 376
+          },
+          "costUsd": 0.0006912
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "73861e193b8774200f95dd23dad723f68467bb168113e05c1f5139d908e729ee",
+          "status": "success",
+          "latencyMs": 2244.948500000006,
+          "decision": "allow",
+          "confidence": 0.72,
+          "usage": {
+            "inputTokens": 620,
+            "outputTokens": 400
+          },
+          "costUsd": 0.000666
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "eaf21b541f39f3e6fc921cf9ba9a9da39442a0113808100ab5e74c5d0becdb20",
+          "status": "success",
+          "latencyMs": 2082.648291999998,
+          "decision": "allow",
+          "confidence": 0.95,
+          "usage": {
+            "inputTokens": 800,
+            "outputTokens": 351
+          },
+          "costUsd": 0.0006612
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "afa81608569a50da0e3076295987aa8c4425d7987bd6b46ee066afcb132adefc",
+          "status": "success",
+          "latencyMs": 2718.953207999999,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 861,
+            "outputTokens": 451
+          },
+          "costUsd": 0.0007995
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "2eb3424065248e1f6b4b1673ffa5e3e192773ad905f7e0f8f77dca29e9c8b460",
+          "status": "success",
+          "latencyMs": 2896.214,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 850,
+            "outputTokens": 426
+          },
+          "costUsd": 0.0007662000000000001
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "511266d347fc62f3621f5430a33cf8292e51d58a62ab267b671c59447927a7ef",
+          "status": "success",
+          "latencyMs": 3138.100624999999,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 993,
+            "outputTokens": 461
+          },
+          "costUsd": 0.0008510999999999999
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "07c0a74dd92a2ea7aea6f618199ae755c3aeb987808b27e77ecbc38b32eb5a7e",
+          "status": "success",
+          "latencyMs": 2950.684208999999,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 989,
+            "outputTokens": 506
+          },
+          "costUsd": 0.0009038999999999999
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "0a8658ce65631a6474ed716f6f01502a65e6318a4e7a438f6740eeecb23b6f5e",
+          "status": "success",
+          "latencyMs": 2849.1945420000047,
+          "decision": "warn",
+          "confidence": 0.6,
+          "usage": {
+            "inputTokens": 832,
+            "outputTokens": 625
+          },
+          "costUsd": 0.0009996
+        },
+        {
+          "adapter": "deepseek",
+          "model": "deepseek-flash",
+          "promptVersion": "pair-v1",
+          "inputHash": "8e3030bd708dac03ea736bdf97f9668c6b65813462601d432272e3e4055771a6",
+          "status": "success",
+          "latencyMs": 3625.789582999998,
+          "decision": "warn",
+          "confidence": 0.55,
+          "usage": {
+            "inputTokens": 871,
+            "outputTokens": 399
+          },
+          "costUsd": 0.0007400999999999999
+        }
+      ],
+      "results": [
+        {
+          "relationGroupId": "d1-0001",
+          "sampleId": "d1-0001-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动合并后可能破坏计量初始化与默认计划语义，证据不足以完全确认安全。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionCharge",
+                "detail": "Left 'after' removes metering.initialize() and calls metering.evaluate(units, 0.1) without the plan argument, changing initialization and plan semantics relied on by callers/tests."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageQuote",
+                "detail": "Right 'after' changes default plan from undefined to \"benchmark\", altering behavior for callers that omit the plan argument."
+              },
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionQuote",
+                "detail": "Caller passes explicit \"monthly\" plan, so it is unaffected by the default change, but subscriptionCharge's dropped plan argument is not covered by this caller."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "subscriptionCharge",
+                "detail": "Test asserts subscriptionCharge(40) > 0 and historySize() > 0, which may fail if metering.initialize() is no longer invoked."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2177.578125,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动合并后可能破坏计量初始化与默认计划语义，证据不足以完全确认安全。",
+              "suggestedAction": "请让 src/subscription.ts#subscriptionCharge 恢复 metering.initialize() 调用并显式传入计划参数（如 \"monthly\"），同时确认 src/metering.ts#usageQuote 的默认计划改为 \"benchmark\" 是否为预期行为。",
+              "inputHash": "75a7cf70ec1693179f2088ee94c0ecb2edf978a673a82d1734a3d18726b239ed",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0002",
+          "sampleId": "d1-0002-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动组合后，scheduledDelay 不再经过 evaluate，且参数从 \"work\" 改为 \"benchmark\" 并移除了初始化调用，行为是否仍满足测试与调用方预期存在实质不确定性。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "Left edit replaces reminders.evaluate(minutes, 0.1, \"work\") with reminders.reminderDelay(minutes, 0.1, \"benchmark\") and drops reminders.initialize(), changing both the calendar argument and initialization behavior."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "evaluate",
+                "detail": "Right edit rebinds evaluate from reminderDelay to reminderDelayV2, but scheduledDelay no longer calls evaluate, so this rebinding is bypassed for scheduledDelay."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderQuote",
+                "detail": "reminderQuote still calls evaluate, so it will use reminderDelayV2 after the right edit; this is the only remaining caller of evaluate in the supplied usage."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "scheduledDelay",
+                "detail": "Test asserts scheduledDelay(40) > 0; the left edit's switch to \"benchmark\" and removal of initialize() could make this fail if reminderDelay does not handle \"benchmark\" or if initialization is required."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 3267.348833,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动组合后，scheduledDelay 不再经过 evaluate，且参数从 \"work\" 改为 \"benchmark\" 并移除了初始化调用，行为是否仍满足测试与调用方预期存在实质不确定性。",
+              "suggestedAction": "请 src/scheduling.ts 的 scheduledDelay 作者确认是否应保留 reminders.initialize() 并继续调用 reminders.evaluate(minutes, 0.1, \"work\")，或明确说明改用 reminderDelay 与 \"benchmark\" 的理由；同时请 src/reminders.ts 的 evaluate 作者确认 reminderDelayV2 是否兼容原 reminderDelay 的调用约定。",
+              "inputHash": "7404286a28b5f6f6ab06d35e1223b9f4dc50adffa946ecd05acdb97232766299",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0004",
+          "sampleId": "d1-0004-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动叠加后会让 scheduledDelay 的返回值同时受到 +1 偏移和 reminderDelay 优先级顺序变化的影响，而现有测试只检查大于 0，无法确认合并后的数值是否符合预期。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit returns reminders.evaluate(...)/reminderUnit + 1, adding a constant offset to the value produced downstream."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "After edit swaps priorities to [multiplier/2, multiplier], so priorities[0] changes from multiplier to multiplier/2, altering the floor term in the returned delay."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "evaluate",
+                "detail": "Relationship states evaluate value-references reminderDelay, so reminderDelay's changed output propagates into scheduledDelay's result."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "scheduledDelay test",
+                "detail": "Only asserts scheduledDelay(40) > 0, which is too weak to detect the combined numeric shift from both edits."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2249.428832999998,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动叠加后会让 scheduledDelay 的返回值同时受到 +1 偏移和 reminderDelay 优先级顺序变化的影响，而现有测试只检查大于 0，无法确认合并后的数值是否符合预期。",
+              "suggestedAction": "请 src/reminders.ts 中 reminderDelay 的作者确认 priorities 顺序交换是否有意，并补充针对 scheduledDelay 具体数值的测试；若无意，应将 priorities 恢复为 [multiplier, multiplier/2]。",
+              "inputHash": "dd7f2398dea056468fa67d2cde8c8128e84c97b1760c1e52ea870bda8c6d4f94",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0005",
+          "sampleId": "d1-0005-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "左改动把 metering.initialize() 破坏成非法语句，右改动又把 chargeUnit 放大 1000 倍，两者叠加会同时造成语法错误和计费结果严重偏移，现有测试无法覆盖。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionCharge",
+                "detail": "Left edit replaces metering.initialize() with 'const alize();', which is invalid syntax and removes the initialization call that the function previously relied on."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "chargeUnit",
+                "detail": "Right edit changes chargeUnit from 1 to 1000, altering the divisor in subscriptionCharge's return expression by a factor of 1000."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "subscriptionCharge test",
+                "detail": "Test only asserts subscriptionCharge(40) > 0, which remains true after the divisor change, so the test does not detect the 1000x scaling shift."
+              }
+            ],
+            "contractChanged": {
+              "left": true,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2494.144166000002,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "左改动把 metering.initialize() 破坏成非法语句，右改动又把 chargeUnit 放大 1000 倍，两者叠加会同时造成语法错误和计费结果严重偏移，现有测试无法覆盖。",
+              "suggestedAction": "请先修复 src/subscription.ts 中 subscriptionCharge 的 'const alize();' 为正确的 metering.initialize() 调用，并确认 src/metering.ts 中 chargeUnit 从 1 改为 1000 是否为预期；若为预期，需更新测试断言以覆盖新的计费比例。",
+              "inputHash": "d555d75520775d437113a0e587c8632b030072bf94edf84dcc6fb870d33ed49f",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0007",
+          "sampleId": "d1-0007-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处修改分别改变了订阅计费的调用路径和 evaluate 的绑定，合并后订阅计费不再经过 evaluate，且计划参数由 monthly 变为 benchmark，可能影响依赖原行为的调用方。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionCharge",
+                "detail": "Before called metering.initialize() then metering.evaluate(units, 0.1, \"monthly\"); after calls metering.usageCharge(units, 0.1, \"benchmark\"), changing both the plan argument and the initialization path."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "evaluate",
+                "detail": "Right edit rebinds evaluate from usageCharge to usageChargeV2, but subscriptionCharge no longer references evaluate, so the merged behavior of subscriptionCharge is driven by the left edit's direct usageCharge call."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageQuote",
+                "detail": "Caller usageQuote still calls evaluate, so the right edit changes usageQuote's behavior while subscriptionCharge's behavior changes independently via the left edit."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "subscriptionCharge test",
+                "detail": "Test asserts subscriptionCharge(40) > 0 and evaluate(20, 0.1, \"monthly\") > 0; the plan string change from \"monthly\" to \"benchmark\" is not covered by the supplied tests, leaving behavior uncertain."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2924.4672500000015,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处修改分别改变了订阅计费的调用路径和 evaluate 的绑定，合并后订阅计费不再经过 evaluate，且计划参数由 monthly 变为 benchmark，可能影响依赖原行为的调用方。",
+              "suggestedAction": "请 src/subscription.ts 的 subscriptionCharge 作者确认是否应保留 metering.initialize() 并将 plan 参数改回 \"monthly\"，或明确说明 \"benchmark\" 与 usageCharge 的兼容性；同时请 src/metering.ts 的 evaluate 作者确认 usageChargeV2 与 usageCharge 的语义差异。",
+              "inputHash": "39d2ac289a23882cc3855b9a549a9c7ed2e5e7d89824dfbc4184eb82b5365275",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0008",
+          "sampleId": "d1-0008-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-deep",
+            "summary": "两处修改合并后，scheduledDelay 传入的 multiplier 0.5 会被 reminderDelay 新增的 >0.2 校验拒绝并抛出 RangeError，导致既有测试失败。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit, calls reminders.evaluate(minutes, 0.5, \"benchmark\"), passing multiplier 0.5."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "After edit, throws RangeError when multiplier > 0.2, so any multiplier of 0.5 is rejected."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "evaluate",
+                "detail": "evaluate value-references reminderDelay, so the new multiplier guard propagates to scheduledDelay's call path."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "scheduledDelay test",
+                "detail": "assert.ok(await scheduledDelay(40) > 0) will fail because the call now throws RangeError."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.9,
+              "latencyMs": 2312.1834579999995,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处修改合并后，scheduledDelay 传入的 multiplier 0.5 会被 reminderDelay 新增的 >0.2 校验拒绝并抛出 RangeError，导致既有测试失败。",
+              "suggestedAction": "请修改 src/reminders.ts#reminderDelay 中的 multiplier 上限校验（例如放宽阈值或改为仅对特定调用方生效），或修改 src/scheduling.ts#scheduledDelay 使其传入不超过 0.2 的 multiplier，以恢复调用契约。",
+              "inputHash": "c2844e36eb114598df13faa570c14b08fd8447d8e5cc19a68a4859c0f0c1f5a0",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0010",
+          "sampleId": "d1-0010-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "合并后 scheduledDelay 改用 0 分钟调用 evaluate，而 reminderDelay 对 0 分钟直接返回 0 且不写入 history，可能导致 historySize() 为 0 并使 scheduledDelay(40)>0 的测试失败，但缺少 reset/evaluate/historySize 的实现细节，无法完全确认。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit, scheduledDelay calls reminders.reset(); reminders.evaluate(0, 0.1, \"benchmark\"); and returns reminders.historySize(), replacing the prior evaluate(minutes, 0.1, \"work\") / reminderUnit behavior."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "After edit, reminderDelay returns 0 immediately when minutes === 0, before history.splice writes to history, so evaluate(0, ...) may not populate history."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "日程提醒与时间计量",
+                "detail": "Tests assert evaluate(20,0.1,\"work\")>0, historySize()>0, and await scheduledDelay(40)>0; the merged scheduledDelay path uses minutes=0 and may violate the historySize()>0 and scheduledDelay(40)>0 expectations."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2777.4161249999997,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "合并后 scheduledDelay 改用 0 分钟调用 evaluate，而 reminderDelay 对 0 分钟直接返回 0 且不写入 history，可能导致 historySize() 为 0 并使 scheduledDelay(40)>0 的测试失败，但缺少 reset/evaluate/historySize 的实现细节，无法完全确认。",
+              "suggestedAction": "请修改 src/scheduling.ts 中的 scheduledDelay：不要用 0 分钟调用 reminders.evaluate，应恢复传入实际 minutes（如 reminders.evaluate(minutes, 0.1, \"work\")）并返回基于 reminderUnit 或有效历史的结果，避免依赖 evaluate(0) 产生 history。",
+              "inputHash": "86a889a502949648772a664fd3f5bded94462b75409a769fd0b93c1621de851c",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0011",
+          "sampleId": "d1-0011-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动分别改变了订阅计费的初始化、乘数与计划参数，以及 usageCharge 的默认乘数，合并后可能使订阅计费结果与测试预期不符，但缺少 configuration.rate、chargeUnit 与 evaluate 对 undefined 的处理等关键信息，无法完全确定。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionCharge",
+                "detail": "Left edit removes metering.initialize() and changes evaluate call to (units, undefined, \"benchmark\"), altering the multiplier and plan relied on by the test assertion subscriptionCharge(40) > 0."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageCharge",
+                "detail": "Right edit changes default multiplier from configuration.rate to 0, so callers relying on the default (including evaluate/usageQuote paths) now compute with multiplier 0, changing charge amounts."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "subscriptionCharge test",
+                "detail": "Test asserts subscriptionCharge(40) > 0 and evaluate(20, 0.1, \"monthly\") > 0; the merged edits change the multiplier/plan inputs these assertions depend on."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2470.9912909999985,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动分别改变了订阅计费的初始化、乘数与计划参数，以及 usageCharge 的默认乘数，合并后可能使订阅计费结果与测试预期不符，但缺少 configuration.rate、chargeUnit 与 evaluate 对 undefined 的处理等关键信息，无法完全确定。",
+              "suggestedAction": "请 src/subscription.ts#subscriptionCharge 的修改者恢复 metering.initialize() 并明确传入有效的 multiplier 与 plan（如 0.1 与 \"monthly\"），或由 src/metering.ts#usageCharge 的修改者确认默认 multiplier 改为 0 是否与 evaluate 的调用约定一致后再合并。",
+              "inputHash": "cfe28d8f166d5f631a22967a64564082ebd65badef2bd44eba334f9c03a13e18",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0013",
+          "sampleId": "d1-0013-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处修改通过计量模块的共享状态相互影响，但现有测试未覆盖新的 0.5 乘数与 \"benchmark\" 计划，合并后的行为存在不确定性。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionCharge",
+                "detail": "After edit, calls metering.evaluate(units, 0.5, \"benchmark\") and no longer calls metering.initialize(); the 0.5 multiplier exceeds the new usageCharge guard threshold of 0.2."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageCharge",
+                "detail": "After edit, throws RangeError when multiplier > 0.2, which would reject the 0.5 multiplier passed by subscriptionCharge if usageCharge is on the same evaluation path."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "chargeUnit",
+                "detail": "Relationship path shows subscriptionCharge value-references chargeUnit and chargeUnit value-references usageCharge, linking the two edited symbols through shared metering state."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "subscriptionCharge",
+                "detail": "Test asserts subscriptionCharge(40) > 0 but does not cover the new 0.5 multiplier or \"benchmark\" plan, so the merged behavior is not verified."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2661.4374579999967,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处修改通过计量模块的共享状态相互影响，但现有测试未覆盖新的 0.5 乘数与 \"benchmark\" 计划，合并后的行为存在不确定性。",
+              "suggestedAction": "请修改 src/subscription.ts 中 subscriptionCharge 的调用参数，将 metering.evaluate 的乘数从 0.5 调整为不超过 0.2 的值，或恢复 metering.initialize() 并确认与 usageCharge 新守卫的兼容性。",
+              "inputHash": "f15acfd45d7547104d41df61cc8c0723ca8366eafceea30f205eda27c9044217",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0017",
+          "sampleId": "d1-0017-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动分别给用量报价加 3、给用量计费乘 2，但调用方 subscriptionQuote 会把报价除以 chargeUnit，导致报价与计费之间的原有比例关系被破坏，且现有测试无法确认哪种数值才是预期。",
+            "evidence": [
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageQuote",
+                "detail": "Return changed from {amount, value: amount} to {amount: amount+3, value: amount+3}, altering the value consumed by callers."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageCharge",
+                "detail": "Return expression multiplied by 2, changing the charge scale relative to usageQuote."
+              },
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionQuote",
+                "detail": "Caller uses metering.usageQuote(units, 0.1, \"monthly\").amount / metering.chargeUnit, so the +3 offset is divided by chargeUnit while usageCharge is doubled, breaking the prior quote/charge relationship."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "订阅计量与计费",
+                "detail": "Tests only assert positivity and history/throw behavior; they do not pin the exact quote/charge relationship, leaving the merged numeric behavior unverified."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2734.8260410000003,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动分别给用量报价加 3、给用量计费乘 2，但调用方 subscriptionQuote 会把报价除以 chargeUnit，导致报价与计费之间的原有比例关系被破坏，且现有测试无法确认哪种数值才是预期。",
+              "suggestedAction": "请 src/metering.ts#usageQuote 的作者确认 +3 偏移是否应改为按 chargeUnit 缩放（例如 amount + 3 * chargeUnit），或由 src/metering.ts#usageCharge 的作者撤销 *2，使报价与计费保持原有比例。",
+              "inputHash": "ca6e2dff3fe07f856981d69f98bdf2d5844c7b84d916e57bbfb6421f45443f1d",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0024",
+          "sampleId": "d1-0024-safe",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-deep",
+            "summary": "两处编辑都破坏了源码：scheduledDelay 的函数体被截断成无效语句，reminderDelay 的字符串未闭合并吞掉了负数校验，导致调用方和测试都会失败。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit the body is 'const alize();' — the reminders.initialize() call is gone and the statement is syntactically invalid, so scheduledDelay cannot run and the test 'await scheduledDelay(40) > 0' fails."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "After edit the body begins 'console.log(\"policy evalif (minutes < 0) throw new RangeError(\"minutes\");' — the string literal is unterminated and the negative-minutes guard is consumed, so evaluate(-1,...) no longer throws RangeError."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "evaluate",
+                "detail": "evaluate value-references reminderDelay; the corrupted reminderDelay removes the RangeError guard that the test 'assert.throws(() => evaluate(-1, 0.1, \"work\"), RangeError)' relies on."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "日程提醒与时间计量",
+                "detail": "Tests assert scheduledDelay(40) > 0 and evaluate(-1,...) throws RangeError; both are violated by the merged edits."
+              }
+            ],
+            "contractChanged": {
+              "left": true,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.9,
+              "latencyMs": 2296.2194999999992,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处编辑都破坏了源码：scheduledDelay 的函数体被截断成无效语句，reminderDelay 的字符串未闭合并吞掉了负数校验，导致调用方和测试都会失败。",
+              "suggestedAction": "请恢复 src/scheduling.ts#scheduledDelay 中的 reminders.initialize() 调用并补全函数体，同时修复 src/reminders.ts#reminderDelay 中未闭合的 console.log 字符串，确保 minutes < 0 时仍抛出 RangeError。",
+              "inputHash": "68329bee8c8d719b4be1bf54c7e331a75ee6b713ed9a5cfeca0a2f499b35dd9a",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0031",
+          "sampleId": "d1-0031-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "lock",
+            "ruleId": "model-deep",
+            "summary": "合并后的代码存在变量名拼写错误，会导致运行时错误，同时 usageQuote 的返回值删除了 value 属性，可能影响其他调用方。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionQuote",
+                "detail": "After edit, the function references 'quot.amount' but the variable is named 'quote', causing a ReferenceError at runtime."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageQuote",
+                "detail": "After edit, the returned object no longer includes the 'value' property, which was present before and may be used by callers."
+              },
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionQuote",
+                "detail": "The caller uses the result of usageQuote and accesses .amount, which is still present, but the typo prevents correct execution."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.95,
+              "latencyMs": 2200.642749999999,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "合并后的代码存在变量名拼写错误，会导致运行时错误，同时 usageQuote 的返回值删除了 value 属性，可能影响其他调用方。",
+              "suggestedAction": "请将 src/subscription.ts 中的 'quot.amount' 改为 'quote.amount'，并确认 src/metering.ts 中 usageQuote 的返回值是否需要保留 value 属性。",
+              "inputHash": "f15e8b348f9b22fb9872f8176c2722084cbc744a9c198b7b699e3459676bdb8c",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0032",
+          "sampleId": "d1-0032-safe",
+          "verdict": {
+            "zone": "grey",
+            "decision": "allow",
+            "ruleId": "model-deep",
+            "summary": "两处改动合并后仅使 scheduledDelay 的返回值缩小 1000 倍，但现有测试只要求结果为正，未依赖具体数值，因此风险较低。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit computes value = reminders.evaluate(minutes, 0.1, \"work\") then divides by reminders.reminderUnit; behavior is unchanged except removal of reminders.initialize(), which is not referenced by any supplied caller or test."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderUnit",
+                "detail": "Changed from 1 to 1000; scheduledDelay divides by this value, so the returned delay shrinks by 1000x, but the only test assertion is scheduledDelay(40) > 0, which still holds."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "scheduledDelay",
+                "detail": "Test asserts only positivity (await scheduledDelay(40) > 0), not a specific magnitude, so the unit change does not violate the tested contract."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.72,
+              "latencyMs": 2244.948500000006,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动合并后仅使 scheduledDelay 的返回值缩小 1000 倍，但现有测试只要求结果为正，未依赖具体数值，因此风险较低。",
+              "suggestedAction": "建议 src/reminders.ts 中 reminderUnit 的修改者确认 1000 是否为预期单位换算；若调用方依赖具体延迟数值，应改为在 src/scheduling.ts 的 scheduledDelay 中显式做单位换算，而不是直接改动全局 reminderUnit。",
+              "inputHash": "73861e193b8774200f95dd23dad723f68467bb168113e05c1f5139d908e729ee",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0036",
+          "sampleId": "d1-0036-safe",
+          "verdict": {
+            "zone": "grey",
+            "decision": "allow",
+            "ruleId": "model-deep",
+            "summary": "两个修改合并后不会破坏现有调用和测试，因为调用方只使用了 amount 属性，而测试也只检查 amount。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledQuote",
+                "detail": "After edit, the function assigns the result of reminderQuote to 'quote' and accesses only 'quote.amount', which remains present in the right edit's return object."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderQuote",
+                "detail": "After edit, the return object is { amount }, removing the previously present 'value' property. No caller or test relies on 'value'."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "reminderQuote",
+                "detail": "Test asserts reminderQuote(30, 0.1, \"work\").amount > 0, which still holds after the right edit."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": true
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.95,
+              "latencyMs": 2082.648291999998,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两个修改合并后不会破坏现有调用和测试，因为调用方只使用了 amount 属性，而测试也只检查 amount。",
+              "suggestedAction": "无需修改；若需进一步简化，可考虑移除 reminderQuote 中未使用的 value 属性（已由右侧编辑完成）。",
+              "inputHash": "eaf21b541f39f3e6fc921cf9ba9a9da39442a0113808100ab5e74c5d0becdb20",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0042",
+          "sampleId": "d1-0042-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动叠加后，scheduledDelay 的返回值同时受到 +2 偏移和 reminderDelay 优先级交换的影响，而现有测试只检查结果大于 0，无法确认合并后的数值行为是否符合预期。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit returns value + 2, adding a constant offset to the result of evaluate/reminderUnit, which depends on reminderDelay's output."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "After edit swaps priorities to [multiplier/2, multiplier], so priorities[0] changes from multiplier to multiplier/2, altering Math.floor(minutes * (1 - priorities[0])) and thus the returned delay."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "evaluate",
+                "detail": "Value-references reminderDelay; scheduledDelay calls evaluate, so reminderDelay's changed output propagates into scheduledDelay's result."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "scheduledDelay test",
+                "detail": "Only asserts scheduledDelay(40) > 0, which does not constrain the combined numeric change, leaving the joint behavior under-specified."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2718.953207999999,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动叠加后，scheduledDelay 的返回值同时受到 +2 偏移和 reminderDelay 优先级交换的影响，而现有测试只检查结果大于 0，无法确认合并后的数值行为是否符合预期。",
+              "suggestedAction": "请 src/reminders.ts 的 reminderDelay 作者确认优先级交换是否为有意变更；若仅为局部调整，应恢复 priorities 为 [multiplier, multiplier/2]，或由 src/scheduling.ts 的 scheduledDelay 作者改为不依赖该内部计算顺序的写法。",
+              "inputHash": "afa81608569a50da0e3076295987aa8c4425d7987bd6b46ee066afcb132adefc",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0044",
+          "sampleId": "d1-0044-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处修改共同改变了默认乘数与日历参数，可能使 scheduledDelay 的既有测试行为不再成立，但证据不足以完全确认。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "After edit, calls reminders.evaluate(minutes, undefined, \"benchmark\") and no longer calls reminders.initialize(), changing both the multiplier and calendar inputs relied on by the test scheduledDelay(40) > 0."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "Default multiplier changed from configuration.rate to 0; when evaluate forwards undefined, priorities[0] becomes 0, so the computed delay formula changes for all callers relying on the default."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "evaluate/reminderQuote/scheduledDelay",
+                "detail": "Tests still assert evaluate(20, 0.1, \"work\") > 0 and scheduledDelay(40) > 0, but the edits alter the calendar string and default multiplier, so the jointly relied-on behavior is not clearly preserved."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2896.214,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处修改共同改变了默认乘数与日历参数，可能使 scheduledDelay 的既有测试行为不再成立，但证据不足以完全确认。",
+              "suggestedAction": "请 src/scheduling.ts#scheduledDelay 的调用方恢复 reminders.initialize() 并显式传入与测试一致的乘数和 \"work\" 日历参数，或由 src/reminders.ts#reminderDelay 保留 configuration.rate 作为默认乘数。",
+              "inputHash": "2eb3424065248e1f6b4b1673ffa5e3e192773ad905f7e0f8f77dca29e9c8b460",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0045",
+          "sampleId": "d1-0045-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动分别给 usageQuote 的返回值加 4、把 usageCharge 的结果翻倍，调用方 subscriptionQuote 依赖 usageQuote 的 amount，合并后数值语义可能被意外改变，但现有测试只验证正数无法发现。",
+            "evidence": [
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageQuote",
+                "detail": "Return value changed from {amount, value: amount} to {amount: amount + 4, value: amount + 4}, altering the numeric contract consumed by callers."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageCharge",
+                "detail": "Return expression multiplied by 2, doubling the charge output; independent of usageQuote but part of the same module's metering behavior."
+              },
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionQuote",
+                "detail": "Caller uses metering.usageQuote(units, 0.1, \"monthly\").amount / metering.chargeUnit, so the +4 offset in usageQuote propagates into subscriptionQuote's result."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "订阅计量与计费",
+                "detail": "Tests only assert > 0 and RangeError, so they do not detect the changed magnitudes from either edit."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 3138.100624999999,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动分别给 usageQuote 的返回值加 4、把 usageCharge 的结果翻倍，调用方 subscriptionQuote 依赖 usageQuote 的 amount，合并后数值语义可能被意外改变，但现有测试只验证正数无法发现。",
+              "suggestedAction": "请确认 src/metering.ts#usageQuote 中 amount + 4 的偏移是否为预期；若不是，应改回 amount，并同步检查 src/metering.ts#usageCharge 的 * 2 是否应保留。",
+              "inputHash": "511266d347fc62f3621f5430a33cf8292e51d58a62ab267b671c59447927a7ef",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0050",
+          "sampleId": "d1-0050-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动分别给 reminderQuote 加 2、给 reminderDelay 乘 2，可能破坏二者原本共享的数值比例，但现有调用方与测试只校验正数，证据不足以确认是否违规。",
+            "evidence": [
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderQuote",
+                "detail": "After edit returns amount+2 and value+2; caller scheduledQuote consumes .amount and divides by reminderUnit, so the +2 offset propagates into scheduling output."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderDelay",
+                "detail": "After edit multiplies the whole expression by 2, doubling the delay for all inputs including the travel calendar branch."
+              },
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledQuote",
+                "detail": "Caller uses reminders.reminderQuote(minutes, 0.1, \"work\").amount / reminders.reminderUnit, so reminderQuote's changed amount directly affects scheduledQuote."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "reminders tests",
+                "detail": "Tests only assert reminderQuote(...).amount > 0 and scheduledDelay(40) > 0, so they do not pin exact values and cannot confirm or refute the joint numeric invariant."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "configuration",
+                "detail": "Both functions default multiplier to configuration.rate, linking their behavior through shared configuration; the dependency path reminderQuote -> configuration -> reminderDelay indicates coupled semantics."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 2950.684208999999,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动分别给 reminderQuote 加 2、给 reminderDelay 乘 2，可能破坏二者原本共享的数值比例，但现有调用方与测试只校验正数，证据不足以确认是否违规。",
+              "suggestedAction": "请修改 src/reminders.ts 中 reminderDelay 的返回值，去掉末尾的 * 2，或同步调整 reminderQuote 的 +2 偏移，使两者在共享 multiplier/calendar 语义下保持一致的数值关系。",
+              "inputHash": "07c0a74dd92a2ea7aea6f618199ae755c3aeb987808b27e77ecbc38b32eb5a7e",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0072",
+          "sampleId": "d1-0072-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两个修改可能改变省略日历参数时的默认行为，但现有测试和调用方大多显式传入了日历，因此影响范围有限，需要进一步确认 evaluate 的默认日历逻辑。",
+            "evidence": [
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledDelay",
+                "detail": "Left edit removes the third argument \"work\" from reminders.evaluate, changing the call from evaluate(minutes, 0.1, \"work\") to evaluate(minutes, 0.1). This may alter behavior if evaluate's default calendar differs from \"work\"."
+              },
+              {
+                "file": "src/reminders.ts",
+                "symbol": "reminderQuote",
+                "detail": "Right edit changes the call to evaluate to use calendar ?? \"benchmark\", so when calendar is omitted, evaluate now receives \"benchmark\" instead of undefined. This could affect callers that omit the calendar argument."
+              },
+              {
+                "file": "src/scheduling.ts",
+                "symbol": "scheduledQuote",
+                "detail": "Caller usage shows scheduledQuote calls reminders.reminderQuote(minutes, 0.1, \"work\").amount, passing an explicit calendar, so its behavior is unaffected by the right edit."
+              },
+              {
+                "file": "test/reminders.test.mjs",
+                "symbol": "test",
+                "detail": "Tests call evaluate(20, 0.1, \"work\") and reminderQuote(30, 0.1, \"work\") with explicit calendars, so they do not exercise the default calendar path changed by the right edit."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.6,
+              "latencyMs": 2849.1945420000047,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两个修改可能改变省略日历参数时的默认行为，但现有测试和调用方大多显式传入了日历，因此影响范围有限，需要进一步确认 evaluate 的默认日历逻辑。",
+              "suggestedAction": "建议修改 src/scheduling.ts 中的 scheduledDelay，恢复传入第三个参数 \"work\"，以保持与之前一致的行为。",
+              "inputHash": "0a8658ce65631a6474ed716f6f01502a65e6318a4e7a438f6740eeecb23b6f5e",
+              "promptVersion": "pair-v1"
+            }
+          }
+        },
+        {
+          "relationGroupId": "d1-0093",
+          "sampleId": "d1-0093-conflict",
+          "verdict": {
+            "zone": "grey",
+            "decision": "warn",
+            "ruleId": "model-deep",
+            "summary": "两处改动分别修改了订阅计费与用量计费，且通过 chargeUnit 形成依赖，但现有测试只验证结果为正数，无法确认合并后的数值与初始化行为是否符合预期。",
+            "evidence": [
+              {
+                "file": "src/subscription.ts",
+                "symbol": "subscriptionCharge",
+                "detail": "Left edit drops metering.initialize() and appends +4, changing the function's contract and its dependency on metering state."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "usageCharge",
+                "detail": "Right edit swaps priorities to [multiplier/2, multiplier], changing the multiplier actually applied to units."
+              },
+              {
+                "file": "src/metering.ts",
+                "symbol": "chargeUnit",
+                "detail": "chargeUnit is the shared value referenced by subscriptionCharge and used by usageCharge, forming the dependency path between the two edits."
+              },
+              {
+                "file": "test/metering.test.mjs",
+                "symbol": "subscriptionCharge",
+                "detail": "Test only asserts subscriptionCharge(40) > 0, which cannot detect the combined numeric or initialization change."
+              }
+            ],
+            "contractChanged": {
+              "left": false,
+              "right": false
+            },
+            "typecheck": {
+              "ran": true,
+              "durationMs": 0,
+              "mergeOnlyDiagnostics": []
+            },
+            "adjudication": {
+              "strategy": "G1",
+              "source": "deep",
+              "adapter": "deepseek",
+              "model": "deepseek-flash",
+              "confidence": 0.55,
+              "latencyMs": 3625.789582999998,
+              "status": "success",
+              "escalated": false,
+              "userExplanation": "两处改动分别修改了订阅计费与用量计费，且通过 chargeUnit 形成依赖，但现有测试只验证结果为正数，无法确认合并后的数值与初始化行为是否符合预期。",
+              "suggestedAction": "请 src/subscription.ts 的 subscriptionCharge 作者确认是否应保留 metering.initialize() 及 +4 偏移，并请 src/metering.ts 的 usageCharge 作者确认 priorities 顺序调整是否与订阅计费的新数值预期一致，必要时补充针对合并后数值的测试。",
+              "inputHash": "8e3030bd708dac03ea736bdf97f9668c6b65813462601d432272e3e4055771a6",
+              "promptVersion": "pair-v1"
+            }
+          }
+        }
+      ],
+      "stats": {
+        "calls": 19,
+        "cacheHits": 1,
+        "judgements": 20,
+        "escalations": 0,
+        "escalationRatio": 0,
+        "p50Ms": 2661.4374579999967,
+        "p95Ms": 3267.348833,
+        "failures": 0,
+        "costUsd": 0.015177
+      }
+    }
+  }
+}

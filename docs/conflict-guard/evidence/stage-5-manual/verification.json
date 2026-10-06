@@ -1,0 +1,54 @@
+{
+  "assertions": "DOM, Monaco, server state, trace",
+  "results": [
+    {
+      "scenario": "regression-rules",
+      "command": "CONFLICT_GUARD=rules SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=1 pnpm test:e2e",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 5
+    },
+    {
+      "scenario": "collab-off",
+      "command": "CONFLICT_GUARD=off pnpm test:collab",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "scenario": "collab-observe",
+      "command": "CONFLICT_GUARD=observe pnpm test:collab",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "scenario": "collab-rules",
+      "command": "CONFLICT_GUARD=rules pnpm test:collab",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "scenario": "model-normal",
+      "command": "CONFLICT_GUARD=full pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "scenario": "model-failure-G3",
+      "command": "CONFLICT_GUARD=full pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 2
+    },
+    {
+      "scenario": "model-failure-G2",
+      "command": "CONFLICT_GUARD=full pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 2
+    }
+  ]
+}

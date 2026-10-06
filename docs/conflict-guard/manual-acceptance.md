@@ -119,3 +119,23 @@ pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/e
 两份轨迹均返回 `checked:true`、`valid:true`、`differences:[]`。合成轨迹只有输入事件，不能用于这种产品一致性校验。
 
 检查点 A 的数据集、五种策略与一致性检查结果见 `review-fix-checkpoint-a.md`。界面回放证据保存在 `evidence/stage-4-ui/`；本轮浏览器十三项证据保存在 `evidence/checkpoint-a-manual/`。
+
+## 阶段 5
+
+根目录环境已经配置两个角色的凭据时，运行 `CONFLICT_GUARD=full CONFLICT_GUARD_STRATEGY=G3 pnpm dev`。导入 conflict-shop，两个独立窗口以 Alice、Bob 加入，打开“冲突预防”页签。
+
+| 编号 | 操作 | 预期 |
+|---|---|---|
+| 1 | Alice 将 applyDiscount 的计算改为 `price - rate`，Bob 修改 checkout 的计算；停顿两秒 | 双方相关区域标黄，研判完成后显示结果。通知或卡片包含中文解释、建议、模型角色与耗时。 |
+| 2 | 查看页签统计 | 出现模型调用、升级比例、p50/p95、失败次数及费用估算。 |
+| 3 | 用无效快判凭据启动 G2，重复第 1 项 | 显示“研判失败，已降级为警告”，编辑继续，区域没有冻结。G3 遇到快判鉴权错误会调用深判；两个角色均失败时才整体降级。 |
+| 4 | 第 1 项显示黄色期间，Alice 继续修改同一符号 | 旧请求被取消，新批次结束后重新分析，最终结果对应新的 revision。 |
+
+无需改写 `.env`，用进程环境覆盖凭据进行失败验收。真实浏览器自动执行命令：
+
+```bash
+CONFLICT_GUARD=full SIMPLERCP_STAGE5_LIVE=1 pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts
+TYPESAFE_API_KEY=stage5-invalid-credential DEEPSEEK_API_KEY=stage5-invalid-credential CONFLICT_GUARD=full SIMPLERCP_STAGE5_LIVE=1 SIMPLERCP_STAGE5_FAILURE=1 pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts
+```
+
+上述失败命令检查 G3 的两个角色均失败路径。截图与状态断言存入 `evidence/stage-5-manual/`。普通 CI 跳过实际模型调用，服务端集成测试使用指定的注入适配器，批次空闲为 1500 ms、写入延迟为 300 ms。

@@ -71,3 +71,32 @@ pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../
 真实界面回放命令为 `pnpm --filter @simplercp/conflict-guard replay:ui --server http://127.0.0.1:3000 --project <id> --trace <file> --speed 2 --hold 15000`，包命令转发到服务端 CLI。它注册 `Replay <memberId>` 成员，重置初始文件，通过真实 presence 与 Yjs 连接发送编辑和光标。最后等待批次判定并保留连接，随后释放连接。第三位成员可以观察输入、冻结与冲突卡片。请使用独立的演示项目执行文件重置。
 
 种子项目、算子与标签定义见 `docs/conflict-guard/benchmark.md`，真实轨迹、界面验收与开发集结果保存在 `docs/conflict-guard/evidence/stage-4-*`。
+
+## 阶段 5 灰区研判
+
+`adjudication/` 定义 `FastJudge` 与 `DeepJudge` 两个角色。适配器通过名字注册，HTTP 使用注入的 fetch；Jev 固定 `jev-1.13.0`，DeepSeek 使用配置中的模型并在 T1 关闭 thinking。`openai-compatible` 使用相同深判输出格式。白区与黑区由本地规则决定，只有灰区进入角色接口。
+
+| 策略 | 灰区处理 |
+|---|---|
+| G0 | warn |
+| G1 | 深判 |
+| G2 | 快判 |
+| G3 | 快判；置信度低于阈值、lock 或失败时升级深判 |
+| G4 | T1 使用配置的 G2 或 G3 |
+
+`buildAdjudicationInput` 供产品与回放共同使用，包含双方符号 before/after、参与者种类、关系路径、本地排除规则与类型检查结果。`extractInvariants` 从入边选取至多三个调用点，按与另一侧符号的距离排序，补充函数签名、调用行前后各三行、测试名称及断言、修改前注释与返回值用法。文本字段上限为 3000 字符，`invariants:false` 可以关闭这部分上下文。
+
+`createAdjudicationService` 合并相同输入的并发角色请求。输入、适配器及模型版本共同形成 SHA-256 缓存键。取消一个订阅者保留其他订阅者的请求，最后一个订阅者取消时中止 HTTP。缓存读取与整个级联过程均受 8000 ms 时间预算限制。失败、超时与无效格式在 T1 返回 warn，模型结果通过 `PairCoordinator` 的修订号检查生效。
+
+灰区等待期间状态为 `analyzing`，相关区域标黄、文本同步继续、文件写入暂停；超过 2000 ms 推送分析进度。结束后复用通知、冻结与卡片。接口统计包含角色调用、缓存命中、升级比例、完整研判延迟、失败与费用。`provider_call` 只保存版本、输入哈希与结果元数据。
+
+`live` 直接调用；`record` 保存经过脱敏的输入和原始响应；`replay` 只读取 `bench/model-cache/`，未命中返回失败。录制文件使用权限 0600，缓存内容经过结构验证。凭据与对象属性名中的敏感值都经过脱敏。
+
+```bash
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --policy G0,P3,G1,G2 --provider-mode record --cache bench/model-cache/stage5-dev-final
+pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/datasets/d1-v1
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --policy G3 --threshold 0 --provider-mode record --cache bench/model-cache/stage5-dev-final
+pnpm --filter @simplercp/conflict-guard adjudication:verify
+```
+
+阈值、价格、完整提示词和配置见 `docs/conflict-guard/adjudication.md`。阶段五命令只读取开发集；保留集留至正式评价。模型录制用于离线确定性回放，实际服务端取消与截止时间另由集成及浏览器测试验证。

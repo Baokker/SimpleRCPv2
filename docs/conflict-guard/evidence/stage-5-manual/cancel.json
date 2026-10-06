@@ -1,0 +1,336 @@
+{
+  "cancelled": true,
+  "state": {
+    "mode": "full",
+    "version": 28,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 6,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 4,
+        "durationMs": 4.830582999999024,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "03032c64-aaff-4f4b-bfbf-63166ca02437"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 149,
+                "end": 165
+              }
+            ],
+            "firstTouchedAt": 1791270951381,
+            "lastTouchedAt": 1791270953581
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "3dd02d71-d8b1-487f-9a54-cea0b85cee75"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 164
+              }
+            ],
+            "firstTouchedAt": 1791270951390,
+            "lastTouchedAt": 1791270951390
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "03032c64-aaff-4f4b-bfbf-63166ca02437"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791270953581
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "3dd02d71-d8b1-487f-9a54-cea0b85cee75"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "lastTouchedAt": 1791270951390
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "f2e7c7f6fed812b1d4824d31de3d3b1d00cdad8a1ae7b0498f44e3427dd487cc",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "03032c64-aaff-4f4b-bfbf-63166ca02437"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "3dd02d71-d8b1-487f-9a54-cea0b85cee75"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "status": "modified"
+        },
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791270951427,
+        "updatedAt": 1791270953615,
+        "revisionKey": "66badeb525e7d2ea6a22ae8e8c3f79be53efcaf71ecd944d33cd48210e500c68"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "f2e7c7f6fed812b1d4824d31de3d3b1d00cdad8a1ae7b0498f44e3427dd487cc",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "03032c64-aaff-4f4b-bfbf-63166ca02437"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "3dd02d71-d8b1-487f-9a54-cea0b85cee75"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "status": "modified"
+          },
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791270951427,
+          "updatedAt": 1791270953615,
+          "revisionKey": "66badeb525e7d2ea6a22ae8e8c3f79be53efcaf71ecd944d33cd48210e500c68"
+        },
+        "status": "judged",
+        "revision": 1,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791270957799,
+        "revisionKey": "66badeb525e7d2ea6a22ae8e8c3f79be53efcaf71ecd944d33cd48210e500c68",
+        "verdict": {
+          "zone": "grey",
+          "decision": "lock",
+          "ruleId": "model-deep",
+          "summary": "这两处改动共同破坏了折扣计算与结账金额的一致性，导致现有测试全部失败。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "applyDiscount",
+              "detail": "Changed from price*(1-rate) to price-rate*2, so applyDiscount(100,0.1) yields 99.8 instead of the tested 90."
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "checkout",
+              "detail": "Added +1 to cart.total(), so checkout(cart) no longer equals formatMoney(cart.total()) and breaks the 'USD 18.00' expectation."
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "Cart.total",
+              "detail": "Calls applyDiscount(amount, 0.1) and is relied on by checkout; both edits jointly corrupt the discount-then-format pipeline."
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "折扣返回折后价格",
+              "detail": "Asserts applyDiscount(100,0.1)===90, which the new applyDiscount body violates."
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "结账使用购物车折后总价",
+              "detail": "Asserts cart.total()===18 and checkout(cart)==='USD 18.00', which the new checkout body violates."
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 30.75541599999997,
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "strategy": "G3",
+            "source": "deep",
+            "adapter": "deepseek",
+            "model": "deepseek-flash",
+            "confidence": 0.95,
+            "latencyMs": 2638,
+            "status": "success",
+            "escalated": true,
+            "userExplanation": "这两处改动共同破坏了折扣计算与结账金额的一致性，导致现有测试全部失败。",
+            "suggestedAction": "请将 src/pricing.ts 的 applyDiscount 恢复为 price * (1 - rate)，并将 src/checkout.ts 的 checkout 恢复为 formatMoney(cart.total())，不要额外加 1。",
+            "inputHash": "5d36ceb763f76fa0228283a494862c52355a3205a96b3f14a40627e01bbe34d0",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "analysisStartedAt": 1791270955153,
+        "analysisVisible": false,
+        "firstLockedAt": 1791270957799
+      }
+    ],
+    "frozenFiles": [
+      {
+        "file": "src/pricing.ts",
+        "regions": [
+          {
+            "pairId": "f2e7c7f6fed812b1d4824d31de3d3b1d00cdad8a1ae7b0498f44e3427dd487cc",
+            "actor": {
+              "kind": "human",
+              "memberId": "03032c64-aaff-4f4b-bfbf-63166ca02437"
+            },
+            "startLine": 3,
+            "endLine": 5,
+            "summary": "这两处改动共同破坏了折扣计算与结账金额的一致性，导致现有测试全部失败。"
+          }
+        ]
+      },
+      {
+        "file": "src/checkout.ts",
+        "regions": [
+          {
+            "pairId": "f2e7c7f6fed812b1d4824d31de3d3b1d00cdad8a1ae7b0498f44e3427dd487cc",
+            "actor": {
+              "kind": "human",
+              "memberId": "3dd02d71-d8b1-487f-9a54-cea0b85cee75"
+            },
+            "startLine": 4,
+            "endLine": 6,
+            "summary": "这两处改动共同破坏了折扣计算与结账金额的一致性，导致现有测试全部失败。"
+          }
+        ]
+      }
+    ],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 4,
+      "cacheHits": 0,
+      "judgements": 2,
+      "escalations": 2,
+      "escalationRatio": 1,
+      "p50Ms": 2643,
+      "p95Ms": 2643,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0.000813726
+    },
+    "blockedPersists": [
+      {
+        "file": "src/pricing.ts",
+        "reason": "lock"
+      },
+      {
+        "file": "src/checkout.ts",
+        "reason": "lock"
+      }
+    ],
+    "persistConflicts": 0,
+    "persistBlockedCount": 2,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 1,
+      "frozenDurationMs": 758,
+      "persistBlockedCount": 2,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 3,
+      "related": 3,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  }
+}
