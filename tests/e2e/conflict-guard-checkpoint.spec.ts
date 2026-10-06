@@ -11,7 +11,10 @@ const shop = fileURLToPath(new URL("../../demo/conflict-shop/", import.meta.url)
 const evidence = fileURLToPath(new URL("../../docs/conflict-guard/evidence/checkpoint-a-manual/", import.meta.url));
 const checks: Array<{ scenario: string; checks: string[] }> = [];
 test.beforeAll(async () => { await fs.mkdir(evidence, { recursive: true }); });
-test.afterAll(async () => { await fs.writeFile(path.join(evidence, "acceptance.json"), JSON.stringify({ mode: "rules", idleMs: 1500, persistDelayMs: 300, scenarios: checks }, null, 2) + "\n"); });
+test.afterAll(async () => {
+  if (checks.length === 0) return;
+  await fs.writeFile(path.join(evidence, "acceptance.json"), JSON.stringify({ mode: "rules", idleMs: 1500, persistDelayMs: 300, scenarios: checks }, null, 2) + "\n");
+});
 
 test("阶段3第1至3、10项及先后编辑、关闭重开、切换撤回", async ({ browser }) => {
   test.setTimeout(90000);

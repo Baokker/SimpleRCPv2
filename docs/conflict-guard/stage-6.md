@@ -50,10 +50,12 @@ Agent 集成测试使用真实 createApp、WebsocketProvider、Yjs、文件监�
 | 命令 | 结果 |
 |---|---|
 | `pnpm -r build` | 全部项目通过 |
-| `pnpm --filter @simplercp/conflict-guard test` | 19 个文件、179 项通过 |
-| `pnpm --filter @simplercp/server test` | 44 个文件、222 项通过，其中 Agent 集成 29 项 |
+| `pnpm --filter @simplercp/conflict-guard test` | 19 个文件、180 项通过 |
+| `pnpm --filter @simplercp/server test` | 44 个文件、237 项通过，其中 Agent 集成 37 项 |
 | `pnpm test:demo` | 2 项通过 |
 | `CONFLICT_GUARD=rules SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=1 SIMPLERCP_SKIP_MODEL_REQUESTS=true pnpm test:e2e` | 36 项通过、8 项按条件跳过；包含阶段 2、3、4 的浏览器回归 |
+| `CONFLICT_GUARD=rules SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3 SIMPLERCP_SKIP_MODEL_REQUESTS=true pnpm test:e2e` | 37 项通过、7 项按条件跳过；包含阶段 2、3、4 与阶段 6 的浏览器回归 |
+| `SIMPLERCP_SKIP_MODEL_REQUESTS=true pnpm test:e2e` | 21 项通过、23 项按条件跳过；默认并发容量为 3 |
 | `CONFLICT_GUARD=full SIMPLERCP_STAGE6_EVIDENCE=true pnpm test:e2e tests/e2e/conflict-guard-agent.spec.ts` | 3 项通过 |
 | `CONFLICT_GUARD=observe SIMPLERCP_STAGE6_EVIDENCE=true pnpm test:e2e tests/e2e/conflict-guard-agent.spec.ts` | 1 项通过、2 项按模式跳过 |
 | `CONFLICT_GUARD=off pnpm test:collab` | 2 项通过 |
@@ -64,6 +66,8 @@ Agent 集成测试使用真实 createApp、WebsocketProvider、Yjs、文件监�
 | `node scripts/verify-evidence-secrets.mjs` | 配置凭据的精确值匹配计数为 0 |
 
 容量为 1 的回归运行跳过两个 Agent 并发用例，该用例在 full、容量为 3 的阶段 6 验收中执行。需要实际模型请求的浏览器用例保留各自的执行条件；阶段 6 的实际调用由上述 OpenCode 验证命令执行。机器可读记录见 `evidence/stage-6-manual/verification.json`。
+
+Agent trace 将事件转换为界面条目后保留最后 200 条可见记录。队列用例按照配置的并发容量创建运行任务，在团队任务进入 queued 后取消占位任务。检查点测试没有执行验收场景时保留已有 acceptance.json。
 
 ## 使用限制
 

@@ -12,10 +12,10 @@ export function presentTrace(events: AgentTraceEvent[]) {
     (event) => event.type === "opencode.session.error"
   );
   return {
-    visible: events.slice(-200).flatMap((event) => {
+    visible: events.flatMap((event) => {
       const item = presentTraceEvent(event, hasProviderError);
       return item ? [item] : [];
-    })
+    }).slice(-200)
   };
 }
 

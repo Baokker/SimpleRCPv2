@@ -5,13 +5,15 @@
   "integrationSettings": { "idleMs": 1500, "persistDelayMs": 300 },
   "build": "passed",
   "unitAndIntegration": {
-    "conflictGuard": { "files": 19, "passed": 179, "failed": 0 },
-    "server": { "files": 44, "passed": 222, "failed": 0 },
-    "agentIntegration": { "passed": 29, "failed": 0 },
+    "conflictGuard": { "files": 19, "passed": 180, "failed": 0 },
+    "server": { "files": 44, "passed": 237, "failed": 0 },
+    "agentIntegration": { "passed": 37, "failed": 0 },
     "demo": { "passed": 2, "failed": 0 }
   },
   "browser": {
+    "defaultRegression": { "passed": 21, "failed": 0, "skipped": 23, "maxConcurrentRuns": 3, "liveModelTests": false },
     "rulesRegression": { "passed": 36, "failed": 0, "skipped": 8, "maxConcurrentRuns": 1, "liveModelTests": false },
+    "rulesRegressionCurrent": { "passed": 37, "failed": 0, "skipped": 7, "maxConcurrentRuns": 3, "liveModelTests": false },
     "stage6Full": { "passed": 3, "failed": 0, "skipped": 0, "maxConcurrentRuns": 3 },
     "stage6Observe": { "passed": 1, "failed": 0, "skipped": 2 },
     "collaboration": {

@@ -150,17 +150,37 @@ test("interrupting a team run records changed files for the next run", async ({ 
 });
 
 test("team Agent waits for a personal Agent run in the project queue", async ({ page }) => {
+  const capacity = Number(process.env.SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS ?? 3);
   await openAs(page, "Queue Member", "demo", "Developer");
   await page.getByTestId("collab-tab-agent").click();
+  const headers = { "X-SimpleRCP-Member": await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo")!) };
+  const blockers: string[] = [];
+  for (let index = 1; index < capacity; index += 1) {
+    const response = await page.request.post("/api/projects/demo/agent/runs", { headers, data: { prompt: `fake-delay=20000 fake-reply=capacity ${index} complete` } });
+    expect(response.ok()).toBe(true);
+    const { run } = await response.json();
+    blockers.push(run.id);
+  }
+  await page.getByTestId("agent-new-session").click();
+  await page.getByTestId("agent-session-title").fill("Queue capacity");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
   await page.getByTestId("agent-prompt").fill("fake-delay=5000 fake-reply=personal work complete");
   await page.getByTestId("agent-run-submit").click();
   await expect(page.getByTestId("agent-selected-run")).toContainText("Running", { timeout: 10_000 });
+  await expect.poll(async () => {
+    const { runs } = await page.request.get("/api/projects/demo/agent/runs", { headers }).then((response) => response.json());
+    return runs.filter((run: { status: string }) => run.status === "running").length;
+  }).toBe(capacity);
 
   await page.getByTestId("collab-tab-chat").click();
   await page.getByTestId("chat-input").fill("@agent fake-reply=team work complete");
   await page.getByTestId("send-chat").click();
   const teamCard = page.getByTestId("chat-agent-card").last();
   await expect(teamCard).toContainText("queued", { timeout: 10_000 });
+  for (const id of blockers) {
+    const response = await page.request.post(`/api/projects/demo/agent/runs/${id}/cancel`, { headers });
+    expect(response.ok()).toBe(true);
+  }
   await expect(teamCard).toContainText("completed", { timeout: 30_000 });
   await page.getByTestId("collab-tab-agent").click();
   await expect(page.getByTestId("agent-selected-run")).toContainText("personal work complete");
