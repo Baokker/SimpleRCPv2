@@ -562,7 +562,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   function hasRuleContent(content: string) {
-    const match = content.match(/(?:^|\n)##\s*规则\s*\n([\s\S]*?)(?=\n##\s|$)/i);
+    const match = content.match(/^##[\t ]*规则[\t ]*\r?\n([\s\S]*?)(?=^##[\t ]|$(?![\s\S]))/im);
     return Boolean(match?.[1]?.trim());
   }
 

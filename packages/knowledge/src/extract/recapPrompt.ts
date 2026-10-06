@@ -40,7 +40,8 @@ export function parseAgentRecapDraft(text: string, evidence: Record<string, unkn
   if (!["title", "summary", "whatHappened", "correction", "rule", "notApplicable"].every((key) => typeof input[key] === "string" && String(input[key]).trim())) return undefined;
   const applies = normalizeApplies(input.appliesTo);
   const scope = normalizeScope(input.scopeSuggestion);
-  const confidence = typeof input.confidence === "number" && Number.isFinite(input.confidence) ? Math.max(0, Math.min(1, input.confidence)) : undefined;
+  const confidence = typeof input.confidence === "number" && Number.isFinite(input.confidence) && input.confidence >= 0 && input.confidence <= 1 ? input.confidence : undefined;
+  if (!isStringArray(input.evidenceCitations) || !isStringArray(input.unknowns)) return undefined;
   const citations = strings(input.evidenceCitations).filter((citation) => citationExists(citation, evidence));
   const unknowns = strings(input.unknowns);
   if (!applies || !scope || confidence === undefined || !citations.length) return undefined;
@@ -87,8 +88,10 @@ export function buildAgentRecapSystemPrompt(evidence: Record<string, unknown>): 
 }
 
 export function listEvidencePaths(evidence: Record<string, unknown>): string[] {
-  const paths: string[] = ["evidence"];
+  const paths: string[] = [];
   const visit = (value: unknown, path: string, depth: number) => {
+    if (value === undefined || paths.length >= 200) return;
+    paths.push(path);
     if (depth > 4 || value === null || typeof value !== "object") return;
     if (Array.isArray(value)) {
       value.slice(0, 8).forEach((item, index) => visit(item, `${path}[${index}]`, depth + 1));
@@ -96,7 +99,6 @@ export function listEvidencePaths(evidence: Record<string, unknown>): string[] {
     }
     for (const [key, item] of Object.entries(value)) {
       const next = `${path}.${key}`;
-      paths.push(next);
       visit(item, next, depth + 1);
     }
   };
@@ -105,7 +107,8 @@ export function listEvidencePaths(evidence: Record<string, unknown>): string[] {
 }
 
 function strings(value: unknown) { return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim()).slice(0, 24) : []; }
-function normalizeApplies(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; const files = strings(input.files); const globs = strings(input.globs); const taskKinds = strings(input.taskKinds); return { files, globs, taskKinds }; }
+function isStringArray(value: unknown): value is string[] { return Array.isArray(value) && value.every((item) => typeof item === "string"); }
+function normalizeApplies(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if (![input.files, input.globs, input.taskKinds].every(isStringArray)) return undefined; const files = strings(input.files); const globs = strings(input.globs); const taskKinds = strings(input.taskKinds); return { files, globs, taskKinds }; }
 function normalizeScope(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.scope !== "team" && input.scope !== "personal") || typeof input.reason !== "string" || !input.reason.trim()) return undefined; return { scope: input.scope, reason: input.reason.trim() } as { scope: "team" | "personal"; reason: string }; }
 function normalizeCheck(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.kind !== "regex-absent" && input.kind !== "regex-present") || typeof input.pattern !== "string" || typeof input.fileGlob !== "string") return undefined; try { new RegExp(input.pattern); } catch { return undefined; } return { kind: input.kind, pattern: input.pattern, fileGlob: input.fileGlob } as { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string }; }
 function citationExists(path: string, evidence: unknown): boolean {
@@ -114,7 +117,7 @@ function citationExists(path: string, evidence: unknown): boolean {
   const parts = normalized.startsWith("evidence.") ? normalized.slice("evidence.".length).split(".") : normalized.split(".");
   let value: unknown = evidence;
   for (const part of parts) {
-    if (!value || typeof value !== "object" || !(part in value)) return false;
+    if (!value || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, part)) return false;
     value = (value as Record<string, unknown>)[part];
   }
   return value !== undefined;

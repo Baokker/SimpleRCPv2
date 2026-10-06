@@ -220,7 +220,7 @@ describe("knowledge capture with real collaboration", () => {
       type: "decision",
       title: "Agent correction",
       summary: "A rule needs human review",
-      content: "## 发生了什么\nAgent changed the file.\n\n## 规则\n",
+      content: "## 发生了什么\nAgent changed the file.\n\n## 规则\n\n## 适用范围\ncode.ts\n\n## 不适用的情况\nOther files.",
       tags: ["agent.revised"],
       fallback: true,
       source: "event",

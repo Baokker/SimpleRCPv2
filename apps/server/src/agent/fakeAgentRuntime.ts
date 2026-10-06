@@ -71,38 +71,44 @@ export function createFakeAgentRuntime(): AgentRuntime {
         }
       };
       await emit("fake.started", { prompt: input.prompt });
-      const writePath = [...input.prompt.matchAll(/fake-write=([^\s]+)/g)].at(-1)?.[1];
-      if (writePath) {
-        const absolutePath = path.resolve(input.workspacePath, writePath);
-        if (!absolutePath.startsWith(`${path.resolve(input.workspacePath)}${path.sep}`)) {
-          throw new Error("Fake Agent write path must stay inside the project workspace");
-        }
-        await fs.mkdir(path.dirname(absolutePath), { recursive: true });
-        await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
-      }
-      for (const match of input.prompt.matchAll(/fake-edit=([^\s:]+):(\d+):([\s\S]*?)(?=\s+fake-(?:write|edit|tool|delay|reply)=|$)/g)) {
-        const editPath = path.resolve(input.workspacePath, match[1]!);
-        if (!editPath.startsWith(`${path.resolve(input.workspacePath)}${path.sep}`)) throw new Error("Fake Agent edit path must stay inside the project workspace");
-        const line = Number(match[2]);
-        if (!Number.isInteger(line) || line < 1) throw new Error("Fake Agent edit line is invalid");
-        const content = await fs.readFile(editPath, "utf8");
-        const lines = content.split("\n");
-        lines.splice(Math.min(line - 1, lines.length), 0, match[3]!);
-        await fs.writeFile(editPath, lines.join("\n"));
-      }
-      for (const match of input.prompt.matchAll(/fake-tool=(ok|fail):([\s\S]*?)(?=\s+fake-(?:write|edit|tool|delay|reply)=|$)/g)) {
-        const success = match[1] === "ok";
-        await emit("message.part.updated", {
-          part: {
-            type: "tool",
-            tool: "bash",
-            state: success
-              ? { status: "completed", input: { command: match[2] }, output: "", metadata: { exitCode: 0 } }
-              : { status: "error", input: { command: match[2] }, error: "command failed", metadata: { exitCode: 1 } }
+      const markers = parseFakeMarkers(input.prompt);
+      for (const marker of markers) {
+        if (marker.kind === "write") {
+          const writePath = marker.payload.split(/\s+/, 1)[0];
+          if (!writePath) continue;
+          const absolutePath = path.resolve(input.workspacePath, writePath);
+          if (!absolutePath.startsWith(`${path.resolve(input.workspacePath)}${path.sep}`)) {
+            throw new Error("Fake Agent write path must stay inside the project workspace");
           }
-        });
+          await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+          await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
+        } else if (marker.kind === "edit") {
+          const match = marker.payload.match(/^([^\s:]+):(\d+):([\s\S]*)$/);
+          if (!match) throw new Error("Fake Agent edit marker is invalid");
+          const editPath = path.resolve(input.workspacePath, match[1]!);
+          if (!editPath.startsWith(`${path.resolve(input.workspacePath)}${path.sep}`)) throw new Error("Fake Agent edit path must stay inside the project workspace");
+          const line = Number(match[2]);
+          if (!Number.isInteger(line) || line < 1) throw new Error("Fake Agent edit line is invalid");
+          const content = await fs.readFile(editPath, "utf8");
+          const lines = content.split("\n");
+          lines.splice(Math.min(line - 1, lines.length), 0, match[3]!);
+          await fs.writeFile(editPath, lines.join("\n"));
+        } else if (marker.kind === "tool") {
+          const match = marker.payload.match(/^(ok|fail):([\s\S]*)$/);
+          if (!match) throw new Error("Fake Agent tool marker is invalid");
+          const success = match[1] === "ok";
+          await emit("message.part.updated", {
+            part: {
+              type: "tool",
+              tool: "bash",
+              state: success
+                ? { status: "completed", input: { command: match[2] }, output: "", metadata: { exitCode: 0 } }
+                : { status: "error", input: { command: match[2] }, error: "command failed", metadata: { exitCode: 1 } }
+            }
+          });
+        }
       }
-      const delayMs = Number([...input.prompt.matchAll(/fake-delay=(\d+)/g)].at(-1)?.[1] ?? 0);
+      const delayMs = Number(markers.filter((marker) => marker.kind === "delay").at(-1)?.payload.split(/\s+/, 1)[0] ?? 0);
       try {
         await wait(delayMs, controller.signal);
       } finally {
@@ -110,7 +116,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
           abortControllers.delete(input.sessionId);
         }
       }
-      const text = [...input.prompt.matchAll(/fake-reply=([^\n]+)/g)].at(-1)?.[1]?.trim()
+      const text = markers.filter((marker) => marker.kind === "reply").at(-1)?.payload.split("\n", 1)[0]?.trim()
         ?? `Fake Agent completed: ${input.prompt}`;
       await emit("fake.completed", { text });
       return { text, messageId: `fake-message-${input.sessionId}`, usage: { inputTokens: 120, outputTokens: 48, reasoningTokens: 12, cacheReadTokens: 8, cacheWriteTokens: 0, totalTokens: 180, cost: 0.0018 } };
@@ -136,6 +142,15 @@ export function createFakeAgentRuntime(): AgentRuntime {
       listeners.clear();
     }
   };
+}
+
+function parseFakeMarkers(prompt: string) {
+  const pattern = /(?:^|\s)fake-(write|edit|tool|delay|reply)=/g;
+  const matches = [...prompt.matchAll(pattern)];
+  return matches.map((match, index) => ({
+    kind: match[1] as "write" | "edit" | "tool" | "delay" | "reply",
+    payload: prompt.slice((match.index ?? 0) + match[0].length, matches[index + 1]?.index ?? prompt.length).trim()
+  }));
 }
 
 function wait(delayMs: number, signal: AbortSignal) {

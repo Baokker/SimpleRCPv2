@@ -32,12 +32,17 @@ describe("Agent capture events", () => {
       type: "decision", title: "Rule", summary: "Summary", whatHappened: "Agent changed a file", correction: "A member corrected it", rule: "Follow the member correction", appliesTo: { files: [], globs: [], taskKinds: [] }, notApplicable: "Other files", scopeSuggestion: { scope: "personal", reason: "Needs review" }, confidence: 0.8, evidenceCitations: ["evidence.chatMessages[0].text", "evidence.chatMessages.0.author", "evidence.missing"], unknowns: []
     })}`, evidence);
     expect(draft?.evidenceCitations).toEqual(["evidence.chatMessages[0].text", "evidence.chatMessages.0.author"]);
+    expect(parseAgentRecapDraft(JSON.stringify({
+      type: "decision", title: "Rule", summary: "Summary", whatHappened: "Agent changed a file", correction: "A member corrected it", rule: "Follow the member correction", appliesTo: { files: [], globs: [], taskKinds: [] }, notApplicable: "Other files", scopeSuggestion: { scope: "personal", reason: "Needs review" }, confidence: 0.8, evidenceCitations: ["evidence.chatMessages.toString"], unknowns: []
+    }), evidence)).toBeUndefined();
   });
 
   test("lists only existing evidence paths in the recap prompt", () => {
-    const prompt = buildAgentRecapSystemPrompt({ chatMessages: [{ text: "use parser" }] });
+    const prompt = buildAgentRecapSystemPrompt({ chatMessages: [{ text: "use parser" }], files: ["src/a.ts"], absent: undefined });
     expect(prompt).toContain("evidence.chatMessages[0].text");
-    expect(prompt).not.toContain("evidence.file");
+    expect(prompt).toContain("evidence.files[0]");
+    expect(prompt).not.toMatch(/^- evidence\.file$/m);
+    expect(prompt).not.toMatch(/^- evidence\.absent$/m);
   });
 
   test("captures interruption and correction in one session", () => {

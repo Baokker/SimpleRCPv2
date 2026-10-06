@@ -10,8 +10,11 @@ import type {
   EventRecord,
   AgentRunUsage
 } from "@simplercp/shared";
-import { buildAgentRecapSystemPrompt, type LlmUsage } from "@simplercp/knowledge";
+import { buildAgentRecapSystemPrompt, parseAgentRecapDraft } from "@simplercp/knowledge";
 import type { AgentRuntime } from "./agentRuntime.js";
+import { createAgentUsageCollector, toLlmUsage } from "./agentUsage.js";
+import { createAgentSessionOperations } from "./agentSessionOperations.js";
+import { executeRuntimePrompt } from "./agentRuntimeExecution.js";
 import { createAgentRunStore, type AgentRunStore } from "./agentRunStore.js";
 import {
   createAgentSessionStore,
@@ -28,8 +31,7 @@ import {
   buildRuntimePrompt,
   mergeFileChanges,
   normalizeAgentContexts,
-  previewPrompt,
-  runWithTimeout
+  previewPrompt
 } from "./agentRunSupport.js";
 import { migrateLegacyAgentSessions } from "./agentSessionAccess.js";
 import type { MemberStore } from "../auth/identity.js";
@@ -91,34 +93,6 @@ function addSnapshotContents(
   });
 }
 
-function addUsage(current: AgentRunUsage | undefined, next: AgentRunUsage | undefined): AgentRunUsage | undefined {
-  if (!current && !next) return undefined;
-  const result: AgentRunUsage = { ...(current ?? {}) };
-  for (const key of ["inputTokens", "outputTokens", "reasoningTokens", "cacheReadTokens", "cacheWriteTokens", "totalTokens", "cost"] as const) {
-    if (next?.[key] !== undefined) result[key] = (result[key] ?? 0) + next[key]!;
-  }
-  return result;
-}
-
-function sumUsage(values: Iterable<AgentRunUsage>): AgentRunUsage | undefined {
-  let total: AgentRunUsage | undefined;
-  for (const value of values) total = addUsage(total, value);
-  return total;
-}
-
-function toLlmUsage(value: AgentRunUsage | undefined): LlmUsage | undefined {
-  if (!value) return undefined;
-  return {
-    ...(value.inputTokens === undefined ? {} : { promptTokens: value.inputTokens }),
-    ...(value.outputTokens === undefined ? {} : { completionTokens: value.outputTokens }),
-    ...(value.reasoningTokens === undefined ? {} : { reasoningTokens: value.reasoningTokens }),
-    ...(value.cacheReadTokens === undefined ? {} : { cacheReadTokens: value.cacheReadTokens }),
-    ...(value.cacheWriteTokens === undefined ? {} : { cacheWriteTokens: value.cacheWriteTokens }),
-    ...(value.totalTokens === undefined ? {} : { totalTokens: value.totalTokens }),
-    ...(value.cost === undefined ? {} : { cost: value.cost })
-  };
-}
-
 function extractToolEvent(type: string, data: Record<string, unknown>, run: AgentRun) {
   const part = (data.part && typeof data.part === "object" ? data.part : data) as Record<string, unknown>;
   const state = (part.state && typeof part.state === "object" ? part.state : part) as Record<string, unknown>;
@@ -170,6 +144,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const traces = new Map<string, TraceStore>();
   const queues = new Map<string, ProjectQueue>();
   const activeRuns = new Map<string, ActiveRun>();
+  const sessionOperations = createAgentSessionOperations();
+  const selfRecaps = new Map<Promise<unknown>, { projectId: string; active?: ActiveRun }>();
+  const closingProjects = new Set<string>();
   const postChecks = new Set<string>();
   const teamAgentOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
@@ -259,6 +236,20 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   async function requestAgentSelfRecap(projectId: string, runId: string, evidence: Record<string, unknown>) {
     const run = await getStore(projectId).get(runId);
     if (!run) throw new Error("Agent run not found for self recap");
+    if (!run.sessionId) throw new Error("Agent session is unavailable for self recap");
+    if (!["completed", "failed", "cancelled"].includes(run.status)) throw Object.assign(new Error("Agent run must finish before self recap"), { statusCode: 409 });
+    const state: { projectId: string; active?: ActiveRun } = { projectId };
+    const operation = sessionOperations.run(`${projectId}:${run.sessionId}`, async () => {
+      if (disposing || closingProjects.has(projectId)) throw new Error("Agent run manager is closing");
+      return performAgentSelfRecap(projectId, run, evidence, state);
+    });
+    selfRecaps.set(operation, state);
+    try { return await operation; }
+    finally { selfRecaps.delete(operation); }
+  }
+
+  async function performAgentSelfRecap(projectId: string, run: AgentRun, evidence: Record<string, unknown>, state: { active?: ActiveRun }) {
+    const runId = run.id;
     const projectRuntime = options.runtimeManager.get(projectId);
     const session = run.sessionId ? await getSessionStore(projectId).get(run.sessionId) : undefined;
     const sessionId = run.runtimeSessionId ?? session?.runtimeSessionId;
@@ -269,46 +260,47 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}`
     ].join("\n\n");
     const promptHash = crypto.createHash("sha256").update(prompt).digest("hex");
-    const observedUsage = new Map<string, AgentRunUsage>();
-    const stopEvents = await options.runtime.subscribe(
-      { workspacePath: projectRuntime.project.workspacePath, sessionId },
-      async (event) => {
-        if (event.type !== "message.updated") return;
-        const usage = event.data.usageSummary;
-        if (!usage || typeof usage !== "object") return;
-        const info = event.data.info;
-        const messageId = info && typeof info === "object" && typeof (info as { id?: unknown }).id === "string"
-          ? (info as { id: string }).id
-          : `event-${observedUsage.size}`;
-        observedUsage.set(messageId, usage as AgentRunUsage);
-      }
-    );
-    let result: Awaited<ReturnType<AgentRuntime["run"]>>;
+    const settings = options.getSettings();
+    const provider = settings.provider;
+    const model = settings.model;
+    const observedUsage = createAgentUsageCollector();
+    state.active = { workspacePath: projectRuntime.project.workspacePath, runtimeSessionId: sessionId };
     try {
-      result = await options.runtime.run({ workspacePath: projectRuntime.project.workspacePath, sessionId, prompt });
+      const result = await executeRuntimePrompt({
+        runtime: options.runtime,
+        input: { workspacePath: projectRuntime.project.workspacePath, sessionId, prompt, purpose: "knowledge-recap", model },
+        timeoutMs: options.runTimeoutMs,
+        usage: observedUsage,
+        onEvent: (event) => observedUsage.observe(event),
+        onSubscriptionError: async (error) => { await appendTrace(projectId, runId, { type: "runtime_subscription_error", summary: error instanceof Error ? error.message : String(error) }); }
+      });
+      if (!parseAgentRecapDraft(result.text, evidence)) throw new Error("Agent self recap returned invalid JSON");
+      const usage = observedUsage.total();
+      await appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider, model, usage, completed: true } });
+      return { text: result.text, provider, model, promptHash, usage: toLlmUsage(usage) };
     } catch (error) {
-      await stopEvents();
+      const usage = observedUsage.total();
       const recapError = Object.assign(new Error(error instanceof Error ? error.message : String(error)), {
         promptHash,
-        provider: run.provider,
-        model: run.model
+        provider,
+        model,
+        usage: toLlmUsage(usage)
       });
       await appendTrace(projectId, runId, {
         type: "knowledge_recap_self",
         data: {
           promptHash,
-          provider: run.provider,
-          model: run.model,
-          error: recapError.message
+          provider,
+          model,
+          error: recapError.message,
+          usage,
+          completed: false
         }
       });
       throw recapError;
+    } finally {
+      state.active = undefined;
     }
-    await stopEvents();
-    if (result.usage) observedUsage.set(result.messageId ?? "result", result.usage);
-    const usage = sumUsage(observedUsage.values());
-    await appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider: run.provider, model: run.model, usage } });
-    return { text: result.text, provider: run.provider, model: run.model, promptHash, usage: toLlmUsage(usage) };
   }
 
   function appendActivity(
@@ -399,7 +391,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       while (queue.runIds.length > 0 && !disposing) {
         const runId = queue.runIds.shift();
         if (!runId) continue;
-        await executeRun(projectId, runId);
+        const run = await getStore(projectId).get(runId);
+        if (run) await sessionOperations.run(`${projectId}:${run.sessionId ?? run.id}`, () => executeRun(projectId, runId));
       }
     })().finally(() => {
       queue.processing = false;
@@ -462,12 +455,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     let workspacePath: string | undefined;
     let runtimeSessionId: string | undefined;
-    const observedUsage = new Map<string, AgentRunUsage>();
+    const observedUsage = createAgentUsageCollector();
     let usageRecorded = false;
     const recordUsage = async (resultUsage?: AgentRunUsage, messageId?: string) => {
-      if (resultUsage) observedUsage.set(messageId ?? "result", resultUsage);
+      observedUsage.addResult(resultUsage, messageId);
       if (usageRecorded) return;
-      const totalUsage = sumUsage(observedUsage.values());
+      const totalUsage = observedUsage.total();
       if (!totalUsage) return;
       usageRecorded = true;
       await updateRun(projectId, runId, { usage: totalUsage });
@@ -629,37 +622,26 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runPrompt: run.prompt
       });
 
-      const stopEvents = await options.runtime.subscribe(
-        {
-          workspacePath: projectRuntime.project.workspacePath,
-          sessionId: activeRuntimeSessionId
-        },
-        async (event) => {
-          const traceEvent = await appendTrace(projectId, runId, {
-            type: `opencode.${event.type}`,
-            data: event.data
-          });
-          const tool = extractToolEvent(event.type, event.data, run);
-          if (tool) await projectRuntime.capture?.agentTool({ ...tool, traceSeq: traceEvent.sequence });
-          const usage = event.data.usageSummary;
-          const info = event.data.info;
-          const messageId = info && typeof info === "object" && typeof (info as { id?: unknown }).id === "string"
-            ? (info as { id: string }).id
-            : undefined;
-          if (usage && typeof usage === "object") observedUsage.set(messageId ?? `event-${traceEvent.sequence}`, usage as AgentRunUsage);
-        }
-      );
-
       let result: { text: string; messageId?: string; usage?: AgentRunUsage };
       try {
-        result = await runWithTimeout(options.runtime.run({
-          workspacePath: projectRuntime.project.workspacePath,
-          sessionId: activeRuntimeSessionId,
-          prompt: runtimePrompt
-        }), options.runTimeoutMs, () => options.runtime.cancel({
-          workspacePath: projectRuntime.project.workspacePath,
-          sessionId: activeRuntimeSessionId
-        })).finally(stopEvents);
+        result = await executeRuntimePrompt({
+          runtime: options.runtime,
+          input: {
+            workspacePath: projectRuntime.project.workspacePath,
+            sessionId: activeRuntimeSessionId,
+            prompt: runtimePrompt
+          },
+          timeoutMs: options.runTimeoutMs,
+          usage: observedUsage,
+          async onEvent(event) {
+            observedUsage.observe(event);
+            const traceEvent = await appendTrace(projectId, runId, { type: `opencode.${event.type}`, data: event.data });
+            const tool = extractToolEvent(event.type, event.data, run);
+            if (tool) await projectRuntime.capture?.agentTool({ ...tool, traceSeq: traceEvent.sequence });
+          },
+          onSubscriptionError: async (error) => { await appendTrace(projectId, runId, { type: "runtime_subscription_error", summary: error instanceof Error ? error.message : String(error) }); }
+        });
+        await recordUsage(result.usage, result.messageId);
       } catch (error) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
@@ -1159,12 +1141,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     hasActiveTasks() {
       return (
         activeRuns.size > 0 ||
+        selfRecaps.size > 0 ||
         [...queues.values()].some(
           (queue) => queue.processing || queue.runIds.length > 0
         )
       );
     },
     async disposeProject(projectId: string) {
+      closingProjects.add(projectId);
       const store = getStore(projectId);
       const active = (await store.list()).filter(
         (run) => run.status === "queued" || run.status === "running"
@@ -1208,6 +1192,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             : [];
         })
       );
+      await Promise.all([...selfRecaps.values()].filter((recap) => recap.projectId === projectId && recap.active).map((recap) => options.runtime.cancel({ workspacePath: recap.active!.workspacePath, sessionId: recap.active!.runtimeSessionId })));
+      await Promise.allSettled([...selfRecaps].filter(([, recap]) => recap.projectId === projectId).map(([operation]) => operation));
       if (queue.completion) await queue.completion;
       queues.delete(projectId);
       for (const key of postChecks) if (key.startsWith(`${projectId}:`)) postChecks.delete(key);
@@ -1216,17 +1202,19 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         if (key.startsWith(`${projectId}:`)) traces.delete(key);
       }
       sessionStores.delete(projectId);
+      closingProjects.delete(projectId);
     },
     async dispose() {
       disposing = true;
       await Promise.all(
-        [...activeRuns.values()].map((active) =>
+        [...activeRuns.values(), ...[...selfRecaps.values()].flatMap((recap) => recap.active ? [recap.active] : [])].map((active) =>
           options.runtime.cancel({
             workspacePath: active.workspacePath,
             sessionId: active.runtimeSessionId
           })
         )
       );
+      await Promise.allSettled(selfRecaps.keys());
       await Promise.all(
         [...queues.values()]
           .map((queue) => queue.completion)

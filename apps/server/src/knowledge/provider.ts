@@ -211,7 +211,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       {}
     );
     const reusable = visibleCards.filter((card) =>
-      !["needsReview", "orphaned", "archived", "superseded"].includes(card.status) &&
+      !["draft", "needsReview", "orphaned", "archived", "superseded"].includes(card.status) &&
       config.statuses.includes(card.status) &&
       (card.status === "reviewed" ? isReusable(card, { viewerMemberId: input.initiator.id }) : true) &&
       !excludedByUser.includes(card.id)

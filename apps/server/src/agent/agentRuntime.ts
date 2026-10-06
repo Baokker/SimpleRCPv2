@@ -21,6 +21,8 @@ export interface AgentRuntime {
     workspacePath: string;
     sessionId: string;
     prompt: string;
+    purpose?: "knowledge-recap";
+    model?: string;
   }): Promise<{ text: string; messageId?: string; usage?: AgentRunUsage }>;
   getDiff(input: {
     workspacePath: string;

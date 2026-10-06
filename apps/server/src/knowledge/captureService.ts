@@ -30,8 +30,9 @@ export interface CaptureServiceOptions {
   onNotify(memberId: string, message: ServerMessage): void;
   memberName(memberId: string): string;
   recapMode?: () => Promise<"server" | "agent-self">;
-  agentSelfRecap?: (suggestion: CaptureSuggestion) => Promise<{ text: string; provider?: string; model?: string; promptHash?: string; usage?: LlmUsage }>;
+  agentSelfRecap?: (suggestion: CaptureSuggestion) => Promise<AgentSelfRecapResult>;
 }
+export interface AgentSelfRecapResult { text: string; provider?: string; model?: string; promptHash?: string; usage?: LlmUsage; }
 export interface RiskWarningConfig {
   files: string[];
   lexicalThreshold: number;
@@ -318,15 +319,17 @@ export function createCaptureService(options: CaptureServiceOptions) {
         mode = "recap";
         if (await recapMode?.() === "agent-self") {
           mode = "agent-self";
+          fallback = false;
           if (!agentSelfRecap) throw new Error("Agent self recap is unavailable");
           let selfResult: Awaited<ReturnType<NonNullable<CaptureServiceOptions["agentSelfRecap"]>>>;
           try {
             selfResult = await agentSelfRecap(suggestion);
           } catch (error) {
-            const recapError = error as { promptHash?: unknown; provider?: unknown; model?: unknown };
+            const recapError = error as { promptHash?: unknown; provider?: unknown; model?: unknown; usage?: unknown };
             if (typeof recapError.promptHash === "string") promptHashes.push(recapError.promptHash);
             if (typeof recapError.provider === "string") llmProvider = recapError.provider;
             if (typeof recapError.model === "string") llmModel = recapError.model;
+            if (recapError.usage && typeof recapError.usage === "object") addLlmUsage(usage, recapError.usage as LlmUsage);
             throw error;
           }
           llmProvider = selfResult.provider ?? llmProvider;
@@ -378,7 +381,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   return {
     ready, feed, attribution,
     setRiskWarningConfig(config: Partial<RiskWarningConfig>) { riskWarningConfig = { ...riskWarningConfig, ...config, files: config.files ?? riskWarningConfig.files }; },
-    bindAgentSelfRecap(callback: (suggestion: CaptureSuggestion) => Promise<{ text: string; provider?: string; model?: string; promptHash?: string; usage?: LlmUsage }>, getMode?: () => Promise<"server" | "agent-self">) { agentSelfRecap = callback; recapMode = getMode ?? recapMode; },
+    bindAgentSelfRecap(callback: (suggestion: CaptureSuggestion) => Promise<AgentSelfRecapResult>, getMode?: () => Promise<"server" | "agent-self">) { agentSelfRecap = callback; recapMode = getMode ?? recapMode; },
     async agentRun(event: Omit<CaptureAgentRunEvent, "type" | "schemaVersion" | "seq" | "at">) {
       await feed({ type: "agentRun", ...event });
       if (["end", "failed", "cancelled", "interrupted"].includes(event.action)) {
