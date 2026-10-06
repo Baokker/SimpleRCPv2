@@ -1,0 +1,22 @@
+{
+  "version": "adjudication-v1",
+  "promptVersion": "pair-v1",
+  "strategy": "G3",
+  "fast": "jev",
+  "deep": "deepseek",
+  "fastModel": "jev-1.13.0",
+  "threshold": 0,
+  "t1Strategy": "G3",
+  "contextLimit": 3000,
+  "topK": 3,
+  "invariants": true,
+  "softDeadlineMs": 2000,
+  "hardDeadlineMs": 8000,
+  "prices": {
+    "date": "2026-10-06",
+    "fastInputPerMillion": 0.042,
+    "fastOutputPerMillion": 0,
+    "deepInputPerMillion": 0.3,
+    "deepOutputPerMillion": 1.2
+  }
+}

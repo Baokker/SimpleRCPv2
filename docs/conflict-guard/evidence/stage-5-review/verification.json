@@ -1,0 +1,99 @@
+{
+  "browser": [
+    {
+      "name": "e2e",
+      "command": "CONFLICT_GUARD=rules SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=1 SIMPLERCP_STAGE5_LIVE=0 pnpm test:e2e",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 5
+    },
+    {
+      "name": "collab-off",
+      "command": "CONFLICT_GUARD=off pnpm test:collab",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "collab-observe",
+      "command": "CONFLICT_GUARD=observe pnpm test:collab",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "collab-rules",
+      "command": "CONFLICT_GUARD=rules pnpm test:collab",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "replay": {
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "9d65602b5574e967b8db05e5a0a6f2508ae86086d4dfb565addc4b7914e12c9c",
+        "revision": 0,
+        "at": 1791274792764,
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn"
+      },
+      {
+        "pairId": "aa23b62231ec7bae8cd0e9a15301fb71ad0b2fa34877fc0970e31b3732ab0784",
+        "revision": 0,
+        "at": 1791274792764,
+        "ruleId": "merge-only-type-error",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "legacyRevisionMatches": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 6,
+        "actual": 6,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 1,
+        "actual": 1,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "recorded"
+  },
+  "modelReplay": {
+    "compared": "judgements, outcomes, intervals, metrics, input hashes, completion, recorded latency, T03",
+    "rounds": [
+      {
+        "round": 1,
+        "recordMatches": true,
+        "sha256": "2d15c5f6fd78db3c9f06086a4676ba18e2dd53cbe37677bfa720e3108d5aad61",
+        "networkCalls": 0
+      },
+      {
+        "round": 2,
+        "recordMatches": true,
+        "sha256": "2d15c5f6fd78db3c9f06086a4676ba18e2dd53cbe37677bfa720e3108d5aad61",
+        "networkCalls": 0
+      },
+      {
+        "round": 3,
+        "recordMatches": true,
+        "sha256": "2d15c5f6fd78db3c9f06086a4676ba18e2dd53cbe37677bfa720e3108d5aad61",
+        "networkCalls": 0
+      }
+    ],
+    "byteIdentical": true,
+    "valid": true
+  }
+}

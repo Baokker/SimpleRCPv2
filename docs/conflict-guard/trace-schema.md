@@ -4,7 +4,7 @@
 
 ## 事件字段
 
-- `session_start`：`mode`、阈值配置和服务端提交号。服务重启后追加事件，回放保留跨会话文本、批次、变更集和脱敏状态。
+- `session_start`：`mode`、阈值配置和服务端提交号。新服务端与合成轨迹增加 `pairRevisionMode: "judged-input"`：有效判定或分析输入首次变化时增加 revision，pending/stale 的连续输入保留 revision。服务重启后追加事件，回放保留跨会话文本、批次、变更集和脱敏状态。
 - `doc_open`：普通文件记录 `file`、初始全文 `text` 和 `textHash`；敏感文件记录 `{ file, skipped: "sensitive" }`。
 - `edit`：`file`、`origin`、`ops`、`revisionAfter`。每个操作包含相对于修改前文本的 `from`、`deleted` 和 `inserted`；按顺序应用时累计前序操作的长度变化。`revisionAfter` 为 collaborativeDocuments 写入后的真实 revision。服务端撤回使用 `origin.kind = "guard-revert"` 并带成员编号。
 - `cursor`：`memberId`、`file`、`position`、`selection` 和时间。服务端内存保留每个成员的最新光标，轨迹每 200 毫秒窗口登记最后一个位置。
@@ -43,3 +43,5 @@
 版本 2 校验 `change_unit` 的批次引用、状态与哈希格式，以及候选打开、更新、关闭的顺序和距离。`session_start` 开始新的候选生命周期；服务端候选状态属于当前运行会话，文件文本、批次与脱敏状态仍按连续轨迹保存。语义事件没有 before/after 全文，语义回放结合初始项目文件和 edit 序列复原符号。当前验证器执行文本 edit 与批次全文哈希核验；一致性检查比较判定序列，尚未单独比较 `change_unit` 的符号哈希。
 
 阶段 4 的 replayTrace 处理输入事件，复用产品逻辑产生候选与判定；replay:check 比较判定、闸门、文件写入、冻结四类事件。没有 pair_judged 的轨迹返回 checked=false、valid=false。找不到变更对的 ui_action 计入 errors。冻结后相交编辑与含有该编辑的模拟持久记录使用结果字段 shouldHaveBeenBlocked、counterfactual 标记；输入轨迹保持 schema 3。
+
+缺少 `pairRevisionMode` 的已有轨迹使用 legacy 修订方式。定时回调合并次数可以影响历史数值 revision；`replay:check` 只在双方有效的 SHA-256 `revisionKey` 完全相同，且成员、规则、动作和时间检查通过时接受这类计数差异，差异单列在 `legacyRevisionMatches`。缺少输入哈希时严格比较 revision。`judged-input` 轨迹始终严格比较 revision。

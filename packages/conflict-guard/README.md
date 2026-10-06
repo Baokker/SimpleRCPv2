@@ -40,7 +40,7 @@
 
 公开箭头函数属性的参数与返回类型纳入外部接口变化。冻结范围随编辑移动，语义索引更新时重新取得当前声明的完整范围。悬空引用通过 TypeChecker 查询导入名称与来源文件，已有本地声明和参数保持自身绑定；引用移除后，动态悬空关系随下一次更新消失。等价重构的临时变量消除仅接受下一条语句直接返回该变量的形式。
 
-变更对的 `revision` 只取双方符号 before/after 的 SHA-256 与关系路径。行号、时间和无关编辑不影响修订号，双方确认在相同修订号下持续有效。冻结字符范围随每次编辑变换，服务端通过 `/ws` 通知当前范围。
+变更对的 `revision` 由双方符号 before/after 的 SHA-256 与关系路径确定。有效判定或正在分析的输入首次变化时增加一次；pending 与 stale 期间的连续输入，以及候选临时消失后重新出现，保留当前修订号。行号、时间和无关编辑不影响修订号，双方确认在相同修订号下持续有效。修订改变时清除旧确认，随后恢复原文仍需重新判定。冻结字符范围随每次编辑变换，服务端通过 `/ws` 通知当前范围。
 
 服务端保留有未写入内容、活跃修改、未关闭变更对或暂停写入的同一个 Y.Doc。UndoManager 按成员编号维护，关闭所有连接后仍可撤回。撤回必须改变文本；没有可撤回内容返回 409。外部文件输入使用最近一次写入的 Yjs 快照建立副本，在副本应用磁盘差异后将增量 update 合并到共享文档。
 
@@ -51,6 +51,8 @@
 `replay/` 提供 `VirtualClock`、`MemoryFileProvider`、`replayTrace`、`checkReplay` 和四个 `ZoningPolicy`。主输入为 `doc_open`、`edit`、`cursor`，并支持 `mirror_resync`、文件退出和确认操作。批次关闭、候选关系和分区结果由同一套 tracker、语义索引、分区器和状态机产生。录制的派生事件只用于一致性校验。重同步与服务端共用 `textDiffOps`。
 
 P0 放行全部候选；P1 在首名成员开始修改时锁定其他成员对该文件的输入；P2 在开始修改时锁定两跳内的相关符号；P3 调用 `routing/classifier.ts`；P* 使用探针真值，在批次结束时锁定冲突候选。P1/P2 对另一成员首次输入即记录反事实。文件文本与 lib 由调用者注入，回放不读取系统 lib 文件。批次参数从 `session_start.config` 取得，语义更新合并窗口为 25 毫秒，文件写入防抖为 300 毫秒。
+
+新服务端与合成轨迹记录 `session_start.pairRevisionMode: "judged-input"`，回放使用相同的修订方式。缺少该字段的已有轨迹使用 legacy 方式；一致性校验只在有效的 `revisionKey` 完全相同时接受历史计数差异，并通过 `legacyRevisionMatches` 单独报告。规则、动作、时间、闸门、文件写入和冻结继续核验。
 
 P1 的文件锁包含声明以外的注释和空白修改。P1/P2 的反事实编辑继续维护共享文本坐标，原有成员的编辑所有权保持有效，锁区只限制其他成员。
 
@@ -84,7 +86,7 @@ pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../
 | G3 | 快判；置信度低于阈值、lock 或失败时升级深判 |
 | G4 | T1 使用配置的 G2 或 G3 |
 
-`buildAdjudicationInput` 供产品与回放共同使用，包含双方符号 before/after、参与者种类、关系路径、本地排除规则与类型检查结果。`extractInvariants` 从入边选取至多三个调用点，按与另一侧符号的距离排序，补充函数签名、调用行前后各三行、测试名称及断言、修改前注释与返回值用法。文本字段上限为 3000 字符，`invariants:false` 可以关闭这部分上下文。
+`buildAdjudicationInput` 供产品与回放共同使用，包含双方符号 before/after、参与者种类、关系路径、本地排除规则与类型检查结果。`extractInvariants` 从入边选取至多三个调用点，按与另一侧符号的距离排序，补充函数签名、调用行前后各三行、测试名称及断言、修改前注释与返回值用法。调用与测试引用通过索引的 `referenceTargets` 使用 TypeChecker 查询目标声明，支持同名方法、import 别名和匿名 default 声明；索引包含 `.mjs` 与 `.cjs` 测试。文本字段上限为 3000 字符，`invariants:false` 可以关闭这部分上下文。
 
 `createAdjudicationService` 合并相同输入的并发角色请求。输入、适配器及模型版本共同形成 SHA-256 缓存键。取消一个订阅者保留其他订阅者的请求，最后一个订阅者取消时中止 HTTP。缓存读取与整个级联过程均受 8000 ms 时间预算限制。失败、超时与无效格式在 T1 返回 warn，模型结果通过 `PairCoordinator` 的修订号检查生效。
 
@@ -98,5 +100,7 @@ pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/d
 pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --policy G3 --threshold 0 --provider-mode record --cache bench/model-cache/stage5-dev-final
 pnpm --filter @simplercp/conflict-guard adjudication:verify
 ```
+
+`adjudication:verify` 按录制报告中已有的模型策略执行三轮重放，支持只录制 G3 的报告。完整录制配置保存为 `adjudication-config.json`，适配器与模型版本保存为 `adjudication-models.json`，通过 `replay:run --config <file> --models <file>` 使用。重放使用录制的模型版本；报告的 `model.httpCalls` 记录实际 HTTP 调用数，`model.calls` 保存调用事件。离线重放不要求存在 `.env` 文件。
 
 阈值、价格、完整提示词和配置见 `docs/conflict-guard/adjudication.md`。阶段五命令只读取开发集；保留集留至正式评价。模型录制用于离线确定性回放，实际服务端取消与截止时间另由集成及浏览器测试验证。
