@@ -1,0 +1,22 @@
+{
+  "dataset": "d1-v1",
+  "seed": 20261006,
+  "sourceCommit": "fa5ca0fdfb717e29f226a10b85c96ca3cbaefb02",
+  "split": "dev",
+  "separateProcesses": 2,
+  "repetitionsPerProcess": 2,
+  "ignoredFields": [
+    "timing"
+  ],
+  "byteIdentical": true,
+  "byteLength": 19470958,
+  "sha256": "c23fa19bb907343a9be37240eff20eb9d08f543285121f0053d3ea348d2c25d8",
+  "policies": [
+    "P0",
+    "P1",
+    "P2",
+    "P3",
+    "P*"
+  ],
+  "holdoutEvaluated": false
+}

@@ -83,7 +83,7 @@
 | C3 | pair_judged 保留完整 typecheck 耗时与跳过结果；回放按记录复现跳过，缺少记录时标 timeoutSimulation: unavailable。两份有检查记录的轨迹标 recorded。合并独有类型错误示例检查耗时 66.87 ms。 |
 | C4 | `conflictGuardApi.integration.test.ts` 暂时移除实际 Y.Text observer，恢复后触发真实 mirror_resync，核验双方范围和有效轨迹。`agentConcurrency.test.ts` 增加同 session 先后运行、两种延迟顺序，各 run 只含自身文件。B3 与重新并入 session.diff 的实际变异均检出失败。round2 文档按现有证据记录。 |
 | C5 | 新生产场景补齐阶段 3 的 2、3、4、7、8、9、11；补写双方确认、参数可选后的自动解除、冻结期间 Yjs 输入、撤回后调用方补写、外部输入 persist_conflict。`接口新增必需成员冻结旧对象消费者` 命中 interface-required-member-incompatible。 |
-| C6 | `routing/greylock-parity.test.ts` 展开原测试全部 47 个分类调用，运行旧 classifier 与本产品。27/47 分区和规则一致，20 项差异逐项列在 stage-3.md 与完整 JSON。D2 的 51/51 动作一致另外验证白区、灰区。 |
+| C6 | `routing/greylock-parity.test.ts` 展开原测试全部 47 个分类调用，运行旧 classifier 与本产品。27/47 分区和规则一致，20 项差异逐项列在 stage-3.md 与完整 JSON。D2 的 47/51 动作一致另外验证白区、灰区，四项等价重构差异见 D2 verification.json。 |
 | C7 | `routing/contracts.ts` 区分已知与未知返回属性，内部箭头函数和 return 保持在自身声明范围；新增、删除符号的空文本按状态处理。`返回未知对象变量时保留返回属性的不确定性`、`内部箭头函数变化不报告外部接口变化`、`新增符号的空文本按新增处理`、`返回局部对象变量保留其属性集合` 通过。 |
 | C8 | 每条规则位于独立文件。same-symbol-concurrent-write 在 type-only-unchanged 之前，call-signature-incompatible 在 consumed-return-property-removed 之前。`调用签名规则在返回属性规则之前求值` 通过。 |
 | C9 | session 在单方批次关闭后维护接口变化表；依赖方新批次查询该表，无需已有变更对。`C9 单方接口变化结束批次后即可触发依赖方 T0` 与浏览器第九项通过。 |
@@ -107,7 +107,7 @@ C4 的 B3 变异把 resync 路径的 tracker.edit 改为 tracker.openDocument，
 | displaySymbol | T0 从符号键读取完整声明名称及 container，面板沿用符号 kind。浏览器验收包含函数与 Cart.total，界面回放包含 billing 声明。 |
 | 四状态目录查询 | 复用索引文件清单与 readFile/readLib，检查时不扫描磁盘目录。四状态及完整服务端场景通过。 |
 | codeCommit 与 D2 哈希 | bench-generate 从脚本所属 SimpleRCPv2 仓库读取提交；GreyLock 导入核验 37 份来源和 57 条轨迹的 SHA-256。greylockImport 测试通过。 |
-| D2 数量与 verification | 51 个规则案例包含 41 warn、10 allow；六个交付场景 unavailable。README、stage-4.md 与重新生成的 verification.json 使用相同计数。 |
+| D2 数量与 verification | 51 个规则案例当前包含 45 warn、6 allow，47 个动作与来源一致；六个交付场景 unavailable。README、stage-4.md 与重新生成的 verification.json 使用相同计数。 |
 
 ## 浏览器与回放证据
 
@@ -115,21 +115,21 @@ C4 的 B3 变异把 resync 路径的 tracker.edit 改为 tracker.openDocument，
 
 九份修复后的服务端轨迹及完整初始文本位于 `evidence/checkpoint-a-live-traces/`。`verification.json` 同时记录各类别录制数量与回放数量；没有产生相应事件的场景，其类别标记 checked:false。
 
-开发集报告位于 `evidence/checkpoint-a-dev-report/`，包含完整结果、Wilson 区间、P* 对照、判定前暴露窗口、冻结次数、编辑计数与 interruptions.svg。判定延迟采用当前 revision 的触发事件，分别报告安全样本与冲突变体。
+当前开发集报告位于 `evidence/checkpoint-a-followup-dev-report/`，包含压缩后的完整结果、Wilson 区间、P* 对照、判定前暴露窗口、冻结次数、编辑计数与 interruptions.svg。判定延迟采用当前 revision 的触发事件，分别报告安全样本与冲突变体。
 
 每个策略使用 28 个去重样本，其中冲突变体 15、安全样本 13。比例分母分别为 lock 真值 8、allow 真值 18、lock 或 warn 真值 10。
 
 | 策略 | 逃逸率 | 漏阻断率 | 误阻断率 | 本地决定比例 | 冻结人秒 |
 |---|---:|---:|---:|---:|---:|
 | P0 | 100.0% | 100.0% | 0.0% | N/A | 0.00 |
-| P1 | 90.0% | 87.5% | 33.3% | N/A | 29874.17 |
-| P2 | 0.0% | 0.0% | 72.2% | N/A | 33492.43 |
+| P1 | 90.0% | 87.5% | 33.3% | N/A | 29873.85 |
+| P2 | 0.0% | 0.0% | 72.2% | N/A | 27335.33 |
 | P3 | 0.0% | 62.5% | 0.0% | 24.2% | 3355.05 |
 | P* | 0.0% | 0.0% | 0.0% | N/A | 11408.82 |
 
 P3 的五个漏阻断均为 CP 族 runtime-only 样本，获得 warn 或 T0，因此逃逸率与漏阻断率反映不同效果。有限暴露窗口样本数为零；P0 全程没有提示的逃逸数为 10，P1 为 9。P0/P2/P3/P* 的安全样本与冲突变体判定延迟 p50/p95 均为 25/25 ms，P1 为 0/0 ms。新增五项先后编辑与多变更对延迟回归在修改前失败、修改后通过。
 
-两次标准 CLI 独立进程分别执行 repeat 2，除顶层 timing 外逐字节相同。SHA-256 为 `c35c2c9eeb0cc61a12eea7bfaf6ba9eabfa52fc425dfc3287b0f513039806aff`，比较范围见 determinism.json。保留集策略没有执行。
+两次标准 CLI 独立进程分别执行 repeat 2，除顶层 timing 外逐字节相同。SHA-256 为 `c23fa19bb907343a9be37240eff20eb9d08f543285121f0053d3ea348d2c25d8`，比较范围见当前报告的 determinism.json。保留集策略没有执行。
 
 ## 验证命令与提交
 

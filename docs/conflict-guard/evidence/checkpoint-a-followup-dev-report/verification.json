@@ -1,0 +1,97 @@
+{
+  "schema": 3,
+  "dataset": "d1-v1",
+  "seed": 20261006,
+  "split": "dev",
+  "repetitions": 2,
+  "selectedRelationGroups": 18,
+  "programIdentity": "baseline-leftOnly-rightOnly-merged-sha256",
+  "oracleConfiguration": {
+    "allow": "allow",
+    "warn": "lock",
+    "lock": "lock",
+    "noRelation": "allow"
+  },
+  "policies": {
+    "P0": {
+      "samples": 28,
+      "variants": {
+        "conflict": 15,
+        "safe": 13
+      },
+      "denominators": {
+        "agreement": 28,
+        "missBlockRatio": 8,
+        "falseBlockRatio": 18,
+        "escapeRatio": 10
+      },
+      "duplicates": 0,
+      "excluded": 0,
+      "missingLatencyTriggers": 0
+    },
+    "P1": {
+      "samples": 28,
+      "variants": {
+        "conflict": 15,
+        "safe": 13
+      },
+      "denominators": {
+        "agreement": 28,
+        "missBlockRatio": 8,
+        "falseBlockRatio": 18,
+        "escapeRatio": 10
+      },
+      "duplicates": 0,
+      "excluded": 0,
+      "missingLatencyTriggers": 0
+    },
+    "P2": {
+      "samples": 28,
+      "variants": {
+        "conflict": 15,
+        "safe": 13
+      },
+      "denominators": {
+        "agreement": 28,
+        "missBlockRatio": 8,
+        "falseBlockRatio": 18,
+        "escapeRatio": 10
+      },
+      "duplicates": 0,
+      "excluded": 0,
+      "missingLatencyTriggers": 0
+    },
+    "P3": {
+      "samples": 28,
+      "variants": {
+        "conflict": 15,
+        "safe": 13
+      },
+      "denominators": {
+        "agreement": 28,
+        "missBlockRatio": 8,
+        "falseBlockRatio": 18,
+        "escapeRatio": 10
+      },
+      "duplicates": 0,
+      "excluded": 0,
+      "missingLatencyTriggers": 0
+    },
+    "P*": {
+      "samples": 28,
+      "variants": {
+        "conflict": 15,
+        "safe": 13
+      },
+      "denominators": {
+        "agreement": 28,
+        "missBlockRatio": 8,
+        "falseBlockRatio": 18,
+        "escapeRatio": 10
+      },
+      "duplicates": 0,
+      "excluded": 0,
+      "missingLatencyTriggers": 0
+    }
+  }
+}

@@ -14,7 +14,7 @@
 
 ```bash
 pnpm --filter @simplercp/conflict-guard bench:prepare --seeds bench/seeds --out bench/datasets/d1-v1 --groups 60 --seed 20261006 --concurrency 8
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy 'P0,P1,P2,P3,P*' --repeat 2 --out ../../docs/conflict-guard/evidence/checkpoint-a-dev-report
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy 'P0,P1,P2,P3,P*' --repeat 2 --out ../../docs/conflict-guard/evidence/checkpoint-a-followup-dev-report
 ```
 
 开发集评价按安全孪生与冲突变体分别计数，相同四状态程序仅计一次。本次每个策略包含 28 个去重样本，其中冲突变体 15 个、安全样本 13 个。漏阻断率的分母为 8 个 lock 真值样本，误阻断率为 18 个 allow 真值样本，逃逸率为 10 个 lock 或 warn 真值样本。逃逸要求冲突合并态已写入，且此前没有通知或阻止；warn、lock 与 T0 均计为提示。本地决定比例按变更对计数，P0、P1、P2、P* 为 N/A。各比例及按算子族、detectability 分组的 Wilson 95% 区间保存在结果 JSON。
@@ -22,22 +22,22 @@ pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v
 | 策略 | 逃逸率 | 漏阻断率 | 误阻断率 | 本地决定比例 | 冻结人秒 |
 |---|---:|---:|---:|---:|---:|
 | P0 | 100.0% | 100.0% | 0.0% | N/A | 0.00 |
-| P1 | 90.0% | 87.5% | 33.3% | N/A | 29874.17 |
-| P2 | 0.0% | 0.0% | 72.2% | N/A | 33492.43 |
+| P1 | 90.0% | 87.5% | 33.3% | N/A | 29873.85 |
+| P2 | 0.0% | 0.0% | 72.2% | N/A | 27335.33 |
 | P3 | 0.0% | 62.5% | 0.0% | 24.2% | 3355.05 |
 | P* | 0.0% | 0.0% | 0.0% | N/A | 11408.82 |
 
 P* 在批次关闭时对真值为冲突的候选对判定 lock，提供本数据与时序下的预言机对照。P1 的文件锁覆盖了同文件冲突，跨文件冲突仍有逃逸。P2 阻止所有关联区域，因此误阻断率为 72.2%。P3 的五个漏阻断均为 CP 族的 runtime-only 样本；它们获得了 warn 或 T0 提示，所以逃逸率为零、漏阻断率仍为 62.5%。P3 的三分类一致率为 13/28，即 46.4%。这些数值分别描述提示能力与 lock 判定能力。
 
-判定延迟使用促成当前 revision 的相关批次关闭时刻；没有对应批次时，使用当前待判定闸门的关闭时刻。P0、P2、P3、P* 的冲突与安全样本 p50/p95 均为 25/25 ms，P1 均为 0/0 ms。这里计量虚拟时钟中的判定安排时间，实际运行耗时保存在 `timing`。各策略缺少触发时刻的判定数量均为零。冻结区间在变更对解除或活跃变更结束时关闭，按成员合并重叠区间；冻结次数分别为 P0 0、P1 49、P2 61、P3 7、P* 19，被阻止编辑数分别为 0、64、1017、17、158。冻结人秒受 600000 ms 活跃变更空闲阈值影响，代表指定生命周期下的模拟时间。
+判定延迟使用促成当前 revision 的相关批次关闭时刻；没有对应批次时，使用当前待判定闸门的关闭时刻。P0、P2、P3、P* 的冲突与安全样本 p50/p95 均为 25/25 ms，P1 均为 0/0 ms。这里计量虚拟时钟中的判定安排时间，实际运行耗时保存在 `timing`。各策略缺少触发时刻的判定数量均为零。冻结区间在变更对解除或活跃变更结束时关闭，按成员合并重叠区间；冻结次数分别为 P0 0、P1 49、P2 51、P3 7、P* 19，被阻止编辑数分别为 0、70、929、17、158。冻结人秒受 600000 ms 活跃变更空闲阈值影响，代表指定生命周期下的模拟时间。
 
 卡片按 `pairId:revision` 去重，包含灰区通知与 T0；每小时频率以第一次至最后一次编辑的时间为分母。P0、P1、P2、P3、P* 分别为 0、477.14、234.90、216.55、121.12 次。有限的判定前暴露窗口样本为零；P0 有 10 个、P1 有 9 个全程未提示的逃逸样本，单独计数。P2、P3、P* 的全程未提示逃逸数为零。
 
-两次独立进程均对每个样本重复回放两次，结果 JSON 除顶层 `timing` 外逐字节相同，SHA-256 为 `c35c2c9eeb0cc61a12eea7bfaf6ba9eabfa52fc425dfc3287b0f513039806aff`。主表、分组、判定序列、散点图、计数与复现证据位于 `evidence/checkpoint-a-dev-report/`；`determinism.json` 记录比较范围与结果。
+两次独立进程均对每个样本重复回放两次，结果 JSON 除顶层 `timing` 外逐字节相同，SHA-256 为 `c23fa19bb907343a9be37240eff20eb9d08f543285121f0053d3ea348d2c25d8`。主表、分组、判定序列、散点图、计数与复现证据位于 `evidence/checkpoint-a-followup-dev-report/`；完整 JSON 以 `results.json.gz` 保存，`determinism.json` 记录比较范围与结果。
 
-D2 包含 51 个规则案例与六个交付场景，共 57 条 schema 3 轨迹。导入校验了 37 个来源文件和全部轨迹的 SHA-256；来源包括 selection、覆盖报告、五份数据集及六个场景的原始文件。规则案例的本地动作全部与 GreyLock 一致，其中 10 个 allow、41 个 warn，每个案例重复回放得到相同 JSON。六个交付场景中四项一方 before/after 相同，两项没有静态关系，因此 tracker 没有双边候选。清单保存 unavailable 原因与来源内容。D2 的校验计数保存在 `packages/conflict-guard/bench/datasets/d2-greylock/verification.json`。
+D2 包含 51 个规则案例与六个交付场景，共 57 条 schema 3 轨迹。导入校验了 37 个来源文件和全部轨迹的 SHA-256；来源包括 selection、覆盖报告、五份数据集及六个场景的原始文件。47 个规则案例的本地动作与 GreyLock 一致，当前结果为 6 个 allow、45 个 warn，每个案例重复回放得到相同 JSON。四个等价重构样例未满足保持求值条件与调用顺序的检查，当前判定为 `semantic-interaction-uncertain/warn`；具体输入编号见 D2 README 与 `verification.json`。六个交付场景中四项一方 before/after 相同，两项没有静态关系，因此 tracker 没有双边候选。清单保存 unavailable 原因与来源内容。D2 的校验计数保存在 `packages/conflict-guard/bench/datasets/d2-greylock/verification.json`。
 
-GreyLock 原始分区器测试另外提供 47 个独立输入，其中 27 个分区和规则结果一致；20 个差异逐条记录于 `evidence/checkpoint-a-greylock-parity.json` 与 `stage-3.md`。D2 的 51/51 动作一致覆盖白区、灰区，原始分区器的 27/47 对照覆盖不同规则边界，两份证据各自保留来源哈希与输入。
+GreyLock 原始分区器测试另外提供 47 个独立输入，其中 27 个分区和规则结果一致；20 个差异逐条记录于 `evidence/checkpoint-a-greylock-parity.json` 与 `stage-3.md`。D2 的 47/51 动作一致覆盖白区、灰区，原始分区器的 27/47 对照覆盖不同规则边界，两份证据各自保留来源哈希与输入。
 
 本轮保存九份真实服务端轨迹，覆盖白区、灰区、合并独有类型错误、确认、撤回、重判、冻结期间输入、observe 与多文件 `mirror_resync`。`replay:check` 对判定、闸门、写入与冻结事件均无差异，九份轨迹的 `valid` 和 `checked` 均为 true，`errors` 均为空。证据为 `evidence/checkpoint-a-live-traces/verification.json`。发生四状态检查的两份轨迹按记录复现检查；其余轨迹明确记录 `timeoutSimulation: unavailable`。
 
@@ -50,7 +50,7 @@ GreyLock 原始分区器测试另外提供 47 个独立输入，其中 27 个分
 | `bench:prepare --groups 60 --seed 20261006 --concurrency 8` | 88 个非 alias 样本完成标注，零项剔除 |
 | `replay:run --split dev --policy 'P0,P1,P2,P3,P*' --repeat 2` | 18 个关系组、28 个去重样本，各策略无错误 |
 | 独立进程重复运行上述开发集命令 | 除 `timing` 外逐字节相同 |
-| D2 导入与重复回放 | 37 个来源、57 条轨迹哈希通过，51 个规则动作一致 |
+| D2 导入与重复回放 | 37 个来源、57 条轨迹哈希通过，47 个规则动作一致，四项差异逐项记录 |
 | `pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/check-checkpoint-traces.ts` | 九份服务端录制无差异 |
 
 完整构建、服务端与包测试、三种模式的协作测试以及 Playwright 验收结果统一记录于 `review-fix-checkpoint-a.md`。Playwright 的真实浏览器验收覆盖阶段 3 十项与先后编辑、重新打开文件、切换文件后撤回三项；执行参数为批次空闲 1500 ms、写入延迟 300 ms，截图与 `acceptance.json` 位于 `evidence/checkpoint-a-manual/`。`manual-acceptance.md` 提供命令和手工步骤。

@@ -361,12 +361,12 @@
       "hash": "4db9a6442d94147648551d3d6538769b37fb5ae053c8510c7a4fe4e2862b9c3a",
       "actual": [
         {
-          "ruleId": "equivalent-refactor",
-          "decision": "allow",
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
           "revision": 0
         }
       ],
-      "matched": true
+      "matched": false
     },
     {
       "id": "ky-retry-method-normalization-conflicting",
@@ -415,12 +415,12 @@
       "hash": "5f856d0322742ac9cc7719dcdbdf68444664822f3bf08f18bf4f1b401a90b77b",
       "actual": [
         {
-          "ruleId": "equivalent-refactor",
-          "decision": "allow",
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
           "revision": 0
         }
       ],
-      "matched": true
+      "matched": false
     },
     {
       "id": "ky-json-schema-validation-order-conflicting",
@@ -721,12 +721,12 @@
       "hash": "8dc7ccfa20bd66a6853852849f4e432cf4365fc11ecf6c22b62678c37412feb5",
       "actual": [
         {
-          "ruleId": "equivalent-refactor",
-          "decision": "allow",
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
           "revision": 0
         }
       ],
-      "matched": true
+      "matched": false
     },
     {
       "id": "defu-config-layer-order-conflicting",
@@ -793,12 +793,12 @@
       "hash": "e92c18b0d900c09becce31ef66ceb053c681ed7886e81626326d10d525048def",
       "actual": [
         {
-          "ruleId": "equivalent-refactor",
-          "decision": "allow",
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
           "revision": 0
         }
       ],
-      "matched": true
+      "matched": false
     },
     {
       "id": "cookie-max-age-validation-conflicting",

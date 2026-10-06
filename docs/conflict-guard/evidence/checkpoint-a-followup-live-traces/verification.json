@@ -1,0 +1,324 @@
+[
+  {
+    "trace": "observe-observe.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "e13a9bc119a782fb301394fdb90b0d9238068a08163c76ec6f9e739107e94a1f",
+        "revision": 0,
+        "at": 1791266354814,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  },
+  {
+    "trace": "rules-confirmed.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "e2b99c544a5235e1414bd25e21327da5d2fb844555ce88639dd4a864dabb9370",
+        "revision": 0,
+        "at": 1791266336726,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 6,
+        "actual": 6,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  },
+  {
+    "trace": "rules-freeze-violation.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "95bf8c6fb69bb122743c644b356020f70714afe0539dbddf9da5afbdd10213c7",
+        "revision": 0,
+        "at": 1791266349846,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      },
+      {
+        "pairId": "95bf8c6fb69bb122743c644b356020f70714afe0539dbddf9da5afbdd10213c7",
+        "revision": 1,
+        "at": 1791266351385,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 4,
+        "actual": 4,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      },
+      "freeze": {
+        "recorded": 1,
+        "actual": 1,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  },
+  {
+    "trace": "rules-grey.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "cde2ef95305da3380252c55378ef43c33c0989aa63993d944a2a4d6e20ec9a09",
+        "revision": 0,
+        "at": 1791266333140,
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 4,
+        "actual": 4,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "recorded"
+  },
+  {
+    "trace": "rules-merge-type-error.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "09a2935c68e8ea01750d1bd4e15dfd51e1b448428735ae0cac9f315e739a155f",
+        "revision": 0,
+        "at": 1791266334961,
+        "ruleId": "merge-only-type-error",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 4,
+        "actual": 4,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      },
+      "freeze": {
+        "recorded": 1,
+        "actual": 1,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "recorded"
+  },
+  {
+    "trace": "rules-mirror-resync-multifile.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "f5b852248b3cdfd837f950b4e8ab5071d3e05e0a220021f9a02e13bdeca2e099",
+        "revision": 0,
+        "at": 1791266353055,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 4,
+        "actual": 4,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      },
+      "freeze": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  },
+  {
+    "trace": "rules-rejudged.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "b383a78b14739e7826f30d9e4e202905572beb549c05194f06d8f6b134df5e2f",
+        "revision": 0,
+        "at": 1791266338465,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 6,
+        "actual": 6,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 3,
+        "actual": 3,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  },
+  {
+    "trace": "rules-reverted.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "5796914eae01185d8deb4d30f351e12b130bf4ab4f755ce270dea08895a498ba",
+        "revision": 0,
+        "at": 1791266341786,
+        "ruleId": "call-signature-incompatible",
+        "decision": "lock"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 6,
+        "actual": 6,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 3,
+        "actual": 3,
+        "checked": true
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  },
+  {
+    "trace": "rules-white.jsonl",
+    "valid": true,
+    "checked": true,
+    "actual": [
+      {
+        "pairId": "dde8a1a6cafda69975d86ea44a559bfdff645bae76aa6a8099e2bd0c86c25851",
+        "revision": 0,
+        "at": 1791266331382,
+        "ruleId": "observability-only",
+        "decision": "allow"
+      }
+    ],
+    "differences": [],
+    "coordinationDifferences": [],
+    "categories": {
+      "persist_gate": {
+        "recorded": 4,
+        "actual": 4,
+        "checked": true
+      },
+      "persist": {
+        "recorded": 2,
+        "actual": 2,
+        "checked": true
+      },
+      "freeze": {
+        "recorded": 0,
+        "actual": 0,
+        "checked": false
+      }
+    },
+    "errors": [],
+    "timeoutSimulation": "unavailable"
+  }
+]

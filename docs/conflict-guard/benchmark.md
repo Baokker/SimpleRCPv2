@@ -95,6 +95,6 @@ P1 在编辑开始时锁定文件，P2 在编辑开始时锁定符号两跳内�
 
 ## D2 与适用范围
 
-D2 包含 GreyLock 的 51 个规则案例与六个交付场景的 schema 3 轨迹，37 份来源文件与 57 份轨迹均校验 SHA-256。`sourceDecision` 为原本地动作，`sourceTruth` 为原真值，`actual` 为当前 P3 的判定序列；51 个规则案例的动作均一致。六个交付场景保留来源内容，`unavailable` 记录一方未修改或缺少静态关系的情况。黑区规则的移植对照另外使用 GreyLock 测试样例。
+D2 包含 GreyLock 的 51 个规则案例与六个交付场景的 schema 3 轨迹，37 份来源文件与 57 份轨迹均校验 SHA-256。`sourceDecision` 为原本地动作，`sourceTruth` 为原真值，`actual` 为当前 P3 的判定序列；47 个规则案例的动作一致，另外四个等价重构样例产生 `semantic-interaction-uncertain/warn`。当前结果为 6 个 allow、45 个 warn，具体差异见 D2 的 `verification.json`。六个交付场景保留来源内容，`unavailable` 记录一方未修改或缺少静态关系的情况。黑区规则的移植对照另外使用 GreyLock 测试样例。
 
 合成项目只能代表写明的业务与修改方式。探针通过表示当前输入与共享测试均满足要求，完整行为仍需要后续真实数据与人工抽检。清单保留项目、算子、声明位置与原始结果，供后续分析按来源分组与检查样本独立性。

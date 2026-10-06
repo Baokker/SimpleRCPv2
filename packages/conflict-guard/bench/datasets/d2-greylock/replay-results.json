@@ -243,13 +243,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "equivalent-refactor",
-        "decision": "allow",
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": true
+    "matched": false
   },
   {
     "id": "ky-retry-method-normalization-conflicting",
@@ -285,13 +285,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "equivalent-refactor",
-        "decision": "allow",
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": true
+    "matched": false
   },
   {
     "id": "ky-json-schema-validation-order-conflicting",
@@ -523,13 +523,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "equivalent-refactor",
-        "decision": "allow",
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": true
+    "matched": false
   },
   {
     "id": "defu-config-layer-order-conflicting",
@@ -579,13 +579,13 @@
     "sourceTruth": "allow",
     "actual": [
       {
-        "ruleId": "equivalent-refactor",
-        "decision": "allow",
+        "ruleId": "semantic-interaction-uncertain",
+        "decision": "warn",
         "revision": 0
       }
     ],
     "category": "rule-case",
-    "matched": true
+    "matched": false
   },
   {
     "id": "cookie-max-age-validation-conflicting",

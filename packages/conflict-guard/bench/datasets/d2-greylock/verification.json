@@ -4,8 +4,53 @@
   "traceHashesVerified": 57,
   "replayDeterministic": true,
   "ruleCases": 51,
-  "matched": 51,
-  "mismatches": [],
+  "matched": 47,
+  "mismatches": [
+    {
+      "id": "ky-retry-method-normalization-safe",
+      "sourceDecision": "allow",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ]
+    },
+    {
+      "id": "ky-json-schema-validation-order-safe",
+      "sourceDecision": "allow",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ]
+    },
+    {
+      "id": "defu-config-layer-order-safe",
+      "sourceDecision": "allow",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ]
+    },
+    {
+      "id": "cookie-max-age-validation-safe",
+      "sourceDecision": "allow",
+      "actual": [
+        {
+          "ruleId": "semantic-interaction-uncertain",
+          "decision": "warn",
+          "revision": 0
+        }
+      ]
+    }
+  ],
   "deliveryScenarios": [
     {
       "id": "control-policy-grey",
