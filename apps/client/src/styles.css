@@ -1405,6 +1405,7 @@ body[data-resizing="terminal"] {
 
 .collab-section.conflict-guard-panel { display: block; overflow: auto; }
 .conflict-frozen-range { background: rgba(220, 38, 38, 0.2); border-left: 3px solid #dc2626; }
+.conflict-analyzing-range { background: rgba(234, 179, 8, 0.2); border-left: 3px solid #ca8a04; }
 .conflict-candidate.white { border-left: 3px solid #94a3b8; }
 .conflict-candidate.grey { border-left: 3px solid #eab308; }
 .conflict-candidate.black, .conflict-lock { border-left: 3px solid #dc2626; }

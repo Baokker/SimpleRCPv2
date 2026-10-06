@@ -367,7 +367,10 @@ function WorkspacePage({
             setTeamAgents(message.agents);
           }
           if (message.type === "conflict_guard_state_changed") {
-            void getConflictGuardState(projectId).then((state) => setConflictGuardState((previous) => previous && previous.version > state.version ? previous : state)).catch(showWorkspaceError);
+            if (message.state) {
+              const state = message.state as ConflictGuardState;
+              setConflictGuardState((previous) => previous && previous.version > state.version ? previous : state);
+            } else void getConflictGuardState(projectId).then((state) => setConflictGuardState((previous) => previous && previous.version > state.version ? previous : state)).catch(showWorkspaceError);
           }
           if (message.type === "event") {
             setEvents((current) => current.some((event) => event.id === message.event.id)
@@ -524,7 +527,8 @@ function WorkspacePage({
       const id = `${record.pair.id}:${record.revision}`;
       if (seenConflictWarningsRef.current.has(id)) return [];
       seenConflictWarningsRef.current.add(id);
-      return [{ id, summary: record.verdict.summary, path: relationPathText(record.pair.path) }];
+      const model = record.verdict.adjudication;
+      return [{ id, summary: model ? `${model.userExplanation} 建议：${model.suggestedAction} · ${model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(model.latencyMs)} ms`}` : record.verdict.summary, path: relationPathText(record.pair.path) }];
     });
     if (warnings.length > 0) setConflictWarnings((previous) => [...previous, ...warnings]);
   }, [conflictGuardState, projectId, identity.memberId, showWorkspaceNotice]);
@@ -941,9 +945,10 @@ function WorkspacePage({
           onLocalEdit={reportFileEdit}
           onCursorChange={changeCursor}
           frozenRegions={conflictGuardState?.frozenFiles}
+          analyzingRegions={conflictGuardState?.analyzingFiles}
           conflictCards={(conflictGuardState?.pairDecisions ?? []).filter((record) => record.status === "judged" && record.verdict?.decision === "lock").map((record) => ({
             pairId: record.pair.id,
-            summary: record.verdict?.summary ?? "修改之间存在冲突",
+            summary: record.verdict?.adjudication ? `${record.verdict.adjudication.userExplanation} 建议：${record.verdict.adjudication.suggestedAction} · 由${record.verdict.adjudication.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(record.verdict.adjudication.latencyMs)} ms` : record.verdict?.summary ?? "修改之间存在冲突",
             files: [record.pair.left.symbol.split("#")[0] ?? "", record.pair.right.symbol.split("#")[0] ?? ""]
           }))}
         />

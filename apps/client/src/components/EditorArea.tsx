@@ -53,7 +53,7 @@ export function EditorArea({
   onLocalEdit,
   onCursorChange,
   navigationTarget
-  , frozenRegions, conflictCards
+  , frozenRegions, analyzingRegions, conflictCards
 }: {
   openFiles: OpenFile[];
   activePath?: string;
@@ -75,6 +75,7 @@ export function EditorArea({
   ): void;
   frozenRegions?: Array<{ file: string; regions: Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }> }>;
   conflictCards?: Array<{ pairId: string; summary: string; files: string[] }>;
+  analyzingRegions?: Array<{ file: string; regions: Array<{ pairId: string; startLine: number; endLine: number; summary: string }> }>;
 }) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -154,6 +155,7 @@ export function EditorArea({
             theme={theme}
             onLocalEdit={onLocalEdit}
             frozenRegions={frozenRegions?.find((entry) => entry.file === activeFile.path)?.regions}
+            analyzingRegions={analyzingRegions?.find((entry) => entry.file === activeFile.path)?.regions}
             onReady={() => setEditorVersion((version) => version + 1)}
             onMount={(editor, monaco) => {
               editorRef.current = editor;
@@ -196,7 +198,7 @@ function CollaborativeEditor({
   onLocalEdit,
   onMount,
   onReady
-  , frozenRegions, conflictCards
+  , frozenRegions, analyzingRegions, conflictCards
 }: {
   file: OpenFile;
   projectId: string;
@@ -212,6 +214,7 @@ function CollaborativeEditor({
   ): void;
   frozenRegions?: Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }>;
   conflictCards?: Array<{ pairId: string; summary: string; files: string[] }>;
+  analyzingRegions?: Array<{ pairId: string; startLine: number; endLine: number; summary: string }>;
 }) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<
@@ -219,6 +222,7 @@ function CollaborativeEditor({
   >("connecting");
   const frozenRegionsRef = useRef<Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }>>([]);
   const frozenDecorationIdsRef = useRef<string[]>([]);
+  const analysisDecorationIdsRef = useRef<string[]>([]);
   frozenRegionsRef.current = frozenRegions ?? [];
   const collaborationRef = useRef<{
     binding?: MonacoBinding;
@@ -237,6 +241,13 @@ function CollaborativeEditor({
     frozenDecorationIdsRef.current = editor.deltaDecorations(frozenDecorationIdsRef.current, frozenRegionsRef.current.map((region) => ({ range: new monaco.Range(region.startLine, 1, region.endLine, 1), options: { isWholeLine: true, className: "conflict-frozen-range", hoverMessage: { value: `已冻结：${region.summary}` } } })));
     return () => { editor.deltaDecorations(frozenDecorationIdsRef.current, []); frozenDecorationIdsRef.current = []; };
   }, [frozenRegions]);
+
+  useEffect(() => {
+    const editor = editorRef.current; const monaco = window.__simplercpMonaco;
+    if (!editor || !monaco) return;
+    analysisDecorationIdsRef.current = editor.deltaDecorations(analysisDecorationIdsRef.current, (analyzingRegions ?? []).map((region) => ({ range: new monaco.Range(region.startLine, 1, region.endLine, 1), options: { isWholeLine: true, className: "conflict-analyzing-range", hoverMessage: { value: region.summary } } })));
+    return () => { editor.deltaDecorations(analysisDecorationIdsRef.current, []); analysisDecorationIdsRef.current = []; };
+  }, [analyzingRegions]);
 
   function destroyCollaboration() {
     const collaboration = collaborationRef.current;

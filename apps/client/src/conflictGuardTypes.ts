@@ -35,11 +35,14 @@ export interface ConflictGuardState {
     revision: number;
     leftConfirmed?: boolean;
     rightConfirmed?: boolean;
-    verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean } };
+    analysisVisible?: boolean;
+    verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean }; adjudication?: { source: "fast" | "deep" | "fallback"; confidence?: number; latencyMs: number; status: "success" | "degraded"; userExplanation: string; suggestedAction: string } };
     resolution?: string;
     totalLockMs?: number;
   }>;
   frozenFiles?: Array<{ file: string; regions: Array<{ pairId: string; actor: { kind: string; memberId?: string }; startLine: number; endLine: number; summary: string }> }>;
+  analyzingFiles?: Array<{ file: string; regions: Array<{ pairId: string; startLine: number; endLine: number; summary: string }> }>;
+  adjudication?: { calls: number; cacheHits: number; escalationRatio: number; p50Ms: number; p95Ms: number; failures: number; costUsd: number };
   blockedPersists?: Array<{ file: string; reason: string }>;
   persistConflicts?: number;
   persistBlockedCount?: number;
