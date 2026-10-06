@@ -14,16 +14,19 @@ interface LegacyDataset { id: string; sources: Array<{ id: string; groups: Legac
 const { values } = parseArgs({ options: { source: { type: "string", default: "../../../collaboration-tools" }, out: { type: "string", default: "bench/datasets/d2-greylock" } } });
 const source = path.resolve(values.source!);
 const output = path.resolve(values.out!);
-const selection = JSON.parse(await fs.readFile(path.join(source, "experiments/greylock-counterfactual-pair-v1.5/selection.json"), "utf8")) as { sourceDatasets: Array<{ path: string; sha256: string }>; excludedCaseIds: string[] };
+const expectedHashes = JSON.parse(await fs.readFile(new URL("../bench/datasets/d2-greylock/source-hashes.json", import.meta.url), "utf8")) as Record<string, string>;
+const verifiedSources = new Map<string, string>();
+const selection = JSON.parse(await readSource("experiments/greylock-counterfactual-pair-v1.5/selection.json")) as { sourceDatasets: Array<{ path: string; sha256: string }>; excludedCaseIds: string[] };
 const libraries = await replayLibraries();
-const auditText = await fs.readFile(path.join(source, "reports/greylock-local-routing-coverage-v2-20261001054227.json"), "utf8");
+const auditText = await readSource("reports/greylock-local-routing-coverage-v2-20261001054227.json");
 const audit = JSON.parse(auditText) as { datasets: Array<{ rows: Array<{ id: string; zone: "white" | "black" | "grey"; reason: string; expectedDecision: string }> }> };
 const auditRows = new Map(audit.datasets.flatMap((dataset) => dataset.rows).map((row) => [row.id, row]));
 const rows: Array<Record<string, unknown>> = [];
 await fs.mkdir(path.join(output, "traces"), { recursive: true });
-for (const entry of [...selection.sourceDatasets, { path: "experiments/greylock-independent-pair-holdout-v2/dataset.json", sha256: "" }]) {
-  const text = await fs.readFile(path.join(source, entry.path), "utf8");
-  if (entry.sha256 && hash(text) !== entry.sha256) throw new Error(`GreyLock 来源哈希不一致：${entry.path}`);
+for (const entry of [...selection.sourceDatasets, { path: "experiments/greylock-independent-pair-holdout-v2/dataset.json", sha256: expectedHashes["experiments/greylock-independent-pair-holdout-v2/dataset.json"] }]) {
+  if (!entry.sha256 || !/^[a-f0-9]{64}$/.test(entry.sha256)) throw new Error(`GreyLock 来源缺少 SHA-256：${entry.path}`);
+  const text = await readSource(entry.path);
+  if (hash(text) !== entry.sha256) throw new Error(`GreyLock 来源哈希不一致：${entry.path}`);
   const dataset = JSON.parse(text) as LegacyDataset;
   for (const project of dataset.sources) for (const group of project.groups) for (const variant of group.variants) {
     const id = `${group.id}-${variant.id}`;
@@ -38,18 +41,24 @@ for (const entry of [...selection.sourceDatasets, { path: "experiments/greylock-
 if (rows.length !== 51) throw new Error(`GreyLock 案例数量错误：${rows.length}`);
 const scenarioRoot = path.join(source, "experiments/greylock-replay-v1/cases");
 for (const name of (await fs.readdir(scenarioRoot)).sort()) {
-  const directory = path.join(scenarioRoot, name);
-  const item = JSON.parse(await fs.readFile(path.join(directory, "case.json"), "utf8")) as { caseId: string; expectedDecision: string; participants: Array<{ path: string; beforeFile: string; afterFile: string }> };
+  const relative = path.posix.join("experiments/greylock-replay-v1/cases", name);
+  const item = JSON.parse(await readSource(path.posix.join(relative, "case.json"))) as { caseId: string; expectedDecision: string; participants: Array<{ path: string; beforeFile: string; afterFile: string }> };
   const baseline: Record<string, string> = {}; const left: Record<string, string> = {}; const merged: Record<string, string> = {};
   for (const [index, participant] of item.participants.entries()) {
-    const before = await fs.readFile(path.join(directory, participant.beforeFile), "utf8");
-    const after = await fs.readFile(path.join(directory, participant.afterFile), "utf8");
+    const before = await readSource(path.posix.join(relative, participant.beforeFile));
+    const after = await readSource(path.posix.join(relative, participant.afterFile));
     baseline[participant.path] = before; left[participant.path] = index === 0 ? after : before; merged[participant.path] = after;
   }
   rows.push(await writeCase(item.caseId, snapshotsTrace(baseline, left, merged), item.expectedDecision, "greylock-replay-v1", "delivery-scenario"));
 }
-await fs.writeFile(path.join(output, "manifest.json"), JSON.stringify({ version: "d2-greylock-v1", schema: 3, caseCount: 51, scenarios: 6, generationCommand: "bench:import-greylock --source <GreyLock directory>", cases: rows }, null, 2) + "\n");
+const sources = Object.fromEntries([...verifiedSources].sort(([left], [right]) => left.localeCompare(right)));
+await fs.writeFile(path.join(output, "manifest.json"), JSON.stringify({ version: "d2-greylock-v1", schema: 3, caseCount: 51, scenarios: 6, generationCommand: "bench:import-greylock --source <GreyLock directory>", sources, cases: rows }, null, 2) + "\n");
 await fs.writeFile(path.join(output, "replay-results.json"), JSON.stringify(rows.map(({ id, sourceDecision, sourceTruth, actual, category, unavailable, matched }) => ({ id, sourceDecision, sourceTruth, actual, category, unavailable, matched })), null, 2) + "\n");
+await fs.writeFile(path.join(output, "source-report.json"), auditText);
+await fs.writeFile(path.join(output, "labels.json"), JSON.stringify(rows.filter((row) => row.category === "rule-case").map((row) => ({ id: row.id, datasetId: row.sourceDataset, label: row.sourceTruth, zone: auditRows.get(String(row.id))!.zone, reason: auditRows.get(String(row.id))!.reason, source: "GreyLock local-routing-coverage-v2" })), null, 2) + "\n");
+for (const row of rows) if (hash(await fs.readFile(path.join(output, String(row.trace)), "utf8")) !== row.hash) throw new Error(`D2 轨迹哈希不一致：${row.id}`);
+const ruleRows = rows.filter((row) => row.category === "rule-case");
+await fs.writeFile(path.join(output, "verification.json"), JSON.stringify({ schema: 3, sourceHashesVerified: verifiedSources.size, traceHashesVerified: rows.length, replayDeterministic: true, ruleCases: ruleRows.length, matched: ruleRows.filter((row) => row.matched).length, mismatches: ruleRows.filter((row) => !row.matched).map((row) => ({ id: row.id, sourceDecision: row.sourceDecision, actual: row.actual })), deliveryScenarios: rows.filter((row) => row.category === "delivery-scenario").map(({ id, unavailable }) => ({ id, unavailable })) }, null, 2) + "\n");
 console.log(JSON.stringify({ cases: rows.filter((row) => row.category === "rule-case").length, scenarios: rows.filter((row) => row.category === "delivery-scenario").length, output }));
 
 function combine(left: LegacySide, right: LegacySide, leftChanged: boolean, rightChanged: boolean, rightAfter: string) {
@@ -78,6 +87,7 @@ async function writeCase(id: string, trace: TraceEvent[], sourceDecision: string
   if (/\bsk-[A-Za-z0-9_-]{12,}/.test(text)) throw new Error("来源包含受限制的敏感值");
   await fs.writeFile(path.join(output, "traces", `${id}.jsonl`), text);
   const result = replayTrace(trace, { policy: "P3", libs: libraries });
+  if (JSON.stringify(replayTrace(trace, { policy: "P3", libs: libraries })) !== JSON.stringify(result)) throw new Error(`D2 重复回放不一致：${id}`);
   const actors = new Set(trace.filter((event) => event.type === "edit").map((event) => (event.origin as { memberId: string }).memberId));
   const files = new MemoryFileProvider(result.finalTexts);
   const index = createSemanticIndex({ files, now: () => 0 }); index.update();
@@ -88,3 +98,11 @@ async function writeCase(id: string, trace: TraceEvent[], sourceDecision: string
   return { id, sourceDataset: dataset, sourceDecision, sourceTruth, sourceRule: audited?.reason, category, trace: `traces/${id}.jsonl`, hash: hash(text), unavailable, actual, matched: actual.length > 0 && actual.at(-1)!.decision === sourceDecision };
 }
 function hash(text: string) { return createHash("sha256").update(text).digest("hex"); }
+async function readSource(relative: string) {
+  const expected = expectedHashes[relative];
+  if (!expected || !/^[a-f0-9]{64}$/.test(expected)) throw new Error(`GreyLock 来源缺少 SHA-256：${relative}`);
+  const text = await fs.readFile(path.join(source, relative), "utf8");
+  if (hash(text) !== expected) throw new Error(`GreyLock 来源哈希不一致：${relative}`);
+  verifiedSources.set(relative, expected);
+  return text;
+}

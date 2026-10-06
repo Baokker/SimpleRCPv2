@@ -1,4 +1,4 @@
-import type { ActiveChangeSet, ActorRef } from "../model/types.js";
+import type { ActorRef } from "../model/types.js";
 import type { CandidatePair } from "../routing/candidates.js";
 import { classify, type SemanticIndexReadonly, type ZoneVerdict } from "../routing/classifier.js";
 import type { SymbolChange } from "../semantic/changes.js";
@@ -17,7 +17,7 @@ export interface PolicyInput {
 }
 
 export interface ZoningPolicy {
-  id: "P0" | "P1" | "P2" | "P3";
+  id: "P0" | "P1" | "P2" | "P3" | "P*";
   decide(input: PolicyInput): ZoneVerdict;
 }
 
@@ -70,10 +70,27 @@ export function createP3Policy(): ZoningPolicy {
   };
 }
 
-export function policyFor(id: ZoningPolicy["id"]): ZoningPolicy {
+export function createOraclePolicy(truth: "allow" | "warn" | "lock"): ZoningPolicy {
+  if (!["allow", "warn", "lock"].includes(truth)) throw new Error("P* 必须提供可执行探针的真值");
+  return {
+    id: "P*",
+    decide(input) {
+      if (!input.pair) return verdict("allow", "oracle-no-relation", "没有候选关系。");
+      return truth === "allow"
+        ? verdict("allow", "oracle-compatible", "可执行探针确认修改兼容。")
+        : verdict("lock", "oracle-conflict-upper-bound", "可执行探针确认冲突，预言机阻止修改。");
+    }
+  };
+}
+
+export function policyFor(id: ZoningPolicy["id"], options: { oracleTruth?: "allow" | "warn" | "lock" } = {}): ZoningPolicy {
   if (id === "P0") return createP0Policy();
   if (id === "P1") return createP1Policy();
   if (id === "P2") return createP2Policy();
+  if (id === "P*") {
+    if (!options.oracleTruth) throw new Error("P* 必须提供可执行探针的真值");
+    return createOraclePolicy(options.oracleTruth);
+  }
   return createP3Policy();
 }
 

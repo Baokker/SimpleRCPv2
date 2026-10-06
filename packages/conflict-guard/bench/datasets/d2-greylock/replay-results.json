@@ -8,11 +8,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -23,11 +18,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -46,11 +36,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -61,11 +46,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -98,11 +78,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -131,11 +106,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -150,11 +120,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -165,11 +130,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -198,11 +158,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -249,11 +204,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -278,11 +228,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -315,11 +260,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -330,11 +270,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -367,11 +302,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -382,11 +312,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -405,11 +330,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -420,11 +340,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -443,11 +358,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -458,11 +368,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -481,11 +386,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -496,11 +396,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -519,11 +414,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -534,11 +424,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -557,11 +442,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -572,11 +452,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -595,11 +470,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -610,11 +480,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -633,11 +498,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -648,11 +508,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -685,11 +540,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -704,11 +554,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -719,11 +564,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -756,11 +596,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -771,11 +606,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -794,11 +624,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -809,11 +634,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -832,11 +652,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -847,11 +662,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "allow",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
@@ -870,11 +680,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -889,11 +694,6 @@
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",
         "revision": 0
-      },
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
       }
     ],
     "category": "rule-case",
@@ -904,11 +704,6 @@
     "sourceDecision": "warn",
     "sourceTruth": "lock",
     "actual": [
-      {
-        "ruleId": "semantic-interaction-uncertain",
-        "decision": "warn",
-        "revision": 0
-      },
       {
         "ruleId": "semantic-interaction-uncertain",
         "decision": "warn",

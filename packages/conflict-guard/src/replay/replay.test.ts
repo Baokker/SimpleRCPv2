@@ -175,6 +175,20 @@ describe("阶段 4 回放基础设施", () => {
       else expect(item.unavailable, item.id).toMatch(/one-side-unchanged|no-static-relation/);
     }
   }, 30_000);
+
+  it("真实白区轨迹按文件独立核验闸门顺序与状态", async () => {
+    const root = new URL("../../../../docs/conflict-guard/evidence/checkpoint-a-live-traces/", import.meta.url);
+    const events = readTrace(await fs.readFile(new URL("rules-white.jsonl", root), "utf8"));
+    const initialFiles = JSON.parse(await fs.readFile(new URL("rules-white-project.json", root), "utf8")) as Record<string, string>;
+    expect(checkReplay(events, { initialFiles }).valid).toBe(true);
+    const opened = events.filter((event) => event.type === "persist_gate" && event.allowed === true);
+    expect(opened).toHaveLength(2);
+    expect(opened[0]!.at).toBe(opened[1]!.at);
+    const exchanged = events.map((event) => event === opened[0] ? { ...opened[1]!, seq: event.seq } : event === opened[1] ? { ...opened[0]!, seq: event.seq } : event);
+    expect(checkReplay(exchanged, { initialFiles }).valid).toBe(true);
+    const invalid = events.map((event) => event === opened[0] ? { ...event, allowed: false, reason: "pending-judgement" } : event);
+    expect(checkReplay(invalid, { initialFiles }).coordinationDifferences.some((event) => event.type === "persist_gate")).toBe(true);
+  });
 });
 
 function sampleChange(key: string): SymbolChange {

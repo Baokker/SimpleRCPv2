@@ -1,0 +1,35 @@
+{
+  "schema": 3,
+  "sourceHashesVerified": 37,
+  "traceHashesVerified": 57,
+  "replayDeterministic": true,
+  "ruleCases": 51,
+  "matched": 51,
+  "mismatches": [],
+  "deliveryScenarios": [
+    {
+      "id": "control-policy-grey",
+      "unavailable": "one-side-unchanged"
+    },
+    {
+      "id": "crossed-session-race",
+      "unavailable": "no-static-relation"
+    },
+    {
+      "id": "log-only-white",
+      "unavailable": "one-side-unchanged"
+    },
+    {
+      "id": "provider-failure-fallback",
+      "unavailable": "one-side-unchanged"
+    },
+    {
+      "id": "return-contract-black",
+      "unavailable": "one-side-unchanged"
+    },
+    {
+      "id": "stale-reanalysis",
+      "unavailable": "no-static-relation"
+    }
+  ]
+}
