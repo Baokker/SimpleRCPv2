@@ -2,7 +2,7 @@
 
 服务端在 `ProjectRuntime.knowledgeProvider` 中创建每项目一个 `KnowledgeProvider`。`KNOWLEDGE=inject` 或 `KNOWLEDGE=full` 时启用检索、任务后核对和在途提醒；`capture` 与 `off` 不产生注入段。
 
-`buildContext({ project, run, initiator })` 使用 `run.prompt` 与 `run.extraPrompt` 作为查询。活动文件来自显式 `run.contexts`、任务文本中出现的工作区相对路径以及发起成员的 `currentFile`。卡片先经过可见性门控，再按项目配置过滤状态；`reviewed` 卡片继续使用 `isReusable` 检查。默认只使用 `reviewed` 卡片，个人卡片只进入属主的任务。实验配置放开其他状态时，仍然保留可见性规则。
+`buildContext({ project, run, initiator })` 使用 `run.prompt` 与 `run.extraPrompt` 作为查询。活动文件来自显式 `run.contexts`、任务文本中出现的工作区相对路径以及发起成员的 `currentFile`。卡片先经过可见性门控，再按项目配置过滤状态；`draft`、`needsReview`、`orphaned`、`archived` 与 `superseded` 永远不会注入，`reviewed` 卡片继续使用 `isReusable` 检查。默认只使用 `reviewed` 卡片，个人卡片只进入属主的任务。`statuses` 只用于实验筛选仍然可注入的卡片状态。
 
 默认配置写入 `<metadata>/knowledge/config.json`：`topK=5`、单卡最多 800 字符、总计最多 4000 字符、`ranking=bounded`、使用活动文件、任务后核对与在途提醒均启用。`fixedCardIds` 设置后跳过检索，只从这些卡片中选择。`legacy` 保留检索结果的原始词法分数；`bounded` 将活动文件加分限制为最高词法分数的 50%，然后按风险、约束、负面、决定、上下文、教程的顺序稳定整理。
 
