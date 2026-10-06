@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import {root, readJson, readJsonl, writeJson, dataset} from "./common.js";
 import {draftMetrics, episodes} from "./k2.js";
+import {summarizeRetrieval} from "./k5.js";
 
 const folder = (name: string) => path.join(root, "runs", name);
 const data = await dataset();
@@ -18,6 +19,7 @@ const k2Evaluation = await Promise.all(k2.map(async row => {
   return {episode: row.episode, condition: row.condition, mustMention: episode.mustMention, ...draftMetrics(cached.response.responses.at(-1), row.condition, cached.request.evidence, episode.mustMention, episode.expectedTypes), latencyMs: row.latencyMs, source: row.artifacts};
 }));
 const k4 = await readJsonl(path.join(folder(k4Location), "results.jsonl"));
+const k4Context = await readJsonl(path.join(folder(process.argv[6] ?? "k4-context-review-final"), "results.jsonl"));
 const k1 = (await readJsonl(path.join(folder("k1-review"), "results.jsonl"))).filter(row => row.condition === "offline");
 const k5Location = process.argv[3] ?? "k5-review";
 const k5 = await readJsonl(path.join(folder(k5Location), "results.jsonl"));
@@ -26,18 +28,20 @@ const k7 = await readJsonl(path.join(folder(k7Location), "results.jsonl"));
 const mean = (items: number[]) => items.reduce((sum, value) => sum + value, 0) / items.length;
 const groups = (rows: any[], field: string) => [...new Set(rows.map(row => row[field]))].map(key => ({key, rows: rows.filter(row => row[field] === key)}));
 const online = await readJsonl(path.join(folder("k1-review-comparison"), "results.jsonl"));
+const transferSummary = (rows: any[]) => rows.map(row => ({key: row.key, pair: row.pair, condition: row.condition, variant: row.variant, taFunctional: row.ta.functional, taTrapped: row.ta.actuallyTrapped,
+  functional: row.functional, avoided: row.trapAvoided, targetInjected: row.targetInjected, cardScope: row.cardScope,
+  cardOwner: row.cardOwner, crossOwner: row.crossOwner, reuse: row.reuse}));
 const summaries = {
   k2: k2Evaluation,
   supplemental: groups(supplements, "condition").map(({key, rows}) => ({condition: key, count: rows.length, functional: rows.filter(row => row.functional).length, avoided: rows.filter(row => row.trapAvoided).length, joint: rows.filter(row => row.jointSuccess).length, toolCalls: rows.reduce((sum, row) => sum + row.toolCalls, 0)})),
   k3: groups(k3, "condition").map(({key, rows}) => ({condition: key, count: rows.length, functional: rows.filter(row => row.functional).length, avoided: rows.filter(row => row.trapAvoided).length,
     joint: rows.filter(row => row.jointSuccess).length, targetInjected: rows.filter(row => row.targetInjected).length, totalEstimatedCNY: rows.reduce((sum, row) => sum + (row.usage?.estimatedCost ?? 0), 0), meanWallMs: mean(rows.map(row => row.wallMs))})),
   calibration: await readJson(path.join(folder("k3-pilot"), "calibration.json")),
-  k4: k4.map(row => ({pair: row.pair, condition: row.condition, taFunctional: row.ta.functional, taTrapped: row.ta.actuallyTrapped, functional: row.functional, avoided: row.trapAvoided, targetInjected: row.targetInjected,
-    cardOwner: row.cardOwner, crossOwner: row.crossOwner, reuse: row.reuse})),
+  k4: transferSummary(k4),
+  k4Context: transferSummary(k4Context),
   k1: {predicted: k1.reduce((sum, row) => sum + row.predicted, 0), annotated: k1.reduce((sum, row) => sum + row.annotated, 0), truePositives: k1.reduce((sum, row) => sum + row.truePositives, 0),
     anchorTotal: k1.reduce((sum, row) => sum + row.anchors.total, 0), top1: mean(k1.map(row => row.anchors.top1)), top3: mean(k1.map(row => row.anchors.top3)), online},
-  k5: groups(k5, "condition").map(({key, rows}) => ({condition: key, traps: rows.filter(row => row.taskKind === "trap").length,
-    ...Object.fromEntries(["recall1", "recall3", "recall5", "mrr", "ndcg5"].map(field => [field, mean(rows.filter(row => row.taskKind === "trap").map(row => row[field]))])), falseInjections: rows.filter(row => row.taskKind === "control").reduce((sum, row) => sum + row.falseInjections, 0)})),
+  k5: groups(k5, "condition").map(({key, rows}) => ({condition: key, ...summarizeRetrieval(rows)})),
   k7: ["range-only", "snapshot-only", "multi-strategy", "yjs-relative", "yjs-multi"].map(strategy => {
     const locatable = k7.filter(row => row.truth !== null).map(row => row.results.find((item: any) => item.strategy === strategy));
     const deletion = k7.filter(row => row.condition === "delete").map(row => row.results.find((item: any) => item.strategy === strategy));

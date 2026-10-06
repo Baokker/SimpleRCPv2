@@ -15,6 +15,21 @@ export function retrievalMetrics(ids: string[], relevant: string[]) {
     falseInjections: relevant.length ? null : Math.min(5, ids.length)};
 }
 
+export function summarizeRetrieval(rows: Array<ReturnType<typeof retrievalMetrics> & {task: string; taskKind: string}>) {
+  const traps = rows.filter(row => row.taskKind === "trap");
+  const tasks = [...new Set(traps.map(row => row.task))];
+  const metrics = Object.fromEntries((["recall1", "recall3", "recall5", "mrr", "ndcg5"] as const).map(field => {
+    const taskMeans = tasks.map(task => {
+      const values = traps.filter(row => row.task === task).map(row => row[field]);
+      if (values.some(value => value === null)) throw new Error(`Missing ${field} for trap task ${task}`);
+      return values.reduce<number>((sum, value) => sum + value!, 0) / values.length;
+    });
+    return [field, taskMeans.length ? taskMeans.reduce((sum, value) => sum + value, 0) / taskMeans.length : null];
+  })) as Pick<ReturnType<typeof retrievalMetrics>, "recall1" | "recall3" | "recall5" | "mrr" | "ndcg5">;
+  return {traps: tasks.length, queries: traps.length, ...metrics,
+    falseInjections: rows.filter(row => row.taskKind === "control").reduce((sum, row) => sum + (row.falseInjections ?? 0), 0)};
+}
+
 // 与 apps/server/src/knowledge/provider.ts 的 rankResults 保持同一排序规则。
 export function rankBounded(results: KnowledgeSearchResult[], activeFiles: string[]) {
   const cap = results.reduce((highest, item) => Math.max(highest, item.score), 0) * 0.5;

@@ -16,6 +16,7 @@ import {normalizeScript, anchorMetrics, triggerMetrics} from "../k1.js";
 import {updateRatingSheet, episodes} from "../k2.js";
 import {evaluateStrategies} from "../k7.js";
 import {correctionContext} from "../k4.js";
+import {retrievalMetrics, summarizeRetrieval} from "../k5.js";
 import {collectFrozenAnchorCorpus, createAnchorBenchmarkCases} from "../../../packages/knowledge/test/fixtures/anchor-benchmark.js";
 
 async function directory(name: string) {
@@ -43,6 +44,16 @@ test("任务选择拒绝未知标识符和重复项", async () => {
   assert.equal(selectIds(data.tasks, "R1-T01")[0].id, "R1-T01");
   assert.throws(() => selectIds(data.tasks, "R1-T01,R1-T01"), /Invalid selection/);
   assert.throws(() => selectIds(data.tasks, "R1-T00"), /Invalid selection/);
+});
+
+test("检索汇总给予每个任务相同权重，保留查询与误注入总数", async () => {
+  const tasks = (await dataset()).tasks.filter(task => task.kind === "trap").slice(0, 2);
+  const found = {...retrievalMetrics([tasks[0].targetCardId!], [tasks[0].targetCardId!]), task: tasks[0].id, taskKind: "trap"};
+  const missed = {...retrievalMetrics([], [tasks[1].targetCardId!]), task: tasks[1].id, taskKind: "trap"};
+  const control = {...retrievalMetrics([tasks[0].targetCardId!], []), task: "control", taskKind: "control"};
+  const result = summarizeRetrieval([found, found, found, missed, control]);
+  assert.equal(result.traps, 2); assert.equal(result.queries, 4);
+  assert.equal(result.recall1, 0.5); assert.equal(result.mrr, 0.5); assert.equal(result.falseInjections, 1);
 });
 
 test("T1 正文预算保留纠正原文与实际 diff 摘要", async () => {
