@@ -125,7 +125,7 @@ def analyze_agent_stratum(frame, directory):
                  "fixed_mean": fitted.fe_mean.tolist(), "fixed_sd": fitted.fe_sd.tolist(), "task_log_sd": fitted.vcp_mean.tolist()}
     (directory / "statistics.json").write_text(json.dumps({"summary": summary, "comparisons": comparisons, "mixed_logistic": model}, ensure_ascii=False, indent=2))
     table = pd.DataFrame(summary)
-    (directory / "agent.md").write_text(table.to_markdown(index=False) + "\n\n" + pd.DataFrame(comparisons).to_markdown(index=False))
+    (directory / "agent.md").write_text((table.to_markdown(index=False) + "\n\n" + pd.DataFrame(comparisons).to_markdown(index=False)).rstrip() + "\n")
     plot = table[table.metric.eq("jointSuccess")] if not table.empty else pd.DataFrame()
     fig, axis = plt.subplots(figsize=(7, 4))
     if not plot.empty:

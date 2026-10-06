@@ -71,4 +71,6 @@ uv run analyze.py ../runs/k7-pilot/results.jsonl --out ../runs/k7-pilot/analysis
 uv run analyze.py ../runs/k2-pilot/results.jsonl --out ../runs/k2-pilot/analysis --ratings-a ../runs/k2-pilot/ratings-a.csv --ratings-b ../runs/k2-pilot/ratings-b.csv
 ```
 
-统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。K4 按 delayed 与 same-session 分别计算，输出到对应子目录。对照任务的功能等价结果单独写入 controls.json；样本数量或差值方差不足时返回空值和原因。统计入口拒绝重复 key 与未完成结果；两份评分表必须包含相同 id 和草稿正文。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率与置信区间、额外 token 与复犯率减少、锚点策略结果。运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 可读取已提交的试跑目录并生成 pilot-summary.json 与 artifact-inspection.json。
+统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。K4 按 delayed 与 same-session 分别计算，输出到对应子目录。对照任务的功能等价结果单独写入 controls.json；样本数量或差值方差不足时返回空值和原因。统计入口拒绝重复 key 与未完成结果；两份评分表必须包含相同 id 和草稿正文。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率与置信区间、额外 token 与复犯率减少、锚点策略结果。
+
+运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 生成 pilot-summary.json 与 artifact-inspection.json。默认读取 k3-pilot、k3-conditions-pilot、k1-review、k1-review-comparison、k4-review、k4-context-review-final、k2-review、k5-review、k7-review。可依次传入 K4、K5、K7、K2、K4 上下文试跑的目录名，目录均位于 runs/。原始模型响应和 K2 上下文运行记录必须保留在对应 raw/ 目录。检索汇总按任务平均，并保留查询总数；K7 汇总单独记录 rightBoundaryExpanded。正式规模按每个实际纠正组合生成 K2 episode，当前材料与三次重复对应 196 个 episode。

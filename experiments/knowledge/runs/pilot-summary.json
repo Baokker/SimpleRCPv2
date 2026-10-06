@@ -2,7 +2,7 @@
   "summaries": {
     "k2": [
       {
-        "episode": "P01",
+        "episode": "P01-T0-delayed-1",
         "condition": "ordinary",
         "mustMention": "InventoryStore.transaction",
         "validStructure": true,
@@ -10,11 +10,11 @@
         "mustMentionCovered": false,
         "acceptedType": false,
         "groundedPass": false,
-        "latencyMs": 11563,
-        "source": "raw/P01-ordinary"
+        "latencyMs": 14430,
+        "source": "raw/P01-T0-delayed-1-ordinary"
       },
       {
-        "episode": "P01",
+        "episode": "P01-T0-delayed-1",
         "condition": "server",
         "mustMention": "InventoryStore.transaction",
         "validStructure": true,
@@ -22,11 +22,11 @@
         "mustMentionCovered": false,
         "acceptedType": true,
         "groundedPass": false,
-        "latencyMs": 17434,
-        "source": "raw/P01-server"
+        "latencyMs": 11256,
+        "source": "raw/P01-T0-delayed-1-server"
       },
       {
-        "episode": "P01",
+        "episode": "P01-T0-delayed-1",
         "condition": "agent-self",
         "mustMention": "InventoryStore.transaction",
         "validStructure": true,
@@ -34,8 +34,8 @@
         "mustMentionCovered": false,
         "acceptedType": true,
         "groundedPass": false,
-        "latencyMs": 10599,
-        "source": "raw/P01-agent-self"
+        "latencyMs": 9727,
+        "source": "raw/P01-T0-delayed-1-agent-self"
       }
     ],
     "supplemental": [
@@ -170,8 +170,10 @@
     ],
     "k4": [
       {
+        "key": "P01-T0-delayed-1",
         "pair": "P01",
         "condition": "T0",
+        "variant": "delayed",
         "taFunctional": true,
         "taTrapped": true,
         "functional": true,
@@ -181,27 +183,32 @@
         "reuse": []
       },
       {
+        "key": "P01-T3-delayed-1",
         "pair": "P01",
         "condition": "T3",
-        "taFunctional": true,
-        "taTrapped": true,
+        "variant": "delayed",
+        "taFunctional": false,
+        "taTrapped": false,
         "functional": true,
         "avoided": true,
         "targetInjected": true,
-        "cardOwner": "448e342c-9874-4041-ae15-d52433fc2ff5",
+        "cardScope": "team",
+        "cardOwner": "30a439f2-3359-43b1-a513-5ef4c80c03b8",
         "crossOwner": false,
         "reuse": [
           {
-            "cardId": "bb20014a-2d76-486d-a01a-788972367995",
-            "confirmedAt": 1791313803105,
-            "knowledgeAt": 1791313772495,
-            "firstInjectedByOtherAt": 1791313863151
+            "cardId": "ec7011d5-59a5-4fae-bbf6-7f6c3c7c8034",
+            "confirmedAt": 1791316677924,
+            "knowledgeAt": 1791316646332,
+            "firstInjectedByOtherAt": 1791316738006
           }
         ]
       },
       {
+        "key": "P03-T0-delayed-1",
         "pair": "P03",
         "condition": "T0",
+        "variant": "delayed",
         "taFunctional": false,
         "taTrapped": false,
         "functional": false,
@@ -211,21 +218,48 @@
         "reuse": []
       },
       {
+        "key": "P03-T3-delayed-1",
         "pair": "P03",
         "condition": "T3",
+        "variant": "delayed",
         "taFunctional": false,
         "taTrapped": false,
         "functional": false,
         "avoided": false,
         "targetInjected": true,
-        "cardOwner": "1eb76209-a57e-43af-b44a-a696633ed7c9",
+        "cardScope": "team",
+        "cardOwner": "9afa7199-cc58-4211-8000-3d347b4c5ea5",
         "crossOwner": true,
         "reuse": [
           {
-            "cardId": "088a100b-5d99-480d-a02a-930b36a324c0",
-            "confirmedAt": 1791313922079,
-            "knowledgeAt": 1791313906960,
-            "firstInjectedByOtherAt": 1791313982134
+            "cardId": "7445b5b4-f74a-49b7-8095-20fb08636450",
+            "confirmedAt": 1791316817205,
+            "knowledgeAt": 1791316797688,
+            "firstInjectedByOtherAt": 1791316877248
+          }
+        ]
+      }
+    ],
+    "k4Context": [
+      {
+        "key": "P01-T1-same-session-1",
+        "pair": "P01",
+        "condition": "T1",
+        "variant": "same-session",
+        "taFunctional": true,
+        "taTrapped": true,
+        "functional": true,
+        "avoided": true,
+        "targetInjected": true,
+        "cardScope": "team",
+        "cardOwner": "faa70a3c-b767-46b6-9e91-6b89a809f3b0",
+        "crossOwner": false,
+        "reuse": [
+          {
+            "cardId": "92601617-69f2-4f9b-82e4-d4ffc0b1e0c1",
+            "confirmedAt": 1791317456092,
+            "knowledgeAt": 1791317456092,
+            "firstInjectedByOtherAt": 1791317456130
           }
         ]
       }
@@ -240,12 +274,12 @@
       "online": [
         {
           "experiment": "k1-compare",
-          "commit": "5478762d7c858be3be024f88cd55a7c14ef64158",
-          "configHash": "4cb9110a806d66d55d7013552773341aa9b32fe4fa5581e367e1d93099e27446",
+          "commit": "e4d3d62dafe0cc470fbd907803f429e0b456ab25",
+          "configHash": "faba410237c6216f0c051d89f25c686deb265f3d688da18593e5db01483d997d",
           "manifestHash": "62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454",
           "provider": "minimax",
           "model": "MiniMax-M2",
-          "sourceResultsHash": "8fc5282c7eea6beef115eda2b90be42cec0e41f58cb6c8f48ec46490340b38a9",
+          "sourceResultsHash": "66ff591c1a89fe6d9e084a2804b81804e4ebbf455d43c8419debf596eabd9569",
           "key": "S01-comparison",
           "completed": true,
           "session": "S01",
@@ -258,17 +292,17 @@
           "rawReplayCount": 18,
           "scriptCount": 16,
           "rawScriptCount": 18,
-          "sourceRecording": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/k1-online-final/raw/S01-online/recording.json",
+          "sourceRecording": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/k1-review/raw/S01-online/recording.json",
           "artifacts": "raw/S01-comparison"
         },
         {
           "experiment": "k1-compare",
-          "commit": "5478762d7c858be3be024f88cd55a7c14ef64158",
-          "configHash": "4cb9110a806d66d55d7013552773341aa9b32fe4fa5581e367e1d93099e27446",
+          "commit": "e4d3d62dafe0cc470fbd907803f429e0b456ab25",
+          "configHash": "faba410237c6216f0c051d89f25c686deb265f3d688da18593e5db01483d997d",
           "manifestHash": "62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454",
           "provider": "minimax",
           "model": "MiniMax-M2",
-          "sourceResultsHash": "8fc5282c7eea6beef115eda2b90be42cec0e41f58cb6c8f48ec46490340b38a9",
+          "sourceResultsHash": "66ff591c1a89fe6d9e084a2804b81804e4ebbf455d43c8419debf596eabd9569",
           "key": "S02-comparison",
           "completed": true,
           "session": "S02",
@@ -281,7 +315,7 @@
           "rawReplayCount": 16,
           "scriptCount": 14,
           "rawScriptCount": 16,
-          "sourceRecording": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/k1-online-final/raw/S02-online/recording.json",
+          "sourceRecording": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/k1-review/raw/S02-online/recording.json",
           "artifacts": "raw/S02-comparison"
         }
       ]
@@ -290,6 +324,7 @@
       {
         "condition": "R1",
         "traps": 10,
+        "queries": 10,
         "recall1": 0.2,
         "recall3": 0.2,
         "recall5": 0.5,
@@ -300,6 +335,7 @@
       {
         "condition": "R2",
         "traps": 10,
+        "queries": 10,
         "recall1": 0.2,
         "recall3": 0.2,
         "recall5": 0.5,
@@ -310,6 +346,7 @@
       {
         "condition": "R3",
         "traps": 10,
+        "queries": 10,
         "recall1": 0.4,
         "recall3": 0.6,
         "recall5": 0.9,
@@ -320,6 +357,7 @@
       {
         "condition": "R2-wrong-file",
         "traps": 10,
+        "queries": 10,
         "recall1": 0.2,
         "recall3": 0.2,
         "recall5": 0.5,
@@ -330,6 +368,7 @@
       {
         "condition": "R3-wrong-file",
         "traps": 10,
+        "queries": 10,
         "recall1": 0,
         "recall3": 0.2,
         "recall5": 0.6,
@@ -344,6 +383,7 @@
         "locatable": 1200,
         "survival": 0,
         "wrongMigration": 1,
+        "rightBoundaryExpanded": 0,
         "review": 0,
         "deletionReview": 0
       },
@@ -352,6 +392,7 @@
         "locatable": 1200,
         "survival": 0.4,
         "wrongMigration": 0,
+        "rightBoundaryExpanded": 0,
         "review": 0.6,
         "deletionReview": 1
       },
@@ -360,22 +401,25 @@
         "locatable": 1200,
         "survival": 0.6208333333333333,
         "wrongMigration": 0.32166666666666666,
+        "rightBoundaryExpanded": 0,
         "review": 0.0575,
         "deletionReview": 1
       },
       {
         "strategy": "yjs-relative",
         "locatable": 1200,
-        "survival": 0.7941666666666667,
-        "wrongMigration": 0.20083333333333334,
-        "review": 0.005,
+        "survival": 0.3975,
+        "wrongMigration": 0.6025,
+        "rightBoundaryExpanded": 480,
+        "review": 0,
         "deletionReview": 1
       },
       {
         "strategy": "yjs-multi",
         "locatable": 1200,
-        "survival": 0.8341666666666666,
-        "wrongMigration": 0.0025,
+        "survival": 0.43583333333333335,
+        "wrongMigration": 0.4008333333333333,
+        "rightBoundaryExpanded": 480,
         "review": 0.16333333333333333,
         "deletionReview": 1
       }
@@ -392,17 +436,19 @@
     "k4": {
       "combinations": 144,
       "agentRunsPerCombination": 3,
-      "delayedMeanSeconds": 125.36325,
-      "sameSessionEstimatedSeconds": 65.36325,
-      "sequentialHours": 3.81453,
-      "estimatedCNY": 175.4750088,
-      "recapEstimatedCNY": 3.313548
+      "delayedMeanSeconds": 141.154,
+      "sameSessionEstimatedSeconds": 81.154,
+      "sequentialHours": 4.44616,
+      "estimatedCNY": 201.06583559999999,
+      "recapEstimatedCNY": 2.470104
     },
     "k2": {
-      "episodes": 56,
-      "drafts": 168,
-      "sequentialHours": 0.8589466666666666,
-      "estimatedCNY": 20.9883072
+      "episodes": 196,
+      "correctionEpisodes": 144,
+      "scriptEpisodes": 52,
+      "drafts": 588,
+      "sequentialHours": 2.6173077777777776,
+      "estimatedCNY": 49.9357236
     },
     "price": {
       "provider": "minimax",

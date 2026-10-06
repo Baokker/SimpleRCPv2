@@ -1,0 +1,8 @@
+{
+  "runtime": "opencode",
+  "state": "ready",
+  "version": "1.18.31",
+  "model": "MiniMax-M2",
+  "provider": "minimax",
+  "apiKeyConfigured": true
+}

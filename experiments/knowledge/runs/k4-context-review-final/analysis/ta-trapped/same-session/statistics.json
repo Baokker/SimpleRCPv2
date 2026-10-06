@@ -1,0 +1,39 @@
+{
+  "summary": [
+    {
+      "condition": "T1",
+      "metric": "recurrence",
+      "mean": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T1",
+      "metric": "jointSuccess",
+      "mean": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "tasks": 1
+    },
+    {
+      "condition": "T1",
+      "metric": "functional",
+      "mean": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "tasks": 1
+    }
+  ],
+  "comparisons": [],
+  "mixed_logistic": {
+    "available": false,
+    "reason": "至少需要两个条件以及同时存在成功和失败"
+  }
+}
