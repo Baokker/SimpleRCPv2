@@ -389,6 +389,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runPrompt: run.prompt
       });
 
+      const permissionWorktree = await options.runtime.getWorktree?.(projectRuntime.project.workspacePath) ?? projectRuntime.project.workspacePath;
       const permissionTasks = new Set<Promise<void>>();
       const handledPermissionIds = new Set<string>();
       const toolInputs = new Map<string, unknown>();
@@ -455,7 +456,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         const toolInput = callId ? toolInputs.get(callId) : undefined;
         const readPermission = ["read", "grep", "glob", "list"].includes(permission);
         const allPaths = readPermission
-          ? normalizePermissionPaths([...patterns, ...movePaths, ...editPath], toolInput, projectRuntime.project.workspacePath)
+          ? normalizePermissionPaths([...patterns, ...movePaths, ...editPath], toolInput, projectRuntime.project.workspacePath, { permission, worktree: permissionWorktree, metadata })
           : [...patterns, ...movePaths, ...editPath];
         const supported = ["bash", "edit", "read", "grep", "glob", "list", "webfetch", "websearch"].includes(permission);
         const commandValue = metadata.command ?? metadata.description ?? patterns[0];

@@ -73,6 +73,11 @@ export function createOpenCodeRuntime(
   }
 
   return {
+    async getWorktree(workspacePath: string) {
+      const client = await getClient(workspacePath);
+      const response = await client.path.get({ directory: workspacePath }, { throwOnError: true });
+      return response.data.worktree;
+    },
     async prepareWorkspace(workspacePath: string) {
       return ensureWorkspaceRepository(workspacePath);
     },

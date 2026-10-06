@@ -143,4 +143,5 @@ guard-v1.3 已修复 G1 到 G5、H1 到 H4、R3-01 到 R3-04、L3-01 与 T-01。
 - OpenCode 的 `env`、`printenv` 仍可能通过工具或进程间接读取敏感内容。
 - 下载文件与后续执行分处不同命令时，Guard 仍无法建立两次调用之间的关联。
 - 同一系统用户下的绝对路径读取没有 OS 沙箱隔离。
+- OpenCode 的 worktree 可能解析为上层 Git 仓库，`external_directory` 因此无法区分其中的同级项目。full 模式由 Guard 检查全部 read、grep、glob、list 请求；部署时应将数据目录放在独立于源码仓库的位置。
 - 快照恢复只覆盖快照中的文件，不删除快照之后的新文件。

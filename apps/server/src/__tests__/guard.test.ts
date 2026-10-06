@@ -33,11 +33,11 @@ describe("guard roles", () => {
 });
 
 describe("guard decisions", () => {
-  it("configures OpenCode read path rules and guarded tools", () => {
+  it("routes all OpenCode full-mode reading tools through Guard", () => {
     const config = openCodeConfig({ port: 4096, baseUrl: "https://models.example.test/v1", model: "model", guardMode: "full" });
     const permission = config.permission as { read?: unknown; edit?: unknown; bash?: unknown; webfetch?: unknown; websearch?: unknown; task?: unknown; external_directory?: unknown };
     expect(permission).toMatchObject({ edit: "ask", bash: "ask", webfetch: "ask", external_directory: "deny" });
-    expect(permission.read).toEqual({ "*": "allow", "*.env": "ask", "*.env.*": "ask", ".env*": "ask", "*.pem": "ask", "*.key": "ask", "*.git/config": "ask", "*.git/hooks/*": "ask" });
+    expect(permission).toMatchObject({ read: "ask", grep: "ask", glob: "ask", list: "ask" });
     expect(permission.websearch).toBe("ask");
     expect(permission.task).toBe("deny");
     const unguarded = openCodeConfig({ port: 4096, baseUrl: "https://models.example.test/v1", model: "model", guardMode: "off" }).permission as { bash?: unknown; read?: unknown };
@@ -311,6 +311,20 @@ describe("guard decisions", () => {
     const absolute = "/workspace/project/.env";
     expect(normalizePermissionPaths([".experiment-data/run/workspace/project/.env"], { filePath: absolute }, workspace)).toEqual([absolute]);
     expect(normalizePermissionPaths([".env"], undefined, workspace)).toEqual(["/workspace/project/.env"]);
+  });
+
+  it("guards sibling project reads and search paths when OpenCode discovers an ancestor worktree", () => {
+    const cwd = "/repo/data/workspaces/demo";
+    const settings = { memberLevel: "student" as const, initiatorOnline: true, workspaceRoot: cwd, platformDataRoot: "/repo/data", otherWorkspaceRoots: ["/repo/data/workspaces/other-project"] };
+    const check = (permission: string, patterns: string[], input: unknown, metadata: Record<string, unknown> = {}) => {
+      const paths = normalizePermissionPaths(patterns, input, cwd, { permission, worktree: "/repo", metadata });
+      return decide({ projectId: "demo", memberId: "student", source: "agent", kind: "read", cwd, paths }, settings).action;
+    };
+    expect(check("read", ["data/workspaces/other-project/notes.md"], { filePath: "../other-project/notes.md" })).toBe("deny");
+    expect(check("read", ["data/workspaces/demo/README.md"], undefined)).toBe("allow");
+    expect(check("grep", ["DATABASE_URL"], undefined, { path: ".env", pattern: "DATABASE_URL" })).toBe("ask");
+    expect(check("glob", ["*.md"], { path: "../other-project", pattern: "*.md" })).toBe("deny");
+    expect(check("list", [], { path: "../other-project" })).toBe("deny");
   });
 
   it("does not treat workspace redirection as dynamic syntax", () => {

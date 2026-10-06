@@ -1,7 +1,8 @@
 # 共享终端与 Agent Guard 设计
 
-版本：v1.3  
-冻结提交：guard-v1.3（包含 G1 到 G5、H1 到 H4、R3-01 到 R3-04、L3-01 与 T-01 的修复及回归测试）
+版本：v1.4
+
+冻结提交：guard-v1.4（包含读取工具统一审批与 worktree 路径判定的回归测试）
 
 ## 请求与刻画
 
@@ -49,7 +50,9 @@ allow_snapshot 按命令涉及的工作区路径复制被跟踪和未被忽略�
 
 ## OpenCode 接入
 
-Guard 模式为 `full` 或 `human-only` 时，OpenCode 的 `bash`、`edit`、`read`、`grep`、`glob`、`list`、`webfetch`、`websearch` 使用 Guard 请求，子 Agent `task` 使用 `deny`。读取类 permission 的路径优先使用工具载荷中的绝对路径；缺少绝对路径时以项目工作区为基准解析。`full` 使用按路径对象规则：通配规则先写入，`*.env`、`*.env.*`、`.env*`、`*.pem`、`*.key`、`*.git/config`、`*.git/hooks/*` 后写入。`off` 和 `human-only` 不覆盖 `read` 键，让 OpenCode 保留默认保护。OpenCode 1.18.31 的 SDK 类型确认支持 `read` 对象配置。
+Guard 模式为 `full` 时，OpenCode 的 `bash`、`edit`、`read`、`grep`、`glob`、`list`、`webfetch`、`websearch` 全部配置为 `ask`，子 Agent `task` 使用 `deny`，`external_directory` 保持 `deny`。普通工作区读取由 Guard 直接批准；受保护路径与工作区外路径进入审批；元数据与其他项目路径直接拒绝。
+
+每次运行通过 OpenCode `/path` 查询实际 worktree。read permission 的相对 pattern 按该 worktree 解析；工具载荷中的 `filePath` 按 OpenCode 当前 directory 解析。grep、glob 与 list 的目录参数使用工具载荷或 permission metadata，并遵循 OpenCode 当前 directory；glob 的文件 pattern 与 grep 的 include 按搜索目录解析。`human-only` 与 `off` 保留读取工具的 OpenCode 默认配置。`human-only` 中发出的 permission 请求由服务端自动批准。
 
 运行时同时处理 `permission.asked` 与 `permission.v2.asked`，并将请求交给同一个策略服务。允许时只回复 `once`，拒绝时回复 `reject`。同一 session 同时存在多个请求时，先发送全部 `once`，再发送 `reject`。拒绝之后 OpenCode 返回 Permission request not found 会记为预期事件。Guard 拒绝导致的空响应记录为 blocked_by_guard。系统永远不回复 `always`，防止一次批准变成会话级永久放行。取消或超时会清理该运行的待审批请求并回复 `reject`。
 

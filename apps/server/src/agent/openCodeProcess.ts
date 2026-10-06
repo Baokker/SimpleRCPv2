@@ -99,7 +99,7 @@ export function openCodeConfig(options: OpenCodeProcessOptions): Config {
   const guardMode = options.guardMode ?? process.env.SIMPLERCP_GUARD_MODE ?? "full";
   const guarded = guardMode !== "off";
   const permission = {
-    ...(guardMode === "full" ? { read: { "*": "allow", "*.env": "ask", "*.env.*": "ask", ".env*": "ask", "*.pem": "ask", "*.key": "ask", "*.git/config": "ask", "*.git/hooks/*": "ask" } } : {}),
+    ...(guardMode === "full" ? { read: "ask", grep: "ask", glob: "ask", list: "ask" } : {}),
     edit: guarded ? "ask" : "allow",
     bash: guarded ? "ask" : "allow",
     webfetch: guarded ? "ask" : "allow",
