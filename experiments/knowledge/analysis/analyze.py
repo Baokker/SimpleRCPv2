@@ -55,6 +55,22 @@ def majority_table(frame):
 
 
 def analyze_agent(frame, directory):
+    if "taskKind" in frame:
+        controls = frame[frame.taskKind.eq("control")]
+        if not controls.empty:
+            control_majority = majority_table(controls)
+            control_majority.to_csv(directory / "control-majority.csv", index=False)
+            wide = control_majority.pivot(index="task", columns="condition", values="functional")
+            control_tests = []
+            for a, b in itertools.combinations(wide.columns, 2):
+                pairs = wide[[a, b]].dropna()
+                if not pairs.empty:
+                    control_tests.append({"condition_a": a, "condition_b": b, **paired_tests(pairs[a], pairs[b])})
+            available = [item for item in control_tests if item["tost_p"] is not None]
+            if available:
+                for item, value in zip(available, multipletests([item["tost_p"] for item in available], method="holm")[1]):
+                    item["tost_holm_p"] = float(value)
+            (directory / "controls.json").write_text(json.dumps(control_tests, ensure_ascii=False, indent=2))
     frame = frame[frame.taskKind.eq("trap")] if "taskKind" in frame else frame
     if frame.empty:
         return []
@@ -87,6 +103,7 @@ def analyze_agent(frame, directory):
                 item["tost_holm_p"] = float(value)
     model = {"available": False, "reason": "至少需要两个条件以及同时存在成功和失败"}
     if frame.condition.nunique() > 1 and frame.jointSuccess.nunique() > 1:
+        np.random.seed(20261007)
         observations = frame.copy()
         observations["jointSuccess"] = observations.jointSuccess.astype(int)
         fitted = BinomialBayesMixedGLM.from_formula("jointSuccess ~ C(condition)", {"task": "0 + C(task)"}, observations).fit_vb()
@@ -97,14 +114,27 @@ def analyze_agent(frame, directory):
     (directory / "agent.md").write_text(table.to_markdown(index=False) + "\n\n" + pd.DataFrame(comparisons).to_markdown(index=False))
     plot = table[table.metric.eq("jointSuccess")]
     fig, axis = plt.subplots(figsize=(7, 4))
-    axis.bar(plot.condition, plot["mean"], color=plt.get_cmap("tab10").colors[:len(plot)])
+    intervals = np.array(plot.ci.tolist())
+    axis.bar(plot.condition, plot["mean"], yerr=np.array([plot["mean"].to_numpy() - intervals[:, 0], intervals[:, 1] - plot["mean"].to_numpy()]), capsize=4, color=plt.get_cmap("tab10").colors[:len(plot)])
     axis.set(ylim=(0, 1), ylabel="Joint success", xlabel="Condition")
     fig.tight_layout(); fig.savefig(directory / "conditions.png", dpi=180); plt.close(fig)
-    costs = frame.usage.map(lambda value: (value or {}).get("totalTokens", 0))
+    frame = frame.copy()
+    frame["totalTokens"] = frame.usage.map(lambda value: (value or {}).get("totalTokens", np.nan))
+    task_rates = frame.groupby(["task", "condition"])[["jointSuccess", "trapAvoided", "totalTokens"]].mean().reset_index()
+    baseline_name = "C0" if "C0" in frame.condition.values else "T0"
+    baseline = task_rates[task_rates.condition.eq(baseline_name)].set_index("task")
     fig, axis = plt.subplots(figsize=(7, 4))
-    for condition, group in frame.groupby("condition"):
-        axis.scatter(costs.loc[group.index], group.jointSuccess.astype(int), label=condition, alpha=0.65)
-    axis.set(xlabel="Total tokens", ylabel="Joint success"); axis.legend()
+    plotted = False
+    for condition, group in task_rates.groupby("condition"):
+        if condition == baseline_name:
+            continue
+        paired = group.set_index("task").join(baseline[["trapAvoided", "totalTokens"]], rsuffix="_baseline", how="inner").dropna()
+        if not paired.empty:
+            axis.scatter(paired.totalTokens - paired.totalTokens_baseline, paired.trapAvoided - paired.trapAvoided_baseline, label=condition, alpha=0.65)
+            plotted = True
+    axis.set(xlabel="Additional mean tokens per task", ylabel="Recurrence reduction")
+    if plotted:
+        axis.legend()
     fig.tight_layout(); fig.savefig(directory / "tokens.png", dpi=180); plt.close(fig)
     return summary
 
@@ -138,7 +168,7 @@ def analyze_ratings(a, b, directory):
             raise ValueError("Ratings must be integers from 1 through 5")
         counts = pd.crosstab(pairs.iloc[:, 0], pairs.iloc[:, 1]).reindex(index=range(1, 6), columns=range(1, 6), fill_value=0).to_numpy()
         kappa = cohens_kappa(counts).kappa
-        rows.append({"metric": field, "rated": len(pairs), "kappa": float(kappa), "mean": float(values.mean())})
+        rows.append({"metric": field, "rated": len(pairs), "kappa": float(kappa) if np.isfinite(kappa) else None, "mean": float(values.mean())})
     (directory / "ratings.md").write_text(pd.DataFrame(rows).to_markdown(index=False))
 
 

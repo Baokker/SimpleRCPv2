@@ -9,7 +9,7 @@ const k4 = await readJsonl(path.join(folder(k4Location), "results.jsonl"));
 const k1 = (await readJsonl(path.join(folder("k1-online-final"), "results.jsonl"))).filter(row => row.condition === "offline");
 const k5Location = process.argv[3] ?? "k5-final-pilot";
 const k5 = await readJsonl(path.join(folder(k5Location), "results.jsonl"));
-const k7 = await readJsonl(path.join(folder("k7-pilot"), "results.jsonl"));
+const k7 = await readJsonl(path.join(folder("k7-final-pilot"), "results.jsonl"));
 const mean = (items: number[]) => items.reduce((sum, value) => sum + value, 0) / items.length;
 const groups = (rows: any[], field: string) => [...new Set(rows.map(row => row[field]))].map(key => ({key, rows: rows.filter(row => row[field] === key)}));
 const online = await exists(path.join(folder("k1-online-final"), "results.jsonl")) ? await readJsonl(path.join(folder("k1-online-final"), "results.jsonl")) : [];

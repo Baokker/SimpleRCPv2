@@ -38,6 +38,7 @@ test("并发轨迹真值和策略结果可重复，删除请求复核", () => {
     assert.equal(evaluateStrategies(trace.text, anchors[0].anchor, trace.relative, trace.truth).length, 5);
     if (kind === "delete") assert.equal(trace.truth, null);
   }
+  assert.notEqual(digest(concurrentTrace(samples[0], "move-and-edit", 31).operations), digest(concurrentTrace(samples[0], "move-and-edit", 32).operations));
 });
 test("检索指标的排名位置和空相关集", () => {
   assert.deepEqual(retrievalMetrics(["distractor", "target"], ["target"]), {recall1: 0, recall3: 1, recall5: 1, mrr: 0.5, ndcg5: 1 / Math.log2(3), falseInjections: null});

@@ -39,7 +39,7 @@ if (command === "verify") {
     if (command === "k2") await runK2(data, config, store, values.source && resolveInput(values.source), values.limit ? Number(values.limit) : undefined);
     if (command === "k3") {
       let tasks = values.tasks ? data.tasks.filter(task => values.tasks!.split(",").includes(task.id)) : data.tasks;
-      if (values.pilot) tasks = ["R1-T01", "R1-T02", "R2-T01", "R2-T02", "R1-C01"].map(id => data.tasks.find(task => task.id === id)!);
+      if (values.pilot && !values.tasks) tasks = ["R1-T01", "R1-T02", "R2-T01", "R2-T02", "R1-C01"].map(id => data.tasks.find(task => task.id === id)!);
       const conditions = (values.conditions?.split(",") ?? (values.pilot ? ["C0", "C2"] : allK3Conditions)) as K3Condition[];
       if (conditions.some(condition => !allK3Conditions.includes(condition))) throw new Error("Unknown K3 condition");
       const combinations = tasks.flatMap(task => conditions.flatMap(condition => Array.from({length: values.pilot ? 1 : config.repetitions}, (_, index) => ({task, condition, repetition: index + 1}))));

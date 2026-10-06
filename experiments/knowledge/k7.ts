@@ -26,7 +26,7 @@ export function concurrentTrace(sample: FrozenAnchorSample, kind: typeof editKin
     operations.push({member, start: offset, deleted, inserted, tracked});
   };
   const s = sample.selectionStart, e = sample.selectionEnd;
-  const midpoint = s + Math.floor((e - s) / 2);
+  const midpoint = s + Math.floor(random() * Math.max(1, e - s));
   const marker = `\n// concurrent ${Math.floor(random() * 100000)}\n`;
   if (kind === "insert-around") {apply(0, s, 0, marker); apply(1, e, 0, marker);}
   if (kind === "interleaved") {apply(0, midpoint, 1, "Q", true); apply(1, Math.max(0, s - 1), 0, marker);}
