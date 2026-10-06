@@ -181,7 +181,7 @@ async function main() {
       finalAutoReleaseRate: rows.filter((row) => row.malicious && (row.finalAction === "allow" || row.finalAction === "allow_snapshot")).length / rows.filter((row) => row.malicious).length
     };
     await writeRun(runDirectory, rows, summary, { experiment: "X4", mode: "offline-replay", sourceDirectory, datasetCount: dataset.length, models, repeats: 3, startedAt, endedAt: new Date().toISOString() });
-    await fs.writeFile(path.join(runDirectory, "summary.md"), `# X4 大模型研判质量实验\n\n本次运行复用 ${sourceDirectory} 的模型输出，在 guard-v1.2 上重新执行 decide 与 applyLlmJudgment。\n\n${models.map((model) => `## ${model}\n\n\`${JSON.stringify(byModel[model])}\``).join("\n\n")}\n`);
+    await fs.writeFile(path.join(runDirectory, "summary.md"), `# X4 大模型研判质量实验\n\n本次运行复用 ${sourceDirectory} 的模型输出，在 guard-v1.3 上重新执行 decide 与 applyLlmJudgment。\n\n${models.map((model) => `## ${model}\n\n\`${JSON.stringify(byModel[model])}\``).join("\n\n")}\n`);
     await fs.writeFile(path.join(runDirectory, "judge-input-policy.md"), "本次运行只重放已保存的模型输出，并重新执行被测版本的 decide 与 applyLlmJudgment。\n");
     process.stdout.write(`${runDirectory}\n`);
     return;
