@@ -1,6 +1,8 @@
 # 独立标签抽检
 
-每位标注者使用各自的 reviewer 文件，独立完成后交由负责人比较。判断时阅读 changes.md、programs.json 和 probe-results.json；完成独立判断前保留 automatic-labels.json 供负责人使用。
+每位标注者填写各自的 reviewer-1.json 或 reviewer-2.json，独立完成后交由负责人比较。判断时阅读 changes.md、programs.json 和 probe-results.json；完成独立判断前保留 automatic-labels.json 供负责人使用。
+
+reviewer-1.template.json 与 reviewer-2.template.json 是冻结模板，包含全部待核验样本并参与哈希检查。人工表格保留独立文件，导出时只创建缺失的表格，已有内容逐字节保留。verify 检查人工表格的样本身份、独立判断标记与字段类型，允许填写标签、reason 与 notes，也允许调整行的顺序。
 
 allow：共享行为兼容；warn：合并观测与明确声明的可组合预期不同；lock：双方单独通过而合并失败；exclude：baseline 或单方失败、文本冲突、超时或三次不一致。仅判断现有探针能够支持的范围，不猜测没有测试的行为。
 

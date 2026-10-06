@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { lstatSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -8,13 +9,14 @@ import { parseArgs } from "node:util";
 import assert from "node:assert/strict";
 import { createTwoFilesPatch } from "diff";
 import * as ts from "typescript";
-import { choiceInstructions, choiceCriteria, deepInstructions, fastInstructions, agentPlanInstruction, labelVariant, readTrace, cacheKey } from "../dist/index.js";
 import type { BenchManifest, BenchLabel } from "../src/bench/types.ts";
+import type { CachedCall, ProviderCall, ProviderSubscription } from "../src/adjudication/types.ts";
+import { assertRepositoryPath, checkWorkingCopy } from "./experiment-freeze-files.ts";
 
 const repository = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
 const { values } = parseArgs({ options: { out: { type: "string", default: "docs/conflict-guard/experiment" }, verify: { type: "boolean", default: false } } });
 const output = path.resolve(repository, values.out!);
-assert(output.startsWith(`${repository}${path.sep}`), "输出目录必须位于当前仓库");
+assertRepositoryPath(repository, output);
 const sha = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex");
 const json = (value: unknown) => JSON.stringify(value, null, 2) + "\n";
 const read = (file: string) => fs.readFile(path.join(repository, file));
@@ -24,6 +26,8 @@ assert.equal(execFileSync("git", ["branch", "--show-current"], { cwd: repository
 assert.equal(execFileSync("git", ["cat-file", "-t", protocol.codeCommit], { cwd: repository, encoding: "utf8" }).trim(), "commit");
 execFileSync("git", ["diff", "--exit-code", protocol.codeCommit, "--", "apps/*/src", "packages/*/src", "pnpm-lock.yaml"], { cwd: repository });
 assert.equal(execFileSync("git", ["status", "--porcelain", "--untracked-files=all", "--", "apps/*/src", "packages/*/src", "pnpm-lock.yaml"], { cwd: repository, encoding: "utf8" }).trim(), "", "产品源码必须与指定提交一致");
+execFileSync("pnpm", ["--filter", "@simplercp/conflict-guard", "build"], { cwd: repository, maxBuffer: 4 * 1024 * 1024 });
+const { choiceInstructions, choiceCriteria, deepInstructions, fastInstructions, agentPlanInstruction, labelVariant, readTrace, cacheKey, inputHash } = await import("../dist/index.js");
 const tracked = execFileSync("git", ["ls-files", "-z"], { cwd: repository, encoding: "utf8" }).split("\0").filter(Boolean);
 const sources = tracked.filter((file) => /^(?:apps|packages)\/[^/]+\/src\//.test(file) && !/\.test\./.test(file));
 const ruleFiles = sources.filter((file) => /^packages\/conflict-guard\/src\/routing\//.test(file));
@@ -34,26 +38,29 @@ async function hashFile(file: string) {
   artifacts[file] = { sha256: sha(bytes), bytes: bytes.length };
   return artifacts[file].sha256;
 }
-for (const file of [...sources, ...tracked.filter((file) => /\/scripts\//.test(file) || /(?:^|\/)package\.json$/.test(file)), "pnpm-lock.yaml", "docs/conflict-guard/experiment/protocol.json", "docs/conflict-guard/experiment/metrics-and-statistics.md", "docs/conflict-guard/experiment/validation.json", "packages/conflict-guard/scripts/experiment-freeze.ts", "packages/conflict-guard/scripts/experiment-freeze-check.ts"].sort()) await hashFile(file);
+for (const file of [...new Set([...sources, ...tracked.filter((file) => /\/scripts\//.test(file) || /(?:^|\/)package\.json$/.test(file)), "pnpm-lock.yaml", "docs/conflict-guard/experiment/protocol.json", "docs/conflict-guard/experiment/metrics-and-statistics.md", "docs/conflict-guard/experiment/validation.json", "packages/conflict-guard/scripts/experiment-freeze.ts", "packages/conflict-guard/scripts/experiment-freeze-check.ts", "packages/conflict-guard/scripts/experiment-freeze-files.ts"])].sort()) await hashFile(file);
 const digestFiles = (files: string[]) => sha(JSON.stringify(files.sort().map((file) => [file, artifacts[file]!.sha256])));
+async function archivedArtifact(file: string, text: string) {
+  const bytes = await checkWorkingCopy(repository, file, text);
+  artifacts[file] = { sha256: sha(bytes), bytes: bytes.length };
+  return text;
+}
 
 const d1Root = "packages/conflict-guard/bench/datasets/d1-v2";
-const manifest = await readJson(`${d1Root}/manifest.json`) as BenchManifest;
-const labels = await readJson(`${d1Root}/labels.json`) as BenchLabel[];
-const excluded = await readJson(`${d1Root}/excluded.json`) as Array<{ id: string; reason: string }>;
+const archive = await read(`${d1Root}/dataset.json.gz`);
+const archiveIndex = await readJson(`${d1Root}/archive-sha256.json`);
+assert.equal(sha(archive), archiveIndex.sha256);
+const restored = JSON.parse(gunzipSync(archive).toString());
+const manifest = restored.manifest as BenchManifest;
+const labels = restored.labels as BenchLabel[];
+const excluded = restored.excluded as Array<{ id: string; reason: string }>;
+for (const name of ["manifest", "labels", "excluded"]) await archivedArtifact(`${d1Root}/${name}.json`, json(restored[name]));
 assert(manifest.groups.length >= 150 && manifest.groups.length <= 250);
 assert.equal(new Set(manifest.groups.map((group) => group.id)).size, manifest.groups.length);
 assert.equal(new Set(labels.map((label) => label.id)).size, labels.length);
 assert.equal(manifest.programStats!.developmentHoldoutOverlap, 0);
 assert.equal(manifest.siteStats!.overlap.length, 0);
 assert.equal(manifest.diversity!.valid, true);
-const archive = await read(`${d1Root}/dataset.json.gz`);
-const archiveIndex = await readJson(`${d1Root}/archive-sha256.json`);
-assert.equal(sha(archive), archiveIndex.sha256);
-const restored = JSON.parse(gunzipSync(archive).toString());
-assert.deepEqual(restored.manifest, manifest);
-assert.deepEqual(restored.labels, labels);
-assert.deepEqual(restored.excluded, excluded);
 const variantIds = new Set<string>();
 for (const group of manifest.groups) {
   const split = group.split === "dev" ? manifest.split.development : manifest.split.holdout;
@@ -67,17 +74,18 @@ for (const group of manifest.groups) {
     const recomputed = labelVariant(group, variant, label.states, textConflict);
     assert.deepEqual([recomputed.label, recomputed.reason, recomputed.detectability], [label.label, label.reason, label.detectability]);
     assert(variant.traceFile && variant.traceHash);
-    const trace = (await read(`${d1Root}/${variant.traceFile}`)).toString();
+    assert.match(variant.traceFile, /^traces\/[a-z0-9.-]+\.jsonl$/);
+    const trace = restored.traces[path.basename(variant.traceFile)];
+    assert.equal(typeof trace, "string");
     assert.equal(sha(trace), variant.traceHash);
-    assert.equal(restored.traces[path.basename(variant.traceFile)], trace);
-    await hashFile(`${d1Root}/${variant.traceFile}`);
+    await archivedArtifact(`${d1Root}/${variant.traceFile}`, trace);
   }
 }
 assert(labels.every((label) => variantIds.has(label.id)));
 assert.equal(manifest.split.development.length + manifest.split.holdout.length, manifest.groups.length);
 assert.equal(new Set([...manifest.split.development, ...manifest.split.holdout]).size, manifest.groups.length);
 assert.deepEqual(excluded, labels.filter((label) => label.label === "exclude").map(({ id, reason }) => ({ id, reason })));
-for (const name of ["manifest.json", "labels.json", "excluded.json", "dataset.json.gz", "archive-sha256.json"]) await hashFile(`${d1Root}/${name}`);
+for (const name of ["dataset.json.gz", "archive-sha256.json"]) await hashFile(`${d1Root}/${name}`);
 
 function splitStats(split: "dev" | "holdout") {
   const groups = manifest.groups.filter((group) => group.split === split);
@@ -129,15 +137,71 @@ put("prompts.json", prompts);
 put("prompt-body-hashes.json", Object.fromEntries(Object.entries(prompts).map(([name, body]) => [name, sha(typeof body === "string" ? body : JSON.stringify(body))])));
 put("exclusions.json", d1.exclusions);
 const requests: Record<string, unknown> = {};
+const cacheRoot = "packages/conflict-guard/bench/model-cache/checkpoint-b-round1";
+const cacheEntries = new Map<string, { file: string; entry: CachedCall }>();
+const cacheArchives: Array<{ file: string; sha256: string; bytes: number; entries: number }> = [];
+const recordings: Array<{ report: string; policy: string; cacheFiles: string[]; subscriptions: ProviderSubscription[] | null }> = [];
+for (const [root, report, data] of [[cacheRoot, developmentFile, development], ["packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated", calibratedFile, calibrated]] as const) {
+  const archiveFile = `${root}/model-cache.json.gz`;
+  await hashFile(archiveFile);
+  const texts = JSON.parse(gunzipSync(await read(archiveFile)).toString()) as Record<string, string>;
+  const entries = new Map<string, { file: string; entry: CachedCall }>();
+  const referenced = new Set<string>();
+  for (const [name, text] of Object.entries(texts).sort(([left], [right]) => left.localeCompare(right))) {
+    assert.match(name, /^G[123]\/[a-f0-9]{64}\.json$/);
+    assert.equal(typeof text, "string");
+    const entry = JSON.parse(text) as CachedCall;
+    assert.equal(path.basename(name, ".json"), entry.key);
+    assert(entry.parameters, `缓存缺少请求参数 ${name}`);
+    assert.equal(cacheKey(entry.input, entry.call.adapter, entry.call.model, entry.parameters), entry.key);
+    assert.equal(entry.call.cacheKey, entry.key);
+    assert.equal(entry.call.inputHash, inputHash(entry.input));
+    assert.equal(entry.call.promptVersion, config.promptVersion);
+    assert.equal(entry.input.promptVersion, config.promptVersion);
+    assert(!entries.has(entry.key), `重复缓存身份 ${root}/${name}`);
+    const file = `${root}/${name}`;
+    await archivedArtifact(file, text);
+    const cached = { file, entry };
+    entries.set(entry.key, cached);
+    cacheEntries.set(file, cached);
+  }
+  cacheArchives.push({ file: archiveFile, ...artifacts[archiveFile]!, entries: entries.size });
+  for (const [policy, value] of Object.entries(data.policies) as Array<[string, { model: { calls: ProviderCall[]; subscriptions?: ProviderSubscription[] } }]>) {
+    if (!value.model.calls.length) continue;
+    const files = value.model.calls.map((call) => {
+      assert(call.cacheKey, `调用缺少缓存身份 ${report}/${policy}`);
+      const cached = entries.get(call.cacheKey);
+      assert(cached, `调用缺少录放缓存 ${report}/${policy}/${call.cacheKey}`);
+      for (const field of ["adapter", "model", "inputHash", "promptVersion", "decision", "confidence"] as const) assert.equal(cached.entry.call[field], call[field]);
+      if (report === developmentFile) assert.deepEqual(cached.entry.call, call);
+      referenced.add(call.cacheKey);
+      return cached.file;
+    });
+    const subscriptions = value.model.subscriptions ?? null;
+    if (subscriptions) for (const subscription of subscriptions) {
+      const cached = entries.get(subscription.cacheKey);
+      assert(cached, `订阅缺少录放缓存 ${subscription.cacheKey}`);
+      for (const field of ["adapter", "model", "inputHash", "promptVersion"] as const) assert.equal(cached.entry.call[field], subscription[field]);
+      referenced.add(subscription.cacheKey);
+    }
+    recordings.push({ report, policy, cacheFiles: files, subscriptions });
+  }
+  assert.equal(referenced.size, entries.size, `缓存归档与录制引用集合不一致 ${root}`);
+}
+put("model-recordings.json", {
+  archives: cacheArchives,
+  entries: Object.fromEntries([...cacheEntries.values()].map(({ file }) => [file, artifacts[file]])),
+  recordings,
+  subscriptionCoverage: recordings.every((recording) => recording.subscriptions !== null) ? "complete" : "missing-in-source",
+  workingCopies: "归档是冻结输入；存在的展开文件必须与归档逐字节相同，缺失文件可由 data:artifacts 恢复。"
+});
 for (const [id, role] of [["G1", "deep"], ["G2", "fast"]] as const) {
-  const call = development.policies[id].model.calls[0];
-  const file = `packages/conflict-guard/bench/model-cache/checkpoint-b-round1/${id}/${call.cacheKey}.json`;
-  await hashFile(file);
-  const entry = await readJson(file);
-  assert.equal(entry.call.model, modelNames[role === "fast" ? "jev" : "deepseek"]);
-  assert.equal(entry.key, call.cacheKey);
-  assert.equal(cacheKey(entry.input, entry.call.adapter, entry.call.model, entry.parameters), entry.key);
-  requests[role] = entry.parameters;
+  for (const call of development.policies[id].model.calls as ProviderCall[]) {
+    const { entry } = cacheEntries.get(`${cacheRoot}/${id}/${call.cacheKey}.json`)!;
+    assert.equal(entry.call.model, modelNames[role === "fast" ? "jev" : "deepseek"]);
+    if (requests[role]) assert.deepEqual(entry.parameters, requests[role]);
+    else requests[role] = entry.parameters;
+  }
 }
 put("request-parameters.json", requests);
 put("strategies.json", {
@@ -177,12 +241,13 @@ for (const group of sampled) {
   put(`label-audit/${group.id}/probe-results.json`, Object.fromEntries(groupLabels.map((label) => [label.id, label.states])));
   put(`label-audit/${group.id}/automatic-labels.json`, groupLabels.map(({ states: _states, ...label }) => label));
 }
-const auditIndex = { ...protocol.audit, groups: sampled.length, totalGroups: manifest.groups.length, fraction: sampled.length / manifest.groups.length, perProject: Object.fromEntries(manifest.projects.map((project) => [project, sampled.filter((group) => group.project === project).length])), perSplit: { dev: sampled.filter((group) => group.split === "dev").length, holdout: sampled.filter((group) => group.split === "holdout").length }, selection: "SHA256(seed:groupId) 升序，每个项目选择前 20%，选择过程不读取标签。", samples: sampleRows };
+const auditIndex = { ...protocol.audit, groups: sampled.length, totalGroups: manifest.groups.length, fraction: sampled.length / manifest.groups.length, perProject: Object.fromEntries(manifest.projects.map((project) => [project, sampled.filter((group) => group.project === project).length])), perSplit: { dev: sampled.filter((group) => group.split === "dev").length, holdout: sampled.filter((group) => group.split === "holdout").length }, selection: "SHA256(seed:groupId) 升序，每个项目选择前 20%，选择过程不读取标签。", samples: sampleRows, responses: [1, 2].map((reviewer) => ({ template: `label-audit/reviewer-${reviewer}.template.json`, file: `label-audit/reviewer-${reviewer}.json` })) };
 put("label-audit/index.json", auditIndex);
-const auditHeader = ["# 独立标签抽检", "", "每位标注者使用各自的 reviewer 文件，独立完成后交由负责人比较。判断时阅读 changes.md、programs.json 和 probe-results.json；完成独立判断前保留 automatic-labels.json 供负责人使用。", "", "allow：共享行为兼容；warn：合并观测与明确声明的可组合预期不同；lock：双方单独通过而合并失败；exclude：baseline 或单方失败、文本冲突、超时或三次不一致。仅判断现有探针能够支持的范围，不猜测没有测试的行为。", "", `抽检 ${sampled.length}/${manifest.groups.length} 个关系组，各项目五组，开发集十五组、保留集二十五组。`, "", "需要修改标签时，由负责人整理两份独立意见并决定重新确认；导出工具不修改原标签。", "", "| 关系组 | 项目 | 算子 | 修改 | 探针结果 |", "|---|---|---|---|---|"];
+const auditHeader = ["# 独立标签抽检", "", "每位标注者填写各自的 reviewer-1.json 或 reviewer-2.json，独立完成后交由负责人比较。判断时阅读 changes.md、programs.json 和 probe-results.json；完成独立判断前保留 automatic-labels.json 供负责人使用。", "", "reviewer-1.template.json 与 reviewer-2.template.json 是冻结模板，包含全部待核验样本并参与哈希检查。人工表格保留独立文件，导出时只创建缺失的表格，已有内容逐字节保留。verify 检查人工表格的样本身份、独立判断标记与字段类型，允许填写标签、reason 与 notes，也允许调整行的顺序。", "", "allow：共享行为兼容；warn：合并观测与明确声明的可组合预期不同；lock：双方单独通过而合并失败；exclude：baseline 或单方失败、文本冲突、超时或三次不一致。仅判断现有探针能够支持的范围，不猜测没有测试的行为。", "", `抽检 ${sampled.length}/${manifest.groups.length} 个关系组，各项目五组，开发集十五组、保留集二十五组。`, "", "需要修改标签时，由负责人整理两份独立意见并决定重新确认；导出工具不修改原标签。", "", "| 关系组 | 项目 | 算子 | 修改 | 探针结果 |", "|---|---|---|---|---|"];
 for (const row of sampleRows) auditHeader.push(`| ${row.id} | ${row.project} | ${row.operator} | [双方修改](${row.id}/changes.md) | [四状态原始结果](${row.id}/probe-results.json) |`);
 put("label-audit/README.md", auditHeader.join("\n") + "\n");
-for (const reviewer of [1, 2]) put(`label-audit/reviewer-${reviewer}.json`, { reviewer: `reviewer-${reviewer}`, independent: true, decisions: sampleRows.flatMap((row) => row.variants.map((id) => ({ relationGroupId: row.id, id, label: null, reason: "", notes: "" }))) });
+const reviewerTemplates = [1, 2].map((reviewer) => ({ reviewer: `reviewer-${reviewer}`, independent: true, decisions: sampleRows.flatMap((row) => row.variants.map((id) => ({ relationGroupId: row.id, id, label: null, reason: "", notes: "" }))) }));
+for (const template of reviewerTemplates) put(`label-audit/${template.reviewer}.template.json`, template);
 
 // 预算只读取开发集与既有冒烟记录，不执行分类器评价或模型请求。
 let agentStarts = 0; let followups = 0; let agentRequests = 0; let agentInput = 0; let agentOutput = 0; let guardFast = 0; let guardDeep = 0; let guardCost = 0;
@@ -249,13 +314,49 @@ for (const experiment of protocol.experiments) {
   if (experiment.command) lines.push("```sh", experiment.command, "```", "");
   lines.push(experiment.additionalWork, "");
 }
-lines.push("## 人工确认前需处理的条件", "", "1. 《实验与评价.md》原文尚未找到，第 5、7 节需要人工核验，公式来源已经注明。", "2. 现有模型评价入口仅接受 dev，X3、X4 的保留集模型入口需要补充。", "3. Agent 批量入口固定 full 和阶段七预算，需要支持冻结的 P0/P3/P5 以及阶段八独立计数。X5 的人与 Agent 条件缺少任务数据。", "4. X2、D2 规则聚合及部分 X7 消融入口需要补充。新增执行代码后需更新评价提交和对应文件哈希，重新确认检查点 C，期间保持标签、提示词、阈值与统计协议。", "5. 第二个兼容端点缺失，X3b 当前注明未执行。DeepSeek 的不可变版本信息由供应方能力限制。", "", "本清单状态为等待人工确认，readyForExperiments=false。标签材料和数据哈希已经导出；保留集尚未执行任何策略评价。确认前不执行正式实验，也不根据保留集调整参数。", "", "## 验证命令", "", "```sh", "pnpm --filter @simplercp/conflict-guard experiment:freeze --verify", "node scripts/verify-evidence-secrets.mjs", "```", "", "verify 重新核对归档、标签规则、轨迹、抽样、配置和导出文件的逐字节内容，不运行模型或策略评价。freeze.json 不包含自身哈希，文件哈希清单覆盖全部其他导出内容；冻结材料提交标识由 Git 提供。", "");
+lines.push("## 人工确认前需处理的条件", "", "1. 《实验与评价.md》原文尚未找到，第 5、7 节需要人工核验，公式来源已经注明。", "2. 现有模型评价入口仅接受 dev，X3、X4 的保留集模型入口需要补充。", "3. Agent 批量入口固定 full 和阶段七预算，需要支持冻结的 P0/P3/P5 以及阶段八独立计数。X5 的人与 Agent 条件缺少任务数据。", "4. X2、D2 规则聚合及部分 X7 消融入口需要补充。新增执行代码后需更新评价提交和对应文件哈希，重新确认检查点 C，期间保持标签、提示词、阈值与统计协议。", "5. 第二个兼容端点缺失，X3b 当前注明未执行。DeepSeek 的不可变版本信息由供应方能力限制。", "6. 既有开发集录制缺少逐订阅记录，正式录制需要补充。完整缓存与引用清单见 [model-recordings.json](model-recordings.json)。", "", "本清单状态为等待人工确认，readyForExperiments=false。标签材料和数据哈希已经导出；保留集尚未执行任何策略评价。确认前不执行正式实验，也不根据保留集调整参数。", "", "## 验证命令", "", "```sh", "pnpm --filter @simplercp/conflict-guard experiment:freeze --verify", "node scripts/verify-evidence-secrets.mjs", "```", "", "verify 构建对应源码，重新核对归档、标签规则、轨迹、抽样、配置和导出文件的逐字节内容，不运行模型或策略评价。freeze.json 不包含自身哈希，其他不可变导出内容全部参与哈希检查。人工表格独立保存，填写后继续通过验证。路径与缓存核验说明见 [recording-integrity.md](recording-integrity.md)；冻结材料提交标识由 Git 提供。", "");
 put("freeze.md", lines.join("\n"));
+put("recording-integrity.md", [
+  "# 冻结材料完整性", "",
+  "每次导出与 verify 都在核验产品源码提交后构建 conflict-guard 包，随后加载构建结果。提示词、标签规则与缓存身份来自当前提交对应的源码。", "",
+  `开发集录放归档包含 ${cacheEntries.size} 份缓存：第一轮 G1 与 G2 各 ${development.policies.G1.model.calls.length} 份，校准轮次 ${cacheArchives[1]!.entries} 份。不同轮次的同一缓存键分别保存，按报告来源匹配。model-recordings.json 保存归档哈希、每份缓存的哈希和全部录制引用；freeze.json 同时保存这些输入的哈希。`, "",
+  "D1 与模型缓存直接读取已提交的压缩归档。工作目录中存在的展开文件必须与归档逐字节相同；新 checkout 可以直接导出和验证。运行需要展开文件的评价命令前使用 data:artifacts 恢复。", "",
+  "```sh",
+  "pnpm --filter @simplercp/conflict-guard data:artifacts --dataset bench/datasets/d1-v2 --restore",
+  "pnpm --filter @simplercp/conflict-guard data:artifacts --cache bench/model-cache/checkpoint-b-round1 --restore",
+  "pnpm --filter @simplercp/conflict-guard data:artifacts --cache bench/model-cache/checkpoint-b-calibrated --restore",
+  "```", "",
+  "既有开发集录制保存了 provider calls，缺少逐订阅记录。model-recordings.json 使用 subscriptions=null 明确标记缺失，当前材料无法复现各订阅单独取消的时序。正式实验入口需要保存并核验逐订阅记录。", "",
+  "冻结哈希覆盖 reviewer template，人工 reviewer 表格由标注者独立维护。重复导出保留已有人工表格；verify 接受有效的填写结果。人工表格的后续修改由 Git 记录，确认材料时同时提交两份独立意见。", "",
+  "输出目录、全部生成文件与人工表格都核验真实路径。指向仓库外部的符号链接、失效的符号链接与工作副本内容不一致都会终止命令。全部路径及人工表格验证通过后才写入生成材料。", ""
+].join("\n"));
 snapshot.generated = generatedHashes();
 put("freeze.json", snapshot);
+for (const file of generated.keys()) assertRepositoryPath(repository, path.join(output, file));
+const missingReviewers: Array<{ file: string; template: typeof reviewerTemplates[number] }> = [];
+for (const template of reviewerTemplates) {
+  const file = path.join(output, "label-audit", `${template.reviewer}.json`);
+  assertRepositoryPath(repository, file);
+  if (!lstatSync(file, { throwIfNoEntry: false })) {
+    assert(!values.verify, `缺少人工表格 ${template.reviewer}`);
+    missingReviewers.push({ file, template });
+    continue;
+  }
+  const sheet = JSON.parse(await fs.readFile(file, "utf8"));
+  assert.equal(sheet.reviewer, template.reviewer);
+  assert.equal(sheet.independent, true);
+  assert(Array.isArray(sheet.decisions));
+  assert.deepEqual(sheet.decisions.map((entry: { relationGroupId: string; id: string }) => [entry.relationGroupId, entry.id]).sort(), template.decisions.map((entry) => [entry.relationGroupId, entry.id]).sort(), `人工表格样本身份不一致 ${template.reviewer}`);
+  for (const entry of sheet.decisions) {
+    assert([null, "allow", "warn", "lock", "exclude"].includes(entry.label));
+    assert.equal(typeof entry.reason, "string");
+    assert.equal(typeof entry.notes, "string");
+  }
+}
 for (const [file, text] of generated) {
   const target = path.join(output, file);
   if (values.verify) assert.equal(await fs.readFile(target, "utf8"), text, `冻结材料内容不一致 ${file}`);
   else { await fs.mkdir(path.dirname(target), { recursive: true }); await fs.writeFile(target, text); }
 }
+for (const { file, template } of missingReviewers) await fs.writeFile(file, json(template), { flag: "wx" });
 console.log(json({ verified: values.verify, codeCommit: protocol.codeCommit, relationGroups: d1.groups, auditGroups: sampled.length, generatedFiles: generated.size, onlineCalls: 0, holdoutPolicyEvaluations: 0, readyForExperiments: false }).trim());

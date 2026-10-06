@@ -148,6 +148,7 @@ owner 条件复用 X5/P5/on 的十个跨属主任务，另执行 all-human/all-a
 3. Agent 批量入口固定 full 和阶段七预算，需要支持冻结的 P0/P3/P5 以及阶段八独立计数。X5 的人与 Agent 条件缺少任务数据。
 4. X2、D2 规则聚合及部分 X7 消融入口需要补充。新增执行代码后需更新评价提交和对应文件哈希，重新确认检查点 C，期间保持标签、提示词、阈值与统计协议。
 5. 第二个兼容端点缺失，X3b 当前注明未执行。DeepSeek 的不可变版本信息由供应方能力限制。
+6. 既有开发集录制缺少逐订阅记录，正式录制需要补充。完整缓存与引用清单见 [model-recordings.json](model-recordings.json)。
 
 本清单状态为等待人工确认，readyForExperiments=false。标签材料和数据哈希已经导出；保留集尚未执行任何策略评价。确认前不执行正式实验，也不根据保留集调整参数。
 
@@ -158,4 +159,4 @@ pnpm --filter @simplercp/conflict-guard experiment:freeze --verify
 node scripts/verify-evidence-secrets.mjs
 ```
 
-verify 重新核对归档、标签规则、轨迹、抽样、配置和导出文件的逐字节内容，不运行模型或策略评价。freeze.json 不包含自身哈希，文件哈希清单覆盖全部其他导出内容；冻结材料提交标识由 Git 提供。
+verify 构建对应源码，重新核对归档、标签规则、轨迹、抽样、配置和导出文件的逐字节内容，不运行模型或策略评价。freeze.json 不包含自身哈希，其他不可变导出内容全部参与哈希检查。人工表格独立保存，填写后继续通过验证。路径与缓存核验说明见 [recording-integrity.md](recording-integrity.md)；冻结材料提交标识由 Git 提供。

@@ -390,5 +390,15 @@
         "d1-0196-conflict"
       ]
     }
+  ],
+  "responses": [
+    {
+      "template": "label-audit/reviewer-1.template.json",
+      "file": "label-audit/reviewer-1.json"
+    },
+    {
+      "template": "label-audit/reviewer-2.template.json",
+      "file": "label-audit/reviewer-2.json"
+    }
   ]
 }

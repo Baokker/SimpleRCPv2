@@ -1,0 +1,1029 @@
+{
+  "archives": [
+    {
+      "file": "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/model-cache.json.gz",
+      "sha256": "521c5c3bf7db971060cedf2b8c33e6976fc00084941724da980d921faaa6ec66",
+      "bytes": 65891,
+      "entries": 104
+    },
+    {
+      "file": "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/model-cache.json.gz",
+      "sha256": "19539adbecb47ee4b4c12fb8fd16a17d85ceab613ba4000063088faf3a721f68",
+      "bytes": 54628,
+      "entries": 93
+    }
+  ],
+  "entries": {
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/005f9c7cd7181150115bd8fb324f690f096fa173b0a82e7219dc76461f61000d.json": {
+      "sha256": "2caa7745b490884541a7341fa3d0b825b18db847e71a799abe412982ce3b35d9",
+      "bytes": 6017
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/09f43bd0f5705bb33c3d869f6a901004eeb0b04bc9f7d115332dd9d496c989bd.json": {
+      "sha256": "6b809c605608ee2f911a0b98f4cd8cb34f121ffed0e8ce98e82ed734e692bd6a",
+      "bytes": 7937
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/115c75821c34b401e9b86f2c12c89df151bbc091789a65be7348114ef37f632e.json": {
+      "sha256": "ed8729b0863cff1b0b6ff622edf026ce7b2de10af01abeb257e6303a8eec127b",
+      "bytes": 5975
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/19d0269f580c9785232a79593cb73040da1fc7391a6e8b5016ecb1a9c2693add.json": {
+      "sha256": "794d0bf0deae2247f2d118bc8ffdb20853a842350328c83876311602a2a16ba9",
+      "bytes": 6252
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/1bdd937a4fff4b9a1bb2764000e118fc1b4e6e38d90521416cc1460f3c0361c8.json": {
+      "sha256": "da683419c81744987b1d863a226366792e3db28b1a8b471d405b0c7f90847031",
+      "bytes": 7606
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/2b512ae455d7e503f31223767182b068201ac7cb1b261c9f663818d75d74897e.json": {
+      "sha256": "cee358f4bf903bbea70bbc8a4a5547e4c10f5ab25e965767b093f97ce49c6d15",
+      "bytes": 5992
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/33687102b94740c1e6be657cceadcffc2cb5494e21df61b0377e705347f99507.json": {
+      "sha256": "cfa734cd5a30829f3f430f62b7d78a2133282464f0434ac251cece585de4e42b",
+      "bytes": 6469
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/33c92586023046164a3284598692b548272be668390811f9db34b3ebac27182b.json": {
+      "sha256": "a2f696aac0d1bf2e922aac48838238d19519ab5f22d4c7a22783b597c1a4ff53",
+      "bytes": 7716
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/3cda5f20d5185f98ae90c6302ce336f1080623079bc59d53dcc1d1cc29ddc9a2.json": {
+      "sha256": "7e4a36e63825328674d0b3b994ceb9e4e085fe7c88a7c79ff6a942255e909094",
+      "bytes": 7118
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/40a67b4db5676dbdb545eeccbcb6daf8b5c94bb336e37677fd532f1d1c4a7242.json": {
+      "sha256": "a94ce83ca357bc5eaeeea0d4817b207b3720ecd9fd190681b011f6a73a91191b",
+      "bytes": 6386
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/410e7af2c0b1adbbe0f07e99df34893fa30e00a10e2a89e60dd1b5b0e282e93b.json": {
+      "sha256": "48c60df6514e8e90d67c66c2434bf6c2fa359f4052b790dcb55b09d7b7ed50ab",
+      "bytes": 7406
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/4153fde4ef08e1bf7c9ce3ab7dc51a3ffe5c7dd510eac620a1522bf73fcfe1c6.json": {
+      "sha256": "643137534f0c58c3ad6a9007a24c1b17bfba5278892a686b1155af6783b65f2c",
+      "bytes": 5569
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/4503f0afa461ee26336326172e28a2b6111ffa78d0d89d3d0681b8c6d947c4f2.json": {
+      "sha256": "b3a0d600a4f3fcee345c6827cb046cfaab355d8ea983c0bea6bcfd2191fe4788",
+      "bytes": 7078
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/475590922e88f7f262bbf441a2e72dedd3d70812026da1e3e344b60aafc60d1b.json": {
+      "sha256": "785d57eace254ad7e3b0d4063493b6a0f6a744ce57c0bd8af07f3f600a6dd767",
+      "bytes": 5591
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/49db87558f08cef89b98656554b7d9bbd4d95b9f8480630fc873a12573883db0.json": {
+      "sha256": "d6c383974d7ea713ff8705709717945a3c9fa7bea5fcde8b28bf6e5b181fb38e",
+      "bytes": 6957
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/4f2f6575a99f02c15a7e0145050ea71dab1448c9cde257b27fa75d7ce065b6ac.json": {
+      "sha256": "0db3c3bd1ca32166aa2209fd469decb86c658c6fd3f14a5cb29bdd43ad6e4380",
+      "bytes": 6683
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/520fb39e30dcebb11c9528b046677a87bee899d5e3e23e18e064a4f5bd76f18c.json": {
+      "sha256": "4f5bbd6bda51bd929063438f027bf39a8400e2fdaa7bb5f28d78a29de9784ebe",
+      "bytes": 5944
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/576beea1b543171506242d67005e74771d9584cb12542cf577f6271abc4fde09.json": {
+      "sha256": "94fd66afb6cd132113a30b8b3c1ecc9486f16e8d649f91efa330a16eee500bec",
+      "bytes": 6917
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/595e1261252ef7f07857aa863a9e639d364f54101f1badfe961d6a01f5e5cb68.json": {
+      "sha256": "acd6c99ca17711c11c8b931a6d813ac38107915b0885267342d800be1e0cda18",
+      "bytes": 6948
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/59753d9607a0ac4cedac2659a149f19dddb9eae0255206b52ae37a489b1b09ad.json": {
+      "sha256": "d1672ca2bc17c0a1b91738aa35ca900f7ab10091cc02d32358c3600c34e48ef7",
+      "bytes": 7862
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/5c3ff702117c70f30ceec1572fd8d0ce0c814cefbe9571e617e2fc1773f6bb4f.json": {
+      "sha256": "283a9c57398f877f01d65882528b6232d524ca34f88f141b81757c2322a653ca",
+      "bytes": 7581
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/5e9c766fe146683a91041420fb8942917d365e372b50db103974f53e794b3df0.json": {
+      "sha256": "7b31fae0cf04eec567d8d82e13b0fa4e478157de7440e76e2014e298a5fb2ecf",
+      "bytes": 7170
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/5fcef2dd4090bc60d1f5651a5e0e60512ed9c6ad3dad4e0a7de764b73746a7f5.json": {
+      "sha256": "36221147f02b2abaa7780042d26675f8924b86063143f6d399232d980f35bc0d",
+      "bytes": 6897
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/63a2ad9572671d899149f6b3d63135f9e07fd1330b9a843788b4e7da88e326a2.json": {
+      "sha256": "d01f9fce0e4bff506b069951d4a963a43a5f67c0a8c1dc2296bfe28e51fc2f84",
+      "bytes": 6436
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/6536fa39cd4f633746ccc439620f5c32126581d29c1192577321bc362e1340ca.json": {
+      "sha256": "de9236bb4e0c8f5812d5a16eab5cdecf01807ca5500486039ca46bfa970964bb",
+      "bytes": 8112
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/6fa60620403f37d628f1f8937dbc5c8306d93bec6def27856c823ee630f4a69d.json": {
+      "sha256": "24e8ebbdfc88a629ae795ce22a7b992ab8b333857a44d4fe6da3d4ddcbf555d5",
+      "bytes": 5084
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/753bf7fde91dcba9f89302c75fdee8b0ada47900c4b7d452479bfa4c39bcafea.json": {
+      "sha256": "0382e9f03b53d938c27ffda0828f13b96dd4bd8081432149eae2244f50f06066",
+      "bytes": 6705
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7cdf67f2bb309f2b9b7a1eb16289841f68eea0b1a623c4a14c4134ac790f488f.json": {
+      "sha256": "16701c3507dd81bf8ea8f492da958b90ba2a1a1e166dc4b4f0fb226e1de33f6d",
+      "bytes": 7944
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7d1c0abe4f280d8565194da23e40b28d09a92d38a633e19572c71134031f63d9.json": {
+      "sha256": "359e52b54399cda52c637c9189fececf549b623239af696ad0b4fb71e9c2264c",
+      "bytes": 6455
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7da911add2c018ee4aace437f4c6505e0fc3c20e8d851c05dc44d65d2e6f0f21.json": {
+      "sha256": "13f94372f7122725d4105f8c4a02d4008e503e50d43b976ae351ca1a9c9ece6b",
+      "bytes": 5151
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7e24b90308055585ee36aa81d0fbd7dab3a786ce3b972ec5564302ed405b80d9.json": {
+      "sha256": "148bf3732325671b097e09d8444498465918298d5a2db09967301a7fb353eec1",
+      "bytes": 5266
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/8f374e95a15236bde285253e0f90a008a1bbf80c9e9275f8760960d1f4ee193b.json": {
+      "sha256": "77a8b3b4291b1567a3bc50fd74cbaa7efce0306f2abc6c5e09c6dc75c632397e",
+      "bytes": 7162
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/90b1cf790ff2259784ef360c31663fa7a650d961475ace4b2890ea4ff3bd74a0.json": {
+      "sha256": "0369aed41d35d5d8bbf88b3a3e696e6e22db684d6915fd6d4bc0007cf316be58",
+      "bytes": 7088
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/93ba715eaf3a163b3666b4fac90f8d7667cd11e1374862ea003fc826d2129265.json": {
+      "sha256": "2765990a2a35c3794eafb45887e05470a5a1f030dd81534d41674e5633f22a90",
+      "bytes": 8866
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/9601d8a967b67682dcd987ac14c3a86e0cc9873e145eabcd82888a6c6d59c02b.json": {
+      "sha256": "5f6777c0b94c00852a94d46f2298077ebdf9ab3739c17897fd9af269aa17ba66",
+      "bytes": 6441
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/af91b0c3f6908e25a5b3cc51dcfe6f0c07eea82a7cc74029f0c6188801ba4f28.json": {
+      "sha256": "ed6440b432115f7f14d87a5ac07ff9a6dafc441d7f73240ebdcf1fc7e42f2714",
+      "bytes": 6434
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/b957213b45305b94ba91465b36bd6fbb7c9eb18ba7da3378974781541ed25ec3.json": {
+      "sha256": "c72bea17758a81ee5e5a544dc205e6f4ad3460eb2112d5a917873d1f99a12ba1",
+      "bytes": 5980
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bb66e06cf14cbf1bf6f66ad9158ab17d68027706e0d2261bcbf124fa6a17cd23.json": {
+      "sha256": "4d420c92c1acc390b8882fc130dc6b422efaebecc9d0d27bffbc4e81fed1b80d",
+      "bytes": 6739
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bd265b06788a0cb28c9bd5f15cb5deb8032c3eac979207cff2f3b47617c23823.json": {
+      "sha256": "f7c40b6665ee040b7baebc2fcf7b076a8b5ff8830f16aa3bb5cd949afa34274c",
+      "bytes": 6880
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bd8fb248f1160d0458c644918e4782cd3c1f67fa2c45bba86b9100f1cb55e83d.json": {
+      "sha256": "8897f2489b442695e4ac8656ab49be2e072b0bddd9a9d97a78e829a7ce30abc9",
+      "bytes": 6100
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bdef9d78ca5ae3756d5443bfa19e276f518185cb5ad4e37518b272b394a12efb.json": {
+      "sha256": "054d2c546dfffe9056ec6884bedc3943c6013064438de83372928558ad3142b3",
+      "bytes": 7744
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/c17d4703ace05633a306e566746976fb8eaf44c581ddd3858ada4a321d1f66b0.json": {
+      "sha256": "08e7139b84e94e38b62fd4e88ff4c7f6020505a809994b7cb684a2161c0e455b",
+      "bytes": 6485
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cc0329df681f9a21eb174759d628ed48377820d4106f34660b5d9bcab757bd6b.json": {
+      "sha256": "2a5b185c33b627b58fbd89da1cc7337b76cb509715194acd2b0aa5f817d5cbf9",
+      "bytes": 6902
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cc0c326640665ce1070fae191b053bb9a1ec1df67b59f791b5f702de891c05c4.json": {
+      "sha256": "52d489f8ad0ec73967d24b023b900d794c6e6bd2d6d13f6f7ab89dec70ae8d9f",
+      "bytes": 5396
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cc443b813ed4e0a3b78b24341c0840003e576ede0dc587732b063a90cc3aeb00.json": {
+      "sha256": "749f361faa4e906ea5592cb51c71200710f2abb00579977880ac5030e0338c7a",
+      "bytes": 6798
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cca42daeca05fa662ffad0160ab3eda66708b01cedb10a7b9da5fee9f8d52150.json": {
+      "sha256": "ffcd6064c56ac4545a867940b7d920f9acaaf67e9a0e640cafd29881d0521992",
+      "bytes": 6876
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d3b5a47756e99c424b5ed68ed795b2fbe2469d20e8dbf658e207783b8d4ec7c6.json": {
+      "sha256": "dc2358cdca0e3dacaea821563c669e7350a0eecea2f2c327a8cf525d1f1a8e72",
+      "bytes": 7677
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d4fb7fc380737304e31be9c1355e081f0fe7505e1e14b52782143d910720ad17.json": {
+      "sha256": "d1d2c394c9961865348cfd720d4988b3f0b364e50442038a9f2075d053b2666b",
+      "bytes": 5275
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d508c36b723c45747ef4de4496504a2fde7929137b3da26d923122f4ba57ed68.json": {
+      "sha256": "d3d000054b20481e24ca8510afeb74e11de5cf3f92b91e2e02988f8a20c285a7",
+      "bytes": 7996
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d9d45e1a3a753fb46b4e103326ec36456b9e27ef9f86ffe0f537ca9a27a60196.json": {
+      "sha256": "7f7652cd33f7a4892bed386c4bd862cba10d447ca9e8836f3636e3258a4ebced",
+      "bytes": 7684
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/e6dfe7588e3448814a98999c11d2d2ec13ae4c5097f5b6af837c0c0ae4e6eede.json": {
+      "sha256": "a51ac528ae83e5d46c3c6f6f368a27eb8477e81c123feba92ad89b74b2e264c0",
+      "bytes": 4882
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/ec1013fb511292c135ff16f7510fef8e79dc17fbc0b583cb9623bf96936c1e41.json": {
+      "sha256": "293845b17a67265f09ab92ab2d46be331052be2384646dcf4c1a8b84b5275aa5",
+      "bytes": 5930
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/0027fa701efad9a04692250cb83bd7128a9311c2aa774928ceaba78066dca572.json": {
+      "sha256": "720d9f31b0f9e00b454da95507542899cf3679d4995e52c8ef8b01b0db03d4d5",
+      "bytes": 3370
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/005e3b786bca4cb80f527f43edc2bc2d95b59d40f550c138821b9be45e63fba2.json": {
+      "sha256": "7a542aa5c95c4a2f2f56adad6465f766206038c5c269b846f414b4e262f8ebb9",
+      "bytes": 2177
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/0322a090c734329658fe6c984514af2ef1d16414d234812d681fee1d680f5f00.json": {
+      "sha256": "92dc0bbe1efa8e36aa9761bf9b648b222d8241e96a920f7e8c8a421c6c0c5f08",
+      "bytes": 4011
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/07ba9ca5dd17330fa1029fc7d276da5d25db4ef412212dd20075a2fac0654c50.json": {
+      "sha256": "be1f8b5961b57b5f94f29d01707b571ae11ec7a9399943c23a1dfac3d41281a3",
+      "bytes": 3084
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/1366c65c88633f69f969e01f222c5356d17fa04b80d004247403c26a181a2a2c.json": {
+      "sha256": "14619d130135ed8801a8d50e84f1849fd3c8a3edda24de25b78994ac4b341f79",
+      "bytes": 3788
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/147cfbcd9c6eeeabf5cc7fad202baf0c8c5c63bf17161ccd75dde8db168648dc.json": {
+      "sha256": "7b63f0909a8414fa91ab9d9726195f3bd5ac796d4f91bb637109ce97ce0b0882",
+      "bytes": 3351
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/18a0e21debcd750dbddc87b015780cf86fd387ae46a23fee07701304a1d0123b.json": {
+      "sha256": "dff3e945f6856d2240b621017f598f81a6c05b35a652057f71821569fbef4cb9",
+      "bytes": 3462
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/18c9a395a43433cf9ae658a90a715b64357c51ecc4a23d059c3e85ed8da0f35c.json": {
+      "sha256": "66c1bfd0a3544b3bef082ec65d1d01636a923722146c1938c34078d8456d7c72",
+      "bytes": 3350
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/1975e2f1f3f68ac3b77f81aea70e6bd6695eba945aa21c376a18ca75580ce922.json": {
+      "sha256": "0220b3239094f42d8c36dee1c93bbc78aa71ee6141a7dc523310f34457d571c8",
+      "bytes": 3791
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/19bb957e63fad70e154c5108c968ba1cc71e31e402aa0eb8963d01ade0c9f637.json": {
+      "sha256": "baea9251be1576b94e2d5ec0a87c91d1d4176b7fbc760967446e6cfaf5a29cbd",
+      "bytes": 3156
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/2a818ced692aebd3d542e660124df56d354012cbfd3a99a79a7162057771655e.json": {
+      "sha256": "1cae17c1f47cd8ef7e1e070187eb5c94db600b1b4c5847de3a4da7c53c3218c6",
+      "bytes": 3183
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/2abe374399d717cc8c86228e8b01a11394c026390c9660a0089ea8db8fc432d2.json": {
+      "sha256": "cb354556b29ca285e1434b58ec2e21b3e838e36459de66d11b4a5ad61c36c127",
+      "bytes": 3114
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/2bd6e3e530496dab6a5d22673a6fc43214d0d420e50fb4907996f27fe3f10f37.json": {
+      "sha256": "b6612af434a23c74fbc764247153fb9170c495008889300fbb9ad3546291fd16",
+      "bytes": 3371
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/39cd502ae77aed00a349a8ee257707487458dacab22941fbfc5016dae5ed284d.json": {
+      "sha256": "90b0062770f9cb23ea5462e2ec57238f79dc52db5afdcbe7e26504abc6f78034",
+      "bytes": 3858
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/3c380a7d419acfa06c09fe7652e707c8bbbf80c7fe1d4bd78b47fad1aa8676b8.json": {
+      "sha256": "6e954dd640ea3877fb1629d19e5e35c754907e4eadf7a4d0c6ca72bbdf10be03",
+      "bytes": 3146
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/3c8042155ec0c769db68fc6efc2ad13ff470908f7ba2492fa1a1aefd7043da7a.json": {
+      "sha256": "1d101b851b6f2c47b77e03e94cf345e7c43654ce6549f5f6ce8dd8778e01fa46",
+      "bytes": 4372
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/4353044bcd6685f4bc00bbc96c3ea7c93695fd81e7f9b8b65c05bd0cf764ccf9.json": {
+      "sha256": "28e4a262c3d388813280be903328fd03781534ebb5824650c71c4b7163c5e6f6",
+      "bytes": 4011
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/4736e4896a1e253d111b5dc53996c95429805c28d45714f955792ca0475d5b80.json": {
+      "sha256": "56cd328d4bef11ff92b61208bb3495ef3517c100e467c1b5baec4f1919e4cf01",
+      "bytes": 3862
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/48c11429160137791d3fc487e599fde2042bb56cc4833256f5f49e831eefa3be.json": {
+      "sha256": "f34fa4cd7f3a084e3dbd241f24c95718d7530a013947ab6536988005189b69a3",
+      "bytes": 3112
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/59b83247660e18cb2b678fffe5d1231d81fcc00e7e75c3c3a2156eb5222e0388.json": {
+      "sha256": "12c887f58d17331325d54df173725cef5b96eb631b83f03b3a321e0878b998af",
+      "bytes": 3135
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/63d359a68b8eee2b1d7d22ba1250d9bbdc7366172f3e26102f6e78936ce07509.json": {
+      "sha256": "550c8d7f0d0d15de7e7c802f7f44acee6738db36718f6bf7ff09ac9660f80050",
+      "bytes": 2353
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/6eb4cbedd071d3f34a101035b12b24c9cc3ff01da33ecab3ab144d3c6e570ffd.json": {
+      "sha256": "318e13439d7a187b45df7f639327c36b5f509e613374d213e94e642ae416d819",
+      "bytes": 3136
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/708942e529edc9a4041765f573e73457c65d696f3afaaa031bf1c955b5e011ba.json": {
+      "sha256": "a19489419cc3fc966c108996513bc25f430cc1656f0bc77d530265e31dd6ffc8",
+      "bytes": 3663
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/73590adfc5dee0ed68c26134c87cff23e7e534479813656cb09e67f2516b60cd.json": {
+      "sha256": "d4282327291b930fefda8d7a2a2606a28115ee76d14a912d70552803636117a6",
+      "bytes": 3461
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/79c5456b0f9615c1c8df736135025abac86136ae8340f56ae9193a1404af950d.json": {
+      "sha256": "35cca451b708b678aed057d8424cc3ea82b10dd7683b1c5ca2ae786014a84aed",
+      "bytes": 3065
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/81b494ea48ac23212bae2085b4abd6ae362d0caad44b08fe2a018ecdc2e4654d.json": {
+      "sha256": "13fd11368be5b61c5868ef978b0bf968414fd615a07f04edd311e90f9724ff1f",
+      "bytes": 3228
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/895a9d859c3b2ce5112038772129855d22556a9c1a85b5f705f3d37b570c597c.json": {
+      "sha256": "614320fcb8690ec892f01f98aafa3cdff8bccaa57be439d9e2e9735d41af7ce6",
+      "bytes": 3090
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/8f7b08cd06f36bd39a698137042e6eac9f516a324c85b45c96fa03e24dc078c1.json": {
+      "sha256": "85a9d81e20727a77960ff942ed736ffe98d0803b1a1749659675db7b890c49b3",
+      "bytes": 3196
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/90aa0cf20434d51ced751063afd08e84afdd2b9884df3523c6eb3f1a7006d826.json": {
+      "sha256": "20ea9f04572a92880c2cbd82b441e479b25a47bb09f93b2a46add69ca8c19343",
+      "bytes": 3170
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/9ab63ee6eff483d420e6623ab04fa98a889ffaf8af562c4c77f257c72d0e03ab.json": {
+      "sha256": "3b7c9ef9f3333774e5f6149af49a42131342ff151f7b15ef4395525598c82d5e",
+      "bytes": 3074
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/9b7b9b6c397148cb392fcbd98af73c9e9847d82e23917f43c78be8a1163103ec.json": {
+      "sha256": "7e9ec2b0e140e3e79f38f7afafbf48367cfcfc419c866158e054a3e2d38ae277",
+      "bytes": 3892
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/9c1e31cc99be4eb7829b2e9038da6fb0704a154c0e780bfe19b120ccbd020151.json": {
+      "sha256": "238b924433e4141e77fe535e54659824639989260ce30e52e575ca423ca737ab",
+      "bytes": 4690
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/a64a33cffe85dd9639ac2d05fcf0f2a74570541dafd9ea63b93683531e8fe7a4.json": {
+      "sha256": "d898699f72b95c03ca5f818db15aa654ee9cc1c61339fb6a200fdc3b66292790",
+      "bytes": 4014
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/aa15c3e3acad2a85be305d0fd24670fb733912e24693c906827320b1a1082b4f.json": {
+      "sha256": "a8b8f427eda4d2ee2c8aac5e363415a17f0b0b6ea449195d6ae122275731495b",
+      "bytes": 3161
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b00bbc18948b78cd6c000a5ddb068b639d01d75eeddc6d8bd0dae98580762226.json": {
+      "sha256": "1a24d429e6fd36c0d222d4d302ee7c42ff1726922c34962a94d73ce446ab578d",
+      "bytes": 3135
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b1dda148b9c13221d72e74651b2bb454cc852a9f4f49a761e30aa3e71741b366.json": {
+      "sha256": "9d8316017fdc38705e46cabfc6a8ed4206b776e10e5547dc3ea08ecfa7a8a797",
+      "bytes": 2241
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b46efad32404d678278a5d654e9e6822a760b7008043c57e9267bc5bef19c5a9.json": {
+      "sha256": "6de95e8534906dec5d4d398cb1a5df7a75a972c44ee291f3e2ff2c34d8601bc4",
+      "bytes": 3586
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b831473bcc23a45408e1830896bb3c2428b9f395dcd7b247e92bf0b364f7b244.json": {
+      "sha256": "3f5d7e20f7723ced0c10289785bf4c120e0189a84e45599462f16b9a72d4e8a3",
+      "bytes": 3918
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/c023e3106501d33358d757756c725c302be19ffe07a86404ee4076e07f4a998a.json": {
+      "sha256": "53b73547a2ed26f51b47e7336e8c7701418d4b3f2effe7219ffb518de0245214",
+      "bytes": 2490
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/ca995f6e38c67d959a04155e60ff03f551dedc91a3b5f8a292de166ef45a404c.json": {
+      "sha256": "c039761efeb956214e9c881212119963e30c051758b6520e0e629c6641fb649f",
+      "bytes": 3109
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/cc86f15bfa46260ce4aa7829acde392ad7b7d866733c0ba8fdd96e9ed2498682.json": {
+      "sha256": "ca09962c6e26d6575b62eedb602a875a2dfa3f4c2996612cbf47ccb7f40f67b5",
+      "bytes": 2363
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/d260da5b1103ef83eb008c89138628ea9f7644218075c82f408fbf5458e56da6.json": {
+      "sha256": "7334a756605d81dc4e40f9def3e932a55159387fbff79ab2d85ae2eb2dadaaea",
+      "bytes": 3087
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/d3bab84c70c8392a55934fc47d06af4e39a5257d89a3ba6b2ddde220a61073a9.json": {
+      "sha256": "5827e2326d1fa7155e5efaa56403b70a667eeec1b23bf0fbc1fe8a93d2029a8c",
+      "bytes": 3743
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/d8429455a8dd1f23a4b2787f03269c7007daeb79d1b5f6b298a0151808375c40.json": {
+      "sha256": "d80452c4ef71518aac1ada1be0287506a3f96254a19d4668d7ddb816c4f07967",
+      "bytes": 2433
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/da5a371c2e60ad5c9e9d4235a2b9c8a3ec52b1076f94741067a8efb1c0fd07e9.json": {
+      "sha256": "ccaf5bd1f465d693a553c2acf5fc6788886eeedd1545131d1f6e62b240cf351c",
+      "bytes": 3122
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/e1ef760b430a2be6e4b89df0052b547b5213338e92fde57a484b1b6fac8e1db4.json": {
+      "sha256": "ace1d5bed82b2f9bb64e6944d8c6a4688de16e683162bc9086d23ea50a899dd8",
+      "bytes": 3643
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/e2862842889fc827add5f005735c57e4d0207d5880a02b86496531053e4235d4.json": {
+      "sha256": "4cefc3bbfb17ba15697fe0375d15fbdaeb0cdfb779e0dabbb2219da1fa89cb95",
+      "bytes": 3873
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/e3edbc13f482a30a1c0e876a7821e926de9379f2ff00037eb7a322c3b2d6e981.json": {
+      "sha256": "f987559d336b9965c8bb6eb917edaf350c62f6d9d83b9f355a5b6cdd4fe1b3b8",
+      "bytes": 2477
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/ecfdd798dfca7163677e17a80ff287cfc639b32fa06ca15f82778f9f0f62dae3.json": {
+      "sha256": "b24e187f33fcb6be8f18d7c1a3035d02d6104c60f2c144adc319755efcd6ec58",
+      "bytes": 3076
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/ef88530daa811d677b7dcc69f097836d0311d38749e9d98b315715371209a41a.json": {
+      "sha256": "8fe7e71908a88e211ecf17c4616deebdd54f88382da97dde274570510725ef39",
+      "bytes": 3168
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/f89acf7edbb20592a75c91efbebbf87426bd06d8ba46c008f4cf264bfa84766c.json": {
+      "sha256": "c25d7762338e8b15836b6cac8c02a16af271da33fb00097db45467f481978384",
+      "bytes": 2294
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/fca6dfd8e7cca830bea196c31fabd82eb3c3707bd905a4e23fc715f4d4615623.json": {
+      "sha256": "f08a8dabd99407d085d6d653a284484c54d970dc6e33358fdeae7ec739aab1b1",
+      "bytes": 3596
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/0027fa701efad9a04692250cb83bd7128a9311c2aa774928ceaba78066dca572.json": {
+      "sha256": "9a5a8ba07f050f710485308fa566661bda968685e444bd4c4575ce79dd820043",
+      "bytes": 3364
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/005e3b786bca4cb80f527f43edc2bc2d95b59d40f550c138821b9be45e63fba2.json": {
+      "sha256": "f8081361550525248f182286585acc5117fe4ffbd14d9cb26415722924ead509",
+      "bytes": 1690
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/005f9c7cd7181150115bd8fb324f690f096fa173b0a82e7219dc76461f61000d.json": {
+      "sha256": "e7cf5558657555873acf690ee94c0d559b3c81fed354265d8d749fc1a5212209",
+      "bytes": 5915
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/0322a090c734329658fe6c984514af2ef1d16414d234812d681fee1d680f5f00.json": {
+      "sha256": "7ecb9be5b6180dd95bf8e02d6e5bb087bddec7fc5d8632aee532f5a0237be684",
+      "bytes": 4007
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/07ba9ca5dd17330fa1029fc7d276da5d25db4ef412212dd20075a2fac0654c50.json": {
+      "sha256": "784daf977bf1c0522f67d589cfd79b56f2d956a1befdb7b041bd008f3a2fde9e",
+      "bytes": 2606
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/115c75821c34b401e9b86f2c12c89df151bbc091789a65be7348114ef37f632e.json": {
+      "sha256": "357c0924390852a3869606d325b159613c801504a1cb83ab610db8d1bc2dd895",
+      "bytes": 6289
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/1366c65c88633f69f969e01f222c5356d17fa04b80d004247403c26a181a2a2c.json": {
+      "sha256": "7afd871e5451e5cdbca89a22494d1d72b0bc0ed2e4457ee57cdcd3b75eb898a1",
+      "bytes": 3307
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/147cfbcd9c6eeeabf5cc7fad202baf0c8c5c63bf17161ccd75dde8db168648dc.json": {
+      "sha256": "c874ff7a53beef2e49b349f7bc6402664f9db6bff6d52f2b9aecd15464febbd6",
+      "bytes": 2859
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/18a0e21debcd750dbddc87b015780cf86fd387ae46a23fee07701304a1d0123b.json": {
+      "sha256": "cba14b1c112de6628effcddfdc5b24075706b60c09d85cdc7e73dcbcaea7c1eb",
+      "bytes": 3462
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/18c9a395a43433cf9ae658a90a715b64357c51ecc4a23d059c3e85ed8da0f35c.json": {
+      "sha256": "fc12d9732a984cdeaa73d3f5644a33bcf9f9e24a9856c8fe168c5007523cd24f",
+      "bytes": 2858
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/1975e2f1f3f68ac3b77f81aea70e6bd6695eba945aa21c376a18ca75580ce922.json": {
+      "sha256": "33854c85c8a5fd1780b30ae385a3179f72953213d04938391406a5994a254a2a",
+      "bytes": 3311
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/19bb957e63fad70e154c5108c968ba1cc71e31e402aa0eb8963d01ade0c9f637.json": {
+      "sha256": "dc689cb53b25d6343bb5ecad7a1f1a271865f6e8f7953917dc85d3551cdc8fc0",
+      "bytes": 2680
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/19d0269f580c9785232a79593cb73040da1fc7391a6e8b5016ecb1a9c2693add.json": {
+      "sha256": "b464cd0bb320cf5e74abdfc4eac4039552ef71ee5961478a4efc4b87e78e2bd0",
+      "bytes": 6595
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/1bdd937a4fff4b9a1bb2764000e118fc1b4e6e38d90521416cc1460f3c0361c8.json": {
+      "sha256": "e7e774c1212e2893df78d08bdbc92d799a9c88aba25026599c75adcb776204d4",
+      "bytes": 7234
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2a818ced692aebd3d542e660124df56d354012cbfd3a99a79a7162057771655e.json": {
+      "sha256": "7148225db86df476c455c176abd44bb58b50968127372d038132791ed586607d",
+      "bytes": 2693
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2abe374399d717cc8c86228e8b01a11394c026390c9660a0089ea8db8fc432d2.json": {
+      "sha256": "7f2200cc4ebc98cbe3f9183c55231439dcbd41fb5b4cbc6d998fcbe924780601",
+      "bytes": 2619
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2b512ae455d7e503f31223767182b068201ac7cb1b261c9f663818d75d74897e.json": {
+      "sha256": "a4866de146fea6c4bc429d09bce118d1ecd03ac96e6ebac396c717e623a2c25b",
+      "bytes": 5900
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2bd6e3e530496dab6a5d22673a6fc43214d0d420e50fb4907996f27fe3f10f37.json": {
+      "sha256": "103b84ba16a1ac2ac05cb51d03bd1a7eb98517192ba4546f37d2b3f74273a30b",
+      "bytes": 3369
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/33687102b94740c1e6be657cceadcffc2cb5494e21df61b0377e705347f99507.json": {
+      "sha256": "2d820aa4ee88a262f26610670d135667633bf1c99829322522e395d4097862ba",
+      "bytes": 6290
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/39cd502ae77aed00a349a8ee257707487458dacab22941fbfc5016dae5ed284d.json": {
+      "sha256": "fe018f72e7e782d93b4392b19e3ae48ebd7fae719bd9ab2ef0fdf8a3a8ee7777",
+      "bytes": 3378
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/3c380a7d419acfa06c09fe7652e707c8bbbf80c7fe1d4bd78b47fad1aa8676b8.json": {
+      "sha256": "b4b8ad73106353a970692fd3e4ad3ced9e0832bbf3cead085d7e429217c4bdd3",
+      "bytes": 2666
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/3c8042155ec0c769db68fc6efc2ad13ff470908f7ba2492fa1a1aefd7043da7a.json": {
+      "sha256": "319749acb13110a7c488ebc6483a59402e93ed3b3c7d7b5936945a2e5e8cd6dc",
+      "bytes": 4372
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/3cda5f20d5185f98ae90c6302ce336f1080623079bc59d53dcc1d1cc29ddc9a2.json": {
+      "sha256": "8f51fcc39e2b44a9da84abc75dde2e074bffb761f8ddc3857512a41074670400",
+      "bytes": 7448
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/40a67b4db5676dbdb545eeccbcb6daf8b5c94bb336e37677fd532f1d1c4a7242.json": {
+      "sha256": "56a6a35502c72766d862ddbfaea2abc81a5c67185a9483449a1729bf8f6b98fd",
+      "bytes": 6203
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/410e7af2c0b1adbbe0f07e99df34893fa30e00a10e2a89e60dd1b5b0e282e93b.json": {
+      "sha256": "7b32dc08df7a86d7309399aae50a72c8a38137fa8820075b03e2d532e6ad8226",
+      "bytes": 7571
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4153fde4ef08e1bf7c9ce3ab7dc51a3ffe5c7dd510eac620a1522bf73fcfe1c6.json": {
+      "sha256": "2e757b920410df9dbc87b76079fcd064c152281e88f269dc0890525ef1b272fc",
+      "bytes": 5028
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4353044bcd6685f4bc00bbc96c3ea7c93695fd81e7f9b8b65c05bd0cf764ccf9.json": {
+      "sha256": "d511a0fdba7d72f7fa30c6a01208604f86f12b4350d570364f7a7be7907646b0",
+      "bytes": 3517
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4736e4896a1e253d111b5dc53996c95429805c28d45714f955792ca0475d5b80.json": {
+      "sha256": "8add150dd6d76d5d369733909c52ce4d96b9db86146a9b6ce8d315a2b48376bb",
+      "bytes": 3381
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/475590922e88f7f262bbf441a2e72dedd3d70812026da1e3e344b60aafc60d1b.json": {
+      "sha256": "bd6588afda98088df8859fdb5bb691c7583a4b1a380dcad69c77c85038917ef6",
+      "bytes": 5711
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/48c11429160137791d3fc487e599fde2042bb56cc4833256f5f49e831eefa3be.json": {
+      "sha256": "69f13627de9d47c7ba470df892ce6f823285206bab0e0bd954059f13710ed4b8",
+      "bytes": 2620
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/49db87558f08cef89b98656554b7d9bbd4d95b9f8480630fc873a12573883db0.json": {
+      "sha256": "0514ed5330974fa9b5261dc16f1e7f7ac0f6fd5702f87f3065bb08dbaf5b7801",
+      "bytes": 7823
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4f2f6575a99f02c15a7e0145050ea71dab1448c9cde257b27fa75d7ce065b6ac.json": {
+      "sha256": "1c04c591c57dbc4da55ea7f90bd939c1b2ea0a534f7db85d39e936d3ee18c104",
+      "bytes": 6621
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/520fb39e30dcebb11c9528b046677a87bee899d5e3e23e18e064a4f5bd76f18c.json": {
+      "sha256": "12c018d0f8d809629f34111d38f5e3852e52fed115c5698a1e70578b1d51ed13",
+      "bytes": 6237
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/595e1261252ef7f07857aa863a9e639d364f54101f1badfe961d6a01f5e5cb68.json": {
+      "sha256": "7c3000eba0eb277e0544bbb63fd397e4d06ad776ba5c894fd421110cfebcddbb",
+      "bytes": 7498
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/59753d9607a0ac4cedac2659a149f19dddb9eae0255206b52ae37a489b1b09ad.json": {
+      "sha256": "f17fde0f471fd530907ff16cbdf859c588a5a4adb028795f22759d63a40ea7b3",
+      "bytes": 7229
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/59b83247660e18cb2b678fffe5d1231d81fcc00e7e75c3c3a2156eb5222e0388.json": {
+      "sha256": "2ada5272828089ae956cd775fc3c9d0eb4b930aac0a9d20215087d6f36b8e154",
+      "bytes": 2643
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/5c3ff702117c70f30ceec1572fd8d0ce0c814cefbe9571e617e2fc1773f6bb4f.json": {
+      "sha256": "5ab57bc550a59f1dfcda9ae7c526631fc8727727f684cce075c35b9c331c8daf",
+      "bytes": 8231
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/5fcef2dd4090bc60d1f5651a5e0e60512ed9c6ad3dad4e0a7de764b73746a7f5.json": {
+      "sha256": "2772d760f0b6056526188bd3395fba005cc5f581f995b2539460619a55139f9f",
+      "bytes": 6858
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/63a2ad9572671d899149f6b3d63135f9e07fd1330b9a843788b4e7da88e326a2.json": {
+      "sha256": "3b727ad7f7b4b044b2a3e9065c5614baab18fd3223eacbfebb9dfab201468a4b",
+      "bytes": 6229
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/63d359a68b8eee2b1d7d22ba1250d9bbdc7366172f3e26102f6e78936ce07509.json": {
+      "sha256": "4f1ea70e7f659f867b8d98ffe989731852d2db9e82e0d048dc98dde4b7976f98",
+      "bytes": 2352
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/6536fa39cd4f633746ccc439620f5c32126581d29c1192577321bc362e1340ca.json": {
+      "sha256": "23683192b50bb2215088b042f2756b13225c684d8f509bddc48c509fd8bb0492",
+      "bytes": 8613
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/6eb4cbedd071d3f34a101035b12b24c9cc3ff01da33ecab3ab144d3c6e570ffd.json": {
+      "sha256": "378a94e00e27b990b2fceddb4def3bb906257840203e1e47c7b802b9ce06e055",
+      "bytes": 2656
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/6fa60620403f37d628f1f8937dbc5c8306d93bec6def27856c823ee630f4a69d.json": {
+      "sha256": "8d65554233dd0ab446c37ca952b2a5656bc759d8b8e3c043bec21b4b87fdefe9",
+      "bytes": 4994
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/708942e529edc9a4041765f573e73457c65d696f3afaaa031bf1c955b5e011ba.json": {
+      "sha256": "e8d079e7db8a2d6815ad62f6edad5059576be9d435c5ffa8dbc3faa87a64431e",
+      "bytes": 3168
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/73590adfc5dee0ed68c26134c87cff23e7e534479813656cb09e67f2516b60cd.json": {
+      "sha256": "e2969399df82d43ae4c718aab37dc144534b1e84d92d1351f51b63688b0feafe",
+      "bytes": 3461
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/79c5456b0f9615c1c8df736135025abac86136ae8340f56ae9193a1404af950d.json": {
+      "sha256": "9b17a3bb3b8948748d988db0c014c4eaaa77b0f6e60ea99d5fd3904cdd01fa35",
+      "bytes": 2585
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/7cdf67f2bb309f2b9b7a1eb16289841f68eea0b1a623c4a14c4134ac790f488f.json": {
+      "sha256": "9bf1cb54b6586912b28b0789ada209109a40bc6bf75d6283f785fed301258691",
+      "bytes": 7905
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/7d1c0abe4f280d8565194da23e40b28d09a92d38a633e19572c71134031f63d9.json": {
+      "sha256": "47a3af48f20769d4f5ec2727da997b3f861c17102fb9ef8825a37a62f586913b",
+      "bytes": 6071
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/7da911add2c018ee4aace437f4c6505e0fc3c20e8d851c05dc44d65d2e6f0f21.json": {
+      "sha256": "3cd3d71a4bcb07b7c70f055d5acd3c179a296cbac14cc25e8ec1a62de0cc6aad",
+      "bytes": 5130
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/81b494ea48ac23212bae2085b4abd6ae362d0caad44b08fe2a018ecdc2e4654d.json": {
+      "sha256": "fe1a230c314c2b90c75d177f386141e9173eb6105bc8158f012b5515ad000c53",
+      "bytes": 3230
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/895a9d859c3b2ce5112038772129855d22556a9c1a85b5f705f3d37b570c597c.json": {
+      "sha256": "6ee6cfad99a81adfd724a4b6b9aaff8d746c61169e87b6fef981eb4a7de654c2",
+      "bytes": 2632
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/8f374e95a15236bde285253e0f90a008a1bbf80c9e9275f8760960d1f4ee193b.json": {
+      "sha256": "459e2bddc4159f6e76b9dac90365637d0a576233985b086b631de5a910a7fe6d",
+      "bytes": 6983
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/8f7b08cd06f36bd39a698137042e6eac9f516a324c85b45c96fa03e24dc078c1.json": {
+      "sha256": "9e31e8bf79e8b096672cf5f893a397c2fd4798f4a689f68bb2f41db7cf699645",
+      "bytes": 2701
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/90aa0cf20434d51ced751063afd08e84afdd2b9884df3523c6eb3f1a7006d826.json": {
+      "sha256": "ac2eada5ffa76cb41ef96bd6520df31cf54e789752414372359048d1d461d1c6",
+      "bytes": 2690
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/90b1cf790ff2259784ef360c31663fa7a650d961475ace4b2890ea4ff3bd74a0.json": {
+      "sha256": "8cd0c7a103d14e08c01d76acbd1bdfe023710ef7a8130418aa6bea2a046ce3e5",
+      "bytes": 7021
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/93ba715eaf3a163b3666b4fac90f8d7667cd11e1374862ea003fc826d2129265.json": {
+      "sha256": "dcdd5e3c6ebebc088504cb5172fbabb5f8bcb17e430ec6df3583fa8140d6f72c",
+      "bytes": 4270
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9601d8a967b67682dcd987ac14c3a86e0cc9873e145eabcd82888a6c6d59c02b.json": {
+      "sha256": "4644ee36a63756884d2aa883b1c2eb5ed7cb808417a957d8631f3a96c1a90cbc",
+      "bytes": 6154
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9ab63ee6eff483d420e6623ab04fa98a889ffaf8af562c4c77f257c72d0e03ab.json": {
+      "sha256": "67af404a48b892a8dccc6e80bb10e7792cb08fe323fce00f504a68e4b15ff75d",
+      "bytes": 2596
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9b7b9b6c397148cb392fcbd98af73c9e9847d82e23917f43c78be8a1163103ec.json": {
+      "sha256": "02bbf6b1fed63d99d1c129b83c05479c84d0f6a1d6b1309a962a3dc62a664aea",
+      "bytes": 3888
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9c1e31cc99be4eb7829b2e9038da6fb0704a154c0e780bfe19b120ccbd020151.json": {
+      "sha256": "c24b016c015c54c1f5c9959746675e4008bf90127b10960d26e61e94f9181e22",
+      "bytes": 4690
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/a64a33cffe85dd9639ac2d05fcf0f2a74570541dafd9ea63b93683531e8fe7a4.json": {
+      "sha256": "c9fd13d0b906bd0e30b7f50d929439c5881fb0599a7cffe8663254bab54bb1ac",
+      "bytes": 4011
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/aa15c3e3acad2a85be305d0fd24670fb733912e24693c906827320b1a1082b4f.json": {
+      "sha256": "ba09871af1dd842fd8f51d9b71a9af1bfa3e4be5faa9bab86c86786bbb636abf",
+      "bytes": 2668
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/af91b0c3f6908e25a5b3cc51dcfe6f0c07eea82a7cc74029f0c6188801ba4f28.json": {
+      "sha256": "91a672461722114ca533384b1534029ebc3f0ffa6312b23b1ab09102d9d689fb",
+      "bytes": 6732
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b00bbc18948b78cd6c000a5ddb068b639d01d75eeddc6d8bd0dae98580762226.json": {
+      "sha256": "75f6562954e524fbea12027363e7a622f53f4d28060dbaefb8dd82b3b9699070",
+      "bytes": 2643
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b1dda148b9c13221d72e74651b2bb454cc852a9f4f49a761e30aa3e71741b366.json": {
+      "sha256": "15c7ef1a1ed71d00785fcd9f132dfea6e2e87b89eb354b408c3271b03f0edd7f",
+      "bytes": 1766
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b46efad32404d678278a5d654e9e6822a760b7008043c57e9267bc5bef19c5a9.json": {
+      "sha256": "3b8dbf19feb448f65f5c0e88b2f194e602ddb6b61cd6d8346bfc8374c1a1bf4e",
+      "bytes": 3589
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b831473bcc23a45408e1830896bb3c2428b9f395dcd7b247e92bf0b364f7b244.json": {
+      "sha256": "dd1def7db0dedaa6e761430394f1dcbc34a38ebc33706b97aa025dac89ee765f",
+      "bytes": 3918
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b957213b45305b94ba91465b36bd6fbb7c9eb18ba7da3378974781541ed25ec3.json": {
+      "sha256": "65263443a14b16cca025131c8fa66d91726bb27eaa3a43f1ea9cf728f1ecd8aa",
+      "bytes": 6061
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/bb66e06cf14cbf1bf6f66ad9158ab17d68027706e0d2261bcbf124fa6a17cd23.json": {
+      "sha256": "bbdfb77389f28c2fe8ea5008bca59b27357ceee133e32a5e0111aa5e548c42f6",
+      "bytes": 6491
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/bd265b06788a0cb28c9bd5f15cb5deb8032c3eac979207cff2f3b47617c23823.json": {
+      "sha256": "09a0a146e223cfde6bca233fa7e11f9f82c00aeee61a7a9620e6f15e202a0fc5",
+      "bytes": 6597
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/bd8fb248f1160d0458c644918e4782cd3c1f67fa2c45bba86b9100f1cb55e83d.json": {
+      "sha256": "65a5dcdb62c68cb1444670da10c9a46dacdae93106f2715ea1b7e54e17a5194a",
+      "bytes": 5851
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/c023e3106501d33358d757756c725c302be19ffe07a86404ee4076e07f4a998a.json": {
+      "sha256": "3cae771fe452b457fd69e125a23162b8acca178a7b11984ef7cc733c142b810f",
+      "bytes": 2487
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/c17d4703ace05633a306e566746976fb8eaf44c581ddd3858ada4a321d1f66b0.json": {
+      "sha256": "5321e44cbc8c387dcecef2189858af18c11f8982c9c85a181dbd6457d20f7c0b",
+      "bytes": 6714
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ca995f6e38c67d959a04155e60ff03f551dedc91a3b5f8a292de166ef45a404c.json": {
+      "sha256": "09decf1874c8b732cfad3ca535888bd6407535fa5a49bd8cf209118fa0811ead",
+      "bytes": 2632
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc0329df681f9a21eb174759d628ed48377820d4106f34660b5d9bcab757bd6b.json": {
+      "sha256": "7f8f3d7bc7de01f15511e02901eb1c5e5fb32e462d37e00fb4ed7817a441dc0f",
+      "bytes": 6799
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc0c326640665ce1070fae191b053bb9a1ec1df67b59f791b5f702de891c05c4.json": {
+      "sha256": "b219b6fc592ef8674c7c9d29b5216f9151c8acea4408416f9b34ee1ab409f8be",
+      "bytes": 6442
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc443b813ed4e0a3b78b24341c0840003e576ede0dc587732b063a90cc3aeb00.json": {
+      "sha256": "fc42473d08438bef1f4d889d86daf3d247c04f5bb945c51606752099db6dfa69",
+      "bytes": 7646
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc86f15bfa46260ce4aa7829acde392ad7b7d866733c0ba8fdd96e9ed2498682.json": {
+      "sha256": "4f16a62a6416961c1cb5d0233ae50b283856271aa1cf859472b6f1ee6e62c671",
+      "bytes": 2363
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cca42daeca05fa662ffad0160ab3eda66708b01cedb10a7b9da5fee9f8d52150.json": {
+      "sha256": "355740bb732629575a1ab66d8db0f5ad68fd6a81d7e37f2bf43a806ed7b59492",
+      "bytes": 6703
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d260da5b1103ef83eb008c89138628ea9f7644218075c82f408fbf5458e56da6.json": {
+      "sha256": "91b954c0a0e58960d7eb568ae2e23f1d60094e87a38b7bad46f6500dfefcb68c",
+      "bytes": 2608
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d3b5a47756e99c424b5ed68ed795b2fbe2469d20e8dbf658e207783b8d4ec7c6.json": {
+      "sha256": "51dd3537dc98de7fc8c7c1b284e46416ccbe01eefc65035cdbb09114a54988a8",
+      "bytes": 7583
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d3bab84c70c8392a55934fc47d06af4e39a5257d89a3ba6b2ddde220a61073a9.json": {
+      "sha256": "59c78249751cb9ef2c5e5aadeba13049cc198ba4f5b9b0c13e82ee3b4670415c",
+      "bytes": 3745
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d8429455a8dd1f23a4b2787f03269c7007daeb79d1b5f6b298a0151808375c40.json": {
+      "sha256": "669e03f67c94a2d78dfaf41b4fcb41888739f8a081cbe6eaf473a1595ed615fe",
+      "bytes": 2435
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/da5a371c2e60ad5c9e9d4235a2b9c8a3ec52b1076f94741067a8efb1c0fd07e9.json": {
+      "sha256": "e928a70ef39c191d6639795e2f981218582c7b83d45e1f69d89c90ae286a04ea",
+      "bytes": 3124
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e1ef760b430a2be6e4b89df0052b547b5213338e92fde57a484b1b6fac8e1db4.json": {
+      "sha256": "a3e7876d465bf6c4432dec957e560dc76d27604b3c122f511ec73eebcd926db3",
+      "bytes": 3153
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e2862842889fc827add5f005735c57e4d0207d5880a02b86496531053e4235d4.json": {
+      "sha256": "edc9a297932980ff136daef753afb8ead62643bce4554d03202238f05359a5ab",
+      "bytes": 3875
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e3edbc13f482a30a1c0e876a7821e926de9379f2ff00037eb7a322c3b2d6e981.json": {
+      "sha256": "ea51722959bc25459991747ac3dfa24e5d6545fcff9b48f19585e94480033f60",
+      "bytes": 2473
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e6dfe7588e3448814a98999c11d2d2ec13ae4c5097f5b6af837c0c0ae4e6eede.json": {
+      "sha256": "4fe1cc330216b5152fc7bca5606656d9885d2ff541554401affac348a7084636",
+      "bytes": 5702
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ec1013fb511292c135ff16f7510fef8e79dc17fbc0b583cb9623bf96936c1e41.json": {
+      "sha256": "5ec31d51f139cf042e7bfe842fe5d37389ad2e1b47fdf9f11034e6a25ad38bd3",
+      "bytes": 5924
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ecfdd798dfca7163677e17a80ff287cfc639b32fa06ca15f82778f9f0f62dae3.json": {
+      "sha256": "81220d2b688742878c71de76f4e85d28ff53da06c2d8f6c997fd7cfcf88603c2",
+      "bytes": 2596
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ef88530daa811d677b7dcc69f097836d0311d38749e9d98b315715371209a41a.json": {
+      "sha256": "06d5cf5116b30fc1a82ad186285b14ee2cf7967ac38a588f1cb8279a36dd486a",
+      "bytes": 2678
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/f89acf7edbb20592a75c91efbebbf87426bd06d8ba46c008f4cf264bfa84766c.json": {
+      "sha256": "ed64d172b8b275fddee9b496f102e6614514e1359ac4681290de289aaeef935c",
+      "bytes": 1814
+    },
+    "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/fca6dfd8e7cca830bea196c31fabd82eb3c3707bd905a4e23fc715f4d4615623.json": {
+      "sha256": "bbc85d40042ef1cfb67d9e361017902030b485dc706f62bf5be99951ba1a9401",
+      "bytes": 3117
+    }
+  },
+  "recordings": [
+    {
+      "report": "docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round1/results.json.gz",
+      "policy": "G1",
+      "cacheFiles": [
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d508c36b723c45747ef4de4496504a2fde7929137b3da26d923122f4ba57ed68.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/753bf7fde91dcba9f89302c75fdee8b0ada47900c4b7d452479bfa4c39bcafea.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bdef9d78ca5ae3756d5443bfa19e276f518185cb5ad4e37518b272b394a12efb.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/93ba715eaf3a163b3666b4fac90f8d7667cd11e1374862ea003fc826d2129265.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7da911add2c018ee4aace437f4c6505e0fc3c20e8d851c05dc44d65d2e6f0f21.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cc0c326640665ce1070fae191b053bb9a1ec1df67b59f791b5f702de891c05c4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/ec1013fb511292c135ff16f7510fef8e79dc17fbc0b583cb9623bf96936c1e41.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/49db87558f08cef89b98656554b7d9bbd4d95b9f8480630fc873a12573883db0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/410e7af2c0b1adbbe0f07e99df34893fa30e00a10e2a89e60dd1b5b0e282e93b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/63a2ad9572671d899149f6b3d63135f9e07fd1330b9a843788b4e7da88e326a2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/40a67b4db5676dbdb545eeccbcb6daf8b5c94bb336e37677fd532f1d1c4a7242.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/4f2f6575a99f02c15a7e0145050ea71dab1448c9cde257b27fa75d7ce065b6ac.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/6fa60620403f37d628f1f8937dbc5c8306d93bec6def27856c823ee630f4a69d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/33687102b94740c1e6be657cceadcffc2cb5494e21df61b0377e705347f99507.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/5fcef2dd4090bc60d1f5651a5e0e60512ed9c6ad3dad4e0a7de764b73746a7f5.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/19d0269f580c9785232a79593cb73040da1fc7391a6e8b5016ecb1a9c2693add.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cca42daeca05fa662ffad0160ab3eda66708b01cedb10a7b9da5fee9f8d52150.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cc0329df681f9a21eb174759d628ed48377820d4106f34660b5d9bcab757bd6b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/115c75821c34b401e9b86f2c12c89df151bbc091789a65be7348114ef37f632e.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bd8fb248f1160d0458c644918e4782cd3c1f67fa2c45bba86b9100f1cb55e83d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/b957213b45305b94ba91465b36bd6fbb7c9eb18ba7da3378974781541ed25ec3.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/2b512ae455d7e503f31223767182b068201ac7cb1b261c9f663818d75d74897e.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/005f9c7cd7181150115bd8fb324f690f096fa173b0a82e7219dc76461f61000d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/e6dfe7588e3448814a98999c11d2d2ec13ae4c5097f5b6af837c0c0ae4e6eede.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/5c3ff702117c70f30ceec1572fd8d0ce0c814cefbe9571e617e2fc1773f6bb4f.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/595e1261252ef7f07857aa863a9e639d364f54101f1badfe961d6a01f5e5cb68.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/cc443b813ed4e0a3b78b24341c0840003e576ede0dc587732b063a90cc3aeb00.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/4153fde4ef08e1bf7c9ce3ab7dc51a3ffe5c7dd510eac620a1522bf73fcfe1c6.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/af91b0c3f6908e25a5b3cc51dcfe6f0c07eea82a7cc74029f0c6188801ba4f28.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bd265b06788a0cb28c9bd5f15cb5deb8032c3eac979207cff2f3b47617c23823.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/c17d4703ace05633a306e566746976fb8eaf44c581ddd3858ada4a321d1f66b0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/520fb39e30dcebb11c9528b046677a87bee899d5e3e23e18e064a4f5bd76f18c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/475590922e88f7f262bbf441a2e72dedd3d70812026da1e3e344b60aafc60d1b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/9601d8a967b67682dcd987ac14c3a86e0cc9873e145eabcd82888a6c6d59c02b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7d1c0abe4f280d8565194da23e40b28d09a92d38a633e19572c71134031f63d9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/bb66e06cf14cbf1bf6f66ad9158ab17d68027706e0d2261bcbf124fa6a17cd23.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7cdf67f2bb309f2b9b7a1eb16289841f68eea0b1a623c4a14c4134ac790f488f.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/3cda5f20d5185f98ae90c6302ce336f1080623079bc59d53dcc1d1cc29ddc9a2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/1bdd937a4fff4b9a1bb2764000e118fc1b4e6e38d90521416cc1460f3c0361c8.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d3b5a47756e99c424b5ed68ed795b2fbe2469d20e8dbf658e207783b8d4ec7c6.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d9d45e1a3a753fb46b4e103326ec36456b9e27ef9f86ffe0f537ca9a27a60196.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/8f374e95a15236bde285253e0f90a008a1bbf80c9e9275f8760960d1f4ee193b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/7e24b90308055585ee36aa81d0fbd7dab3a786ce3b972ec5564302ed405b80d9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/d4fb7fc380737304e31be9c1355e081f0fe7505e1e14b52782143d910720ad17.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/09f43bd0f5705bb33c3d869f6a901004eeb0b04bc9f7d115332dd9d496c989bd.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/6536fa39cd4f633746ccc439620f5c32126581d29c1192577321bc362e1340ca.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/90b1cf790ff2259784ef360c31663fa7a650d961475ace4b2890ea4ff3bd74a0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/59753d9607a0ac4cedac2659a149f19dddb9eae0255206b52ae37a489b1b09ad.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/5e9c766fe146683a91041420fb8942917d365e372b50db103974f53e794b3df0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/33c92586023046164a3284598692b548272be668390811f9db34b3ebac27182b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/576beea1b543171506242d67005e74771d9584cb12542cf577f6271abc4fde09.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G1/4503f0afa461ee26336326172e28a2b6111ffa78d0d89d3d0681b8c6d947c4f2.json"
+      ],
+      "subscriptions": null
+    },
+    {
+      "report": "docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round1/results.json.gz",
+      "policy": "G2",
+      "cacheFiles": [
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/2bd6e3e530496dab6a5d22673a6fc43214d0d420e50fb4907996f27fe3f10f37.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/da5a371c2e60ad5c9e9d4235a2b9c8a3ec52b1076f94741067a8efb1c0fd07e9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/0027fa701efad9a04692250cb83bd7128a9311c2aa774928ceaba78066dca572.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/9c1e31cc99be4eb7829b2e9038da6fb0704a154c0e780bfe19b120ccbd020151.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/d8429455a8dd1f23a4b2787f03269c7007daeb79d1b5f6b298a0151808375c40.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/c023e3106501d33358d757756c725c302be19ffe07a86404ee4076e07f4a998a.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/e3edbc13f482a30a1c0e876a7821e926de9379f2ff00037eb7a322c3b2d6e981.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/1366c65c88633f69f969e01f222c5356d17fa04b80d004247403c26a181a2a2c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/1975e2f1f3f68ac3b77f81aea70e6bd6695eba945aa21c376a18ca75580ce922.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/fca6dfd8e7cca830bea196c31fabd82eb3c3707bd905a4e23fc715f4d4615623.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/e1ef760b430a2be6e4b89df0052b547b5213338e92fde57a484b1b6fac8e1db4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/708942e529edc9a4041765f573e73457c65d696f3afaaa031bf1c955b5e011ba.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/f89acf7edbb20592a75c91efbebbf87426bd06d8ba46c008f4cf264bfa84766c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/ecfdd798dfca7163677e17a80ff287cfc639b32fa06ca15f82778f9f0f62dae3.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/d260da5b1103ef83eb008c89138628ea9f7644218075c82f408fbf5458e56da6.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/2abe374399d717cc8c86228e8b01a11394c026390c9660a0089ea8db8fc432d2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/895a9d859c3b2ce5112038772129855d22556a9c1a85b5f705f3d37b570c597c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b00bbc18948b78cd6c000a5ddb068b639d01d75eeddc6d8bd0dae98580762226.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/9ab63ee6eff483d420e6623ab04fa98a889ffaf8af562c4c77f257c72d0e03ab.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/07ba9ca5dd17330fa1029fc7d276da5d25db4ef412212dd20075a2fac0654c50.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/48c11429160137791d3fc487e599fde2042bb56cc4833256f5f49e831eefa3be.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/ca995f6e38c67d959a04155e60ff03f551dedc91a3b5f8a292de166ef45a404c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/59b83247660e18cb2b678fffe5d1231d81fcc00e7e75c3c3a2156eb5222e0388.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/005e3b786bca4cb80f527f43edc2bc2d95b59d40f550c138821b9be45e63fba2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/147cfbcd9c6eeeabf5cc7fad202baf0c8c5c63bf17161ccd75dde8db168648dc.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/79c5456b0f9615c1c8df736135025abac86136ae8340f56ae9193a1404af950d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/18c9a395a43433cf9ae658a90a715b64357c51ecc4a23d059c3e85ed8da0f35c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b1dda148b9c13221d72e74651b2bb454cc852a9f4f49a761e30aa3e71741b366.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/3c380a7d419acfa06c09fe7652e707c8bbbf80c7fe1d4bd78b47fad1aa8676b8.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/ef88530daa811d677b7dcc69f097836d0311d38749e9d98b315715371209a41a.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/90aa0cf20434d51ced751063afd08e84afdd2b9884df3523c6eb3f1a7006d826.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/8f7b08cd06f36bd39a698137042e6eac9f516a324c85b45c96fa03e24dc078c1.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/6eb4cbedd071d3f34a101035b12b24c9cc3ff01da33ecab3ab144d3c6e570ffd.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/aa15c3e3acad2a85be305d0fd24670fb733912e24693c906827320b1a1082b4f.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/19bb957e63fad70e154c5108c968ba1cc71e31e402aa0eb8963d01ade0c9f637.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/2a818ced692aebd3d542e660124df56d354012cbfd3a99a79a7162057771655e.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/39cd502ae77aed00a349a8ee257707487458dacab22941fbfc5016dae5ed284d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/4736e4896a1e253d111b5dc53996c95429805c28d45714f955792ca0475d5b80.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/4353044bcd6685f4bc00bbc96c3ea7c93695fd81e7f9b8b65c05bd0cf764ccf9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/0322a090c734329658fe6c984514af2ef1d16414d234812d681fee1d680f5f00.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/a64a33cffe85dd9639ac2d05fcf0f2a74570541dafd9ea63b93683531e8fe7a4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b46efad32404d678278a5d654e9e6822a760b7008043c57e9267bc5bef19c5a9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/cc86f15bfa46260ce4aa7829acde392ad7b7d866733c0ba8fdd96e9ed2498682.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/63d359a68b8eee2b1d7d22ba1250d9bbdc7366172f3e26102f6e78936ce07509.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/d3bab84c70c8392a55934fc47d06af4e39a5257d89a3ba6b2ddde220a61073a9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/3c8042155ec0c769db68fc6efc2ad13ff470908f7ba2492fa1a1aefd7043da7a.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/e2862842889fc827add5f005735c57e4d0207d5880a02b86496531053e4235d4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/9b7b9b6c397148cb392fcbd98af73c9e9847d82e23917f43c78be8a1163103ec.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/b831473bcc23a45408e1830896bb3c2428b9f395dcd7b247e92bf0b364f7b244.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/18a0e21debcd750dbddc87b015780cf86fd387ae46a23fee07701304a1d0123b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/81b494ea48ac23212bae2085b4abd6ae362d0caad44b08fe2a018ecdc2e4654d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-round1/G2/73590adfc5dee0ed68c26134c87cff23e7e534479813656cb09e67f2516b60cd.json"
+      ],
+      "subscriptions": null
+    },
+    {
+      "report": "docs/conflict-guard/evidence/checkpoint-b-dev-report/calibrated/results.json.gz",
+      "policy": "G3",
+      "cacheFiles": [
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2bd6e3e530496dab6a5d22673a6fc43214d0d420e50fb4907996f27fe3f10f37.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/da5a371c2e60ad5c9e9d4235a2b9c8a3ec52b1076f94741067a8efb1c0fd07e9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/0027fa701efad9a04692250cb83bd7128a9311c2aa774928ceaba78066dca572.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9c1e31cc99be4eb7829b2e9038da6fb0704a154c0e780bfe19b120ccbd020151.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/93ba715eaf3a163b3666b4fac90f8d7667cd11e1374862ea003fc826d2129265.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/93ba715eaf3a163b3666b4fac90f8d7667cd11e1374862ea003fc826d2129265.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d8429455a8dd1f23a4b2787f03269c7007daeb79d1b5f6b298a0151808375c40.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/7da911add2c018ee4aace437f4c6505e0fc3c20e8d851c05dc44d65d2e6f0f21.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/c023e3106501d33358d757756c725c302be19ffe07a86404ee4076e07f4a998a.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc0c326640665ce1070fae191b053bb9a1ec1df67b59f791b5f702de891c05c4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e3edbc13f482a30a1c0e876a7821e926de9379f2ff00037eb7a322c3b2d6e981.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ec1013fb511292c135ff16f7510fef8e79dc17fbc0b583cb9623bf96936c1e41.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/1366c65c88633f69f969e01f222c5356d17fa04b80d004247403c26a181a2a2c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/49db87558f08cef89b98656554b7d9bbd4d95b9f8480630fc873a12573883db0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/1975e2f1f3f68ac3b77f81aea70e6bd6695eba945aa21c376a18ca75580ce922.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/410e7af2c0b1adbbe0f07e99df34893fa30e00a10e2a89e60dd1b5b0e282e93b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/fca6dfd8e7cca830bea196c31fabd82eb3c3707bd905a4e23fc715f4d4615623.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/63a2ad9572671d899149f6b3d63135f9e07fd1330b9a843788b4e7da88e326a2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e1ef760b430a2be6e4b89df0052b547b5213338e92fde57a484b1b6fac8e1db4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/40a67b4db5676dbdb545eeccbcb6daf8b5c94bb336e37677fd532f1d1c4a7242.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/708942e529edc9a4041765f573e73457c65d696f3afaaa031bf1c955b5e011ba.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4f2f6575a99f02c15a7e0145050ea71dab1448c9cde257b27fa75d7ce065b6ac.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/f89acf7edbb20592a75c91efbebbf87426bd06d8ba46c008f4cf264bfa84766c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/6fa60620403f37d628f1f8937dbc5c8306d93bec6def27856c823ee630f4a69d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ecfdd798dfca7163677e17a80ff287cfc639b32fa06ca15f82778f9f0f62dae3.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/33687102b94740c1e6be657cceadcffc2cb5494e21df61b0377e705347f99507.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d260da5b1103ef83eb008c89138628ea9f7644218075c82f408fbf5458e56da6.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/5fcef2dd4090bc60d1f5651a5e0e60512ed9c6ad3dad4e0a7de764b73746a7f5.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2abe374399d717cc8c86228e8b01a11394c026390c9660a0089ea8db8fc432d2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/19d0269f580c9785232a79593cb73040da1fc7391a6e8b5016ecb1a9c2693add.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/895a9d859c3b2ce5112038772129855d22556a9c1a85b5f705f3d37b570c597c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cca42daeca05fa662ffad0160ab3eda66708b01cedb10a7b9da5fee9f8d52150.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b00bbc18948b78cd6c000a5ddb068b639d01d75eeddc6d8bd0dae98580762226.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc0329df681f9a21eb174759d628ed48377820d4106f34660b5d9bcab757bd6b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9ab63ee6eff483d420e6623ab04fa98a889ffaf8af562c4c77f257c72d0e03ab.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/115c75821c34b401e9b86f2c12c89df151bbc091789a65be7348114ef37f632e.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/07ba9ca5dd17330fa1029fc7d276da5d25db4ef412212dd20075a2fac0654c50.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/bd8fb248f1160d0458c644918e4782cd3c1f67fa2c45bba86b9100f1cb55e83d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/48c11429160137791d3fc487e599fde2042bb56cc4833256f5f49e831eefa3be.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b957213b45305b94ba91465b36bd6fbb7c9eb18ba7da3378974781541ed25ec3.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ca995f6e38c67d959a04155e60ff03f551dedc91a3b5f8a292de166ef45a404c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2b512ae455d7e503f31223767182b068201ac7cb1b261c9f663818d75d74897e.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/59b83247660e18cb2b678fffe5d1231d81fcc00e7e75c3c3a2156eb5222e0388.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/005f9c7cd7181150115bd8fb324f690f096fa173b0a82e7219dc76461f61000d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/005e3b786bca4cb80f527f43edc2bc2d95b59d40f550c138821b9be45e63fba2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e6dfe7588e3448814a98999c11d2d2ec13ae4c5097f5b6af837c0c0ae4e6eede.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/147cfbcd9c6eeeabf5cc7fad202baf0c8c5c63bf17161ccd75dde8db168648dc.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/5c3ff702117c70f30ceec1572fd8d0ce0c814cefbe9571e617e2fc1773f6bb4f.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/79c5456b0f9615c1c8df736135025abac86136ae8340f56ae9193a1404af950d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/595e1261252ef7f07857aa863a9e639d364f54101f1badfe961d6a01f5e5cb68.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/18c9a395a43433cf9ae658a90a715b64357c51ecc4a23d059c3e85ed8da0f35c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc443b813ed4e0a3b78b24341c0840003e576ede0dc587732b063a90cc3aeb00.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b1dda148b9c13221d72e74651b2bb454cc852a9f4f49a761e30aa3e71741b366.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4153fde4ef08e1bf7c9ce3ab7dc51a3ffe5c7dd510eac620a1522bf73fcfe1c6.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/3c380a7d419acfa06c09fe7652e707c8bbbf80c7fe1d4bd78b47fad1aa8676b8.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/af91b0c3f6908e25a5b3cc51dcfe6f0c07eea82a7cc74029f0c6188801ba4f28.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/ef88530daa811d677b7dcc69f097836d0311d38749e9d98b315715371209a41a.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/bd265b06788a0cb28c9bd5f15cb5deb8032c3eac979207cff2f3b47617c23823.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/90aa0cf20434d51ced751063afd08e84afdd2b9884df3523c6eb3f1a7006d826.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/c17d4703ace05633a306e566746976fb8eaf44c581ddd3858ada4a321d1f66b0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/8f7b08cd06f36bd39a698137042e6eac9f516a324c85b45c96fa03e24dc078c1.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/520fb39e30dcebb11c9528b046677a87bee899d5e3e23e18e064a4f5bd76f18c.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/6eb4cbedd071d3f34a101035b12b24c9cc3ff01da33ecab3ab144d3c6e570ffd.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/475590922e88f7f262bbf441a2e72dedd3d70812026da1e3e344b60aafc60d1b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/aa15c3e3acad2a85be305d0fd24670fb733912e24693c906827320b1a1082b4f.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9601d8a967b67682dcd987ac14c3a86e0cc9873e145eabcd82888a6c6d59c02b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/19bb957e63fad70e154c5108c968ba1cc71e31e402aa0eb8963d01ade0c9f637.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/7d1c0abe4f280d8565194da23e40b28d09a92d38a633e19572c71134031f63d9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/2a818ced692aebd3d542e660124df56d354012cbfd3a99a79a7162057771655e.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/bb66e06cf14cbf1bf6f66ad9158ab17d68027706e0d2261bcbf124fa6a17cd23.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/39cd502ae77aed00a349a8ee257707487458dacab22941fbfc5016dae5ed284d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/7cdf67f2bb309f2b9b7a1eb16289841f68eea0b1a623c4a14c4134ac790f488f.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4736e4896a1e253d111b5dc53996c95429805c28d45714f955792ca0475d5b80.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/3cda5f20d5185f98ae90c6302ce336f1080623079bc59d53dcc1d1cc29ddc9a2.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/4353044bcd6685f4bc00bbc96c3ea7c93695fd81e7f9b8b65c05bd0cf764ccf9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/1bdd937a4fff4b9a1bb2764000e118fc1b4e6e38d90521416cc1460f3c0361c8.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/0322a090c734329658fe6c984514af2ef1d16414d234812d681fee1d680f5f00.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d3b5a47756e99c424b5ed68ed795b2fbe2469d20e8dbf658e207783b8d4ec7c6.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/a64a33cffe85dd9639ac2d05fcf0f2a74570541dafd9ea63b93683531e8fe7a4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b46efad32404d678278a5d654e9e6822a760b7008043c57e9267bc5bef19c5a9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/8f374e95a15236bde285253e0f90a008a1bbf80c9e9275f8760960d1f4ee193b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/cc86f15bfa46260ce4aa7829acde392ad7b7d866733c0ba8fdd96e9ed2498682.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/63d359a68b8eee2b1d7d22ba1250d9bbdc7366172f3e26102f6e78936ce07509.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/d3bab84c70c8392a55934fc47d06af4e39a5257d89a3ba6b2ddde220a61073a9.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/3c8042155ec0c769db68fc6efc2ad13ff470908f7ba2492fa1a1aefd7043da7a.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/6536fa39cd4f633746ccc439620f5c32126581d29c1192577321bc362e1340ca.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/e2862842889fc827add5f005735c57e4d0207d5880a02b86496531053e4235d4.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/90b1cf790ff2259784ef360c31663fa7a650d961475ace4b2890ea4ff3bd74a0.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/9b7b9b6c397148cb392fcbd98af73c9e9847d82e23917f43c78be8a1163103ec.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/59753d9607a0ac4cedac2659a149f19dddb9eae0255206b52ae37a489b1b09ad.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/b831473bcc23a45408e1830896bb3c2428b9f395dcd7b247e92bf0b364f7b244.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/18a0e21debcd750dbddc87b015780cf86fd387ae46a23fee07701304a1d0123b.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/81b494ea48ac23212bae2085b4abd6ae362d0caad44b08fe2a018ecdc2e4654d.json",
+        "packages/conflict-guard/bench/model-cache/checkpoint-b-calibrated/G3/73590adfc5dee0ed68c26134c87cff23e7e534479813656cb09e67f2516b60cd.json"
+      ],
+      "subscriptions": null
+    }
+  ],
+  "subscriptionCoverage": "missing-in-source",
+  "workingCopies": "归档是冻结输入；存在的展开文件必须与归档逐字节相同，缺失文件可由 data:artifacts 恢复。"
+}
