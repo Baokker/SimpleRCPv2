@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { fileURLToPath } from "node:url";
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readTrace } from "../dist/trace/trace.js";
 import { calculateReplayMetrics, replayOutcome, type ReplayGroupOutcome, type ReplayMetrics } from "../dist/replay/metrics.js";
@@ -9,6 +11,10 @@ import { policyFor, type ZoningPolicy } from "../dist/replay/policies.js";
 import type { BenchLabel, BenchManifest } from "../dist/bench/types.js";
 import { replayLibraries } from "./replay-libs.ts";
 
+if (process.argv.some((argument) => /^G[0-4](?:,|$)|(?:^|,)G[0-4](?:,|$)/.test(argument))) {
+  await new Promise<void>((resolve, reject) => { const child = execFile(process.execPath, ["--experimental-strip-types", fileURLToPath(new URL("adjudication-run.ts", import.meta.url)), ...process.argv.slice(2)], (error) => error ? reject(error) : resolve()); child.stdout?.pipe(process.stdout); child.stderr?.pipe(process.stderr); });
+  process.exit(0);
+}
 const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "P0,P1,P2,P3,P*" }, repeat: { type: "string", default: "1" } } });
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 const ids = values.policy!.split(",");

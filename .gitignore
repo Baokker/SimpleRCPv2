@@ -14,3 +14,7 @@ artifacts/
 .claude/logs/
 docs/.claude/
 .scratch/verify-opencode-concurrent-diff/
+packages/conflict-guard/bench/datasets/stage5-dev-smoke/manifest.json
+packages/conflict-guard/bench/datasets/stage5-dev-smoke/labels.json
+packages/conflict-guard/bench/datasets/stage5-dev-smoke/excluded.json
+packages/conflict-guard/bench/datasets/stage5-dev-smoke/traces/

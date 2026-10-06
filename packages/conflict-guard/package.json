@@ -19,7 +19,12 @@
     "bench:import-greylock": "node --experimental-strip-types scripts/bench-import-greylock.ts",
     "replay:run": "node --experimental-strip-types scripts/replay-run.ts",
     "replay:check": "node --experimental-strip-types scripts/replay-check.ts",
-    "replay:ui": "node --experimental-strip-types scripts/replay-ui.ts"
+    "replay:ui": "node --experimental-strip-types scripts/replay-ui.ts",
+    "adjudication:smoke": "node --experimental-strip-types scripts/adjudication-smoke.ts",
+    "adjudication:prepare-dev": "node --experimental-strip-types scripts/adjudication-prepare-dev.ts",
+    "adjudication:calibrate": "node --experimental-strip-types scripts/adjudication-calibrate.ts",
+    "adjudication:verify": "node --experimental-strip-types scripts/adjudication-verify.ts",
+    "adjudication:evidence": "node --experimental-strip-types scripts/adjudication-evidence.ts"
   },
   "dependencies": {
     "fast-diff": "1.3.0",

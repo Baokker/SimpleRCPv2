@@ -11,7 +11,7 @@ const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(import.meta.url);
 const { parse } = require("../apps/server/node_modules/dotenv/lib/main.js");
 const environment = parse(await fs.readFile(path.join(repositoryRoot, ".env"), "utf8"));
-const sensitiveValues = [environment.DEEPSEEK_API_KEY, environment.TYPESAFE_API_KEY].filter(Boolean);
+const sensitiveValues = [environment.DEEPSEEK_API_KEY, environment.TYPESAFE_API_KEY, environment.ADJUDICATION_COMPATIBLE_API_KEY].filter(Boolean);
 assert(sensitiveValues.length > 0, "Configured sensitive values are required");
 const { stdout } = await promisify(execFile)("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: repositoryRoot, maxBuffer: 8 * 1024 * 1024 });
 const files = [...new Set(stdout.split("\0").filter(Boolean))];
