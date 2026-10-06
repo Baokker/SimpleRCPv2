@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { statSync } from "node:fs";
 import path from "node:path";
 import type { AgentFileChange } from "@simplercp/shared";
+import { canonicalWorkspacePath } from "../workspacePath.js";
 
 export interface AgentWriteEntry {
   runId: string;
@@ -31,12 +32,12 @@ export function createAgentWriteLedger(options: {
   ) {
     const writes = extractWrites(data);
     if (writes.length === 0) return undefined;
-    const root = path.resolve(workspacePath);
     const entries: AgentWriteEntry[] = [];
     for (const write of writes) {
-      const absolutePath = path.resolve(workspacePath, write.file);
-      if (absolutePath === root || !absolutePath.startsWith(`${root}${path.sep}`)) continue;
-      const file = path.relative(root, absolutePath).split(path.sep).join("/");
+      let absolutePath: string; let file: string;
+      try { ({ absolute: absolutePath, relative: file } = canonicalWorkspacePath(workspacePath, write.file)); }
+      catch { continue; }
+      if (!file) continue;
       let content: Buffer | undefined;
       let readError: string | undefined;
       try {

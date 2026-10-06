@@ -1,0 +1,12 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardAdjudication.integration.test.ts  (4 tests) 22443ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  00:50:59
+   Duration  25.13s (transform 1.77s, setup 0ms, collect 2.45s, tests 22.44s, environment 0ms, prepare 90ms)

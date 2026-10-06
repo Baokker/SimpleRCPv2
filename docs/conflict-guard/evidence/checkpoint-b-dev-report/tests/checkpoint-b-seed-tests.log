@@ -1,0 +1,28 @@
+✔ role graph, deny precedence, scoped sessions, and audit history (1.156375ms)
+▶ immutable accounting
+  ✔ balanced entries, credits and oldest debt allocation (1.138583ms)
+  ✔ meter resets count new readings without negative usage (0.143959ms)
+✔ immutable accounting (2.5775ms)
+✔ weighted eviction follows recent access and expiration (1.915459ms)
+✔ list promotion and concurrent computation preserve identity (1.312917ms)
+✔ adjacent intervals and resource booking lifecycle (10.278834ms)
+✔ recurrence retains weekday identity after shifts (0.236167ms)
+✔ 订单从库存预约经过付款进入配送 (2.385333ms)
+✔ 取消订单恢复库存并保持原始购物车 (0.750417ms)
+✔ 账单与配送金额可用于汇总，分付款保持整数分总额 (0.515667ms)
+▶ delivery pipeline
+  ✔ routes nested publication in sequence and acknowledges subscribers (1.159958ms)
+  ✔ isolates subscriber failures and permits removal during publish (0.107583ms)
+✔ delivery pipeline (1.790625ms)
+✔ Unicode columns and paragraph breaking retain all words (2.372792ms)
+✔ document edits, indexed search, and page rendering compose (6.9455ms)
+✔ expiry-first allocations conserve total stock and reservations (1.058458ms)
+✔ transfer movement records time and prevents illegal transitions (0.237375ms)
+ℹ tests 16
+ℹ suites 2
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 265.309167

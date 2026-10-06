@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { confirmConflictPair, getConflictGuardSymbol, revertConflictPair } from "../api";
-import type { ActiveSymbol, ConflictGuardState, ConflictGuardSymbol, GuardActorRef } from "../conflictGuardTypes";
+import type { ActiveSymbol, ConflictGuardState, ConflictGuardSymbol, GuardActorRef, GuardConflict } from "../conflictGuardTypes";
 import type { RoomMember } from "../types";
 import { relationPathText, guardActorName, guardActorKey, humanConflict } from "../conflictGuardPresentation";
 
@@ -45,9 +45,9 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
         const ownConfirmed = record.pair.left.actor.memberId === memberId ? record.leftConfirmed : record.rightConfirmed;
         const otherConfirmed = record.pair.left.actor.memberId === memberId ? record.rightConfirmed : record.leftConfirmed;
         return <article key={record.pair.id} className="conflict-card" data-testid="conflict-card">
-          <strong>{participant ? `与 ${memberName(record.pair.left.actor.memberId === memberId ? record.pair.right.actor.memberId : record.pair.left.actor.memberId)} 的修改冲突` : `${memberName(record.pair.left.actor.memberId)} 与 ${memberName(record.pair.right.actor.memberId)} 的修改冲突`}</strong>
-          <p>{record.verdict ? zoneName(record.verdict.zone) : "黑区"} · {state.mode === "observe" ? "观察" : "冻结"} · {ruleName(record.verdict?.ruleId)}：{record.verdict?.summary}</p>
-          <ModelDetail metadata={record.verdict?.adjudication} />
+          <strong>{participant ? `与 ${record.conflict?.otherDisplayName ?? memberName(record.pair.left.actor.memberId === memberId ? record.pair.right.actor.memberId : record.pair.left.actor.memberId)} 的修改冲突` : `${memberName(record.pair.left.actor.memberId)} 与 ${memberName(record.pair.right.actor.memberId)} 的修改冲突`}</strong>
+          <p>{record.verdict ? zoneName(record.verdict.zone) : "黑区"} · {state.mode === "observe" ? "观察" : "冻结"} · {ruleName(record.conflict?.ruleId ?? record.verdict?.ruleId)}：{record.conflict?.summaryZh ?? record.verdict?.summary}</p>
+          <ModelDetail metadata={record.verdict?.adjudication} conflict={record.conflict} />
           {participant && (state.mode === "rules" || state.mode === "full") ? <div className="conflict-card-actions">
             <p>{ownConfirmed ? "你已确认，等待对方确认" : otherConfirmed ? "对方已确认，等待你的确认" : "双方尚未确认"}</p>
             <button type="button" onClick={() => { if (window.confirm("将撤回你在该文件本轮的全部修改，是否继续？")) performAction(record.pair.id, () => revertConflictPair(projectId, record.pair.id)); }}>我来改</button>
@@ -71,7 +71,7 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
       <strong>{record.point} · {actorName(record.pair.left.actor)} ⟷ {actorName(record.pair.right.actor)}</strong>
       <p>{record.status === "analyzing" ? "Agent 修改正在研判" : record.shadow ? record.verdict?.decision === "lock" ? "若启用将被拒绝" : "观察记录" : record.verdict?.decision === "lock" ? record.point === "T2" ? "修改被拒绝" : "结束检查发现冲突" : record.verdict?.decision === "warn" ? "修改警告" : "放行"} · {ruleName(record.verdict?.ruleId)}：{record.verdict?.summary}</p>
       <small>{displayName(record.pair.left.symbol)} ⟷ {displayName(record.pair.right.symbol)} · {relationPathText(record.pair.path)}</small>
-      <ModelDetail metadata={record.verdict?.adjudication} />
+      <ModelDetail metadata={record.verdict?.adjudication} conflict={record.conflict} />
     </article>)}
     <h3>统计</h3>
     {state.adjudication ? <p data-testid="adjudication-statistics">模型调用 {state.adjudication.calls} 次 · 缓存命中 {state.adjudication.cacheHits} 次 · 升级比例 {(state.adjudication.escalationRatio * 100).toFixed(1)}%<br />延迟 p50/p95 {Math.round(state.adjudication.p50Ms)}/{Math.round(state.adjudication.p95Ms)} ms · 失败 {state.adjudication.failures} 次 · 费用估算 ${state.adjudication.costUsd.toFixed(6)}</p> : null}
@@ -125,10 +125,10 @@ function zeroDistanceText(leftKind: string | undefined, rightKind: string | unde
   return symbolName(left).includes(".") || symbolName(right).includes(".") ? "两人在改同一个类的不同部分" : "两人在改同一个声明";
 }
 function elapsed(at: number) { const seconds = Math.max(0, Math.floor((Date.now() - at) / 1_000)); return seconds < 60 ? `${seconds} 秒前` : `${Math.floor(seconds / 60)} 分钟前`; }
-function ModelDetail({ metadata }: { metadata?: NonNullable<NonNullable<ConflictGuardState["pairDecisions"]>[number]["verdict"]>["adjudication"] }) {
+function ModelDetail({ metadata, conflict }: { metadata?: NonNullable<NonNullable<ConflictGuardState["pairDecisions"]>[number]["verdict"]>["adjudication"]; conflict?: GuardConflict }) {
   if (!metadata) return null;
   const degraded = metadata.point === "T2" ? "Agent 研判未完成，本次修改被拒绝" : metadata.point === "T3" ? "Agent 结束研判未完成，请检查撤回结果" : "研判失败，已降级为警告";
-  return <p data-testid="adjudication-result">{metadata.status === "degraded" ? degraded : `已判定 · 由${metadata.source === "fast" ? "快判" : "深判"}模型判定 · 置信度 ${((metadata.confidence ?? 0) * 100).toFixed(1)}% · ${Math.round(metadata.latencyMs)} ms`}<br />{metadata.userExplanation}<br />建议：{metadata.suggestedAction}</p>;
+  return <p data-testid="adjudication-result">{metadata.status === "degraded" ? degraded : `已判定 · 由${metadata.source === "fast" ? "快判" : "深判"}模型判定 · 置信度 ${((metadata.confidence ?? 0) * 100).toFixed(1)}% · ${Math.round(metadata.latencyMs)} ms`}<br />{conflict?.explanationZh ?? metadata.userExplanation}<br />建议：{conflict?.suggestionZh ?? metadata.suggestedAction}</p>;
 }
 function zoneName(zone: "white" | "black" | "grey") { return zone === "white" ? "白区" : zone === "black" ? "黑区" : "灰区"; }
 function decisionName(decision: "allow" | "warn" | "lock") { return decision === "allow" ? "放行" : decision === "lock" ? "冻结" : "警告"; }

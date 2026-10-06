@@ -35,6 +35,7 @@ import { selectRunnableAgentRun } from "./agentRunSelection.js";
 import { createPermissionDispatcher, type AgentPermissionRequest } from "./permissionDispatcher.js";
 import { conflictGuardEditHandler } from "./conflictGuardEditHandler.js";
 import fs from "node:fs/promises";
+import { canonicalWorkspacePath } from "../workspacePath.js";
 import {
   createAgentScheduler,
   getCompletedOverlapGroup,
@@ -302,8 +303,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await recordAttributionError(projectId, runId, "workspace_after", error);
       }
     }
+    const sessionFiles = new Set<string>();
     try {
       const runtimeChanges = await options.runtime.getDiff({ workspacePath, sessionId: runtimeSessionId, messageId });
+      if (messageId) for (const change of runtimeChanges) sessionFiles.add(change.file);
       await appendTrace(projectId, runId, {
         type: "session_diff_observed",
         summary: "Runtime session diff observed",
@@ -355,7 +358,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           return after === undefined && change.status !== "deleted" ? [] : [{ file: change.file, before, after: after ?? "", existedBefore: workspaceBefore?.has(change.file) ?? false, ...(change.status === "deleted" ? { deleted: true } : {}) }];
         });
         const checkedFiles = new Set(net.map((proposal) => proposal.file));
-        const changedFiles = new Set([...changes, ...fileChanges].map((change) => change.file));
+        const runFiles = new Set(writeLedger.list(projectId, runId).map((entry) => entry.file));
+        const changedFiles = new Set([...runFiles, ...sessionFiles]);
         const unverified: Array<{ file?: string; reason: string }> = [...changedFiles].filter((file) => !checkedFiles.has(file)).map((file) => ({ file, reason: memberChangedFiles.has(file) ? "Member edits prevent exclusive snapshot attribution" : "Concurrent activity prevents exclusive snapshot attribution" }));
         if (!workspaceBefore || !workspaceAfter) unverified.push({ reason: "Run workspace snapshot could not be read" });
         const t3 = await project.conflictGuard?.agentGuard.finish(runId, net, (file, expected, text, owner, remove) => project.documents.applyGuardRevert(file, expected, text, owner, remove), unverified);
@@ -608,9 +612,20 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
 
       const approval = createApprovalBudget();
       const guard = projectRuntime.conflictGuard;
-      const dispatcher = createPermissionDispatcher({ handlers: guard && ["rules", "full"].includes(guard.mode) ? [conflictGuardEditHandler({ workspace: projectRuntime.project.workspacePath, judge: (proposals, signal) => guard.agentGuard.judge(runId, proposals, signal), approved: () => {} })] : [], pause: approval.pause, reply: async (reply) => {
+      const toolInputs = new Map<string, { tool: string; input: Record<string, unknown> }>();
+      const handlers = guard && ["rules", "full"].includes(guard.mode) ? [{ handle: conflictGuardEditHandler({
+        workspace: projectRuntime.project.workspacePath,
+        judge: (proposals, signal) => guard.agentGuard.judge(runId, proposals, signal),
+        approved: () => {},
+        async toolInput(request) {
+          if (!request.tool) return undefined;
+          const observed = toolInputs.get(request.tool.callID);
+          return observed ?? await options.runtime.getToolInput?.({ workspacePath: projectRuntime.project.workspacePath, sessionId: request.sessionID, messageId: request.tool.messageID, callId: request.tool.callID });
+        }
+      }), budgetMs: null }] : [];
+      const dispatcher = createPermissionDispatcher({ handlers, fileKey: (request) => canonicalWorkspacePath(projectRuntime.project.workspacePath, String(request.metadata.filepath ?? request.metadata.filePath ?? request.patterns?.[0] ?? ".")).relative, pause: approval.pause, unavailable: (file) => guard?.agentGuard.unavailable(runId, file), reply: async (reply) => {
         if (!options.runtime.replyPermission) throw new Error("Runtime does not support permission replies");
-        await options.runtime.replyPermission({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId!, ...reply });
+        await options.runtime.replyPermission({ workspacePath: projectRuntime.project.workspacePath, ...reply });
       }, trace: async (type, data) => {
         await appendTrace(projectId, runId, { type, data });
         if (type === "permission_reply") {
@@ -627,12 +642,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: runtimeSessionId
         },
         async (event) => {
+          const part = event.data.part as { callID?: string; tool?: string; state?: { input?: Record<string, unknown> } } | undefined;
+          if (part?.callID && part.tool && part.state?.input) toolInputs.set(part.callID, { tool: part.tool, input: part.state.input });
           await appendTrace(projectId, runId, {
             type: `opencode.${event.type}`,
             data: event.data
           });
           if (event.type === "permission.asked") {
-            await dispatcher.dispatch(event.data as unknown as AgentPermissionRequest);
+            void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
             return;
           }
           if (hasUnattributedPatch(event.data)) {
@@ -694,6 +711,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: runtimeSessionId
         }), approval).finally(async () => {
           dispatcher.dispose();
+          await dispatcher.drain();
           try {
             await stopEvents();
           } catch (error) {

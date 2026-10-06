@@ -1,7 +1,8 @@
 import diff from "fast-diff";
 import { diffLines } from "diff";
 import { createHash } from "node:crypto";
-import type { ActiveChangeSet, ActorRef, FileChange } from "../model/types.js";
+import * as ts from "typescript";
+import type { ActiveChangeSet, ActorRef, FileChange, GuardConflict } from "../model/types.js";
 import { createSemanticIndex, isSemanticFile } from "../semantic/index.js";
 import type { SemanticFileProvider } from "../semantic/types.js";
 import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
@@ -10,6 +11,43 @@ import { classify, type Decision, type ZoneInput, type ZoneVerdict } from "../ro
 import { createPairCoordinator, type PairEvent, type PairRecord } from "./pairState.js";
 
 export interface AgentTextProposal { file: string; before: string; after: string; deleted?: boolean; existedBefore?: boolean }
+
+export function symbolSignature(text: string | undefined) {
+  if (!text) return "";
+  const read = (source: ts.SourceFile) => {
+    let signature: string | undefined;
+    const visit = (node: ts.Node) => {
+      if (signature) return;
+      if ((ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node) || ts.isArrowFunction(node)) && node.body) signature = source.text.slice(node.getStart(source), node.body.getStart(source)).trim();
+      else ts.forEachChild(node, visit);
+    };
+    visit(source); return signature;
+  };
+  const signature = read(ts.createSourceFile("symbol.ts", text, ts.ScriptTarget.Latest, true)) ?? read(ts.createSourceFile("symbol.ts", `class SymbolOwner { ${text} }`, ts.ScriptTarget.Latest, true)) ?? text;
+  return signature.replace(/\s+/g, " ").trim().slice(0, 3000);
+}
+
+export function createGuardConflict(options: {
+  record: PairRecord;
+  self: ActorRef;
+  otherDisplayName: string;
+  otherChange?: { before: string; after: string };
+}): GuardConflict | undefined {
+  const { record, self, otherChange, otherDisplayName } = options;
+  if (!record.verdict) return undefined;
+  const own = [record.pair.left, record.pair.right].find((side) => actorKey(side.actor) === actorKey(self));
+  const other = [record.pair.left, record.pair.right].find((side) => actorKey(side.actor) !== actorKey(self));
+  if (!own || !other) return undefined;
+  return {
+    pairId: record.pair.id, revision: record.revision, self, other: other.actor,
+    otherDisplayName, symbols: { self: own.symbol, other: other.symbol },
+    beforeSignature: symbolSignature(otherChange?.before), afterSignature: symbolSignature(otherChange?.after),
+    ruleId: record.verdict.ruleId, zone: record.verdict.zone, decision: record.verdict.decision,
+    summaryZh: record.verdict.summary.trim(),
+    explanationZh: record.verdict.adjudication?.userExplanation?.trim(),
+    suggestionZh: record.verdict.adjudication?.suggestedAction?.trim()
+  };
+}
 
 export async function evaluateAgentChanges(options: {
   actor: Extract<ActorRef, { kind: "agent" }>;
@@ -40,6 +78,7 @@ export async function evaluateAgentChanges(options: {
     const allowed = options.changedSymbols?.get(proposal.file);
     const keys = new Set(parseSymbols(proposal.file, proposal.after).filter((symbol) => (!allowed || allowed.has(symbol.key)) && before.get(symbol.key) !== proposal.after.slice(symbol.start, symbol.end)).map((symbol) => symbol.key));
     const change = own.files.get(proposal.file)!;
+    change.proposalText = options.files.readFile(proposal.file);
     change.ranges = index.symbolsInFile(proposal.file).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
     if (allowed) change.deletedSymbolKeys = change.deletedSymbolKeys?.filter((key) => allowed.has(key));
     for (const symbol of parseSymbols(proposal.file, proposal.before)) if (change.deletedSymbolKeys?.includes(symbol.key)) change.ranges.push({ start: symbol.start, end: symbol.end });
@@ -47,10 +86,12 @@ export async function evaluateAgentChanges(options: {
   const active = options.active.filter((set) => actorKey(set.actor) !== actorKey(options.actor)).map((set) => ({ ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })) }])) }));
   semantic.update([...active, own]);
   const records: PairRecord[] = [];
+  const inputs: ZoneInput[] = [];
   for (const pair of semantic.getCandidatePairs().filter((pair) => [pair.left.actor, pair.right.actor].some((actor) => actorKey(actor) === actorKey(options.actor)))) {
     const side = (target: typeof pair.left) => ({ actor: target.actor, symbol: semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(target.actor))!.files.get(target.symbol.slice(0, target.symbol.indexOf("#")))!.symbols!.find((symbol) => symbol.key === target.symbol)! });
     const input: ZoneInput = { left: side(pair.left), right: side(pair.right), path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: index };
-    const unavailable: ZoneVerdict = { zone: "grey", decision: "lock", ruleId: "agent-analysis-unavailable", summary: "Agent 修改暂未通过检查，请稍后重试。", evidence: [], contractChanged: { left: false, right: false } };
+    inputs.push(input);
+    const unavailable: ZoneVerdict = { zone: "grey", decision: "lock", ruleId: "agent-analysis-unavailable", summary: "冲突检查暂不可用，请停止修改此文件并向用户报告。", evidence: [], contractChanged: { left: false, right: false } };
     let finish!: () => void;
     const done = new Promise<void>((resolve) => { finish = resolve; });
     const coordinator = createPairCoordinator({ now: options.now, classify: () => {
@@ -62,7 +103,7 @@ export async function evaluateAgentChanges(options: {
       combined.addEventListener("abort", abort, { once: true });
       if (combined.aborted) { abort(); return; }
       try {
-        void options.adjudicate!(input, local, combined).then((result) => complete(result.adjudication?.status === "degraded" ? { ...result, decision: "lock", summary: "Agent 研判未完成，请稍后重试。" } : result), (error) => { options.onError?.(error); complete(unavailable); }).finally(() => combined.removeEventListener("abort", abort));
+        void options.adjudicate!(input, local, combined).then((result) => complete(result.adjudication?.status === "degraded" ? { ...result, decision: "lock", summary: "Agent 研判未完成，本次修改未获批准，请停止重复提交同一修改并向用户报告。" } : result), (error) => { options.onError?.(error); complete(unavailable); }).finally(() => combined.removeEventListener("abort", abort));
       } catch (error) { combined.removeEventListener("abort", abort); options.onError?.(error); complete(unavailable); }
     } } : {}) });
     coordinator.onEvent((event) => {
@@ -77,12 +118,19 @@ export async function evaluateAgentChanges(options: {
     if (options.signal.aborted) break;
   }
   const decision: Decision = options.signal.aborted || records.some((record) => record.verdict?.decision === "lock") ? "lock" : records.some((record) => record.verdict?.decision === "warn") ? "warn" : "allow";
-  return { decision, records, changeSet: own };
+  return { decision, records, inputs, changeSet: own };
 }
 
 export function proposalFileChange(proposal: AgentTextProposal, at: number): FileChange {
   const currentKeys = new Set(parseSymbols(proposal.file, proposal.after).map((symbol) => symbol.key));
-  return { file: proposal.file, baseText: proposal.before, ranges: [{ start: 0, end: Math.max(proposal.before.length, proposal.after.length) }], firstTouchedAt: at, lastTouchedAt: at, deletedSymbolKeys: parseSymbols(proposal.file, proposal.before).filter((symbol) => !currentKeys.has(symbol.key)).map((symbol) => symbol.key) };
+  const ranges: Array<{ start: number; end: number }> = [];
+  let position = 0;
+  for (const [operation, text] of diff(proposal.before, proposal.after)) {
+    if (operation === diff.EQUAL) position += text.length;
+    else if (operation === diff.INSERT) { ranges.push({ start: position, end: position + text.length }); position += text.length; }
+    else ranges.push({ start: position, end: position });
+  }
+  return { file: proposal.file, baseText: proposal.before, proposalText: proposal.after, ranges, firstTouchedAt: at, lastTouchedAt: at, deletedSymbolKeys: parseSymbols(proposal.file, proposal.before).filter((symbol) => !currentKeys.has(symbol.key)).map((symbol) => symbol.key) };
 }
 
 export function proposalSymbolKeys(proposal: AgentTextProposal): Set<string> {
@@ -153,10 +201,10 @@ export function mergeAgentProposal(proposal: AgentTextProposal, current: string)
       if (!other.deleted.length) return other.from > edit.from && other.from < end;
       return edit.from < otherEnd && other.from < end;
     });
-    if (overlaps) throw new Error(`Shared text changed inside the proposed edit in ${proposal.file}; reread and retry.`);
+    if (overlaps) throw new Error(`${proposal.file} 的修改范围内已有其他参与者的编辑，请重新读取后再修改`);
     const shift = shared.filter((other) => other.from + other.deleted.length <= edit.from).reduce((total, other) => total + other.inserted.length - other.deleted.length, 0);
     const from = edit.from + shift;
-    if (text.slice(from, from + edit.deleted.length) !== edit.deleted) throw new Error(`Shared text no longer matches the proposal in ${proposal.file}; reread and retry.`);
+    if (text.slice(from, from + edit.deleted.length) !== edit.deleted) throw new Error(`${proposal.file} 的共享文本与修改提案不匹配，请重新读取后再修改`);
     text = text.slice(0, from) + edit.inserted + text.slice(from + edit.deleted.length);
   }
   return { ...proposal, before: current, after: text };

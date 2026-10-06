@@ -1,0 +1,111 @@
+Scope: 4 of 5 workspace projects
+packages/shared build$ tsc -p tsconfig.json
+packages/conflict-guard build$ tsc -p tsconfig.json
+packages/shared build: Done
+packages/conflict-guard build: Done
+apps/client build$ tsc -p tsconfig.json && vite build
+apps/server build$ tsc -p tsconfig.json
+apps/client build: vite v5.4.21 building for production...
+apps/client build: transforming...
+apps/server build: Done
+apps/client build: ✓ 2679 modules transformed.
+apps/client build: rendering chunks...
+apps/client build: computing gzip size...
+apps/client build: dist/index.html                               0.40 kB │ gzip:     0.27 kB
+apps/client build: dist/assets/codicon-B16ygVZF.ttf             80.19 kB
+apps/client build: dist/assets/editor.worker-iE_L6vXA.js       219.71 kB
+apps/client build: dist/assets/ts.worker-BSIRc3Qe.js         4,857.03 kB
+apps/client build: dist/assets/index-DVa8viBo.css              177.43 kB │ gzip:    29.93 kB
+apps/client build: dist/assets/azcli-CIONJYq1.js                 1.09 kB │ gzip:     0.46 kB
+apps/client build: dist/assets/javascript-C5E6v7c0.js            1.19 kB │ gzip:     0.62 kB
+apps/client build: dist/assets/ini-BscO_0vf.js                   1.35 kB │ gzip:     0.67 kB
+apps/client build: dist/assets/csp-BK5qlsQ9.js                   1.67 kB │ gzip:     0.67 kB
+apps/client build: dist/assets/pla-BUVXxyGx.js                   1.93 kB │ gzip:     0.79 kB
+apps/client build: dist/assets/scheme-DkJ87xtR.js                2.01 kB │ gzip:     0.95 kB
+apps/client build: dist/assets/flow9-BKFjllYO.js                 2.06 kB │ gzip:     0.98 kB
+apps/client build: dist/assets/sb-5vPrUWN-.js                    2.08 kB │ gzip:     0.96 kB
+apps/client build: dist/assets/bat-C9Lf3IiR.js                   2.09 kB │ gzip:     1.00 kB
+apps/client build: dist/assets/dockerfile-fYe1jRYc.js            2.12 kB │ gzip:     0.81 kB
+apps/client build: dist/assets/pascaligo-Dcwo06z5.js             2.25 kB │ gzip:     1.05 kB
+apps/client build: dist/assets/lua-DLZgaSX1.js                   2.37 kB │ gzip:     1.06 kB
+apps/client build: dist/assets/cameligo-v1zEsXLu.js              2.43 kB │ gzip:     1.10 kB
+apps/client build: dist/assets/graphql-k0EsSqLB.js               2.51 kB │ gzip:     1.16 kB
+apps/client build: dist/assets/objective-c-B_h_kxCB.js           2.65 kB │ gzip:     1.19 kB
+apps/client build: dist/assets/xml-CcSs15No.js                   2.67 kB │ gzip:     1.10 kB
+apps/client build: dist/assets/lexon-BXW1vGDt.js                 2.68 kB │ gzip:     1.07 kB
+apps/client build: dist/assets/bicep-D-A_iHuq.js                 2.78 kB │ gzip:     1.10 kB
+apps/client build: dist/assets/sparql-BTJymgeb.js                2.80 kB │ gzip:     1.30 kB
+apps/client build: dist/assets/mips-DcG9r2vI.js                  2.83 kB │ gzip:     1.21 kB
+apps/client build: dist/assets/go-DzbHtIm4.js                    2.90 kB │ gzip:     1.28 kB
+apps/client build: dist/assets/sophia-z0tjJxhY.js                3.01 kB │ gzip:     1.34 kB
+apps/client build: dist/assets/typespec-Dwv00aWl.js              3.04 kB │ gzip:     1.23 kB
+apps/client build: dist/assets/m3-CLtYU2dl.js                    3.06 kB │ gzip:     1.44 kB
+apps/client build: dist/assets/qsharp-BHSA_OC9.js                3.18 kB │ gzip:     1.49 kB
+apps/client build: dist/assets/fsharp-ETo-tsZt.js                3.23 kB │ gzip:     1.45 kB
+apps/client build: dist/assets/pascal-Bc-8SB3K.js                3.24 kB │ gzip:     1.53 kB
+apps/client build: dist/assets/shell-BHhUv290.js                 3.32 kB │ gzip:     1.34 kB
+apps/client build: dist/assets/r-DBvxNhD8.js                     3.38 kB │ gzip:     1.42 kB
+apps/client build: dist/assets/java-CtY9ZHW8.js                  3.47 kB │ gzip:     1.53 kB
+apps/client build: dist/assets/powershell-CCS0rx-A.js            3.52 kB │ gzip:     1.51 kB
+apps/client build: dist/assets/y-monaco-Bp8A_yYY.js              3.60 kB │ gzip:     1.33 kB
+apps/client build: dist/assets/cypher-Bl5_yQjz.js                3.63 kB │ gzip:     1.56 kB
+apps/client build: dist/assets/kotlin-DTDxWyre.js                3.69 kB │ gzip:     1.61 kB
+apps/client build: dist/assets/redis-mBNZiS5I.js                 3.80 kB │ gzip:     1.62 kB
+apps/client build: dist/assets/tcl-CjHYkh5E.js                   3.82 kB │ gzip:     1.50 kB
+apps/client build: dist/assets/coffee-DNMvp8RP.js                3.84 kB │ gzip:     1.45 kB
+apps/client build: dist/assets/hcl-Cq9v6if3.js                   3.84 kB │ gzip:     1.62 kB
+apps/client build: dist/assets/python-D64YaweJ.js                3.88 kB │ gzip:     1.73 kB
+apps/client build: dist/assets/markdown-7fQo6M4U.js              4.03 kB │ gzip:     1.52 kB
+apps/client build: dist/assets/restructuredtext-45Xf76JB.js      4.14 kB │ gzip:     1.50 kB
+apps/client build: dist/assets/less-CqJAWV1X.js                  4.14 kB │ gzip:     1.55 kB
+apps/client build: dist/assets/apex-CW6wsJgM.js                  4.20 kB │ gzip:     1.90 kB
+apps/client build: dist/assets/liquid-BC72-foO.js                4.22 kB │ gzip:     1.79 kB
+apps/client build: dist/assets/yaml-Cka_Qsus.js                  4.27 kB │ gzip:     1.65 kB
+apps/client build: dist/assets/rust-BChN5uNh.js                  4.41 kB │ gzip:     1.95 kB
+apps/client build: dist/assets/dart-BVA93hyX.js                  4.50 kB │ gzip:     1.78 kB
+apps/client build: dist/assets/css-D1nB4Vcj.js                   4.76 kB │ gzip:     1.52 kB
+apps/client build: dist/assets/csharp-BoWmgZhk.js                4.77 kB │ gzip:     1.87 kB
+apps/client build: dist/assets/pug-Dg4O54Js.js                   5.07 kB │ gzip:     1.78 kB
+apps/client build: dist/assets/mdx-CFE2oLRP.js                   5.12 kB │ gzip:     1.58 kB
+apps/client build: dist/assets/msdax-DN__iVzl.js                 5.16 kB │ gzip:     2.09 kB
+apps/client build: dist/assets/html-Cyih9laO.js                  5.27 kB │ gzip:     1.53 kB
+apps/client build: dist/assets/swift-BwlyOzQq.js                 5.42 kB │ gzip:     2.20 kB
+apps/client build: dist/assets/cpp-DEDKHd-B.js                   5.55 kB │ gzip:     2.22 kB
+apps/client build: dist/assets/ecl-Bxo8QmCt.js                   5.59 kB │ gzip:     2.38 kB
+apps/client build: dist/assets/typescript-BZVIzTki.js            5.67 kB │ gzip:     2.30 kB
+apps/client build: dist/assets/vb-BjPEumh4.js                    6.04 kB │ gzip:     2.19 kB
+apps/client build: dist/assets/twig-CmYTg8Iu.js                  6.22 kB │ gzip:     1.66 kB
+apps/client build: dist/assets/scss-CpPOP9XS.js                  6.66 kB │ gzip:     1.89 kB
+apps/client build: dist/assets/handlebars-CWSOgyrn.js            7.03 kB │ gzip:     1.75 kB
+apps/client build: dist/assets/julia-DOes61nN.js                 7.34 kB │ gzip:     2.77 kB
+apps/client build: dist/assets/scala-BQOorN7X.js                 7.56 kB │ gzip:     2.22 kB
+apps/client build: dist/assets/wgsl-Bp8RP3jd.js                  7.59 kB │ gzip:     2.90 kB
+apps/client build: dist/assets/st-DZS1F9ME.js                    7.64 kB │ gzip:     2.38 kB
+apps/client build: dist/assets/systemverilog-DJsb8r0W.js         7.85 kB │ gzip:     2.88 kB
+apps/client build: dist/assets/postiats-DSt55phJ.js              8.10 kB │ gzip:     2.55 kB
+apps/client build: dist/assets/php-CH5O-_gG.js                   8.27 kB │ gzip:     2.20 kB
+apps/client build: dist/assets/perl-BnGpdHsN.js                  8.50 kB │ gzip:     3.24 kB
+apps/client build: dist/assets/ruby-CEgcCkh9.js                  8.75 kB │ gzip:     2.70 kB
+apps/client build: dist/assets/razor-BbrhkGhk.js                 9.03 kB │ gzip:     2.42 kB
+apps/client build: dist/assets/protobuf-5lyCd6Ku.js              9.29 kB │ gzip:     2.20 kB
+apps/client build: dist/assets/clojure-DgNu_ptH.js               9.89 kB │ gzip:     3.74 kB
+apps/client build: dist/assets/elixir-BbUoe7nZ.js               10.50 kB │ gzip:     2.65 kB
+apps/client build: dist/assets/sql-BFyYaP5s.js                  10.54 kB │ gzip:     3.98 kB
+apps/client build: dist/assets/mysql-05d2lfAy.js                11.52 kB │ gzip:     4.19 kB
+apps/client build: dist/assets/redshift-gtd9hS2x.js             12.05 kB │ gzip:     4.46 kB
+apps/client build: dist/assets/pgsql-DfVleuq_.js                13.71 kB │ gzip:     4.63 kB
+apps/client build: dist/assets/abap-DR3EPHcA.js                 14.41 kB │ gzip:     5.47 kB
+apps/client build: dist/assets/freemarker2-tYZowO5n.js          16.35 kB │ gzip:     4.26 kB
+apps/client build: dist/assets/powerquery-2KNS9mh4.js           17.19 kB │ gzip:     5.00 kB
+apps/client build: dist/assets/solidity-BFcLIl1x.js             18.84 kB │ gzip:     4.58 kB
+apps/client build: dist/assets/tsMode-BLydqlWV.js               22.52 kB │ gzip:     6.47 kB
+apps/client build: dist/assets/cssMode-p09Glj_T.js              33.59 kB │ gzip:     8.89 kB
+apps/client build: dist/assets/htmlMode-BhAeqBbi.js             34.14 kB │ gzip:     9.01 kB
+apps/client build: dist/assets/jsonMode-D8X8FUYX.js             39.65 kB │ gzip:    11.08 kB
+apps/client build: dist/assets/index-BVPnevS6.js             3,967.52 kB │ gzip: 1,036.66 kB
+apps/client build: ✓ built in 11.57s
+apps/client build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/client build: - Using dynamic import() to code-split the application
+apps/client build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+apps/client build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/client build: Done

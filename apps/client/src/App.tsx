@@ -951,7 +951,7 @@ function WorkspacePage({
           analyzingRegions={conflictGuardState?.analyzingFiles}
           conflictCards={(conflictGuardState?.pairDecisions ?? []).filter((record) => humanConflict(record.pair) && record.status === "judged" && record.verdict?.decision === "lock").map((record) => ({
             pairId: record.pair.id,
-            summary: record.verdict?.adjudication ? `${record.verdict.adjudication.userExplanation} 建议：${record.verdict.adjudication.suggestedAction} · 由${record.verdict.adjudication.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(record.verdict.adjudication.latencyMs)} ms` : record.verdict?.summary ?? "修改之间存在冲突",
+            summary: record.verdict?.adjudication ? `${record.conflict?.explanationZh ?? record.verdict.adjudication.userExplanation} 建议：${record.conflict?.suggestionZh ?? record.verdict.adjudication.suggestedAction} · 由${record.verdict.adjudication.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(record.verdict.adjudication.latencyMs)} ms` : record.conflict?.summaryZh ?? record.verdict?.summary ?? "修改之间存在冲突",
             files: [record.pair.left.symbol.split("#")[0] ?? "", record.pair.right.symbol.split("#")[0] ?? ""]
           }))}
         />

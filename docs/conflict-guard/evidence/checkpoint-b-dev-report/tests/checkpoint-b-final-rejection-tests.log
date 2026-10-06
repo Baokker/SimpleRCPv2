@@ -1,0 +1,11 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+ ✓ src/__tests__/permissionDispatcher.test.ts  (15 tests) 61ms
+ ✓ src/__tests__/workspace.test.ts  (11 tests) 48ms
+ ✓ src/__tests__/agentEditProposal.test.ts  (5 tests) 25ms
+
+ Test Files  3 passed (3)
+      Tests  31 passed (31)
+   Start at  01:52:32
+   Duration  816ms (transform 63ms, setup 1ms, collect 101ms, tests 134ms, environment 0ms, prepare 144ms)

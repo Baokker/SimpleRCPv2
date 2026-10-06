@@ -445,7 +445,7 @@ function CollaborativeEditor({
             : "Reconnecting collaboration"}
         </div>
       ) : null}
-      {conflictCards && conflictCards.length > 0 ? <div className="editor-conflict-overlay" data-testid="editor-conflict-overlay">{conflictCards.map((card) => <article className="conflict-card" key={card.pairId}><strong>冲突预防</strong><p>{card.summary}</p></article>)}</div> : null}
+      {conflictCards && conflictCards.length > 0 ? <details className="editor-conflict-banner" data-testid="editor-conflict-banner"><summary>当前有 {conflictCards.length} 个冲突 · 在“冲突预防”页签查看详情</summary><p>相关区域的冻结提示可通过悬停查看。</p></details> : null}
     </div>
   );
 }

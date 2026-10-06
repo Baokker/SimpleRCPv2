@@ -30,7 +30,7 @@ export function conflictWarning(record: NonNullable<ConflictGuardState["pairDeci
   const model = record.verdict.adjudication;
   return {
     id: `${record.pair.id}:${record.revision}`,
-    summary: model ? `${model.userExplanation} 建议：${model.suggestedAction} · ${model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(model.latencyMs)} ms`}` : record.verdict.summary,
+    summary: model ? `${record.conflict?.explanationZh ?? model.userExplanation} 建议：${record.conflict?.suggestionZh ?? model.suggestedAction} · ${model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(model.latencyMs)} ms`}` : record.conflict?.summaryZh ?? record.verdict.summary,
     path: relationPathText(record.pair.path)
   };
 }

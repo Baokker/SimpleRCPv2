@@ -16,7 +16,7 @@ import { OPERATOR_SPECS } from "./operators.js";
 import type { BenchLabel, ProbeRun, SeedProject } from "./types.js";
 
 const seedRoot = fileURLToPath(new URL("../../bench/seeds/", import.meta.url));
-const projects: SeedProject[] = fs.readdirSync(seedRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => ({ name: entry.name, files: collectFiles(path.join(seedRoot, entry.name)) }));
+const projects: SeedProject[] = fs.readdirSync(seedRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "native").map((entry) => ({ name: entry.name, files: collectFiles(path.join(seedRoot, entry.name)) }));
 
 describe("阶段 4 基准生成", () => {
   it("固定种子使用原始业务源码，保留两个完整算子族与独立项目", () => {

@@ -3,6 +3,7 @@ import path from "node:path";
 import type { AgentFileChange } from "@simplercp/shared";
 import diff from "fast-diff";
 import { isIgnoredPath } from "../workspacePolicy.js";
+import { canonicalWorkspaceRoot, canonicalWorkspacePath } from "../workspacePath.js";
 
 interface SnapshotFile {
   content?: string;
@@ -15,7 +16,7 @@ export async function createAgentWorkspaceSnapshot(
   workspacePath: string
 ): Promise<AgentWorkspaceSnapshot> {
   const snapshot: AgentWorkspaceSnapshot = new Map();
-  await readDirectory(workspacePath, "", snapshot);
+  await readDirectory(canonicalWorkspaceRoot(workspacePath), "", snapshot);
   return snapshot;
 }
 
@@ -63,7 +64,7 @@ async function readDirectory(
   relativeDirectory: string,
   snapshot: AgentWorkspaceSnapshot
 ) {
-  const absoluteDirectory = path.join(workspacePath, relativeDirectory);
+  const absoluteDirectory = canonicalWorkspacePath(workspacePath, relativeDirectory).absolute;
   const entries = await fs.readdir(absoluteDirectory, { withFileTypes: true });
   for (const entry of entries) {
     const relativePath = relativeDirectory
@@ -75,7 +76,7 @@ async function readDirectory(
       continue;
     }
     if (!entry.isFile()) continue;
-    const bytes = await fs.readFile(path.join(workspacePath, relativePath));
+    const bytes = await fs.readFile(canonicalWorkspacePath(workspacePath, relativePath).absolute);
     snapshot.set(relativePath, {
       bytes,
       content: bytes.includes(0) ? undefined : bytes.toString("utf8")

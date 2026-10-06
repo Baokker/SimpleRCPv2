@@ -1,0 +1,762 @@
+{
+  "result": {
+    "checks": {
+      "oneBanner": true,
+      "multipleConflicts": true
+    }
+  },
+  "state": {
+    "mode": "full",
+    "version": 27,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 2,
+        "durationMs": 2.300708000000668,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 116,
+                "end": 147
+              },
+              {
+                "start": 266,
+                "end": 294
+              }
+            ],
+            "firstTouchedAt": 1791305467045,
+            "lastTouchedAt": 1791305469338
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/cart.ts",
+            "ranges": [
+              {
+                "start": 351,
+                "end": 362
+              }
+            ],
+            "firstTouchedAt": 1791305467053,
+            "lastTouchedAt": 1791305467053
+          },
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 174
+              }
+            ],
+            "firstTouchedAt": 1791305469371,
+            "lastTouchedAt": 1791305469371
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "lastTouchedAt": 1791305469338
+          },
+          {
+            "key": "src/pricing.ts#formatMoney",
+            "file": "src/pricing.ts",
+            "name": "formatMoney",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 7,
+            "endLine": 9,
+            "lastTouchedAt": 1791305469338
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+        },
+        "symbols": [
+          {
+            "key": "src/cart.ts#Cart.total",
+            "file": "src/cart.ts",
+            "name": "total",
+            "kind": "method",
+            "container": "Cart",
+            "exported": false,
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "lastTouchedAt": 1791305467053
+          },
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "lastTouchedAt": 1791305469371
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "82c86ccf26bbabbc05f2c6e4454ee3663dddfc82b8650f3b3fe28c9cfdfc71b0",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+          },
+          "symbol": "src/pricing.ts#formatMoney",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "status": "modified"
+        },
+        "distance": 1,
+        "path": {
+          "from": "src/pricing.ts#formatMoney",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#formatMoney",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791305469414,
+        "updatedAt": 1791305469414,
+        "revisionKey": "3be2f30f2b4b4bab6571ef52d18dcda8d749140efc799b9e4e247df2408c9ffb"
+      },
+      {
+        "id": "cfa7f1612f505eef85bfd4b844f47d2382e02cf4b46b2353eafe9d9fab652383",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "status": "modified"
+        },
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791305469414,
+        "updatedAt": 1791305469414,
+        "revisionKey": "17ae7341e0e70c0e722a79320db99a6331a86d4f2f8db581317ce0454325ceed"
+      },
+      {
+        "id": "2ffb5a4895496bde99b0f342f9fc224790f5c910d881749eb896124d827343b0",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+          },
+          "symbol": "src/pricing.ts#formatMoney",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+          },
+          "symbol": "src/cart.ts#Cart.total",
+          "status": "modified"
+        },
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#formatMoney",
+          "to": "src/cart.ts#Cart.total",
+          "hops": [
+            {
+              "from": "src/pricing.ts#formatMoney",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/checkout.ts#checkout",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "forward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791305469369,
+        "updatedAt": 1791305469369,
+        "revisionKey": "a1784ca26e1eb3e8c2a1b90fab70c463d835b102a5efe99ce30ac38e9047022c"
+      },
+      {
+        "id": "91df0d1f786b97316bdebd1b55582567d03530984301978f1b8f304571e3ea9e",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+          },
+          "symbol": "src/cart.ts#Cart.total",
+          "status": "modified"
+        },
+        "distance": 1,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/cart.ts#Cart.total",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791305467128,
+        "updatedAt": 1791305467128,
+        "revisionKey": "f0342f0785d5fe5e11afe4ff8f7825510f3938b52d37f0b3c9af9aa7aec798cb"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "91df0d1f786b97316bdebd1b55582567d03530984301978f1b8f304571e3ea9e",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/cart.ts#Cart.total",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791305467128,
+          "updatedAt": 1791305467128,
+          "revisionKey": "f0342f0785d5fe5e11afe4ff8f7825510f3938b52d37f0b3c9af9aa7aec798cb"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791305471117,
+        "revisionKey": "f0342f0785d5fe5e11afe4ff8f7825510f3938b52d37f0b3c9af9aa7aec798cb",
+        "analysisVisible": false,
+        "firstLockedAt": 1791305468593,
+        "verdict": {
+          "zone": "black",
+          "decision": "lock",
+          "ruleId": "call-signature-incompatible",
+          "summary": "一侧调用无法满足另一侧修改后的函数签名。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "detail": "applyDiscount 的调用参数数量与签名不兼容"
+            }
+          ],
+          "contractChanged": {
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "pair": {
+          "id": "2ffb5a4895496bde99b0f342f9fc224790f5c910d881749eb896124d827343b0",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "symbol": "src/pricing.ts#formatMoney",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#formatMoney",
+            "to": "src/cart.ts#Cart.total",
+            "hops": [
+              {
+                "from": "src/pricing.ts#formatMoney",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/checkout.ts#checkout",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "forward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791305469369,
+          "updatedAt": 1791305469369,
+          "revisionKey": "a1784ca26e1eb3e8c2a1b90fab70c463d835b102a5efe99ce30ac38e9047022c"
+        },
+        "status": "analyzing",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791305471117,
+        "revisionKey": "a1784ca26e1eb3e8c2a1b90fab70c463d835b102a5efe99ce30ac38e9047022c",
+        "verdict": {
+          "zone": "grey",
+          "decision": "warn",
+          "ruleId": "semantic-interaction-uncertain",
+          "summary": "修改可能互相影响，需要进一步判断。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#formatMoney",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": true,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 104.18566699999974,
+            "mergeOnlyDiagnostics": []
+          }
+        },
+        "analysisStartedAt": 1791305470981,
+        "analysisVisible": false
+      },
+      {
+        "pair": {
+          "id": "82c86ccf26bbabbc05f2c6e4454ee3663dddfc82b8650f3b3fe28c9cfdfc71b0",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "symbol": "src/pricing.ts#formatMoney",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/pricing.ts#formatMoney",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#formatMoney",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791305469414,
+          "updatedAt": 1791305469414,
+          "revisionKey": "3be2f30f2b4b4bab6571ef52d18dcda8d749140efc799b9e4e247df2408c9ffb"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791305471069,
+        "revisionKey": "3be2f30f2b4b4bab6571ef52d18dcda8d749140efc799b9e4e247df2408c9ffb",
+        "analysisVisible": false,
+        "firstLockedAt": 1791305471069,
+        "verdict": {
+          "zone": "black",
+          "decision": "lock",
+          "ruleId": "merge-only-type-error",
+          "summary": "合并双方修改后才出现类型错误。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#formatMoney",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": true,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 28.525166999999783,
+            "mergeOnlyDiagnostics": [
+              "src/checkout.ts:2339:Property 'toUpperCase' does not exist on type 'number'."
+            ]
+          }
+        }
+      },
+      {
+        "pair": {
+          "id": "cfa7f1612f505eef85bfd4b844f47d2382e02cf4b46b2353eafe9d9fab652383",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "status": "modified"
+          },
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791305469414,
+          "updatedAt": 1791305469414,
+          "revisionKey": "17ae7341e0e70c0e722a79320db99a6331a86d4f2f8db581317ce0454325ceed"
+        },
+        "status": "analyzing",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791305471071,
+        "revisionKey": "17ae7341e0e70c0e722a79320db99a6331a86d4f2f8db581317ce0454325ceed",
+        "verdict": {
+          "zone": "grey",
+          "decision": "warn",
+          "ruleId": "semantic-interaction-uncertain",
+          "summary": "修改可能互相影响，需要进一步判断。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": true,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 38.2783330000002,
+            "mergeOnlyDiagnostics": []
+          }
+        },
+        "analysisStartedAt": 1791305471111,
+        "analysisVisible": false
+      }
+    ],
+    "agentNotices": [],
+    "frozenFiles": [
+      {
+        "file": "src/pricing.ts",
+        "regions": [
+          {
+            "pairId": "91df0d1f786b97316bdebd1b55582567d03530984301978f1b8f304571e3ea9e",
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "startLine": 3,
+            "endLine": 5,
+            "summary": "一侧调用无法满足另一侧修改后的函数签名。"
+          },
+          {
+            "pairId": "82c86ccf26bbabbc05f2c6e4454ee3663dddfc82b8650f3b3fe28c9cfdfc71b0",
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "startLine": 7,
+            "endLine": 9,
+            "summary": "合并双方修改后才出现类型错误。"
+          }
+        ]
+      },
+      {
+        "file": "src/cart.ts",
+        "regions": [
+          {
+            "pairId": "91df0d1f786b97316bdebd1b55582567d03530984301978f1b8f304571e3ea9e",
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "startLine": 11,
+            "endLine": 15,
+            "summary": "一侧调用无法满足另一侧修改后的函数签名。"
+          }
+        ]
+      },
+      {
+        "file": "src/checkout.ts",
+        "regions": [
+          {
+            "pairId": "82c86ccf26bbabbc05f2c6e4454ee3663dddfc82b8650f3b3fe28c9cfdfc71b0",
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "startLine": 4,
+            "endLine": 6,
+            "summary": "合并双方修改后才出现类型错误。"
+          }
+        ]
+      }
+    ],
+    "analyzingFiles": [
+      {
+        "file": "src/pricing.ts",
+        "regions": [
+          {
+            "pairId": "2ffb5a4895496bde99b0f342f9fc224790f5c910d881749eb896124d827343b0",
+            "startLine": 7,
+            "endLine": 9,
+            "summary": "分析中，文本继续同步。"
+          },
+          {
+            "pairId": "cfa7f1612f505eef85bfd4b844f47d2382e02cf4b46b2353eafe9d9fab652383",
+            "startLine": 3,
+            "endLine": 5,
+            "summary": "分析中，文本继续同步。"
+          }
+        ]
+      },
+      {
+        "file": "src/cart.ts",
+        "regions": [
+          {
+            "pairId": "2ffb5a4895496bde99b0f342f9fc224790f5c910d881749eb896124d827343b0",
+            "startLine": 11,
+            "endLine": 15,
+            "summary": "分析中，文本继续同步。"
+          }
+        ]
+      },
+      {
+        "file": "src/checkout.ts",
+        "regions": [
+          {
+            "pairId": "cfa7f1612f505eef85bfd4b844f47d2382e02cf4b46b2353eafe9d9fab652383",
+            "startLine": 4,
+            "endLine": 6,
+            "summary": "分析中，文本继续同步。"
+          }
+        ]
+      }
+    ],
+    "adjudication": {
+      "calls": 2,
+      "cacheHits": 0,
+      "judgements": 2,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0
+    },
+    "blockedPersists": [
+      {
+        "file": "src/pricing.ts",
+        "reason": "analyzing"
+      },
+      {
+        "file": "src/cart.ts",
+        "reason": "analyzing"
+      },
+      {
+        "file": "src/checkout.ts",
+        "reason": "analyzing"
+      }
+    ],
+    "persistConflicts": 0,
+    "persistBlockedCount": 3,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 4,
+      "localDecisionRatio": 0.5,
+      "white": 0,
+      "black": 2,
+      "grey": 2,
+      "frozenDurationMs": 3122,
+      "persistBlockedCount": 3,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 4,
+      "related": 4,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  }
+}

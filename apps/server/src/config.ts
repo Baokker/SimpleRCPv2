@@ -98,7 +98,7 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
-    sensitiveValues: [env.DEEPSEEK_API_KEY, env.TYPESAFE_API_KEY, env.ADJUDICATION_COMPATIBLE_API_KEY].filter((value): value is string => Boolean(value)),
+    sensitiveValues: Object.entries(env).filter(([name, value]) => /(?:KEY|TOKEN|SECRET)(?:_|$)/i.test(name) && value).map(([, value]) => value!),
     conflictGuard: {
       mode: conflictGuardMode as ProjectConflictGuardConfig["mode"],
       idleMs: 1_500,

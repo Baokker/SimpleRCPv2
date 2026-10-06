@@ -1,0 +1,55 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ❯ src/__tests__/conflictGuardCheckpoint.integration.test.ts  (15 tests | 1 failed | 14 skipped) 2253ms
+   ❯ src/__tests__/conflictGuardCheckpoint.integration.test.ts > 检查点 A 生产参数 rules > P2 先后编辑在判定前和判定后保持调用方磁盘内容
+     → expected 'import type { CartItem } from "./type…' to be 'import type { CartItem } from "./type…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/conflictGuardCheckpoint.integration.test.ts > 检查点 A 生产参数 rules > P2 先后编辑在判定前和判定后保持调用方磁盘内容
+AssertionError: expected 'import type { CartItem } from "./type…' to be 'import type { CartItem } from "./type…' // Object.is equality
+
+- Expected
++ Received
+
+  import type { CartItem } from "./types.ts";
+  import { applyDiscount } from "./pricing.ts";
+
+  export class Cart {
+    items: CartItem[] = [];
+
+    add(item: CartItem): void {
+      this.items = [...this.items, item];
+    }
+
+    total(): number {
+      let amount = 0;
+      for (const item of this.items) amount += item.price * item.quantity;
+-     return applyDiscount(amount, 0.1);
++     return applyDiscount(amount, 0.2);
+    }
+  }
+
+
+ ❯ src/__tests__/conflictGuardCheckpoint.integration.test.ts:102:39
+    100|     const { cartBaseline } = await lock(true);
+    101|     await delay(500);
+    102|     expect(await disk("src/cart.ts")).toBe(cartBaseline);
+       |                                       ^
+    103|     expect(state().blockedPersists).toContainEqual({ file: "src/cart.t…
+    104|     await judgement();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 skipped (15)
+   Start at  00:44:01
+   Duration  5.04s (transform 1.72s, setup 0ms, collect 2.54s, tests 2.25s, environment 0ms, prepare 103ms)
+
+undefined
+/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/__tests__/conflictGuardCheckpoint.integration.test.ts -t P2 先后编辑

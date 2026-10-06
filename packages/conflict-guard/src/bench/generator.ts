@@ -5,11 +5,16 @@ import type { TraceEvent } from "../trace/trace.js";
 import type { BenchManifest, BenchRelationGroup, BenchVariant, SeedProject } from "./types.js";
 import { OPERATOR_SPECS } from "./operators.js";
 import { operatorTemplate } from "./templates.js";
+import { nativeOperatorIds, nativeOperatorTemplate } from "./nativeTemplates.js";
+import { inspectSeedDiversity } from "./diversity.js";
 
 export interface GenerateOptions { groups: number; seed: number; projects: SeedProject[]; generatedBy?: string; codeCommit?: string; generationCommand?: string }
 export function generateManifest(options: GenerateOptions): BenchManifest {
   if (!Number.isInteger(options.groups) || options.groups < 1) throw new Error("groups 必须为正整数");
   if (!options.projects.length) throw new Error("至少需要一个种子项目");
+  const native = options.projects.every((project) => project.layout === "native");
+  const diversity = native ? inspectSeedDiversity(options.projects) : undefined;
+  if (diversity && !diversity.valid) throw new Error(`种子项目未通过结构独立性检查：${JSON.stringify({ projectCount: diversity.projectCount, sizes: diversity.sizes, maximumObserved: diversity.maximumObserved, violations: diversity.violations.slice(0, 5) })}`);
   const random = createRandom(options.seed);
   const projects = [...options.projects].sort((left, right) => left.name.localeCompare(right.name));
   const shuffled = [...projects].sort((left, right) => hash(`${options.seed}:${left.name}`).localeCompare(hash(`${options.seed}:${right.name}`)));
@@ -20,17 +25,19 @@ export function generateManifest(options: GenerateOptions): BenchManifest {
   for (let index = 0; index < options.groups; index += 1) {
     const projectIndex = index % projects.length;
     const project = projects[projectIndex]!;
-    const eligible = OPERATOR_SPECS.filter((operator) => !development.has(project.name) || !heldoutFamilies.has(operator.family));
+    const nativeIds = native ? new Set(nativeOperatorIds(project, OPERATOR_SPECS.map((operator) => operator.id))) : undefined;
+    const eligible = OPERATOR_SPECS.filter((operator) => (!development.has(project.name) || !heldoutFamilies.has(operator.family)) && (!nativeIds || nativeIds.has(operator.id)));
+    if (!eligible.length) throw new Error(`项目没有可执行算子：${project.name}`);
     const operator = eligible[(Math.floor(index / projects.length) + projectIndex * 3) % eligible.length]!;
     const seed = random.nextInt(2_147_483_647);
     const unrelated = operator.family !== "SF" && conflictGroups++ % 3 === 2;
     const groupId = `d1-${String(index + 1).padStart(4, "0")}`;
     const makeVariant = (kind: "conflict" | "safe"): BenchVariant => {
-      const template = operatorTemplate(operator.id, kind === "safe" || operator.family === "SF", seed, project, unrelated);
+      const template = (native ? nativeOperatorTemplate : operatorTemplate)(operator.id, kind === "safe" || operator.family === "SF", seed, project, unrelated);
       const baseline = template.baseline;
       const leftOnly = { ...baseline, ...template.left };
       const rightOnly = { ...baseline, ...template.right };
-      return { id: `${groupId}-${kind}`, kind, operatorId: operator.id, dependencyMode: operator.family === "SF" ? undefined : unrelated ? "unrelated" : kind === "safe" ? "new-behavior" : "old-behavior", probes: template.probes, truth: kind === "safe" || operator.family === "SF" || unrelated ? "allow" : operator.expectedTruth, detectability: kind === "safe" || operator.family === "SF" || unrelated ? "none" : operator.expectedDetectability, baseline, leftOnly, rightOnly, merged: template.merged, entryPoints: template.entryPoints, site: template.site, baselineReference: baseline, schedule: (["simultaneous", "sequential", "alternating"] as const)[seed % 3], trace: synthesizeTrace(baseline, template.left, template.right, seed) };
+      return { id: `${groupId}-${kind}`, kind, operatorId: operator.id, dependencyMode: operator.family === "SF" ? undefined : unrelated ? "unrelated" : kind === "safe" ? "new-behavior" : "old-behavior", probes: template.probes, truth: kind === "safe" || operator.family === "SF" || unrelated ? "allow" : operator.expectedTruth, detectability: kind === "safe" || operator.family === "SF" || unrelated ? "none" : operator.expectedDetectability, baseline, leftOnly, rightOnly, merged: template.merged, entryPoints: template.entryPoints, site: template.site, baselineReference: template.reference ?? baseline, schedule: (["simultaneous", "sequential", "alternating"] as const)[seed % 3], trace: synthesizeTrace(baseline, template.left, template.right, seed) };
     };
     const conflict = makeVariant("conflict");
     const safe = makeVariant("safe");
@@ -44,13 +51,16 @@ export function generateManifest(options: GenerateOptions): BenchManifest {
   const programs = (split: "dev" | "holdout") => new Set(groups.filter((group) => group.split === split).flatMap((group) => Object.values(group.variants).flatMap((variant) => [variant.baseline, variant.leftOnly, variant.rightOnly, variant.merged].map(programFingerprint))));
   const developmentPrograms = programs("dev"); const holdoutPrograms = programs("holdout");
   const dependencyVariants = groups.filter((group) => group.operator.family !== "SF").flatMap((group) => Object.values(group.variants).filter((variant) => !variant.aliasOf));
+  const siteKeys = (split: "dev" | "holdout") => [...new Set(groups.filter((group) => group.split === split).flatMap((group) => Object.values(group.variants).map((variant) => `${group.project}:${variant.site?.producerKey}:${variant.site?.consumerKey}`)))].sort();
+  const developmentSites = siteKeys("dev"); const holdoutSites = siteKeys("holdout");
   return {
-    version: "d1-v1", seed: options.seed, generatedBy: options.generatedBy ?? "@simplercp/conflict-guard bench:generate",
+    version: native ? "d1-v2" : "d1-v1", seed: options.seed, generatedBy: options.generatedBy ?? "@simplercp/conflict-guard bench:generate",
     generationCommand: options.generationCommand ?? `bench:generate --seeds bench/seeds --out bench/datasets/d1-v1 --groups ${options.groups} --seed ${options.seed}`,
     codeCommit: options.codeCommit ?? "unspecified", typing: { characterIntervalMs: 150, pauseEveryCharacters: 24, pauseMs: 1800, startGapMs: [5_000, 60_000], intervalDistribution: "四次均匀采样之和生成对数对称间隔，中位数为 150 ms", intervalRangeMs: [65, 350], thoughtPauseRangeMs: [1800, 7000], schedules: ["simultaneous", "sequential", "alternating"] },
     dependencyMix: { oldBehavior: dependencyVariants.filter((variant) => variant.dependencyMode === "old-behavior").length, newBehavior: dependencyVariants.filter((variant) => variant.dependencyMode === "new-behavior").length, unrelated: dependencyVariants.filter((variant) => variant.dependencyMode === "unrelated").length, schedule: "每三个冲突算子组包含一个无关修改组；按去重样本计数，旧行为、新行为、无关修改的比例为 40%、40%、20%。安全算子单独统计。" },
     projects: projects.map((project) => project.name), groups, split: { development: groups.filter((group) => group.split === "dev").map((group) => group.id), holdout: groups.filter((group) => group.split === "holdout").map((group) => group.id) },
-    programStats: { uniquePrograms: new Set(allVariants.flatMap((variant) => [variant.baseline, variant.leftOnly, variant.rightOnly, variant.merged].map(programFingerprint))).size, seedPrograms: new Set(projects.map((project) => programFingerprint(project.files))).size, uniqueVariantPrograms: new Set(allVariants.map(statesFingerprint)).size, samples: allVariants.length, developmentHoldoutOverlap: [...developmentPrograms].filter((fingerprint) => holdoutPrograms.has(fingerprint)).length, groupsByProject: countBy(groups, (group) => group.project), groupsByOperator: countBy(groups, (group) => group.operator.id), heldoutFamilies: [...heldoutFamilies] }
+    programStats: { uniquePrograms: new Set(allVariants.flatMap((variant) => [variant.baseline, variant.leftOnly, variant.rightOnly, variant.merged].map(programFingerprint))).size, seedPrograms: new Set(projects.map((project) => programFingerprint(project.files))).size, uniqueVariantPrograms: new Set(allVariants.map(statesFingerprint)).size, samples: allVariants.length, developmentHoldoutOverlap: [...developmentPrograms].filter((fingerprint) => holdoutPrograms.has(fingerprint)).length, groupsByProject: countBy(groups, (group) => group.project), groupsByOperator: countBy(groups, (group) => group.operator.id), heldoutFamilies: [...heldoutFamilies] },
+    ...(diversity ? { diversity, siteStats: { development: developmentSites, holdout: holdoutSites, overlap: developmentSites.filter((key) => holdoutSites.includes(key)) } } : {})
   };
 }
 

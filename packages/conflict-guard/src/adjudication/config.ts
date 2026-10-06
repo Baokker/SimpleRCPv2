@@ -7,6 +7,7 @@ export const defaultAdjudicationConfig: AdjudicationConfig = {
   fast: "jev",
   deep: "deepseek",
   fastModel: "jev-1.13.0",
+  fastSamplingCount: 7,
   threshold: 0,
   t1Strategy: "G3",
   t2Strategy: "G1",
@@ -24,7 +25,8 @@ export const defaultAdjudicationConfig: AdjudicationConfig = {
 export function validateAdjudicationConfig(config: AdjudicationConfig) {
   if (!["G0", "G1", "G2", "G3", "G4"].includes(config.strategy) || !["G2", "G3"].includes(config.t1Strategy)) throw new Error("无效的研判策略");
   if (!Number.isFinite(config.threshold) || config.threshold < 0 || config.threshold > 1) throw new Error("研判阈值必须介于 0 与 1");
-  if (config.fastModel !== "jev-1.13.0") throw new Error("快判模型必须固定为 jev-1.13.0");
+  if (!config.fastModel.trim() || !config.fast.trim() || !config.deep.trim()) throw new Error("研判适配器与模型名称不能为空");
+  if (config.fastSamplingCount !== undefined && (!Number.isInteger(config.fastSamplingCount) || config.fastSamplingCount < 3 || config.fastSamplingCount > 25)) throw new Error("快判采样次数必须介于 3 与 25");
   if (!Number.isInteger(config.contextLimit) || config.contextLimit < 1 || config.contextLimit > 3000) throw new Error("上下文上限必须介于 1 与 3000");
   const deadline = config.point === "T2" ? 30000 : config.point === "T3" ? 60000 : 8000;
   if (config.point !== undefined && !["T1", "T2", "T3"].includes(config.point)) throw new Error("研判时点无效");

@@ -75,7 +75,7 @@ test("the later Agent receives a rejection for an active Agent dependency", asyn
     await bob.getByTestId("agent-run-submit").click();
     await expect(bob.getByTestId("agent-guard-result")).toContainText("修改被拒绝 1 次", { timeout: 20000 });
     await expect(bob.getByTestId("agent-last-rejection")).toContainText("signature");
-    await expect(bob.getByTestId("agent-last-rejection")).toContainText("agent:");
+    await expect(bob.getByTestId("agent-last-rejection")).toContainText("Alice 的 Agent");
     await expect(alice.getByTestId("agent-message-list")).toContainText("Completed", { timeout: 20000 });
     await saveEvidence("agent-agent", alice, id, { laterEditRejected: true });
   } finally { await context.close(); }

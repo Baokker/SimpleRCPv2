@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-const { values } = parseArgs({ options: { seeds: { type: "string", default: "bench/seeds" }, out: { type: "string", default: "bench/datasets/d1-v1" }, groups: { type: "string", default: "10" }, seed: { type: "string", default: "7" }, concurrency: { type: "string", default: "4" } } });
+const { values } = parseArgs({ options: { seeds: { type: "string", default: "bench/seeds/native" }, out: { type: "string", default: "bench/datasets/d1-v2" }, groups: { type: "string", default: "10" }, seed: { type: "string", default: "7" }, concurrency: { type: "string", default: "4" } } });
 await run("bench-generate.ts", ["--seeds", values.seeds!, "--out", values.out!, "--groups", values.groups!, "--seed", values.seed!]);
 await run("bench-label.ts", ["--dataset", values.out!, "--concurrency", values.concurrency!]);
 

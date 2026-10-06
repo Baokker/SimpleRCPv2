@@ -3,6 +3,18 @@ import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import { requireIdentity } from "../auth/permissions.js";
 
 export function registerConflictGuardRoutes(app: Express, runtimeManager: ProjectRuntimeManager) {
+  app.patch("/api/projects/:projectId/conflict-guard/notifications/:noticeId", (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const guard = runtimeManager.get(req.params.projectId).conflictGuard;
+      if (!guard) { res.sendStatus(404); return; }
+      const { read, handled } = req.body ?? {};
+      if ((read !== undefined && typeof read !== "boolean") || (handled !== undefined && typeof handled !== "boolean")) { res.status(400).json({ error: "通知状态必须为 boolean" }); return; }
+      if (!guard.agentGuard.updateNotice(req.params.noticeId, identity.memberId, { read, handled })) { res.sendStatus(404); return; }
+      res.status(204).end();
+    } catch (error) { next(error); }
+  });
   app.get("/api/projects/:projectId/conflict-guard/symbol", (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
@@ -65,7 +77,7 @@ export function registerConflictGuardRoutes(app: Express, runtimeManager: Projec
       if (!requireIdentity(req, res)) return;
       const runtime = runtimeManager.get(req.params.projectId);
       if (!runtime.conflictGuard) { res.sendStatus(404); return; }
-      if (!runtime.conflictGuard.revertPair(req.params.pairId, req.identity!.memberId)) { res.status(409).json({ error: "没有可撤回的修改，或当前状态不允许撤回" }); return; }
+      if (!runtime.conflictGuard.revertPair(req.params.pairId, req.identity!.memberId)) { res.status(409).json({ error: runtime.conflictGuard.revertError() }); return; }
       res.status(204).end();
     } catch (error) { next(error); }
   });

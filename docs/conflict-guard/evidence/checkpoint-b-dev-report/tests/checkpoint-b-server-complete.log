@@ -1,0 +1,455 @@
+
+> @simplercp/server@0.1.0 test /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+> vitest run
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stderr | src/__tests__/agentGuard.integration.test.ts > reports incomplete T3 when the completion snapshot cannot be read
+Agent attribution failed for run H2yh7uRel4BQ Error: ENOENT: no such file or directory, scandir '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-guard-LpfEGv/data/workspaces/-D0BY7fHgEsf'
+    at Object.readdir (node:internal/fs/promises:958:18)
+    at readDirectory (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentWorkspaceSnapshot.ts:68:19)
+    at Module.createAgentWorkspaceSnapshot (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentWorkspaceSnapshot.ts:19:3)
+    at recordFinishedFileChanges (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:300:26)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:741:27) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-guard-LpfEGv/data/workspaces/-D0BY7fHgEsf'
+}
+
+ ✓ src/__tests__/agentGuard.integration.test.ts  (47 tests) 98884ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 工作区快照读取失败时保留成功结果并记录归属错误
+Agent attribution failed for run qU6yd1uLKQ_j Error: ENOENT: no such file or directory, scandir '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-concurrency-4v91nf/data/workspaces/demo'
+    at Object.readdir (node:internal/fs/promises:958:18)
+    at readDirectory (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentWorkspaceSnapshot.ts:68:19)
+    at Module.createAgentWorkspaceSnapshot (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentWorkspaceSnapshot.ts:19:3)
+    at recordFinishedFileChanges (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:300:26)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:741:27) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-concurrency-4v91nf/data/workspaces/demo'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:560:9) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:560:9) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at options.runtime.subscribe.appendTrace.type (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:647:11)
+    at safeListener (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:204:11)
+    at emit (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:102:11)
+    at Object.run (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:105:7)
+    at Module.runWithTimeout (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunSupport.ts:108:12) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at options.runtime.subscribe.appendTrace.type (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:647:11)
+    at safeListener (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:204:11)
+    at emit (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:102:11)
+    at Object.run (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:105:7)
+    at Module.runWithTimeout (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunSupport.ts:108:12) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at options.runtime.subscribe.appendTrace.type (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:647:11)
+    at safeListener (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:204:11)
+    at emit (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:102:11)
+    at Object.run (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:185:7)
+    at Module.runWithTimeout (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunSupport.ts:108:12) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at options.runtime.subscribe.appendTrace.type (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:647:11)
+    at safeListener (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:204:11)
+    at emit (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:102:11)
+    at Object.run (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/fakeAgentRuntime.ts:185:7)
+    at Module.runWithTimeout (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunSupport.ts:108:12) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent listener failed for run KZurhWVnGMvj Error: event stop injection
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/agentConcurrency.test.ts:133:48
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:716:13
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:705:18)
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:719:13
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:705:18) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:719:13
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:705:18) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at recordFinishedFileChanges (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:310:7)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:741:27) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at recordFinishedFileChanges (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:310:7)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:741:27) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:750:7) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:750:7) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:777:7) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+Agent trace failed for run KZurhWVnGMvj Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at appendTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:218:21)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:777:7) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+stderr | src/__tests__/agentConcurrency.test.ts > Agent concurrency with fake runtime > 轨迹文件无法写入时运行成功且恢复后仍能读取已有事件
+Agent listener failed for run k4cLdrqgUUfl Error: event stop injection
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/agentConcurrency.test.ts:133:48
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:716:13
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:705:18)
+
+ ✓ src/__tests__/agentConcurrency.test.ts  (20 tests) 6477ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/agentRunApi.integration.test.ts  (7 tests) 22903ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stderr | src/__tests__/conflictGuardApi.integration.test.ts > conflict guard API > enters degraded state when a semantic update throws and keeps the API available
+Conflict guard entered degraded state Error: semantic update injection
+    at Object.guard.semanticIndex.update (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/conflictGuardApi.integration.test.ts:312:13)
+    at updateSemantic (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/conflictGuard/projectConflictGuard.ts:255:36)
+    at Timeout.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/conflictGuard/projectConflictGuard.ts:240:9)
+    at listOnTimeout (node:internal/timers:608:17)
+    at processTimers (node:internal/timers:543:7)
+
+stderr | src/__tests__/conflictGuardApi.integration.test.ts > conflict guard API > continues the trace write chain after a metadata path failure
+Conflict guard trace write failed Error: EEXIST: file already exists, mkdir '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/conflict-guard-api-FGk6eA/data/projects/demo/conflict-guard'
+    at Object.mkdir (node:internal/fs/promises:861:10)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/conflictGuard/projectConflictGuard.ts:188:7
+    at Object.waitForTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/conflictGuard/projectConflictGuard.ts:720:5)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/conflictGuardApi.integration.test.ts:329:5
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/vitest@1.6.1_@types+node@20.19.41/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7 {
+  errno: -17,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/conflict-guard-api-FGk6eA/data/projects/demo/conflict-guard'
+}
+Conflict guard entered degraded state Error: EEXIST: file already exists, mkdir '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/conflict-guard-api-FGk6eA/data/projects/demo/conflict-guard'
+    at Object.mkdir (node:internal/fs/promises:861:10)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/conflictGuard/projectConflictGuard.ts:188:7
+    at Object.waitForTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/conflictGuard/projectConflictGuard.ts:720:5)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/conflictGuardApi.integration.test.ts:329:5
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/vitest@1.6.1_@types+node@20.19.41/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7 {
+  errno: -17,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/conflict-guard-api-FGk6eA/data/projects/demo/conflict-guard'
+}
+
+ ✓ src/__tests__/conflictGuardApi.integration.test.ts  (10 tests) 3013ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardCheckpoint.integration.test.ts  (15 tests) 37301ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardRules.integration.test.ts  (8 tests) 2317ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardScenarios.integration.test.ts  (11 tests) 25598ms
+ ✓ src/__tests__/permissionDispatcher.test.ts  (15 tests) 60ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stdout | src/__tests__/conflictGuardSemantic.integration.test.ts > 符号观察的真实协作接口 > 磁盘修改未打开的文件时更新索引，记录初次与增量耗时且不创建活跃变更
+{"semanticPerformance":{"initialMs":9.763332999999875,"incrementalSamples":30,"p50Ms":7.904833999999937,"p95Ms":9.256332999999813}}
+
+ ✓ src/__tests__/conflictGuardSemantic.integration.test.ts  (4 tests) 1809ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardAdjudication.integration.test.ts  (4 tests) 21627ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/agentSessionApi.test.ts  (3 tests) 121ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/memberIdentityApi.test.ts  (6 tests) 1177ms
+ ✓ src/__tests__/projects.test.ts  (9 tests) 62ms
+ ✓ src/__tests__/collaborativeDocuments.test.ts  (9 tests) 33ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/teamAgentApi.test.ts  (3 tests) 128ms
+ ✓ src/__tests__/workspace.test.ts  (11 tests) 36ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/chat.test.ts  (3 tests) 132ms
+ ✓ src/__tests__/agentWriteLedger.test.ts  (6 tests) 14ms
+ ✓ src/__tests__/storageMigration.test.ts  (3 tests) 35ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/projectApi.test.ts  (2 tests) 68ms
+ ✓ src/__tests__/config.test.ts  (8 tests) 3ms
+stderr | src/__tests__/openCodeRuntime.test.ts > OpenCode runtime model switching > keeps the old process model when dispose fails and retries while idle
+Agent runtime model switch failed Error: dispose failed
+    at Object.dispose (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/openCodeRuntime.test.ts:80:36)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/openCodeRuntime.ts:63:23
+    at startModelSwitch (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/openCodeRuntime.ts:66:7)
+    at ensureCurrentProcess (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/openCodeRuntime.ts:56:11)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/openCodeRuntime.ts:98:16
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/openCodeRuntime.test.ts:88:5
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:17)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+ ✓ src/__tests__/openCodeRuntime.test.ts  (4 tests) 166ms
+ ✓ src/__tests__/agentEditProposal.test.ts  (5 tests) 12ms
+ ✓ src/__tests__/chatAgentBridge.test.ts  (2 tests) 14ms
+ ✓ src/__tests__/rooms.test.ts  (6 tests) 33ms
+ ✓ src/__tests__/foundation.test.ts  (4 tests) 19ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stderr | src/__tests__/conflictGuardOff.test.ts > conflict guard off > starts in observe mode with an unknown Git commit when Git is unavailable
+Unable to read Git commit for conflict guard <ref *1> Error: spawnSync git ENOENT
+    at Object.spawnSync (node:internal/child_process:1120:20)
+    at spawnSync (node:child_process:911:24)
+    at Proxy.execFileSync (node:child_process:954:15)
+    at readGitCommit (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/createApp.ts:127:20)
+    at Module.createApp (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/createApp.ts:22:83)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/conflictGuardOff.test.ts:57:19
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawnSync git',
+  path: 'git',
+  spawnargs: [ 'rev-parse', 'HEAD' ],
+  error: [Circular *1],
+  status: null,
+  signal: null,
+  output: null,
+  pid: 0,
+  stdout: undefined,
+  stderr: undefined
+}
+
+ ✓ src/__tests__/conflictGuardOff.test.ts  (2 tests) 98ms
+ ✓ src/__tests__/realtime.test.ts  (3 tests) 16ms
+ ✓ src/__tests__/openCodeRuntime.integration.test.ts  (2 tests) 5452ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/agentSettingsApi.test.ts  (2 tests) 50ms
+ ✓ src/__tests__/sharedTerminal.test.ts  (3 tests) 61ms
+ ✓ src/__tests__/agentSessionStore.test.ts  (2 tests) 19ms
+ ✓ src/__tests__/fakeAgentRuntime.test.ts  (2 tests) 15ms
+stderr | file:/Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/dist/yjs.mjs:10294:11
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/openCodeStatus.test.ts  (1 test) 703ms
+ ✓ src/__tests__/agentRunSupport.test.ts  (3 tests) 99ms
+ ✓ src/__tests__/agentRunSelection.test.ts  (3 tests) 8ms
+ ✓ src/__tests__/guardNotifications.test.ts  (2 tests) 5ms
+ ✓ src/__tests__/agentRunStore.test.ts  (1 test) 17ms
+ ✓ src/__tests__/agentScheduler.test.ts  (1 test) 2ms
+stderr | src/__tests__/traceStore.test.ts > Agent trace 写入隔离 > 文件路径故障恢复后继续写入并保持成功事件的连续序号
+Agent trace write failed Error: EISDIR: illegal operation on a directory, read
+    at readFileHandle (node:internal/fs/promises:558:24)
+    at readTrace (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:54:21)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:15:24
+    at Object.append (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/traceStore.ts:29:9)
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/traceStore.test.ts:22:5
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+ ✓ src/__tests__/traceStore.test.ts  (1 test) 12ms
+ ✓ src/__tests__/agentSettingsStore.test.ts  (1 test) 7ms
+ ✓ src/__tests__/teamAgentSupport.test.ts  (3 tests) 4ms
+ ✓ src/__tests__/openCodeWorkspace.test.ts  (1 test) 4ms
+ ✓ src/__tests__/processEnv.test.ts  (1 test) 2ms
+stderr | src/__tests__/processFaults.test.ts > process fault handlers > records process-level faults without terminating the process
+Unhandled promise rejection Error: test rejection
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/processFaults.test.ts:8:30
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:17)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/vitest@1.6.1_@types+node@20.19.41/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+Uncaught exception Error: test exception
+    at /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/__tests__/processFaults.test.ts:9:29
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:17)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2/node_modules/.pnpm/vitest@1.6.1_@types+node@20.19.41/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+
+ ✓ src/__tests__/processFaults.test.ts  (1 test) 3ms
+
+ Test Files  45 passed (45)
+      Tests  260 passed (260)
+   Start at  01:47:13
+   Duration  246.60s (transform 1.83s, setup 3ms, collect 10.68s, tests 228.62s, environment 4ms, prepare 2.23s)

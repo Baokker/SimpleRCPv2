@@ -23,6 +23,7 @@ export interface CollaborativeDocumentStoreOptions {
   shouldPinDocument?(filePath: string): boolean;
   onPersistenceGateOpened?(): void;
   filesystemOrigin?(filePath: string, content: string): unknown;
+  onFilesystemReconciled?(filePath: string, content: string): void;
   onUnopenedGuardRevert?(filePath: string, before: string, after: string, ownerId: string): void;
 }
 
@@ -41,6 +42,7 @@ export function createCollaborativeDocumentStore({
   shouldPinDocument,
   onPersistenceGateOpened,
   filesystemOrigin,
+  onFilesystemReconciled,
   onUnopenedGuardRevert
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
@@ -272,6 +274,7 @@ export function createCollaborativeDocumentStore({
         if (persistGate && !persistGate(filePath).allowed) onPersistConflict?.(filePath);
       })
     );
+    onFilesystemReconciled?.(filePath, result.content);
   }
 
   function dropPath(filePath: string) {

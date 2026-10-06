@@ -1,0 +1,201 @@
+{
+  "split": "dev",
+  "dataset": "d1-v2",
+  "source": "../../docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round1/results.json.gz",
+  "samples": 12,
+  "lockCount": 12,
+  "allowCount": 0,
+  "recommended": 0,
+  "selection": "minimum missed blocking, then false blocking, then maximum agreement, then minimum escalation",
+  "curves": [
+    {
+      "threshold": 0,
+      "coverage": 0.6666666666666667,
+      "escalationRatio": 0.3333333333333333,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.05,
+      "coverage": 0.6666666666666667,
+      "escalationRatio": 0.3333333333333333,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.1,
+      "coverage": 0.6666666666666667,
+      "escalationRatio": 0.3333333333333333,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.15,
+      "coverage": 0.6666666666666667,
+      "escalationRatio": 0.3333333333333333,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.2,
+      "coverage": 0.6666666666666667,
+      "escalationRatio": 0.3333333333333333,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.25,
+      "coverage": 0.6666666666666667,
+      "escalationRatio": 0.3333333333333333,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.3,
+      "coverage": 0.5,
+      "escalationRatio": 0.5,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.35,
+      "coverage": 0.5,
+      "escalationRatio": 0.5,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.4,
+      "coverage": 0.33333333333333337,
+      "escalationRatio": 0.6666666666666666,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.45,
+      "coverage": 0.33333333333333337,
+      "escalationRatio": 0.6666666666666666,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.5,
+      "coverage": 0.25,
+      "escalationRatio": 0.75,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.55,
+      "coverage": 0.16666666666666663,
+      "escalationRatio": 0.8333333333333334,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.65,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.75,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.85,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.9,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 0.95,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    },
+    {
+      "threshold": 1,
+      "coverage": 0,
+      "escalationRatio": 1,
+      "missBlockRatio": 0.75,
+      "falseBlockRatio": null,
+      "agreement": 0.25,
+      "completionRatio": 1
+    }
+  ]
+}

@@ -1,5 +1,22 @@
 export interface GuardActorRef { kind: string; memberId?: string; runId?: string; ownerId?: string; teamAgent?: string }
 
+export interface GuardConflict {
+  pairId: string;
+  revision: number;
+  self: GuardActorRef;
+  other: GuardActorRef;
+  otherDisplayName: string;
+  symbols: { self: string; other: string };
+  beforeSignature: string;
+  afterSignature: string;
+  ruleId: string;
+  zone: "white" | "black" | "grey";
+  decision: "allow" | "warn" | "lock";
+  summaryZh: string;
+  explanationZh?: string;
+  suggestionZh?: string;
+}
+
 export interface ActiveSymbol {
   key: string;
   file: string;
@@ -35,6 +52,7 @@ export interface ConflictGuardState {
     pair: ConflictGuardState["candidatePairs"][number];
     status: string;
     revision: number;
+    conflict?: GuardConflict;
     point?: "T2" | "T3";
     shadow?: boolean;
     leftConfirmed?: boolean;

@@ -1,0 +1,91 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ❯ src/__tests__/agentGuard.integration.test.ts  (45 tests | 2 failed | 43 skipped) 5939ms
+   ❯ src/__tests__/agentGuard.integration.test.ts > accepts and rejects Agent edits through a symbolic workspace using production timings
+     → Path escapes workspace root
+   ❯ src/__tests__/agentGuard.integration.test.ts > rejects a stale full-file T2 write and keeps a human edit during its 1500ms judgement
+     → the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardCheckpoint.integration.test.ts  (15 tests | 14 skipped) 3293ms
+ ❯ src/__tests__/openCodeRuntime.test.ts  (4 tests | 1 failed | 3 skipped) 6ms
+   ❯ src/__tests__/openCodeRuntime.test.ts > tracks descendant OpenCode sessions and excludes unrelated permission requests
+     → expected false to be true // Object.is equality
+ ❯ src/__tests__/agentEditProposal.test.ts  (5 tests | 1 failed | 4 skipped) 7ms
+   ❯ src/__tests__/agentEditProposal.test.ts > reconstructs a deeply indented trimDiff and prefers exact tool input
+     → Edit baseline has changed for example.ts; reread the file and retry.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/agentEditProposal.test.ts > reconstructs a deeply indented trimDiff and prefers exact tool input
+Error: Edit baseline has changed for example.ts; reread the file and retry.
+ ❯ Module.reconstructAgentEdit src/agent/conflictGuardEditHandler.ts:61:32
+     59|       }
+     60|     }
+     61|     if (after === false) throw new Error(`Edit baseline has changed fo…
+       |                                ^
+     62|     if (proposals.some((proposal) => proposal.file === file)) throw ne…
+     63|     proposals.push({ file, before, after, existedBefore, ...(patches[0…
+ ❯ src/__tests__/agentEditProposal.test.ts:49:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/__tests__/agentGuard.integration.test.ts > accepts and rejects Agent edits through a symbolic workspace using production timings
+Error: Path escapes workspace root
+ ❯ Module.canonicalWorkspacePath src/workspacePath.ts:34:101
+     32|   }
+     33|   const relative = path.relative(canonicalRoot, canonical);
+     34|   if (relative === ".." || relative.startsWith(`..${path.sep}`) || pat…
+       |                                                                                                     ^
+     35|   return { absolute: canonical, relative: relative.split(path.sep).joi…
+     36| }
+ ❯ reconstructAgentEdit src/agent/conflictGuardEditHandler.ts:21:18
+ ❯ src/agent/conflictGuardEditHandler.ts:84:29
+ ❯ src/__tests__/agentGuard.integration.test.ts:69:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/__tests__/agentGuard.integration.test.ts > rejects a stale full-file T2 write and keeps a human edit during its 1500ms judgement
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ src/__tests__/agentGuard.integration.test.ts:251:75
+    249|   await waitFor(async () => ["completed", "failed"].includes((await co…
+    250|   expect(await context.getRun(created.id)).toMatchObject({ status: "co…
+    251|   expect((await context.getRun(created.id)).conflictGuard?.lastRejecti…
+       |                                                                           ^
+    252|   expect((await context.getRun(created.id)).conflictGuard?.rejectedEdi…
+    253|   expect(await context.disk("src/cart.ts")).toContain("[item, ...this.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/__tests__/openCodeRuntime.test.ts > tracks descendant OpenCode sessions and excludes unrelated permission requests
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/__tests__/openCodeRuntime.test.ts:7:107
+      5| it("tracks descendant OpenCode sessions and excludes unrelated permiss…
+      6|   const accepts = createRunSessionFilter("parent");
+      7|   expect(accepts({ type: "session.created", properties: { info: { id: …
+       |                                                                                                           ^
+      8|   expect(accepts({ type: "session.created", properties: { info: { id: …
+      9|   expect(accepts({ type: "permission.asked", properties: { id: "p", se…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  3 failed | 1 passed (4)
+      Tests  4 failed | 1 passed | 64 skipped (69)
+   Start at  00:43:16
+   Duration  13.64s (transform 2.04s, setup 0ms, collect 3.61s, tests 9.24s, environment 0ms, prepare 256ms)
+
+undefined
+/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/__tests__/agentGuard.integration.test.ts src/__tests__/agentEditProposal.test.ts src/__tests__/openCodeRuntime.test.ts src/__tests__/conflictGuardCheckpoint.integration.test.ts -t symbolic workspace|stale full-file|deeply indented|descendant OpenCode|P2 先后编辑

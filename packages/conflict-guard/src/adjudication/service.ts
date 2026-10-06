@@ -18,7 +18,8 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   async function provider(input: AdjudicationInput, fast: boolean, signal: AbortSignal, budget: number): Promise<CachedCall & { waitedMs?: number }> {
     if (signal.aborted) throw new ProviderError("cancelled");
     const judge = fast ? options.fast : options.deep;
-    const key = cacheKey(input, judge.name, judge.model);
+    const parameters = { ...judge.cacheParameters, role: fast ? "fast" : "deep", reasoning: config.reasoning ?? false, hardDeadlineMs: config.hardDeadlineMs };
+    const key = cacheKey(input, judge.name, judge.model, parameters);
     let shared = inFlight.get(key);
     if (shared?.controller.signal.aborted) shared = undefined;
     const joined = Boolean(shared);
@@ -30,7 +31,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
       void promise.finally(() => { if (inFlight.get(key)?.promise === promise) inFlight.delete(key); }).catch(() => undefined);
       async function execute(): Promise<CachedCall> {
         const started = options.clock.now();
-        const base = { ...(input.point ? { point: input.point } : {}), adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input) };
+        const base = { ...(input.point ? { point: input.point } : {}), role: fast ? "fast" as const : "deep" as const, adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input), cacheKey: key };
         let timer: unknown;
         let abortListener: (() => void) | undefined;
         let entry: CachedCall;
@@ -44,9 +45,9 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
           const cached = options.mode === "live" ? undefined : await Promise.race([options.cache?.get(key), timeout, abortPromise]);
           if (controller.signal.aborted) throw new ProviderError("cancelled");
           if (cached) {
-            validateCachedCall(cached, key, input, judge.name, judge.model);
+            validateCachedCall(cached, key, input, judge.name, judge.model, parameters);
             const safe = sanitize(cached, options.sensitiveValues ?? []);
-            const call = { ...safe.call, status: safe.result ? "cache-hit" as const : safe.call.status, costUsd: 0 };
+            const call = { ...safe.call, cacheKey: key, status: safe.result ? "cache-hit" as const : safe.call.status, costUsd: 0 };
             emit(call); return { ...safe, call };
           }
           if (options.mode === "replay") throw new ProviderError("failed", "provider replay cache miss");
@@ -55,14 +56,14 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
           const result = sanitize(await Promise.race([request, timeout, abortPromise]), options.sensitiveValues ?? []);
           completedResult = result;
           const call: ProviderCall = { ...base, status: "success", latencyMs: result.latencyMs, decision: result.decision, confidence: result.confidence, usage: result.usage, costUsd: cost(result, fast) };
-          entry = { key, input, result, call };
+          entry = { key, input, parameters, result, call };
           if (options.mode === "record") {
             try { await Promise.race([options.cache?.put(sanitize(entry, options.sensitiveValues ?? [])), timeout, abortPromise]); }
             catch (error) { reportError("cache"); throw error; }
           }
         } catch (error) {
           const status = error instanceof ProviderError ? error.status : "failed";
-          entry = { key, input, call: { ...base, status, latencyMs: Math.max(0, options.clock.now() - started), usage: completedResult?.usage, costUsd: cost(completedResult, fast) } };
+          entry = { key, input, parameters, call: { ...base, status, latencyMs: options.mode === "replay" ? 0 : Math.max(0, options.clock.now() - started), usage: completedResult?.usage, costUsd: cost(completedResult, fast) } };
         } finally {
           options.clock.clearTimeout(timer);
           if (abortListener) controller.signal.removeEventListener("abort", abortListener);
@@ -83,8 +84,10 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
       if (signal.aborted) { abort(); return; }
       if (subscribedAt + budget < current.startedAt + config.hardDeadlineMs) timer = options.clock.setTimeout(() => {
         if (!finish()) return;
-        const call: ProviderCall = { adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input), status: "timeout", latencyMs: budget, costUsd: 0 };
-        emit(call); resolve({ key, input, call });
+        const call: ProviderCall = { ...(input.point ? { point: input.point } : {}), role: fast ? "fast" : "deep", adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input), cacheKey: key, status: "timeout", latencyMs: budget, costUsd: 0 };
+        const entry = { key, input, parameters, call };
+        if (options.mode === "record") void options.cache?.put(sanitize(entry, options.sensitiveValues ?? [])).catch(() => reportError("cache"));
+        emit(call); resolve(entry);
       }, budget);
       current.promise.then((value) => { if (finish()) resolve(joined && subscribedAt > current.startedAt && options.mode !== "replay" && value.call.status !== "cache-hit" ? { ...value, waitedMs: Math.max(0, options.clock.now() - subscribedAt) } : value); }, () => { if (finish()) reject(new ProviderError("failed")); });
     });
@@ -111,7 +114,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     if (signal.aborted) throw new ProviderError("cancelled");
     if (final.call.status === "timeout" && options.clock.now() - started >= config.hardDeadlineMs) elapsed = config.hardDeadlineMs;
     const result = Math.max(elapsed, options.mode === "replay" ? 0 : options.clock.now() - started) <= config.hardDeadlineMs ? final.result : undefined;
-    const explanation = result?.userExplanation ?? (result ? result.decision === "lock" ? "模型发现双方修改可能破坏共同使用的行为。" : result.decision === "allow" ? "模型认为双方修改可以共同继续。" : "模型建议双方检查关联修改的影响。" : "研判失败，已降级为警告。 ");
+    const explanation = result?.userExplanation?.trim() ?? (result ? result.decision === "lock" ? "模型发现双方修改可能破坏共同使用的行为。" : result.decision === "allow" ? "模型认为双方修改可以共同继续。" : "模型建议双方检查关联修改的影响。" : "研判失败，已降级为警告。");
     const action = result?.suggestedAction ?? `请双方检查 ${input.left.symbol} 与 ${input.right.symbol} 的共同使用方式。`;
     adjudicationLatencies.push(Math.min(Math.max(elapsed, options.clock.now() - started), config.hardDeadlineMs));
     return { ...local, decision: result?.decision ?? "warn", ruleId: result ? `model-${source}` : "model-unavailable", summary: explanation, evidence: result?.evidence?.map((item) => ({ file: item.path, symbol: item.symbol, detail: item.reason })) ?? local.evidence, adjudication: { ...(config.point ? { point: config.point } : {}), strategy: config.strategy, source: result ? source : "fallback", adapter: final.call.adapter, model: final.call.model, confidence: result?.confidence, latencyMs: Math.min(elapsed, config.hardDeadlineMs), status: result ? "success" : "degraded", escalated, userExplanation: explanation, suggestedAction: action, inputHash: inputHash(input), promptVersion: config.promptVersion } };
@@ -123,11 +126,11 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   }, dispose() { for (const request of inFlight.values()) request.controller.abort(); } };
 }
 
-function validateCachedCall(value: CachedCall, key: string, input: AdjudicationInput, adapter: string, model: string) {
+function validateCachedCall(value: CachedCall, key: string, input: AdjudicationInput, adapter: string, model: string, parameters: Record<string, unknown>) {
   const call = value.call;
   const finite = (number: unknown) => typeof number === "number" && Number.isFinite(number) && number >= 0;
   const validDecision = (decision: unknown) => ["allow", "warn", "lock"].includes(String(decision));
-  if (!call || value.key !== key || cacheKey(value.input, adapter, model) !== key || call.adapter !== adapter || call.model !== model || call.inputHash !== inputHash(input) || call.promptVersion !== input.promptVersion || !finite(call.latencyMs) || !finite(call.costUsd) || !["success", "timeout", "failed", "invalid-format", "cancelled"].includes(call.status)) throw new ProviderError("invalid-format");
+  if (!call || value.key !== key || cacheKey(value.input, adapter, model, parameters) !== key || call.adapter !== adapter || call.model !== model || call.inputHash !== inputHash(input) || call.promptVersion !== input.promptVersion || !finite(call.latencyMs) || !finite(call.costUsd) || !["success", "timeout", "failed", "invalid-format", "cancelled"].includes(call.status)) throw new ProviderError("invalid-format");
   const result = value.result;
   if (!result) { if (call.status === "success") throw new ProviderError("invalid-format"); return; }
   if (call.status !== "success" || !validDecision(result.decision) || !finite(result.confidence) || result.confidence > 1 || !finite(result.latencyMs) || result.decision !== call.decision || result.confidence !== call.confidence || result.latencyMs !== call.latencyMs) throw new ProviderError("invalid-format");

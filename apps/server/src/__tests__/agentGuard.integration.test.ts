@@ -20,11 +20,16 @@ import { conflictGuardEditHandler } from "../agent/conflictGuardEditHandler.js";
 const shop = fileURLToPath(new URL("../../../../demo/conflict-shop/", import.meta.url));
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => { for (const dispose of cleanup.reverse()) await dispose(); cleanup.length = 0; });
-async function setup(mode: "off" | "observe" | "rules" | "full" = "rules", model?: { decision: "allow" | "warn" | "lock"; delay?: number; timeout?: boolean; runTimeoutMs?: number }) {
+async function setup(mode: "off" | "observe" | "rules" | "full" = "rules", model?: { decision: "allow" | "warn" | "lock"; delay?: number; timeout?: boolean; runTimeoutMs?: number }, linked = false) {
   const root = await createTestWorkspace("agent-guard-");
+  const accessRoot = linked ? `${root}-link` : root;
+  if (linked) {
+    await fs.symlink(root, accessRoot, "dir");
+    cleanup.push(async () => { await fs.unlink(accessRoot); });
+  }
   let modelCalls = 0;
   const judge = async (): Promise<JudgeResult> => { modelCalls += 1; await new Promise((resolve) => setTimeout(resolve, model?.delay ?? 1)); if (model?.timeout) throw new ProviderError("timeout"); return { decision: model?.decision ?? "warn", confidence: 0.9, latencyMs: model?.delay ?? 1, raw: {}, userExplanation: "关联计算需要检查。", suggestedAction: "请 Agent 检查调用方式。" }; };
-  const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: shop, terminalEnabled: false, fakeAgentRuntime: true, agent: { runTimeoutMs: model?.runTimeoutMs ?? 600000, maxConcurrentRuns: 3, model: "fake-agent", openCodePort: 4199, baseUrl: "http://127.0.0.1:4199" }, importRoots: [path.dirname(shop)], conflictGuard: { mode, idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 5000, activeIdleMs: 600000, cursorDebounceMs: 100, ...(model ? { adjudication: { settings: defaultAdjudicationConfig, jev: {}, deepseek: { model: "test" }, judges: { fast: { name: "test-fast", model: "test", judge }, deep: { name: "test-deep", model: "test", judge } } } } : {}) } });
+  const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(accessRoot, "data"), demoProjectRoot: shop, terminalEnabled: false, fakeAgentRuntime: true, agent: { runTimeoutMs: model?.runTimeoutMs ?? 600000, maxConcurrentRuns: 3, model: "fake-agent", openCodePort: 4199, baseUrl: "http://127.0.0.1:4199" }, importRoots: [path.dirname(shop)], conflictGuard: { mode, idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 5000, activeIdleMs: 600000, cursorDebounceMs: 100, ...(model ? { adjudication: { settings: defaultAdjudicationConfig, jev: {}, deepseek: { model: "test" }, judges: { fast: { name: "test-fast", model: "test", judge }, deep: { name: "test-deep", model: "test", judge } } } } : {}) } });
   const project = await app.locals.registry.importDirectory("Agent shop", shop);
   const runtime = app.locals.runtimeManager.get(project.id) as ProjectRuntime;
   const server = http.createServer(app);
@@ -45,11 +50,33 @@ async function setup(mode: "off" | "observe" | "rules" | "full" = "rules", model
   const run = (prompt: string, memberId = bob.member.id) => app.locals.agentRuns.createRun({ projectId: project.id, memberId, prompt });
   const getRun = (id: string): Promise<AgentRun> => app.locals.agentRuns.getRun(project.id, id);
   const trace = (id: string) => app.locals.agentRuns.listTrace(project.id, id);
-  return { app, runtime, alice, bob, connect, run, getRun, trace, modelCalls: () => modelCalls, disk: (file: string) => fs.readFile(path.join(runtime.project.workspacePath, file), "utf8") };
+  return { app, runtime, workspacePath: project.workspacePath, alice, bob, connect, run, getRun, trace, modelCalls: () => modelCalls, disk: (file: string) => fs.readFile(path.join(runtime.project.workspacePath, file), "utf8") };
 }
 function replace(document: Y.Doc, before: string, after: string) { const text = document.getText("content"); const from = text.toString().indexOf(before); expect(from).toBeGreaterThanOrEqual(0); document.transact(() => { text.delete(from, before.length); text.insert(from, after); }); }
 async function waitFor(check: () => boolean | Promise<boolean>, timeout = 9000) { const deadline = performance.now() + timeout; while (!await check()) { if (performance.now() > deadline) throw new Error("等待 Agent 检查超时"); await new Promise((resolve) => setTimeout(resolve, 25)); } }
 const edit = (file: string, from: string, to: string) => `${file}:${encodeURIComponent(from)}=>${encodeURIComponent(to)}`;
+
+it("accepts and rejects Agent edits through a symbolic workspace using production timings", async () => {
+  const context = await setup("rules", undefined, true);
+  const workspace = context.workspacePath;
+  const canonical = await fs.realpath(workspace);
+  const guard = context.runtime.conflictGuard!;
+  const file = "src/cart.ts";
+  const before = await context.disk(file);
+  guard.beginAgentRun({ kind: "agent", runId: "symbolic-run", ownerId: context.bob.member.id }, new Map([[file, before]]));
+  const handler = conflictGuardEditHandler({ workspace, judge: (proposals, signal) => guard.agentGuard.judge("symbolic-run", proposals, signal), approved: () => {} });
+  const request = { id: "symbolic-edit", sessionID: "symbolic-session", permission: "edit", metadata: { filepath: path.join(canonical, file), diff: createPatch(file, before, before.replace("let amount = 0;", "let amount = 10;")) } };
+  const allowed = await handler(request, new AbortController().signal);
+  expect(allowed.reply).toBe("once");
+  await allowed.onRejected?.();
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(() => guard.state().activeSymbols.some((set) => set.actor.kind === "human"));
+  const rejected = await handler({ ...request, id: "symbolic-conflict" }, new AbortController().signal);
+  expect(rejected.reply).toBe("reject");
+  expect(rejected.message).toContain("applyDiscount");
+  expect(rejected.message).not.toContain("could not verify");
+}, 15000);
 
 it("rejects an Agent signature conflict, accepts a compatible retry and keeps the human editable", async () => {
   const context = await setup();
@@ -187,7 +214,7 @@ it("rejects a timed out T2 without failing the run", async () => {
   await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.symbols.some((symbol) => symbol.key.endsWith("#applyDiscount"))));
   const created = await context.run(`fake-edit=${edit("src/checkout.ts", "cart.total()", "cart.total() + 1")}`);
   await waitFor(async () => (await context.getRun(created.id)).status === "completed");
-  expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("retry later");
+  expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("研判未完成");
   expect(context.runtime.conflictGuard!.state().frozenFiles).toEqual([]);
 }, 15000);
 
@@ -205,6 +232,145 @@ it("rechecks a dependency changed while T2 is awaiting a model verdict", async (
   expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("signature");
   expect(await context.disk("src/cart.ts")).toBe(original);
   expect(context.runtime.conflictGuard!.state().frozenFiles).toEqual([]);
+}, 15000);
+
+it("rejects a stale full-file T2 write and keeps a human edit during its 1500ms judgement", async () => {
+  const context = await setup("full", { decision: "allow", delay: 1500 });
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "return price * (1 - rate);", "return price - rate;");
+  await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.symbols.some((symbol) => symbol.key.endsWith("#applyDiscount"))));
+  const cart = await context.connect("src/cart.ts", context.alice.member.id);
+  const from = "applyDiscount(amount, 0.1)";
+  const to = "applyDiscount(amount + 1, 0.1)";
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", from, to)} fake-on-reject=${edit("src/cart.ts", from, to)} fake-delay=300`);
+  await waitFor(() => context.modelCalls() === 1);
+  replace(cart, "this.items = [...this.items, item];", "this.items = [item, ...this.items];");
+  await waitFor(async () => (await context.disk("src/cart.ts")).includes("[item, ...this.items]"));
+  await waitFor(async () => ["completed", "failed"].includes((await context.getRun(created.id)).status), 18000);
+  expect(await context.getRun(created.id)).toMatchObject({ status: "completed" });
+  expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("文件在你修改期间已被他人更新");
+  expect((await context.getRun(created.id)).conflictGuard?.rejectedEdits).toBe(1);
+  expect(await context.disk("src/cart.ts")).toContain("[item, ...this.items]");
+  expect(await context.disk("src/cart.ts")).toContain(to);
+  expect(cart.getText("content").toString()).toContain("[item, ...this.items]");
+  expect(cart.getText("content").toString()).toContain(to);
+}, 30000);
+
+it("replies to an edit permission from a child Agent session", async () => {
+  const context = await setup();
+  const created = await context.run(`fake-child=true fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")}`);
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect(await context.disk("src/cart.ts")).toContain("let amount = 10;");
+  const events = await context.trace(created.id);
+  const createdChild = events.find((event: { type: string }) => event.type === "opencode.session.created");
+  expect(createdChild).toBeDefined();
+  expect(events.some((event: { type: string; data?: Record<string, unknown> }) => event.type === "permission_reply" && String(event.data?.sessionId).endsWith("-child"))).toBe(true);
+}, 15000);
+
+it("merges an approved Agent write with a human edit made before write confirmation", async () => {
+  const context = await setup();
+  const cart = await context.connect("src/cart.ts");
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")} fake-write-delay=1000 fake-delay=2700`);
+  await waitFor(async () => (await context.trace(created.id)).some((event: { type: string }) => event.type === "permission_reply"));
+  replace(cart, "this.items = [...this.items, item];", "this.items = [item, ...this.items];");
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(await context.disk("src/cart.ts")).toContain("this.items = [...this.items, item];");
+  await waitFor(() => cart.getText("content").toString().includes("let amount = 10;"));
+  await waitFor(async () => (await context.disk("src/cart.ts")).includes("this.items = [item, ...this.items];"));
+  expect(await context.disk("src/cart.ts")).toContain("let amount = 10;");
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+  expect(cart.getText("content").toString()).toContain("this.items = [item, ...this.items];");
+}, 15000);
+
+it("keeps a later human dependency edit editable while an Agent run is active", async () => {
+  const context = await setup();
+  const created = await context.run(`fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")} fake-delay=4000`);
+  await waitFor(() => context.runtime.conflictGuard!.state().activeSymbols.some((set) => set.actor.kind === "agent" && set.actor.runId === created.id));
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(() => context.runtime.conflictGuard!.state().candidatePairs.some((pair) => pair.left.actor.kind === "agent" || pair.right.actor.kind === "agent"));
+  await new Promise((resolve) => setTimeout(resolve, 1700));
+  expect(context.runtime.conflictGuard!.state().frozenFiles).toEqual([]);
+  expect(context.runtime.conflictGuard!.state().pairDecisions.filter((record) => record.pair.left.actor.kind === "human" && record.pair.right.actor.kind === "agent" && record.verdict?.decision === "lock")).toEqual([]);
+  replace(pricing, "return price * (1 - rate);", "return price * (1 - rate) + 0;");
+  expect(pricing.getText("content").toString()).toContain("+ 0");
+  await waitFor(async () => (await context.getRun(created.id)).status === "completed");
+}, 15000);
+
+it("reserves precise disjoint functions in one file for two Agent proposals", async () => {
+  const context = await setup();
+  const guard = context.runtime.conflictGuard!;
+  const file = "src/independent.ts";
+  const before = "export function tax(amount: number) { return amount * 0.1; }\nexport function label(text: string) { return text.trim(); }\n";
+  await fs.writeFile(path.join(context.runtime.project.workspacePath, file), before);
+  guard.beginAgentRun({ kind: "agent", runId: "proposal-one", ownerId: context.alice.member.id }, new Map([[file, before]]));
+  guard.beginAgentRun({ kind: "agent", runId: "proposal-two", ownerId: context.bob.member.id }, new Map([[file, before]]));
+  const first = await guard.agentGuard.judge("proposal-one", [{ file, before, after: before.replace("amount * 0.1", "amount * 0.12") }], new AbortController().signal);
+  const second = await guard.agentGuard.judge("proposal-two", [{ file, before, after: before.replace("text.trim()", "text.trim().toUpperCase()") }], new AbortController().signal);
+  expect(first.decision).toBe("allow");
+  expect(second.decision).toBe("allow");
+  first.onApproved?.();
+  expect(() => second.onApproved?.()).toThrow("正在确认另一位 Agent");
+  first.onRejected?.(); second.onRejected?.();
+}, 15000);
+
+it("prevents a second whole-file Agent write until the first reservation is confirmed", async () => {
+  const context = await setup();
+  const file = "src/independent.ts";
+  const before = "export function tax(amount: number) { return amount * 0.1; }\nexport function label(text: string) { return text.trim(); }\n";
+  await fs.writeFile(path.join(context.runtime.project.workspacePath, file), before);
+  const first = await context.run(`fake-edit=${edit(file, "amount * 0.1", "amount * 0.12")} fake-write-delay=1000 fake-delay=2200`, context.alice.member.id);
+  await waitFor(async () => (await context.trace(first.id)).some((event: { type: string }) => event.type === "permission_reply"));
+  const second = await context.run(`fake-edit=${edit(file, "text.trim()", "text.trim().toUpperCase()")} fake-delay=10`);
+  await waitFor(async () => (await context.getRun(second.id)).status === "completed");
+  expect((await context.getRun(second.id)).conflictGuard?.rejectedEdits).toBe(1);
+  expect((await context.getRun(second.id)).conflictGuard?.lastRejection).toContain("正在确认另一位 Agent");
+  await waitFor(async () => (await context.getRun(first.id)).status === "completed");
+  const retry = await context.run(`fake-edit=${edit(file, "text.trim()", "text.trim().toUpperCase()")} fake-delay=10`);
+  await waitFor(async () => (await context.getRun(retry.id)).status === "completed");
+  expect(await context.disk(file)).toContain("amount * 0.12");
+  expect(await context.disk(file)).toContain("text.trim().toUpperCase()");
+}, 15000);
+
+it("clears a formatted approval after its two-second confirmation deadline", async () => {
+  const context = await setup();
+  const guard = context.runtime.conflictGuard!;
+  const file = "src/cart.ts";
+  const before = await context.disk(file);
+  guard.beginAgentRun({ kind: "agent", runId: "formatted-run", ownerId: context.bob.member.id }, new Map([[file, before]]));
+  const after = before.replace("let amount = 0;", "let amount = 10;");
+  const result = await guard.agentGuard.judge("formatted-run", [{ file, before, after }], new AbortController().signal);
+  result.onApproved?.();
+  expect(guard.agentGuard.pendingFile(file)).toBe(true);
+  await fs.writeFile(path.join(context.workspacePath, file), `${after}\n`);
+  await waitFor(() => !guard.agentGuard.pendingFile(file));
+  await guard.waitForTrace();
+  expect(readTrace(await guard.exportTrace()).some((event) => event.type === "reservation_mismatch" && event.file === file)).toBe(true);
+  expect(guard.tracker.getActiveChangeSets().some((set) => set.actor.kind === "agent" && set.actor.runId === "formatted-run")).toBe(true);
+}, 15000);
+
+it("confirms an approved deletion without keeping its write reservation", async () => {
+  const context = await setup();
+  const guard = context.runtime.conflictGuard!;
+  const file = "src/report.ts";
+  const before = await context.disk(file);
+  guard.beginAgentRun({ kind: "agent", runId: "delete-run", ownerId: context.bob.member.id }, new Map([[file, before]]));
+  const result = await guard.agentGuard.judge("delete-run", [{ file, before, after: "", deleted: true }], new AbortController().signal);
+  result.onApproved?.();
+  await fs.unlink(path.join(context.workspacePath, file));
+  guard.workspaceChanged(file);
+  expect(guard.agentGuard.pendingFile(file)).toBe(false);
+}, 15000);
+
+it("ignores earlier session files during the next run's T3 verification", async () => {
+  const context = await setup();
+  const first = await context.run(`fake-edit=${edit("src/cart.ts", "let amount = 0;", "let amount = 10;")} fake-delay=10`);
+  await waitFor(async () => (await context.getRun(first.id)).status === "completed");
+  const second = await context.app.locals.agentRuns.createRun({ projectId: context.runtime.project.id, memberId: context.bob.member.id, sessionId: first.sessionId, prompt: `fake-edit=${edit("src/checkout.ts", "cart.total()", "cart.total() + 1")} fake-delay=10` });
+  await waitFor(async () => (await context.getRun(second.id)).status === "completed");
+  expect((await context.getRun(second.id)).fileChanges?.map((change) => change.file)).toEqual(["src/checkout.ts"]);
+  expect((await context.getRun(second.id)).conflictGuard?.t3).toBe("passed");
+  expect((await context.trace(second.id)).some((event: { type: string }) => event.type === "t3_incomplete")).toBe(false);
 }, 15000);
 
 it("pauses a short run timeout while a T2 model request is pending", async () => {
@@ -225,7 +391,7 @@ it("rejects the later dependent edit from another active Agent run", async () =>
   const second = await context.run(`fake-edit=${edit("src/cart.ts", "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)")}`);
   await waitFor(async () => (await context.getRun(second.id)).status === "completed");
   expect((await context.getRun(second.id)).conflictGuard?.rejectedEdits).toBe(1);
-  expect((await context.getRun(second.id)).conflictGuard?.lastRejection).toContain(first.id);
+  expect((await context.getRun(second.id)).conflictGuard?.lastRejection).toContain("Alice 的 Agent");
   await waitFor(async () => (await context.getRun(first.id)).status === "completed");
 }, 15000);
 
@@ -267,6 +433,7 @@ it("T3 reverts an unchanged block and skips the block edited by Bob", async () =
   expect(cart.getText("content").toString()).toContain("let amount = 0;");
   expect(cart.getText("content").toString()).toContain("applyDiscount(amount, 0.25)");
   expect((await context.trace(created.id)).some((event: { type: string }) => event.type === "t3_revert")).toBe(true);
+  expect(context.runtime.conflictGuard!.agentGuard.notices(context.bob.member.id)).toEqual(expect.arrayContaining([expect.objectContaining({ conflict: expect.objectContaining({ self: { kind: "agent", runId: created.id, ownerId: context.bob.member.id }, other: expect.objectContaining({ kind: "human" }), otherDisplayName: expect.stringMatching(/^(?:Alice|Bob)（人）$/), beforeSignature: expect.stringMatching(/\(/), afterSignature: expect.stringMatching(/\(/), ruleId: expect.stringMatching(/^(?:call-signature-incompatible|same-symbol-concurrent-write)$/) }) })]));
   expect(validateTrace(readTrace(await context.runtime.conflictGuard!.exportTrace()))).toBe(true);
 }, 15000);
 
@@ -335,7 +502,7 @@ it("rejects an edit to a file already paused by a human conflict", async () => {
   await waitFor(() => context.runtime.conflictGuard!.state().frozenFiles.length > 0);
   const created = await context.run(`fake-edit=${edit("src/cart.ts", "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)")}`);
   await waitFor(async () => (await context.getRun(created.id)).status === "completed");
-  expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("is paused");
+  expect((await context.getRun(created.id)).conflictGuard?.lastRejection).toContain("正在等待冲突处理");
 }, 15000);
 
 for (const ending of ["completed", "failed", "cancelled", "timeout"] as const) it(`runs T3 for an unopened file when the run ends as ${ending}`, async () => {

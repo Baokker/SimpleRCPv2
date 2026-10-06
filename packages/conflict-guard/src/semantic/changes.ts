@@ -1,6 +1,6 @@
 import type { FileChange, TextEdit } from "../model/types.js";
 import type { SemanticIndex, SymbolInfo } from "./types.js";
-import { parseSymbols } from "./symbols.js";
+import { innermostSymbols, parseSymbols } from "./symbols.js";
 import { isSemanticFile } from "./index.js";
 
 export interface SymbolChange {
@@ -29,9 +29,9 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
   if (!isSemanticFile(change.file)) return [];
   const baseline = parseSymbols(change.file, change.baseText);
   const baselineByKey = new Map(baseline.map((symbol) => [symbol.key, symbol]));
-  const current = index.symbolsInFile(change.file);
+  const current = change.proposalText === undefined ? index.symbolsInFile(change.file) : parseSymbols(change.file, text);
   const currentKeys = new Set(current.map((symbol) => symbol.key));
-  const touched = new Map(change.ranges.flatMap((range) => index.symbolsInRange(change.file, range.start, range.end)).map((symbol) => [symbol.key, symbol]));
+  const touched = new Map(change.ranges.flatMap((range) => innermostSymbols(current, range.start, range.end)).map((symbol) => [symbol.key, symbol]));
   const changes: SymbolChange[] = [];
   for (const symbol of touched.values()) {
     const previous = baselineByKey.get(symbol.key);
@@ -49,7 +49,7 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
     const candidate = slot >= 0 ? baselineSiblings[slot] : undefined;
     return candidate && !currentKeys.has(candidate.key) ? [candidate.key] : [];
   }));
-  const deletedCandidates = [...new Map([...touchedBase, ...baseline.filter((symbol) => renamedBaselineKeys.has(symbol.key))].map((symbol) => [symbol.key, symbol])).values()];
+  const deletedCandidates = [...new Map([...touchedBase, ...baseline.filter((symbol) => renamedBaselineKeys.has(symbol.key) || change.deletedSymbolKeys?.includes(symbol.key))].map((symbol) => [symbol.key, symbol])).values()];
   for (const symbol of deletedCandidates) if (!currentKeys.has(symbol.key) && (change.deletedSymbolKeys?.includes(symbol.key) || renamedBaselineKeys.has(symbol.key) || addedTouched.some((added) => added.start <= symbol.end && symbol.start <= added.end))) {
     changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, status: "deleted", before: change.baseText.slice(symbol.start, symbol.end), after: "", startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt, beforeComments: change.baseText.slice(symbol.node.getFullStart(), symbol.start).trim() });
   }

@@ -31,6 +31,7 @@ export interface AgentRuntime {
     sessionId: string;
   }): Promise<void>;
   replyPermission?(input: { workspacePath: string; sessionId: string; requestId: string; reply: "once" | "reject"; message?: string }): Promise<void>;
+  getToolInput?(input: { workspacePath: string; sessionId: string; messageId: string; callId: string }): Promise<{ tool: string; input: Record<string, unknown> } | undefined>;
   subscribe(
     input: { workspacePath: string; sessionId: string },
     listener: (event: AgentRuntimeEvent) => void | Promise<void>,

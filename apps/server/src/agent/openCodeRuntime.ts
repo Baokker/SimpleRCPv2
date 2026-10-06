@@ -175,14 +175,15 @@ export function createOpenCodeRuntime(
         .map((part) => part.text)
         .join("\n");
       if (!text.trim()) throw new Error("OpenCode returned an empty response");
-      return { text, messageId: response.data.info.id };
+      return { text, messageId: response.data.info.parentID };
     },
     async getDiff(input) {
       const client = await getClient(input.workspacePath);
       const response = await client.session.diff(
         {
           directory: input.workspacePath,
-          sessionID: input.sessionId
+          sessionID: input.sessionId,
+          ...(input.messageId ? { messageID: input.messageId } : {})
         },
         { throwOnError: true }
       );
@@ -208,6 +209,12 @@ export function createOpenCodeRuntime(
         { throwOnError: true }
       );
     },
+    async getToolInput(input) {
+      const client = await getClient(input.workspacePath);
+      const response = await client.session.message({ sessionID: input.sessionId, messageID: input.messageId }, { throwOnError: true });
+      const part = response.data?.parts.find((part) => part.type === "tool" && part.callID === input.callId);
+      return part?.type === "tool" && "input" in part.state ? { tool: part.tool, input: part.state.input } : undefined;
+    },
     async replyPermission(input) {
       const client = await getClient(input.workspacePath);
       await client.permission.reply({ directory: input.workspacePath, requestID: input.requestId, reply: input.reply, message: input.message }, { throwOnError: true });
@@ -220,8 +227,9 @@ export function createOpenCodeRuntime(
         { signal: controller.signal }
       );
       const completion = (async () => {
+        const belongsToRun = createRunSessionFilter(input.sessionId);
         for await (const event of subscription.stream) {
-          if (!eventBelongsToSession(event, input.sessionId)) continue;
+          if (!belongsToRun(event)) continue;
           try {
             await listener({
               type: event.type,
@@ -272,17 +280,11 @@ function formatProviderError(
   return `OpenCode Provider request failed${statusCode}: ${message}`;
 }
 
-function eventBelongsToSession(event: {
-  properties: unknown;
-}, sessionId: string) {
-  const properties = event.properties as {
-    sessionID?: unknown;
-    info?: { sessionID?: unknown };
-    part?: { sessionID?: unknown };
+export function createRunSessionFilter(sessionId: string) {
+  const sessions = new Set([sessionId]);
+  return (event: { type: string; properties: unknown }) => {
+    const properties = event.properties as { sessionID?: string; info?: { id?: string; parentID?: string; sessionID?: string }; part?: { sessionID?: string } };
+    if (event.type === "session.created" && properties.info?.id && properties.info.parentID && sessions.has(properties.info.parentID)) sessions.add(properties.info.id);
+    return [properties.sessionID, properties.info?.sessionID, properties.part?.sessionID, event.type.startsWith("session.") ? properties.info?.id : undefined].some((id) => id !== undefined && sessions.has(id));
   };
-  return (
-    properties.sessionID === sessionId ||
-    properties.info?.sessionID === sessionId ||
-    properties.part?.sessionID === sessionId
-  );
 }

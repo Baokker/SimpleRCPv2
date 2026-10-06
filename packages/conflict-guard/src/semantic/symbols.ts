@@ -1,6 +1,11 @@
 import * as ts from "typescript";
 import type { SymbolInfo } from "./types.js";
 
+export function isSourceParsable(file: string, text: string) {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, /\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.[cm]?jsx?$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS);
+  return ((source as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics ?? []).length === 0;
+}
+
 export interface IndexedSymbol extends SymbolInfo {
   node: ts.Node;
   nameStart: number;

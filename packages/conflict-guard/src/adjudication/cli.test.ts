@@ -14,10 +14,11 @@ it("verifies a G3-only recording with its original configuration and model versi
   await fs.mkdir(workspace, { recursive: true });
   const directory = await fs.mkdtemp(path.join(workspace, "adjudication-verify-"));
   try {
-    const source = JSON.parse(gunzipSync(await fs.readFile(path.join(repository, "docs/conflict-guard/evidence/stage-5-dev-report/results.json.gz"))).toString());
+    for (const args of [["--dataset", "bench/datasets/d1-v2"], ["--cache", "bench/model-cache/checkpoint-b-calibrated"]]) await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/data-artifacts.ts", ...args, "--restore"], { cwd: packageDirectory });
+    const source = JSON.parse(gunzipSync(await fs.readFile(path.join(repository, "docs/conflict-guard/evidence/checkpoint-b-dev-report/calibrated/results.json.gz"))).toString());
     const report = { ...source, config: { ...source.config, version: "adjudication-review-test", prices: { ...source.config.prices, deepOutputPerMillion: 1.5 } }, policies: { G3: source.policies.G3 } };
     await fs.writeFile(path.join(directory, "results.json.gz"), gzipSync(JSON.stringify(report)));
-    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/adjudication-verify.ts", "--record", directory, "--cache", "bench/model-cache/stage5-dev-final", "--dataset", "bench/datasets/d1-v1"], { cwd: packageDirectory, env: { ...process.env, DEEPSEEK_MODEL: "review-different-model" }, timeout: 90000, maxBuffer: 1024 * 1024 });
+    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/adjudication-verify.ts", "--record", directory, "--cache", "bench/model-cache/checkpoint-b-calibrated", "--dataset", "bench/datasets/d1-v2"], { cwd: packageDirectory, env: { ...process.env, DEEPSEEK_MODEL: "review-different-model" }, timeout: 900000, maxBuffer: 1024 * 1024 });
     const verification = JSON.parse(await fs.readFile(path.join(directory, "repeatability.json"), "utf8"));
     expect(verification.valid).toBe(true);
     expect(verification.byteIdentical).toBe(true);
@@ -29,4 +30,4 @@ it("verifies a G3-only recording with its original configuration and model versi
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 95000);
+}, 910000);

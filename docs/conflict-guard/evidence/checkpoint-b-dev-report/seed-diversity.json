@@ -1,0 +1,5246 @@
+{
+  "diversity": {
+    "valid": true,
+    "method": "TypeScript scanner; identifier normalization; token sequence LCS Dice",
+    "maximum": 0.6,
+    "projectCount": 8,
+    "sizes": [
+      {
+        "project": "access",
+        "files": 6,
+        "lines": 338
+      },
+      {
+        "project": "billing",
+        "files": 6,
+        "lines": 308
+      },
+      {
+        "project": "cache",
+        "files": 6,
+        "lines": 350
+      },
+      {
+        "project": "calendar",
+        "files": 6,
+        "lines": 306
+      },
+      {
+        "project": "commerce",
+        "files": 6,
+        "lines": 310
+      },
+      {
+        "project": "events",
+        "files": 6,
+        "lines": 318
+      },
+      {
+        "project": "text",
+        "files": 6,
+        "lines": 303
+      },
+      {
+        "project": "warehouse",
+        "files": 6,
+        "lines": 329
+      }
+    ],
+    "maximumObserved": 0.5994397759103641,
+    "violations": [],
+    "comparisons": [
+      {
+        "left": "access/src/policy.ts",
+        "right": "billing/src/invoices.ts",
+        "similarity": 0.5994397759103641
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.5965601965601965
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.5959183673469388
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5946462715105163
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.5860621326616289
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.5853174603174603
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.5834557023984337
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5818505338078291
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.5804878048780487
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5752773375594294
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5752380952380952
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.574826560951437
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.5726141078838174
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.5696040868454662
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5695611577964519
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.569502948609941
+      },
+      {
+        "left": "text/src/search.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5682326621923938
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.567342073897497
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5670926517571885
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.5650372825186413
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5643835616438356
+      },
+      {
+        "left": "text/src/document.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5637065637065637
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5635808748728383
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.5633456334563346
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5624344176285414
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "billing/src/meter.ts",
+        "similarity": 0.5621621621621622
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5606361829025845
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5583482944344704
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5582255083179297
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.5581896551724138
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.5563380281690141
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.555014605647517
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.555008210180624
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "billing/src/ledger.ts",
+        "similarity": 0.5546038543897216
+      },
+      {
+        "left": "text/src/search.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5544041450777202
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5526315789473685
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "billing/src/ledger.ts",
+        "similarity": 0.5522252497729337
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5516201959306707
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.5515873015873016
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.5515660809778457
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5510204081632653
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.5504587155963303
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.5499573014517506
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "billing/src/payments.ts",
+        "similarity": 0.5496342737722049
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5494296577946768
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5493827160493827
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.5487179487179488
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5478260869565217
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5475152571926766
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5474956822107081
+      },
+      {
+        "left": "text/src/document.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5472636815920398
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5472312703583062
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.5470459518599562
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "billing/src/meter.ts",
+        "similarity": 0.5454545454545454
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.5454545454545454
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5444340505144996
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5436746987951807
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.543035993740219
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.542713567839196
+      },
+      {
+        "left": "text/src/render.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5426774483378257
+      },
+      {
+        "left": "text/src/search.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5421010425020049
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5420765027322404
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.5412844036697247
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5411089866156787
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5410526315789473
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5408734602463606
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.5404761904761904
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5402766476810414
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5397379912663756
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.5385514018691588
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5382685069008782
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.5379609544468547
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5369406867845994
+      },
+      {
+        "left": "text/src/document.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.536834427425237
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5363908275174477
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5355871886120996
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.534740545294635
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5339449541284403
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5334590009425071
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.5324283559577677
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.5323910482921084
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.5320304017372421
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5318791946308725
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5303030303030303
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.5296803652968036
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5295275590551181
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5289256198347108
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.5277136258660509
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5273492286115007
+      },
+      {
+        "left": "text/src/render.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.52734375
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5272727272727272
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.5270935960591133
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5265486725663717
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5260663507109005
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5252725470763132
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5251677852348994
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.525
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5248990578734859
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.524416135881104
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.5242718446601942
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5241090146750524
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.5240562546262029
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5240174672489083
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.523335883703137
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5233160621761658
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5231053604436229
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5224199288256228
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.522279792746114
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5219251336898396
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.5216346153846154
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5215859030837005
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.5215311004784688
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.5213270142180095
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5211830535571543
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.5208791208791209
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5202952029520295
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5197934595524957
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5195094760312151
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5194570135746607
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5192850423330198
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.5190380761523046
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5185856754306437
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5184210526315789
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.5183324962330487
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5182648401826484
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5177865612648221
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.517578125
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.5167173252279635
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5166666666666667
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5164410058027079
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5163398692810458
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.5162162162162162
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5161943319838057
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5161290322580645
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.5158831003811944
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5156912637828668
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "billing/test/billing.test.mjs",
+        "similarity": 0.5155555555555555
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.515274949083503
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5150346954510409
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5148717948717949
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "billing/src/payments.ts",
+        "similarity": 0.5142348754448398
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5140740740740741
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.513953488372093
+      },
+      {
+        "left": "text/src/width.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5133603238866397
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.513215859030837
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5130023640661938
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5120689655172413
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.5119453924914675
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5117150890346767
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5116279069767442
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5116279069767442
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5112474437627812
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5111441307578009
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5111346765641569
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.5107692307692308
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5093984962406015
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5091743119266054
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5089877010406811
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.5089285714285714
+      },
+      {
+        "left": "text/src/layout.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5087319665907365
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5085066162570888
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5084322298563397
+      },
+      {
+        "left": "text/src/layout.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.508
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5079928952042628
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.5079365079365079
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5077989601386482
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5073825503355704
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5071851225697379
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5071574642126789
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5068259385665529
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5067873303167421
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5064478311840562
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.506350550381033
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5063291139240507
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5061830173124485
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.5059101654846335
+      },
+      {
+        "left": "text/src/search.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5058626465661642
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.5058317986494782
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5055970149253731
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.5044052863436124
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.5043988269794721
+      },
+      {
+        "left": "text/src/width.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.5041384499623778
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5036544850498339
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5032765399737876
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.5032740879326474
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5032594524119948
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.5032397408207343
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5031185031185031
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.5028854080791426
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.5027494108405341
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.5027322404371585
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.5027085590465872
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.5015290519877675
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.5010183299389002
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.5010141987829615
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5009861932938856
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.5008077544426495
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.5006321112515802
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.5
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.5
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.5
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.5
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.5
+      },
+      {
+        "left": "text/src/document.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.5
+      },
+      {
+        "left": "text/test/text.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.5
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4996282527881041
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4995836802664446
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4990138067061144
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.49887640449438203
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.49872773536895676
+      },
+      {
+        "left": "text/src/document.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.49836065573770494
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4983388704318937
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.4979114452798663
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4978241949521323
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4977238239757208
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.49768875192604006
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4974721941354904
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4974182444061962
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4968421052631579
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4968152866242038
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4966216216216216
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.49627263045793396
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "text/src/render.ts",
+        "similarity": 0.4960362400906002
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4959883296863603
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4958283671036949
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.49572649572649574
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.49548810500410173
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.49544626593806923
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4954022988505747
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.49521988527724664
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.49504950495049505
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.4949640287769784
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4940152339499456
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.49396621078037006
+      },
+      {
+        "left": "text/src/width.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.493891797556719
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.493801652892562
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.4935459377372817
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4935064935064935
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4933870040253019
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4933417882054534
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.49327354260089684
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.49326145552560646
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.49304911955514363
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4928131416837782
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.49233716475095785
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.49230769230769234
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.49228395061728397
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.49228269699431354
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.4921077065923863
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4920212765957447
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.49186602870813395
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.49122807017543857
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.49118817509948837
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4911392405063291
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.49108589951377635
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.49080882352941174
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4906716417910448
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "billing/src/tariffs.ts",
+        "similarity": 0.49063670411985016
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.49044056525353286
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.49010367577756836
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.48986784140969164
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4897288414133114
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.4895608351331893
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4895591647331787
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.48947778643803586
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.4894308943089431
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4892623716153128
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.48924122310305773
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.48922863099374564
+      },
+      {
+        "left": "text/src/layout.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.48873873873873874
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4886164623467601
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.4885844748858447
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4884713919726729
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.48841698841698844
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4883720930232558
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.48834628190899
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4879948085658663
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.48756218905472637
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4875
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4873323397913562
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.48729076255424675
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.48722986247544203
+      },
+      {
+        "left": "text/src/render.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4871582435791218
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.48711943793911006
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4870725604670559
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.48703494926719276
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4868316041500399
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.48668280871670705
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4864864864864865
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.4864359214218896
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4861244019138756
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.486119679210364
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.4861111111111111
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.48599545798637395
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.4859550561797753
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4858490566037736
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.4858420268256334
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.4858369098712446
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4857928505957837
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4855012427506214
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4852941176470588
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.4852233676975945
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.48521916411824667
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.48478488982161594
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.48478015783540024
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4847625797306875
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.48467966573816157
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4845869297163995
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.48424068767908307
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4839296543359612
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4838709677419355
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4837133550488599
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.48346636259977194
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.48337950138504154
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.48327939590075514
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.48302370275464446
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.48267008985879334
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.48253968253968255
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.48253968253968255
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4824387011265739
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.48232521602513745
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.48220064724919093
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.482078853046595
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4819064430714916
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.48148148148148145
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.48139711465451784
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.48098859315589354
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4809437386569873
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.4807467911318553
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.47959183673469385
+      },
+      {
+        "left": "text/src/layout.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4793741109530583
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4793388429752066
+      },
+      {
+        "left": "text/src/render.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.47924528301886793
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4791318864774624
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.4791238877481177
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4788135593220339
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.4786680541103018
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.47823261858349575
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.47815533980582525
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.47812817904374366
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.47737556561085975
+      },
+      {
+        "left": "text/src/width.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.47715736040609136
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4767747589833479
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.47676419965576594
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.47674418604651164
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4764595103578154
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.47644444444444445
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.47629083245521603
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.47610294117647056
+      },
+      {
+        "left": "text/src/layout.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4759793052475979
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4754521963824289
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.47533632286995514
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.47522236340533675
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4750277469478357
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4750235626767201
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4749290444654683
+      },
+      {
+        "left": "text/src/width.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4747663551401869
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.47469458987783597
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.4746136865342163
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4745762711864407
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4745269286754003
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4744408945686901
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.47384615384615386
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.473655019412091
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.47333333333333333
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "billing/src/tariffs.ts",
+        "similarity": 0.4731182795698925
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.47283406754772395
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4727608494921514
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4726890756302521
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.4721984602224123
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.47219690063810393
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4721030042918455
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4718162839248434
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.4717948717948718
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4717832957110609
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4716636197440585
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.47144592952612396
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.47136150234741786
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.471195184866724
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4711830131445905
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.47116564417177914
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.47096774193548385
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.47092469018112487
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.47089487402258906
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.470873786407767
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4708680142687277
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.47058823529411764
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.47058823529411764
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4703344120819849
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.47019867549668876
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.47007299270072994
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4700625558534406
+      },
+      {
+        "left": "text/src/search.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.47000618429189855
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4699386503067485
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4693295292439372
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "text/src/render.ts",
+        "similarity": 0.4692737430167598
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.46875
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.46872393661384487
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4685082872928177
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.46846846846846846
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.46820405310971347
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.46800501882057716
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.46778989098116946
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4677740863787375
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.46775745909528393
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4675324675324675
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4672330097087379
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.46715328467153283
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.46706586826347307
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4670138888888889
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.46677215189873417
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.46657754010695185
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.46653543307086615
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.46635730858468677
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.46634146341463417
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "text/src/search.ts",
+        "similarity": 0.4663287472845764
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.46620959843290893
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.4658119658119658
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.46562786434463793
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.46558704453441296
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4655493482309125
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.46554621848739497
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.46511627906976744
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.465016146393972
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.4645760743321719
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4644852354349561
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4644412191582003
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.464321608040201
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.46402877697841727
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.464
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.46386020651310567
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4637096774193548
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.4634146341463415
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.46319272125723737
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.46307053941908716
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.46306504961411243
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.46292134831460674
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.46285714285714286
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.46271186440677964
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4626006904487917
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.4622823984526112
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.46195652173913043
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.46136363636363636
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.4611764705882353
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.4610668301655426
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4610655737704918
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4610526315789474
+      },
+      {
+        "left": "text/test/text.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.46075433231396534
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.4602097470697101
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4599774520856821
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.45991189427312773
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.45981308411214955
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4592274678111588
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.4591639871382637
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4589114194236926
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.45878136200716846
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4587588373919874
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.45869297163995065
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.45866666666666667
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.45861297539149887
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4584527220630373
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4581589958158996
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.45792079207920794
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "text/src/render.ts",
+        "similarity": 0.4570970328789094
+      },
+      {
+        "left": "text/src/search.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4569842738205365
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.456968773800457
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4568306010928962
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.45682888540031397
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.45681818181818185
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4568081991215227
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4566929133858268
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.45664739884393063
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.45663010967098705
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4565043894652833
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.45631891433418154
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "text/src/search.ts",
+        "similarity": 0.45624385447394294
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.45614035087719296
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.4555052790346908
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.45526475958612295
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.45488257107540175
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4548611111111111
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.45472061657032753
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.454638124362895
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "billing/test/billing.test.mjs",
+        "similarity": 0.4540540540540541
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.45399828030954426
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.45395348837209304
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4538653366583541
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.45383759733036705
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "billing/src/tariffs.ts",
+        "similarity": 0.453781512605042
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.4537712895377129
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.45356793743890517
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.45321637426900585
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4530643910007758
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "text/src/document.ts",
+        "similarity": 0.45294855708908405
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.45290199809705045
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.45272206303724927
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4526829268292683
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4525993883792049
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4525862068965517
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.45257452574525747
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.45254237288135596
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.45226130653266333
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.45226130653266333
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.45208333333333334
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.45196003074558033
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.45181347150259066
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.45179584120982985
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.4516971279373368
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.45118733509234826
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.4510166358595194
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.4506172839506173
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4504983388704319
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.4496551724137931
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4494142705005325
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4491362763915547
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.44889779559118237
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.44883720930232557
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.44874274661508706
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4482758620689655
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4479695431472081
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.44782939832444785
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.44731610337972166
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.44727891156462585
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4472573839662447
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.44724770642201833
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.44680851063829785
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.44673539518900346
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.44572896596017986
+      },
+      {
+        "left": "text/src/render.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.44561774023231254
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.44556451612903225
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4454225352112676
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.44481887110362256
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4444444444444444
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.44421906693711966
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.4439140811455847
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.44383184011026877
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4435146443514644
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4432576769025367
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.44314868804664725
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4431279620853081
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.44244244244244246
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.44202180376610506
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.44193345888261143
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "text/src/layout.ts",
+        "similarity": 0.44155844155844154
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.44129235618597323
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "billing/src/invoices.ts",
+        "similarity": 0.4412191582002903
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4411764705882353
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "events/src/retry.ts",
+        "similarity": 0.44095665171898357
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4409349336702464
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4407443682664055
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4402035623409669
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4399712437095615
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.4393305439330544
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4392523364485981
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4392059553349876
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4389086595492289
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.43859649122807015
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.43848167539267013
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.43846153846153846
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4383020730503455
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.43821209465381245
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "text/src/render.ts",
+        "similarity": 0.4374295377677565
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4372937293729373
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.43704474505723206
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.43673012318029114
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.4366812227074236
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "text/src/render.ts",
+        "similarity": 0.43666323377960864
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.43618090452261304
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.43613707165109034
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "events/src/retry.ts",
+        "similarity": 0.43610547667342797
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.43606255749770007
+      },
+      {
+        "left": "commerce/src/cart.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4354679802955665
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.43517679057116954
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.43496357960457854
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.43478260869565216
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4347240915208614
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4344660194174757
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4342857142857143
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4342629482071713
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.4342273307790549
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4342105263157895
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4339063426200356
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.4337606837606838
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4336842105263158
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.4336175395858709
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.433264887063655
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4330383480825959
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.43287225386493083
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.43267776096822996
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.43258426966292135
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.43243243243243246
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.4323748668796592
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.43232044198895025
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4320388349514563
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.43201542912246865
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.4318429661941112
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.4316546762589928
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.43162393162393164
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.43161634103019536
+      },
+      {
+        "left": "text/src/render.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4315576534052596
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.43137254901960786
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4313326551373347
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.43111831442463533
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "billing/src/payments.ts",
+        "similarity": 0.4309895833333333
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "text/src/width.ts",
+        "similarity": 0.4306784660766962
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4306306306306306
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "text/src/render.ts",
+        "similarity": 0.4304568527918782
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4302416212003118
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4302203567681007
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "events/src/bus.ts",
+        "similarity": 0.42992623814541625
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.4298440979955457
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.42971887550200805
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "billing/src/ledger.ts",
+        "similarity": 0.42961004626569727
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.4295774647887324
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4293785310734463
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.42924976258309594
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.42857142857142855
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.4283154121863799
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.42815814850530376
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4278403275332651
+      },
+      {
+        "left": "calendar/src/recurrence.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4272
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "text/src/search.ts",
+        "similarity": 0.4271493212669683
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "text/src/search.ts",
+        "similarity": 0.42703232125367285
+      },
+      {
+        "left": "text/test/text.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.42674532940019666
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.42657342657342656
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.42649006622516555
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.4262607040913416
+      },
+      {
+        "left": "text/test/text.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4261682242990654
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.4260027662517289
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.42558425584255843
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.42517662170841364
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.42481456507080245
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.42480883602378927
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.4246771879483501
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.42464612822647796
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.42432253800396563
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.42411642411642414
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.42397914856646396
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4239766081871345
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.42392444910807975
+      },
+      {
+        "left": "events/src/delivery.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.4234990316333118
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4233055885850178
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.42325056433408575
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4232209737827715
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4232081911262799
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4228993536472761
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.42247191011235957
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4224548049476689
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4223175965665236
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "billing/src/invoices.ts",
+        "similarity": 0.42224744608399545
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.4218551461245235
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "text/src/search.ts",
+        "similarity": 0.4217687074829932
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.4216725559481743
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4216725559481743
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4215349369988545
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.42147117296222664
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.42105263157894735
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.42105263157894735
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4208092485549133
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.4207961007311129
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4206815511163337
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.42046718576195774
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.4200507614213198
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.42
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.419838523644752
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4198198198198198
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4196502914238135
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4195804195804196
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.4192825112107623
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.41914893617021276
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4189189189189189
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "billing/src/payments.ts",
+        "similarity": 0.4184549356223176
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.4184331797235023
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.418426103646833
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.4184008762322015
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.4182358771060456
+      },
+      {
+        "left": "events/src/retry.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.41811175337186895
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.4180100055586437
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.41797752808988764
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "text/src/width.ts",
+        "similarity": 0.417910447761194
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.41742654508611954
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.41682974559686886
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4165915238954013
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4162062615101289
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.41519434628975266
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4149933065595716
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "text/src/layout.ts",
+        "similarity": 0.41496598639455784
+      },
+      {
+        "left": "events/src/routes.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.41491525423728814
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.4147368421052632
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "text/src/document.ts",
+        "similarity": 0.4146341463414634
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.41448692152917505
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.41421143847487
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4139834406623735
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.41384388807069217
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "text/src/width.ts",
+        "similarity": 0.41344046749452157
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "events/src/routes.ts",
+        "similarity": 0.4132917964693666
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4132420091324201
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4130879345603272
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4128686327077748
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "text/src/search.ts",
+        "similarity": 0.4128686327077748
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.41237113402061853
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4121827411167513
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.4118705035971223
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.4116504854368932
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.41147540983606556
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "billing/src/ledger.ts",
+        "similarity": 0.41144114411441146
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.41141732283464566
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.41125541125541126
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.41083099906629317
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.41051567239635994
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4102079395085066
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.4095427435387674
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.40919199406968126
+      },
+      {
+        "left": "text/test/text.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.40893470790378006
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4087136929460581
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.40864864864864864
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.4086265607264472
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4085188770571152
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4085106382978723
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.40846824408468246
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4082013047530289
+      },
+      {
+        "left": "text/src/layout.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4080645161290323
+      },
+      {
+        "left": "calendar/src/intervals.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4079696394686907
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.40796703296703296
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.40745672436750996
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.40706476030277544
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4070631970260223
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.40705882352941175
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.4069767441860465
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.4068479355488419
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.4062772449869224
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "text/src/width.ts",
+        "similarity": 0.4062214089661482
+      },
+      {
+        "left": "text/src/width.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4059869036482694
+      },
+      {
+        "left": "commerce/src/shipping.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4055299539170507
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.4055045871559633
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.4050811573747354
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.4049586776859504
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "events/src/retry.ts",
+        "similarity": 0.4048964218455744
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "events/src/stream.ts",
+        "similarity": 0.40441176470588236
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.4037940379403794
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.4036281179138322
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.4034229828850856
+      },
+      {
+        "left": "text/src/document.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.4034003091190108
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.4032997250229148
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.40311804008908686
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "billing/src/tariffs.ts",
+        "similarity": 0.4028056112224449
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "text/src/width.ts",
+        "similarity": 0.40237859266600595
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.4013377926421405
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.40114613180515757
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.40058479532163743
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.4004550625711035
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.40038684719535783
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.40034965034965037
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.4
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.3996101364522417
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.39920556107249255
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "text/src/document.ts",
+        "similarity": 0.3990895295902883
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3980514961725818
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.3973655323819978
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "text/src/layout.ts",
+        "similarity": 0.39730639730639733
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.39679715302491103
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.3963585434173669
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "events/src/stream.ts",
+        "similarity": 0.39625850340136054
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.3960573476702509
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.3956953642384106
+      },
+      {
+        "left": "commerce/test/orders.test.mjs",
+        "right": "events/src/bus.ts",
+        "similarity": 0.39510204081632655
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "cache/src/list.ts",
+        "similarity": 0.3949367088607595
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "text/src/layout.ts",
+        "similarity": 0.39436619718309857
+      },
+      {
+        "left": "commerce/src/orders.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.39373297002724794
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "events/src/stream.ts",
+        "similarity": 0.3916849015317287
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.3912543153049482
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.3912087912087912
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.39117352056168503
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.3902012248468941
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "billing/test/billing.test.mjs",
+        "similarity": 0.3901098901098901
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.38986013986013984
+      },
+      {
+        "left": "commerce/src/pricing.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.38945578231292516
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.38910505836575876
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "events/src/stream.ts",
+        "similarity": 0.3888888888888889
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "events/src/bus.ts",
+        "similarity": 0.3883696780893043
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "text/src/layout.ts",
+        "similarity": 0.38813559322033897
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.38746438746438744
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.3873239436619718
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "text/src/document.ts",
+        "similarity": 0.3864734299516908
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.38579387186629527
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.385752688172043
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.3857374392220421
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.3853564547206166
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.385
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.38482384823848237
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "text/src/width.ts",
+        "similarity": 0.38482384823848237
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.3846838824577026
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.3839464882943144
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.383879781420765
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.3833634719710669
+      },
+      {
+        "left": "events/src/bus.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.38329911019849416
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.38321167883211676
+      },
+      {
+        "left": "calendar/src/availability.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.38269794721407624
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "cache/src/list.ts",
+        "similarity": 0.38215102974828374
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.38169642857142855
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "text/src/layout.ts",
+        "similarity": 0.3813291139240506
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.38108680310515175
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.38063063063063063
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.3805243445692884
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.3788732394366197
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.37872683319903305
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "text/src/document.ts",
+        "similarity": 0.3783783783783784
+      },
+      {
+        "left": "events/src/stream.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3781869688385269
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.378159757330637
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.37735849056603776
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.37719298245614036
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.3756177924217463
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.375
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.37433155080213903
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.3739130434782609
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.373546511627907
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "text/src/document.ts",
+        "similarity": 0.3727714748784441
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.37257824143070045
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.37168141592920356
+      },
+      {
+        "left": "commerce/src/stock.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.37047551454932576
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.3701578192252511
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.36970118137595553
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.3684210526315789
+      },
+      {
+        "left": "cache/src/partition.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.36838288614938364
+      },
+      {
+        "left": "text/test/text.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3680555555555556
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.36796536796536794
+      },
+      {
+        "left": "events/test/events.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3664772727272727
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.36625811103100214
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.3660220994475138
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.36395147313691506
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.36231884057971014
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.3622497616777884
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "billing/test/billing.test.mjs",
+        "similarity": 0.3603723404255319
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.3601694915254237
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.35958188153310106
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.3586626139817629
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.3585029546946816
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.3577545195052331
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.35772357723577236
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.3558282208588957
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.35526315789473684
+      },
+      {
+        "left": "calendar/test/calendar.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3536423841059603
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.3535690460306871
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.35352112676056335
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.35294117647058826
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.34608985024958405
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.3460837887067395
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.34570135746606334
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.34324324324324323
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3413597733711048
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.34001910219675263
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.33702016916070265
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.33608815426997246
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.3359683794466403
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.33151750972762645
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.3309143686502177
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "billing/src/invoices.ts",
+        "similarity": 0.328042328042328
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.3274478330658106
+      },
+      {
+        "left": "cache/src/list.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.3269961977186312
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "billing/src/invoices.ts",
+        "similarity": 0.3232876712328767
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "billing/src/invoices.ts",
+        "similarity": 0.32327919566898683
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.31966643502432246
+      },
+      {
+        "left": "access/src/policy.ts",
+        "right": "billing/src/meter.ts",
+        "similarity": 0.31835205992509363
+      },
+      {
+        "left": "billing/src/invoices.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.3170731707317073
+      },
+      {
+        "left": "billing/src/ledger.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.31627906976744186
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.31521739130434784
+      },
+      {
+        "left": "billing/src/payments.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.3143712574850299
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.3134978229317852
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.31092436974789917
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.3093220338983051
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.308288148721921
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.3076923076923077
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.30434782608695654
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.30376344086021506
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.30344827586206896
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.3029197080291971
+      },
+      {
+        "left": "calendar/src/calendar.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.3008573655494934
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.29971988795518206
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.2987551867219917
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.296551724137931
+      },
+      {
+        "left": "cache/test/cache.test.mjs",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.29642857142857143
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.29562982005141386
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.29469548133595286
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.2943495400788436
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.2939068100358423
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.29326287978863935
+      },
+      {
+        "left": "cache/src/memo.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.2925170068027211
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "calendar/src/calendar.ts",
+        "similarity": 0.2916030534351145
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.2898550724637681
+      },
+      {
+        "left": "billing/src/tariffs.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.28610354223433243
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.28520499108734404
+      },
+      {
+        "left": "billing/test/billing.test.mjs",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.2830188679245283
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.28104575163398693
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.276510067114094
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.2761061946902655
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.274442538593482
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.2740286298568507
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.27241379310344827
+      },
+      {
+        "left": "cache/src/lru.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.2708585247883918
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.27075812274368233
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "cache/src/partition.ts",
+        "similarity": 0.2701525054466231
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.267223382045929
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.26422018348623855
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "commerce/src/stock.ts",
+        "similarity": 0.26294820717131473
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.2613861386138614
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "events/src/stream.ts",
+        "similarity": 0.2601626016260163
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.26006191950464397
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.2591743119266055
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.25696594427244585
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "billing/src/ledger.ts",
+        "similarity": 0.25418060200668896
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.25219941348973607
+      },
+      {
+        "left": "access/src/audit.ts",
+        "right": "billing/src/meter.ts",
+        "similarity": 0.25106990014265335
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "cache/src/list.ts",
+        "similarity": 0.24892703862660945
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.24864864864864866
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "billing/src/payments.ts",
+        "similarity": 0.24798711755233493
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "events/src/bus.ts",
+        "similarity": 0.2476894639556377
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.24647887323943662
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.24621212121212122
+      },
+      {
+        "left": "access/test/access.test.mjs",
+        "right": "billing/src/meter.ts",
+        "similarity": 0.24361493123772102
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.2423580786026201
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.24179620034542315
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.2414307004470939
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.2411764705882353
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.2398753894080997
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.23945578231292516
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "events/src/routes.ts",
+        "similarity": 0.23943661971830985
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.2336182336182336
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.23210831721470018
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.23119777158774374
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.23088455772113944
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.23087621696801114
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.23052959501557632
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.23008849557522124
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "commerce/src/orders.ts",
+        "similarity": 0.22992700729927007
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.2297029702970297
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.22969187675070027
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "cache/src/memo.ts",
+        "similarity": 0.22920517560073936
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.22919179734620024
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.22569444444444445
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.22346368715083798
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.22189349112426035
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.22131147540983606
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.22061855670103092
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "billing/src/ledger.ts",
+        "similarity": 0.2188034188034188
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.216
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "events/test/events.test.mjs",
+        "similarity": 0.2155688622754491
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "calendar/src/recurrence.ts",
+        "similarity": 0.21554770318021202
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "billing/src/tariffs.ts",
+        "similarity": 0.21542940320232898
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.21441124780316345
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "billing/src/payments.ts",
+        "similarity": 0.2138157894736842
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.213406292749658
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "events/src/delivery.ts",
+        "similarity": 0.21303656597774245
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "cache/test/cache.test.mjs",
+        "similarity": 0.21052631578947367
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.2101313320825516
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "billing/src/tariffs.ts",
+        "similarity": 0.20771513353115728
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.20757825370675453
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "warehouse/src/cycleCount.ts",
+        "similarity": 0.2066772655007949
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.2066326530612245
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.20630372492836677
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "text/src/render.ts",
+        "similarity": 0.20603907637655416
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.20530973451327433
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "events/src/retry.ts",
+        "similarity": 0.20489296636085627
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.20448179271708683
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.20394736842105263
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.2028169014084507
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.20256410256410257
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "warehouse/src/transfers.ts",
+        "similarity": 0.20150375939849624
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.2012121212121212
+      },
+      {
+        "left": "calendar/src/reminders.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.20034843205574912
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.19777503090234858
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "billing/test/billing.test.mjs",
+        "similarity": 0.1969439728353141
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "commerce/src/cart.ts",
+        "similarity": 0.19607843137254902
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.1958041958041958
+      },
+      {
+        "left": "cache/src/weights.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.19574468085106383
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "calendar/src/reminders.ts",
+        "similarity": 0.19550173010380623
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "warehouse/src/picking.ts",
+        "similarity": 0.19498607242339833
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.19473081328751432
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "calendar/src/intervals.ts",
+        "similarity": 0.19373219373219372
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "text/src/width.ts",
+        "similarity": 0.1927007299270073
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "text/src/search.ts",
+        "similarity": 0.19225251076040173
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "billing/test/billing.test.mjs",
+        "similarity": 0.1909722222222222
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "warehouse/src/lots.ts",
+        "similarity": 0.1896551724137931
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.18881987577639753
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "text/test/text.test.mjs",
+        "similarity": 0.18846153846153846
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.1855447680690399
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "commerce/src/shipping.ts",
+        "similarity": 0.18544935805991442
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.18305084745762712
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "calendar/test/calendar.test.mjs",
+        "similarity": 0.1824212271973466
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "warehouse/test/warehouse.test.mjs",
+        "similarity": 0.18115942028985507
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.17721518987341772
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "commerce/src/pricing.ts",
+        "similarity": 0.17676767676767677
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.16776625824693686
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.16570771001150747
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.16251354279523295
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "cache/src/lru.ts",
+        "similarity": 0.16166883963494133
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "text/src/layout.ts",
+        "similarity": 0.1588785046728972
+      },
+      {
+        "left": "access/src/risk.ts",
+        "right": "billing/src/meter.ts",
+        "similarity": 0.15813117699910154
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.15724381625441697
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "text/src/document.ts",
+        "similarity": 0.15604395604395604
+      },
+      {
+        "left": "billing/src/meter.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.15565610859728507
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.1456953642384106
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.1453900709219858
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.14168937329700274
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.13615023474178403
+      },
+      {
+        "left": "access/src/sessions.ts",
+        "right": "commerce/test/orders.test.mjs",
+        "similarity": 0.13410404624277455
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "cache/src/weights.ts",
+        "similarity": 0.1273542600896861
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "warehouse/src/forecast.ts",
+        "similarity": 0.12683823529411764
+      },
+      {
+        "left": "access/src/roles.ts",
+        "right": "calendar/src/availability.ts",
+        "similarity": 0.12643678160919541
+      }
+    ]
+  },
+  "operators": [
+    {
+      "project": "access",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "CP-5",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "billing",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "CP-5",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "cache",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "CP-5",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "calendar",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "commerce",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "CP-5",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "events",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "text",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "CP-5",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    },
+    {
+      "project": "warehouse",
+      "eligible": [
+        "IC-1",
+        "IC-2",
+        "IC-3",
+        "IC-4",
+        "CP-2",
+        "CP-3",
+        "CP-5",
+        "SS-1",
+        "EB-2",
+        "SF-1",
+        "SF-2",
+        "SF-3",
+        "SF-4",
+        "SF-5"
+      ]
+    }
+  ]
+}

@@ -12,6 +12,7 @@ export interface AdjudicationInput {
   right: AdjudicationInput["left"];
   relationship: string;
   invariants: string;
+  invariantCoverage?: { callers: boolean; tests: boolean; comments: boolean; usage: boolean };
   local: { excludedRules: string[]; typecheck?: ZoneVerdict["typecheck"] };
 }
 export interface JudgeResult {
@@ -25,14 +26,16 @@ export interface JudgeResult {
   suggestedAction?: string;
   usage?: { inputTokens: number; outputTokens: number };
 }
-export interface FastJudge { name: string; model: string; judge(input: AdjudicationInput, signal: AbortSignal): Promise<JudgeResult> }
-export interface DeepJudge { name: string; model: string; judge(input: AdjudicationInput, options: { reasoning: boolean }, signal: AbortSignal): Promise<JudgeResult> }
+export interface FastJudge { name: string; model: string; cacheParameters?: Record<string, unknown>; judge(input: AdjudicationInput, signal: AbortSignal): Promise<JudgeResult> }
+export interface DeepJudge { name: string; model: string; cacheParameters?: Record<string, unknown>; judge(input: AdjudicationInput, options: { reasoning: boolean }, signal: AbortSignal): Promise<JudgeResult> }
 export interface ProviderCall {
   point?: "T1" | "T2" | "T3";
   adapter: string;
+  role?: "fast" | "deep";
   model: string;
   promptVersion: string;
   inputHash: string;
+  cacheKey?: string;
   status: ProviderStatus;
   latencyMs: number;
   decision?: Decision;
@@ -55,7 +58,7 @@ export interface ModelVerdictMetadata {
   inputHash: string;
   promptVersion: string;
 }
-export interface CachedCall { key: string; input: AdjudicationInput; call: ProviderCall; result?: JudgeResult }
+export interface CachedCall { key: string; input: AdjudicationInput; call: ProviderCall; parameters?: Record<string, unknown>; result?: JudgeResult }
 export interface ModelCache { get(key: string): Promise<CachedCall | undefined>; put(value: CachedCall): Promise<void> }
 export interface AdjudicationConfig {
   version: string;
@@ -64,6 +67,7 @@ export interface AdjudicationConfig {
   fast: string;
   deep: string;
   fastModel: string;
+  fastSamplingCount?: number;
   threshold: number;
   t1Strategy: "G2" | "G3";
   t2Strategy?: "G1" | "G2" | "G3";

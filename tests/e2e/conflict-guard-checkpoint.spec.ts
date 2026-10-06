@@ -53,6 +53,7 @@ test("阶段3第1至3、10项及先后编辑、关闭重开、切换撤回", asy
     await expect(bob.locator(".conflict-frozen-range")).toHaveCount(0);
     await expect.poll(() => disk(alice, projectId, "src/pricing.ts")).not.toContain("currency: string");
     await expect.poll(() => disk(bob, projectId, "src/cart.ts")).toBe(edited);
+    await expect(alice.getByTestId("workspace-notice").filter({ hasText: /Unexpected end of JSON|Failed to execute 'json'/ })).toHaveCount(0);
     await expect(alice.getByTestId("conflict-statistics")).toContainText("冻结总时长");
     await snapshot(alice, "03-switched-file-revert");
     checks.push({ scenario: "sequential-retention-revert", checks: ["01", "02", "03", "10", "sequential-disk", "reopen-retention", "switched-file-revert"] });
@@ -73,6 +74,7 @@ test("阶段3第1、4项同时编辑与双方确认", async ({ browser }) => {
     await expect(alice.locator(".conflict-frozen-range")).toHaveCount(0);
     await expect.poll(() => disk(alice, projectId, "src/pricing.ts")).toContain("currency: string");
     await expect.poll(() => disk(alice, projectId, "src/cart.ts")).toContain("amount, 0.2");
+    await expect(alice.getByTestId("workspace-notice").filter({ hasText: /Unexpected end of JSON|Failed to execute 'json'/ })).toHaveCount(0);
     await snapshot(alice, "04-confirmed"); checks.push({ scenario: "confirmed", checks: ["01", "04"] });
   } finally { await pair.close(); }
 });

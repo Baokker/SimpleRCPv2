@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { createOpenCodeRuntime } from "../agent/openCodeRuntime.js";
+import { createOpenCodeRuntime, createRunSessionFilter } from "../agent/openCodeRuntime.js";
 import { createLocalProcessLifecycle } from "./testProcessLifecycle.js";
+
+it("tracks descendant OpenCode sessions and excludes unrelated permission requests", () => {
+  const accepts = createRunSessionFilter("parent");
+  expect(accepts({ type: "session.created", properties: { info: { id: "child", parentID: "parent" } } })).toBe(true);
+  expect(accepts({ type: "session.created", properties: { info: { id: "grandchild", parentID: "child" } } })).toBe(true);
+  expect(accepts({ type: "permission.asked", properties: { id: "p", sessionID: "grandchild" } })).toBe(true);
+  expect(accepts({ type: "message.part.updated", properties: { part: { sessionID: "child" } } })).toBe(true);
+  expect(accepts({ type: "session.created", properties: { info: { id: "other", parentID: "unrelated" } } })).toBe(false);
+  expect(accepts({ type: "permission.asked", properties: { sessionID: "other" } })).toBe(false);
+});
 
 describe("OpenCode runtime model switching", () => {
   it("空闲时修改模型后首个预留运行使用新进程模型", async () => {

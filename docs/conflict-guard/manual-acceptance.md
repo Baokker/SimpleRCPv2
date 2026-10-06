@@ -167,3 +167,36 @@ CONFLICT_GUARD=observe SIMPLERCP_STAGE6_EVIDENCE=true pnpm test:e2e tests/e2e/co
 ```
 
 自动验收通过真实浏览器、Monaco、Yjs 和 DOM 断言验证编辑与页面行为。full 模式执行拒绝重试、两个 Agent 的依赖冲突和 T3 撤回通知三个用例；observe 模式执行直接写入与 shadow 提示用例。界面验收的 Agent 使用指定的 fake runtime；真实 OpenCode 调用证据位于 `evidence/stage-6-smoke/`，浏览器状态证据位于 `evidence/stage-6-manual/`。T3 全部结束路径、部分撤回、删除恢复与检查不完整使用生产时间参数的服务端集成测试验证。真实任务的项目测试结果见 `stage-6.md` 与证据中的 results.json。
+
+## 检查点 B
+
+使用 full、G3、record 和 OpenCode 1.18.31。两个浏览器分别以 Alice、Bob 加入 conflict-shop。工作区通过符号链接访问；Agent 面板使用真实 DeepSeek。
+
+| 操作 | 预期与执行记录 |
+|---|---|
+| Alice 给 applyDiscount 增加必填 currency，Bob 让 Agent 给 checkout 输出增加 Total: 前缀。 | Agent 审批给出 once 或具体冲突拒绝，路径核验无内部错误；Alice 保持可编辑。本轮获得 once 与警告，T3 passed。 |
+| Alice 将折扣结果限制为非负值，Bob 让 Agent 在 Cart.total 开头增加空购物车返回 0。审批分析中，Alice 将 Cart.add 改为 prepend。 | 旧提案因文件变化拒绝，Agent 重新读取再提交，最终保留双方代码。本轮首次 reject、随后 once，双方内容均在磁盘和编辑器中。 |
+| 重复签名冲突，同时将 formatMoney 改为返回 number，Bob 调用其结果的 toUpperCase。 | 两个冲突使用一个可折叠横幅，显示数量；编辑器只有冻结装饰与悬停提示，详情在页签中。 |
+| Alice 在页签点击“我来改”并确认。 | 文件恢复，相关冻结解除，页面没有 JSON 解析报错；交叠产生无效语法时返回 409 并保持原内容。 |
+| 制造灰区并导出 full 轨迹，指定 provider 缓存执行 replay:check。 | 判定、闸门、文件写入和冻结无差异，离线核验不联网。 |
+
+自动执行命令：
+
+```bash
+SIMPLERCP_CHECKPOINT_B_LIVE=1 pnpm exec playwright test --config tests/playwright.checkpoint-b.config.ts
+pnpm --filter @simplercp/conflict-guard data:artifacts --cache bench/model-cache/checkpoint-b-product --restore
+pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/checkpoint-b-manual/05-full.jsonl --cache bench/model-cache/checkpoint-b-product
+```
+
+四个浏览器用例通过；同文件兼容提交另外执行一次。三次真实 Agent run 的状态、审批回复、DOM 与文件断言保存于 evidence/checkpoint-b-manual/。截图通过 Playwright 保存，验收依据为 DOM、Monaco、接口、轨迹与文件内容。
+
+开发集复现：
+
+```bash
+pnpm --filter @simplercp/conflict-guard data:artifacts --dataset bench/datasets/d1-v2 --restore
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v2 --split dev --policy 'P0,P1,P2,P3,P*' --out ../../.test-workspaces/checkpoint-b-rules
+pnpm --filter @simplercp/conflict-guard data:artifacts --cache bench/model-cache/checkpoint-b-round1 --restore
+pnpm --filter @simplercp/conflict-guard adjudication:verify --record ../../docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round1 --cache bench/model-cache/checkpoint-b-round1 --dataset bench/datasets/d1-v2
+```
+
+开发集主表与阈值曲线位于 evidence/checkpoint-b-dev-report/。G1、G2 的三轮真实录制使用不同缓存目录，保留集没有执行策略评价。

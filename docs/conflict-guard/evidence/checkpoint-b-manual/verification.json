@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "case": 1,
+      "status": "completed",
+      "rejectedEdits": 0,
+      "t3": "passed",
+      "replies": [
+        {
+          "requestId": "per_1121edf37001nGoV1qRvwmohwz",
+          "sessionId": "ses_eede12ee6ffe7gKD3CqSYc63yk",
+          "reply": "once",
+          "approvalWaitMs": 3332.8001249999998
+        }
+      ],
+      "checks": {
+        "canonicalPath": true,
+        "explicitPermission": true,
+        "humanEditable": true
+      }
+    },
+    {
+      "case": 2,
+      "status": "completed",
+      "rejectedEdits": 1,
+      "t3": "passed",
+      "replies": [
+        {
+          "requestId": "per_11238e74f001Tgu1D96HwpFBCt",
+          "sessionId": "ses_eedc7276dffeHv6VQkKSvOZu4v",
+          "reply": "reject",
+          "message": "文件在你修改期间已被他人更新，请重新读取后再修改",
+          "approvalWaitMs": 5261.927959000002
+        },
+        {
+          "requestId": "per_1123904aa001V9G9QQhI6CRe0g",
+          "sessionId": "ses_eedc7276dffeHv6VQkKSvOZu4v",
+          "reply": "once",
+          "approvalWaitMs": 159.68237500000032
+        }
+      ],
+      "checks": {
+        "humanPreserved": true,
+        "approvedAgentPreserved": true,
+        "staleProposalRejected": true
+      }
+    }
+  ],
+  "realAgentRuns": 3,
+  "twoConflicts": true,
+  "noJsonParseError": true,
+  "fullReplayTrace": "05-full.jsonl"
+}

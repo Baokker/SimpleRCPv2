@@ -4,10 +4,10 @@
 
 | 位置 | 行为 |
 |---|---|
-| `apps/server/src/agent/permissionDispatcher.ts` | 按注册顺序执行审批处理函数，回复 once 或 reject；记录审批等待，重复请求共享处理过程，处理异常拒绝修改。 |
-| `apps/server/src/agent/conflictGuardEditHandler.ts` | 使用 diff 库还原单文件、多文件、新增、删除和移动提案，核验路径与基线。 |
+| `apps/server/src/agent/permissionDispatcher.ts` | 按注册顺序执行审批处理函数，支持 defer，回复 once 或 reject；各处理函数独立预算，记录审批等待，重复请求共享处理过程，处理异常拒绝修改。 |
+| `apps/server/src/agent/conflictGuardEditHandler.ts` | 优先使用 tool.callID 对应的 edit/write 输入，后备使用 diff 库，还原 trimDiff、多文件、新增、删除和移动提案，核验 realpath 与 before。 |
 | `apps/server/src/agent/agentRunManager.ts` | 连接审批事件、暂停执行超时计时、更新拒绝与警告记录，在全部结束路径执行 T3，保留取消状态。 |
-| `apps/server/src/conflictGuard/projectAgentGuard.ts` | 维护 run 快照、批准预约、归属哈希与关联修改历史，串行执行 T2，执行 T3 与属主通知。 |
+| `apps/server/src/conflictGuard/projectAgentGuard.ts` | 维护 run 快照、批准预约、归属哈希与关联修改历史，按文件串行执行 T2，不同文件并行，执行 T3 与持久属主通知。 |
 | `packages/conflict-guard/src/coordination/agentGuard.ts` | 复用语义索引、候选对、classify 与 PairCoordinator，合并共享文本，选择可以撤回的完整行。 |
 | `apps/server/src/collaborativeDocuments.ts` | 回灌使用 Agent origin；打开文件以 guard-revert 事务撤回，未打开文件核验当前内容后写入，支持新增文件删除与删除文件恢复。 |
 | `apps/client/src/components/AgentPanel.tsx`、`ConflictGuardPanel.tsx`、`App.tsx` | 显示审批拒绝、原因、等待时间、T3、Agent 参与者及 T2/T3 来源，通知属主。 |
@@ -20,7 +20,7 @@ T3 总时间预算为 60 秒，默认 G1。范围限定为 run 期间被其他�
 
 ## 真实 OpenCode 验证
 
-OpenCode 版本为 1.18.31。原始权限证据位于 `evidence/stage-6-smoke/permission-events.json`，包含 edit、write、apply_patch 的三个 permission.asked 事件，permission 均为 edit。edit、write 使用 filepath 与 unified diff，apply_patch 使用 files。事件中的 always 是请求字段；回复仅使用 once。
+OpenCode 版本为 1.18.31。原始权限证据位于 `evidence/stage-6-smoke/permission-events.json`，三个 permission.asked 事件来自 edit 与 write，permission 均为 edit。元数据包含 filepath 与 unified diff。apply_patch 的 files 元数据通过 SDK 类型及夹具测试核验，字段为 filePath、relativePath、type、patch、movePath。事件中的 always 是请求字段；回复仅使用 once。
 
 真实任务的 run 事件、协作轨迹和最终源码保存在 `evidence/stage-6-smoke/`。运行命令：
 
@@ -50,8 +50,8 @@ Agent 集成测试使用真实 createApp、WebsocketProvider、Yjs、文件监�
 | 命令 | 结果 |
 |---|---|
 | `pnpm -r build` | 全部项目通过 |
-| `pnpm --filter @simplercp/conflict-guard test` | 19 个文件、180 项通过 |
-| `pnpm --filter @simplercp/server test` | 44 个文件、237 项通过，其中 Agent 集成 37 项 |
+| `pnpm --filter @simplercp/conflict-guard test` | 22 个文件、195 项通过 |
+| `pnpm --filter @simplercp/server test` | 45 个文件、260 项通过，其中 Agent 集成 47 项 |
 | `pnpm test:demo` | 2 项通过 |
 | `CONFLICT_GUARD=rules SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=1 SIMPLERCP_SKIP_MODEL_REQUESTS=true pnpm test:e2e` | 36 项通过、8 项按条件跳过；包含阶段 2、3、4 的浏览器回归 |
 | `CONFLICT_GUARD=rules SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3 SIMPLERCP_SKIP_MODEL_REQUESTS=true pnpm test:e2e` | 37 项通过、7 项按条件跳过；包含阶段 2、3、4 与阶段 6 的浏览器回归 |
@@ -80,6 +80,14 @@ Agent trace 将事件转换为界面条目后保留最后 200 条可见记录。
 - 服务重启会清除内存中的活跃 run 与审批预约。
 - 依赖 OpenCode 1.18.31 的权限事件元数据和 SDK 接口。
 - 未形成候选对的单方行为修改可能改变既有测试结果，T2/T3 的关联检查不会运行整个项目测试。
+
+## 检查点 B 真实浏览器
+
+两个独立浏览器使用 full/G3、真实 OpenCode 和 DeepSeek，工作区通过 macOS 符号链接访问。三次真实 Agent run 均 completed。签名变化与 checkout 前缀场景获得 once 和模型警告，人类没有冻结；同文件灰区修改曾因语义冲突拒绝一次。兼容的空购物车检查场景在分析期间遇到 Cart.add 更新，首次提案因 before 已变化拒绝，Agent 重新读取后获得 once，双方修改均保留，T3 passed。
+
+预约使用精确修改范围与提案自己的 after；批准后暂停该文件的 Yjs 写入，两秒期限后核验实际内容并记录 reservation_mismatch。子 Agent 的 session.created 后代进入同一事件集合，回复使用请求的 sessionID。T3 的无法核验文件限定于本次台账或按 user messageID 查询的会话 diff。
+
+GuardConflict 统一传递显示名、双方 ActorRef、符号、修改前后签名、规则、中文说明与建议。defer 权限处理和带 read/handled 的持久通知提供阶段 7 接口，团队 Agent 通知对象为本次触发者。生产参数集成复查、blocker 变异、完整测试与截图见 review-fix-checkpoint-b.md。
 
 ## 阶段 7 建议
 

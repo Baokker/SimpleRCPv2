@@ -7,6 +7,7 @@ export type Detectability = "text-merge" | "typecheck" | "runtime-only" | "none"
 export interface SeedProject {
   name: string;
   files: Record<string, string>;
+  layout?: "native";
 }
 
 export interface OperatorSpec {
@@ -55,7 +56,7 @@ export interface BenchRelationGroup {
 }
 
 export interface BenchManifest {
-  version: "d1-v1";
+  version: "d1-v1" | "d1-v2" | "stage5-dev-smoke-v2";
   seed: number;
   generatedBy: string;
   generationCommand: string;
@@ -66,6 +67,8 @@ export interface BenchManifest {
   groups: BenchRelationGroup[];
   split: { development: string[]; holdout: string[] };
   programStats?: { uniquePrograms: number; seedPrograms?: number; uniqueVariantPrograms?: number; samples?: number; developmentHoldoutOverlap: number; groupsByProject: Record<string, number>; groupsByOperator: Record<string, number>; heldoutFamilies?: string[] };
+  diversity?: ReturnType<typeof import("./diversity.js").inspectSeedDiversity>;
+  siteStats?: { development: string[]; holdout: string[]; overlap: string[] };
 }
 
 export interface ProbeRun {

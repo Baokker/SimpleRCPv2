@@ -14,6 +14,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "bench:generate": "node --experimental-strip-types scripts/bench-generate.ts",
+    "bench:inspect": "node --experimental-strip-types scripts/bench-inspect.ts",
+    "data:artifacts": "node --experimental-strip-types scripts/data-artifacts.ts",
     "bench:prepare": "node --experimental-strip-types scripts/bench-prepare.ts",
     "bench:label": "node --experimental-strip-types scripts/bench-label.ts",
     "bench:import-greylock": "node --experimental-strip-types scripts/bench-import-greylock.ts",

@@ -9,18 +9,22 @@ export function loadModelEnvironment() { const file = path.join(repositoryRoot, 
 export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicationConfig, mode: ProviderMode = "replay", directory = path.join(repositoryRoot, "packages/conflict-guard/bench/model-cache"), onCall?: (call: ProviderCall) => void, models: Record<string, string> = {}) {
   if (models.jev && models.jev !== config.fastModel) throw new Error("录制快判版本与配置不一致");
   const env = process.env;
+  const scope = env.ADJUDICATION_BUDGET_SCOPE ?? "stage5";
+  if (!/^[a-z0-9-]+$/.test(scope)) throw new Error("调用预算名称无效");
+  const limits = { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
   let budgetExhausted = false;
-  const secrets = [env.TYPESAFE_API_KEY, env.DEEPSEEK_API_KEY, env.ADJUDICATION_COMPATIBLE_API_KEY].filter((value): value is string => Boolean(value));
+  const secrets = Object.entries(env).filter(([name, value]) => /(?:KEY|TOKEN|SECRET)(?:_|$)/i.test(name) && value).map(([, value]) => value!);
   const wrappedFetch: typeof fetch = async (url, init) => {
-    const fast = String(url).endsWith("/v1/systemone");
-    const budgetFile = path.join(repositoryRoot, ".test-workspaces/stage5-call-budget.json");
+    const body = typeof init?.body === "string" ? JSON.parse(init.body) : {};
+    const fast = String(url).endsWith("/v1/systemone") || body.logprobs === true || body.messages?.[0]?.content?.endsWith("Output exactly one word: allow, warn, or lock.");
+    const budgetFile = path.join(repositoryRoot, `.test-workspaces/${scope}-call-budget.json`);
     let budget = { fast: 0, deep: 0 };
     try { budget = JSON.parse(await fs.readFile(budgetFile, "utf8")); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-    if (fast ? budget.fast >= 2000 : budget.deep >= 800) {
+    if (fast ? budget.fast >= limits.fast : budget.deep >= limits.deep) {
       budgetExhausted = true;
-      const evidence = path.join(repositoryRoot, "docs/conflict-guard/evidence/stage-5-budget-stop.json");
+      const evidence = path.join(repositoryRoot, `docs/conflict-guard/evidence/${scope}-budget-stop.json`);
       await fs.mkdir(path.dirname(evidence), { recursive: true });
-      await fs.writeFile(evidence, JSON.stringify({ reason: "call-limit", role: fast ? "fast" : "deep", calls: budget, limits: { fast: 2000, deep: 800 } }, null, 2) + "\n");
+      await fs.writeFile(evidence, JSON.stringify({ reason: "call-limit", role: fast ? "fast" : "deep", calls: budget, limits }, null, 2) + "\n");
       throw new Error("真实调用预算已达到上限");
     }
     if (fast) budget.fast += 1; else budget.deep += 1;

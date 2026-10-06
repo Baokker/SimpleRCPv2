@@ -103,6 +103,21 @@ for (const mode of ["rules", "observe"] as const) describe(`检查点 A 生产�
     expect(state().blockedPersists).toContainEqual({ file: "src/cart.ts", reason: "pending-judgement" });
     await judgement();
     expect(await disk("src/cart.ts")).toBe(cartBaseline);
+    const conflict = guard().state(bob.member.id).pairDecisions.find((record) => record.verdict?.ruleId === "call-signature-incompatible")?.conflict;
+    expect(conflict).toMatchObject({ self: { kind: "human", memberId: bob.member.id }, other: { kind: "human", memberId: alice.member.id }, ruleId: "call-signature-incompatible", decision: "lock" });
+    expect(conflict?.afterSignature).toContain("currency: string");
+  }, 15000);
+  it("U3 rejects an undo that would produce an invalid overlapping function declaration", async () => {
+    const { pricing } = await lock();
+    const record = await judgement();
+    const other = await connect("src/pricing.ts", bob.member.id);
+    replace(other.document, "currency: string", "currency: string: number");
+    await waitFor(() => pricing.document.getText("content").toString().includes("string: number"));
+    const before = pricing.document.getText("content").toString();
+    const response = await alice.request(`/conflict-guard/pairs/${record.pair.id}/revert`, { method: "POST" });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "撤回会与他人的修改交叠，请在聊天中协商" });
+    expect(pricing.document.getText("content").toString()).toBe(before);
   }, 15000);
   it("P1 锁定期间全部连接关闭后保留文档与成员 Undo 历史", async () => {
     const { pricing, cart, cartBaseline } = await lock();

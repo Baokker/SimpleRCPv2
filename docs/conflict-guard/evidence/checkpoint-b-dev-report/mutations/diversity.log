@@ -1,0 +1,41 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+
+ ❯ src/bench/nativeTemplates.test.ts  (4 tests | 1 failed | 3 skipped) 15191ms
+   ❯ src/bench/nativeTemplates.test.ts > rejects a copied business file even when project and size requirements pass
+     → expected { valid: true, …(7) } to match object { valid: false, maximumObserved: 1 }
+(6 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/bench/nativeTemplates.test.ts > rejects a copied business file even when project and size requirements pass
+AssertionError: expected { valid: true, …(7) } to match object { valid: false, maximumObserved: 1 }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+    "maximumObserved": 1,
+-   "valid": false,
++   "valid": true,
+  }
+
+ ❯ src/bench/nativeTemplates.test.ts:20:21
+     18|   const diversity = inspectSeedDiversity(cloned);
+     19|   expect(diversity.sizes.every((size) => size.files >= 5 && size.lines…
+     20|   expect(diversity).toMatchObject({ valid: false, maximumObserved: 1 }…
+       |                     ^
+     21|   expect(() => generateManifest({ projects: cloned, groups: 8, seed: 7…
+     22| }, 60000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  00:43:17
+   Duration  17.43s (transform 1.59s, setup 0ms, collect 1.96s, tests 15.19s, environment 0ms, prepare 74ms)
+
+undefined
+/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/bench/nativeTemplates.test.ts -t copied business file

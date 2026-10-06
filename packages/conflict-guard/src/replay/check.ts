@@ -2,9 +2,11 @@ import type { TraceEvent } from "../trace/trace.js";
 import { replayTrace, type ReplayOptions } from "./engine.js";
 import type { CandidatePair } from "../routing/candidates.js";
 
-export function checkReplay(events: TraceEvent[], options: Omit<ReplayOptions, "policy"> = {}) {
+export function checkReplay(events: TraceEvent[], options: Partial<ReplayOptions> = {}) {
   const recorded = events.filter((event) => event.type === "pair_judged").map((event) => ({ pairId: String(event.pairId), revision: Number(event.revision), at: event.at, ruleId: (event.verdict as { ruleId?: string })?.ruleId, decision: (event.verdict as { decision?: string })?.decision }));
-  const replay = replayTrace(events, { ...options, policy: "P3" });
+  const start = events.find((event) => event.type === "session_start");
+  if (start?.mode === "full" && start.adjudication && !options.policy) throw new Error("full 模式核验需要录放缓存策略");
+  const replay = replayTrace(events, { ...options, policy: options.policy ?? "P3" });
   const actual = replay.judgements.map((event) => ({ pairId: event.pairId, revision: event.revision, at: event.at, ruleId: event.verdict.ruleId, decision: event.verdict.decision }));
   const config = events.find((event) => event.type === "session_start")?.config as { idleMs?: number } | undefined;
   const tolerance = options.idleMs ?? config?.idleMs ?? 1500;

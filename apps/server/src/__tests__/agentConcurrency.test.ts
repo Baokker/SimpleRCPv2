@@ -208,7 +208,7 @@ describe("Agent concurrency with fake runtime", () => {
     expect(runs.find((run) => run.id === first.id)?.fileChanges?.map((change) => change.file)).toEqual(["session-first.ts"]);
     expect(runs.find((run) => run.id === second.id)?.fileChanges?.map((change) => change.file)).toEqual(["session-second.ts"]);
     const secondTrace = await getTrace(second.id);
-    expect(secondTrace.find((event) => event.type === "session_diff_observed")?.data?.files).toEqual(expect.arrayContaining(["session-first.ts", "session-second.ts"]));
+    expect(secondTrace.find((event) => event.type === "session_diff_observed")?.data?.files).toEqual(["session-second.ts"]);
   });
 
   it("records overlap only for runs that actually overlap", async () => {

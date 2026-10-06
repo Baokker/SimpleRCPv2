@@ -1,0 +1,7 @@
+
+> @simplercp/conflict-guard@0.1.0 adjudication:verify /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+> node --experimental-strip-types scripts/adjudication-verify.ts "--record" "../../docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round3" "--cache" "bench/model-cache/checkpoint-b-round3" "--dataset" "bench/datasets/d1-v2"
+
+{"round":1,"recordMatches":true,"sha256":"e541b9314fa1510f6ffcf508bcf84829a079d4c8839ff467d09e5e23b71ac3d4","networkCalls":0}
+{"round":2,"recordMatches":true,"sha256":"e541b9314fa1510f6ffcf508bcf84829a079d4c8839ff467d09e5e23b71ac3d4","networkCalls":0}
+{"round":3,"recordMatches":true,"sha256":"e541b9314fa1510f6ffcf508bcf84829a079d4c8839ff467d09e5e23b71ac3d4","networkCalls":0}

@@ -18,3 +18,9 @@ packages/conflict-guard/bench/datasets/stage5-dev-smoke/manifest.json
 packages/conflict-guard/bench/datasets/stage5-dev-smoke/labels.json
 packages/conflict-guard/bench/datasets/stage5-dev-smoke/excluded.json
 packages/conflict-guard/bench/datasets/stage5-dev-smoke/traces/
+packages/conflict-guard/bench/datasets/d1-v2/manifest.json
+packages/conflict-guard/bench/datasets/d1-v2/labels.json
+packages/conflict-guard/bench/datasets/d1-v2/excluded.json
+packages/conflict-guard/bench/datasets/d1-v2/traces/
+packages/conflict-guard/bench/model-cache/checkpoint-b-*/**/*.json
+docs/conflict-guard/evidence/checkpoint-b-dev-report/rules/results.json

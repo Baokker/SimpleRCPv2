@@ -88,22 +88,24 @@ pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../
 
 `buildAdjudicationInput` 供产品与回放共同使用，包含双方符号 before/after、参与者种类、关系路径、本地排除规则与类型检查结果。`extractInvariants` 从入边选取至多三个调用点，按与另一侧符号的距离排序，补充函数签名、调用行前后各三行、测试名称及断言、修改前注释与返回值用法。调用与测试引用通过索引的 `referenceTargets` 使用 TypeChecker 查询目标声明，支持同名方法、import 别名和匿名 default 声明；索引包含 `.mjs` 与 `.cjs` 测试。文本字段上限为 3000 字符，`invariants:false` 可以关闭这部分上下文。
 
-`createAdjudicationService` 合并相同输入的并发角色请求。输入、适配器及模型版本共同形成 SHA-256 缓存键。取消一个订阅者保留其他订阅者的请求，最后一个订阅者取消时中止 HTTP。缓存读取与整个级联过程均受 8000 ms 时间预算限制。失败、超时与无效格式在 T1 返回 warn，模型结果通过 `PairCoordinator` 的修订号检查生效。
+`createAdjudicationService` 合并相同输入的并发角色请求。输入、角色、适配器、模型版本、提示词全文、端点、temperature、reasoning 与截止时间共同形成 SHA-256 缓存键。取消一个订阅者保留其他订阅者的请求，最后一个订阅者取消时中止 HTTP。缓存读取与整个级联过程均受 8000 ms 时间预算限制。失败、超时与无效格式在 T1 返回 warn，模型结果通过 `PairCoordinator` 的修订号检查生效。
 
 灰区等待期间状态为 `analyzing`，相关区域标黄、文本同步继续、文件写入暂停；超过 2000 ms 推送分析进度。结束后复用通知、冻结与卡片。接口统计包含角色调用、缓存命中、升级比例、完整研判延迟、失败与费用。`provider_call` 只保存版本、输入哈希与结果元数据。
 
 `live` 直接调用；`record` 保存经过脱敏的输入和原始响应；`replay` 只读取 `bench/model-cache/`，未命中返回失败。录制文件使用权限 0600，缓存内容经过结构验证。凭据与对象属性名中的敏感值都经过脱敏。
 
 ```bash
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --policy G0,P3,G1,G2 --provider-mode record --cache bench/model-cache/stage5-dev-final
-pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/datasets/d1-v1
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --policy G3 --threshold 0 --provider-mode record --cache bench/model-cache/stage5-dev-final
-pnpm --filter @simplercp/conflict-guard adjudication:verify
+pnpm --filter @simplercp/conflict-guard data:artifacts --dataset bench/datasets/d1-v2 --restore
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v2 --policy G1,G2 --provider-mode record --cache bench/model-cache/checkpoint-b-round1
+pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/datasets/d1-v2 --record ../../docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round1/results.json.gz
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v2 --policy G3 --threshold 0 --provider-mode record --cache bench/model-cache/checkpoint-b-calibrated
 ```
 
 `adjudication:verify` 按录制报告中已有的模型策略执行三轮重放，支持只录制 G3 的报告。完整录制配置保存为 `adjudication-config.json`，适配器与模型版本保存为 `adjudication-models.json`，通过 `replay:run --config <file> --models <file>` 使用。重放使用录制的模型版本；报告的 `model.httpCalls` 记录实际 HTTP 调用数，`model.calls` 保存调用事件。离线重放不要求存在 `.env` 文件。
 
 阈值、价格、完整提示词和配置见 `docs/conflict-guard/adjudication.md`。阶段五命令只读取开发集；保留集留至正式评价。模型录制用于离线确定性回放，实际服务端取消与截止时间另由集成及浏览器测试验证。
+
+快判与深判适配器均可按配置注册。`openai-compatible` 快判从三个单词的 logprobs 计算条件概率；端点不提供概率时，以 temperature=1 执行配置次数的独立单词采样。temperature=0 的能力检查响应不参与采样概率，其 token 仍计入使用量。当前 D1-v2 使用八个独立业务项目与 200 个关系组，开发集 75 组；相似度、站点检查和来源见 benchmark.md。模型报告包含 P*、逃逸、token、真实三轮重复、McNemar/Holm 和关系组 bootstrap。合成轨迹的冻结人秒按编辑结束截断，另报无人处理上界。
 
 ## Agent T2 与 T3
 

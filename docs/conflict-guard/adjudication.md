@@ -40,16 +40,18 @@ DeepSeek 请求使用 temperature 0、`response_format:{type:"json_object"}`、`
 
 ## 共享上下文
 
+变量别名与重导出通过索引关系找到原始调用方。测试断言仅收集引用了被修改符号或其调用方的断言，支持 node:test 与 node:assert 的导入别名。调用点、测试、返回值用法和注释分别分配上下文预算，`invariantCoverage` 保存四类内容是否存在；开发集比例见检查点 B 报告。
+
 每侧包含成员类型、文件、符号键与 before/after。入边中的调用点按与另一侧符号的距离排序，每个片段包含所在声明签名及调用行前后三行。测试上下文从 test 目录及 test/spec 文件中选取引用该符号的测试名称与断言；同时提取修改前注释以及 AST 中返回值的属性访问、比较、计算、传参或变量使用。调用与测试使用现有索引 Program 的 TypeChecker 查询目标声明，按声明所在文件及范围识别符号，支持同名方法、import 别名、匿名 default 声明与 `.mjs`、`.cjs` 文件。
 
 `invariants:false` 清空这部分上下文。各文本字段按 3000 字符限制，类型检查上下文去除测量耗时，保证相同程序的输入哈希稳定。当前匹配能力受静态关系与测试的写法限制，间接运行时调用以及测试辅助函数中的断言可能缺失。
 
 ## 校准与价格
 
-校准仅使用 D1 的开发项目与算子。曲线使用最终灰区修订的快判、深判记录，并按输入哈希对应；本次为 18 项，其中 lock 真值 5 项、allow 真值 12 项。阈值从 0 到 1，以 0.05 为间隔；先选择漏阻断最少的阈值，再比较误阻断、一致率和升级率。推荐值为 0，强制升级快判 lock 与快判失败仍然有效。当前曲线不能证明置信度阈值提升质量，报告保留未达到 T03 的结果。
+校准仅使用 D1-v2 的三个开发项目与 IC、CP、SF 算子。曲线使用最终灰区 revision 的快判、深判记录，并按输入哈希对应；本次十二项全部为 lock 真值。阈值从 0 到 1，以 0.05 为间隔；选择漏阻断最少的阈值，随后比较误阻断、一致率和升级率。推荐值为 0，强制升级快判 lock 与失败仍然有效。阈值 0 时覆盖率 66.7%、升级率 33.3%，所有阈值的漏阻断率均为 75%。该子集没有 allow 标签，无法估计其误阻断率；当前曲线没有支持阈值提高质量的证据。
 
 ```bash
-pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/datasets/d1-v1 --record ../../docs/conflict-guard/evidence/stage-5-dev-report/results.json.gz
+pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/datasets/d1-v2 --record ../../docs/conflict-guard/evidence/checkpoint-b-dev-report/real-round1/results.json.gz --out ../../docs/conflict-guard/evidence/checkpoint-b-dev-report/calibration
 ```
 
 价格日期为 2026-10-06，单位 USD / 一百万 token：Jev 输入 0.042，输出 0；DeepSeek Flash 输入按峰值、未命中缓存 0.30 估算，输出 1.20。响应提供的 token usage 决定费用估算，缓存重放费用为 0。实际账单可能包含服务端缓存或时段折扣。来源为 TypeSafe models 文档与 DeepSeek pricing 文档，下载资料保存在被忽略的本地验收目录。
@@ -58,7 +60,7 @@ pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/d
 
 ## 录放
 
-缓存键为规范化输入、适配器名、模型版本的 SHA-256。输入哈希去除对象键顺序影响；配置中的提示词版本属于输入。缓存保存原文输入与原始响应，轨迹只保存元数据。所有配置的敏感值在字符串与属性名中都经过替换。
+缓存键为规范化输入、角色、适配器名、模型版本、提示词全文与请求参数的 SHA-256。请求参数包括 endpoint、temperature、reasoning、hardDeadlineMs；输入哈希去除对象键顺序影响。快判和深判使用不同角色身份。缓存保存原文输入与原始响应，provider_call 仅保存 cacheKey 等元数据。所有配置的敏感值在字符串与属性名中都经过替换。
 
 `record` 可复用已有缓存，`replay` 完全禁止网络；缺失或损坏的缓存产生失败结果。并发相同请求共享一次角色调用，每个订阅者分别维护整轮级联的截止时间。一个订阅者超时后，其余订阅者仍可在自己的时间预算内等待；全部订阅者取消或超时后终止共享请求，每次底层角色请求最多运行 8000 ms。变更对修订后中止旧订阅，迟到结果不会进入状态机。录制中的角色耗时用于推动回放虚拟时钟。
 
@@ -67,3 +69,16 @@ pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/d
 `replay:run --config <file> --models <file>` 读取完整研判配置与录制模型版本，显式提供的 `--deep` 与 `--threshold` 可以覆盖对应字段。`adjudication:verify` 恢复录制配置，从调用元数据恢复每个适配器的模型版本，并只运行报告已有的模型策略。G3 单独录制和 `openai-compatible` 配置沿用相同入口；已有录制模型版本的兼容适配器可以在离线重放时注册。报告分别保存 `model.httpCalls` 与 `model.calls`，重放的一致性校验使用实际 HTTP 次数检查网络调用。
 
 冻结自动解除且新判定为 warn 时，双方收到该修订的模型解释与建议。通知按 `pairId:revision` 去重，旁观成员不接收双方的警告。
+
+## 角色替换与核验
+
+快判适配器由配置注册，fastModel 用于指定版本。`openai-compatible` 快判对 allow、warn、lock 请求 logprobs，使用这三个 token 的条件概率。HTTP 400/422 或没有概率时采用单词多次采样，temperature 为 1，默认七次，配置允许 3–25 次；最初 temperature 0 的能力响应不参与概率估计。费用包含全部调用与响应中的 usage。
+
+G1 第一轮 52 份输入的上下文比例为：调用点 84.6%、相关测试断言 25.0%、返回值用法 84.6%、注释 13.5%。完整比例与真实三轮重复结果见检查点 B provenance.json 和 real-repeatability.json。当前环境没有额外兼容端点，替换适配器由单元测试验证。
+
+full 轨迹核验从 session_start 恢复策略配置，用 provider_call 的 cacheKey 读取缓存并验证哈希，再重建模型角色；取消请求不提交判定。初始项目内容包含测试文件，以保持共享上下文哈希。
+
+```bash
+pnpm --filter @simplercp/conflict-guard data:artifacts --cache bench/model-cache/checkpoint-b-product --restore
+pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/checkpoint-b-manual/05-full.jsonl --cache bench/model-cache/checkpoint-b-product
+```

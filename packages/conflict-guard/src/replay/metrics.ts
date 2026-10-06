@@ -15,6 +15,7 @@ export interface ReplayGroupOutcome {
   missed: boolean;
   overblocked: boolean;
   frozenPersonSeconds: number;
+  unattendedFrozenPersonSeconds?: number;
   cardCount: number;
   latencyMs?: number;
   latenciesMs?: number[];
@@ -41,6 +42,7 @@ export interface ReplayMetrics {
   falseBlockRatio: WilsonInterval;
   escapeRatio: WilsonInterval;
   frozenPersonSeconds: number;
+  unattendedFrozenPersonSeconds: number;
   cardsPerHour: number;
   counterfactualEdits: number;
   freezeCount: number;
@@ -98,6 +100,7 @@ export function calculateReplayMetrics(outcomes: ReplayGroupOutcome[], noRelatio
     falseBlockRatio: wilson(overblocked, allowTruth.length),
     escapeRatio: wilson(escaped, conflictTruth.length),
     frozenPersonSeconds: frozen,
+    unattendedFrozenPersonSeconds: outcomes.reduce((sum, outcome) => sum + (outcome.unattendedFrozenPersonSeconds ?? outcome.frozenPersonSeconds), 0),
     cardsPerHour: durationHours > 0 ? cards / durationHours : 0,
     counterfactualEdits: outcomes.reduce((sum, outcome) => sum + (outcome.counterfactualEdits ?? 0), 0),
     freezeCount: outcomes.reduce((sum, outcome) => sum + (outcome.freezeCount ?? 0), 0),
@@ -230,7 +233,8 @@ export function replayOutcome(input: {
     escaped: exposure.escaped,
     missed: input.truth === "lock" && result.finalDecision !== "lock",
     overblocked: input.truth === "allow" && result.finalDecision === "lock",
-    frozenPersonSeconds: frozenPersonSeconds(result),
+    frozenPersonSeconds: frozenPersonSeconds(result, input.trace.find((event) => event.type === "session_start")?.typing ? Math.max(0, ...edits.map((event) => event.at)) : result.endedAt),
+    unattendedFrozenPersonSeconds: frozenPersonSeconds(result),
     cardCount: cards.size,
     freezeCount: new Set(result.freezeIntervals.map((interval) => `${interval.pairId}:${interval.start}`)).size,
     frozenEdits,
@@ -249,12 +253,12 @@ export function replayOutcome(input: {
   };
 }
 
-export function frozenPersonSeconds(result: Pick<ReplayResult, "freezeIntervals" | "endedAt">) {
+export function frozenPersonSeconds(result: Pick<ReplayResult, "freezeIntervals" | "endedAt">, cutoff = result.endedAt) {
   const actors = new Map<string, Array<[number, number]>>();
   for (const interval of result.freezeIntervals) {
     const key = JSON.stringify(interval.actor);
     const ranges = actors.get(key) ?? [];
-    ranges.push([interval.start, interval.end ?? result.endedAt]);
+    ranges.push([interval.start, Math.min(interval.end ?? result.endedAt, cutoff)]);
     actors.set(key, ranges);
   }
   let milliseconds = 0;

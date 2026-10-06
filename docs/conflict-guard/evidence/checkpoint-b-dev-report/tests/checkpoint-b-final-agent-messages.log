@@ -1,0 +1,9 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/packages/conflict-guard
+
+ ✓ src/coordination/agentGuard.test.ts  (8 tests) 90ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  01:53:23
+   Duration  1.72s (transform 1.21s, setup 0ms, collect 1.46s, tests 90ms, environment 0ms, prepare 53ms)

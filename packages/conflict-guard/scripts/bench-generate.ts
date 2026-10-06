@@ -6,11 +6,12 @@ import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import { generateManifest } from "../dist/bench/generator.js";
 import type { BenchLabel, BenchManifest, BenchVariant, SeedProject } from "../dist/bench/types.js";
+import { readSeedProjects } from "./seed-projects.ts";
 
-const { values: args } = parseArgs({ args: process.argv.slice(2).filter((value) => value !== "--"), options: { seeds: { type: "string", default: "bench/seeds" }, out: { type: "string", default: "bench/datasets/d1-v1" }, groups: { type: "string", default: "10" }, seed: { type: "string", default: "1" }, "preserve-labels": { type: "boolean", default: false } } });
+const { values: args } = parseArgs({ args: process.argv.slice(2).filter((value) => value !== "--"), options: { seeds: { type: "string", default: "bench/seeds/native" }, out: { type: "string", default: "bench/datasets/d1-v2" }, groups: { type: "string", default: "200" }, seed: { type: "string", default: "1" }, "preserve-labels": { type: "boolean", default: false } } });
 const output = path.resolve(args.out ?? "bench/datasets/d1-v1");
 const seedDirectory = path.resolve(args.seeds ?? "bench/seeds");
-const projects = await readProjects(seedDirectory);
+const projects = await readSeedProjects(seedDirectory);
 const repository = fileURLToPath(new URL("../../../", import.meta.url));
 const manifest = generateManifest({ groups: Number(args.groups), seed: Number(args.seed), projects, generationCommand: `pnpm --filter @simplercp/conflict-guard bench:generate --seeds ${args.seeds} --out ${args.out} --groups ${args.groups} --seed ${args.seed}${args["preserve-labels"] ? " --preserve-labels" : ""}`, codeCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repository, encoding: "utf8" }).trim() });
 let labels: BenchLabel[] = [];
@@ -48,26 +49,3 @@ await fs.writeFile(path.join(output, "manifest.json"), `${JSON.stringify(manifes
 console.log(JSON.stringify({ output, groups: manifest.groups.length, development: manifest.split.development.length, holdout: manifest.split.holdout.length, labelsReused: labels.length }));
 
 function labelInputs(variant: BenchVariant) { return JSON.stringify([variant.baseline, variant.leftOnly, variant.rightOnly, variant.merged, variant.probes, variant.entryPoints, variant.expectedMergedObservations, variant.baselineReference]); }
-
-async function readProjects(directory: string): Promise<SeedProject[]> {
-    const entries = await fs.readdir(directory, { withFileTypes: true });
-    const projects: SeedProject[] = [];
-    for (const entry of entries.filter((item) => item.isDirectory()).sort((left, right) => left.name.localeCompare(right.name))) {
-      const root = path.join(directory, entry.name);
-      const files = await collectFiles(root);
-      if (Object.keys(files).length > 0) projects.push({ name: entry.name, files });
-    }
-    if (projects.length > 0) return projects;
-  throw new Error("种子目录没有 TypeScript 项目");
-}
-
-async function collectFiles(root: string, relative = "") {
-  const result: Record<string, string> = {};
-  const entries = await fs.readdir(path.join(root, relative), { withFileTypes: true });
-  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
-    const file = path.posix.join(relative, entry.name);
-    if (entry.isDirectory() && !["node_modules", ".git", "dist", "build", "coverage"].includes(entry.name)) Object.assign(result, await collectFiles(root, file));
-    else if (entry.isFile() && /\.(ts|tsx|js|jsx|mts|cts|mjs)$/i.test(entry.name)) result[file] = await fs.readFile(path.join(root, file), "utf8");
-  }
-  return result;
-}

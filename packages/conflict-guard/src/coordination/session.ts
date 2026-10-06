@@ -195,7 +195,7 @@ export function createSessionCoordinator(options: {
         const id = `${batch.id}:${pairId}`;
         if (warnings.has(id)) continue;
         warnings.add(id);
-        emit({ type: "t0_warning", id, pairId, revision, targetSymbol, batchId: batch.id, memberId: batch.actor.memberId, actor: entry.actor, symbol: entry.symbol, summary: `正在修改你依赖的 ${entry.symbol.slice(entry.symbol.indexOf("#") + 1)}：外部接口已改变。` });
+        emit({ type: "t0_warning", id, pairId, revision, targetSymbol, batchId: batch.id, memberId: batch.actor.memberId, targetActor: batch.actor, actor: entry.actor, symbol: entry.symbol, summary: `正在修改你依赖的 ${entry.symbol.slice(entry.symbol.indexOf("#") + 1)}：外部接口已改变。` });
       }
     }
   }

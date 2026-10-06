@@ -36,7 +36,7 @@ export class SemanticChangeTracker {
 
   update(changeSets: ActiveChangeSet[], batches: Array<{ batch: EditBatch; change?: FileChange }> = []) {
     this.changeSets = changeSets;
-    for (const changeSet of this.changeSets) for (const change of changeSet.files.values()) change.symbols = isSemanticFile(change.file) ? mapSymbolChanges(change, this.options.readFile(change.file), this.options.index) : [];
+    for (const changeSet of this.changeSets) for (const change of changeSet.files.values()) change.symbols = isSemanticFile(change.file) ? mapSymbolChanges(change, change.proposalText ?? this.options.readFile(change.file), this.options.index) : [];
     for (const { batch, change } of batches) {
       if (!["human", "agent"].includes(batch.actor.kind) || !isSemanticFile(batch.file)) continue;
       const changeSet = this.changeSets.find((set) => actorKey(set.actor) === actorKey(batch.actor));

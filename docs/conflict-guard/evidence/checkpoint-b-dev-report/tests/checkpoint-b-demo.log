@@ -1,0 +1,14 @@
+
+> simple-rcp-v2@0.1.0 test:demo /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2
+> node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs
+
+✔ demo command starts SimpleRCPv2 with the bundled workspace (1987.406375ms)
+✔ bundled demo workspace passes its own tests (211.278875ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2071.3615

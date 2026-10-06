@@ -1,6 +1,11 @@
 import { expect, it } from "vitest";
-import { evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalSymbolKeys } from "./agentGuard.js";
+import { evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalSymbolKeys, symbolSignature } from "./agentGuard.js";
 import { VirtualClock } from "../replay/clock.js";
+
+it("includes multiline parameters in function and method signatures", () => {
+  expect(symbolSignature("export function price(\n value: number,\n currency: string\n): number { return value; }")).toBe("export function price( value: number, currency: string ): number");
+  expect(symbolSignature("total(\n currency: string\n): number { return 1; }")).toContain("currency: string");
+});
 
 it("uses the product signature rule and state machine for an Agent proposal against a human", async () => {
   const baseline = "export function price(value: number) { return value; }\n";
@@ -29,7 +34,7 @@ it("keeps a changed numeric expression as a complete line during selective rever
 it("merges a proposal with unsaved changes outside its region and rejects overlapping shared edits", () => {
   const proposal = { file: "a.ts", before: "first = 1;\nsecond = 2;\n", after: "first = 1;\nsecond = 3;\n" };
   expect(mergeAgentProposal(proposal, "first = 10;\nsecond = 2;\n").after).toBe("first = 10;\nsecond = 3;\n");
-  expect(() => mergeAgentProposal(proposal, "first = 1;\nsecond = 4;\n")).toThrow("Shared text");
+  expect(() => mergeAgentProposal(proposal, "first = 1;\nsecond = 4;\n")).toThrow("修改范围内已有其他参与者的编辑");
 });
 
 it("keeps dependency edges when the proposal deletes an exported file", async () => {

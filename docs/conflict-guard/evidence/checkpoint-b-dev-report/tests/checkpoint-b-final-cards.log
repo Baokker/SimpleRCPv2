@@ -1,0 +1,39 @@
+
+> simple-rcp-v2@0.1.0 test:e2e /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2
+> playwright test --config tests/playwright.config.ts "tests/e2e/conflict-guard-intervention.spec.ts" "tests/e2e/conflict-guard-checkpoint.spec.ts"
+
+[2m[WebServer] [22m(node:82181) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:82194) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:82200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:82200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22mYjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+[2m[WebServer] [22m(node:82290) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:82293) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 1 worker
+
+(node:82339) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82339) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/conflict-guard-checkpoint.spec.ts:19:1 › 阶段3第1至3、10项及先后编辑、关闭重开、切换撤回 (10.8s)
+  ✓   2 tests/e2e/conflict-guard-checkpoint.spec.ts:63:1 › 阶段3第1、4项同时编辑与双方确认 (6.5s)
+  ✓   3 tests/e2e/conflict-guard-checkpoint.spec.ts:82:48 › 阶段3第5项white (5.1s)
+  ✓   4 tests/e2e/conflict-guard-checkpoint.spec.ts:82:48 › 阶段3第6项grey (5.0s)
+  ✓   5 tests/e2e/conflict-guard-checkpoint.spec.ts:100:1 › 阶段3第7项合并类型错误 (5.1s)
+  ✓   6 tests/e2e/conflict-guard-checkpoint.spec.ts:112:1 › 阶段3第8项同一函数 (5.8s)
+  ✓   7 tests/e2e/conflict-guard-checkpoint.spec.ts:125:1 › 阶段3第9项依赖编辑开始提示 (6.1s)
+  ✓   8 tests/e2e/conflict-guard-intervention.spec.ts:12:1 › rules 模式显示黑区判定与冻结区域 (5.0s)
+  ✓   9 tests/e2e/conflict-guard-intervention.spec.ts:54:1 › 冻结区域阻止缩进、删除快捷键、跨区选区与多个光标修改 (5.4s)
+  ✓  10 tests/e2e/conflict-guard-intervention.spec.ts:88:1 › rules 模式双方确认后解除冻结并写入当前修改 (7.2s)
+  ✓  11 tests/e2e/conflict-guard-intervention.spec.ts:123:1 › 冻结按历史编辑区域拦截撤销与重做，区域外历史仍可执行 (5.1s)
+  ✓  12 tests/e2e/conflict-guard-intervention.spec.ts:153:1 › 灰区判定向双方显示可以关闭的通知 (5.8s)
+  ✓  13 tests/e2e/conflict-guard-intervention.spec.ts:180:1 › 冻结区域阻止光标位于区域外的历史重做 (5.1s)
+
+  13 passed (1.4m)

@@ -37,8 +37,13 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
       return runtimeFor(input.sessionId).cancel(input);
     },
     async replyPermission(input) { await runtimeFor(input.sessionId).replyPermission?.(input); },
+    async getToolInput(input) { return runtimeFor(input.sessionId).getToolInput?.(input); },
     subscribe(input, listener, onListenerError) {
-      return runtimeFor(input.sessionId).subscribe(input, listener, onListenerError);
+      return runtimeFor(input.sessionId).subscribe(input, (event) => {
+        const info = event.data.info as { id?: string; parentID?: string } | undefined;
+        if (event.type === "session.created" && info?.id && info.parentID && modes.has(info.parentID)) modes.set(info.id, modes.get(info.parentID)!);
+        return listener(event);
+      }, onListenerError);
     },
     async dispose() {
       await Promise.all([real.dispose(), fake.dispose()]);
@@ -54,7 +59,9 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
 export function createFakeAgentRuntime(options: { editPermission?: "allow" | "ask" } = {}): AgentRuntime {
   const abortControllers = new Map<string, AbortController>();
   const listeners = new Map<string, Set<(event: { type: string; data: Record<string, unknown> }) => void | Promise<void>>>();
-  const writtenFiles = new Set<string>();
+  const writtenFiles = new Map<string, Set<string>>();
+  const messageFiles = new Map<string, Set<string>>();
+  let nextMessageId = 0;
   let nextSessionId = 0;
   let nextRequestId = 0;
   const permissions = new Map<string, { sessionId: string; resolve: (value: { reply: "once" | "reject"; message?: string }) => void }>();
@@ -85,6 +92,9 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
       }
     },
     async run(input) {
+      const messageId = `fake-message-${++nextMessageId}`;
+      const runFiles = new Set<string>();
+      messageFiles.set(messageId, runFiles);
       const controller = new AbortController();
       abortControllers.set(input.sessionId, controller);
       const emit = async (type: string, data: Record<string, unknown>) => {
@@ -93,6 +103,8 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
         }
       };
       await emit("fake.started", { prompt: input.prompt });
+      const editSessionId = /fake-child=true/.test(input.prompt) ? `${input.sessionId}-child` : input.sessionId;
+      if (editSessionId !== input.sessionId) await emit("session.created", { info: { id: editSessionId, parentID: input.sessionId } });
       const bashEdit = [...input.prompt.matchAll(/fake-bash-edit=([^\s]+)/g)].at(-1)?.[1];
       const edit = [...input.prompt.matchAll(/fake-edit=([^\s]+)/g)].at(-1)?.[1] ?? bashEdit;
       const retry = [...input.prompt.matchAll(/fake-on-reject=([^\s]+)/g)].at(-1)?.[1];
@@ -115,17 +127,20 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
           const deleting = /fake-delete=true/.test(input.prompt);
           const requestId = `fake-permission-${++nextRequestId}`;
           if (options.editPermission === "ask" && !bypass) {
-            const response = new Promise<{ reply: "once" | "reject"; message?: string }>((resolve) => permissions.set(requestId, { sessionId: input.sessionId, resolve }));
-            await emit("permission.asked", { id: requestId, sessionID: input.sessionId, permission: "edit", patterns: [file], metadata: { filepath: absolute, diff: createPatch(absolute, before, after), ...(deleting ? { type: "delete" } : {}) }, always: ["*"], tool: { messageID: `fake-message-${input.sessionId}`, callID: requestId } });
+            const response = new Promise<{ reply: "once" | "reject"; message?: string }>((resolve) => permissions.set(requestId, { sessionId: editSessionId, resolve }));
+            await emit("message.part.updated", { part: { sessionID: editSessionId, callID: requestId, tool: from ? "edit" : "write", state: { status: "running", input: from ? { filePath: absolute, oldString: from, newString: to } : { filePath: absolute, content: after } } } });
+            await emit("permission.asked", { id: requestId, sessionID: editSessionId, permission: "edit", patterns: [file], metadata: { filepath: absolute, diff: createPatch(absolute, before, after), ...(deleting ? { type: "delete" } : {}) }, always: ["*"], tool: { messageID: `fake-message-${editSessionId}`, callID: requestId } });
             const result = await response;
             permissions.delete(requestId);
             if (result.reply === "reject") { await emit("fake.permission_rejected", { requestId, message: result.message }); return false; }
           }
           if (controller.signal.aborted) return false;
+          await wait(Number([...input.prompt.matchAll(/fake-write-delay=(\d+)/g)].at(-1)?.[1] ?? 0), controller.signal);
           await fs.mkdir(path.dirname(absolute), { recursive: true });
           if (deleting) await fs.unlink(absolute);
           else await fs.writeFile(absolute, after);
-          writtenFiles.add(file);
+          const files = writtenFiles.get(input.sessionId) ?? new Set<string>(); files.add(file); writtenFiles.set(input.sessionId, files);
+          runFiles.add(file);
           await emit("message.part.updated", { part: { sessionID: input.sessionId, callID: requestId, messageID: `fake-message-${input.sessionId}`, type: "tool", tool: bypass ? "bash" : "edit", state: { status: "completed", input: bypass ? { command: "write workspace text" } : { filePath: absolute }, metadata: bypass ? {} : { filepath: absolute, diff: createPatch(absolute, before, after) } } } });
           return true;
         };
@@ -140,7 +155,8 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
         }
         await fs.mkdir(path.dirname(absolutePath), { recursive: true });
         await fs.writeFile(absolutePath, `Written by fake Agent for ${input.sessionId}\n`);
-        writtenFiles.add(writePath.split(path.sep).join("/"));
+        const files = writtenFiles.get(input.sessionId) ?? new Set<string>(); files.add(writePath.split(path.sep).join("/")); writtenFiles.set(input.sessionId, files);
+        runFiles.add(writePath.split(path.sep).join("/"));
         await emit("message.part.updated", {
           part: {
             sessionID: input.sessionId,
@@ -167,10 +183,10 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
       const text = [...input.prompt.matchAll(/fake-reply=([^\n]+)/g)].at(-1)?.[1]?.trim()
         ?? `Fake Agent completed: ${input.prompt}`;
       await emit("fake.completed", { text });
-      return { text, messageId: `fake-message-${input.sessionId}` };
+      return { text, messageId };
     },
-    async getDiff(): Promise<AgentFileChange[]> {
-      return [...writtenFiles].map((file) => ({ file, additions: 0, deletions: 0, status: "modified" }));
+    async getDiff(input): Promise<AgentFileChange[]> {
+      return [...((input.messageId ? messageFiles.get(input.messageId) : writtenFiles.get(input.sessionId)) ?? [])].map((file) => ({ file, additions: 0, deletions: 0, status: "modified" }));
     },
     async cancel(input) {
       abortControllers.get(input.sessionId)?.abort();
@@ -206,6 +222,7 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
       abortControllers.clear();
       listeners.clear();
       writtenFiles.clear();
+      messageFiles.clear();
       for (const permission of permissions.values()) permission.resolve({ reply: "reject", message: "Runtime disposed" });
       permissions.clear();
     },

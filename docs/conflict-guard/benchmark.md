@@ -1,20 +1,27 @@
-# 阶段 4 基准说明
+# 可执行基准
 
 ## 种子项目与源码选择
 
-`packages/conflict-guard/bench/seeds/` 包含七个无外部依赖的 TypeScript 项目。每个项目有七个源文件和两份 `node:test` 文件，测试使用 Node.js 22 及以上的 `--experimental-strip-types --test` 执行；本轮使用 Node.js 24.7.0。
+当前数据集使用 `bench/seeds/native/` 中八个手写 TypeScript 项目。来源为本仓库的基准代码，各项目采用独立的业务组织，没有引入外部源码。每个项目包含五份生产 TypeScript 文件和一份 `node:test` 文件。测试使用 Node.js 24.7.0 的 strip-types 支持，十六项原始业务测试通过。
 
-- `commerce`：购物价格、配送费用、服务等级、配送报价与订单标记。
-- `inventory`：库存扣减、仓储箱数、冷库附加费用与仓库报价。
-- `permissions`：权限筛选、令牌期限、管理员期限限制与会话标记。
-- `formatter`：文本规范化、预览截取、文档宽度与边框计量。
-- `calendar`：日程重叠、提醒间隔、旅行日程与提醒标记。
-- `billing`：税额、订阅用量、年度计划与账单计费。
-- `events`：事件筛选、重试延迟、优先队列与投递标记。
+| 项目 | 业务组织 | 非空代码行（含测试） |
+|---|---|---:|
+| access | 角色继承、权限策略、风险、会话、审计 | 338 |
+| billing | 用量、阶梯费率、发票、支付、账目 | 308 |
+| cache | 双向链表、LRU、分区、memo、权重 | 350 |
+| calendar | 时间区间、周期、空闲时间、提醒、日历 | 306 |
+| commerce | 购物车、库存、订单、价格、配送 | 310 |
+| events | 事件总线、流处理、路由、重试、投递 | 318 |
+| text | 文档、字符宽度、布局、渲染、搜索 | 303 |
+| warehouse | 批次库存、拣货、调拨、盘点、预测 | 329 |
+
+`bench:inspect` 使用 TypeScript scanner，将 identifier 统一为固定 token，再计算 token 序列 LCS Dice 相似度。所有跨项目源文件和测试文件均参与检查，超过 0.6 时生成失败。最大值为 0.5994397759，完整文件对见 `evidence/checkpoint-b-dev-report/seed-diversity.json`。复制业务文件的变异检验使检查失败。
 
 生成器以原始项目文件为 baseline，通过 TypeScript AST 识别参数、默认值、对象返回值、导出别名、状态写入与调用表达式；semantic index 验证被依赖声明与调用方在两跳内可达。修改位置来自声明和表达式的字符范围。四种状态保存完整业务项目，原有函数、类型、调用方和测试都参与执行。
 
 ## 算子
+
+当前 native 项目生成 IC-1 到 IC-4、CP-2、CP-3、CP-5、SS-1、EB-2、SF-1 到 SF-5，共十四个满足前提的算子。兼容生成器保留其余五个算子，用于既有回归夹具。D1-v2 的实际覆盖以 manifest 中的组数为准。
 
 - `IC-1`：可选参数改为必填参数，依赖方保留旧参数数量；安全孪生提供该参数。
 - `IC-2`：删除返回对象字段，依赖方读取该字段；安全孪生读取保留的字段。
@@ -42,20 +49,21 @@
 
 `manifest.json` 保存 baseline、leftOnly、rightOnly、merged、探针、声明键、入口文件、打字参数、项目划分、生成命令、SimpleRCPv2 的提交号与轨迹 SHA-256。`codeCommit` 从脚本所属的 SimpleRCPv2 仓库读取。
 
-`d1-v1` 使用种子 `20261006`，包含 60 个关系组、88 个非 alias 样本；各项目有 8 至 9 个关系组。七个 baseline 项目产生 225 个完整状态程序和 87 个四状态组合，均按 SHA-256 去重。清单分别用 `seedPrograms`、`uniquePrograms` 与 `uniqueVariantPrograms` 记录这三个数值。
+`d1-v2` 使用种子 `20261008`，包含 200 个关系组，每个项目 25 组。283 个非 alias 样本完成标注，剔除 7 个，剔除率 2.47%。八个项目产生 446 个不同状态程序、214 个不同四状态组合，均按 SHA-256 去重。
 
-固定种子选择两个项目作为开发项目，另外五个项目作为保留项目。开发集包含 18 组，保留集包含 42 组；同一项目的关系组只属于一个集合。`SS` 与 `EB` 两个完整算子族仅出现在保留集。开发集与保留集的全部程序交集为零，结果记录在 `developmentHoldoutOverlap`。保留集可生成、标注，策略评价只运行开发集。
+固定种子选择三个开发项目，另外五个项目属于保留集。开发集 75 组，保留集 125 组；SS 与 EB 两个完整算子族仅属于保留集。开发集与保留集的程序交集为零。站点标识包含项目、被依赖符号和调用方，开发集 23 个、保留集 26 个，交集为零。相关结果写入 `diversity`、`programStats`、`siteStats`。
 
-当前冲突算子的去重样本中，旧行为、新行为、无关修改分别为 28、28、14 个；另有 18 个安全算子样本。算子目录中的预期标签用于描述生成目的，清单中的最终 truth 由真实探针产生。
-
-88 个样本全部完成标注：allow 60、warn 3、lock 25，剔除零项。原始记录包含 1056 次状态执行。算子族的关系组数量为 IC 14、CP 16、SS 6、EB 6、SF 18。
+开发集标注后包含 101 个样本，lock 26、allow 75；按完整四状态程序去重后评价 79 个样本。算子族、项目数量和所有标签均保存于清单，预期标签只描述算子目的，最终 truth 来自真实探针。
 
 ```bash
-pnpm --filter @simplercp/conflict-guard bench:prepare --groups 60 --seed 20261006 --concurrency 8
-pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v1 --split dev --policy 'P0,P1,P2,P3,P*' --repeat 1 --out ../../docs/conflict-guard/evidence/checkpoint-a-dev-report
+pnpm --filter @simplercp/conflict-guard bench:prepare --seeds bench/seeds/native --out bench/datasets/d1-v2 --groups 200 --seed 20261008 --concurrency 8
+pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v2 --split dev --policy 'P0,P1,P2,P3,P*' --out ../../docs/conflict-guard/evidence/checkpoint-b-dev-report/rules
+pnpm --filter @simplercp/conflict-guard data:artifacts --dataset bench/datasets/d1-v2 --restore
 ```
 
 ## 可执行标签
+
+`dataset.json.gz` 包含完整 manifest、labels、excluded 和 traces，原始 JSON 与 traces 目录被 Git 忽略。归档哈希见 `archive-sha256.json`；恢复命令校验轨迹名称及 SHA-256。`bench:label --reuse <dataset>` 仅复用完整状态、探针、入口、reference 和观测期望哈希相同的三次原始结果。
 
 四种状态分别写入仓库内被 Git 忽略的 `.test-workspaces/probes/` 子目录。每种状态执行三次真实子进程；每次运行都执行 TypeScript 诊断、双方适用的意图探针以及种子项目的全部测试。单次状态预算为 20 秒，结束后删除该次工作目录。`--concurrency` 控制并行数量，结果顺序保持稳定。
 
@@ -84,6 +92,8 @@ pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v
 轨迹包含三种时序：同时开始；改动方完成后间隔 5 至 60 秒依赖方开始；双方分多段交替输入。交替输入每 12 个字符安排一次等待。部分连续输入超过 `maxBatchDurationMs=5000`，光标移到声明之外也会关闭批次。批次空闲阈值为 1500 ms，活跃变更空闲阈值为 600000 ms。尾部 cursor 推进时钟，使活跃变更与冻结按产品生命周期结束。
 
 ## 指标与回放
+
+合成轨迹的冻结人秒在最后一次编辑处截止，另外报告活跃修改十分钟超时产生的无人处理时长上界。模型报告增加按关系组采样的 bootstrap 区间，判定对错使用配对 McNemar 检验及 Holm 校正。当前配置的策略评价仅使用开发集。
 
 回放保留关系组与孪生关系，安全样本和冲突变体分别报告；完全相同的四状态程序只统计一次。漏阻断率的分母为 truth 为 lock 的样本，误阻断率的分母为 truth 为 allow 的样本，逃逸率的分母为 truth 为 lock 或 warn 的样本。
 

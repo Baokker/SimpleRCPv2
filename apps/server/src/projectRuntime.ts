@@ -7,12 +7,14 @@ import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import type { ChatMessage, WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
+import { canonicalWorkspaceRoot } from "./workspacePath.js";
 import { createProjectConflictGuard, type ProjectConflictGuardConfig } from "./conflictGuard/projectConflictGuard.js";
 
 export function createProjectRuntime(
   project: ProjectRecord,
   options: { terminalEnabled?: boolean; conflictGuard?: ProjectConflictGuardConfig; sensitiveValues?: string[]; gitCommit?: string } = {}
 ) {
+  project = { ...project, workspacePath: canonicalWorkspaceRoot(project.workspacePath) };
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
   const rooms = createRoomStore(events);
@@ -38,6 +40,12 @@ export function createProjectRuntime(
         gitCommit: options.gitCommit,
         sensitiveValues: options.sensitiveValues,
         getRevision: (file) => documents.getRevision(file),
+        reconcileAgentFile: (file) => documents.reloadPath(file),
+        displayActor: (actor) => {
+          if (actor.kind !== "human" && actor.kind !== "agent") return "协作成员";
+          const name = room.members.find((member) => member.id === (actor.kind === "human" ? actor.memberId : actor.ownerId))?.displayName ?? "协作成员";
+          return actor.kind === "human" ? `${name}（人）` : actor.teamAgent ? `${actor.teamAgent}（由 ${name} 触发）` : `${name} 的 Agent`;
+        },
         onPersistenceStateChanged: () => documents?.persistenceStateChanged(),
         onStateChanged: (version) => { for (const listener of conflictGuardStateListeners) listener(version); }
       })
@@ -53,6 +61,7 @@ export function createProjectRuntime(
     onDocumentRetired: (filePath) => conflictGuard?.retirePath(filePath),
     onDocumentReleased: (filePath) => conflictGuard?.releaseDocument(filePath),
     filesystemOrigin: (filePath, content) => conflictGuard?.resolveFilesystemOrigin(filePath, content),
+    onFilesystemReconciled: (filePath, content) => conflictGuard?.agentGuard.completeOrigin(filePath, content),
     onUnopenedGuardRevert: (filePath, before, after, ownerId) => conflictGuard?.workspaceReverted(filePath, before, after, ownerId),
     shouldPinDocument: (filePath) => conflictGuard?.shouldPinDocument(filePath) ?? false,
     onPersistenceGateOpened: () => conflictGuard?.persistenceGateChanged(),
@@ -202,7 +211,7 @@ export function createProjectRuntime(
       terminal.dispose();
       await watcher.close();
       await documents.dispose();
-      conflictGuard?.dispose();
+      await conflictGuard?.dispose();
       await conflictGuard?.waitForTrace();
     }
   };

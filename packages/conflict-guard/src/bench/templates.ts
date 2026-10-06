@@ -24,6 +24,7 @@ export interface OperatorTemplate {
   probes: BenchProbe[];
   entryPoints: { producer: string; consumer: string };
   site: { producerKey: string; consumerKey: string; producerName: string; consumerName: string };
+  reference?: Record<string, string>;
 }
 
 export function operatorTemplate(id: string, safe: boolean, salt: number, project: SeedProject, unrelated = false): OperatorTemplate {

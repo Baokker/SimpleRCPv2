@@ -1,0 +1,29 @@
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server
+
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+stderr | src/__tests__/agentGuard.integration.test.ts > reports incomplete T3 when the completion snapshot cannot be read
+Agent attribution failed for run mEO0i_wlFhR6 Error: ENOENT: no such file or directory, scandir '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-guard-b70vGk/data/workspaces/6zYkI8uBl08h'
+    at Object.readdir (node:internal/fs/promises:958:18)
+    at readDirectory (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentWorkspaceSnapshot.ts:68:19)
+    at Module.createAgentWorkspaceSnapshot (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentWorkspaceSnapshot.ts:19:3)
+    at recordFinishedFileChanges (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:300:26)
+    at Object.executeRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/apps/server/src/agent/agentRunManager.ts:741:27) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: '/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-guard-b70vGk/data/workspaces/6zYkI8uBl08h'
+}
+
+ ✓ src/__tests__/agentGuard.integration.test.ts  (47 tests) 101840ms
+stderr | Object.<anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/node_modules/.pnpm/yjs@13.6.31/node_modules/yjs/src/index.js:133:11)
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+
+ ✓ src/__tests__/conflictGuardCheckpoint.integration.test.ts  (15 tests) 36893ms
+
+ Test Files  2 passed (2)
+      Tests  62 passed (62)
+   Start at  01:13:19
+   Duration  142.89s (transform 1.83s, setup 0ms, collect 3.51s, tests 138.73s, environment 0ms, prepare 297ms)

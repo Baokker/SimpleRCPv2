@@ -1,0 +1,58 @@
+{
+  "seed": 20261008,
+  "samplingUnit": "relationGroupId",
+  "bootstrapRepetitions": 2000,
+  "intervals": {
+    "G3": {
+      "agreement": {
+        "estimate": 0.8860759493670886,
+        "low": 0.8235294117647058,
+        "high": 0.9473684210526315,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "missed": {
+        "estimate": 0.3181818181818182,
+        "low": 0.13636363636363635,
+        "high": 0.5,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "falseBlocking": {
+        "estimate": 0,
+        "low": 0,
+        "high": 0,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "escape": {
+        "estimate": 0.13636363636363635,
+        "low": 0,
+        "high": 0.3181818181818182,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p50Ms": {
+        "estimate": 2152.368542000011,
+        "low": 633.0437500000116,
+        "high": 2517.7230839999975,
+        "groups": 14,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p95Ms": {
+        "estimate": 2879.415541999915,
+        "low": 2579.1761669999687,
+        "high": 3193.452707999968,
+        "groups": 14,
+        "repetitions": 2000,
+        "seed": 20261008
+      }
+    }
+  },
+  "comparisons": []
+}

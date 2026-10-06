@@ -1,0 +1,119 @@
+{
+  "seed": 20261008,
+  "samplingUnit": "relationGroupId",
+  "bootstrapRepetitions": 2000,
+  "intervals": {
+    "G1": {
+      "agreement": {
+        "estimate": 0.8734177215189873,
+        "low": 0.8068181818181818,
+        "high": 0.9367088607594937,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "missed": {
+        "estimate": 0.3181818181818182,
+        "low": 0.13636363636363635,
+        "high": 0.5,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "falseBlocking": {
+        "estimate": 0,
+        "low": 0,
+        "high": 0,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "escape": {
+        "estimate": 0.13636363636363635,
+        "low": 0,
+        "high": 0.3181818181818182,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p50Ms": {
+        "estimate": 2368.824666999979,
+        "low": 2081.823457999999,
+        "high": 2542.649334,
+        "groups": 14,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p95Ms": {
+        "estimate": 2922.6409170000115,
+        "low": 2731.7818329999864,
+        "high": 3157.6654590000107,
+        "groups": 14,
+        "repetitions": 2000,
+        "seed": 20261008
+      }
+    },
+    "G2": {
+      "agreement": {
+        "estimate": 0.8860759493670886,
+        "low": 0.8214285714285714,
+        "high": 0.9473684210526315,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "missed": {
+        "estimate": 0.2727272727272727,
+        "low": 0.09090909090909091,
+        "high": 0.45454545454545453,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "falseBlocking": {
+        "estimate": 0,
+        "low": 0,
+        "high": 0,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "escape": {
+        "estimate": 0.13636363636363635,
+        "low": 0,
+        "high": 0.3181818181818182,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p50Ms": {
+        "estimate": 320.57158399996115,
+        "low": 301.5985830000136,
+        "high": 337.46858300000895,
+        "groups": 17,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p95Ms": {
+        "estimate": 655.7550000000047,
+        "low": 521.7719999999972,
+        "high": 703.1778329999652,
+        "groups": 17,
+        "repetitions": 2000,
+        "seed": 20261008
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "id": "G1:G2",
+      "left": "G1",
+      "right": "G2",
+      "leftOnlyCorrect": 0,
+      "rightOnlyCorrect": 1,
+      "discordant": 1,
+      "p": 1,
+      "adjustedP": 1
+    }
+  ]
+}

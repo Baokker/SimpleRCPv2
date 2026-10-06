@@ -1,0 +1,206 @@
+{
+  "result": {
+    "checks": {
+      "undoChangedText": true,
+      "noJsonError": true
+    }
+  },
+  "state": {
+    "mode": "full",
+    "version": 41,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 5,
+        "durationMs": 10.105666000001293,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/cart.ts",
+            "ranges": [
+              {
+                "start": 351,
+                "end": 362
+              }
+            ],
+            "firstTouchedAt": 1791305467053,
+            "lastTouchedAt": 1791305467053
+          },
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 135,
+                "end": 174
+              }
+            ],
+            "firstTouchedAt": 1791305469371,
+            "lastTouchedAt": 1791305469371
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+        },
+        "symbols": [
+          {
+            "key": "src/cart.ts#Cart.total",
+            "file": "src/cart.ts",
+            "name": "total",
+            "kind": "method",
+            "container": "Cart",
+            "exported": false,
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "lastTouchedAt": 1791305467053
+          },
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "lastTouchedAt": 1791305469371
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "91df0d1f786b97316bdebd1b55582567d03530984301978f1b8f304571e3ea9e",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "676ed7f2-c0df-4bc2-831e-3a7fa0e58470"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "cd975b2e-ef23-47a0-a5d2-82e6572b1fdc"
+            },
+            "symbol": "src/cart.ts#Cart.total",
+            "status": "modified"
+          },
+          "distance": 1,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/cart.ts#Cart.total",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791305467128,
+          "updatedAt": 1791305467128,
+          "revisionKey": "f0342f0785d5fe5e11afe4ff8f7825510f3938b52d37f0b3c9af9aa7aec798cb"
+        },
+        "status": "resolved",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 2921,
+        "updatedAt": 1791305471514,
+        "revisionKey": "f0342f0785d5fe5e11afe4ff8f7825510f3938b52d37f0b3c9af9aa7aec798cb",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "black",
+          "decision": "lock",
+          "ruleId": "call-signature-incompatible",
+          "summary": "一侧调用无法满足另一侧修改后的函数签名。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口发生变化"
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/pricing.ts",
+              "detail": "applyDiscount 的调用参数数量与签名不兼容"
+            }
+          ],
+          "contractChanged": {
+            "left": true,
+            "right": false
+          }
+        },
+        "resolution": "reverted"
+      }
+    ],
+    "agentNotices": [],
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 2,
+      "cacheHits": 0,
+      "judgements": 2,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0
+    },
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 3,
+    "uiActionCount": 1,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 1,
+      "white": 0,
+      "black": 1,
+      "grey": 0,
+      "frozenDurationMs": 3374,
+      "persistBlockedCount": 3,
+      "uiActionCount": 1
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 4,
+      "related": 4,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  }
+}

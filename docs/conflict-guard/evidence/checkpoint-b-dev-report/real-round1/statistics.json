@@ -1,0 +1,119 @@
+{
+  "seed": 20261008,
+  "samplingUnit": "relationGroupId",
+  "bootstrapRepetitions": 2000,
+  "intervals": {
+    "G1": {
+      "agreement": {
+        "estimate": 0.8860759493670886,
+        "low": 0.8235294117647058,
+        "high": 0.9473684210526315,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "missed": {
+        "estimate": 0.3181818181818182,
+        "low": 0.13636363636363635,
+        "high": 0.5,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "falseBlocking": {
+        "estimate": 0,
+        "low": 0,
+        "high": 0,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "escape": {
+        "estimate": 0.13636363636363635,
+        "low": 0,
+        "high": 0.3181818181818182,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p50Ms": {
+        "estimate": 2309.7464580000014,
+        "low": 2197.229625000007,
+        "high": 2470.1771660000004,
+        "groups": 15,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p95Ms": {
+        "estimate": 2812.277792000008,
+        "low": 2795.495750000002,
+        "high": 3139.9687920000006,
+        "groups": 15,
+        "repetitions": 2000,
+        "seed": 20261008
+      }
+    },
+    "G2": {
+      "agreement": {
+        "estimate": 0.8987341772151899,
+        "low": 0.8375,
+        "high": 0.958904109589041,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "missed": {
+        "estimate": 0.2727272727272727,
+        "low": 0.09090909090909091,
+        "high": 0.45454545454545453,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "falseBlocking": {
+        "estimate": 0,
+        "low": 0,
+        "high": 0,
+        "groups": 57,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "escape": {
+        "estimate": 0.13636363636363635,
+        "low": 0,
+        "high": 0.3181818181818182,
+        "groups": 22,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p50Ms": {
+        "estimate": 342.5839580000029,
+        "low": 309.60329200001433,
+        "high": 439.61666599998716,
+        "groups": 17,
+        "repetitions": 2000,
+        "seed": 20261008
+      },
+      "p95Ms": {
+        "estimate": 633.3107500000042,
+        "low": 504.6599580000038,
+        "high": 1253.135208999971,
+        "groups": 17,
+        "repetitions": 2000,
+        "seed": 20261008
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "id": "G1:G2",
+      "left": "G1",
+      "right": "G2",
+      "leftOnlyCorrect": 0,
+      "rightOnlyCorrect": 1,
+      "discordant": 1,
+      "p": 1,
+      "adjustedP": 1
+    }
+  ]
+}

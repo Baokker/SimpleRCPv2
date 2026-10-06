@@ -13,7 +13,7 @@ describe("Agent permission dispatcher", () => {
     });
     await dispatcher.dispatch({ id: "request-1", sessionID: "session-1", permission: "edit", metadata: {} });
     expect(order).toEqual([1, 2]);
-    expect(replies).toEqual([{ requestId: "request-1", reply: "reject", message: expect.stringContaining("retry") }]);
+    expect(replies).toEqual([{ requestId: "request-1", sessionId: "session-1", reply: "reject", message: expect.stringContaining("handler unavailable") }]);
     expect(traces).toContain("permission_handler_error");
   });
 
@@ -114,7 +114,7 @@ describe("Agent permission dispatcher", () => {
 
     await dispatcher.dispatch({ id: "pause-error", sessionID: "session-1", permission: "edit", metadata: {} });
 
-    expect(replies).toEqual([{ requestId: "pause-error", reply: "reject", message: expect.stringContaining("retry") }]);
+    expect(replies).toEqual([{ requestId: "pause-error", sessionId: "session-1", reply: "reject", message: expect.stringContaining("pause unavailable") }]);
   });
 
   it("keeps the permission reply when resuming approval throws", async () => {
@@ -131,5 +131,64 @@ describe("Agent permission dispatcher", () => {
 
     expect(replies).toEqual(["once"]);
     expect(traces).toContain("permission_resume_error");
+  });
+
+  it("defers one permission while other requests complete and rejects deferred requests on dispose", async () => {
+    const replies: Array<{ requestId: string; reply: string }> = [];
+    const dispatcher = createPermissionDispatcher({
+      handlers: [{ handle: async (request) => ({ reply: request.id === "deferred" ? "defer" : "once" }), budgetMs: 1000 }],
+      reply: async (reply) => { replies.push(reply); }, trace: async () => {}
+    });
+    const deferred = dispatcher.dispatch({ id: "deferred", sessionID: "child", permission: "edit", metadata: {} });
+    await dispatcher.dispatch({ id: "other", sessionID: "root", permission: "edit", metadata: {} });
+    expect(replies).toEqual([{ requestId: "other", sessionId: "root", reply: "once" }]);
+    dispatcher.dispose();
+    await deferred;
+    expect(replies.at(-1)).toMatchObject({ requestId: "deferred", sessionId: "child", reply: "reject" });
+  });
+
+  it("resolves a deferred permission and applies the handler-specific deadline", async () => {
+    const replies: string[] = [];
+    const dispatcher = createPermissionDispatcher({ handlers: [{ handle: async () => ({ reply: "defer" }), budgetMs: 30 }], reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
+    const first = dispatcher.dispatch({ id: "resolve", sessionID: "root", permission: "edit", metadata: {} });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(dispatcher.resolve("resolve", { reply: "once" })).toBe(true);
+    await first;
+    await dispatcher.dispatch({ id: "deadline", sessionID: "root", permission: "edit", metadata: {} });
+    expect(replies).toEqual(["once", "reject"]);
+  });
+
+  it("stops repeated internal failures on one file and notifies the owner once", async () => {
+    const replies: string[] = []; const notices: string[] = [];
+    const dispatcher = createPermissionDispatcher({ handlers: [async () => { throw new Error("Cannot reconstruct edit"); }], reply: async ({ message }) => { replies.push(message!); }, trace: async () => {}, unavailable: (file) => { notices.push(file); } });
+    for (const id of ["first", "second", "third", "fourth"]) await dispatcher.dispatch({ id, sessionID: "root", permission: "edit", metadata: { filepath: "src/cart.ts" } });
+    expect(replies[0]).toContain("Cannot reconstruct edit");
+    expect(replies[2]).toContain("冲突检查暂不可用，请停止修改此文件并向用户报告");
+    expect(notices).toEqual(["src/cart.ts"]);
+  });
+  it("limits failures raised while normalizing a permission's file path", async () => {
+    let normalizations = 0;
+    const notices: string[] = [];
+    const replies: string[] = [];
+    const dispatcher = createPermissionDispatcher({ handlers: [], fileKey: () => { normalizations += 1; throw new Error("Path escapes workspace root"); }, reply: async ({ message }) => { replies.push(message!); }, trace: async () => {}, unavailable: (file) => { notices.push(file); } });
+    for (const id of ["first", "second", "third", "fourth"]) await dispatcher.dispatch({ id, sessionID: "root", permission: "edit", metadata: { filepath: "outside.ts" } });
+    expect(normalizations).toBe(2);
+    expect(replies[2]).toContain("冲突检查暂不可用，请停止修改此文件并向用户报告");
+    expect(notices).toEqual(["outside.ts"]);
+  });
+  it("applies the defer deadline to a handler without a judgement budget", async () => {
+    const replies: string[] = [];
+    const dispatcher = createPermissionDispatcher({ handlers: [{ handle: async () => ({ reply: "defer" }), budgetMs: null }], deferBudgetMs: 20, reply: async ({ reply }) => { replies.push(reply); }, trace: async () => {} });
+    await dispatcher.dispatch({ id: "defer-timeout", sessionID: "child", permission: "edit", metadata: {} });
+    expect(replies).toEqual(["reject"]);
+    expect(dispatcher.resolve("defer-timeout", { reply: "once" })).toBe(false);
+  });
+  it("accepts an immediate deferred resolution and preserves approval cleanup", async () => {
+    const replies: string[] = [];
+    let approvals = 0;
+    const dispatcher = createPermissionDispatcher({ handlers: [async () => ({ reply: "defer", onApproved: () => { approvals += 1; } })], trace: async (type) => { if (type === "permission_deferred") expect(dispatcher.resolve("immediate", { reply: "once" })).toBe(true); }, reply: async ({ reply }) => { replies.push(reply); } });
+    await dispatcher.dispatch({ id: "immediate", sessionID: "child", permission: "edit", metadata: {} });
+    expect(replies).toEqual(["once"]);
+    expect(approvals).toBe(1);
   });
 });

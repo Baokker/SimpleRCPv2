@@ -378,10 +378,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!response.ok) {
     const contentType = response.headers.get("content-type") ?? "";
-    const message = contentType.includes("application/json")
-      ? ((await response.json()) as { error?: string }).error
+    const body = await response.text();
+    const message = contentType.includes("application/json") && body.trim()
+      ? (JSON.parse(body) as { error?: string }).error
       : undefined;
     throw new Error(message ?? `Request failed with status ${response.status}`);
   }
-  return response.json() as Promise<T>;
+  if (response.status === 204) return undefined as T;
+  const body = await response.text();
+  return body.trim() ? JSON.parse(body) as T : undefined as T;
 }

@@ -1,0 +1,64 @@
+{
+  "baselineCommit": "5d0aa3dfc7ad6caa768257be657d7d7520306186",
+  "branch": "feature/conflict-guard",
+  "build": { "command": "pnpm -r build", "passed": true, "log": "tests/checkpoint-b-build-final.log" },
+  "unitAndIntegration": {
+    "conflictGuard": { "files": 22, "passed": 195, "log": "tests/checkpoint-b-package-complete.log" },
+    "server": { "files": 45, "passed": 260, "log": "tests/checkpoint-b-server-complete.log" },
+    "structuredConflictAndAgent": { "files": 2, "passed": 62, "log": "tests/checkpoint-b-structured-tests.log" },
+    "fullCacheReplay": { "passed": 4, "log": "tests/checkpoint-b-full-replay-check.log" },
+    "finalRejectionMessages": { "files": 3, "passed": 31, "log": "tests/checkpoint-b-final-rejection-tests.log" },
+    "finalAgentMessages": { "passed": 8, "log": "tests/checkpoint-b-final-agent-messages.log" },
+    "productionParameters": { "idleMs": 1500, "persistDelayMs": 300 },
+    "seedBusinessTests": { "passed": 16, "log": "tests/checkpoint-b-seed-tests.log" }
+  },
+  "demo": { "passed": 2, "log": "tests/checkpoint-b-demo.log" },
+  "collaboration": {
+    "off": { "passed": 2, "log": "tests/checkpoint-b-collab-off.log" },
+    "observe": { "passed": 2, "log": "tests/checkpoint-b-collab-observe.log" },
+    "rules": { "passed": 2, "log": "tests/checkpoint-b-collab-rules.log" },
+    "full": { "passed": 2, "log": "tests/checkpoint-b-collab-full.log" }
+  },
+  "playwright": {
+    "existing": { "passed": 38, "conditionalSkipped": 10, "log": "tests/checkpoint-b-e2e-complete.log" },
+    "finalCardsAndRevert": { "passed": 13, "log": "tests/checkpoint-b-final-cards.log" },
+    "finalStructuredPresentation": { "passed": 2, "log": "tests/checkpoint-b-final-presentation.log" },
+    "realBrowserEvidence": "../checkpoint-b-manual/verification.json",
+    "realAgentRuns": 3,
+    "realAgentRunLimit": 20,
+    "concurrentHumanAndAgent": { "passed": true, "log": "tests/checkpoint-b-manual-merge-final.log" },
+    "twoConflictsAndRevert": { "passed": true, "log": "tests/checkpoint-b-manual-followup.log" },
+    "fullRecordedJudgement": { "passed": true, "log": "tests/checkpoint-b-manual-full-final.log" }
+  },
+  "fullTraceCheck": {
+    "valid": true,
+    "differences": 0,
+    "errors": 0,
+    "persistGateEvents": 6,
+    "freezeEvents": 1,
+    "providerCacheKeys": 2,
+    "persistEvents": 0,
+    "persistCategoryChecked": false,
+    "persistValidation": "allow/warn 的文件写入由四项 full 服务端集成核验覆盖。",
+    "log": "tests/checkpoint-b-full-final-check.log"
+  },
+  "mutations": {
+    "A1": { "failedAsExpected": true, "log": "mutations/agent.log" },
+    "A2": { "failedAsExpected": true, "log": "mutations/agent.log" },
+    "A3": { "failedAsExpected": true, "log": "mutations/agent.log" },
+    "A4": { "failedAsExpected": true, "scope": "真实 runtime 的 session filter；子会话审批另有生产参数集成用例。", "log": "mutations/agent.log" },
+    "E1": { "failedAsExpected": true, "log": "mutations/diversity.log" },
+    "checkpointAP2": { "failedAsExpected": true, "removedBothPendingBranches": true, "log": "mutations/pending.log" },
+    "repairedCodeRestored": true
+  },
+  "dataset": { "version": "d1-v2", "projects": 8, "groups": 200, "developmentGroups": 75, "developmentProjects": 3, "evaluatedSamples": 79, "programOverlap": 0, "siteOverlap": 0, "maximumFileSimilarity": 0.5994397759103641, "holdoutEvaluated": false },
+  "recordReplay": {
+    "real-round1": { "rounds": 3, "byteIdentical": true, "recordMatches": true, "networkCalls": 0 },
+    "real-round2": { "rounds": 3, "byteIdentical": true, "recordMatches": true, "networkCalls": 0 },
+    "real-round3": { "rounds": 3, "byteIdentical": true, "recordMatches": true, "networkCalls": 0 },
+    "calibrated": { "rounds": 3, "byteIdentical": true, "recordMatches": true, "networkCalls": 0 }
+  },
+  "modelCalls": { "fast": 214, "deep": 205, "fastLimit": 2000, "deepLimit": 1000 },
+  "secrets": { "configuredValuesFound": 0, "command": "node scripts/verify-evidence-secrets.mjs" },
+  "limitations": ["G1/G2/G3 的漏阻断率未达到 T03。", "校准灰区子集没有 allow 真值。", "额外兼容端点未配置，X3b 真实冒烟待补。", "原始 apply_patch 权限事件尚未新增，支持依据 SDK 和真实格式夹具验证。"]
+}

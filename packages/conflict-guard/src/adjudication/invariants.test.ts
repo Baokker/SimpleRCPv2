@@ -57,3 +57,14 @@ it("anonymous default functions retain their caller and test evidence", () => {
   expect(result.usage).toEqual(["buy.ts:1 returned by caller: return price(10);"]);
   expect(result.tests.join("\n")).toContain('"default price"');
 });
+
+it("follows an exported alias and keeps only relevant assertions", () => {
+  const files = new MemoryFileProvider({ "price.ts": "export function price(value: number){ return value * 2; } export const evaluate = price;", "buy.ts": 'import { evaluate } from "./price"; export function buy(){ return evaluate(10)+1; }', "test/price.test.mjs": 'import { evaluate } from "../price.ts"; test("price", () => { assert.equal(evaluate(5), 10); assert.equal(2+2, 4); });' });
+  const index = createSemanticIndex({ files, now: () => 0 }); index.update();
+  const make = (file: string, name: string) => { const symbol = index.symbolsInFile(file).find((entry) => entry.name === name)!; const before = files.readFile(file).slice(symbol.start, symbol.end); return { ...symbol, before, after: before, status: "modified" as const, lastTouchedAt: 0 }; };
+  const input: ZoneInput = { left: { actor: { kind: "human", memberId: "a" }, symbol: make("price.ts", "price") }, right: { actor: { kind: "human", memberId: "b" }, symbol: make("buy.ts", "buy") }, project: index, path: null, nested: false, typeOnly: false };
+  const result = extractInvariants(input, defaultAdjudicationConfig);
+  expect(result.callers.join("\n")).toContain("evaluate(10)");
+  expect(result.tests.join("\n")).toContain("assert.equal(evaluate(5), 10)");
+  expect(result.tests.join("\n")).not.toContain("assert.equal(2+2, 4)");
+});

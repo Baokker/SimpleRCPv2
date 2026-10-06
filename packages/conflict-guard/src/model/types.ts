@@ -31,11 +31,29 @@ export interface TrackedRange {
 export interface FileChange {
   file: string;
   baseText: string;
+  proposalText?: string;
   ranges: TrackedRange[];
   firstTouchedAt: number;
   lastTouchedAt: number;
   symbols?: SymbolChange[];
   deletedSymbolKeys?: string[];
+}
+
+export interface GuardConflict {
+  pairId: string;
+  revision: number;
+  self: ActorRef;
+  other: ActorRef;
+  otherDisplayName: string;
+  symbols: { self: string; other: string };
+  beforeSignature: string;
+  afterSignature: string;
+  ruleId: string;
+  zone: "white" | "black" | "grey";
+  decision: "allow" | "warn" | "lock";
+  summaryZh: string;
+  explanationZh?: string;
+  suggestionZh?: string;
 }
 
 export type BatchCloseReason = "idle" | "cursor-left" | "max-duration" | "file-retired" | "flush";

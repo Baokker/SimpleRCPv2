@@ -41,6 +41,12 @@
 
 ## 最小回放条件
 
+`provider_call` 增加 `role` 和 `cacheKey`，缓存键包含提示词正文与请求参数。full 模式的 `replay:check` 根据 session 配置读取缓存、校验 SHA-256，重新执行灰区策略；完整初始项目文件保存为轨迹旁的 `<trace>-project.json`，包含相关测试。核验禁止联网，并比较判定、闸门、写入和冻结。
+
+`reservation_mismatch` 保存 Agent ActorRef、文件、预计内容哈希与磁盘实际内容哈希，表示批准后的两秒确认期限内出现格式变化。`permission_deferred` 保存请求和子会话 ID；后续回复使用 `permission_reply`。内部检查异常保存原因，重复同文件异常会产生属主通知。
+
+T2/T3 的结构化 `conflict` 包含 pairId、revision、self、other、otherDisplayName、symbols、beforeSignature、afterSignature、ruleId、zone、decision、summaryZh 及可选解释和建议。持久通知包含 id、memberId、runId、at、summary、read、handled，保存到项目的 `conflict-guard/notifications.json`。
+
 回放从每个 `doc_open.text` 或 `mirror_resync.text` 建立文件状态，按 `seq` 顺序校验 edit 并应用操作。`batch_closed.textAfterHash` 必须等于回放后的文件文本 SHA-256。脱敏保留文本长度并替换内容，这些文件跳过 edit 操作和哈希核验，并列入 `redactedFiles`。敏感文件列入 `skippedFiles`。校验拒绝空轨迹、缺少 session 起点、缺失或乱序事件、错误删除文本和未关闭批次。
 
 `mirror_resync` 使用 filesystem 差异作为 tracker 编辑操作，已有批次和活跃范围继续保留并按差异移动。`session_start` 保持已有文件状态，序列继续递增。

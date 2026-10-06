@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import http from "node:http";
 import { fileURLToPath } from "node:url";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import { WebsocketProvider } from "y-websocket";
@@ -26,7 +28,9 @@ describe("T1 grey adjudication production timing", () => {
       if (fail) throw new Error("测试注入的服务错误");
       return { decision, confidence: 0.9, latencyMs: 2600, raw: {}, userExplanation: "请检查双方使用的计算方式。", suggestedAction: "请 applyDiscount 的修改者检查计算单位。" };
     };
-    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: shop, terminalEnabled: false, importRoots: [path.dirname(shop)], conflictGuard: { mode: "full", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 5000, activeIdleMs: 600000, cursorDebounceMs: 100, adjudication: { settings: { ...defaultAdjudicationConfig, strategy: "G2" }, jev: {}, deepseek: { model: "test" }, judges: { fast: { name: "test-fast", model: "test-v1", judge }, deep: { name: "test-deep", model: "test-v1", judge: (input, _options, signal) => judge(input, signal) } } } } });
+    const cacheDirectory = path.join(root, "cache");
+    const initialFiles = Object.fromEntries(await Promise.all((await fs.readdir(shop, { recursive: true })).filter((file) => /\.[cm]?[jt]sx?$/.test(file)).map(async (file) => [file, await fs.readFile(path.join(shop, file), "utf8")])));
+    const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(root, "data"), demoProjectRoot: shop, terminalEnabled: false, importRoots: [path.dirname(shop)], conflictGuard: { mode: "full", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 5000, activeIdleMs: 600000, cursorDebounceMs: 100, adjudication: { settings: { ...defaultAdjudicationConfig, strategy: "G2", fast: "test-fast", deep: "test-deep", fastModel: "test-v1" }, mode: "record", cacheDirectory, jev: {}, deepseek: { model: "test" }, judges: { fast: { name: "test-fast", model: "test-v1", judge }, deep: { name: "test-deep", model: "test-v1", judge: (input, _options, signal) => judge(input, signal) } } } } });
     const project = await app.locals.registry.importDirectory("Model shop", shop);
     const runtime = app.locals.runtimeManager.get(project.id) as ProjectRuntime;
     const server = http.createServer(app); const realtime = attachRealtimeServer(server, app.locals.runtimeManager, app.locals.agentRuns, { members: app.locals.members });
@@ -44,7 +48,7 @@ describe("T1 grey adjudication production timing", () => {
     const pricing = await connect("src/pricing.ts", members[0]!.member.id); const checkout = await connect("src/checkout.ts", members[1]!.member.id);
     replace(pricing, "return price * (1 - rate);", "return price - rate;");
     replace(checkout, "formatMoney(cart.total())", "formatMoney(cart.total() + 1)");
-    return { runtime, pricing, checkout, signals, members, state: () => runtime.conflictGuard!.state(), disk: (file: string) => fs.readFile(path.join(runtime.project.workspacePath, file), "utf8") };
+    return { runtime, pricing, checkout, signals, members, root, cacheDirectory, initialFiles, state: () => runtime.conflictGuard!.state(), disk: (file: string) => fs.readFile(path.join(runtime.project.workspacePath, file), "utf8") };
   }
   for (const decision of ["allow", "warn", "lock"] as const) it(`analyzing is pushed before ${decision} and gates persistence`, async () => {
     const context = await setup(decision);
@@ -63,6 +67,7 @@ describe("T1 grey adjudication production timing", () => {
     expect(validateTrace(events)).toBe(true);
     expect(events.some((event) => event.type === "pair_analyzing")).toBe(true);
     expect(events.some((event) => event.type === "provider_call" && event.status === "success")).toBe(true);
+    await checkOffline(context);
   }, 18000);
   it("failure becomes warn and changed revision cancels the old request", async () => {
     const context = await setup("lock", true);
@@ -73,7 +78,22 @@ describe("T1 grey adjudication production timing", () => {
     expect(context.state().pairDecisions[0]?.verdict).toMatchObject({ decision: "warn", adjudication: { status: "degraded" } });
     expect(context.state().frozenFiles).toEqual([]);
     await waitFor(async () => (await context.disk("src/pricing.ts")).includes("rate * 2"));
+    await checkOffline(context);
   }, 18000);
 });
+async function checkOffline(context: { root: string; cacheDirectory: string; initialFiles: Record<string, string>; runtime: ProjectRuntime }) {
+  const trace = path.join(context.root, "recorded.jsonl");
+  await context.runtime.conflictGuard!.waitForTrace();
+  await fs.writeFile(trace, await context.runtime.conflictGuard!.exportTrace());
+  await fs.writeFile(trace.replace(/\.jsonl$/, "-project.json"), JSON.stringify(context.initialFiles));
+  const directory = fileURLToPath(new URL("../../../../packages/conflict-guard/", import.meta.url));
+  const output = await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-check.ts", trace, "--cache", context.cacheDirectory], { cwd: directory, timeout: 20000 }).catch(async (error) => {
+    const diagnostic = fileURLToPath(new URL("../../../../.test-workspaces/checkpoint-b-full-diagnostic/", import.meta.url));
+    await fs.mkdir(diagnostic, { recursive: true });
+    await fs.cp(context.root, path.join(diagnostic, path.basename(context.root)), { recursive: true });
+    throw error;
+  });
+  expect(JSON.parse(output.stdout)).toMatchObject({ valid: true, differences: [], coordinationDifferences: [], errors: [] });
+}
 function replace(document: Y.Doc, before: string, after: string) { const text = document.getText("content"); const position = text.toString().indexOf(before); expect(position).toBeGreaterThanOrEqual(0); document.transact(() => { text.delete(position, before.length); text.insert(position, after); }); }
 async function waitFor(check: () => boolean | Promise<boolean>) { const deadline = Date.now() + 12000; while (!await check()) { if (Date.now() > deadline) throw new Error("等待研判状态超时"); await new Promise((resolve) => setTimeout(resolve, 25)); } }

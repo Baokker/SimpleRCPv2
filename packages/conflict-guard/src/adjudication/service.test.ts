@@ -8,6 +8,28 @@ const input = { promptVersion: "pair-v1", left: { actorKind: "human", file: "a.t
 const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "可能互相影响", evidence: [], contractChanged: { left: false, right: false } };
 const result: JudgeResult = { decision: "allow", confidence: 0.9, latencyMs: 10, raw: {} };
 
+it("separates fast and deep cache entries when adapter and model names match", async () => {
+  const cache = new Map<string, CachedCall>();
+  const dependencies = { clock: new VirtualClock(), mode: "record" as const, cache: { async get(key: string) { return cache.get(key); }, async put(value: CachedCall) { cache.set(value.key, value); } }, fast: { name: "openai-compatible", model: "same-model", cacheParameters: { logprobs: true }, async judge() { return { ...result, decision: "allow" as const }; } }, deep: { name: "openai-compatible", model: "same-model", cacheParameters: { response_format: { type: "json_object" } }, async judge() { return { ...result, decision: "lock" as const }; } } };
+  const fast = createAdjudicationService({ ...dependencies, config: { ...defaultAdjudicationConfig, strategy: "G2" } });
+  const deep = createAdjudicationService({ ...dependencies, config: { ...defaultAdjudicationConfig, strategy: "G1" } });
+  expect((await fast.judge(input, local, new AbortController().signal)).decision).toBe("allow");
+  expect((await deep.judge(input, local, new AbortController().signal)).decision).toBe("lock");
+  expect(cache.size).toBe(2);
+  expect(new Set([...cache.values()].map((entry) => entry.call.role))).toEqual(new Set(["fast", "deep"]));
+});
+
+it("reports replay cache misses identically when the wall clock changes", async () => {
+  const clock = new VirtualClock();
+  const service = createAdjudicationService({ clock, config: { ...defaultAdjudicationConfig, strategy: "G2" }, mode: "replay", fast: { name: "jev", model: "jev-1.13.0", async judge() { throw new Error("replay must stay offline"); } }, deep: { name: "deepseek", model: "test", async judge() { throw new Error("replay must stay offline"); } }, cache: { async get() { clock.advanceTo(clock.now() + 37); return undefined; }, async put() {} } });
+  const first = await service.judge(input, local, new AbortController().signal);
+  clock.advanceTo(1000);
+  const second = await service.judge(input, local, new AbortController().signal);
+  expect(JSON.stringify(first)).toBe(JSON.stringify(second));
+  expect(first.adjudication).toMatchObject({ status: "degraded", latencyMs: 0 });
+  expect(service.stats().calls).toBe(0);
+});
+
 it("selects G4 T2 deep reasoning with its own budget and cache identity", async () => {
   const cache = new Map<string, CachedCall>();
   const received: boolean[] = [];

@@ -18,16 +18,19 @@ import {
   type FileChange,
   type ActorRef,
   mapSymbolChanges,
+  isSourceParsable,
   classify,
   buildAdjudicationInput,
   defaultAdjudicationConfig,
   createSessionCoordinator,
+  createGuardConflict,
   type PairCoordinator
 } from "@simplercp/conflict-guard";
 import { FILESYSTEM_ORIGIN } from "../textDelta.js";
 import { createWorkspaceSemanticFiles } from "./semanticFiles.js";
 import { createServerAdjudication, type ServerAdjudicationConfig } from "./adjudicationRuntime.js";
 import { createProjectAgentGuard } from "./projectAgentGuard.js";
+import { resolveWorkspacePath } from "../workspace.js";
 
 const require = createRequire(import.meta.url);
 const YRuntime = require("yjs") as typeof import("yjs");
@@ -58,6 +61,8 @@ export function createProjectConflictGuard(options: {
   getRevision(file: string): number;
   onPersistenceStateChanged?(): void;
   onStateChanged?(version: number): void;
+  reconcileAgentFile?(file: string): Promise<void>;
+  displayActor?(actor: ActorRef): string;
 }) {
   if (options.config.mode === "off") return undefined;
   const clock: ConflictGuardClock = {
@@ -76,6 +81,7 @@ export function createProjectConflictGuard(options: {
   const mirrors = new Map<string, { text: string; version: number; stop: () => void; document: Y.Doc }>();
   const undoManagers = new Map<string, Y.UndoManager>();
   const undoBaselines = new Map<string, number>();
+  let revertFailure = "当前状态不允许撤回";
   const revertOrigins = new Map<Y.UndoManager, string>();
   const originMembers = new Map<object, string>();
   const memberOrigins = new Map<string, object>();
@@ -191,7 +197,17 @@ export function createProjectConflictGuard(options: {
   };
 
   const agentAdjudication = options.config.mode === "full" && options.config.adjudication ? Object.fromEntries((["T2", "T3"] as const).map((point) => [point, createServerAdjudication({ ...options.config.adjudication!, settings: { ...adjudicationSettings, strategy: "G4", point, reasoning: point === "T2" ? adjudicationSettings.t2Reasoning ?? false : adjudicationSettings.t3Reasoning ?? false, hardDeadlineMs: point === "T2" ? 30000 : 60000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call }); })])) as Record<"T2" | "T3", ReturnType<typeof createServerAdjudication>> : undefined;
-  const agentGuard = createProjectAgentGuard({ mode: options.config.mode, tracker, clock, files: semanticFiles, active: () => semantic.getActiveChangeSets(), refresh: updateSemantic, gate: persistGate, current: (file) => { try { return semanticFiles.readFile(file); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; } }, ...(agentAdjudication ? { adjudicate(point, input, local, signal) { return agentAdjudication[point].judge(buildAdjudicationInput(input, local, { ...adjudicationSettings, point }, semanticFiles.contextFiles()), local, signal); } } : {}), emit: (event) => { void appendTrace(event); }, changed: () => { stateVersion += 1; options.onStateChanged?.(stateVersion); } });
+  const agentGuard = createProjectAgentGuard({
+    mode: options.config.mode, tracker, clock, files: semanticFiles,
+    active: () => semantic.getActiveChangeSets(), refresh: updateSemantic, gate: persistGate,
+    current: (file) => { try { return semanticFiles.readFile(file); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; } },
+    readDisk: async (file) => { try { return await fs.readFile(resolveWorkspacePath(options.workspacePath, file), "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return ""; } },
+    reconcile: options.reconcileAgentFile, displayActor: options.displayActor,
+    notificationsPath: path.join(options.metadataPath, "conflict-guard", "notifications.json"), sensitiveValues: options.sensitiveValues,
+    ...(agentAdjudication ? { adjudicate(point, input, local, signal) { return agentAdjudication[point].judge(buildAdjudicationInput(input, local, { ...adjudicationSettings, point }, semanticFiles.contextFiles()), local, signal); } } : {}),
+    emit: (event) => { void appendTrace(event); },
+    changed: () => { stateVersion += 1; options.onStateChanged?.(stateVersion); options.onPersistenceStateChanged?.(); }
+  });
 
   traceOperations = initializeTraceSequence().then(() => undefined).catch((error) => {
     traceWriteFailures += 1;
@@ -523,7 +539,13 @@ export function createProjectConflictGuard(options: {
       changeSets: tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) })),
       activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, beforeComments: _comments, ...symbol }) => symbol) })),
       candidatePairs: semantic.getCandidatePairs(),
-      pairDecisions: [...pairCoordinator.records().filter((record) => record.status !== "closed" && record.pair.left.actor.kind === "human" && record.pair.right.actor.kind === "human"), ...agentGuard.records()].map((record) => ({ ...record, verdict: record.verdict })),
+      pairDecisions: [...pairCoordinator.records().filter((record) => record.status !== "closed" && record.pair.left.actor.kind === "human" && record.pair.right.actor.kind === "human"), ...agentGuard.records()].map((record) => {
+        const self = [record.pair.left, record.pair.right].find((side) => side.actor.kind === "human" && side.actor.memberId === memberId) ?? record.pair.left;
+        const other = actorKey(self.actor) === actorKey(record.pair.left.actor) ? record.pair.right : record.pair.left;
+        const otherChange = sets.find((set) => actorKey(set.actor) === actorKey(other.actor))?.files.get(other.symbol.split("#")[0]!)?.symbols?.find((symbol) => symbol.key === other.symbol);
+        const conflict = createGuardConflict({ record, self: self.actor, otherDisplayName: options.displayActor?.(other.actor) ?? "协作成员", otherChange });
+        return { ...record, conflict };
+      }),
       agentNotices: agentGuard.notices(memberId),
       frozenFiles: frozenFiles(),
       analyzingFiles: analyzingFiles(),
@@ -580,7 +602,7 @@ export function createProjectConflictGuard(options: {
   }
 
   function persistGate(file: string) {
-    try { return session.gate(file); }
+    try { if (options.config.mode !== "observe" && agentGuard.pendingFile(file)) return { allowed: false, reason: "agent-write" }; return session.gate(file); }
     catch (error) { markDegraded(error); return { allowed: true, reason: undefined }; }
   }
   function shouldPinDocument(file: string) {
@@ -602,37 +624,65 @@ export function createProjectConflictGuard(options: {
   function persisted(file: string, content: string) { void appendTrace({ type: "persist", file, textHash: hashText(content) }); }
   function persistError(file: string, error: unknown) { markDegraded(error); void appendTrace({ type: "persist_error", file, reason: error instanceof Error ? error.message : String(error) }); }
 
-  function confirmPair(pairId: string, memberId: string) {
+  function confirmPair(pairId: string, actor: ActorRef | string) {
+    const identity: ActorRef = typeof actor === "string" ? { kind: "human", memberId: actor } : actor;
     if (options.config.mode !== "rules" && options.config.mode !== "full") return false;
     const record = pairCoordinator.get(pairId);
     if (!record || record.status !== "judged" || record.verdict?.decision !== "lock") return false;
     if (record.pair.left.actor.kind !== "human" || record.pair.right.actor.kind !== "human") return false;
-    const side = actorKey(record.pair.left.actor) === `human:${memberId}` ? "left" : actorKey(record.pair.right.actor) === `human:${memberId}` ? "right" : undefined;
+    const side = actorKey(record.pair.left.actor) === actorKey(identity) ? "left" : actorKey(record.pair.right.actor) === actorKey(identity) ? "right" : undefined;
     if (!side) return false;
+    if (identity.kind !== "human") return false;
+    const memberId = identity.memberId;
     const result = pairCoordinator.confirm(pairId, side);
     if (result) { stateVersion += 1; options.onStateChanged?.(stateVersion); options.onPersistenceStateChanged?.(); }
     if (result) uiActionCount += 1;
     if (result) void appendTrace({ type: "ui_action", action: "confirm_pair", pairId, memberId });
     return result;
   }
-  function chatPair(pairId: string, memberId: string, text: string) {
+  function chatPair(pairId: string, identity: ActorRef | string, text: string) {
     const record = pairCoordinator.get(pairId);
     if (!record || !text.trim()) return false;
-    const actor = `human:${memberId}`;
+    const actorRef: ActorRef = typeof identity === "string" ? { kind: "human", memberId: identity } : identity;
+    const actor = actorKey(actorRef);
     if (actorKey(record.pair.left.actor) !== actor && actorKey(record.pair.right.actor) !== actor) return false;
     uiActionCount += 1;
-    void appendTrace({ type: "ui_action", action: "chat_pair", pairId, memberId });
+    void appendTrace({ type: "ui_action", action: "chat_pair", pairId, actor: actorRef });
     return true;
   }
-  function revertPair(pairId: string, memberId: string) {
+  function revertPair(pairId: string, identity: ActorRef | string) {
+    revertFailure = "当前状态不允许撤回";
     if (options.config.mode !== "rules" && options.config.mode !== "full") return false;
     const record = pairCoordinator.get(pairId);
     if (!record || record.status !== "judged" || record.verdict?.decision !== "lock") return false;
     if (record.pair.left.actor.kind !== "human" || record.pair.right.actor.kind !== "human") return false;
-    const actor = `human:${memberId}`;
+    const actorRef: ActorRef = typeof identity === "string" ? { kind: "human", memberId: identity } : identity;
+    if (actorRef.kind !== "human") return false;
+    const memberId = actorRef.memberId;
+    const actor = actorKey(actorRef);
     const symbols = [record.pair.left, record.pair.right].filter((side) => actorKey(side.actor) === actor).map((side) => side.symbol);
     if (symbols.length === 0) return false;
     const files = new Set(symbols.map((symbol) => symbol.slice(0, symbol.indexOf("#"))));
+    let reversible = false;
+    for (const file of files) {
+      const key = `${memberId}:${file}`;
+      const manager = undoManagers.get(key);
+      const mirror = mirrors.get(file);
+      if (!manager || !mirror) continue;
+      const baseline = undoBaselines.get(key) ?? manager.undoStack.length;
+      if (manager.undoStack.length <= baseline) continue;
+      const preview = new YRuntime.Doc({ gc: false });
+      YRuntime.applyUpdate(preview, YRuntime.encodeStateAsUpdate(mirror.document));
+      const undo = new YRuntime.UndoManager(preview.getText("content"));
+      undo.undoStack = manager.undoStack.map((item) => ({ ...item, meta: new Map(item.meta) }));
+      while (undo.undoStack.length > baseline) undo.undo();
+      const after = preview.getText("content").toString();
+      reversible ||= after !== mirror.text;
+      const valid = isSourceParsable(file, after);
+      undo.destroy(); preview.destroy();
+      if (!valid) { revertFailure = "撤回会与他人的修改交叠，请在聊天中协商"; return false; }
+    }
+    if (!reversible) { revertFailure = "没有可撤回的修改"; return false; }
     let changed = false;
     for (const file of files) {
       const key = `${memberId}:${file}`;
@@ -649,7 +699,7 @@ export function createProjectConflictGuard(options: {
       if (before !== after) tracker.closeMemberFile({ kind: "human", memberId }, file);
       scheduleSemanticUpdate(file);
     }
-    if (!changed) return false;
+    if (!changed) { revertFailure = "没有可撤回的修改"; return false; }
     pairCoordinator.requestResolution(pairId, "reverted");
     updateSemantic();
     uiActionCount += 1;
@@ -744,11 +794,13 @@ export function createProjectConflictGuard(options: {
         const before = previous ?? externalOrigins.get(file)?.before;
         if (before !== undefined) trackUnopenedChange(file, before, after, actor);
         else scheduleSemanticUpdate(file);
+        agentGuard.completeOrigin(file, after);
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") {
           const before = externalTexts.get(file);
           const origin = resolveFilesystemOrigin(file, "");
           if (before !== undefined && before !== "") trackUnopenedChange(file, before, "", origin === FILESYSTEM_ORIGIN ? { kind: "filesystem" } : origin as ActorRef);
+          agentGuard.completeOrigin(file, "");
         } else if ((error as NodeJS.ErrnoException).code !== "EISDIR") markDegraded(error);
         scheduleSemanticUpdate(file);
       }
@@ -773,8 +825,9 @@ export function createProjectConflictGuard(options: {
     confirmPair,
     chatPair,
     revertPair,
+    revertError: () => revertFailure,
     pairCoordinator,
-    dispose() {
+    async dispose() {
       session.dispose();
       adjudication?.dispose();
       for (const service of Object.values(agentAdjudication ?? {})) service.dispose();
@@ -798,6 +851,7 @@ export function createProjectConflictGuard(options: {
       } catch (error) {
         markDegraded(error);
       }
+      await agentGuard.flushNotices();
     }
   };
 }
