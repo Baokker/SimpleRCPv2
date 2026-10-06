@@ -68,7 +68,7 @@ export function returnedPropertyShape(source: ts.SourceFile | undefined) {
   if (!source) return { properties, known: false };
   for (const node of source.statements.flatMap((statement) => declarationNodes(statement))) {
     const body = (node as ts.FunctionLikeDeclaration).body;
-    if (ts.isVariableDeclaration(node) && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
+    if ((ts.isVariableDeclaration(node) || ts.isPropertyDeclaration(node)) && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
       if (ts.isBlock(node.initializer.body)) known = collectDirectReturnProperties(node.initializer.body, properties) && known;
       else known = addObjectProperties(node.initializer.body, properties) && known;
     }
@@ -137,15 +137,14 @@ export function contractFingerprint(source: ts.SourceFile) {
     if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isMethodSignature(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
       values.push(`fn:${node.type?.getText(source) ?? ""}:${parametersFingerprint(node.parameters, source)}`);
       values.push(...directReturnFingerprint(node, source));
-    } else if (ts.isVariableDeclaration(node)) {
+    } else if (ts.isVariableDeclaration(node) || ts.isPropertyDeclaration(node)) {
+      if (ts.isPropertyDeclaration(node)) values.push(`member:${node.name.getText(source)}:${node.questionToken ? "?" : "!"}:${node.type?.getText(source) ?? ""}`);
       const initializer = node.initializer;
       if (initializer && (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer))) {
         values.push(`fn:${initializer.type?.getText(source) ?? ""}:${parametersFingerprint(initializer.parameters, source)}`);
         values.push(...directReturnFingerprint(initializer, source));
-      } else if (node.type) values.push(`variable:${node.type.getText(source)}`);
+      } else if (ts.isVariableDeclaration(node) && node.type) values.push(`variable:${node.type.getText(source)}`);
     } else if (ts.isPropertySignature(node)) {
-      values.push(`member:${node.name.getText(source)}:${node.questionToken ? "?" : "!"}:${node.type?.getText(source) ?? ""}`);
-    } else if (ts.isPropertyDeclaration(node)) {
       values.push(`member:${node.name.getText(source)}:${node.questionToken ? "?" : "!"}:${node.type?.getText(source) ?? ""}`);
     }
   }

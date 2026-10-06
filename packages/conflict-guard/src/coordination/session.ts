@@ -70,14 +70,7 @@ export function createSessionCoordinator(options: {
   }
   function refresh(batches: Array<{ batch: EditBatch; change?: FileChange }> = [], pairs?: (pairs: CandidatePair[]) => CandidatePair[]) {
     options.semantic.update(options.tracker.getActiveChangeSets(), batches);
-    for (const { batch } of batches) if (batch.actor.kind === "human") {
-      const set = options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(batch.actor));
-      for (const symbol of set?.files.get(batch.file)?.symbols ?? []) {
-        const key = `${actorKey(batch.actor)}:${symbol.key}`;
-        if (symbolContractChanged(symbol)) contracts.set(key, { actor: batch.actor, symbol: symbol.key });
-        else contracts.delete(key);
-      }
-    }
+    for (const { batch } of batches) recordContracts(batch);
     for (const [key, entry] of contracts) if (!symbolFor(entry.actor, entry.symbol)) contracts.delete(key);
     coordinator.update(pairs ? pairs(options.semantic.getCandidatePairs()) : options.semantic.getCandidatePairs(), (pair) => !relevantBatch(pair));
     for (const { batch } of batches) {
@@ -88,7 +81,7 @@ export function createSessionCoordinator(options: {
         batchPaths.delete(key);
       }
     }
-    syncFrozen();
+    syncFrozen(true);
     refreshGates();
   }
   function pending(file: string) {
@@ -127,14 +120,14 @@ export function createSessionCoordinator(options: {
       if (previous !== result.reason) emit({ type: "persist_gate", file, allowed: result.allowed, reason: result.reason });
     }
   }
-  function syncFrozen() {
+  function syncFrozen(reconcile = false) {
     const active = new Set<string>();
     if (options.intervene) for (const record of coordinator.records()) {
       if (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock") continue;
       for (const side of [record.pair.left, record.pair.right]) {
         const key = `${record.pair.id}:${actorKey(side.actor)}:${side.symbol}`;
         active.add(key);
-        if (frozen.has(key)) continue;
+        if (frozen.has(key) && !reconcile) continue;
         const file = side.symbol.slice(0, side.symbol.indexOf("#"));
         const symbol = options.index.symbolsInFile(file).find((entry) => entry.key === side.symbol);
         if (!symbol) continue;
@@ -148,8 +141,16 @@ export function createSessionCoordinator(options: {
     const violations = regions().filter((region) => region.file === file && ops.some((op) => op.from < region.end && op.from + op.deleted.length >= region.start));
     if (human && violations.length > 0) emit({ type: "freeze_violation", file, pairIds: [...new Set(violations.map((region) => region.pairId))] });
     let changed = false;
+    const replacements: TextEditOp[] = [];
+    for (const op of ops) {
+      const previous = replacements.at(-1);
+      if (previous && op.from === previous.from + previous.deleted.length) {
+        previous.deleted += op.deleted;
+        previous.inserted += op.inserted;
+      } else replacements.push({ ...op });
+    }
     for (const region of frozen.values()) if (region.file === file) {
-      const range = transformRanges([{ start: region.start, end: region.end }], ops)[0];
+      const range = transformRanges([{ start: region.start, end: region.end }], replacements)[0];
       if (range) { changed ||= region.start !== range.start || region.end !== range.end; region.start = range.start; region.end = range.end; }
     }
     if (changed) emitFrozen();
@@ -183,8 +184,18 @@ export function createSessionCoordinator(options: {
     }
   }
   function batchClosed(batch: EditBatch) {
+    recordContracts(batch);
     awaitingBatches.set(batch.id, batch);
     refreshGates();
+  }
+  function recordContracts(batch: EditBatch) {
+    if (batch.actor.kind !== "human") return;
+    const set = options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(batch.actor));
+    for (const symbol of set?.files.get(batch.file)?.symbols ?? []) {
+      const key = `${actorKey(batch.actor)}:${symbol.key}`;
+      if (symbolContractChanged(symbol)) contracts.set(key, { actor: batch.actor, symbol: symbol.key });
+      else contracts.delete(key);
+    }
   }
   function regions() { return [...frozen.values()].map((region) => ({ ...region })); }
   function emitFrozen() {

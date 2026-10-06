@@ -1,6 +1,6 @@
 import * as ts from "typescript";
 import { collectSymbols, innermostSymbols, symbolInfo, type IndexedSymbol } from "./symbols.js";
-import { collectRelations, collectTypeDependencies } from "./relations.js";
+import { collectRelations, collectTypeDependencies, collectUnresolvedReferences } from "./relations.js";
 import type { RelationEdge, RelationPath, SemanticFileProvider, SemanticIndex } from "./types.js";
 import { createFourStateTypeChecker } from "../routing/typecheck.js";
 
@@ -16,6 +16,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
   const indexedVersions = new Map<string, string>();
   const symbols = new Map<string, IndexedSymbol[]>();
   const edges = new Map<string, RelationEdge[]>();
+  const unresolved = new Map<string, Map<string, Array<{ name: string; via: string[] }>>>();
   const dependencies = new Map<string, Set<string>>();
   const typeDependencies = new Map<string, Set<string>>();
   const compilerOptions: ts.CompilerOptions = { allowJs: true, checkJs: false, noLib: true, skipLibCheck: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, jsx: ts.JsxEmit.Preserve };
@@ -75,7 +76,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       files = nextFiles;
       projectVersion += 1;
       if (topologyChanged) service.cleanupSemanticCache();
-      for (const file of [...symbols.keys()]) if (!files.includes(file)) { symbols.delete(file); edges.delete(file); snapshots.delete(file); dependencies.delete(file); typeDependencies.delete(file); indexedVersions.delete(file); }
+      for (const file of [...symbols.keys()]) if (!files.includes(file)) { symbols.delete(file); edges.delete(file); unresolved.delete(file); snapshots.delete(file); dependencies.delete(file); typeDependencies.delete(file); indexedVersions.delete(file); }
       const program = service.getProgram();
       if (!program) throw new Error("Semantic LanguageService 未生成 Program");
       function moduleTargets(source: ts.SourceFile, exportsOnly = false, visited = new Set<string>()): Set<string> {
@@ -115,6 +116,16 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
       for (const file of affected) if (files.includes(file)) {
         const source = program.getSourceFile(`/${file}`)!;
         edges.set(file, collectRelations(source, checker, byNode));
+        const references = collectUnresolvedReferences(source, checker, byNode);
+        for (const entries of references.values()) for (const reference of entries) {
+          const via = [...reference.via];
+          for (const route of via) {
+            const module = program.getSourceFile(`/${route}`);
+            if (module) reference.via.push(...moduleTargets(module, true));
+          }
+          reference.via = [...new Set(reference.via)];
+        }
+        unresolved.set(file, references);
         typeDependencies.set(file, collectTypeDependencies(source, checker));
       }
       const keys = new Set([...symbols.values()].flat().map((symbol) => symbol.key));
@@ -126,6 +137,7 @@ export function createSemanticIndex(options: { files: SemanticFileProvider; now(
     symbolsInRange: (file, start, end) => innermostSymbols((symbols.get(file) ?? []).map(symbolInfo), start, end),
     outgoing,
     incoming,
+    unresolvedReferences: (key) => (unresolved.get(key.slice(0, key.indexOf("#")))?.get(key) ?? []).map((reference) => ({ ...reference, via: [...reference.via] })),
     findPaths(fromKeys, toKeys, maxHops = 2) {
       if (!Number.isInteger(maxHops) || maxHops < 0) throw new Error("maxHops 必须为非负整数");
       const paths: RelationPath[] = [];

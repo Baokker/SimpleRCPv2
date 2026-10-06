@@ -81,6 +81,30 @@ export function collectRelations(source: ts.SourceFile, checker: ts.TypeChecker,
   return [...edges.values()].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 }
 
+export function collectUnresolvedReferences(source: ts.SourceFile, checker: ts.TypeChecker, symbolsByNode: Map<ts.Node, IndexedSymbol>) {
+  const references = new Map<string, Array<{ name: string; via: string[] }>>();
+  const visit = (node: ts.Node) => {
+    if (ts.isIdentifier(node) && !isDeclarationName(node)) {
+      const from = containingSymbol(node, symbolsByNode);
+      const original = checker.getSymbolAtLocation(node);
+      const resolved = resolveSymbol(checker, original);
+      if (from && !resolved.symbol?.declarations?.length) {
+        const imported = original?.declarations?.find(ts.isImportSpecifier);
+        const name = imported ? (imported.propertyName ?? imported.name).text : node.text;
+        if (ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) {
+          resolved.via.push(...resolveSymbol(checker, checker.getSymbolAtLocation(node.parent.expression)).via);
+        }
+        const entries = references.get(from.key) ?? [];
+        entries.push({ name, via: [...new Set(resolved.via)].filter((file) => file !== from.file) });
+        references.set(from.key, entries);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return references;
+}
+
 function containingSymbol(node: ts.Node, symbols: Map<ts.Node, IndexedSymbol>): IndexedSymbol | undefined {
   for (let current: ts.Node | undefined = node; current; current = current.parent) { const symbol = symbols.get(current); if (symbol) return symbol; }
   return undefined;

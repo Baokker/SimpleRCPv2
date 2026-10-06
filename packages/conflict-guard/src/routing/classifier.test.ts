@@ -2,6 +2,10 @@ import { describe, expect, test } from "vitest";
 import { classify, symbolContractChanged, type PairSide } from "./classifier.js";
 import { createFourStateTypeChecker } from "./typecheck.js";
 import type { SymbolChange } from "../semantic/changes.js";
+import * as ts from "typescript";
+import { runInNewContext } from "node:vm";
+import { createSemanticIndex } from "../semantic/index.js";
+import { MemoryFileProvider } from "../replay/files.js";
 
 const project = { symbolsInFile: () => [], outgoing: () => [], incoming: () => [] };
 function side(file: string, name: string, before: string, after: string, extra: Partial<SymbolChange> = {}): PairSide {
@@ -88,6 +92,28 @@ describe("阶段 3 分区规则", () => {
     const right = side("b.ts", "call", "function call() { return run(1); }", "function call() { return run(2); }");
     expect(classify(input(left, right))).toMatchObject({ zone: "white", decision: "allow", ruleId: "equivalent-refactor" });
   });
+  test.each([
+    ["条件求值", "return enabled && record('value');", "const value = record('value'); return enabled && value;", false, [], ["value"]],
+    ["调用顺序", "return record('first') + record('second');", "const value = record('second'); return record('first') + value;", true, ["first", "second"], ["second", "first"]]
+  ])("改变%s的临时变量提取保留语义警告", (_name, beforeBody, afterBody, enabled, beforeCalls, afterCalls) => {
+    const before = `export function run(enabled: boolean) { ${beforeBody} }`;
+    const after = `export function run(enabled: boolean) { ${afterBody} }`;
+    const execute = (source: string) => {
+      const program = `const calls: string[] = []; function record(value: string) { calls.push(value); return value; } ${source}; run(${enabled}); export { calls };`;
+      const output = ts.transpileModule(program, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+      const exports: { calls?: string[] } = {};
+      runInNewContext(output, { exports });
+      return Array.from(exports.calls!);
+    };
+    expect(execute(before)).toEqual(beforeCalls);
+    expect(execute(after)).toEqual(afterCalls);
+    const left = side("a.ts", "run", before, after);
+    const right = side("b.ts", "call", "export function call() { return run(false); }", "export function call() { return run(true); }");
+    const files = new MemoryFileProvider({ "a.ts": after, "b.ts": `import { run } from './a'; ${right.symbol.after}` });
+    const index = createSemanticIndex({ files, now: () => 0 });
+    index.update();
+    expect(classify({ ...input(left, right), project: index })).toMatchObject({ zone: "grey", decision: "warn", ruleId: "semantic-interaction-uncertain" });
+  });
   test("删除被引用符号命中黑区", () => {
     const left = side("a.ts", "run", "function run() { return 1; }", "", { status: "deleted" });
     const right = side("b.ts", "call", "function call() { return run(); }", "function call() { return run(); }");
@@ -159,6 +185,10 @@ describe("阶段 3 分区规则", () => {
   test("内部箭头函数变化不报告外部接口变化", () => {
     const change = side("a.ts", "run", "export function run(): number { const helper = () => 'x'; return 1; }", "export function run(): number { const helper = (value: string) => value; return 1; }").symbol;
     expect(symbolContractChanged(change)).toBe(false);
+  });
+  test("公开箭头函数属性的参数和返回类型变化报告外部接口变化", () => {
+    const change = side("box.ts", "apply", "apply = (value: number): number => value;", "apply = (value: string): string => value;", { key: "box.ts#Box.apply", kind: "property", container: "Box" }).symbol;
+    expect(symbolContractChanged(change)).toBe(true);
   });
   test("新增符号的空文本按新增处理", () => {
     const left = side("a.ts", "run", "", "export function run() { return 1; }", { status: "added" });

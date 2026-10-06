@@ -67,7 +67,9 @@ function semanticStatements(statements: ts.NodeArray<ts.Statement>, source: ts.S
   for (const [index, statement] of statements.entries()) {
     const next = statements[index + 1];
     const declaration = ts.isVariableStatement(statement) && statement.declarationList.flags === ts.NodeFlags.Const && statement.declarationList.declarations.length === 1 ? statement.declarationList.declarations[0] : undefined;
-    if (declaration && ts.isIdentifier(declaration.name) && declaration.initializer && !declaration.type && next && referenceCount(next, declaration.name.text) === 1 && statements.slice(index + 2).every((later) => referenceCount(later, declaration.name.getText(source)) === 0)) {
+    if (declaration && ts.isIdentifier(declaration.name) && declaration.initializer && !declaration.type
+      && next && ts.isReturnStatement(next) && next.expression && ts.isIdentifier(next.expression) && next.expression.text === declaration.name.text
+      && statements.slice(index + 2).every((later) => referenceCount(later, declaration.name.getText(source)) === 0)) {
       aliases.set(declaration.name.text, semanticNode(declaration.initializer, source, aliases));
     } else fingerprints.push(semanticNode(statement, source, aliases));
   }

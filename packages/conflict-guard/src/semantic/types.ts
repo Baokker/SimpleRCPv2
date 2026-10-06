@@ -44,6 +44,7 @@ export interface SemanticIndex {
   symbolsInRange(file: string, start: number, end: number): SymbolInfo[];
   outgoing(key: string): RelationEdge[];
   incoming(key: string): RelationEdge[];
+  unresolvedReferences?(key: string): Array<{ name: string; via: string[] }>;
   findPaths(fromKeys: string[], toKeys: string[], maxHops?: number): RelationPath[];
   stats(): { files: number; symbols: number; edges: number; truncated: boolean };
   readFile?(file: string): string;

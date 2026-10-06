@@ -153,6 +153,25 @@ describe("TypeScript 语义索引", () => {
     expect(index.outgoing("consumer.ts#total")).toEqual([{ from: "consumer.ts#total", to: "middle.ts#price", kind: "call", via: ["index.ts"] }]);
     expect(index.outgoing("namespace.ts#total")).toEqual([{ from: "namespace.ts#total", to: "middle.ts#price", kind: "call", via: ["index.ts"] }]);
   });
+  it("未解析引用保留导入名称与重导出来源，排除已有的本地声明", () => {
+    const files = memoryFiles({
+      "pricing.ts": "export function priceV2() { return 1; }",
+      "index.ts": "export * from './pricing';",
+      "alias.ts": "import { price as oldPrice } from './index'; export function total() { return oldPrice(); }",
+      "namespace.ts": "import * as shop from './index'; export function total() { return shop.price(); }",
+      "local.ts": "function price() { return 1; } export function total() { return price(); }",
+      "parameter.ts": "export function total(price: () => number) { return price(); }"
+    });
+    const index = createSemanticIndex({ files: files.provider, now: () => 0 });
+    index.update();
+    for (const key of ["alias.ts#total", "namespace.ts#total"]) expect(index.unresolvedReferences?.(key)).toContainEqual({ name: "price", via: ["index.ts", "pricing.ts"] });
+    expect(index.unresolvedReferences?.("local.ts#total")).toEqual([]);
+    expect(index.unresolvedReferences?.("parameter.ts#total")).toEqual([]);
+    files.set("pricing.ts", "export function price() { return 1; }");
+    index.update(["pricing.ts"]);
+    expect(index.unresolvedReferences?.("alias.ts#total")).toEqual([]);
+    expect(index.unresolvedReferences?.("namespace.ts#total")).toEqual([]);
+  });
 
   it("推断返回类型新增属性时重算直接使用该类型的文件", () => {
     const files = memoryFiles({ "a.ts": "export class A {}", "b.ts": "import { A } from './a'; export function make() { return new A(); }", "c.ts": "import { make } from './b'; export function read() { return make().fresh; }" });

@@ -4,7 +4,6 @@ import type { RelationEdge, SemanticIndex, RelationPath } from "../semantic/type
 import { mapSymbolChanges, type SymbolChange } from "../semantic/changes.js";
 import { isSemanticFile } from "../semantic/index.js";
 import { parseSymbols } from "../semantic/symbols.js";
-import { parseChangeSource, referencesName } from "./contracts.js";
 
 export interface CandidatePair {
   id: string;
@@ -57,12 +56,12 @@ export class SemanticChangeTracker {
     }
     const active = this.changeSets.filter((set) => set.actor.kind === "human" && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
     const deletedKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => symbol.key)));
-    for (const [key, edge] of this.staleEdges) if (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to)) this.staleEdges.delete(key);
+    for (const [key, edge] of this.staleEdges) if (edge.dangling || (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to))) this.staleEdges.delete(key);
     const deletedSymbols = active.flatMap((set) => [...set.files.values()].flatMap((file) => (file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => ({ actor: actorKey(set.actor), symbol }))));
     for (const set of active) for (const change of set.files.values()) for (const symbol of change.symbols ?? []) {
       if (symbol.status === "deleted") continue;
       for (const deleted of deletedSymbols) {
-        if (deleted.actor === actorKey(set.actor) || !referencesName(parseChangeSource(symbol, symbol.after), deleted.symbol.name)) continue;
+        if (deleted.actor === actorKey(set.actor) || !this.options.index.unresolvedReferences?.(symbol.key).some((reference) => reference.name === deleted.symbol.name && (reference.via.includes(deleted.symbol.file) || symbol.file === deleted.symbol.file))) continue;
         this.staleEdges.set(`${symbol.key}:${deleted.symbol.key}:value-reference`, { from: symbol.key, to: deleted.symbol.key, kind: "value-reference", via: [], stale: true, dangling: true });
       }
     }

@@ -174,6 +174,38 @@ for (const mode of ["rules", "observe"] as const) describe(`检查点 A 生产�
     replace(report.document, 'return "Shop report"', "return String(applyDiscount(10, 0.1))");
     await waitFor(() => state().pairDecisions.some((record) => record.verdict?.ruleId === "runtime-export-removed"));
     expect(state().candidatePairs.some((pair) => [pair.left.symbol, pair.right.symbol].includes("src/pricing.ts#applyDiscount"))).toBe(true);
+    replace(report.document, "return String(applyDiscount(10, 0.1))", 'return "Changed report"');
+    await waitFor(() => state().candidatePairs.length === 0);
+    expect(state().frozenFiles).toEqual([]);
+    await waitForAsync(async () => (await disk("src/report.ts")).includes('return "Changed report"'));
+  }, 15000);
+  it("同名本地函数保持独立关系，不与改名导出形成冻结", async () => {
+    const independent = "function applyDiscount(price: number) { return price; }\nexport function independentCheckout(price: number) { return applyDiscount(price); }\n";
+    await fs.writeFile(path.join(runtime().project.workspacePath, "src/independent.ts"), independent);
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    const consumer = await connect("src/independent.ts", bob.member.id);
+    replace(pricing.document, "function applyDiscount(", "function applyDiscountV2(");
+    await waitFor(() => state().activeSymbols.some((group) => group.actor.kind === "human" && group.actor.memberId === alice.member.id && group.symbols.some((symbol) => symbol.status === "deleted")));
+    replace(consumer.document, "return applyDiscount(price);", "return applyDiscount(price) + 1;");
+    await waitFor(() => state().activeSymbols.some((group) => group.actor.kind === "human" && group.actor.memberId === bob.member.id && group.symbols.some((symbol) => symbol.name === "independentCheckout")));
+    expect(guard().semanticIndex.outgoing("src/independent.ts#independentCheckout")).toContainEqual({ from: "src/independent.ts#independentCheckout", to: "src/independent.ts#applyDiscount", kind: "call", via: [] });
+    expect(state().candidatePairs).toEqual([]);
+    expect(state().frozenFiles).toEqual([]);
+    expect(state().blockedPersists).toEqual([]);
+    await waitForAsync(async () => (await disk("src/independent.ts")) === independent.replace("return applyDiscount(price);", "return applyDiscount(price) + 1;"));
+  }, 15000);
+  it("整段替换冻结方法后保留当前声明的完整行范围", async () => {
+    const { cart } = await lock();
+    await judgement();
+    const key = "src/cart.ts#Cart.total";
+    const previous = guard().symbol(key)!.text;
+    const after = "total(): number {\n    let amount = 5;\n    const result = applyDiscount(amount, 0.2);\n    return result;\n  }";
+    replace(cart.document, previous, after);
+    await waitFor(() => guard().symbol(key)?.text === after);
+    const current = guard().semanticIndex.symbolsInFile("src/cart.ts").find((symbol) => symbol.key === key)!;
+    expect(state().frozenFiles.find((file) => file.file === "src/cart.ts")?.regions).toEqual(expect.arrayContaining([expect.objectContaining({ startLine: current.startLine, endLine: current.endLine })]));
+    await delay(1700);
+    expect(state().frozenFiles.find((file) => file.file === "src/cart.ts")?.regions).toEqual(expect.arrayContaining([expect.objectContaining({ startLine: current.startLine, endLine: current.endLine })]));
   }, 15000);
   it("N 冻结区域中的一个事务只记录一次违规", async () => {
     const { cart } = await lock();
@@ -194,6 +226,17 @@ for (const mode of ["rules", "observe"] as const) describe(`检查点 A 生产�
     expect(guard().state(alice.member.id).t0Warnings).toEqual([]);
     await delay(1700);
     expect(validateTraceDetailed(await trace()).valid).toBe(true);
+  }, 15000);
+  it("公开箭头函数属性签名变化向新批次发送 T0", async () => {
+    await fs.writeFile(path.join(runtime().project.workspacePath, "src/box.ts"), "export class Box { apply = (value: number) => value; }\n");
+    await fs.writeFile(path.join(runtime().project.workspacePath, "src/use-box.ts"), "import { Box } from './box'; export function useBox() { const box = new Box(); return box.apply(1); }\n");
+    const box = await connect("src/box.ts", alice.member.id);
+    replace(box.document, "value: number", "value: string");
+    await waitFor(() => guard().tracker.getActiveChangeSets().some((set) => set.actor.kind === "human" && set.actor.memberId === alice.member.id && set.status === "settled"));
+    const consumer = await connect("src/use-box.ts", bob.member.id);
+    replace(consumer.document, "box.apply(1)", "box.apply(2)");
+    await waitFor(() => guard().state(bob.member.id).t0Warnings.some((warning) => warning.summary.includes("Box.apply")));
+    expect(guard().state(alice.member.id).t0Warnings).toEqual([]);
   }, 15000);
   it("P2 白区文件允许写入并且不受其他文件持续输入影响", async () => {
     const pricing = await connect("src/pricing.ts", alice.member.id);
