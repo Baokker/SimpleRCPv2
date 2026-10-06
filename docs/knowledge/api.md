@@ -118,7 +118,7 @@
 
 阶段 6 的知识配置增加 `toolEnabled`、`proposeEnabled` 与 `recapLanguage`。`POST /api/projects/:projectId/knowledge/import` 导入工作区规范文件并创建 Inbox 草稿；`GET /api/projects/:projectId/knowledge/export?format=agents-md` 返回团队卡片 Markdown，`POST /api/projects/:projectId/knowledge/export/workspace` 写入工作区。`POST /mcp/knowledge` 提供 `knowledge_search`、`knowledge_get` 和受项目配置控制的 `knowledge_propose`。
 
-Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 不包含完整卡片正文，记录 `totalChars` 与 `estimatedInjectionTokens`；`usage_summary` 记录 OpenCode assistant 消息用量。 `knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。
+Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 不包含完整卡片正文，记录 `totalChars` 与 `estimatedInjectionTokens`；`totalChars` 包含标题、卡片元数据、正文、矛盾标注、分隔符和工具说明，受项目 `maxTotalChars` 限制。`usage_summary` 记录 OpenCode assistant 消息用量。`knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。自我复盘的 `llm-calls.jsonl.usage` 包含 token 用量、SDK `cost` 和可选的 `estimatedCost`、`estimatedCostCurrency`、`estimatedCostSource`。
 
 在途提醒使用 `/ws` 消息：
 

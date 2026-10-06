@@ -23,6 +23,18 @@ describe("knowledge document IO", () => {
     expect(drafts[0]?.startLine).toBe(3);
     expect(drafts[1]?.startLine).toBe(4);
     expect(drafts.every(draft => draft.fallback)).toBe(true);
+    expect(drafts[1]?.content).toContain("# text inside a fence");
+  });
+  it("retains instructions after a list together with their source line range", () => {
+    const source = "# Rules\n\n- Preserve sharedHelper.\n\nRun npm test after every change.\n";
+    const drafts = deterministicImport(source, "CONTRIBUTING.md");
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]).toMatchObject({ startLine: 3, endLine: 6 });
+    expect(drafts[0]?.content).toContain("Run npm test after every change.");
+    const prefixed = deterministicImport(`Run npm test.\n\n${source}`, "CONTRIBUTING.md");
+    expect(prefixed).toHaveLength(2);
+    expect(prefixed[0]).toMatchObject({ startLine: 1, endLine: 2, content: "Run npm test." });
+    expect(deterministicImport("# Team process knowledge\n", "AGENTS.md")).toEqual([]);
   });
   it("preserves exactly one imported entry per exported card", () => {
     const cards: KnowledgeCard[] = (["constraint", "negative", "context"] as const).map((type, index) => ({ schemaVersion: LatestSchemaVersion, type, id: String(index), title: `Card ${index}`, summary: "rule", content: "## Inner heading\n\n- first rule\n- second rule", scope: "team", status: "reviewed", tags: [], createdAt: 1, updatedAt: 1, metadata: {}, evolution: [], anchors: [], appliesTo: { kind: "project" } }));

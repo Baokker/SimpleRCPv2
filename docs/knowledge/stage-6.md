@@ -32,7 +32,7 @@ OpenCode 工具名称带服务器前缀，权限项为 `knowledge_knowledge_sear
 
 真实 MiniMax 导入 CONTRIBUTING.md 生成两条草稿，证据对应原文第 5、9 行，记录见 [import-real.json](evidence/stage-6/import-real.json)。界面可以逐条查看原文、编辑草稿、选择确认或丢弃。模型不可用或结构与行号校验失败时使用 mdast 的标题和列表节点生成确定性条目。
 
-导出只包含 reviewed/team 卡片，并保留项目级或文件模式适用范围。卡片正文使用引用块，导出的 Markdown 再经确定性导入时，每张卡片生成一个条目。读取和写入路径拒绝符号链接与工作区外路径。
+确定性导入保留标题前的说明，以及列表后续的段落和代码块；条目继续携带完整原文行号范围。导出只包含 reviewed/team 卡片，并保留项目级或文件模式适用范围。卡片正文使用引用块，导出的 Markdown 再经确定性导入时，每张卡片生成一个条目。读取和写入路径拒绝符号链接与工作区外路径。
 
 没有 AGENTS.md 时写入该文件，OpenCode 默认读取。已有 AGENTS.md 时写入 AGENTS.knowledge.md，OpenCode 默认不会读取这个文件；可配置 `instructions: ["AGENTS.knowledge.md"]`。本阶段接口不改变全局 instructions，实验 C1 应记录文件名称和启用方式。
 
@@ -52,6 +52,8 @@ OpenCode 工具名称带服务器前缀，权限项为 `knowledge_knowledge_sear
 | 费用 | 估算人民币 2.471606 元 | SDK cost=0，实际账单未取得 |
 
 MiniMax 的错误与完成结果符合本阶段标准，作为点三默认 Agent 模型。平均耗时约为 DeepSeek 的 2.22 倍，总 token 数约为 1.39 倍。各任务记录、价格与来源见 [agent-model.md](agent-model.md)。MiniMax 的估算费用独立保存为 `estimatedCost`、`estimatedCostCurrency`、`estimatedCostSource`；SDK `cost` 保持原值。其他模型名称需要对应价格才提供估算。旧原型的 60 次草稿实验使用 DeepSeek，论文需要记录模型差异。
+
+自我复盘通过 `LlmUsage` 保留估算费用、币种和来源，统一模型调用日志与 run trace 使用相同的费用数据。知识段预算按完整文本计算，包含工具说明与矛盾标注。主动提议按 run 和提议内容计算来源标识，相同内容重复调用复用建议，不同规则分别保存。
 
 ## 六次复盘与上一轮比较
 
@@ -73,13 +75,17 @@ MiniMax 的错误与完成结果符合本阶段标准，作为点三默认 Agent
 执行环境为 Node 22.19.0、pnpm 9。2026-10-06 至 2026-10-07 执行以下命令，永久记录见 [verification.md](evidence/stage-6/verification.md)：
 
 - `pnpm build`：通过。
-- `pnpm test`：server 128 项、knowledge 152 项、demo 2 项通过。
+- `pnpm test`：server 133 项、knowledge 152 项、demo 2 项通过。
 - `pnpm test:e2e`：21 项通过，15 项按条件跳过。
 - `pnpm test:e2e:knowledge`：13 项通过，包括本阶段导入、编辑、批量确认与导出。
-- 全部 38 项 Agent 测试分别在 `AGENT_LLM_PROVIDER=minimax` 和 `deepseek` 环境下通过，MiniMax 环境包含在完整单元回归中。
+- Agent 测试分别在 `AGENT_LLM_PROVIDER=minimax` 和 `deepseek` 环境下通过，环境验证记录见 verification.md。
 - `bench:retrieval-stress`：Lexical Recall@1 24.2%，Type-only 60.8%，Wrong-file+Type @1/@3 为 0%/63.3%，确定性数值保持一致。
 
 MCP 测试使用 SDK 客户端与实际 HTTP 服务，覆盖工具列表、令牌错误、未知工作区、个人和草稿卡片过滤、关闭工具时的空结果与记录、运行时间关联、提议的人工确认、原文行号与导出往返。真实 MCP 验证覆盖运行时主动调用和唯一 run 关联；多个 run 的 ambiguous 分支通过运行时间区间测试验证。
+
+2026-10-07 的审阅验证覆盖同一纠正任务中的不同知识提议、相同提议重复调用、完整知识段预算边界、矛盾标注预算、Markdown 列表后续内容与前置说明、估算费用汇总。四项回归命令均通过；常规端到端测试的 15 项条件跳过保持测试配置的要求。
+
+一次真实 `minimax/MiniMax-M2` 自我复盘完成且未使用兜底，模型调用日志与 trace 均记录 `totalTokens=15932`、`estimatedCost=0.0376278`、`estimatedCostCurrency=CNY`。调用前后用户任务数量均为 2。完整脱敏用量见 [review-self-recap.json](evidence/stage-6/review-self-recap.json)。
 
 ## 阶段 7B 接口与限制
 

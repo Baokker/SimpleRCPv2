@@ -101,4 +101,63 @@ describe("knowledge MCP endpoint", () => {
     expect(reimported.drafts).toHaveLength(2);
     expect((await request("knowledge/export/workspace", {}, member.id)).path).toBe("AGENTS.knowledge.md");
   });
+
+  it("preserves distinct proposals from a correction run and deduplicates repeated proposals", async () => {
+    const { app, request, member } = await setup();
+    const runtime = app.locals.runtimeManager.get("demo");
+    const actor = { memberId: member.id, displayName: "Importer" };
+    await runtime.capture.agentRun({ action: "start", runId: "previous-task", memberId: member.id, sessionId: "session", prompt: "Update session state" });
+    await runtime.capture.agentRun({ action: "end", status: "completed", runId: "previous-task", memberId: member.id, sessionId: "session", prompt: "Update session state" });
+    await runtime.capture.agentRun({ action: "start", runId: "correction-task", memberId: member.id, sessionId: "session", prompt: "不要直接修改 state，改用 sharedHelper" });
+    const correction = (await runtime.capture.list(member.id)).find((item: { triggerType: string }) => item.triggerType === "agent.corrected");
+    expect(correction).toBeDefined();
+
+    const helperRule = { type: "constraint" as const, title: "Use sharedHelper", summary: "Use the shared helper for state changes", content: "Call sharedHelper when updating session state.", files: ["src/session.ts"] };
+    const first = await runtime.capture.propose(actor, "correction-task", helperRule);
+    const second = await runtime.capture.propose(actor, "correction-task", { ...helperRule, title: "Preserve session isolation", content: "Keep state isolated between sessions." });
+    expect(new Set([correction.id, first.id, second.id]).size).toBe(3);
+    expect(first).toMatchObject({ origin: "agent-self", triggerType: "agent.proposed", evidence: { draft: helperRule } });
+    expect((await runtime.capture.propose(actor, "correction-task", helperRule)).id).toBe(first.id);
+    const accepted = await request(`knowledge/inbox/${first.id}/accept`, {}, member.id);
+    expect(accepted.card).toMatchObject({ title: helperRule.title, content: helperRule.content, provenance: { origin: "agent-self", author: { agentRunId: "correction-task" } } });
+    expect((await runtime.capture.get(second.id)).evidence.draft.content).toBe("Keep state isolated between sessions.");
+  });
+
+  it("bounds the complete injection section including its heading and tool instructions", async () => {
+    const { request, member } = await setup();
+    const card = (await request("knowledge/cards", { type: "constraint", title: "sharedHelper", summary: "Preserve sharedHelper", content: "Use sharedHelper for state changes.", scope: "team" }, member.id)).card;
+    await request("knowledge/config", { fixedCardIds: [card.id], maxTotalChars: 10_000 }, member.id, "PUT");
+    const full = await request("knowledge/preview", { prompt: "Update state" }, member.id);
+    expect(full.records.map((item: { id: string }) => item.id)).toEqual([card.id]);
+    expect(full.totalChars).toBe(full.section.length);
+    const budget = full.totalChars - 1;
+    await request("knowledge/config", { maxTotalChars: budget }, member.id, "PUT");
+    const limited = await request("knowledge/preview", { prompt: "Update state" }, member.id);
+    expect(limited.totalChars).toBeLessThanOrEqual(budget);
+    expect(limited.records).toEqual([]);
+    expect(limited.section).toContain("knowledge_search");
+    expect(limited.estimatedInjectionTokens).toBe(Math.ceil(limited.totalChars / 4));
+
+    await request("knowledge/config", { maxTotalChars: 1 }, member.id, "PUT");
+    const tiny = await request("knowledge/preview", { prompt: "Update state" }, member.id);
+    expect(tiny).toMatchObject({ records: [], totalChars: 0, estimatedInjectionTokens: 0 });
+    expect(tiny.section).toBeUndefined();
+  });
+
+  it("budgets contradiction annotations and marks only the cards actually injected", async () => {
+    const { request, member } = await setup();
+    const base = { type: "constraint", summary: "State rule", content: "Use the helper for state changes.", scope: "team" };
+    const first = (await request("knowledge/cards", { ...base, title: "State rule A" }, member.id)).card;
+    const second = (await request("knowledge/cards", { ...base, title: "State rule B" }, member.id)).card;
+    await request(`knowledge/cards/${first.id}/relations`, { kind: "contradicts", cardId: second.id }, member.id);
+    await request("knowledge/config", { fixedCardIds: [first.id, second.id], maxTotalChars: 10_000 }, member.id, "PUT");
+    const full = await request("knowledge/preview", { prompt: "Update state" }, member.id);
+    expect(full.records).toHaveLength(2);
+    expect(full.section.match(/CONTRADICTS_ANOTHER_INJECTED_CARD/g)).toHaveLength(2);
+    await request("knowledge/config", { maxTotalChars: full.totalChars - 1 }, member.id, "PUT");
+    const limited = await request("knowledge/preview", { prompt: "Update state" }, member.id);
+    expect(limited.records).toHaveLength(1);
+    expect(limited.totalChars).toBeLessThan(full.totalChars);
+    expect(limited.section).not.toContain("CONTRADICTS_ANOTHER_INJECTED_CARD");
+  });
 });

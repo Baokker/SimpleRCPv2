@@ -66,9 +66,12 @@ function recapCardFields(draft: {
   return check ? { appliesTo, check } : { appliesTo };
 }
 
-function addLlmUsage(target: LlmUsage, value: LlmUsage | undefined) {
-  for (const key of ["promptTokens", "completionTokens", "reasoningTokens", "cacheReadTokens", "cacheWriteTokens", "totalTokens", "cost"] as const) {
+export function addLlmUsage(target: LlmUsage, value: LlmUsage | undefined) {
+  for (const key of ["promptTokens", "completionTokens", "reasoningTokens", "cacheReadTokens", "cacheWriteTokens", "totalTokens", "cost", "estimatedCost"] as const) {
     if (value?.[key] !== undefined) target[key] = (target[key] ?? 0) + value[key]!;
+  }
+  for (const key of ["estimatedCostCurrency", "estimatedCostSource"] as const) {
+    if (value?.[key] !== undefined) target[key] = value[key];
   }
 }
 
@@ -229,11 +232,17 @@ export function createCaptureService(options: CaptureServiceOptions) {
     for (const memberId of actors) for (const card of await options.knowledge.list({ memberId, displayName: options.memberName(memberId) }, {})) {
       cards.set(card.id, card);
     }
-    const cardSourceIds = (card: Awaited<ReturnType<KnowledgeService["list"]>>[number]) => new Set([
-      ...(card.provenance?.evidenceRefs.runIds ?? []).map((runId) => `run:${runId}`),
-      ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((messageId) => `message:${messageId}`),
-      ...(card.provenance?.evidenceRefs.traceRefs ?? []).map((ref) => `trace:${ref.runId}:${ref.seq}`)
-    ]);
+    const cardSourceIds = (card: Awaited<ReturnType<KnowledgeService["list"]>>[number]) => {
+      if (card.provenance?.trigger?.type === "agent.proposed") {
+        const source = suggestions.get(card.provenance.trigger.suggestionId ?? "");
+        return source ? sourceEvidenceIds(source) : new Set<string>();
+      }
+      return new Set([
+        ...(card.provenance?.evidenceRefs.runIds ?? []).map((runId) => `run:${runId}`),
+        ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((messageId) => `message:${messageId}`),
+        ...(card.provenance?.evidenceRefs.traceRefs ?? []).map((ref) => `trace:${ref.runId}:${ref.seq}`)
+      ]);
+    };
     const matchingCard = [...cards.values()].find((card) => intersects(sourceIds, cardSourceIds(card)));
     if (matchingCard) suggestion.dedupe = { cardId: matchingCard.id, score: 1 };
     if (!actors.length) for (const card of await options.knowledge.list({ memberId: "filesystem", displayName: "filesystem" }, { scope: "team" })) cards.set(card.id, card);
@@ -249,6 +258,14 @@ export function createCaptureService(options: CaptureServiceOptions) {
 
   function sourceEvidenceIds(suggestion: CaptureSuggestion) {
     const ids = new Set<string>();
+    if (suggestion.triggerType === "agent.proposed") {
+      const draft = suggestion.evidence.draft as Pick<ImportedDraft, "type" | "title" | "summary" | "content" | "files"> | undefined;
+      if (draft) {
+        const source = JSON.stringify([suggestion.actors.runIds[0], draft.type, draft.title, draft.summary, draft.content, [...new Set(draft.files)].sort()]);
+        ids.add(`proposal:${crypto.createHash("sha256").update(source).digest("hex")}`);
+      }
+      return ids;
+    }
     for (const runId of suggestion.actors.runIds) ids.add(`run:${runId}`);
     for (const key of ["runId", "previousRunId", "suggestionId"] as const) if (typeof suggestion.evidence[key] === "string") ids.add(`${key}:${suggestion.evidence[key]}`);
     const traceRefs = suggestion.evidence.traceRefs;

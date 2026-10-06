@@ -74,10 +74,13 @@ export function deterministicImport(source: string, file: string): ImportedDraft
     if (node.type === "heading" && (!exported || node.depth === 3)) {
       boundaries.push({ startLine: node.position!.start.line, endLine: lines.length, title: toString(node) });
     } else if (node.type === "list" && !exported) {
-      for (const item of node.children) boundaries.push({ startLine: item.position!.start.line, endLine: item.position!.end.line, title: toString(item).split("\n")[0]!.slice(0, 160) });
+      for (const item of node.children) boundaries.push({ startLine: item.position!.start.line, endLine: lines.length, title: toString(item).split("\n")[0]!.slice(0, 160) });
     }
   }
   if (!boundaries.length && !exported) boundaries.push({ startLine: 1, endLine: lines.length, title: file });
+  if (!exported && boundaries[0]!.startLine > 1 && lines.slice(0, boundaries[0]!.startLine - 1).join("\n").trim()) {
+    boundaries.unshift({ startLine: 1, endLine: lines.length, title: file });
+  }
   return boundaries.flatMap((boundary, index) => {
     const endLine = Math.min(boundary.endLine, (boundaries[index + 1]?.startLine ?? lines.length + 1) - 1);
     const content = lines.slice(boundary.startLine - 1, endLine).join("\n").trim();

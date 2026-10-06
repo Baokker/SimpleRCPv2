@@ -209,8 +209,9 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const query = [input.run.prompt, input.run.extraPrompt].filter(Boolean).join("\n\n").trim();
     const excludedByUser = input.run.knowledge?.excludeCardIds ?? [];
     const activeFiles = await collectActiveFiles(input.run, input.initiator);
-    const toolHint = options.mode === "full" && config.toolEnabled
+    const toolInstruction = options.mode === "full" && config.toolEnabled
       ? `Project knowledge_search and knowledge_get tools are available. When a project convention is uncertain, query knowledge_search. Pass workspace=${JSON.stringify(options.workspaceRoot)} when calling knowledge tools.` : undefined;
+    const toolHint = toolInstruction && toolInstruction.length <= config.maxTotalChars ? toolInstruction : undefined;
     if (!isInjectionMode(options.mode) || !config.injectEnabled || input.run.knowledge?.disabled) {
       return { section: toolHint, records: [], activeFiles, excludedByUser, query, totalChars: toolHint?.length ?? 0, estimatedInjectionTokens: Math.ceil((toolHint?.length ?? 0) / 4), config: await getConfig(), mode: options.mode };
     }
@@ -239,10 +240,18 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const cardById = new Map(reusable.map((card) => [card.id, card]));
     const ranked = rankResults(selected, activeFiles, config);
     const records: KnowledgeInjectionRecord[] = [];
-    const blocks: string[] = [KNOWLEDGE_PROMPT_TITLE];
     const seenSources = new Set<string>();
     const candidates: Array<{ result: KnowledgeSearchResult; card: KnowledgeCard; content: string; baseBlock: string }> = [];
-    let candidateChars = 0;
+    function formatCandidates(items: typeof candidates): string | undefined {
+      if (!items.length) return toolHint;
+      const selectedIds = new Set(items.map((item) => item.card.id));
+      const blocks = items.map(({ card, baseBlock }) => {
+        const contradictory = items.some((item) => (item.card.relations ?? []).some((relation) => relation.kind === "contradicts" && relation.cardId === card.id))
+          || (card.relations ?? []).some((relation) => relation.kind === "contradicts" && selectedIds.has(relation.cardId));
+        return `${contradictory ? "[CONTRADICTS_ANOTHER_INJECTED_CARD: unresolved]\n" : ""}${baseBlock}`;
+      });
+      return [KNOWLEDGE_PROMPT_TITLE, ...blocks, ...(toolHint ? [toolHint] : [])].join("\n\n");
+    }
     for (const result of ranked) {
       const card = cardById.get(result.cardId);
       if (!card) continue;
@@ -252,28 +261,18 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
         ...(card.provenance?.evidenceRefs.traceRefs ?? []).map((ref) => `trace:${ref.runId}:${ref.seq}`)
       ];
       if (sourceKeys.some((key) => seenSources.has(key))) continue;
-      for (const key of sourceKeys) seenSources.add(key);
       const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
       const content = truncate(safeCardText(card.content), config.maxCharsPerCard);
       const baseBlock = formatCard({ ...card, title: safeCardText(card.title), summary: safeCardText(card.summary) }, content, result.score, options.sensitiveValues);
-      if (candidateChars + baseBlock.length > config.maxTotalChars) continue;
-      candidates.push({ result, card, content, baseBlock });
-      candidateChars += baseBlock.length;
+      const candidate = { result, card, content, baseBlock };
+      if (formatCandidates([...candidates, candidate])!.length > config.maxTotalChars) continue;
+      candidates.push(candidate);
+      for (const key of sourceKeys) seenSources.add(key);
       if (candidates.length >= config.topK) break;
     }
-    const selectedIds = new Set(candidates.map((candidate) => candidate.card.id));
-    let totalChars = 0;
     for (const candidate of candidates) {
       const { result, card, content } = candidate;
       const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
-      const contradictory = [...cardById.values()].some((candidate) => selectedIds.has(candidate.id) && (candidate.relations ?? []).some((relation) => relation.kind === "contradicts" && relation.cardId === card.id))
-        || (card.relations ?? []).some((relation) => relation.kind === "contradicts" && selectedIds.has(relation.cardId));
-      const block = formatCard({
-        ...card,
-        title: safeCardText(card.title),
-        summary: safeCardText(card.summary)
-      }, content, result.score, options.sensitiveValues, contradictory);
-      if (totalChars + block.length > config.maxTotalChars) continue;
       const lexical = typeof (result as KnowledgeSearchResult & { lexical?: number }).lexical === "number"
         ? (result as KnowledgeSearchResult & { lexical: number }).lexical
         : config.ranking === "legacy" ? result.score : Math.max(0, result.score - activeFileBoost(card, activeFiles));
@@ -291,13 +290,9 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
         chars: content.length,
         title: safeCardText(card.title)
       });
-      blocks.push(block);
-      totalChars += block.length;
-      if (records.length >= config.topK) break;
     }
-    if (toolHint) blocks.push(toolHint);
-    const section = records.length ? blocks.join("\n\n") : toolHint;
-    totalChars = section?.length ?? 0;
+    const section = formatCandidates(candidates);
+    const totalChars = section?.length ?? 0;
     if (recordUsage) {
       for (const record of records) {
         const injectedAt = Date.now();
@@ -558,11 +553,11 @@ function priority(type: string) { return ["negative", "risk", "constraint"].incl
 function activeFileBoost(card: KnowledgeCard, activeFiles: string[]) { return activeFileBoostFromFiles(card.anchors.map((anchor) => anchor.file.workspaceRelativePath), activeFiles); }
 function activeFileBoostFromFiles(files: string[], activeFiles: string[]) { return files.some((file) => activeFiles.some((active) => file === active || file.endsWith(`/${active}`))) ? 0.06 : 0; }
 function fixedResult(card: KnowledgeCard): KnowledgeSearchResult { return { cardId: card.id, score: 1, mode: "lexical", type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags, files: card.anchors.map((anchor) => anchor.file.workspaceRelativePath), excerpt: card.content }; }
-function formatCard(card: KnowledgeCard, content: string, score: number, sensitiveValues?: string[], contradictory = false) {
+function formatCard(card: KnowledgeCard, content: string, score: number, sensitiveValues?: string[]) {
   const anchors = card.anchors.map((anchor) => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
   const author = card.provenance?.author.displayName ?? card.metadata.createdBy?.name ?? card.ownerMemberId ?? "unknown";
   const confirmedBy = card.review?.confirmedBy?.join(", ") ?? "";
-  return redactKnowledgeText(`${contradictory ? "[CONTRADICTS_ANOTHER_INJECTED_CARD: unresolved]\n" : ""}[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
+  return redactKnowledgeText(`[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
 }
 function truncate(value: string, max: number) { return value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`; }
 function summarize(value: string) { return value.length > 500 ? `${value.slice(0, 497)}…` : value; }

@@ -18,6 +18,8 @@ search/get 只读取 `team` 且 `reviewed` 的卡片。search 使用 `searchKnow
 
 `toolEnabled` 默认 true，关闭时三个工具返回空结果并记录调用。`proposeEnabled` 默认 false；开启后 propose 要求项目中存在唯一运行中的任务。建议使用 `origin: agent-self`、`triggerType: agent.proposed`，参与成员为任务发起人。接受生成个人草稿，作者标记 Agent run，确认必须由项目成员完成。
 
+主动提议以 run id、类型、标题、摘要、正文与适用文件集合的 SHA-256 标识来源。同一任务中内容不同的提议分别进入 Inbox；相同内容的重复调用返回同一建议 id。自动捕获的纠正建议使用独立的来源标识。卡片的 provenance 保留 run id 与建议 id。
+
 ## 记录与运行关联
 
 每次已定位项目的工具调用写入 `<metadata>/knowledge/tool-calls.jsonl`，包括 tool、query、files、resultIds、开始时间、latencyMs 与错误摘要。search/get 返回的卡片增加 `usage.toolHitCount`，保留原 `updatedAt` 和演化记录。
@@ -30,7 +32,7 @@ search/get 只读取 `team` 且 `reviewed` 的卡片。search 使用 `searchKnow
 
 OpenCode 1.18.31 的 remote MCP 实现按顺序尝试 Streamable HTTP 和 SSE。本项目使用 Streamable HTTP，并设置 `oauth: false`，由随机令牌认证。OpenCode 工具名称包含服务器前缀：`knowledge_knowledge_search`、`knowledge_knowledge_get`、`knowledge_knowledge_propose`；这三项权限均为 `allow`。propose 仍受项目开关与人工确认控制。
 
-模型提示提供工作区路径与查询提示；关闭卡片注入时工具提示继续存在。点一集成时需同时保留 `openCodeConfig` 的 provider、mcp 与 permission 字段。
+模型提示提供工作区路径与查询提示；关闭卡片注入时工具提示继续存在。完整提示段受 `maxTotalChars` 限制，字符预算不足以容纳完整工具说明时省略该说明。点一集成时需同时保留 `openCodeConfig` 的 provider、mcp 与 permission 字段。
 
 ## 静态文件
 

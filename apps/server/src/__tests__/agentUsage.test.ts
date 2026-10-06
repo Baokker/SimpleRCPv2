@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createAgentUsageCollector, normalizeAgentUsage, estimateAgentUsageCost } from "../agent/agentUsage.js";
+import { createAgentUsageCollector, normalizeAgentUsage, estimateAgentUsageCost, toLlmUsage } from "../agent/agentUsage.js";
+import { addLlmUsage } from "../knowledge/captureService.js";
+import type { LlmUsage } from "@simplercp/knowledge";
 
 describe("Agent usage collection", () => {
   it("prices uncached, cached and reasoning tokens separately for MiniMax-M2", () => {
@@ -20,5 +22,14 @@ describe("Agent usage collection", () => {
     summaryCollector.observe({ type: "message.updated", data: { info: { id: "message-summary" }, usageSummary: { inputTokens: 3, outputTokens: 4, totalTokens: 7, cost: 0.04 } } });
     expect(summaryCollector.total()).toEqual({ inputTokens: 3, outputTokens: 4, totalTokens: 7, cost: 0.04 });
     expect(normalizeAgentUsage({ role: "user", tokens: { input: 10, output: 0 } })).toBeUndefined();
+  });
+  it("preserves estimated recap costs and their currency in serialized call usage", () => {
+    const usage = toLlmUsage(estimateAgentUsageCost({ inputTokens: 1000, outputTokens: 300, reasoningTokens: 100, totalTokens: 1400, cost: 0 }, "minimax", "MiniMax-M2"));
+    const accumulated: LlmUsage = {};
+    addLlmUsage(accumulated, undefined);
+    addLlmUsage(accumulated, usage);
+    expect(JSON.parse(JSON.stringify(accumulated))).toMatchObject({ promptTokens: 1000, completionTokens: 300, totalTokens: 1400, cost: 0, estimatedCost: expect.closeTo(0.00546), estimatedCostCurrency: "CNY", estimatedCostSource: "MiniMax-M2 official token prices (2026-10-06)" });
+    addLlmUsage(accumulated, usage);
+    expect(JSON.parse(JSON.stringify(accumulated))).toMatchObject({ promptTokens: 2000, completionTokens: 600, totalTokens: 2800, cost: 0, estimatedCost: expect.closeTo(0.01092), estimatedCostCurrency: "CNY" });
   });
 });
