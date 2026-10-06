@@ -39,7 +39,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
           abortListener = () => reject(new ProviderError("cancelled"));
           controller.signal.addEventListener("abort", abortListener, { once: true });
         });
-        const timeout = new Promise<never>((_resolve, reject) => { timer = options.clock.setTimeout(() => { reject(new ProviderError("timeout")); controller.abort(); }, budget); });
+        const timeout = new Promise<never>((_resolve, reject) => { timer = options.clock.setTimeout(() => { reject(new ProviderError("timeout")); controller.abort(); }, config.hardDeadlineMs); });
         try {
           const cached = options.mode === "live" ? undefined : await Promise.race([options.cache?.get(key), timeout, abortPromise]);
           if (controller.signal.aborted) throw new ProviderError("cancelled");
@@ -81,7 +81,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
       const abort = () => { if (finish()) reject(new ProviderError("cancelled")); };
       signal.addEventListener("abort", abort, { once: true });
       if (signal.aborted) { abort(); return; }
-      if (joined) timer = options.clock.setTimeout(() => {
+      if (subscribedAt + budget < current.startedAt + config.hardDeadlineMs) timer = options.clock.setTimeout(() => {
         if (!finish()) return;
         const call: ProviderCall = { adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input), status: "timeout", latencyMs: budget, costUsd: 0 };
         emit(call); resolve({ key, input, call });

@@ -103,6 +103,29 @@ it("late subscribers retain their own remaining cascade budget", async () => {
   expect(deepCalls).toBe(1);
 });
 
+it("shared deep requests preserve each subscriber's cascade deadline", async () => {
+  const clock = new VirtualClock();
+  let completeFast: (value: JudgeResult) => void = () => {};
+  let completeDeep: (value: JudgeResult) => void = () => {};
+  let deepSignal: AbortSignal | undefined;
+  let deepCalls = 0;
+  const service = createAdjudicationService({ clock, config: defaultAdjudicationConfig, mode: "live", fast: { name: "jev", model: "jev-1.13.0", judge() { return new Promise((resolve) => { completeFast = resolve; }); } }, deep: { name: "deepseek", model: "test", judge(_input, _options, signal) { deepCalls += 1; deepSignal = signal; return new Promise((resolve) => { completeDeep = resolve; }); } } });
+  const first = service.judge(input, local, new AbortController().signal);
+  for (let turn = 0; turn < 12; turn += 1) await Promise.resolve();
+  clock.advanceTo(6000);
+  const second = service.judge(input, local, new AbortController().signal);
+  clock.advanceTo(7000);
+  completeFast({ ...result, decision: "lock", latencyMs: 7000 });
+  for (let turn = 0; turn < 12; turn += 1) await Promise.resolve();
+  expect(deepCalls).toBe(1);
+  clock.advanceTo(8000);
+  expect(await first).toMatchObject({ decision: "warn", adjudication: { status: "degraded", latencyMs: 8000 } });
+  expect(deepSignal?.aborted).toBe(false);
+  clock.advanceTo(9000);
+  completeDeep({ ...result, latencyMs: 2000 });
+  expect(await second).toMatchObject({ decision: "allow", adjudication: { source: "deep", status: "success", latencyMs: 3000 } });
+});
+
 it("counts trace callbacks and failed cache writes without failing adjudication", async () => {
   const service = createAdjudicationService({ clock: new VirtualClock(), config: { ...defaultAdjudicationConfig, strategy: "G2" }, mode: "record", fast: { name: "jev", model: "jev-1.13.0", async judge() { throw new Error("测试故障"); } }, deep: { name: "deepseek", model: "test", async judge() { return result; } }, onCall() { throw new Error("测试故障"); }, cache: { async get() { return undefined; }, async put() { throw new Error("测试故障"); } } });
   expect((await service.judge(input, local, new AbortController().signal)).decision).toBe("warn");
