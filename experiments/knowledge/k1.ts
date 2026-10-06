@@ -225,7 +225,7 @@ export async function runK1Online(data: Dataset, config: ExperimentConfig, store
         const counterpart = offline[index];
         return item.type === counterpart.type && Math.abs(item.at - counterpart.at) <= 300 && JSON.stringify(item.actors) === JSON.stringify(counterpart.actors) && JSON.stringify(item.anchors) === JSON.stringify(counterpart.anchors);
       });
-      const types = (items: CaptureSuggestion[]) => items.map(item => item.triggerType).sort();
+      const types = (items: CaptureSuggestion[]) => fingerprint(items).map(item => item.type);
       const scriptRaw = replayEvents(input.events, recording.config, input.metadata.durationSeconds * 1000 / config.speed + 65000 / config.speed);
       const scriptSuggestions = dedupeSuggestions(scriptRaw);
       const scriptTypesEqual = JSON.stringify(types(scriptSuggestions)) === JSON.stringify(types(recording.suggestions));
@@ -252,7 +252,7 @@ export async function compareK1Recordings(config: ExperimentConfig, store: RunSt
     const fingerprint = (items: CaptureSuggestion[]) => items.map(item => ({type: item.triggerType, at: item.createdAt, actors: item.actors, anchors: item.suggestedAnchors})).sort((a, b) => a.at - b.at || a.type.localeCompare(b.type));
     const online = fingerprint(recording.suggestions), offline = fingerprint(replay);
     const recordedEqual = online.length === offline.length && online.every((item, index) => item.type === offline[index].type && Math.abs(item.at - offline[index].at) <= 300 && JSON.stringify(item.actors) === JSON.stringify(offline[index].actors) && JSON.stringify(item.anchors) === JSON.stringify(offline[index].anchors));
-    const types = (items: CaptureSuggestion[]) => items.map(item => item.triggerType).sort();
+    const types = (items: CaptureSuggestion[]) => fingerprint(items).map(item => item.type);
     const scriptTypesEqual = JSON.stringify(types(script)) === JSON.stringify(types(recording.suggestions));
     const rawScriptTypesEqual = JSON.stringify(types(scriptRaw)) === JSON.stringify(types(replayRaw));
     await writeJson(path.join(store.raw(key), "comparison.json"), {online, recordedReplay: offline, rawReplay: fingerprint(replayRaw), script: fingerprint(script), rawScript: fingerprint(scriptRaw)});
