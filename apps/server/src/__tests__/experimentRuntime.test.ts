@@ -31,7 +31,8 @@ it("executes allowed read calls without emitting permission events and asks for 
 
 it("uses the recorded OpenCode worktree for external-directory checks", async () => {
   const workspace = await createTestWorkspace("experiment-worktree-");
-  const recordedWorktree = path.resolve(workspace, "../..");
+  const recordedWorktree = (JSON.parse(await fs.readFile(path.resolve(workspace, "../../experiments/guard/results/R4_WORKTREE.json"), "utf8")) as { worktree: string }).worktree;
+  expect(path.resolve(workspace, "../..")).toBe(recordedWorktree);
   const siblingDirectory = path.join(path.dirname(workspace), "other-project");
   await fs.mkdir(siblingDirectory, { recursive: true });
   await fs.writeFile(path.join(siblingDirectory, "notes.md"), "Notes from the adjacent project.\n");

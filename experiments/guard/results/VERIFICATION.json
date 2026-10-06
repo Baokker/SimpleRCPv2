@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-10-06T14:34:51.021Z",
+  "verifiedAt": "2026-10-06T16:05:52.484Z",
   "previousVerifiedAt": "2026-10-06T10:51:18.323Z",
   "selection": "FINAL_RUNS.json",
   "coverage": "主要指标与分组统计从 raw 重算；并发整体计时与撤权观察采用仪器记录",
@@ -13,7 +13,7 @@
     },
     {
       "experiment": "X2a",
-      "directory": "X2a/x2a-20261006141044",
+      "directory": "X2a/x2a-20261006223000",
       "pass": true,
       "checkedFields": 1550,
       "rowCount": 720
@@ -27,7 +27,7 @@
     },
     {
       "experiment": "X2_new",
-      "directory": "X2/x2-20261006135607",
+      "directory": "X2/x2-20261006154724-repaired",
       "pass": true,
       "checkedFields": 386,
       "rowCount": 20
