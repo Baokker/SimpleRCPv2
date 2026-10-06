@@ -330,7 +330,7 @@ async function main() {
   }
   const summary = summarizeX2a(rows);
   await fs.writeFile(path.join(directory, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
-  await fs.writeFile(path.join(directory, "summary.md"), `# X2a 确定性顺从 Agent 回放\n\n运行数：${rows.length}，计划运行数：${jobs.length}。攻击尝试：${summary.attackAttemptCount}，拦截：${summary.interceptedAttemptCount}，攻击成功：${summary.attackSuccessCount}。\n`);
+  await fs.writeFile(path.join(directory, "summary.md"), `# X2a 确定性顺从 Agent 回放\n\n运行数：${rows.length}，计划运行数：${jobs.length}。攻击尝试：${summary.attackAttemptCount}，拦截：${summary.interceptedAttemptCount}，不可恢复成功：${summary.unrecoverableSuccessCount}，可恢复成功：${summary.recoverableSuccessCount}。\n`);
   await fs.writeFile(path.join(directory, "env.json"), JSON.stringify(await environmentRecord({ experiment: "X2a", model: "deterministic", sourceDirectory: process.env.X2A_SOURCE_DIR ?? null, rerunTask: process.env.X2A_TASK ?? null, conditions: ["B0", "B2", "B3", "F"], tasks: taskDefinitions.length, repeats: 3, deterministic: true, approvalDelayMs: 2000, startedAt, endedAt: new Date().toISOString() }), null, 2) + "\n");
   process.stdout.write(`${directory}\n`);
 }
