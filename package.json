@@ -19,6 +19,7 @@
     "exp:datasets:v2": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/dataset-generator-v2.ts",
     "exp:verify-datasets:v2": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-dataset-v2.ts",
     "exp:x1": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x1-static/run.ts",
+    "exp:x2a": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/run-deterministic.ts",
     "exp:x2": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/run.ts",
     "exp:x3": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x3-approval-burden/run.ts",
     "exp:x4": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x4-llm-judge/run.ts",

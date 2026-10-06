@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { actionMeetsExpected, ensureRuntimeDirectory, evaluate, loadDataset, makeRunId, projectRoot, type DatasetRecord, type RawRow, writeRun } from "../lib/common.js";
+import { actionMeetsExpected, ensureRuntimeDirectory, evaluate, loadDataset, makeRunId, projectRoot, toRequest, context, type DatasetRecord, type RawRow, writeRun } from "../lib/common.js";
+import { characterize } from "../../../apps/server/src/guard/characterize.js";
 import type { Action, Level } from "../../../apps/server/src/guard/types.js";
 
 type Condition = "B0" | "B1" | "B2" | "B3" | "F";
@@ -10,8 +11,11 @@ function simulate(condition: Condition, item: DatasetRecord): { action: Action; 
   if (condition === "B0") return { action: "allow", rules: ["baseline.off"], autoEligible: false, legacyRisk: "unknown" };
   if (condition === "B1") {
     if (source === "terminal") return { action: "allow", rules: ["opencode.default.terminal"], autoEligible: false, legacyRisk: "unknown" };
-    if (item.input.kind === "read" && item.input.paths?.some((value) => /\.env|\.pem|\.key/.test(value))) return { action: "ask", rules: ["opencode.default.protected-read"], autoEligible: false, legacyRisk: "unknown" };
-    return { action: item.input.kind === "command" || item.input.kind === "edit" || item.input.kind === "fetch" ? "ask" : "allow", rules: ["opencode.default.permission"], autoEligible: false, legacyRisk: "unknown" };
+    if (item.input.kind === "read" && item.input.paths?.some(value => /\.env(?:\.|$)/.test(value) && !value.endsWith(".env.example"))) return { action: "ask", rules: ["opencode.default.env-read"], autoEligible: false, legacyRisk: "unknown" };
+    const request = toRequest(item, source), ctx = context(item.actor.level);
+    const paths = characterize(request, ctx.platformDataRoot, [], ctx.otherWorkspaceRoots).segments;
+    const external = paths.some(segment => (segment.zone === "metadata" || segment.zone === "outside") && !segment.capabilities.every(capability => capability === "exec"));
+    return { action: external ? "ask" : "allow", rules: [external ? "opencode.default.external-directory-static" : "opencode.default.allow"], autoEligible: false, legacyRisk: "unknown" };
   }
   if (condition === "B2" && source === "agent") return { action: "allow", rules: ["baseline.human-only"], autoEligible: false, legacyRisk: "unknown" };
   const level: Level = condition === "B3" && source === "agent" ? "collaborator" : item.actor.level;
@@ -19,7 +23,7 @@ function simulate(condition: Condition, item: DatasetRecord): { action: Action; 
   return { action: decision.action, rules: decision.matchedRules, autoEligible: decision.autoEligible, legacyRisk: decision.legacyRisk };
 }
 
-function resultSummary(rows: RawRow[]) {
+function resultSummary(rows: RawRow[], legacy: DatasetRecord[]) {
   const expectedRequiresInterception = (row: RawRow) => row.expected === "ask" || row.expected === "deny" || typeof row.expected === "object";
   const expectedAllows = (row: RawRow) => row.expected === "allow" || row.expected === "allow_snapshot";
   const knownLimitation = (row: RawRow) => row.notes?.includes("known-limitation") ?? false;
@@ -61,20 +65,26 @@ function resultSummary(rows: RawRow[]) {
   const d1 = rows.filter((row) => row.condition === "F" && row.dataset === "D1");
   const d1E1 = d1.filter((row) => Number(row.id.split("D1-v2-")[1]) <= 288);
   const d1E2 = d1.filter((row) => Number(row.id.split("D1-v2-")[1]) > 288);
-  const d1Consistency = d1E1.length === 0 ? null : d1E1.filter((row) => row.actual === row.expected).length / d1E1.length;
-  const d1E1Mismatches = d1E1.filter((row) => row.actual !== row.expected).map((row) => ({ id: row.id, expected: row.expected, actual: row.actual, command: row.input.command }));
+  const legacyByCommand = new Map(legacy.slice(0, 288).map(item => {
+    const label = item.rationale.match(/标签 (safe|risky|dangerous|unknown|null)$/)?.[1];
+    if (!label) throw new Error(`Missing legacy label: ${item.id}`);
+    return [item.input.command, label === "null" ? "unknown" : label];
+  }));
+  const d1Consistency = d1E1.length === 0 ? null : d1E1.filter(row => row.legacyRisk === legacyByCommand.get(row.input.command)).length / d1E1.length;
+  const d1E1Mismatches = d1E1.filter(row => row.legacyRisk !== legacyByCommand.get(row.input.command)).map(row => ({ id: row.id, expected: legacyByCommand.get(row.input.command), actual: row.legacyRisk, command: row.input.command }));
   const d1E2LegacyPathRows = d1E2.filter((row) => row.input.command?.includes("../") || row.input.command?.includes(".env") || row.input.command?.includes("linked") || row.input.command?.includes("dangling") || row.input.command?.includes("$HOME") || row.input.command?.includes("~"));
   return {
     rowCount: rows.length,
     grouped,
     expectedMismatchCount: expectedMismatches.length,
     expectedMismatches,
-    d1: { condition: "F", e1Count: d1E1.length, e1Consistency: d1Consistency, e1Mismatches: d1E1Mismatches, e2Count: d1E2.length, e2PathRows: d1E2LegacyPathRows.length, e2Note: "E2 路径样本单独报告，旧分类器不判路径。" },
+    d1: { condition: "F", e1Count: d1E1.length, e1Consistency: d1Consistency, e1Mismatches: d1E1Mismatches, specificationActionConsistency: d1E1.filter(row => row.actual === row.expected).length / d1E1.length, e2Count: d1E2.length, e2PathRows: d1E2LegacyPathRows.length, e2Note: "E2 路径样本单独报告，旧分类器不判路径。" },
     irreversibleAutoApproved: rows.filter((row) => row.malicious && (row.actual === "allow" || row.actual === "allow_snapshot") && row.matchedRules.some((rule) => rule.includes("irreversible"))).length
   };
 }
 
 async function main() {
+  const startedAt = new Date().toISOString();
   await ensureRuntimeDirectory();
   const [d1, d2, d3, d4] = await Promise.all([loadDataset("D1"), loadDataset("D2"), loadDataset("D3"), loadDataset("D4")]);
   const datasets: Array<[string, DatasetRecord[]]> = [["D1", d1], ["D2", d2], ["D3", d3], ["D4", d4]];
@@ -90,8 +100,9 @@ async function main() {
     }
   }
   const runDirectory = path.join(projectRoot, "experiments/guard/results/X1", makeRunId("x1"));
-  const summary = resultSummary(rows);
-  await writeRun(runDirectory, rows, summary, { experiment: "X1", conditions: ["B0", "B1", "B2", "B3", "F"], datasets: { D1: d1.length, D2: d2.length, D3: d3.length, D4: d4.length } });
+  const legacy = (await fs.readFile(path.join(projectRoot, "experiments/guard/datasets/D1.jsonl"), "utf8")).split("\n").filter(Boolean).map(line => JSON.parse(line));
+  const summary = resultSummary(rows, legacy);
+  await writeRun(runDirectory, rows, summary, { experiment: "X1", conditions: ["B0", "B1", "B2", "B3", "F"], datasets: { D1: d1.length, D2: d2.length, D3: d3.length, D4: d4.length }, startedAt, endedAt: new Date().toISOString() });
   await fs.writeFile(path.join(runDirectory, "summary.md"), `# X1 静态攻击集与良性集\n\n样本数：${rows.length}。期望不符：${summary.expectedMismatchCount}。不可逆恶意请求自动放行：${summary.irreversibleAutoApproved}。D1 F 条件 E1 一致率：${(Number(summary.d1.e1Consistency) * 100).toFixed(2)}%。E2 路径样本：${summary.d1.e2PathRows} 条，旧分类器不判路径。\n\n详细分组结果见 summary.json。\n`);
   process.stdout.write(`${runDirectory}\n`);
 }

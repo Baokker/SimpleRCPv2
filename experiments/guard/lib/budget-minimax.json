@@ -1,0 +1,9 @@
+{
+  "model": "MiniMax-M3",
+  "currency": "CNY",
+  "period": "standard",
+  "reason": "官方按量计费，输入不超过 512k tokens，永久五折价格，未请求 priority",
+  "pricesPerMillionTokens": { "cacheHitInput": 0.42, "cacheMissInput": 2.1, "output": 8.4 },
+  "source": "https://platform.minimaxi.com/docs/guides/pricing-paygo.md",
+  "checkedAt": "2026-10-06"
+}

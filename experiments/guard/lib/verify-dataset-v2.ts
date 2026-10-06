@@ -132,14 +132,14 @@ async function checkD5TaskTemplates(errors: string[]) {
   for (const [taskDirectoryName, commands] of Object.entries(expected)) {
     const taskDirectory = path.join(root, "experiments/guard/tasks/v2", taskDirectoryName);
     const taskId = taskDirectoryName.slice(3);
-    const task = JSON.parse(await fs.readFile(path.join(taskDirectory, "task.json"), "utf8")) as { variants?: Record<string, { prompt?: string } | undefined> };
+    const task = JSON.parse(await fs.readFile(path.join(taskDirectory, "task.json"), "utf8")) as { variants?: Record<string, { prompt?: string; injection?: string } | undefined> };
     const prompt = task.variants?.subtle?.prompt ?? "";
     const scriptPrompt = task.variants?.subtleScript?.prompt ?? "";
     const readme = await fs.readFile(path.join(taskDirectory, "README.injected.md"), "utf8");
     const scriptReadme = await fs.readFile(path.join(taskDirectory, "README.injected-script.md"), "utf8");
-    if (!prompt.includes("`" + commands.subtle + "`")) errors.push(`D5/${taskId}: task.json subtle prompt mismatch`);
+    if (!prompt || task.variants?.subtle?.injection !== "README.injected.md") errors.push(`D5/${taskId}: task.json subtle injection reference mismatch`);
     if (!readme.includes("`" + commands.subtle + "`")) errors.push(`D5/${taskId}: README.injected.md mismatch`);
-    if (!scriptPrompt.includes("`" + commands.subtleScript + "`")) errors.push(`D5/${taskId}: task.json subtleScript prompt mismatch`);
+    if (!scriptPrompt || task.variants?.subtleScript?.injection !== "README.injected-script.md") errors.push(`D5/${taskId}: task.json subtleScript injection reference mismatch`);
     if (!scriptReadme.includes("`" + commands.subtleScript + "`")) errors.push(`D5/${taskId}: README.injected-script.md mismatch`);
   }
 }

@@ -54,6 +54,7 @@ export interface RawRow {
   finalAction?: Action;
   llmApplied?: boolean;
   notes?: string;
+  propertyEvidence?: Record<string, unknown>;
 }
 
 export function context(level: Level, overrides: Partial<GuardContext> = {}): GuardContext {
@@ -61,7 +62,8 @@ export function context(level: Level, overrides: Partial<GuardContext> = {}): Gu
 }
 
 export function toRequest(item: DatasetRecord, source: "terminal" | "agent" = item.actor.viaAgent ? "agent" : "terminal"): GuardRequest {
-  return { projectId: "experiment", memberId: "member", source, agentRunId: source === "agent" ? `run-${item.id}` : undefined, sessionScope: item.actor.agentKind === "team" ? "team" : "personal", agentHandle: source === "agent" ? "experiment-agent" : undefined, kind: item.input.kind, command: item.input.command, paths: item.input.paths, url: item.input.url, cwd: workspaceRoot };
+  const resolveDataAlias = (value: string) => value.replaceAll("/platform/data", dataRoot);
+  return { projectId: "experiment", memberId: "member", source, agentRunId: source === "agent" ? `run-${item.id}` : undefined, sessionScope: item.actor.agentKind === "team" ? "team" : "personal", agentHandle: source === "agent" ? "experiment-agent" : undefined, kind: item.input.kind, command: item.input.command === undefined ? undefined : resolveDataAlias(item.input.command), paths: item.input.paths?.map(resolveDataAlias), url: item.input.url, cwd: workspaceRoot };
 }
 
 export function evaluate(item: DatasetRecord, level: Level = item.actor.level, source: "terminal" | "agent" = item.actor.viaAgent ? "agent" : "terminal", overrides: Partial<GuardContext> = {}): GuardDecision {
@@ -132,6 +134,7 @@ export async function environmentRecord(extra: Record<string, unknown> = {}) {
     memoryBytes: os.totalmem(),
     model: process.env.DEEPSEEK_MODEL ?? "unconfigured",
     dataDir: runtimeRoot,
+    pathAliases: { "/platform/data": dataRoot },
     ...extra
   };
 }
