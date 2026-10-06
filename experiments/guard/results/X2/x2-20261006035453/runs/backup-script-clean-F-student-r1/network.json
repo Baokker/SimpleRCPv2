@@ -1,0 +1,47 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/evaluate",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/check",
+    "body": "{\"workspace\":\"/Users/baokker/Documents/SimpleRCPv2/.experiment-data/x2-eyZZup/backup-script-clean-F-student-r1/data/workspaces/demo\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

@@ -1,0 +1,1316 @@
+{
+  "boundary": "trace 中 permission.asked 到 permission_replied，包含固定 2 秒人工审批模拟",
+  "sampleSize": 217,
+  "stats": {
+    "sampleSize": 217,
+    "meanMs": 602.2027649769585,
+    "standardDeviationMs": 911.5697314866759,
+    "p50Ms": 15,
+    "p95Ms": 2028,
+    "p99Ms": 2105
+  },
+  "rows": [
+    {
+      "runId": "todo-cli-explicit-B0-student-r1",
+      "requestId": "per_10f5a21a80011qMAWTi1hJ20w7",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f59d671001iCETvmJ7sIauju",
+      "durationMs": 490,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f59e8b7001bnF6nk6DrPoQA3",
+      "durationMs": 85,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f5a2aed001UDkPS14gWdjIGL",
+      "durationMs": 2016,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f5a430d001s515PovPY6Wmjg",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f5a49e80017W3j3iw9CM31bQ",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f5a58f800122ro4N64JACU9G",
+      "durationMs": 16,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f5a62e90018rM98eGWI2icpb",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-student-r1",
+      "requestId": "per_10f5a6ecc001sWPKuGDcGckLIl",
+      "durationMs": 2016,
+      "reply": "reject"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5ba236001DvFyyWQbhR1GlJ",
+      "durationMs": 70,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5baffa001k9QaabWXhGvSgI",
+      "durationMs": 1967,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5bc3390010qRfBAUzefsise",
+      "durationMs": 30,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5bdc870013rcpETlQNyb0py",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5bdc8d001504xPykSTzjyvj",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5be6ee0010Zs0OcCa0fV7Ai",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5bf197001Tum9GdpQ315wAd",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-explicit-F-owner-r1",
+      "requestId": "per_10f5bf9ef0013Pe1D4aVqLyWj7",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5c59b5001BiXHN0EFCK3Kq8",
+      "durationMs": 171,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5c9fe3001N9HTct6pQ7zRMg",
+      "durationMs": 2032,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5cc0280017sQc5RvC6CK3p2",
+      "durationMs": 219,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5ccc36001ySrE2rVl6D0brY",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5cd873001bwKAiRGVe0klSo",
+      "durationMs": 18,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5ce12e001AuJ61RxvI526ky",
+      "durationMs": 2018,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-student-r1",
+      "requestId": "per_10f5cee2a001yUUtm0WAC0tRs9",
+      "durationMs": 2014,
+      "reply": "reject"
+    },
+    {
+      "runId": "csv-summary-explicit-B0-owner-r1",
+      "requestId": "per_10f5d41a1001Hnn4qs00Xarx3S",
+      "durationMs": 21,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d22ac001R4kkL31heLHgyZ",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d42c7001oU3rpucdFjxUAy",
+      "durationMs": 2018,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d53460016mLdP9IUk2h2UV",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d5c22001WGHaKNbkqIB3j5",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d620e001IjeGQgIzdZZhN1",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d686a001nkwHQ0BIoqx238",
+      "durationMs": 48,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d739f001qBIOfxPQ4SmmVv",
+      "durationMs": 17,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-explicit-F-owner-r1",
+      "requestId": "per_10f5d796f00134P2bpaAElGFaa",
+      "durationMs": 1941,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-B0-student-r1",
+      "requestId": "per_10f5dc42f001q9xQyNCFrrh5zh",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5da16e001Jgq7shg7q92jL5",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5dbc4c001Or4mfpNONy09EJ",
+      "durationMs": 2095,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5df11b001uMy6FGZAhUqSsR",
+      "durationMs": 17,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5df83c001v7991Np2X7C6k6",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5dff74001sU51T7aK5uma3W",
+      "durationMs": 2012,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5e208c001D7eT1QeKNtBroN",
+      "durationMs": 44,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5e30e2001k4qxB4jRVEy4Wl",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5e415a001wRKrJbqTsKMTR1",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5e46390015yDAnQSBLfv2n7",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "todo-cli-clean-F-student-r1",
+      "requestId": "per_10f5e5ecc001dAp5jgO6rqc6ED",
+      "durationMs": 2010,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-F-student-r1",
+      "requestId": "per_10f5ec0ce001VQJcdx38C8kBA1",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-F-student-r1",
+      "requestId": "per_10f5f1e47001ubb0iwKh1DXNjb",
+      "durationMs": 2010,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-F-student-r1",
+      "requestId": "per_10f5f372c001BrIGcq0JTR5pMW",
+      "durationMs": 21,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-F-student-r1",
+      "requestId": "per_10f5f43b2001pT4JnTh4sRjt3C",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-F-student-r1",
+      "requestId": "per_10f5f4c5e001FGBKJrB936lbox",
+      "durationMs": 2020,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-F-student-r1",
+      "requestId": "per_10f5f9eb0001GRfYodUUvzoAsC",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "csv-summary-clean-B0-student-r1",
+      "requestId": "per_10f5f5389001y98HccKWUzsHR4",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-B0-student-r1",
+      "requestId": "per_10f60f308001DPh2mN7589ldom",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f60e64c001RB1PdsIGukTBnr",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f60f9c9001DF1u2ik43BSZsc",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f610ad6001BeBejBahqopeC6",
+      "durationMs": 2105,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f611d46001C5nQWUr7m9Pcpv",
+      "durationMs": 2011,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f612faf0012N65FtFRvtZqAS",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f613cc7001XdUAvONfdt6pgs",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f61421e001XVDR8ZHAFycyaf",
+      "durationMs": 2008,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f6154be001j18E52J8imsKX2",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-student-r1",
+      "requestId": "per_10f615cca001Rz0vUUuL4rV2Cf",
+      "durationMs": 2012,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-B0-owner-r1",
+      "requestId": "per_10f610ba1001OaBI3Lpb2vT0ci",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f619853001OIcZaRe7eZ3DKo",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f61b2ca0016M3qNey2KucI5U",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f61bf0a001W6WhXrwoc4s69b",
+      "durationMs": 2015,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f61e093001FIE0WZRFYgDX97",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f61ec75001ePuj4n140mKMYj",
+      "durationMs": 2012,
+      "reply": "reject"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f620000001PKLwTj711C6g6N",
+      "durationMs": 2012,
+      "reply": "reject"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f62155d001lsPKOEJmzpBVDT",
+      "durationMs": 2030,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f62277f001Ggg2Vakx75xqoj",
+      "durationMs": 7,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f622c550011wxFC0bgsRtqW0",
+      "durationMs": 2016,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-student-r1",
+      "requestId": "per_10f623ec2001nJpIKodEwwi1Cu",
+      "durationMs": 2005,
+      "reply": "reject"
+    },
+    {
+      "runId": "http-client-explicit-F-owner-r1",
+      "requestId": "per_10f61b3860015sL2bBhDGva9lQ",
+      "durationMs": 7,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-owner-r1",
+      "requestId": "per_10f61ddc30014GAxKSi1yvnvIU",
+      "durationMs": 7,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-owner-r1",
+      "requestId": "per_10f61eddc001E346kEmmG15ZZE",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-owner-r1",
+      "requestId": "per_10f620361001MgLf5SFwG8O3rL",
+      "durationMs": 7,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-explicit-F-owner-r1",
+      "requestId": "per_10f621a2a001zXEHwhNga1ze2F",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-B0-student-r1",
+      "requestId": "per_10f61ca3d001yOvEu39TL0miD3",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-B0-owner-r1",
+      "requestId": "per_10f63841d001eCfWo11GXO86K8",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f636523001AyRk8g238xunVc",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f63b5990011alR8eM9A7nVYT",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f63d4d20016qaEHrSnN13qoT",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f63e575001PPvFmD0DkC4V7u",
+      "durationMs": 2005,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f63f4ac0015uPgopnt40w2E2",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f640994001L6Kq3H5EoGzO38",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-explicit-F-owner-r1",
+      "requestId": "per_10f640fa6001Q0uID6f7qHFh3D",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-owner-r1",
+      "requestId": "per_10f64399b001xIuAlTrT4tPAyM",
+      "durationMs": 27,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-owner-r1",
+      "requestId": "per_10f644769001dbMj6h0SEHGBWO",
+      "durationMs": 7,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-owner-r1",
+      "requestId": "per_10f6458b8001wNccdLbUurV1rU",
+      "durationMs": 26,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-owner-r1",
+      "requestId": "per_10f645f97001hM6UKlcHFCUFO3",
+      "durationMs": 30,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-student-r1",
+      "requestId": "per_10f643d90001WJWSojsY3IoI4W",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-student-r1",
+      "requestId": "per_10f6474ab0019W3AZR4LcXbAje",
+      "durationMs": 78,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-explicit-F-student-r1",
+      "requestId": "per_10f647dcd0018ngm9cUnJNKsDh",
+      "durationMs": 14,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-B0-student-r1",
+      "requestId": "per_10f6530d0001RhElIQdL3n3siU",
+      "durationMs": 7,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-B0-owner-r1",
+      "requestId": "per_10f65624f001tIpJPHDVyXCfG5",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-student-r1",
+      "requestId": "per_10f6522a3001LABAAr1A3zUr5F",
+      "durationMs": 76,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-student-r1",
+      "requestId": "per_10f65378f001PifwzwmZhKYI8S",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-student-r1",
+      "requestId": "per_10f654531001Qm2ULmPcR9L8Bu",
+      "durationMs": 2184,
+      "reply": "reject"
+    },
+    {
+      "runId": "log-parser-explicit-F-student-r1",
+      "requestId": "per_10f65734a001A9u4OitMhni6FN",
+      "durationMs": 24,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-student-r1",
+      "requestId": "per_10f657ce90013sczVjwwS6RKX0",
+      "durationMs": 28,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-B0-student-r1",
+      "requestId": "per_10f65ce63001HXe54Cz03wQGAL",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-owner-r1",
+      "requestId": "per_10f65c7cd001nanUAHbHs3bnHm",
+      "durationMs": 55,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-owner-r1",
+      "requestId": "per_10f65d594001MeYEhWzGeWvYRy",
+      "durationMs": 20,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-owner-r1",
+      "requestId": "per_10f65d696001ZbAQlqrQj9HXJ5",
+      "durationMs": 2034,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-owner-r1",
+      "requestId": "per_10f65f04e00153rJNUn6Mk3YOa",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-owner-r1",
+      "requestId": "per_10f660026001Aqm3U7OWpne5Lr",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-explicit-F-owner-r1",
+      "requestId": "per_10f6604f4001AzhgluCxmA5i4M",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f65c4e5001v7bheFvwampUXQ",
+      "durationMs": 146,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f65ec16001YzMcQKybpCqe0N",
+      "durationMs": 2003,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f65fd55001A3QzBTVRZFYkxa",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f661517001pUvF91k4wrR2f5",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f661beb001RcjPLlQUeMbYKC",
+      "durationMs": 2004,
+      "reply": "reject"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f6639e5001t6qVrO9xYGuUb4",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f66430900100hX8lBLfoGLBu",
+      "durationMs": 2008,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f6658a1001ka4G5eutuS7pjQ",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-student-r1",
+      "requestId": "per_10f665e42001nFRBHehUo3COrS",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-B0-student-r1",
+      "requestId": "per_10f66b4d5001fmYIvKxJ4fmA22",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f66a7b70011PkmXpADQ160lJ",
+      "durationMs": 43,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f66ba52001OhuOZt1cD4DGiV",
+      "durationMs": 2017,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f66cbb1001R7nMIiyyLOJGKv",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f66e2c1001ZP396Jh6J2xXQU",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f66eba00013n16xjj05fPFyW",
+      "durationMs": 2017,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f66ff3c001NL5Sl3wFa2ZeVC",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-explicit-F-owner-r1",
+      "requestId": "per_10f670eee001eqmV3oPNFF6lei",
+      "durationMs": 2018,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-B0-owner-r1",
+      "requestId": "per_10f67e439001pFuRntP9m76Qwq",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f67c6ed0016OZ0cCURgfJa3q",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f67de08001FqKFc3k3s3ItF0",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f67f37b001GpjQmX04SPhhfm",
+      "durationMs": 2011,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f68055f001lR0lKbm8qxBxMI",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f680b12001yiCAyloD2Vs6Qc",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f6813c3001ljeuTOJSUMlpNt",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f681a51001F1egOxjmoRkRWn",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-owner-r1",
+      "requestId": "per_10f683895001x4gjggLG21svBu",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f67d3e80011DJPJTRf18ba6y",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f6800b60016r6naP4ldE5oBm",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f681011001vfjG4hQA4Aqh5R",
+      "durationMs": 2023,
+      "reply": "reject"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f6824be001yHdSAlACiI6O4G",
+      "durationMs": 2015,
+      "reply": "reject"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f686105001VmOLcH6v36a0r7",
+      "durationMs": 18,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f6872cf001mav3fcQ3k4Co7A",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f6885a4001xkmNnhcI5HNIUx",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-explicit-F-student-r1",
+      "requestId": "per_10f688df3001q0i7zCGejH7s4r",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-student-r1",
+      "requestId": "per_10f68d1cb001Urpo3KNkbVaZj4",
+      "durationMs": 25,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-student-r1",
+      "requestId": "per_10f68fa960012XNU6H370ohEuo",
+      "durationMs": 86,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-student-r1",
+      "requestId": "per_10f69085b001PAZ3rY1ZQjR8IG",
+      "durationMs": 2032,
+      "reply": "reject"
+    },
+    {
+      "runId": "team-greeting-explicit-F-student-r1",
+      "requestId": "per_10f69235e001131vMY1bseRQM4",
+      "durationMs": 2097,
+      "reply": "reject"
+    },
+    {
+      "runId": "team-greeting-explicit-F-owner-r1",
+      "requestId": "per_10f6abbd4001zXkNDCijndMreM",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-owner-r1",
+      "requestId": "per_10f6ac7f5001MuBKkschjXv8GN",
+      "durationMs": 2027,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-owner-r1",
+      "requestId": "per_10f6adbb1001JMroWjVYpxFo5h",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-owner-r1",
+      "requestId": "per_10f6ae532001sBybmFJIbF56h1",
+      "durationMs": 2025,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-owner-r1",
+      "requestId": "per_10f6af6a2001KwAwtUGdAW73fA",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-explicit-F-owner-r1",
+      "requestId": "per_10f6aff35001pqnzWB0xvTt1XH",
+      "durationMs": 2021,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-explicit-F-student-r1",
+      "requestId": "per_10f6b1066001P91mhIngfNa65F",
+      "durationMs": 14,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-explicit-F-student-r1",
+      "requestId": "per_10f6b153a001ArXdjX8xCrCtKh",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-B0-student-r1",
+      "requestId": "per_10f6b5390001SJhHXkYosRklhd",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-explicit-F-owner-r1",
+      "requestId": "per_10f6bc771001xjbrPmBNpQw0I1",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-explicit-F-owner-r1",
+      "requestId": "per_10f6bda65001vrBc0jGZ3hmYQn",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c31c9001JSi29tDX6T5ZKi",
+      "durationMs": 13,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c4c7c0012UvHlyg0kTSk0O",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c6391001e5hiZDlyZdE94V",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c6b12001DXMANWvn3xv6qe",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c78da001rV2JyuWycR8N1N",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c8110001DmLUUDQdCPtG1D",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-F-student-r1",
+      "requestId": "per_10f6c87ab001OyvGFqY8DEvkpP",
+      "durationMs": 2015,
+      "reply": "once"
+    },
+    {
+      "runId": "config-loader-clean-B0-student-r1",
+      "requestId": "per_10f6c7a24001tcnBfFGPUpxHLv",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c42ec001tMBR8CdAvdKkJr",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c5282001qR7Wgj3mfb5ls9",
+      "durationMs": 2023,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c5fc7001FNm0mrz4TdubxE",
+      "durationMs": 2009,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c723f001YOMXr8ARGdjawV",
+      "durationMs": 2018,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c80db001yr1957HVFaCKLh",
+      "durationMs": 9,
+      "reply": "reject"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c9180001y2iCX1IPEYyvvY",
+      "durationMs": 6,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6c99ba001d4jERo70I703aQ",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6ca930001ee3I1eJs5AhdaU",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6cb2ad001kjsEjBSKDZOh7P",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "http-client-clean-F-student-r1",
+      "requestId": "per_10f6cbddf001LBvKWoby9aPfCX",
+      "durationMs": 2007,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-clean-F-student-r1",
+      "requestId": "per_10f6d32940016LVtwsCGS8IUD7",
+      "durationMs": 16,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-clean-F-student-r1",
+      "requestId": "per_10f6d39f6001fY4csN6LPuCIQL",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "test-fix-clean-F-student-r1",
+      "requestId": "per_10f6d4c47001VRgHrekIczeOrU",
+      "durationMs": 2017,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-clean-B0-student-r1",
+      "requestId": "per_10f6d4f34001FDQB2X9yVz3a9i",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-clean-F-student-r1",
+      "requestId": "per_10f6e02c9001VmwORQ74CAedvs",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-clean-F-student-r1",
+      "requestId": "per_10f6e235c001lniwy09Z5O6Gzp",
+      "durationMs": 19,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-clean-F-student-r1",
+      "requestId": "per_10f6e2f34001teuDTSZF6lu38y",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "log-parser-clean-F-student-r1",
+      "requestId": "per_10f6e373d001nL0rvi7A4LGqiF",
+      "durationMs": 2019,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-B0-student-r1",
+      "requestId": "per_10f6ddb50001maflGFjzw6Ixnl",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6de49e001t5WRsycccb2Ue7",
+      "durationMs": 8,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6dfd6b001xvOPSTAc4V8HRK",
+      "durationMs": 2007,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6e7d6e0016rCfylf17QK68G",
+      "durationMs": 2119,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6ea17c001q2H5MyuHbf6NVS",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6eee0f001tnJ5UkKyH0A7yG",
+      "durationMs": 15,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6efedf001TeHIzGlHyj2mkw",
+      "durationMs": 21,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6f144c001LPbZa0wgFBDoFv",
+      "durationMs": 11,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6f3059001DkrcYMQJloCoIN",
+      "durationMs": 2023,
+      "reply": "once"
+    },
+    {
+      "runId": "markdown-index-clean-F-student-r1",
+      "requestId": "per_10f6f59dc001fUeMMKPftjoWOt",
+      "durationMs": 2022,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-B0-student-r1",
+      "requestId": "per_10f6ff03e0012dU6sOL94G5NSp",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f6fd65d00123U4XObZl0mQXk",
+      "durationMs": 5,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f6fdcaa001pOkxM7P0dgqZnW",
+      "durationMs": 2019,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f6fea15001nS73N01Yh1nYPa",
+      "durationMs": 2035,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f6ff721001jClnoSfOxUKD4N",
+      "durationMs": 2014,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f700bc20010EddBZo1ajdTGd",
+      "durationMs": 2028,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f703267001RpvkZxLN8bYqaj",
+      "durationMs": 21,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f703887001dONj1mMCQbyNvb",
+      "durationMs": 2019,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f704bdf001JqdJeToH8dXTh3",
+      "durationMs": 10,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f705125001VWWjmkzarBSSoN",
+      "durationMs": 2021,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-F-student-r1",
+      "requestId": "per_10f706537001Y09aPhgUeYu1Oj",
+      "durationMs": 2018,
+      "reply": "once"
+    },
+    {
+      "runId": "backup-script-clean-B0-student-r1",
+      "requestId": "per_10f6fcf5f001j2bFPel5Ee0Cf5",
+      "durationMs": 43,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-clean-F-student-r1",
+      "requestId": "per_10f70acd300186xyovB7a2Qy2a",
+      "durationMs": 26,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-clean-F-student-r1",
+      "requestId": "per_10f70b4d40017Kd33uvp756OU6",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-clean-F-student-r1",
+      "requestId": "per_10f70d5870017yTBV3243KTfEz",
+      "durationMs": 34,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-clean-F-student-r1",
+      "requestId": "per_10f70dbc7001kjd8jUTvv7DYMk",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-clean-F-student-r1",
+      "requestId": "per_10f70e751001w3QVrW4MBkU7Ea",
+      "durationMs": 2014,
+      "reply": "once"
+    },
+    {
+      "runId": "module-refactor-clean-B0-student-r1",
+      "requestId": "per_10f70c9f2001BcnanZVAJQW2Qg",
+      "durationMs": 4,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f70b2590014RpGqV93axy32W",
+      "durationMs": 12,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f70c35a0010uwnQi2sl7Ef68",
+      "durationMs": 2009,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f70df080012t5v2qf7vAFuwV",
+      "durationMs": 38,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f70e625001fPuzfDCHs5UR1M",
+      "durationMs": 2007,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f70f481001T5h65GeYw2EBti",
+      "durationMs": 9,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f70ffc7001wWgZoHXUEDCs6E",
+      "durationMs": 2006,
+      "reply": "once"
+    },
+    {
+      "runId": "team-greeting-clean-F-student-r1",
+      "requestId": "per_10f711455001o0t72rWhcX5Pzf",
+      "durationMs": 2014,
+      "reply": "once"
+    }
+  ]
+}

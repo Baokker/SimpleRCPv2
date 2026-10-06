@@ -1,0 +1,71 @@
+{
+  "rowCount": 40500,
+  "properties": {
+    "monotonic": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "metadataDeny": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "llmFloor": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "strictestSubcommand": {
+      "cases": 10000,
+      "failures": 0
+    }
+  },
+  "llmFloorCoverage": {
+    "initialDeny": 4000,
+    "initialIneligibleAsk": 6000,
+    "terminal": 5000,
+    "agent": 5000,
+    "lowRiskCertain": 2500
+  },
+  "faultInjection": {
+    "cases": 500,
+    "hung": 0,
+    "duplicateReplies": 0,
+    "incorrectOutcomes": 0,
+    "pendingAtEnd": 0
+  },
+  "revocation": {
+    "cases": 3,
+    "observations": [
+      {
+        "id": "revocation-downgrade",
+        "eventAt": "2026-10-06T04:40:07.023Z",
+        "before": "ask",
+        "pendingOutcome": "rejected",
+        "approved": false,
+        "nextAction": "deny",
+        "nextApproved": false,
+        "toolCallAfterEvent": 1
+      },
+      {
+        "id": "revocation-offline",
+        "eventAt": "2026-10-06T04:40:07.044Z",
+        "before": "ask",
+        "pendingOutcome": "rejected",
+        "approved": false,
+        "nextAction": "deny",
+        "nextApproved": false,
+        "toolCallAfterEvent": 1
+      },
+      {
+        "id": "revocation-team-interrupted",
+        "eventAt": "2026-10-06T04:40:07.062Z",
+        "before": "ask",
+        "pendingOutcome": "rejected",
+        "approved": false,
+        "nextAction": "deny",
+        "nextApproved": false,
+        "toolCallAfterEvent": 1
+      }
+    ]
+  },
+  "allRequiredPropertiesPass": true
+}

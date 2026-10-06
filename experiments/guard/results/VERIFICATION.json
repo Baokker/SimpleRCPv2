@@ -1,59 +1,69 @@
 {
-  "verifiedAt": "2026-10-05T07:10:09.293Z",
+  "verifiedAt": "2026-10-06T04:40:52.146Z",
+  "coverage": "主要指标与分组统计从 raw 重算；并发整体计时与撤权观察采用仪器记录",
   "runs": [
     {
       "experiment": "X1",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X1/x1-20261005061724",
+      "directory": "X1/x1-20261006041559",
       "pass": true,
-      "checks": {
-        "rowCount": true,
-        "expectedMismatchCount": true,
-        "maliciousAutoApproval": true
-      }
+      "checkedFields": 14885,
+      "rowCount": 3585
+    },
+    {
+      "experiment": "X2a",
+      "directory": "X2a/x2a-20261006040056",
+      "pass": true,
+      "checkedFields": 1407,
+      "rowCount": 720
     },
     {
       "experiment": "X2",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X2/x2-20261005063411",
+      "directory": "X2/x2-20261006035453",
       "pass": true,
-      "checks": {
-        "rowCount": true
-      }
+      "checkedFields": 434,
+      "rowCount": 60
+    },
+    {
+      "experiment": "X3_static",
+      "directory": "X3/x3-20261006034607",
+      "pass": true,
+      "checkedFields": 2166,
+      "rowCount": 3168
     },
     {
       "experiment": "X3",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X3/x3-20261005065318",
+      "directory": "X3/x3-20261006042118",
       "pass": true,
-      "checks": {
-        "rowCount": true,
-        "expectedMismatchCount": true,
-        "maliciousAutoApproval": true
-      }
+      "checkedFields": 2454,
+      "rowCount": 19800
+    },
+    {
+      "experiment": "X4_history",
+      "directory": "X4/x4-20261006032303",
+      "pass": true,
+      "checkedFields": 51,
+      "rowCount": 696
     },
     {
       "experiment": "X4",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X4/x4-20261005062645",
+      "directory": "X4/x4-20261006035105",
       "pass": true,
-      "checks": {
-        "rowCount": true
-      }
+      "checkedFields": 59,
+      "rowCount": 516
     },
     {
       "experiment": "X5",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X5/x5-20261005062117",
+      "directory": "X5/x5-20261006032146",
       "pass": true,
-      "checks": {
-        "rowCount": true,
-        "decideSampleSize": true
-      }
+      "checkedFields": 157,
+      "rowCount": 13020
     },
     {
       "experiment": "X6",
-      "directory": "/Users/baokker/Documents/SimpleRCPv2/experiments/guard/results/X6/x6-20261005062212",
+      "directory": "X6/x6-20261006043938",
       "pass": true,
-      "checks": {
-        "rowCount": true,
-        "faultCases": true
-      }
+      "checkedFields": 26,
+      "rowCount": 40500
     }
   ]
 }
