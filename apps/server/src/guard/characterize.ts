@@ -104,7 +104,9 @@ function resolvePathWithLinks(target: string, visited: Set<string>): string {
       }
       return path.resolve(fs.realpathSync(candidate), ...suffix);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === "ENOTDIR") return path.resolve(target);
+      if (code !== "ENOENT") throw error;
       const parent = path.dirname(candidate);
       if (parent === candidate) return path.resolve(target);
       suffix.unshift(path.basename(candidate));
