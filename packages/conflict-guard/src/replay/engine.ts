@@ -66,6 +66,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   const index = createSemanticIndex({ files, now: () => clock.now() });
   const semantic = new SemanticChangeTracker({ index, readFile: (file) => files.readFile(file), now: () => clock.now() });
   const policy = typeof options.policy === "string" ? policyFor(options.policy, { oracleTruth: options.oracleTruth }) : options.policy;
+  policy.beginReplay?.();
   const intervene = policy.id !== "P0" && !(policy.id === "P3" && events.find((event) => event.type === "session_start")?.mode === "observe");
   const judgements: ReplayJudgement[] = [];
   const coordinationEvents: ReplayResult["coordinationEvents"] = [];

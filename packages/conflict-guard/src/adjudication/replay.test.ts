@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { replayTrace } from "../replay/engine.js";
-import { createReplayModelPolicy } from "../replay/policies.js";
+import { createReplayModelPolicy, replayModelRequestKey } from "../replay/policies.js";
 import { defaultAdjudicationConfig } from "./config.js";
 import { inputHash } from "./prompts.js";
 import { calibrateThreshold } from "./calibrate.js";
@@ -25,4 +25,31 @@ it("calibration uses forced lock escalation and minimizes missed blocking before
   expect(result.recommended).toBe(0.45);
   expect(result.curves[0]?.escalationRatio).toBeCloseTo(1 / 3);
   expect(result.curves.find((row) => row.threshold === 0.45)?.missBlockRatio).toBe(0);
+});
+
+it("replays distinct outcomes for repeated inputs and resets occurrences for each replay", () => {
+  const a = "export function price(){return 10;}";
+  const b = 'import {price} from "./a.ts"; export function buy(){return price()+1;}';
+  const trace: TraceEvent[] = [
+    { schema: 3, seq: 1, at: 0, type: "session_start" },
+    { schema: 3, seq: 2, at: 0, type: "doc_open", file: "a.ts", text: a },
+    { schema: 3, seq: 3, at: 0, type: "doc_open", file: "b.ts", text: b }
+  ];
+  for (const [at, from, to] of [[0, "10", "20"], [10000, "20", "10"], [20000, "10", "20"]] as const) {
+    trace.push({ schema: 3, seq: trace.length + 1, at, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "a" }, ops: [{ from: a.indexOf("10"), deleted: from, inserted: to }] });
+    trace.push({ schema: 3, seq: trace.length + 1, at: at + 10, type: "edit", file: "b.ts", origin: { kind: "human", memberId: "b" }, ops: [{ from: b.indexOf("+1"), deleted: at === 10000 ? "+2" : "+1", inserted: at === 10000 ? "+1" : "+2" }] });
+  }
+  const config = { ...defaultAdjudicationConfig, strategy: "G2" as const };
+  const responses = new Map<string, ZoneVerdict>();
+  replayTrace(trace, { policy: createReplayModelPolicy(config, new Map(), (request, local, occurrence) => responses.set(replayModelRequestKey(request, occurrence), {
+    ...local, decision: occurrence === 1 ? "warn" : "allow", ruleId: occurrence === 1 ? "model-unavailable" : "model-fast",
+    adjudication: { strategy: "G2", source: occurrence === 1 ? "fallback" : "fast", latencyMs: occurrence === 1 ? 8000 : 3000, status: occurrence === 1 ? "degraded" : "success", escalated: false, userExplanation: "请检查共同计算方式。", suggestedAction: "请双方检查关联修改。", inputHash: inputHash(request), promptVersion: "pair-v1" }
+  })) });
+  expect(responses.size).toBe(2);
+  const policy = createReplayModelPolicy(config, responses);
+  const first = replayTrace(trace, { policy });
+  const second = replayTrace(trace, { policy });
+  expect(first.judgements.map((entry) => entry.verdict.decision)).toEqual(["warn", "allow"]);
+  expect(first.judgements.map((entry) => entry.verdict.adjudication?.latencyMs)).toEqual([8000, 3000]);
+  expect(JSON.stringify(first)).toBe(JSON.stringify(second));
 });

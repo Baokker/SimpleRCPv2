@@ -24,6 +24,7 @@ export interface PolicyInput {
 export interface ZoningPolicy {
   id: "P0" | "P1" | "P2" | "P3" | "P*" | GreyStrategy;
   decide(input: PolicyInput): ZoneVerdict;
+  beginReplay?(): void;
   adjudicate?(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]): void;
   maxLatencyMs?: number;
 }
@@ -102,15 +103,24 @@ export function policyFor(id: ZoningPolicy["id"], options: { oracleTruth?: "allo
   return createP3Policy();
 }
 
-export function createReplayModelPolicy(config: AdjudicationConfig, responses: Map<string, ZoneVerdict>, onInput?: (input: AdjudicationInput, local: ZoneVerdict) => void, contextFiles: string[] = [], cancelledInputs: ReadonlySet<string> = new Set()): ZoningPolicy {
-  return { ...createP3Policy(), id: config.strategy, maxLatencyMs: config.strategy === "G0" ? 0 : config.hardDeadlineMs,
+export function replayModelRequestKey(input: AdjudicationInput, occurrence: number): string {
+  return `${inputHash(input)}:${occurrence}`;
+}
+
+export function createReplayModelPolicy(config: AdjudicationConfig, responses: Map<string, ZoneVerdict>, onInput?: (input: AdjudicationInput, local: ZoneVerdict, occurrence: number) => void, contextFiles: string[] = [], cancelledInputs: ReadonlySet<string> = new Set()): ZoningPolicy {
+  const occurrences = new Map<string, number>();
+  return { ...createP3Policy(), id: config.strategy, beginReplay: () => occurrences.clear(), maxLatencyMs: config.strategy === "G0" ? 0 : config.hardDeadlineMs,
     ...(config.strategy === "G0" ? {} : { adjudicate(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]) {
       const left = input.pair && input.symbols(input.pair.left); const right = input.pair && input.symbols(input.pair.right);
       if (!input.pair || !left || !right) { complete({ ...local, decision: "warn", ruleId: "model-unavailable" }); return; }
       const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles);
-      onInput?.(request, local);
-      if (cancelledInputs.has(inputHash(request))) return;
-      const response = responses.get(inputHash(request));
+      const hash = inputHash(request);
+      const occurrence = (occurrences.get(hash) ?? 0) + 1;
+      occurrences.set(hash, occurrence);
+      const requestKey = replayModelRequestKey(request, occurrence);
+      onInput?.(request, local, occurrence);
+      if (cancelledInputs.has(requestKey) || cancelledInputs.has(hash)) return;
+      const response = responses.get(requestKey) ?? responses.get(hash);
       const verdict = response ?? { ...local, decision: "warn" as const, ruleId: "model-unavailable", summary: "研判录放缓存未命中，已降级为警告。" };
       const timer = clock.setTimeout(() => { signal.removeEventListener("abort", abort); if (!signal.aborted) complete(verdict); }, verdict.adjudication?.latencyMs ?? 0);
       const abort = () => clock.clearTimeout(timer);

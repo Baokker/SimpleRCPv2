@@ -2,11 +2,11 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createAdjudicationService, createJudgeRegistry, defaultAdjudicationConfig, type AdjudicationConfig, type CachedCall, type ProviderCall, type ProviderMode } from "../dist/index.js";
+import { createAdjudicationService, createJudgeRegistry, defaultAdjudicationConfig, type AdjudicationConfig, type CachedCall, type ProviderCall, type ProviderMode, type ProviderSubscription } from "../dist/index.js";
 
 export const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 export function loadModelEnvironment() { const file = path.join(repositoryRoot, ".env"); if (existsSync(file)) process.loadEnvFile(file); }
-export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicationConfig, mode: ProviderMode = "replay", directory = path.join(repositoryRoot, "packages/conflict-guard/bench/model-cache"), onCall?: (call: ProviderCall) => void, models: Record<string, string> = {}) {
+export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicationConfig, mode: ProviderMode = "replay", directory = path.join(repositoryRoot, "packages/conflict-guard/bench/model-cache"), onCall?: (call: ProviderCall) => void, models: Record<string, string> = {}, recordedSubscriptions?: readonly ProviderSubscription[]) {
   if (models.jev && models.jev !== config.fastModel) throw new Error("录制快判版本与配置不一致");
   const env = process.env;
   const scope = env.ADJUDICATION_BUDGET_SCOPE ?? "stage5";
@@ -33,7 +33,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
     return fetch(url, init);
   };
   const registry = createJudgeRegistry({ config, now: () => performance.now(), fetch: wrappedFetch, jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: env.TYPESAFE_BASE_URL }, deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: env.DEEPSEEK_BASE_URL, model: models.deepseek ?? env.DEEPSEEK_MODEL ?? "deepseek-flash" }, ...(env.ADJUDICATION_COMPATIBLE_BASE_URL && env.ADJUDICATION_COMPATIBLE_MODEL || mode === "replay" && models["openai-compatible"] ? { compatible: { apiKey: env.ADJUDICATION_COMPATIBLE_API_KEY, baseUrl: env.ADJUDICATION_COMPATIBLE_BASE_URL ?? "", model: models["openai-compatible"] ?? env.ADJUDICATION_COMPATIBLE_MODEL! } } : {}) });
-  const service = createAdjudicationService({ config, mode, sensitiveValues: secrets, fast: registry.fast(config.fast), deep: registry.deep(config.deep), clock: { now: () => performance.now(), setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (handle) => clearTimeout(handle as NodeJS.Timeout) }, onCall, onError: (stage) => console.error(JSON.stringify({ infrastructureError: stage })), cache: {
+  const service = createAdjudicationService({ config, mode, sensitiveValues: secrets, fast: registry.fast(config.fast), deep: registry.deep(config.deep), clock: { now: () => performance.now(), setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (handle) => clearTimeout(handle as NodeJS.Timeout) }, onCall, recordedSubscriptions, onError: (stage) => console.error(JSON.stringify({ infrastructureError: stage })), cache: {
     async get(key) {
       try { return JSON.parse(await fs.readFile(path.join(directory, `${key}.json`), "utf8")) as CachedCall; }
       catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; }

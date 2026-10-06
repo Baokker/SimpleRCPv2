@@ -17,6 +17,7 @@
 - `pair_analyzing`：灰区开始异步研判，记录变更对、修订号与本地结果；相关文件暂停写入。
 - `pair_analysis_progress`：超过软时间预算的分析进度，记录变更对及修订号。
 - `provider_call`：`adapter`、`model`、`promptVersion`、`inputHash`、`decision`、`confidence`、`latencyMs`、`usage`、`costUsd` 与 `status`。状态为 `success/timeout/failed/invalid-format/cancelled/cache-hit`，失败可以没有 decision 与 confidence。事件不包含请求正文与原始响应。
+- `provider_subscription`：每个研判请求分别记录 `role`、`adapter`、`model`、`promptVersion`、`inputHash`、`cacheKey`、`occurrence`、`status`、`latencyMs` 与 `budgetMs`，Agent 请求另带 `point`。`occurrence` 从 1 开始，在同一研判服务内按输入哈希递增。共享 HTTP 请求的各订阅者分别保存等待时长、剩余预算与完成状态；单个订阅者超时不会改写共享响应缓存。事件不包含请求正文与原始响应。
 - 模型 `pair_judged.verdict.adjudication`：策略、角色来源、适配器及模型、置信度、总延迟、`success/degraded`、是否升级、中文解释、操作建议、输入哈希与提示词版本。取消及过期响应没有判定事件。
 - `pair_stale`、`pair_resolved`、`pair_closed`：记录变更对修订号、状态和解决原因。
 - `freeze`：当前冻结字符范围，包含变更对、成员、符号、文件与起止位置。每次相关范围移动或冻结状态变化时记录。
@@ -42,6 +43,8 @@
 ## 最小回放条件
 
 `provider_call` 增加 `role` 和 `cacheKey`，缓存键包含提示词正文与请求参数。full 模式的 `replay:check` 根据 session 配置读取缓存、校验 SHA-256，重新执行灰区策略；完整初始项目文件保存为轨迹旁的 `<trace>-project.json`，包含相关测试。核验禁止联网，并比较判定、闸门、写入和冻结。
+
+full 轨迹包含 `provider_subscription` 时，核验按输入哈希、请求次数与角色恢复各自的等待结果；相同输入的不同请求可以分别超时、取消或完成。缺少订阅事件的已有轨迹继续使用 `provider_call` 与响应缓存。
 
 `reservation_mismatch` 保存 Agent ActorRef、文件、预计内容哈希与磁盘实际内容哈希，表示批准后的两秒确认期限内出现格式变化。`permission_deferred` 保存请求和子会话 ID；后续回复使用 `permission_reply`。内部检查异常保存原因，重复同文件异常会产生属主通知。
 

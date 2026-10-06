@@ -67,6 +67,7 @@ describe("T1 grey adjudication production timing", () => {
     expect(validateTrace(events)).toBe(true);
     expect(events.some((event) => event.type === "pair_analyzing")).toBe(true);
     expect(events.some((event) => event.type === "provider_call" && event.status === "success")).toBe(true);
+    expect(events.filter((event) => event.type === "provider_subscription")).toEqual([expect.objectContaining({ role: "fast", occurrence: 1, status: "success", budgetMs: 8000, cacheKey: expect.stringMatching(/^[a-f0-9]{64}$/), latencyMs: expect.any(Number) })]);
     await checkOffline(context);
   }, 18000);
   it("failure becomes warn and changed revision cancels the old request", async () => {
@@ -78,6 +79,9 @@ describe("T1 grey adjudication production timing", () => {
     expect(context.state().pairDecisions[0]?.verdict).toMatchObject({ decision: "warn", adjudication: { status: "degraded" } });
     expect(context.state().frozenFiles).toEqual([]);
     await waitFor(async () => (await context.disk("src/pricing.ts")).includes("rate * 2"));
+    await context.runtime.conflictGuard!.waitForTrace();
+    const subscriptions = readTrace(await context.runtime.conflictGuard!.exportTrace()).filter((event) => event.type === "provider_subscription");
+    expect(subscriptions.map((event) => event.status)).toEqual(["cancelled", "failed"]);
     await checkOffline(context);
   }, 18000);
 });

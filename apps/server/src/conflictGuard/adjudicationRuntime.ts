@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createAdjudicationService, createJudgeRegistry, defaultAdjudicationConfig, type AdjudicationConfig, type CachedCall, type ConflictGuardClock, type DeepJudge, type FastJudge, type ProviderCall, type ProviderMode } from "@simplercp/conflict-guard";
+import { createAdjudicationService, createJudgeRegistry, defaultAdjudicationConfig, type AdjudicationConfig, type CachedCall, type ConflictGuardClock, type DeepJudge, type FastJudge, type ProviderCall, type ProviderMode, type ProviderSubscription } from "@simplercp/conflict-guard";
 
 export interface ServerAdjudicationConfig {
   settings?: AdjudicationConfig;
@@ -12,11 +12,11 @@ export interface ServerAdjudicationConfig {
   judges?: { fast: FastJudge; deep: DeepJudge };
 }
 
-export function createServerAdjudication(options: ServerAdjudicationConfig, clock: ConflictGuardClock, sensitiveValues: string[], onCall: (call: ProviderCall) => void) {
+export function createServerAdjudication(options: ServerAdjudicationConfig, clock: ConflictGuardClock, sensitiveValues: string[], onCall: (call: ProviderCall) => void, onSubscription: (subscription: ProviderSubscription) => void) {
   const config = options.settings ?? defaultAdjudicationConfig;
   const registry = createJudgeRegistry({ ...options, config, fetch: globalThis.fetch, now: clock.now });
   const directory = options.cacheDirectory;
-  return createAdjudicationService({ config, clock, mode: options.mode ?? "live", sensitiveValues, fast: options.judges?.fast ?? registry.fast(config.fast), deep: options.judges?.deep ?? registry.deep(config.deep), onCall, onError: (stage) => console.error("Model adjudication infrastructure error", { stage }), cache: directory ? {
+  return createAdjudicationService({ config, clock, mode: options.mode ?? "live", sensitiveValues, fast: options.judges?.fast ?? registry.fast(config.fast), deep: options.judges?.deep ?? registry.deep(config.deep), onCall, onSubscription, onError: (stage) => console.error("Model adjudication infrastructure error", { stage }), cache: directory ? {
     async get(key) {
       if (!/^[a-f0-9]{64}$/.test(key)) throw new Error("缓存键无效");
       try { return JSON.parse(await fs.readFile(path.join(directory, `${key}.json`), "utf8")) as CachedCall; }

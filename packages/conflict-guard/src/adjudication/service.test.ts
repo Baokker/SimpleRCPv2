@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { VirtualClock } from "../replay/clock.js";
 import { createAdjudicationService } from "./service.js";
 import { defaultAdjudicationConfig } from "./config.js";
-import type { CachedCall, JudgeResult } from "./types.js";
+import type { CachedCall, JudgeResult, ProviderSubscription } from "./types.js";
 
 const input = { promptVersion: "pair-v1", left: { actorKind: "human", file: "a.ts", symbol: "a.ts#a", before: "a", after: "b" }, right: { actorKind: "human", file: "b.ts", symbol: "b.ts#b", before: "c", after: "d" }, relationship: "call", invariants: "", local: { excludedRules: [] } };
 const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "可能互相影响", evidence: [], contractChanged: { left: false, right: false } };
@@ -159,6 +159,42 @@ it("shared deep requests preserve each subscriber's cascade deadline", async () 
   clock.advanceTo(9000);
   completeDeep({ ...result, latencyMs: 2000 });
   expect(await second).toMatchObject({ decision: "allow", adjudication: { source: "deep", status: "success", latencyMs: 3000 } });
+});
+
+it("replays staggered subscribers with their own waits and timeout outcomes", async () => {
+  const clock = new VirtualClock();
+  const cache = new Map<string, CachedCall>();
+  const subscriptions: ProviderSubscription[] = [];
+  let completeFast!: (value: JudgeResult) => void;
+  let completeDeep!: (value: JudgeResult) => void;
+  let networkCalls = 0;
+  const dependencies = { config: defaultAdjudicationConfig, fast: { name: "jev", model: "jev-1.13.0", judge() { networkCalls += 1; return new Promise<JudgeResult>((resolve) => { completeFast = resolve; }); } }, deep: { name: "deepseek", model: "test", judge() { networkCalls += 1; return new Promise<JudgeResult>((resolve) => { completeDeep = resolve; }); } }, cache: { async get(key: string) { return cache.get(key); }, async put(entry: CachedCall) { cache.set(entry.key, entry); } } };
+  const recording = createAdjudicationService({ ...dependencies, clock, mode: "record", onSubscription: (subscription: ProviderSubscription) => subscriptions.push(subscription) });
+  const first = recording.judge(input, local, new AbortController().signal);
+  for (let turn = 0; turn < 20; turn += 1) await Promise.resolve();
+  clock.advanceTo(6000);
+  const second = recording.judge(input, local, new AbortController().signal);
+  clock.advanceTo(7000);
+  completeFast({ ...result, decision: "lock", latencyMs: 7000 });
+  for (let turn = 0; turn < 20; turn += 1) await Promise.resolve();
+  clock.advanceTo(8000);
+  const left = await first;
+  clock.advanceTo(9000);
+  completeDeep({ ...result, latencyMs: 2000 });
+  const right = await second;
+  expect([left.decision, right.decision]).toEqual(["warn", "allow"]);
+  expect(subscriptions.map(({ role, occurrence, status, latencyMs, budgetMs }) => ({ role, occurrence, status, latencyMs, budgetMs }))).toEqual([
+    { role: "fast", occurrence: 1, status: "success", latencyMs: 7000, budgetMs: 8000 },
+    { role: "fast", occurrence: 2, status: "success", latencyMs: 1000, budgetMs: 8000 },
+    { role: "deep", occurrence: 1, status: "timeout", latencyMs: 1000, budgetMs: 1000 },
+    { role: "deep", occurrence: 2, status: "success", latencyMs: 2000, budgetMs: 7000 }
+  ]);
+  expect([...cache.values()].map((entry) => entry.call.status)).toEqual(["success", "success"]);
+  expect(recording.stats()).toMatchObject({ calls: 2, judgements: 2, failures: 1 });
+  const replay = createAdjudicationService({ ...dependencies, clock: new VirtualClock(), mode: "replay", recordedSubscriptions: subscriptions });
+  expect(await replay.judge(input, local, new AbortController().signal)).toEqual(left);
+  expect(await replay.judge(input, local, new AbortController().signal)).toEqual(right);
+  expect(networkCalls).toBe(2);
 });
 
 it("counts trace callbacks and failed cache writes without failing adjudication", async () => {

@@ -43,6 +43,19 @@ export interface ProviderCall {
   usage?: JudgeResult["usage"];
   costUsd: number;
 }
+export interface ProviderSubscription {
+  point?: "T1" | "T2" | "T3";
+  role: "fast" | "deep";
+  adapter: string;
+  model: string;
+  promptVersion: string;
+  inputHash: string;
+  cacheKey: string;
+  occurrence: number;
+  status: ProviderStatus;
+  latencyMs: number;
+  budgetMs: number;
+}
 export interface ModelVerdictMetadata {
   point?: "T1" | "T2" | "T3";
   strategy: GreyStrategy;
@@ -92,6 +105,8 @@ export interface AdjudicationDependencies {
   cache?: ModelCache;
   sensitiveValues?: string[];
   onCall?(call: ProviderCall): void;
+  onSubscription?(subscription: ProviderSubscription): void;
+  recordedSubscriptions?: readonly ProviderSubscription[];
   onError?(stage: "trace" | "cache"): void;
 }
 export class ProviderError extends Error {

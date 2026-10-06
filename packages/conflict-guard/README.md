@@ -92,7 +92,7 @@ pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../
 
 灰区等待期间状态为 `analyzing`，相关区域标黄、文本同步继续、文件写入暂停；超过 2000 ms 推送分析进度。结束后复用通知、冻结与卡片。接口统计包含角色调用、缓存命中、升级比例、完整研判延迟、失败与费用。`provider_call` 只保存版本、输入哈希与结果元数据。
 
-`live` 直接调用；`record` 保存经过脱敏的输入和原始响应；`replay` 只读取 `bench/model-cache/`，未命中返回失败。录制文件使用权限 0600，缓存内容经过结构验证。凭据与对象属性名中的敏感值都经过脱敏。
+`live` 直接调用；`record` 保存经过脱敏的输入和原始响应；`replay` 只读取 `bench/model-cache/`，未命中返回失败。录制文件使用权限 0600，缓存内容经过结构验证。凭据与对象属性名中的敏感值都经过脱敏。`subscriptions()` 与 `onSubscription` 提供每个订阅者各自的等待状态，离线服务通过 `recordedSubscriptions` 恢复该状态。订阅者超时只影响自己的研判，共享响应缓存保留完整结果。
 
 ```bash
 pnpm --filter @simplercp/conflict-guard data:artifacts --dataset bench/datasets/d1-v2 --restore
@@ -101,7 +101,7 @@ pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/d
 pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v2 --policy G3 --threshold 0 --provider-mode record --cache bench/model-cache/checkpoint-b-calibrated
 ```
 
-`adjudication:verify` 按录制报告中已有的模型策略执行三轮重放，支持只录制 G3 的报告。完整录制配置保存为 `adjudication-config.json`，适配器与模型版本保存为 `adjudication-models.json`，通过 `replay:run --config <file> --models <file>` 使用。重放使用录制的模型版本；报告的 `model.httpCalls` 记录实际 HTTP 调用数，`model.calls` 保存调用事件。离线重放不要求存在 `.env` 文件。
+`adjudication:verify` 按录制报告中已有的模型策略执行三轮重放，支持只录制 G3 的报告。完整录制配置保存为 `adjudication-config.json`，适配器与模型版本保存为 `adjudication-models.json`，订阅记录保存为 `adjudication-subscriptions.json`，通过 `replay:run --config <file> --models <file> --subscriptions <file>` 使用。重放使用录制的模型版本；报告的 `model.httpCalls` 记录实际 HTTP 调用数，`model.calls` 保存共享请求事件，`model.subscriptions` 保存各订阅者的完成状态与等待时间。离线重放不要求存在 `.env` 文件。已有报告缺少订阅记录时继续使用响应缓存。
 
 阈值、价格、完整提示词和配置见 `docs/conflict-guard/adjudication.md`。阶段五命令只读取开发集；保留集留至正式评价。模型录制用于离线确定性回放，实际服务端取消与截止时间另由集成及浏览器测试验证。
 

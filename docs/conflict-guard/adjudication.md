@@ -62,11 +62,11 @@ pnpm --filter @simplercp/conflict-guard adjudication:calibrate --dataset bench/d
 
 缓存键为规范化输入、角色、适配器名、模型版本、提示词全文与请求参数的 SHA-256。请求参数包括 endpoint、temperature、reasoning、hardDeadlineMs；输入哈希去除对象键顺序影响。快判和深判使用不同角色身份。缓存保存原文输入与原始响应，provider_call 仅保存 cacheKey 等元数据。所有配置的敏感值在字符串与属性名中都经过替换。
 
-`record` 可复用已有缓存，`replay` 完全禁止网络；缺失或损坏的缓存产生失败结果。并发相同请求共享一次角色调用，每个订阅者分别维护整轮级联的截止时间。一个订阅者超时后，其余订阅者仍可在自己的时间预算内等待；全部订阅者取消或超时后终止共享请求，每次底层角色请求最多运行 8000 ms。变更对修订后中止旧订阅，迟到结果不会进入状态机。录制中的角色耗时用于推动回放虚拟时钟。
+`record` 可复用已有缓存，`replay` 完全禁止网络；缺失或损坏的缓存产生失败结果。并发相同请求共享一次角色调用，每个订阅者分别维护整轮级联的截止时间。一个订阅者超时后，其余订阅者仍可在自己的时间预算内等待；全部订阅者取消或超时后终止共享请求，每次底层角色请求最多运行 8000 ms。变更对修订后中止旧订阅，迟到结果不会进入状态机。响应缓存保存共享请求的完整结果，`subscriptions()` 保存各订阅者的等待时长、剩余预算、请求次数和状态。回放使用订阅记录推动虚拟时钟；缺少订阅记录的已有录制使用角色调用耗时。
 
 开发集命令按策略分别准备输入并调用真实适配器，随后由同一会话协调器消费录制结果。报告中的 HTTP 次数包含录制准备阶段的所有调用，完成率使用实际应用于状态机的模型判定；两者的分母分别保存。服务端实时取消行为另用生产参数集成测试和浏览器测试验证。
 
-`replay:run --config <file> --models <file>` 读取完整研判配置与录制模型版本，显式提供的 `--deep` 与 `--threshold` 可以覆盖对应字段。`adjudication:verify` 恢复录制配置，从调用元数据恢复每个适配器的模型版本，并只运行报告已有的模型策略。G3 单独录制和 `openai-compatible` 配置沿用相同入口；已有录制模型版本的兼容适配器可以在离线重放时注册。报告分别保存 `model.httpCalls` 与 `model.calls`，重放的一致性校验使用实际 HTTP 次数检查网络调用。
+`replay:run --config <file> --models <file> --subscriptions <file>` 读取完整研判配置、录制模型版本与按策略保存的订阅记录；`--subscriptions` 为可选参数。显式提供的 `--deep` 与 `--threshold` 可以覆盖对应字段。`adjudication:verify` 恢复录制配置，从调用元数据恢复每个适配器的模型版本，并只运行报告已有的模型策略；包含订阅记录时自动写出并传入 `adjudication-subscriptions.json`。G3 单独录制和 `openai-compatible` 配置沿用相同入口；已有录制模型版本的兼容适配器可以在离线重放时注册。报告分别保存 `model.httpCalls`、`model.calls` 与 `model.subscriptions`，重放的一致性校验使用实际 HTTP 次数检查网络调用。
 
 冻结自动解除且新判定为 warn 时，双方收到该修订的模型解释与建议。通知按 `pairId:revision` 去重，旁观成员不接收双方的警告。
 

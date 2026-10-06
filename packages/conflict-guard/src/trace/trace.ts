@@ -145,6 +145,13 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       }
       continue;
     }
+    if (event.type === "provider_subscription") {
+      if (!["fast", "deep"].includes(String(event.role)) || !["success", "timeout", "failed", "invalid-format", "cancelled", "cache-hit"].includes(String(event.status))
+        || !Number.isInteger(event.occurrence) || Number(event.occurrence) < 1 || typeof event.adapter !== "string" || typeof event.model !== "string" || typeof event.promptVersion !== "string"
+        || typeof event.inputHash !== "string" || !/^[a-f0-9]{64}$/.test(event.inputHash) || typeof event.cacheKey !== "string" || !/^[a-f0-9]{64}$/.test(event.cacheKey)
+        || !Number.isFinite(event.latencyMs) || Number(event.latencyMs) < 0 || !Number.isFinite(event.budgetMs) || Number(event.budgetMs) <= 0) throw new Error("provider_subscription 字段不完整");
+      continue;
+    }
     if (["freeze_violation", "freeze", "persist", "persist_gate", "persist_conflict", "persist_error", "ui_action", "t0_warning", "provider_call"].includes(event.type)) continue;
     if (event.type === "t3_incomplete") {
       const actor = event.actor as { kind?: string; runId?: string } | undefined;

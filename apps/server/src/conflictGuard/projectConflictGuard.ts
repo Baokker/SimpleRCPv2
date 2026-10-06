@@ -117,7 +117,7 @@ export function createProjectConflictGuard(options: {
     void appendTrace({ type: "provider_call", ...call });
     stateVersion += 1;
     options.onStateChanged?.(stateVersion);
-  }) : undefined;
+  }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); }) : undefined;
   const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
     if (pair.left.actor.kind !== "human" || pair.right.actor.kind !== "human") { complete(local); return; }
     try {
@@ -196,7 +196,7 @@ export function createProjectConflictGuard(options: {
     return traceOperations;
   };
 
-  const agentAdjudication = options.config.mode === "full" && options.config.adjudication ? Object.fromEntries((["T2", "T3"] as const).map((point) => [point, createServerAdjudication({ ...options.config.adjudication!, settings: { ...adjudicationSettings, strategy: "G4", point, reasoning: point === "T2" ? adjudicationSettings.t2Reasoning ?? false : adjudicationSettings.t3Reasoning ?? false, hardDeadlineMs: point === "T2" ? 30000 : 60000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call }); })])) as Record<"T2" | "T3", ReturnType<typeof createServerAdjudication>> : undefined;
+  const agentAdjudication = options.config.mode === "full" && options.config.adjudication ? Object.fromEntries((["T2", "T3"] as const).map((point) => [point, createServerAdjudication({ ...options.config.adjudication!, settings: { ...adjudicationSettings, strategy: "G4", point, reasoning: point === "T2" ? adjudicationSettings.t2Reasoning ?? false : adjudicationSettings.t3Reasoning ?? false, hardDeadlineMs: point === "T2" ? 30000 : 60000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call }); }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); })])) as Record<"T2" | "T3", ReturnType<typeof createServerAdjudication>> : undefined;
   const agentGuard = createProjectAgentGuard({
     mode: options.config.mode, tracker, clock, files: semanticFiles,
     active: () => semantic.getActiveChangeSets(), refresh: updateSemantic, gate: persistGate,

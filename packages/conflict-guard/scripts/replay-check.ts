@@ -4,7 +4,7 @@ import { readTrace } from "../dist/trace/trace.js";
 import { existsSync } from "node:fs";
 import { checkReplay } from "../dist/replay/check.js";
 import { replayLibraries } from "./replay-libs.ts";
-import { createReplayModelPolicy, replayTrace, inputHash, cacheKey, canonicalJson, createAdjudicationService, VirtualClock, type CachedCall, type AdjudicationConfig, type AdjudicationInput, type ZoneVerdict } from "../dist/index.js";
+import { createReplayModelPolicy, replayModelRequestKey, replayTrace, cacheKey, canonicalJson, createAdjudicationService, VirtualClock, type CachedCall, type AdjudicationConfig, type AdjudicationInput, type ProviderSubscription, type ZoneVerdict } from "../dist/index.js";
 import { parseArgs } from "node:util";
 
 const { positionals, values } = parseArgs({ args: process.argv.slice(2).filter((value) => value !== "--"), allowPositionals: true, options: { cache: { type: "string", default: "bench/model-cache" } } });
@@ -22,6 +22,7 @@ let replayedProviderCalls: ReturnType<ReturnType<typeof createAdjudicationServic
 if (settings) {
   const directory = path.resolve(values.cache!);
   const calls = events.filter((event) => event.type === "provider_call");
+  const subscriptions = events.filter((event) => event.type === "provider_subscription" && (!event.point || event.point === "T1")) as unknown as ProviderSubscription[];
   const entries = new Map<string, CachedCall>();
   for (const call of calls.filter((call) => call.status !== "cancelled")) {
     if (typeof call.cacheKey !== "string" || !/^[a-f0-9]{64}$/.test(call.cacheKey)) throw new Error("provider_call 缺少有效缓存键");
@@ -38,9 +39,9 @@ if (settings) {
     const { role: _role, reasoning: _reasoning, hardDeadlineMs: _deadline, availableBudgetMs: _budget, ...cacheParameters } = entry?.parameters ?? {};
     return { name, model: entry?.call.model ?? (role === "fast" ? settings.fastModel : "unrecorded"), cacheParameters, async judge(): Promise<never> { throw new Error("回放校验禁止联网"); } };
   };
-  const service = createAdjudicationService({ config: settings, mode: "replay", clock: new VirtualClock(), fast: identity("fast", settings.fast), deep: identity("deep", settings.deep), cache: { async get(key) { return entries.get(key); }, async put() { throw new Error("回放校验禁止改写缓存"); } } });
-  const cancelled = new Set(calls.filter((call) => call.status === "cancelled").map((call) => String(call.inputHash)));
-  for (const event of events.filter((event) => event.type === "pair_judged")) {
+  const service = createAdjudicationService({ config: settings, mode: "replay", clock: new VirtualClock(), fast: identity("fast", settings.fast), deep: identity("deep", settings.deep), ...(subscriptions.length ? { recordedSubscriptions: subscriptions } : {}), cache: { async get(key) { return entries.get(key); }, async put() { throw new Error("回放校验禁止改写缓存"); } } });
+  const cancelled = new Set(subscriptions.length ? subscriptions.filter((entry) => entry.status === "cancelled").map((entry) => `${entry.inputHash}:${entry.occurrence}`) : calls.filter((call) => call.status === "cancelled").map((call) => String(call.inputHash)));
+  if (!subscriptions.length) for (const event of events.filter((event) => event.type === "pair_judged")) {
     const verdict = event.verdict as ZoneVerdict;
     if (verdict.adjudication) cancelled.delete(verdict.adjudication.inputHash);
   }
@@ -50,8 +51,8 @@ if (settings) {
   for (let pass = 0; ; pass += 1) {
     if (pass > events.length) throw new Error("回放校验的输入集合未能稳定");
     requests.clear();
-    replayTrace(events, { policy: createReplayModelPolicy(settings, responses, (input, local) => requests.set(inputHash(input), { input, local }), contexts, cancelled), libs, initialFiles });
-    const missing = [...requests].filter(([hash]) => !responses.has(hash) && !cancelled.has(hash));
+    replayTrace(events, { policy: createReplayModelPolicy(settings, responses, (input, local, occurrence) => requests.set(replayModelRequestKey(input, occurrence), { input, local }), contexts, cancelled), libs, initialFiles });
+    const missing = [...requests].filter(([key]) => !responses.has(key) && (subscriptions.length || !cancelled.has(key.slice(0, 64))));
     if (!missing.length) break;
     for (const [hash, request] of missing) responses.set(hash, await service.judge(request.input, request.local, new AbortController().signal));
   }

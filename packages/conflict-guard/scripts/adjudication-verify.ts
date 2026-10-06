@@ -22,6 +22,9 @@ for (const id of policies) for (const call of recorded.policies[id].model.calls)
 }
 const identities = path.join(directory, "adjudication-models.json");
 await fs.writeFile(identities, JSON.stringify(models, null, 2) + "\n");
+const subscriptions = Object.fromEntries(policies.filter((id) => Array.isArray(recorded.policies[id].model.subscriptions)).map((id) => [id, recorded.policies[id].model.subscriptions]));
+const subscriptionFile = path.join(directory, "adjudication-subscriptions.json");
+if (Object.keys(subscriptions).length) await fs.writeFile(subscriptionFile, JSON.stringify(subscriptions, null, 2) + "\n");
 const comparable = (report: typeof recorded) => canonicalJson(Object.fromEntries(policies.map((id) => {
   const row = report.policies[id];
   return [id, { metrics: row.metrics, groups: row.groups, inputHashes: row.inputHashes, t03: row.t03, model: { tasks: row.model.tasks, successful: row.model.successful, completionRatio: row.model.completionRatio, p50Ms: row.model.p50Ms, p95Ms: row.model.p95Ms } }];
@@ -30,7 +33,7 @@ const reference = comparable(recorded);
 const rounds: Array<{ round: number; recordMatches: boolean; sha256: string; networkCalls: number }> = [];
 for (let round = 1; round <= 3; round += 1) {
   const output = path.join(directory, `replay-${round}`);
-  await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", values.dataset!, "--policy", policies.join(","), "--provider-mode", "replay", "--config", configuration, "--models", identities, "--cache", values.cache!, "--out", output], { cwd: process.cwd(), maxBuffer: 1024 * 1024 });
+  await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", values.dataset!, "--policy", policies.join(","), "--provider-mode", "replay", "--config", configuration, "--models", identities, "--cache", values.cache!, "--out", output, ...(Object.keys(subscriptions).length ? ["--subscriptions", subscriptionFile] : [])], { cwd: process.cwd(), maxBuffer: 1024 * 1024 });
   const replayed = await read(path.join(output, "results.json.gz"));
   const networkCalls = policies.reduce((sum, id) => sum + replayed.policies[id].model.httpCalls, 0);
   const bytes = await fs.readFile(path.join(output, "results.json.gz"));
