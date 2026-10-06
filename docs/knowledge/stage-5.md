@@ -65,12 +65,20 @@
 
 服务端复盘与 Agent self recap 的 12 次验收均返回合法结构，引用列表均至少包含一条可解析引用，均未使用兜底。服务端调用使用 `minimax/MiniMax-M2`，self recap 使用同一 OpenCode session 的 `deepseek/deepseek-flash`。
 
-| 场景 | 模式 | 次数 | 未回落 | 引用可解析 | 规则原文 |
-| --- | --- | ---: | ---: | ---: | --- |
-| 跨属主改回 | server | 3 | 3 | 3 | Agents must not directly write or modify shared helper files without first consulting team members through the chat. Direct writes to shared utilities override team consensus and can lose important shared logic.；Agents must not perform direct file writes to shared or team-managed codebase files without member review; should use collaborative editing workflows or seek member approval first.；Do not perform direct writes that remove, modify, or replace shared helper functions in shared modules. Preserve the existing implementation and consult team members before changes. |
-| 追加纠正 | server | 3 | 3 | 3 | Do not write directly to state in session files. Use shared helper functions for state mutations.；Do not write session state directly. Use shared helper functions for all state mutations.；Do not write state directly in `src/session.ts`; identify and use the shared helper for state operations. |
-| 跨属主改回 | agent-self | 3 | 3 | 3 | In `src/session.ts`, do not modify or overwrite the shared helper via a direct write; preserve it unless an explicit coordinated change is approved.；Edits to `src/session.ts` must not introduce direct writes that bypass the shared helper; preserve the helper in the resulting diff.；Edits to `src/session.ts` must not overwrite or remove the shared helper. |
-| 追加纠正 | agent-self | 3 | 3 | 3 | In `src/session.ts` and related session modules, session state must not be assigned directly; use the shared helper.；In `src/session.ts`, session state must be mutated through the shared helper; do not write state directly.；在 `src/session.ts` 中修改 session 状态时，必须调用共享 helper，不得直接对状态赋值。 |
+| 场景 | 模式 | 次数 | 是否回落 | 引用可解析数 | 规则原文 |
+| --- | --- | ---: | --- | ---: | --- |
+| 跨属主改回 | server | 1 | 否 | 6 | Agents must not directly write or modify shared helper files without first consulting team members through the chat. Direct writes to shared utilities override team consensus and can lose important shared logic. |
+| 跨属主改回 | server | 2 | 否 | 6 | Agents must not perform direct file writes to shared or team-managed codebase files without member review; should use collaborative editing workflows or seek member approval first. |
+| 跨属主改回 | server | 3 | 否 | 5 | Do not perform direct writes that remove, modify, or replace shared helper functions in shared modules. Preserve the existing implementation and consult team members before changes. |
+| 追加纠正 | server | 1 | 否 | 4 | Do not write directly to state in session files. Use shared helper functions for state mutations. |
+| 追加纠正 | server | 2 | 否 | 4 | Do not write session state directly. Use shared helper functions for all state mutations. |
+| 追加纠正 | server | 3 | 否 | 3 | Do not write state directly in `src/session.ts`; identify and use the shared helper for state operations. |
+| 跨属主改回 | agent-self | 1 | 否 | 8 | In `src/session.ts`, do not modify or overwrite the shared helper via a direct write; preserve it unless an explicit coordinated change is approved. |
+| 跨属主改回 | agent-self | 2 | 否 | 8 | Edits to `src/session.ts` must not introduce direct writes that bypass the shared helper; preserve the helper in the resulting diff. |
+| 跨属主改回 | agent-self | 3 | 否 | 7 | Edits to `src/session.ts` must not overwrite or remove the shared helper. |
+| 追加纠正 | agent-self | 1 | 否 | 7 | In `src/session.ts` and related session modules, session state must not be assigned directly; use the shared helper. |
+| 追加纠正 | agent-self | 2 | 否 | 4 | In `src/session.ts`, session state must be mutated through the shared helper; do not write state directly. |
+| 追加纠正 | agent-self | 3 | 否 | 7 | 在 `src/session.ts` 中修改 session 状态时，必须调用共享 helper，不得直接对状态赋值。 |
 
 服务端六次均通过解析，Agent self recap 六次均通过解析，合计 12 次均未使用兜底。Agent self recap 的一次真实用量记录为 `inputTokens=18043`、`outputTokens=427`、`reasoningTokens=428`、`cacheReadTokens=1664`、`totalTokens=18898`、`cost=0`；该调用只写入自我复盘 trace 与 `llm-calls.jsonl`，没有计入用户 run。注入字符数按 `Math.ceil(totalChars / 4)` 估算 token 数。模型调用日志新增 `provider`、`model` 和完整用量字段，提示词仍只保存哈希。
 
