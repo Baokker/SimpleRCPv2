@@ -254,7 +254,11 @@ export function attachRealtimeServer(
       });
     });
     const removeConflictGuardListener = runtime.onConflictGuardStateChanged((version) => {
-      broadcastToProject(projectSockets, runtime.project.id, { type: "conflict_guard_state_changed", version });
+      for (const socket of projectSockets.get(runtime.project.id) ?? []) {
+        if (socket.readyState !== socket.OPEN) continue;
+        try { socket.send(JSON.stringify({ type: "conflict_guard_state_changed", version, state: runtime.conflictGuard ? { mode: runtime.conflictGuard.mode, ...runtime.conflictGuard.state(identities.get(socket)?.memberId) } : undefined })); }
+        catch { console.error("Conflict guard state push failed"); }
+      }
     });
     runtimeSubscriptions.set(runtime.project.id, [
       removeWorkspaceListener,

@@ -4,9 +4,9 @@ import path from "node:path";
 import { isSemanticFile, type SemanticFileProvider } from "@simplercp/conflict-guard";
 import { resolveWorkspacePath } from "../workspace.js";
 
-export function createWorkspaceSemanticFiles(root: string, mirror: (file: string) => { text: string; version: number } | undefined): SemanticFileProvider {
+export function createWorkspaceSemanticFiles(root: string, mirror: (file: string) => { text: string; version: number } | undefined): SemanticFileProvider & { contextFiles(): string[] } {
   const require = createRequire(import.meta.url);
-  function listFiles(directory = ""): string[] {
+  function listFiles(directory = "", context = false): string[] {
     let entries;
     try {
       entries = readdirSync(path.join(root, directory), { withFileTypes: true });
@@ -17,12 +17,13 @@ export function createWorkspaceSemanticFiles(root: string, mirror: (file: string
     return entries.flatMap((entry) => {
       const file = path.posix.join(directory, entry.name);
       if (["node_modules", ".git", "dist", "build", "coverage"].includes(entry.name)) return [];
-      if (entry.isDirectory()) return listFiles(file);
-      return entry.isFile() && isSemanticFile(file) ? [file] : [];
+      if (entry.isDirectory()) return listFiles(file, context);
+      return entry.isFile() && (isSemanticFile(file) || context && /\.[cm]?[jt]sx?$/.test(file)) ? [file] : [];
     });
   }
   return {
     listFiles,
+    contextFiles: () => listFiles("", true),
     readFile: (file) => mirror(file)?.text ?? readFileSync(resolveWorkspacePath(root, file), "utf8"),
     version(file) {
       const current = mirror(file);

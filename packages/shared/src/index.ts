@@ -321,6 +321,7 @@ export type ServerMessage =
   | {
       type: "conflict_guard_state_changed";
       version: number;
+      state?: unknown;
     };
 
 export type TerminalClientMessage =

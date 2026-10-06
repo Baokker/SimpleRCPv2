@@ -18,11 +18,14 @@ import {
   type FileChange,
   type ActorRef,
   classify,
+  buildAdjudicationInput,
+  defaultAdjudicationConfig,
   createSessionCoordinator,
   type PairCoordinator
 } from "@simplercp/conflict-guard";
 import { FILESYSTEM_ORIGIN } from "../textDelta.js";
 import { createWorkspaceSemanticFiles } from "./semanticFiles.js";
+import { createServerAdjudication, type ServerAdjudicationConfig } from "./adjudicationRuntime.js";
 
 const require = createRequire(import.meta.url);
 const YRuntime = require("yjs") as typeof import("yjs");
@@ -34,6 +37,7 @@ export interface ProjectConflictGuardConfig {
   maxBatchDurationMs: number;
   activeIdleMs: number;
   cursorDebounceMs: number;
+  adjudication?: ServerAdjudicationConfig;
 }
 
 interface ConnectionIdentity {
@@ -97,7 +101,21 @@ export function createProjectConflictGuard(options: {
   let persistConflicts = 0;
   let uiActionCount = 0;
   const t0Warnings: Array<{ id: string; memberId: string; pairId: string; summary: string; at: number }> = [];
-  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, intervene: options.config.mode === "rules" || options.config.mode === "full", onError(error) { console.error("Conflict guard pair classification failed", error); }, onEvent(event) {
+  const adjudicationSettings = options.config.adjudication?.settings ?? defaultAdjudicationConfig;
+  const adjudication = options.config.mode === "full" && options.config.adjudication && adjudicationSettings.strategy !== "G0" ? createServerAdjudication(options.config.adjudication, clock, options.sensitiveValues ?? [], (call) => {
+    void appendTrace({ type: "provider_call", ...call });
+    stateVersion += 1;
+    options.onStateChanged?.(stateVersion);
+  }) : undefined;
+  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
+    try {
+      const left = session.symbolFor(pair.left.actor, pair.left.symbol);
+      const right = session.symbolFor(pair.right.actor, pair.right.symbol);
+      if (!left || !right) throw new Error("研判输入缺少符号");
+      const input = buildAdjudicationInput({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, path: pair.path, nested: false, typeOnly: Boolean(pair.path?.typeOnly), project: { ...semanticIndex, readFile: semanticFiles.readFile } }, local, adjudicationSettings, semanticFiles.contextFiles());
+      void adjudication.judge(input, local, signal).then(complete).catch(() => { if (!signal.aborted) complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); });
+    } catch { complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); }
+  } } : {}), intervene: options.config.mode === "rules" || options.config.mode === "full", onError(error) { console.error("Conflict guard pair classification failed", error); }, onEvent(event) {
     if (event.type === "t0_warning") {
       t0Warnings.push({ id: String(event.id), memberId: String(event.memberId), pairId: String(event.pairId), summary: String(event.summary), at: clock.now() });
       if (t0Warnings.length > 100) t0Warnings.shift();
@@ -182,6 +200,7 @@ export function createProjectConflictGuard(options: {
       activeIdleMs: options.config.activeIdleMs,
       cursorDebounceMs: options.config.cursorDebounceMs
     },
+    ...(adjudication ? { adjudication: adjudicationSettings } : {}),
     gitCommit: options.gitCommit
   });
 
@@ -477,10 +496,12 @@ export function createProjectConflictGuard(options: {
       traceWriteFailures,
       index: { ...semanticIndex.stats(), latestUpdate },
       changeSets: tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) })),
-      activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, ...symbol }) => symbol) })),
+      activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, beforeComments: _comments, ...symbol }) => symbol) })),
       candidatePairs: semantic.getCandidatePairs(),
       pairDecisions: pairCoordinator.records().filter((record) => record.status !== "closed").map((record) => ({ ...record, verdict: record.verdict })),
       frozenFiles: frozenFiles(),
+      analyzingFiles: analyzingFiles(),
+      adjudication: adjudication?.stats(),
       blockedPersists: [...blockedPersists.entries()].map(([file, reason]) => ({ file, reason })),
       persistConflicts,
       persistBlockedCount,
@@ -518,6 +539,18 @@ export function createProjectConflictGuard(options: {
       files.set(region.file, entries);
     }
     return [...files.entries()].map(([file, regions]) => ({ file, regions }));
+  }
+
+  function analyzingFiles() {
+    const files = new Map<string, Array<{ pairId: string; startLine: number; endLine: number; summary: string }>>();
+    for (const region of session.analyzingRegions()) {
+      const text = mirrors.get(region.file)?.text ?? semanticFiles.readFile(region.file);
+      const lineAt = (position: number) => text.slice(0, position).split("\n").length;
+      const entries = files.get(region.file) ?? [];
+      entries.push({ pairId: region.pairId, startLine: lineAt(region.start), endLine: lineAt(Math.max(region.start, region.end - 1)), summary: region.summary });
+      files.set(region.file, entries);
+    }
+    return [...files].map(([file, regions]) => ({ file, regions }));
   }
 
   function persistGate(file: string) {
@@ -660,6 +693,8 @@ export function createProjectConflictGuard(options: {
     revertPair,
     pairCoordinator,
     dispose() {
+      session.dispose();
+      adjudication?.dispose();
       try {
         if (semanticTimer !== undefined) clearTimeout(semanticTimer);
         semanticTimer = undefined;

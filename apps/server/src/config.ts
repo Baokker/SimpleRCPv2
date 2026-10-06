@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ProjectConflictGuardConfig } from "./conflictGuard/projectConflictGuard.js";
+import { defaultAdjudicationConfig, validateAdjudicationConfig } from "@simplercp/conflict-guard";
 
 const defaultRepositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -97,14 +98,22 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
-    sensitiveValues: [env.DEEPSEEK_API_KEY, env.TYPESAFE_API_KEY].filter((value): value is string => Boolean(value)),
+    sensitiveValues: [env.DEEPSEEK_API_KEY, env.TYPESAFE_API_KEY, env.ADJUDICATION_COMPATIBLE_API_KEY].filter((value): value is string => Boolean(value)),
     conflictGuard: {
       mode: conflictGuardMode as ProjectConflictGuardConfig["mode"],
       idleMs: 1_500,
       cursorLeaveLines: 3,
       maxBatchDurationMs: 5_000,
       activeIdleMs: 600_000,
-      cursorDebounceMs: 200
+      cursorDebounceMs: 200,
+      ...(conflictGuardMode === "full" ? { adjudication: {
+        settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: env.CONFLICT_GUARD_DEEP ?? "deepseek" }),
+        mode: (env.CONFLICT_GUARD_PROVIDER_MODE ?? "live") as "live" | "record" | "replay",
+        cacheDirectory: path.resolve(repositoryRoot, "packages/conflict-guard/bench/model-cache"),
+        jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: env.TYPESAFE_BASE_URL },
+        deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: agentBaseUrl.toString().replace(/\/$/, ""), model: agentModel },
+        ...(env.ADJUDICATION_COMPATIBLE_BASE_URL && env.ADJUDICATION_COMPATIBLE_MODEL ? { compatible: { apiKey: env.ADJUDICATION_COMPATIBLE_API_KEY, baseUrl: env.ADJUDICATION_COMPATIBLE_BASE_URL, model: env.ADJUDICATION_COMPATIBLE_MODEL } } : {})
+      } } : {})
     },
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
