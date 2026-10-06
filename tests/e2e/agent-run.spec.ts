@@ -132,14 +132,12 @@ test("member sees a concurrent change warning when editing an Agent file", async
     "Use the bash tool to run sleep 3. Then replace src/hello.ts with exactly: agent replaced this file"
   );
   await page.getByTestId("agent-run-submit").click();
-  await page.waitForTimeout(500);
+  await expect(page.getByTestId("agent-selected-run").last()).toContainText("Running");
   await page.evaluate(() => {
     window.__simplercpEditors?.["src/hello.ts"]?.setValue(
       "member changed while agent ran"
     );
   });
-  await page.waitForTimeout(700);
-
   await expect(page.getByTestId("agent-selected-run").last()).toContainText("Completed", {
     timeout: 90_000
   });
