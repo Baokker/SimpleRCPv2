@@ -1,6 +1,7 @@
 import type {
   AgentFileChange,
-  AgentRuntimeStatus
+  AgentRuntimeStatus,
+  AgentRunUsage
 } from "@simplercp/shared";
 
 export interface AgentRuntimeEvent {
@@ -20,7 +21,7 @@ export interface AgentRuntime {
     workspacePath: string;
     sessionId: string;
     prompt: string;
-  }): Promise<{ text: string; messageId?: string }>;
+  }): Promise<{ text: string; messageId?: string; usage?: AgentRunUsage }>;
   getDiff(input: {
     workspacePath: string;
     sessionId: string;

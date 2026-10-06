@@ -561,6 +561,11 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     return { kind: input.kind, pattern: input.pattern, ...(input.flags === undefined ? {} : { flags: input.flags }), fileGlob: input.fileGlob } as const;
   }
 
+  function hasRuleContent(content: string) {
+    const match = content.match(/(?:^|\n)##\s*规则\s*\n([\s\S]*?)(?=\n##\s|$)/i);
+    return Boolean(match?.[1]?.trim());
+  }
+
   async function update(actor: KnowledgeActor, id: string, patch: Record<string, unknown>) {
     return enqueue(async () => {
       const stored = await readCard(id);
@@ -580,6 +585,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
       if (stored.card.status !== "draft") throw new Error("Only draft knowledge cards can be confirmed");
       const card = input.patch === undefined ? stored.card : await applyPatch(stored.card, input.patch, actor);
+      if (card.fallback && !hasRuleContent(card.content)) throw new Error("Fallback knowledge drafts require a rule before confirmation");
       if (stored.card.provenance?.origin === "human-agent" && card.scope === "team" && stored.card.scope !== "team") throw new Error("Agent-origin cards must use team scope confirmation");
       const edited = input.edited === true
         || (["type", "title", "summary", "content", "tags", "scope", "anchors"] as const).some(key => JSON.stringify(stored.card[key]) !== JSON.stringify(card[key]))
@@ -751,7 +757,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     get,
     relationCandidates,
     create,
-    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; provenance: KnowledgeProvenance; source: "ai" | "event"; scope?: KnowledgeScope; anchors?: Array<{ file: string; selection: KnowledgeAnchorSelection }>; appliesTo?: KnowledgeCard["appliesTo"]; check?: KnowledgeCard["check"] }) {
+    createDraft(actor: KnowledgeActor, draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; confidence?: number; fallback?: boolean; provenance: KnowledgeProvenance; source: "ai" | "event"; scope?: KnowledgeScope; anchors?: Array<{ file: string; selection: KnowledgeAnchorSelection }>; appliesTo?: KnowledgeCard["appliesTo"]; check?: KnowledgeCard["check"] }) {
       return enqueue(async () => {
         const now = Date.now();
         const anchors: KnowledgeAnchor[] = [];

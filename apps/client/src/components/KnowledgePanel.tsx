@@ -360,9 +360,11 @@ export function KnowledgePanel({
         <div className="knowledge-editor" role="dialog" aria-label="知识卡片编辑器">
           <h3>{editingCard ? "编辑知识卡片" : "知识卡片"}</h3>
           {draftEvidence ? <aside className="knowledge-draft-evidence">
+            {draftEvidence.ai?.fallback ? <p role="alert">模型未能生成规则，请人工填写</p> : null}
             <details open><summary>原始证据</summary><pre>{JSON.stringify(draftEvidence.evidence, null, 2)}</pre></details>
             <strong>建议锚点</strong>{draftEvidence.suggestedAnchors?.map((anchor, index) => <label key={index}><input type="checkbox" checked={selectedAnchors.includes(index)} onChange={event => setSelectedAnchors(items => event.target.checked ? [...items, index] : items.filter(item => item !== index))} />{anchor.file}:{anchor.startLine}–{anchor.endLine} · {anchor.reasons.join("、")}</label>)}
           </aside> : null}
+          {editingCard?.fallback ? <p role="alert">模型未能生成规则，请人工填写</p> : null}
           {editingCard?.status === "draft" ? <select value={authorMemberId} onChange={event => setAuthorMemberId(event.target.value)} aria-label="卡片作者">{members.map(member => <option key={member.id} value={member.id}>{member.displayName}</option>)}</select> : null}
           {editingCard ? (
             <div className="knowledge-editor-anchors">

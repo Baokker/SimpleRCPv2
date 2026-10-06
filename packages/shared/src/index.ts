@@ -127,6 +127,16 @@ export interface AgentFileChange {
   afterText?: string;
 }
 
+export interface AgentRunUsage {
+  inputTokens?: number;
+  outputTokens?: number;
+  reasoningTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  totalTokens?: number;
+  cost?: number;
+}
+
 export interface AgentPromptContext {
   type: "file";
   path: string;
@@ -161,6 +171,7 @@ export interface AgentRun {
   output?: string;
   error?: string;
   fileChanges?: AgentFileChange[];
+  usage?: AgentRunUsage;
   createdAt: string;
   startedAt?: string;
   finishedAt?: string;

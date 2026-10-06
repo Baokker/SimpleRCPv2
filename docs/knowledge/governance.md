@@ -16,4 +16,6 @@
 
 状态变更时服务端通过 `knowledge_anchor_needs_review` 通知属主和确认人，消息不包含卡片正文。
 
+`correctionClassifier` 与 `contradictionJudge` 当前没有配置项，`rules+llm` 和 `llm` 尚未实现。后续阶段可以在保留人工确认的前提下增加这两项可选能力。
+
 阶段五定义 `KnowledgeEventSink` 接口，支持 `terminal.commandDenied`、`terminal.commandApproved`、`conflict.detected` 和 `conflict.resolved`，事件包含参与者、文件、时间和说明。点一、点二的事件接入留给后续阶段。

@@ -208,7 +208,11 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `DEEPSEEK_API_KEY`：DeepSeek API Key，Agent 任务需要该变量。
 - `DEEPSEEK_BASE_URL`：OpenAI-compatible API 地址，默认值为 `https://api.deepseek.com/v1`。
 - `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-chat`。
-- `KNOWLEDGE`：过程性知识功能模式，可选 `off`、`capture`、`inject`、`full`，默认值为 `off`。当前阶段只解析配置并在服务端启动日志中打印模式。
+- `KNOWLEDGE`：过程性知识功能模式，可选 `off`、`capture`、`inject`、`full`，默认值为 `off`；分别对应关闭、捕获、Agent 注入和全部知识功能。
+- `KNOWLEDGE_LLM_PROVIDER`：服务端知识模型，可选 `minimax`、`deepseek`；存在 `MINIMAX_API_KEY` 时默认使用 MiniMax。
+- `MINIMAX_API_KEY`：服务端知识模块使用的 MiniMax API Key。
+- `MINIMAX_BASE_URL`：MiniMax OpenAI-compatible API 地址，默认值为 `https://api.minimaxi.com/v1`。
+- `MINIMAX_MODEL`：服务端知识模型名称，默认值为 `MiniMax-M2`。
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 

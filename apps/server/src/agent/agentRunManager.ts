@@ -7,8 +7,10 @@ import type {
   AgentSession,
   AgentTraceEvent,
   AgentPromptContext,
-  EventRecord
+  EventRecord,
+  AgentRunUsage
 } from "@simplercp/shared";
+import { buildAgentRecapSystemPrompt, type LlmUsage } from "@simplercp/knowledge";
 import type { AgentRuntime } from "./agentRuntime.js";
 import { createAgentRunStore, type AgentRunStore } from "./agentRunStore.js";
 import {
@@ -87,6 +89,34 @@ function addSnapshotContents(
       ...(afterText !== undefined ? { afterText } : {})
     };
   });
+}
+
+function addUsage(current: AgentRunUsage | undefined, next: AgentRunUsage | undefined): AgentRunUsage | undefined {
+  if (!current && !next) return undefined;
+  const result: AgentRunUsage = { ...(current ?? {}) };
+  for (const key of ["inputTokens", "outputTokens", "reasoningTokens", "cacheReadTokens", "cacheWriteTokens", "totalTokens", "cost"] as const) {
+    if (next?.[key] !== undefined) result[key] = (result[key] ?? 0) + next[key]!;
+  }
+  return result;
+}
+
+function sumUsage(values: Iterable<AgentRunUsage>): AgentRunUsage | undefined {
+  let total: AgentRunUsage | undefined;
+  for (const value of values) total = addUsage(total, value);
+  return total;
+}
+
+function toLlmUsage(value: AgentRunUsage | undefined): LlmUsage | undefined {
+  if (!value) return undefined;
+  return {
+    ...(value.inputTokens === undefined ? {} : { promptTokens: value.inputTokens }),
+    ...(value.outputTokens === undefined ? {} : { completionTokens: value.outputTokens }),
+    ...(value.reasoningTokens === undefined ? {} : { reasoningTokens: value.reasoningTokens }),
+    ...(value.cacheReadTokens === undefined ? {} : { cacheReadTokens: value.cacheReadTokens }),
+    ...(value.cacheWriteTokens === undefined ? {} : { cacheWriteTokens: value.cacheWriteTokens }),
+    ...(value.totalTokens === undefined ? {} : { totalTokens: value.totalTokens }),
+    ...(value.cost === undefined ? {} : { cost: value.cost })
+  };
 }
 
 function extractToolEvent(type: string, data: Record<string, unknown>, run: AgentRun) {
@@ -234,13 +264,33 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const sessionId = run.runtimeSessionId ?? session?.runtimeSessionId;
     if (!sessionId) throw new Error("Agent runtime session is unavailable for self recap");
     const prompt = [
+      buildAgentRecapSystemPrompt(evidence),
       "Review the completed Agent task using only this evidence.",
-      "Return one strict JSON object with type, title, summary, whatHappened, correction, rule, appliesTo, notApplicable, scopeSuggestion, checkSuggestion, confidence, evidenceCitations, and unknowns.",
       `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}`
     ].join("\n\n");
-    const result = await options.runtime.run({ workspacePath: projectRuntime.project.workspacePath, sessionId, prompt });
-    await appendTrace(projectId, runId, { type: "knowledge_agent_self_recap", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), chars: result.text.length } });
-    return result.text;
+    const promptHash = crypto.createHash("sha256").update(prompt).digest("hex");
+    let result: Awaited<ReturnType<AgentRuntime["run"]>>;
+    try {
+      result = await options.runtime.run({ workspacePath: projectRuntime.project.workspacePath, sessionId, prompt });
+    } catch (error) {
+      const recapError = Object.assign(new Error(error instanceof Error ? error.message : String(error)), {
+        promptHash,
+        provider: run.provider,
+        model: run.model
+      });
+      await appendTrace(projectId, runId, {
+        type: "knowledge_recap_self",
+        data: {
+          promptHash,
+          provider: run.provider,
+          model: run.model,
+          error: recapError.message
+        }
+      });
+      throw recapError;
+    }
+    await appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider: run.provider, model: run.model, usage: result.usage } });
+    return { text: result.text, provider: run.provider, model: run.model, promptHash, usage: toLlmUsage(result.usage) };
   }
 
   function appendActivity(
@@ -394,6 +444,17 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let workspaceBefore: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     let workspacePath: string | undefined;
     let runtimeSessionId: string | undefined;
+    const observedUsage = new Map<string, AgentRunUsage>();
+    let usageRecorded = false;
+    const recordUsage = async (resultUsage?: AgentRunUsage, messageId?: string) => {
+      if (resultUsage) observedUsage.set(messageId ?? "result", resultUsage);
+      if (usageRecorded) return;
+      const totalUsage = sumUsage(observedUsage.values());
+      if (!totalUsage) return;
+      usageRecorded = true;
+      await updateRun(projectId, runId, { usage: totalUsage });
+      await appendTrace(projectId, runId, { type: "usage_summary", data: { ...totalUsage } });
+    };
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       workspacePath = projectRuntime.project.workspacePath;
@@ -526,7 +587,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             activeFiles: knowledgeContext.activeFiles,
             excludedByUser: knowledgeContext.excludedByUser,
             cards: knowledgeContext.records,
-            totalChars: knowledgeContext.totalChars
+            totalChars: knowledgeContext.totalChars,
+            estimatedInjectionTokens: knowledgeContext.estimatedInjectionTokens
           }
         });
         appendActivity(projectId, {
@@ -561,10 +623,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           });
           const tool = extractToolEvent(event.type, event.data, run);
           if (tool) await projectRuntime.capture?.agentTool({ ...tool, traceSeq: traceEvent.sequence });
+          const usage = event.data.usageSummary;
+          const info = event.data.info;
+          const messageId = info && typeof info === "object" && typeof (info as { id?: unknown }).id === "string"
+            ? (info as { id: string }).id
+            : undefined;
+          if (usage && typeof usage === "object") observedUsage.set(messageId ?? `event-${traceEvent.sequence}`, usage as AgentRunUsage);
         }
       );
 
-      let result: { text: string; messageId?: string };
+      let result: { text: string; messageId?: string; usage?: AgentRunUsage };
       try {
         result = await runWithTimeout(options.runtime.run({
           workspacePath: projectRuntime.project.workspacePath,
@@ -577,6 +645,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } catch (error) {
         const latestAfterFailure = await store.get(runId);
         if (latestAfterFailure?.status === "cancelled") {
+          await recordUsage();
           const cancelledChanges = await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore!);
           const interruptedByRun = latestAfterFailure.interruptedByRunId ? await store.get(latestAfterFailure.interruptedByRunId) : undefined;
           await projectRuntime.capture?.agentRun({
@@ -600,6 +669,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       }
       const latest = await store.get(runId);
       if (latest?.status === "cancelled") {
+        await recordUsage(result.usage, result.messageId);
         const cancelledChanges = await recordCancelledFileChanges(projectId, runId, projectRuntime.project.workspacePath, activeRuntimeSessionId, workspaceBefore!, result.messageId);
         const interruptedByRun = latest.interruptedByRunId ? await store.get(latest.interruptedByRunId) : undefined;
         await projectRuntime.capture?.agentRun({
@@ -632,6 +702,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         runtimeFileChanges
       );
       const recordedFileChanges = addSnapshotContents(fileChanges, workspaceBefore, workspaceAfter);
+      await recordUsage(result.usage, result.messageId);
       const agentOwnerId = run.initiatorMemberId ?? run.memberId;
       const agentRanges = fileChanges.flatMap((change) => insertedRanges(workspaceBefore?.get(change.file)?.content, workspaceAfter.get(change.file)?.content).map((range) => ({ file: change.file, ...range, ownerId: agentOwnerId })));
       await projectRuntime.capture?.agentRun({
@@ -708,6 +779,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
     } catch (error) {
       const latest = await store.get(runId);
+      await recordUsage();
       if (latest?.status === "cancelled") return;
       const message = error instanceof Error ? error.message : "Agent run failed";
       let failedFileChanges = current.fileChanges;

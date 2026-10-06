@@ -30,7 +30,7 @@ export async function createApp(config: ServerConfig) {
     knowledgeMode: config.knowledge ?? "off",
     knowledgeRecordEvents: config.knowledgeRecordEvents,
     captureConfig: config.captureConfig,
-    llm: config.agent
+    llm: config.knowledgeLlm
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),

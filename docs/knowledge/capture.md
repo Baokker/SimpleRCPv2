@@ -65,7 +65,7 @@
 
 接受使用 `extractKnowledgeCardDraft` 的确定性草稿。AI 草稿通过已有 OpenAI compatible HTTP 客户端调用配置的模型。卡片以 `draft` 保存，`provenance.origin` 为 `human-human`，保留 suggestion id、聊天 id、文件与 revision。覆写作者默认为改写者；聊天作者默认为发言最多的成员，同次数按成员 id 排序。确认界面可以修改作者、内容、作用域与选择候选锚点。
 
-同一建议的并发处理返回 `409`，完成后持久状态阻止重复处理。模型请求失败继续报告错误，建议保留在 Inbox。`llm-calls.jsonl` 记录模型、耗时、累计 token、尝试次数、是否完成、是否使用确定性草稿及每次提示词的 SHA-256。日志不保存完整提示词。确认日志记录 `editedBeforeConfirm` 和打开编辑器到确认的 `durationMs`。
+同一建议的并发处理返回 `409`，完成后持久状态阻止重复处理。模型请求失败继续报告错误，建议保留在 Inbox。`llm-calls.jsonl` 记录 provider、模型、耗时、累计 token、尝试次数、是否完成、是否使用确定性草稿及每次提示词的 SHA-256。日志不保存完整提示词。MiniMax 返回的 `<think>...</think>` 在 JSON 解析前清理。确认日志记录 `editedBeforeConfirm` 和打开编辑器到确认的 `durationMs`。
 
 ## 风险提醒与打扰控制
 

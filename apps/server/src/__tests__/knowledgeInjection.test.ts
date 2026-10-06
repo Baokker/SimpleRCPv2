@@ -77,10 +77,15 @@ describe("knowledge agent injection", () => {
       const response = await fetch(`${origin}/api/projects/demo/agent/runs/${injectedRunId}`, { headers });
       injectedStatus = ((await response.json()) as { run: { status: string } }).run.status;
     }
+    const injectedRun = await fetch(`${origin}/api/projects/demo/agent/runs/${injectedRunId}`, { headers });
+    const injectedRunBody = (await injectedRun.json()) as { run: { usage?: Record<string, number> } };
+    expect(injectedRunBody.run.usage).toMatchObject({ inputTokens: 120, outputTokens: 48, reasoningTokens: 12, totalTokens: 180, cost: 0.0018 });
     const injectedTrace = await fetch(`${origin}/api/projects/demo/agent/runs/${injectedRunId}/trace`, { headers });
     const injectedEvents = (await injectedTrace.json() as { events: Array<{ type: string; data?: Record<string, unknown> }> }).events;
     expect(injectedEvents.map((event) => event.type)).toContain("knowledge_injected");
     expect(String(injectedEvents.find((event) => event.type === "opencode.fake.started")?.data?.prompt)).toContain("Project rule");
+    expect(injectedEvents.find((event) => event.type === "knowledge_injected")?.data?.estimatedInjectionTokens).toBeGreaterThan(0);
+    expect(injectedEvents.find((event) => event.type === "usage_summary")?.data).toMatchObject({ inputTokens: 120, outputTokens: 48, totalTokens: 180, cost: 0.0018 });
 
     const created = await fetch(`${origin}/api/projects/demo/agent/runs`, { method: "POST", headers, body: JSON.stringify({ prompt: "Follow the project rule fake-reply=done", knowledge: { excludeCardIds: [card.id] } }) });
     expect(created.status).toBe(202);

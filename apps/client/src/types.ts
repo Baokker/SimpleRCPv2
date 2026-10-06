@@ -64,6 +64,7 @@ export interface KnowledgeCard {
   title: string;
   summary: string;
   content: string;
+  fallback?: boolean;
   status: KnowledgeCardStatus;
   tags: string[];
   createdAt: number;
@@ -109,6 +110,7 @@ export interface KnowledgeSuggestion {
   suggestedSummary?: string; suggestedAnchors?: SuggestedKnowledgeAnchor[];
   dedupe?: { cardId: string; score: number };
   seenBy?: string[];
+  ai?: { provider?: string; model?: string; fallback: boolean };
 }
 export interface KnowledgeCardInput {
   type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "proposedTeam" | "team";

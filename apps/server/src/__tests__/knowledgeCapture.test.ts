@@ -214,6 +214,35 @@ describe("knowledge capture with real collaboration", () => {
     expect(await s.runtime.knowledge!.list({ memberId: ada, displayName: "Ada" })).toHaveLength(1);
   });
 
+  it("requires a human rule before confirming a fallback Agent draft", async () => {
+    const s = await start(); const ada = await s.join("Ada");
+    const draft = await s.runtime.knowledge!.createDraft({ memberId: ada, displayName: "Ada" }, {
+      type: "decision",
+      title: "Agent correction",
+      summary: "A rule needs human review",
+      content: "## 发生了什么\nAgent changed the file.\n\n## 规则\n",
+      tags: ["agent.revised"],
+      fallback: true,
+      source: "event",
+      scope: "personal",
+      provenance: {
+        origin: "human-agent",
+        author: { kind: "human", memberId: ada, displayName: "Ada" },
+        trigger: { type: "agent.revised", suggestionId: "suggestion-1" },
+        evidenceRefs: { runIds: ["run-1"], chatMessageIds: [] }
+      }
+    });
+    const rejected = await s.request(ada, `knowledge/cards/${draft.id}/confirm`, { edited: false });
+    expect(rejected.response.status).toBe(400);
+    expect(rejected.body.error).toContain("require a rule");
+    const confirmed = await s.request(ada, `knowledge/cards/${draft.id}/confirm`, {
+      edited: true,
+      patch: { content: "## 发生了什么\nAgent changed the file.\n\n## 规则\nReview the Agent diff before accepting it." }
+    });
+    expect(confirmed.response.status).toBe(200);
+    expect(confirmed.body.card).toMatchObject({ status: "reviewed", fallback: true });
+  });
+
   it("moves an unresolved anchor from needsReview to orphaned after the configured age", async () => {
     const s = await start(); const ada = await s.join("Ada");
     const card = await s.runtime.knowledge!.create({ memberId: ada, displayName: "Ada" }, {

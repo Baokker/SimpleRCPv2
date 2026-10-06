@@ -60,6 +60,7 @@ export interface KnowledgeCard {
     title: string;
     summary: string;
     content: string;
+    fallback?: boolean;
     source?: KnowledgeSource;
     status: KnowledgeCardStatus;
     tags: string[];
@@ -90,6 +91,7 @@ export function isKnowledgeCard(value: unknown): value is KnowledgeCard {
     const v = value as Partial<KnowledgeCard>;
     if (v.schemaVersion !== LatestSchemaVersion || typeof v.id !== 'string' || !v.id) return false;
     if (!isKnowledgeCardType(v.type) || typeof v.title !== 'string' || !v.title || typeof v.summary !== 'string' || typeof v.content !== 'string') return false;
+    if (v.fallback !== undefined && typeof v.fallback !== 'boolean') return false;
     if (v.source !== undefined && !isKnowledgeSource(v.source)) return false;
     if (!isKnowledgeCardStatus(v.status) || !Array.isArray(v.tags) || v.tags.some(t => typeof t !== 'string')) return false;
     if (v.confidence !== undefined && (!isFiniteNumber(v.confidence) || v.confidence < 0 || v.confidence > 1)) return false;
@@ -202,7 +204,7 @@ export interface CaptureSuggestion {
     resolvedBy?: string;
     draftCardId?: string;
     seenBy?: string[];
-    ai?: { model?: string; durationMs?: number; totalTokens?: number; fallback: boolean };
+    ai?: { provider?: string; model?: string; durationMs?: number; totalTokens?: number; fallback: boolean };
 }
 
 export function isCaptureSuggestion(value: unknown): value is CaptureSuggestion {

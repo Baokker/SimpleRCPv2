@@ -16,7 +16,7 @@ import type { KnowledgeMode } from "./config.js";
 
 export interface ProjectRuntimeOptions {
   terminalEnabled?: boolean; knowledgeMode?: KnowledgeMode; knowledgeRecordEvents?: boolean;
-  captureConfig?: CaptureConfigInput; riskWarningConfig?: Partial<RiskWarningConfig>; llm?: { apiKey?: string; baseUrl: string; model: string };
+  captureConfig?: CaptureConfigInput; riskWarningConfig?: Partial<RiskWarningConfig>; llm?: { provider?: "minimax" | "deepseek"; apiKey?: string; baseUrl: string; model: string };
 }
 export function createProjectRuntime(
   project: ProjectRecord,

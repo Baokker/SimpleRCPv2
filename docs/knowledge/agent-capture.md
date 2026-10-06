@@ -19,8 +19,10 @@
 
 Agent 文件归属在 run 结束后完成。服务端比较 run 前后的工作区快照，用文本 diff 提取新增区间，并以 `agent:<runId>` 和 `ownerId` 登记到 `AuthorshipIndex`。运行期间的文件系统回灌继续使用 `filesystem`，这样不会提前触发成员之间的覆写判断。成员改写 Agent 区间时，引擎通过 `onAgentRevised` 回调生成 `human-agent` 建议。建议证据包含 Agent 原任务、运行产生的文件差异、成员改写差异、聊天消息和最近光标；成员把文件完整恢复到运行前内容时也会生成同类建议。
 
-`agent.interrupted`、`agent.revised`、`agent.corrected` 的 AI 草稿默认使用服务端 `extractAgentRecapDraft`。项目设置为 `recapMode: "agent-self"` 时，服务端向已结束 run 的同一 OpenCode session 追加一次复盘请求，只接受符合 schema 且引用证据的 JSON；输出无效时记录失败并返回错误，不调用服务端复盘。服务端复盘失败时最多尝试三次，随后生成带未知项的个人草稿。`agent.retried` 与 `agent.toolRecovered` 使用普通 `extractKnowledgeCardDraft`。
+`agent.interrupted`、`agent.revised`、`agent.corrected` 的 AI 草稿默认使用服务端 `extractAgentRecapDraft`。项目设置为 `recapMode: "agent-self"` 时，服务端向已结束 run 的同一 OpenCode session 追加一次复盘请求，只接受符合 schema 且引用证据的 JSON；输出无效时记录失败并返回错误，不调用服务端复盘。服务端复盘失败时最多尝试三次，随后生成 `rule` 为空且带 `fallback: true` 的个人草稿，确认前必须补充规则。引用支持 `evidence.a[0].b`、`evidence.a.0.b` 以及省略 `evidence.` 的写法，单个无效引用会被删除，全部无效时才判定输出失败。`agent.retried` 与 `agent.toolRecovered` 使用普通 `extractKnowledgeCardDraft`。
 
 Agent 建议默认创建为 `personal` 草稿，确认人必须是成员。个人卡片可以请求 `proposedTeam`，第二名成员确认后变为 `team`。团队卡片可以通过关系接口建立 `contradicts`、`supersedes`、`duplicates` 或 `refines` 关系；`supersedes` 会把目标卡片标记为 `superseded`。相同 run、聊天消息或建议来源的建议会合并，注入时同一来源只保留分数最高的卡片。
 
-捕获事件文件仍位于 `<metadata>/knowledge/events.jsonl`，可以直接交给 `replayEvents` 回放。回放使用相同的引擎、配置和虚拟时钟，因此 Agent 触发与线上处理共享判定代码。工具恢复证据保留成功工具的 `traceSeq` 和修改文件列表；事件与证据写入前经过平台敏感信息清理，错误摘要最多保留 2000 个字符。
+捕获事件文件仍位于 `<metadata>/knowledge/events.jsonl`，可以直接交给 `replayEvents` 回放。回放使用相同的引擎、配置和虚拟时钟，因此 Agent 触发与线上处理共享判定代码。工具恢复证据保留成功工具的 `traceSeq` 和修改文件列表；事件与证据写入前经过平台敏感信息清理，错误摘要最多保留 2000 个字符。服务端知识模型由 `KNOWLEDGE_LLM_PROVIDER` 选择，默认在存在 `MINIMAX_API_KEY` 时使用 MiniMax，当前兼容地址为 `https://api.minimaxi.com/v1`，默认模型为 `MiniMax-M2`。模型调用记录包含 `provider`、`model`、耗时、用量、完成状态、兜底标记、尝试次数和提示词哈希。MiniMax 返回的 `<think>...</think>` 会在 JSON 解析前清理。
+
+`correctionClassifier: "rules+llm"` 与 `contradictionJudge: "llm"` 当前尚未实现，当前配置不提供这两个取值；后续阶段可以增加模型判定。

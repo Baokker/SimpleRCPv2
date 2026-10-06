@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { VirtualCaptureClock, createCaptureEngine, createKnowledgeEventSink, replayEvents, createAgentRecapFallback, parseAgentRecapDraft, createAgentRevisedSuggestion, type CaptureEvent } from "../src/index.js";
+import { VirtualCaptureClock, buildAgentRecapSystemPrompt, createCaptureEngine, createKnowledgeEventSink, replayEvents, createAgentRecapFallback, parseAgentRecapDraft, createAgentRevisedSuggestion, type CaptureEvent } from "../src/index.js";
 
 function run(events: CaptureEvent[]) {
   const clock = new VirtualCaptureClock(events[0]?.at ?? 0);
@@ -19,11 +19,25 @@ function event<T extends CaptureEvent>(value: Omit<T, "schemaVersion" | "seq">, 
 
 describe("Agent capture events", () => {
   test("creates grounded recap fallback citations", () => {
-    expect(createAgentRecapFallback({ previousRun: { runId: "run-1" } }).evidenceCitations).toEqual(["evidence.previousRun"]);
-    expect(createAgentRecapFallback({}).evidenceCitations).toEqual(["evidence"]);
+    expect(createAgentRecapFallback({ previousRun: { runId: "run-1" } })).toMatchObject({ evidenceCitations: ["evidence.previousRun"], rule: "", fallback: true });
+    expect(createAgentRecapFallback({})).toMatchObject({ evidenceCitations: ["evidence"], rule: "", fallback: true });
     expect(parseAgentRecapDraft(JSON.stringify({
       type: "decision", title: "Rule", summary: "Summary", whatHappened: "Agent changed a file", correction: "A member corrected it", rule: "Follow the member correction", appliesTo: { files: ["src/a.ts"], globs: [], taskKinds: [] }, notApplicable: "Other files", scopeSuggestion: { scope: "personal", reason: "Needs review" }, confidence: 0.8, evidenceCitations: ["evidence.previousRun.runId"], unknowns: []
     }), { previousRun: { runId: "run-1" } })).toMatchObject({ title: "Rule" });
+  });
+
+  test("accepts indexed citation paths and removes only invalid citations", () => {
+    const evidence = { chatMessages: [{ text: "use parser", author: "Ada" }] };
+    const draft = parseAgentRecapDraft(`<think>reasoning</think>${JSON.stringify({
+      type: "decision", title: "Rule", summary: "Summary", whatHappened: "Agent changed a file", correction: "A member corrected it", rule: "Follow the member correction", appliesTo: { files: [], globs: [], taskKinds: [] }, notApplicable: "Other files", scopeSuggestion: { scope: "personal", reason: "Needs review" }, confidence: 0.8, evidenceCitations: ["evidence.chatMessages[0].text", "evidence.chatMessages.0.author", "evidence.missing"], unknowns: []
+    })}`, evidence);
+    expect(draft?.evidenceCitations).toEqual(["evidence.chatMessages[0].text", "evidence.chatMessages.0.author"]);
+  });
+
+  test("lists only existing evidence paths in the recap prompt", () => {
+    const prompt = buildAgentRecapSystemPrompt({ chatMessages: [{ text: "use parser" }] });
+    expect(prompt).toContain("evidence.chatMessages[0].text");
+    expect(prompt).not.toContain("evidence.file");
   });
 
   test("captures interruption and correction in one session", () => {

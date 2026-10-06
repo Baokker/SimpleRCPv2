@@ -113,7 +113,7 @@ export function createFakeAgentRuntime(): AgentRuntime {
       const text = [...input.prompt.matchAll(/fake-reply=([^\n]+)/g)].at(-1)?.[1]?.trim()
         ?? `Fake Agent completed: ${input.prompt}`;
       await emit("fake.completed", { text });
-      return { text, messageId: `fake-message-${input.sessionId}` };
+      return { text, messageId: `fake-message-${input.sessionId}`, usage: { inputTokens: 120, outputTokens: 48, reasoningTokens: 12, cacheReadTokens: 8, cacheWriteTokens: 0, totalTokens: 180, cost: 0.0018 } };
     },
     async getDiff() {
       return [];

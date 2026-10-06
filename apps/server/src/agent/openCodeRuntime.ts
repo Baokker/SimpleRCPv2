@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { AgentSettingsResponse } from "@simplercp/shared";
+import type { AgentRunUsage, AgentSettingsResponse } from "@simplercp/shared";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2";
 import { promisify } from "node:util";
 import type { AgentRuntime } from "./agentRuntime.js";
@@ -126,7 +126,7 @@ export function createOpenCodeRuntime(
         .map((part) => part.text)
         .join("\n");
       if (!text.trim()) throw new Error("OpenCode returned an empty response");
-      return { text, messageId: response.data.info.id };
+      return { text, messageId: response.data.info.id, usage: normalizeUsage(response.data.info) };
     },
     async getDiff(input) {
       const client = await getClient(input.workspacePath);
@@ -170,9 +170,11 @@ export function createOpenCodeRuntime(
       const completion = (async () => {
         for await (const event of subscription.stream) {
           if (!eventBelongsToSession(event, input.sessionId)) continue;
+          const properties = event.properties as Record<string, unknown>;
+          const usage = event.type === "message.updated" ? normalizeUsage(properties.info) : undefined;
           await listener({
             type: event.type,
-            data: event.properties as Record<string, unknown>
+            data: usage ? { ...properties, usageSummary: usage } : properties
           });
         }
       })();
@@ -187,6 +189,35 @@ export function createOpenCodeRuntime(
       await process.dispose();
     }
   };
+}
+
+function normalizeUsage(info: unknown): AgentRunUsage | undefined {
+  if (!info || typeof info !== "object") return undefined;
+  const value = info as { tokens?: { input?: unknown; output?: unknown; reasoning?: unknown; cache?: { read?: unknown; write?: unknown } }; cost?: unknown };
+  const tokens = value.tokens;
+  if (!tokens) return undefined;
+  const inputTokens = numberOrUndefined(tokens.input);
+  const outputTokens = numberOrUndefined(tokens.output);
+  const reasoningTokens = numberOrUndefined(tokens.reasoning);
+  const cacheReadTokens = numberOrUndefined(tokens.cache?.read);
+  const cacheWriteTokens = numberOrUndefined(tokens.cache?.write);
+  const cost = numberOrUndefined(value.cost);
+  const totalTokens = inputTokens === undefined && outputTokens === undefined && reasoningTokens === undefined
+    ? undefined
+    : (inputTokens ?? 0) + (outputTokens ?? 0) + (reasoningTokens ?? 0);
+  return {
+    ...(inputTokens === undefined ? {} : { inputTokens }),
+    ...(outputTokens === undefined ? {} : { outputTokens }),
+    ...(reasoningTokens === undefined ? {} : { reasoningTokens }),
+    ...(cacheReadTokens === undefined ? {} : { cacheReadTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+    ...(totalTokens === undefined ? {} : { totalTokens }),
+    ...(cost === undefined ? {} : { cost })
+  };
+}
+
+function numberOrUndefined(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 export async function ensureWorkspaceRepository(workspacePath: string) {

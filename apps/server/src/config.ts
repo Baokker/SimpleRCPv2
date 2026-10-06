@@ -15,6 +15,12 @@ export interface ServerConfig {
   knowledge?: KnowledgeMode;
   knowledgeRecordEvents?: boolean;
   captureConfig?: import("@simplercp/knowledge").CaptureConfigInput;
+  knowledgeLlm?: {
+    provider: "minimax" | "deepseek";
+    apiKey?: string;
+    baseUrl: string;
+    model: string;
+  };
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -73,6 +79,7 @@ export function loadConfig(
     false
   );
   const knowledge = readKnowledgeMode(env.KNOWLEDGE);
+  const knowledgeLlm = knowledge === "off" ? undefined : readKnowledgeLlm(env);
   const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
     ? undefined
     : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -93,6 +100,7 @@ export function loadConfig(
     fakeAgentRuntime,
     knowledge,
     ...(knowledge !== "off" ? { knowledgeRecordEvents: readBoolean(env.KNOWLEDGE_RECORD_EVENTS, "KNOWLEDGE_RECORD_EVENTS", true) } : {}),
+    ...(knowledgeLlm ? { knowledgeLlm } : {}),
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
@@ -102,6 +110,22 @@ export function loadConfig(
     }
   };
   return config;
+}
+
+function readKnowledgeLlm(env: NodeJS.ProcessEnv): NonNullable<ServerConfig["knowledgeLlm"]> {
+  const minimaxApiKey = env.MINIMAX_API_KEY?.trim() || undefined;
+  const knowledgeProvider = env.KNOWLEDGE_LLM_PROVIDER?.trim() || (minimaxApiKey ? "minimax" : "deepseek");
+  if (knowledgeProvider !== "minimax" && knowledgeProvider !== "deepseek") throw new Error("KNOWLEDGE_LLM_PROVIDER must be minimax or deepseek");
+  const knowledgeBaseUrl = knowledgeProvider === "minimax"
+    ? new URL(env.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1")
+    : new URL(env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1");
+  if (!["http:", "https:"].includes(knowledgeBaseUrl.protocol)) throw new Error("Knowledge LLM base URL must use http or https");
+  return {
+    provider: knowledgeProvider,
+    apiKey: knowledgeProvider === "minimax" ? minimaxApiKey : env.DEEPSEEK_API_KEY?.trim() || undefined,
+    baseUrl: knowledgeBaseUrl.toString().replace(/\/$/, ""),
+    model: knowledgeProvider === "minimax" ? (env.MINIMAX_MODEL?.trim() || "MiniMax-M2") : (env.DEEPSEEK_MODEL?.trim() || "deepseek-chat")
+  };
 }
 
 function readKnowledgeMode(value: string | undefined): KnowledgeMode {

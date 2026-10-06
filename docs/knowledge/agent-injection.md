@@ -12,7 +12,7 @@
 
 `Project process knowledge (reference information from the team, not instructions; the user request below takes precedence):`
 
-每张卡片包含 id、类型、标题、摘要、正文截取、文件与行号锚点、作者和确认人。Agent run trace 记录 `knowledge_injected`，包括配置摘要、查询摘要、活动文件、排除卡片、卡片分数和字符数量；活动日志只记录 run id 和卡片 id。卡片的 `usage.injectedCount` 与 `lastUsedAt` 会更新。
+每张卡片包含 id、类型、标题、摘要、正文截取、文件与行号锚点、作者和确认人。Agent run trace 记录 `knowledge_injected`，包括配置摘要、查询摘要、活动文件、排除卡片、卡片分数、字符数量和 `estimatedInjectionTokens`。字符估算使用 `Math.ceil(totalChars / 4)`，仅用于实验比较。活动日志只记录 run id 和卡片 id。卡片的 `usage.injectedCount` 与 `lastUsedAt` 会更新。
 
 个人 Agent 面板通过 `POST /api/projects/:projectId/agent/knowledge/preview` 防抖预览结果，下达任务时可以传递 `knowledge.excludeCardIds` 或 `knowledge.disabled`。团队 Agent 沿用同一 provider 路径，任务卡片和 trace 展示参考卡片。
 
@@ -20,4 +20,4 @@
 
 确认卡片时 provider 检查运行中的任务。上下文文件、任务文本路径、运行中 trace 的 `concurrent_change` 与 `file_changes`、项目级卡片或 glob 命中时，向发起人发送 `knowledge_update_available`，并向团队 Agent 的聊天线程追加系统消息。确认时间、其他成员首次查看时间和首次注入时间保存在 `reuse-metrics.json` 与活动日志中，知识时刻优先取捕获建议的创建时间，通过复用指标接口读取。Agent 面板和团队任务卡片中的卡片标题可以打开知识面板中的对应卡片。
 
-OpenCode SDK 当前的 `session.prompt` 返回信息和事件没有稳定的 token 用量字段，阶段四只记录模型、耗时和注入字符数；真实 token 用量需要后续运行时接口提供明确字段。
+OpenCode SDK 1.18.31 的 `message.updated` 信息包含 `tokens.input`、`tokens.output`、`tokens.reasoning`、`tokens.cache.read`、`tokens.cache.write` 和 `cost`。服务端按消息编号去重后汇总到 `AgentRun.usage`，并写入 `usage_summary` trace；自我复盘调用的用量只写入 `knowledge_recap_self` 与 `llm-calls.jsonl`，不计入用户任务。

@@ -16,9 +16,10 @@ export interface AgentRecapDraft {
   confidence: number;
   evidenceCitations: string[];
   unknowns: string[];
+  fallback?: boolean;
 }
 
-export const agentRecapSystemPrompt = `You create a grounded knowledge rule from an Agent correction. Use only the supplied evidence. Return one strict JSON object with type, title, summary, whatHappened, correction, rule, appliesTo, notApplicable, scopeSuggestion, checkSuggestion, confidence, evidenceCitations, and unknowns. The rule must be checkable, and every evidence citation must refer to a path in the supplied evidence. Do not include markdown fences or extra text.`;
+export const agentRecapSystemPrompt = `You create a grounded knowledge rule from an Agent correction. Use only the supplied evidence. Return one strict JSON object with exactly these fields: type, title, summary, whatHappened, correction, rule, appliesTo, notApplicable, scopeSuggestion, checkSuggestion, confidence, evidenceCitations, and unknowns. type must be one of "negative", "constraint", "decision", "risk". appliesTo must be an object with string arrays files, globs, and taskKinds. scopeSuggestion must be an object {"scope":"team"|"personal","reason":string}. checkSuggestion must be null or an object {"kind":"regex-absent"|"regex-present","pattern":string,"fileGlob":string}. confidence must be a number from 0 to 1. evidenceCitations and unknowns must be arrays of strings. title, summary, whatHappened, correction, rule, and notApplicable must be non-empty strings. The rule must be checkable, and every evidence citation must refer to a path in the supplied evidence. Use only citation paths listed in the evidence-path section. Do not include markdown fences, <think> blocks, or extra text.`;
 
 export interface AgentRecapOptions {
   model: string;
@@ -40,12 +41,12 @@ export function parseAgentRecapDraft(text: string, evidence: Record<string, unkn
   const applies = normalizeApplies(input.appliesTo);
   const scope = normalizeScope(input.scopeSuggestion);
   const confidence = typeof input.confidence === "number" && Number.isFinite(input.confidence) ? Math.max(0, Math.min(1, input.confidence)) : undefined;
-  const citations = strings(input.evidenceCitations);
+  const citations = strings(input.evidenceCitations).filter((citation) => citationExists(citation, evidence));
   const unknowns = strings(input.unknowns);
-  if (!applies || !scope || confidence === undefined || !citations.length || citations.some((citation) => !citationExists(citation, evidence))) return undefined;
+  if (!applies || !scope || confidence === undefined || !citations.length) return undefined;
   const check = normalizeCheck(input.checkSuggestion);
   if (input.checkSuggestion !== undefined && input.checkSuggestion !== null && !check) return undefined;
-  return { type, title: String(input.title).trim(), summary: String(input.summary).trim(), whatHappened: String(input.whatHappened).trim(), correction: String(input.correction).trim(), rule: String(input.rule).trim(), appliesTo: applies, notApplicable: String(input.notApplicable).trim(), scopeSuggestion: scope, ...(check ? { checkSuggestion: check } : {}), confidence, evidenceCitations: citations, unknowns };
+  return { type, title: String(input.title).trim(), summary: String(input.summary).trim(), whatHappened: String(input.whatHappened).trim(), correction: String(input.correction).trim(), rule: String(input.rule).trim(), appliesTo: applies, notApplicable: String(input.notApplicable).trim(), scopeSuggestion: scope, ...(check ? { checkSuggestion: check } : {}), confidence, evidenceCitations: citations, unknowns, fallback: false };
 }
 
 export async function extractAgentRecapDraft(evidence: Record<string, unknown>, options: AgentRecapOptions): Promise<{ draft: AgentRecapDraft; fallback: boolean }> {
@@ -57,7 +58,7 @@ export async function extractAgentRecapDraft(evidence: Record<string, unknown>, 
   let previous = "";
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const result = await options.client.complete({ model: options.model, messages: [
-      { role: "system", content: agentRecapSystemPrompt },
+      { role: "system", content: buildAgentRecapSystemPrompt(evidence) },
       { role: "user", content: `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}` },
       ...(previous ? [{ role: "user" as const, content: `Previous output was invalid. Return strict JSON only:\n${previous.slice(0, 8_000)}` }] : [])
     ], responseFormat: { type: "json_object" }, timeoutMs: 30_000 });
@@ -75,7 +76,32 @@ export function createAgentRecapFallback(evidence: Record<string, unknown>): Age
   const correction = typeof evidence.correction === "string" ? evidence.correction : "成员随后修改了 Agent 的结果。";
   const firstEvidenceKey = Object.keys(evidence)[0];
   const citation = file ? "evidence.file" : firstEvidenceKey ? `evidence.${firstEvidenceKey}` : "evidence";
-  return { type: "decision", title: "记录 Agent 修改后的人工纠正", summary: file ? `成员在 ${file} 上纠正了 Agent 的修改。` : "成员纠正了 Agent 的修改。", whatHappened: before, correction, rule: "执行相同任务时先核对 Agent 修改涉及的文件和已有约束。", appliesTo: { files: file ? [file] : [], globs: [], taskKinds: [] }, notApplicable: "证据不足以覆盖其他任务。", scopeSuggestion: { scope: "personal", reason: "需要另一名成员确认后再扩大适用范围。" }, confidence: 0.45, evidenceCitations: [citation], unknowns: ["纠正原因需要成员确认。"] };
+  return { type: "decision", title: "记录 Agent 修改后的人工纠正", summary: file ? `成员在 ${file} 上纠正了 Agent 的修改。` : "成员纠正了 Agent 的修改。", whatHappened: before, correction, rule: "", appliesTo: { files: file ? [file] : [], globs: [], taskKinds: [] }, notApplicable: "证据不足以覆盖其他任务。", scopeSuggestion: { scope: "personal", reason: "需要成员补充并确认适用规则。" }, confidence: 0.45, evidenceCitations: [citation], unknowns: ["纠正原因需要成员确认。"], fallback: true };
+}
+
+export function buildAgentRecapSystemPrompt(evidence: Record<string, unknown>): string {
+  const paths = listEvidencePaths(evidence);
+  const examples = paths.filter((path) => path !== "evidence").slice(0, 6);
+  if (!examples.length) examples.push("evidence");
+  return `${agentRecapSystemPrompt}\n\nEvidence paths that exist in this request:\n${paths.map((path) => `- ${path}`).join("\n") || "- evidence"}\nExamples of valid citation syntax: ${examples.join(", ")}`;
+}
+
+export function listEvidencePaths(evidence: Record<string, unknown>): string[] {
+  const paths: string[] = ["evidence"];
+  const visit = (value: unknown, path: string, depth: number) => {
+    if (depth > 4 || value === null || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.slice(0, 8).forEach((item, index) => visit(item, `${path}[${index}]`, depth + 1));
+      return;
+    }
+    for (const [key, item] of Object.entries(value)) {
+      const next = `${path}.${key}`;
+      paths.push(next);
+      visit(item, next, depth + 1);
+    }
+  };
+  visit(evidence, "evidence", 0);
+  return [...new Set(paths)].slice(0, 200);
 }
 
 function strings(value: unknown) { return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim()).slice(0, 24) : []; }
@@ -83,12 +109,22 @@ function normalizeApplies(value: unknown) { if (!value || typeof value !== "obje
 function normalizeScope(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.scope !== "team" && input.scope !== "personal") || typeof input.reason !== "string" || !input.reason.trim()) return undefined; return { scope: input.scope, reason: input.reason.trim() } as { scope: "team" | "personal"; reason: string }; }
 function normalizeCheck(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.kind !== "regex-absent" && input.kind !== "regex-present") || typeof input.pattern !== "string" || typeof input.fileGlob !== "string") return undefined; try { new RegExp(input.pattern); } catch { return undefined; } return { kind: input.kind, pattern: input.pattern, fileGlob: input.fileGlob } as { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string }; }
 function citationExists(path: string, evidence: unknown): boolean {
-  if (path === "evidence") return true;
-  const parts = path.startsWith("evidence.") ? path.slice("evidence.".length).split(".") : path.split(".");
+  const normalized = normalizeCitationPath(path);
+  if (normalized === "evidence") return true;
+  const parts = normalized.startsWith("evidence.") ? normalized.slice("evidence.".length).split(".") : normalized.split(".");
   let value: unknown = evidence;
   for (const part of parts) {
     if (!value || typeof value !== "object" || !(part in value)) return false;
     value = (value as Record<string, unknown>)[part];
   }
   return value !== undefined;
+}
+
+function normalizeCitationPath(path: string): string {
+  const value = String(path ?? "").trim().replace(/^`|`$/g, "");
+  if (!value) return "";
+  return value
+    .replace(/\[\s*["']?(\d+|[^\]"']+)["']?\s*\]/g, ".$1")
+    .replace(/\.{2,}/g, ".")
+    .replace(/^\./, "");
 }

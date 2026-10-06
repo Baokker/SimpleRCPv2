@@ -70,6 +70,10 @@ describe("server config", () => {
     ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
   });
 
+  it("does not read knowledge model settings when knowledge is off", () => {
+    expect(() => loadConfig({ KNOWLEDGE: "off", KNOWLEDGE_LLM_PROVIDER: "invalid", MINIMAX_BASE_URL: "not-a-url" })).not.toThrow();
+  });
+
   it("uses defaults for blank optional paths and validates workspace and import paths", () => {
     const config = loadConfig({ SIMPLERCP_DATA_DIR: "", SIMPLERCP_WORKSPACES_DIR: "", SIMPLERCP_IMPORT_ROOTS: "" }, "/srv/simplercp");
     expect(config.dataDir).toBe("/srv/simplercp/.simplercp-data");
@@ -85,5 +89,13 @@ describe("server config", () => {
     expect(loadConfig({ KNOWLEDGE: "inject" }).knowledge).toBe("inject");
     expect(loadConfig({ KNOWLEDGE: "full" }).knowledge).toBe("full");
     expect(() => loadConfig({ KNOWLEDGE: "invalid" })).toThrow("KNOWLEDGE must be one of off, capture, inject, full");
+  });
+
+  it("selects MiniMax for knowledge calls when its key is configured", () => {
+    expect(loadConfig({ KNOWLEDGE: "full", MINIMAX_API_KEY: "configured", MINIMAX_BASE_URL: "https://api.minimaxi.com/v1", MINIMAX_MODEL: "MiniMax-M2" }).knowledgeLlm).toEqual({
+      provider: "minimax", apiKey: "configured", baseUrl: "https://api.minimaxi.com/v1", model: "MiniMax-M2"
+    });
+    expect(loadConfig({ KNOWLEDGE: "full", DEEPSEEK_API_KEY: "deepseek-key" }).knowledgeLlm).toMatchObject({ provider: "deepseek", apiKey: "deepseek-key" });
+    expect(() => loadConfig({ KNOWLEDGE: "full", KNOWLEDGE_LLM_PROVIDER: "invalid" })).toThrow("KNOWLEDGE_LLM_PROVIDER must be minimax or deepseek");
   });
 });

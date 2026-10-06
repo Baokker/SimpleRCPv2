@@ -24,6 +24,10 @@ describe('knowledge-extract', () => {
         expect(extractFirstJsonObject(text)).toBeUndefined();
     });
 
+    test('extractFirstJsonObject removes MiniMax reasoning blocks', () => {
+        expect(extractFirstJsonObject('<think>internal reasoning</think>{"ok":true}')).toBe('{"ok":true}');
+    });
+
     test('parseKnowledgeCardDraftFromText returns empty object on non-JSON output', () => {
         const parsed = parseKnowledgeCardDraftFromText('hello');
         expect(Object.keys(parsed).length).toBe(0);

@@ -49,8 +49,6 @@ export interface KnowledgeProviderConfig {
   inflightNotify: boolean;
   requireSecondConfirmForTeam: boolean;
   recapMode: "server" | "agent-self";
-  correctionClassifier: "rules" | "rules+llm";
-  contradictionJudge: "none" | "llm";
   orphanedAfterMs: number;
   riskWarning: KnowledgeRiskWarningConfig;
 }
@@ -77,8 +75,6 @@ export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   inflightNotify: true,
   requireSecondConfirmForTeam: true,
   recapMode: "server",
-  correctionClassifier: "rules",
-  contradictionJudge: "none",
   orphanedAfterMs: 7 * 24 * 60 * 60_000,
   riskWarning: {
     files: ["**/package.json", "**/tsconfig*.json", "**/vite.config.*", "**/.eslintrc*", "**/Dockerfile", "**/docker-compose*.yml", ".github/workflows/*"],
@@ -96,6 +92,7 @@ export interface KnowledgeContextResult {
   excludedByUser: string[];
   query: string;
   totalChars: number;
+  estimatedInjectionTokens: number;
   config: KnowledgeProviderConfig;
   mode: string;
 }
@@ -206,7 +203,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const excludedByUser = input.run.knowledge?.excludeCardIds ?? [];
     const activeFiles = await collectActiveFiles(input.run, input.initiator);
     if (!isInjectionMode(options.mode) || !config.injectEnabled || input.run.knowledge?.disabled) {
-      return { records: [], activeFiles, excludedByUser, query, totalChars: 0, config: await getConfig(), mode: options.mode };
+      return { records: [], activeFiles, excludedByUser, query, totalChars: 0, estimatedInjectionTokens: 0, config: await getConfig(), mode: options.mode };
     }
 
     const visibleCards = await options.knowledge.list(
@@ -309,7 +306,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       }
       await saveMetrics();
     }
-    return { section, records, activeFiles, excludedByUser, query: summarize(query), totalChars, config: await getConfig(), mode: options.mode };
+    return { section, records, activeFiles, excludedByUser, query: summarize(query), totalChars, estimatedInjectionTokens: Math.ceil(totalChars / 4), config: await getConfig(), mode: options.mode };
   }
 
   async function postRunCheck(run: AgentRun): Promise<KnowledgePostCheckResult> {
@@ -429,8 +426,6 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
   const statuses = value.statuses as KnowledgeCardStatus[] | undefined ?? defaultKnowledgeProviderConfig.statuses;
   for (const key of ["injectEnabled", "useActiveFiles", "postRunCheck", "inflightNotify", "requireSecondConfirmForTeam"] as const) if (value[key] !== undefined && typeof value[key] !== "boolean") throw new Error(`Knowledge ${key} must be boolean`);
   if (value.recapMode !== undefined && value.recapMode !== "server" && value.recapMode !== "agent-self") throw new Error("Knowledge recapMode is invalid");
-  if (value.correctionClassifier !== undefined && value.correctionClassifier !== "rules" && value.correctionClassifier !== "rules+llm") throw new Error("Knowledge correctionClassifier is invalid");
-  if (value.contradictionJudge !== undefined && value.contradictionJudge !== "none" && value.contradictionJudge !== "llm") throw new Error("Knowledge contradictionJudge is invalid");
   if (value.lexicalScoring !== undefined && value.lexicalScoring !== "legacy" && value.lexicalScoring !== "exact-boost") throw new Error("Knowledge lexical scoring is invalid");
   if (value.ranking !== undefined && value.ranking !== "legacy" && value.ranking !== "bounded") throw new Error("Knowledge ranking is invalid");
   return {
@@ -447,8 +442,6 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
     inflightNotify: value.inflightNotify ?? defaultKnowledgeProviderConfig.inflightNotify,
     requireSecondConfirmForTeam: value.requireSecondConfirmForTeam ?? defaultKnowledgeProviderConfig.requireSecondConfirmForTeam,
     recapMode: value.recapMode ?? defaultKnowledgeProviderConfig.recapMode,
-    correctionClassifier: value.correctionClassifier ?? defaultKnowledgeProviderConfig.correctionClassifier,
-    contradictionJudge: value.contradictionJudge ?? defaultKnowledgeProviderConfig.contradictionJudge,
     orphanedAfterMs: numberValue(value.orphanedAfterMs, defaultKnowledgeProviderConfig.orphanedAfterMs, 1, 365 * 24 * 60 * 60_000),
     riskWarning: normalizeRiskWarningConfig(value.riskWarning)
   };

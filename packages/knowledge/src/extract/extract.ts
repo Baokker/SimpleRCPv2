@@ -120,7 +120,7 @@ export function parseKnowledgeCardDraftFromText(text: string): Partial<Knowledge
 }
 
 export function extractFirstJsonObject(text: string): string | undefined {
-    const raw = String(text ?? '').trim();
+    const raw = stripReasoningBlocks(String(text ?? '')).trim();
     if (!raw) return undefined;
     const match = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
     const candidate = (match?.[1] ?? raw).trim();
@@ -131,6 +131,10 @@ export function extractFirstJsonObject(text: string): string | undefined {
     } catch {
         return undefined;
     }
+}
+
+export function stripReasoningBlocks(text: string): string {
+    return String(text ?? '').replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, '').trim();
 }
 
 function normalizeDraft(parsed: Partial<KnowledgeCardDraftV2>, input: KnowledgeExtractionInput): KnowledgeCardDraftV2 {
