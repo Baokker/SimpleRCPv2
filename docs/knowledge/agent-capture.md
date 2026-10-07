@@ -29,6 +29,10 @@ Agent 建议默认创建为 `personal` 草稿，确认人必须是成员。个�
 
 复盘证据保留纠正文件的完整 `beforeText` 与 `afterText`，录制重启后恢复这些版本。代码经 TypeScript AST 提取标识符，相对 import 使用 TypeScript 模块解析，并结合项目源文件确定 `Type.method` 或 `Type.field`。提示词列出候选和类型归属，要求规则写明被纠正的具体代码对象。证据 JSON 完整传入模型。
 
+文件名等复杂证据键使用带引号的路径，例如 `evidence.symbolSources["src/storage/inventory-store.ts"]`。路径生成和解析支持文件名中的点号、斜线和引号；解析使用 Lodash `toPath`。K2 使用服务端返回的完整证据评价原始引用，全部原始引用都需要能够读取。
+
 `checkSuggestion` 在匹配 `fileGlob` 的文件全文上验证：至少一个 Agent 版本违反检查，所有纠正版本通过检查，才能保留。正则语法无效、没有完整版本或不能区分两个版本时移除检查，在草稿注明“自动检查未通过验证，已移除”。`llm-calls.jsonl.checkValidation` 保存 `offered`、`retained`、文件与原因，实验可以计算检查保留率。
 
 K4 使用独立实验接口 `POST /api/projects/:projectId/experiments/recap-from-episode`，按已经执行的纠正创建建议并进入同一复盘与人工确认流程。输入包含 `runId`、可选 `correctionRunId`、`correctionAction`、`correctionText` 和完整 `correctionFiles`。接口核验原 run 已结束、纠正 run 的发起人和文件版本，返回 `captureBypassed: true` 与 `naturallyTriggered`，重复提交保留该观察值。K1 使用产品默认纠正词表，遗漏正常计入召回率。
+
+同源建议统一保留原建议 id、阅读状态与成员意见，并写入实验纠正类型及证据。`naturallyTriggered` 只表示该纠正由产品的纠正触发器识别；已有重试或工具恢复建议单独保存在 `naturalEvidence` 中。新增参与成员收到建议通知，重复提交保持同一记录。

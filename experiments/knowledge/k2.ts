@@ -1,10 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import get from "lodash/get.js";
 import {stringify} from "csv-stringify/sync";
 import {parse} from "csv-parse/sync";
 import {z} from "zod";
-import {extractFirstJsonObject, parseKnowledgeCardDraftFromText, parseAgentRecapDraft, type KnowledgeCardType} from "@simplercp/knowledge";
+import {extractFirstJsonObject, parseKnowledgeCardDraftFromText, parseAgentRecapDraft, citationExists, type KnowledgeCardType} from "@simplercp/knowledge";
 import {type Dataset, type ExperimentConfig, type Task, RunStore, digest, exists, readJson, readJsonl, writeJson} from "./common.js";
 import {PlatformClient} from "./client.js";
 import {normalizeScript} from "./k1.js";
@@ -18,7 +17,7 @@ export function draftMetrics(raw: string, mode: string, evidence: Record<string,
   const original = json ? JSON.parse(json) : {};
   const validStructure = mode === "ordinary" ? ordinaryDraftSchema.safeParse(original).success : Boolean(parsed && typeof parsed.title === "string" && parsed.title.length >= 4 && typeof parsed.summary === "string" && parsed.summary.length >= 12 && typeof content === "string" && content.length >= 40 && Array.isArray(parsed.evidenceCitations) && Array.isArray(parsed.unknowns));
   const citations = original.evidenceCitations;
-  const validCitations = Array.isArray(citations) && citations.length > 0 && citations.every(citation => typeof citation === "string" && (get({evidence, payload: evidence}, citation) !== undefined || get(evidence, citation) !== undefined));
+  const validCitations = Array.isArray(citations) && citations.length > 0 && citations.every(citation => typeof citation === "string" && (citationExists(citation, evidence) || citationExists(citation, {payload: evidence})));
   const mustMentionCovered = `${parsed?.summary ?? ""}\n${content ?? ""}`.includes(mustMention);
   return {validStructure, validCitations, mustMentionCovered, acceptedType: expectedTypes.includes(parsed?.type), groundedPass: validStructure && validCitations && mustMentionCovered};
 }
@@ -85,9 +84,10 @@ export async function runK2(data: Dataset, config: ExperimentConfig, store: RunS
         await writeJson(cache, {requestHash: digest(request), request, response});
       }
       const text = response.responses.at(-1) ?? "";
-      const metrics = draftMetrics(text, mode, episode.evidence, episode.mustMention, episode.expectedTypes);
+      const evaluatedEvidence = response.evidence ?? episode.evidence;
+      const metrics = draftMetrics(text, mode, evaluatedEvidence, episode.mustMention, episode.expectedTypes);
       await store.append({key, completed: true, episode: episode.id, pair: episode.pairId, condition: mode, ...metrics, fallback: response.fallback, latencyMs: response.latencyMs,
-        mustMention: episode.mustMention, evidenceHash: digest(episode.evidence), expectedTypes: episode.expectedTypes,
+        mustMention: episode.mustMention, evidenceHash: digest(evaluatedEvidence), expectedTypes: episode.expectedTypes,
         calls: response.calls, outputHash: digest(response.draft), artifacts: path.relative(store.directory, raw)});
     }
   }

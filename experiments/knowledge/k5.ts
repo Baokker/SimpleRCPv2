@@ -1,7 +1,9 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import {searchKnowledgeCards, searchRankedKnowledgeCards, rankKnowledgeResults, type KnowledgeSearchResult} from "@simplercp/knowledge";
-import {type Dataset, type ExperimentConfig, RunStore, readJson, readJsonl, writeJson} from "./common.js";
+import {searchKnowledgeCards, searchRankedKnowledgeCards, rankKnowledgeResults, type KnowledgeSearchResult, type KnowledgeCard} from "@simplercp/knowledge";
+import type {AgentRun} from "@simplercp/shared";
+import {selectKnowledgeInjection} from "../../apps/server/src/knowledge/injection.js";
+import {type Dataset, type ExperimentConfig, RunStore, readJson, readJsonl, writeJson, exists} from "./common.js";
 
 export function retrievalMetrics(ids: string[], relevant: string[]) {
   const relevance = new Set(relevant);
@@ -43,12 +45,19 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
     const injection = trace.find(event => event.type === "knowledge_injected" && Array.isArray(event.data.activeFiles));
     if (injection && !activity.has(row.task)) activity.set(row.task, {files: injection.data.activeFiles, source: row.key});
     if (injection && row.condition === "C2") {
-      const run = await readJson(path.join(k3Directory, row.artifacts, "run.json"));
-      const query = [run.prompt, run.extraPrompt].filter(Boolean).join("\n\n").trim();
+      const run = await readJson<AgentRun>(path.join(k3Directory, row.artifacts, "run.json"));
+      const querySource = Array.isArray(injection.data.candidates) ? "trace" : "run";
+      const query = querySource === "trace" ? injection.data.query : [run.prompt, run.extraPrompt].filter(Boolean).join("\n\n").trim();
       const variants = new Set(data.tasks.flatMap(task => task.variantCardIds ?? []));
-      const cards = data.library.filter(item => item.repository === row.repository && !variants.has(item.card.id) && injection.data.config.statuses.includes(item.card.status)).map(item => item.card);
-      const ranked = await searchRankedKnowledgeCards({cards, query, activeFiles: injection.data.activeFiles, ranking: injection.data.config.ranking, useActiveFiles: injection.data.config.useActiveFiles, lexicalScoring: injection.data.config.lexicalScoring, workspaceId: row.repository, indexDir: path.join(store.raw(`replay-${row.key}`), "index")});
-      await writeJson(path.join(store.raw(`replay-${row.key}`), "comparison.json"), {query, recordedQuery: injection.data.query, activeFiles: injection.data.activeFiles, config: injection.data.config, online: injection.data.cards.map((card: any) => card.id), offline: ranked.slice(0, injection.data.config.topK).map(card => card.cardId), candidates: ranked.slice(0, 20)});
+      const snapshot = path.join(k3Directory, row.artifacts, "knowledge-cards.json");
+      const viewerMemberId = run.initiatorMemberId ?? run.memberId;
+      const cardSource = await exists(snapshot) ? "snapshot" : "reconstructed-import";
+      const cards = cardSource === "snapshot" ? await readJson<KnowledgeCard[]>(snapshot) : data.library.filter(item => item.repository === row.repository && !variants.has(item.card.id) && item.card.status === "reviewed").map(({card}) => ({...card, ownerMemberId: viewerMemberId, provenance: {...card.provenance!, author: {kind: "human" as const, memberId: viewerMemberId, displayName: run.memberName}}, review: {...card.review!, confirmedBy: [viewerMemberId]}}));
+      const selection = await selectKnowledgeInjection({cards, viewerMemberId, query, activeFiles: injection.data.activeFiles, config: injection.data.config, excludedByUser: injection.data.excludedByUser, disabled: run.knowledge?.disabled, workspaceId: row.repository, indexDir: path.join(store.raw(`replay-${row.key}`), "index")});
+      const online = injection.data.cards.map((card: any) => card.id), offline = selection.records.map(card => card.id);
+      const matches = JSON.stringify(online) === JSON.stringify(offline) && selection.totalChars === injection.data.totalChars;
+      await writeJson(path.join(store.raw(`replay-${row.key}`), "comparison.json"), {query, querySource, cardSource, recordedQuery: injection.data.query, activeFiles: injection.data.activeFiles, config: injection.data.config, online, offline, onlineTotalChars: injection.data.totalChars, offlineTotalChars: selection.totalChars, matches, candidates: selection.candidates});
+      if (!matches) throw new Error(`线上注入与离线选择结果不同: ${row.key}`);
     }
     for (const event of trace.filter(item => item.type === "knowledge_tool_call" && item.data.tool === "knowledge_search")) {
       if (typeof event.data.query === "string" && event.data.runId !== "ambiguous") toolQueries.push({task: row.task, query: event.data.query, source: row.key, files: event.data.files});

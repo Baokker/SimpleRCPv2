@@ -93,11 +93,13 @@
   },
   "dependencies": {
     "diff": "^7.0.0",
+    "lodash": "^4.17.21",
     "minimatch": "^10.0.1",
     "typescript": "^5.4.0"
   },
   "devDependencies": {
     "@types/diff": "^7.0.1",
+    "@types/lodash": "^4.17.21",
     "@types/node": "^20.11.0",
     "tsx": "^4.7.0",
     "vitest": "^1.4.0"

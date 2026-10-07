@@ -1,6 +1,7 @@
 import type { KnowledgeCardType } from "../schema/card.js";
 import type { LlmClient } from "../llm/client.js";
 import { extractFirstJsonObject } from "./extract.js";
+import toPath from "lodash/toPath.js";
 import { correctedIdentifiers, correctedSymbolBindings, validateRecapCheck } from "./recapEvidence.js";
 export { correctedIdentifiers, correctedSymbolBindings, recapFileVersions, validateRecapCheck } from "./recapEvidence.js";
 
@@ -106,7 +107,7 @@ export function listEvidencePaths(evidence: Record<string, unknown>): string[] {
       return;
     }
     for (const [key, item] of Object.entries(value)) {
-      const next = `${path}.${key}`;
+      const next = /^[A-Za-z_$][\w$]*$/u.test(key) ? `${path}.${key}` : `${path}[${JSON.stringify(key)}]`;
       visit(item, next, depth + 1);
     }
   };
@@ -119,23 +120,15 @@ function isStringArray(value: unknown): value is string[] { return Array.isArray
 function normalizeApplies(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if (![input.files, input.globs, input.taskKinds].every(isStringArray)) return undefined; const files = strings(input.files); const globs = strings(input.globs); const taskKinds = strings(input.taskKinds); return { files, globs, taskKinds }; }
 function normalizeScope(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.scope !== "team" && input.scope !== "personal") || typeof input.reason !== "string" || !input.reason.trim()) return undefined; return { scope: input.scope, reason: input.reason.trim() } as { scope: "team" | "personal"; reason: string }; }
 function normalizeCheck(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.kind !== "regex-absent" && input.kind !== "regex-present") || typeof input.pattern !== "string" || typeof input.fileGlob !== "string") return undefined; return { kind: input.kind, pattern: input.pattern, fileGlob: input.fileGlob } as { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string }; }
-function citationExists(path: string, evidence: unknown): boolean {
-  const normalized = normalizeCitationPath(path);
-  if (normalized === "evidence") return true;
-  const parts = normalized.startsWith("evidence.") ? normalized.slice("evidence.".length).split(".") : normalized.split(".");
+export function citationExists(path: string, evidence: unknown): boolean {
+  const normalized = String(path ?? "").trim().replace(/^`|`$/g, "");
+  if (!normalized) return false;
+  const parts = toPath(normalized);
+  if (parts[0] === "evidence") parts.shift();
   let value: unknown = evidence;
   for (const part of parts) {
     if (!value || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, part)) return false;
     value = (value as Record<string, unknown>)[part];
   }
   return value !== undefined;
-}
-
-function normalizeCitationPath(path: string): string {
-  const value = String(path ?? "").trim().replace(/^`|`$/g, "");
-  if (!value) return "";
-  return value
-    .replace(/\[\s*["']?(\d+|[^\]"']+)["']?\s*\]/g, ".$1")
-    .replace(/\.{2,}/g, ".")
-    .replace(/^\./, "");
 }

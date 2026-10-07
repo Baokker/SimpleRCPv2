@@ -86,6 +86,28 @@ async function start(knowledge: "capture" | "off" = "capture") {
 }
 
 describe("knowledge capture with real collaboration", () => {
+  it("实验纠正与已有重试建议合并", async () => {
+    const s = await start(), member = await s.join("Ada");
+    const editor = await s.join("Bob"), presence = await s.presence(editor);
+    for (const event of [
+      {action: "start", runId: "failed-original", status: "running"},
+      {action: "failed", runId: "failed-original", status: "failed"},
+      {action: "start", runId: "successful-retry", status: "running"},
+      {action: "end", runId: "successful-retry", status: "completed"}
+    ] as const) await s.runtime.capture!.agentRun({...event, memberId: member, prompt: "Implement inventory transfer", sessionId: "inventory-session"});
+    const retry = (await s.runtime.capture!.list(member)).find(item => item.triggerType === "agent.retried")!;
+    expect(retry).toBeDefined();
+    await s.runtime.capture!.markRead(member, [retry.id]);
+    const episode: CaptureSuggestion = {id: "explicit-episode", createdAt: Date.now(), triggerType: "agent.corrected", origin: "human-agent", state: "open", actors: {memberIds: [member, editor], runIds: ["failed-original", "successful-retry"]}, suggestedTitle: "事务纠正", suggestedSummary: "在事务中执行库存操作", suggestedType: "constraint", evidence: {captureBypassed: true, naturallyTriggered: false, correction: "在事务中执行库存操作"}};
+    const merged = await s.runtime.capture!.fromEpisode(episode);
+    expect(merged).toMatchObject({id: retry.id, triggerType: "agent.corrected", seenBy: [member], evidence: {captureBypassed: true, naturallyTriggered: false, naturalEvidence: retry.evidence}});
+    await waitUntil(() => presence.messages.some(message => message.type === "knowledge_suggestion" && message.suggestionId === retry.id));
+    const repeated = await s.runtime.capture!.fromEpisode({...episode, id: "repeated-episode"});
+    expect(repeated).toMatchObject({id: retry.id, triggerType: "agent.corrected", evidence: {captureBypassed: true, naturallyTriggered: false}});
+    expect(await s.runtime.capture!.list(member)).toHaveLength(1);
+    await new Promise(resolve => setTimeout(resolve, 30));
+    expect(presence.messages.filter(message => message.type === "knowledge_suggestion" && message.suggestionId === retry.id)).toHaveLength(1);
+  });
   it("restores complete Agent versions and keeps episode observations on repeated requests", async () => {
     const s = await start(), member = await s.join("Ada");
     const changes = [{file: "code.ts", beforeText: "export const value = 1;", afterText: "export const value = 2;"}];

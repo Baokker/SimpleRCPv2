@@ -62,6 +62,10 @@ test("复盘评价检查原始响应中的全部引用", () => {
   assert.equal(measured.validStructure, true);
   assert.equal(measured.validCitations, false);
   assert.equal(draftMetrics("invalid JSON", "ordinary", evidence, "orders.ts", ["decision"]).validStructure, false);
+  const enriched = {...evidence, symbolSources: {"src/orders.ts": "export function updateOrders() {}"}};
+  const sourceCitation = JSON.stringify({...JSON.parse(raw), evidenceCitations: ['evidence.symbolSources["src/orders.ts"]']});
+  assert.equal(draftMetrics(sourceCitation, "server", enriched, "orders.ts", ["decision"]).groundedPass, true);
+  assert.equal(draftMetrics(sourceCitation, "server", evidence, "orders.ts", ["decision"]).validCitations, false);
 });
 test("C7 与 C5 的完整固定卡片字符预算一致", async () => {
   const data = await dataset();

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { openAs } from "./helpers";
 
-const screenshotDirectory = "docs/knowledge/screenshots";
+const screenshotDirectory = process.env.SIMPLERCP_E2E_SCREENSHOT_DIR ?? "docs/knowledge/screenshots";
 
 test.describe("knowledge stage 6", () => {
   test.skip((process.env.KNOWLEDGE ?? "off") !== "full", "Knowledge document flows use full mode");

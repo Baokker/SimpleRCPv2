@@ -559,14 +559,18 @@ export function createCaptureService(options: CaptureServiceOptions) {
       if (!isCaptureSuggestion(suggestion) || suggestion.evidence.captureBypassed !== true || !["agent.revised", "agent.corrected"].includes(suggestion.triggerType)) throw new Error("A correction episode is required");
       await awaitIdle();
       return enqueue(async () => {
-        const existing = [...suggestions.values()].find(item => item.actors.runIds.includes(suggestion.actors.runIds[0]!) && ["agent.revised", "agent.corrected", "agent.interrupted"].includes(item.triggerType));
+        const sources = sourceEvidenceIds(suggestion);
+        const related = [...suggestions.values()].filter(item => intersects(sources, sourceEvidenceIds(item)));
+        const existing = related.find(item => item.actors.runIds.includes(suggestion.actors.runIds[0]!) && ["agent.revised", "agent.corrected", "agent.interrupted"].includes(item.triggerType)) ?? related[0];
         if (existing) {
           if (existing.state === "accepted" && existing.draftCardId && existing.evidence.captureBypassed === true) return existing;
           if (existing.state && !["open", "disputed"].includes(existing.state)) throw new Error("Correction episode has already been reviewed");
-          const naturallyTriggered = existing.evidence.captureBypassed === true ? existing.evidence.naturallyTriggered === true : true;
+          const naturallyTriggered = existing.evidence.captureBypassed === true ? existing.evidence.naturallyTriggered === true : existing.actors.runIds.includes(suggestion.actors.runIds[0]!) && ["agent.revised", "agent.corrected", "agent.interrupted"].includes(existing.triggerType);
           const naturalEvidence = existing.evidence.captureBypassed === true ? existing.evidence.naturalEvidence : existing.evidence;
-          const merged = mask({...suggestion, id: existing.id, state: existing.state, evidence: {...existing.evidence, ...suggestion.evidence, naturallyTriggered, ...(naturalEvidence ? {naturalEvidence} : {})}}) as CaptureSuggestion;
-          suggestions.set(merged.id, merged); await save(merged); return merged;
+          const merged = mask({...existing, ...suggestion, id: existing.id, state: existing.state, evidence: {...existing.evidence, ...suggestion.evidence, naturallyTriggered, ...(naturalEvidence ? {naturalEvidence} : {})}}) as CaptureSuggestion;
+          suggestions.set(merged.id, merged); await save(merged);
+          for (const actor of merged.actors.memberIds) if (!existing.actors.memberIds.includes(actor)) notify(actor, {type: "knowledge_suggestion", suggestionId: merged.id}, merged.createdAt);
+          return merged;
         }
         return storeSuggestion(suggestion);
       });

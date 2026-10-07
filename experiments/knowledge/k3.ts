@@ -76,6 +76,7 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
       if (setup.cards.length) await client.request(client.projectRoute(project, "experiments/cards/import"), member, {cards: setup.cards});
       const actualConfig = await client.configure(project, member, configuration);
       await writeJson(path.join(raw, "knowledge-config.json"), {actualConfig, cardIds: setup.cards.map(card => card.id), lengthDifference: setup.lengthDifference});
+      await writeJson(path.join(raw, "knowledge-cards.json"), (await client.request(client.projectRoute(project, "knowledge/cards"), member)).cards);
       if (condition === "C1") {
         const exported = await client.request(client.projectRoute(project, "knowledge/export/workspace"), member, {});
         if (exported.path !== "AGENTS.md") throw new Error("C1 requires an automatically read AGENTS.md");

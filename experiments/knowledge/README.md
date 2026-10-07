@@ -58,7 +58,7 @@ K2 逐条读取来源 K4 中已经完成的纠正组合，以组合 key 区分�
 
 K7 的真值由 Y.Text 的字符归属属性跟踪，所有被测策略只读取纯文本与旧锚点。移动操作给迁移后的文本保留归属标记；并发编辑在原位置保留的字符单独记录 fragmented。删除后的真值为请求复核。相对位置与产品共同采用 start assoc=0、end assoc=-1。Yjs 分支使用 0.65 字符相似度及 0.5 行修改比例阈值；文本分支使用包返回的 confidence 与行修改比例。主要指标要求起止字符位置完全正确；`boundaryTolerant` 另行统计起点精确、终点行号误差最多一行的结果。
 
-K5 与线上 provider 共用 `searchRankedKnowledgeCards`。全部候选进入类型重排，同分时按卡片 id 排序，原词法打分与活动文件权重保持一致。来源 K3 的空 `activeFiles` 原样保留；每个 C2 组合在 `raw/replay-<key>/comparison.json` 保存实际 query、参数和线上、离线前五名。旧 trace 的查询摘要由完整 run 提示重建。`KNOWLEDGE_BENCH_ROOT` 可指定独立冻结数据目录，仍执行全部 manifest 校验。
+K5 与线上 provider 共用 `searchRankedKnowledgeCards`。全部候选进入类型重排，同分时按卡片 id 排序，原词法打分与活动文件权重保持一致。C2 重放另使用 `selectKnowledgeInjection`，应用状态、用户排除、固定卡片、同源去重与字符预算，比较最终卡片列表和完整注入字符数。来源 K3 的空 `activeFiles` 原样保留；每个 C2 组合在 `raw/replay-<key>/comparison.json` 保存实际 query、参数、候选与线上、离线最终列表，任何不一致都会终止执行。K3 在任务开始前保存 `knowledge-cards.json`；旧记录按冻结卡片与 run 的成员信息恢复导入状态，比较结果标明 `cardSource`。完整查询使用 trace，旧 trace 的查询摘要由完整 run 提示重建。R1 到 R5 继续评价检索排名。`KNOWLEDGE_BENCH_ROOT` 可指定独立冻结数据目录，仍执行全部 manifest 校验。
 
 审阅复盘验证命令为 `pnpm --filter @simplercp/experiments exec tsx review-recaps.ts`。使用同一 K2 episode 与真实执行的两个 Session 纠正场景，每个场景请求 MiniMax 三次，记录原始响应、代码标识符与检查验证结果。`toolInstructionPlacement` 可选 `prompt` 或 `system`；对应审阅配置为 `review-fixes.json` 和 `review-fixes-system.json`。
 
