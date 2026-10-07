@@ -10,6 +10,7 @@ OpenCode 与 DeepSeek 的配置方式见[项目 README](../README.md#配置)。
 
 ## 当前产品文件
 
+- [过程性知识分支人工验收](./knowledge/manual-acceptance.md)：阶段 1–6 与阶段 7B 的功能清单、模型配置、启动命令、操作步骤、预期结果和验收记录表。
 - [Agent Session 设计与开发范围](./product/2026-09-19-agent-sessions.md)：成员私有会话、会话内 run、接口和页面行为。
 - [IDE Agent 界面与 Monaco 语言支持调研](./research/2026-09-19/ide-agent-ui-and-monaco.md)：Cursor、VS Code、Zed 的 Agent 交互设计，以及 Monaco 的内置语言支持。
 - [基线需求](./product/2026-09-17-baseline.md)：产品范围、用户流程、系统边界、Agent 规则与验收条件。
