@@ -9,7 +9,7 @@ import {isKnowledgeCard, type KnowledgeCard} from "@simplercp/knowledge";
 
 export const root = fileURLToPath(new URL(".", import.meta.url));
 export const platformRoot = path.resolve(root, "../..");
-export const benchRoot = path.resolve(platformRoot, "../knowledge-bench");
+export const benchRoot = process.env.KNOWLEDGE_BENCH_ROOT ? path.resolve(platformRoot, process.env.KNOWLEDGE_BENCH_ROOT) : path.resolve(platformRoot, "../knowledge-bench");
 export const exec = promisify(execFile);
 export const hash = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex");
 export const digest = (value: unknown) => hash(JSON.stringify(value));
@@ -32,6 +32,7 @@ export const configSchema = z.object({
   speed: z.number().positive().default(10),
   repetitions: z.number().int().positive().default(3),
   seed: z.number().int().default(20261007),
+  toolInstructionPlacement: z.enum(["prompt", "system"]).optional(),
   embedding: z.object({origin: z.string().url(), model: z.string()}).optional()
 }).strict();
 export type ExperimentConfig = z.infer<typeof configSchema>;

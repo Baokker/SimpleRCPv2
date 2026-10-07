@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import {searchKnowledgeCards, type KnowledgeSearchResult} from "@simplercp/knowledge";
+import {searchKnowledgeCards, searchRankedKnowledgeCards, rankKnowledgeResults, type KnowledgeSearchResult} from "@simplercp/knowledge";
 import {type Dataset, type ExperimentConfig, RunStore, readJson, readJsonl, writeJson} from "./common.js";
 
 export function retrievalMetrics(ids: string[], relevant: string[]) {
@@ -32,20 +32,24 @@ export function summarizeRetrieval(rows: Array<ReturnType<typeof retrievalMetric
     falseInjections: controls.reduce((sum, row) => sum + row.falseInjections!, 0)};
 }
 
-// 与 apps/server/src/knowledge/provider.ts 的 rankResults 保持同一排序规则。
 export function rankBounded(results: KnowledgeSearchResult[], activeFiles: string[]) {
-  const cap = results.reduce((highest, item) => Math.max(highest, item.score), 0) * 0.5;
-  const priority = (type: string) => ["negative", "risk", "constraint"].includes(type) ? 0 : ["decision", "context"].includes(type) ? 1 : 2;
-  return results.map(item => ({...item, score: item.score + Math.min(cap, item.files.some(file => activeFiles.some(active => file === active || file.endsWith(`/${active}`))) ? 0.06 : 0)}))
-    .sort((a, b) => priority(a.type) - priority(b.type) || b.score - a.score).slice(0, 25);
+  return rankKnowledgeResults(results, activeFiles, {ranking: "bounded", useActiveFiles: true});
 }
 export async function runK5(data: Dataset, config: ExperimentConfig, store: RunStore, k3Directory?: string) {
   const toolQueries: Array<{task: string; query: string; source: string; files?: string[]}> = [];
   const activity = new Map<string, {files: string[]; source: string}>();
   if (k3Directory) for (const row of await readJsonl(path.join(k3Directory, "results.jsonl"))) {
     const trace = await readJson<any[]>(path.join(k3Directory, row.artifacts, "trace.json"));
-    const injection = trace.find(event => event.type === "knowledge_injected" && Array.isArray(event.data.activeFiles) && event.data.activeFiles.length);
+    const injection = trace.find(event => event.type === "knowledge_injected" && Array.isArray(event.data.activeFiles));
     if (injection && !activity.has(row.task)) activity.set(row.task, {files: injection.data.activeFiles, source: row.key});
+    if (injection && row.condition === "C2") {
+      const run = await readJson(path.join(k3Directory, row.artifacts, "run.json"));
+      const query = [run.prompt, run.extraPrompt].filter(Boolean).join("\n\n").trim();
+      const variants = new Set(data.tasks.flatMap(task => task.variantCardIds ?? []));
+      const cards = data.library.filter(item => item.repository === row.repository && !variants.has(item.card.id) && injection.data.config.statuses.includes(item.card.status)).map(item => item.card);
+      const ranked = await searchRankedKnowledgeCards({cards, query, activeFiles: injection.data.activeFiles, ranking: injection.data.config.ranking, useActiveFiles: injection.data.config.useActiveFiles, lexicalScoring: injection.data.config.lexicalScoring, workspaceId: row.repository, indexDir: path.join(store.raw(`replay-${row.key}`), "index")});
+      await writeJson(path.join(store.raw(`replay-${row.key}`), "comparison.json"), {query, recordedQuery: injection.data.query, activeFiles: injection.data.activeFiles, config: injection.data.config, online: injection.data.cards.map((card: any) => card.id), offline: ranked.slice(0, injection.data.config.topK).map(card => card.cardId), candidates: ranked.slice(0, 20)});
+    }
     for (const event of trace.filter(item => item.type === "knowledge_tool_call" && item.data.tool === "knowledge_search")) {
       if (typeof event.data.query === "string" && event.data.runId !== "ambiguous") toolQueries.push({task: row.task, query: event.data.query, source: row.key, files: event.data.files});
     }
@@ -66,15 +70,15 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
       if (store.done(key)) continue;
       const vector = item.condition === "R5";
       const bounded = item.condition.startsWith("R3") || item.condition.startsWith("R4");
-      const results = await searchKnowledgeCards({cards, query: item.query, workspaceId: task.repository, indexDir: path.join(store.raw(key), "index"), topK: 25,
-        filters: {statuses: ["reviewed"]}, lexicalScoring: "legacy", ...(!bounded ? {activeFiles: item.active} : {}),
+      const results = await (vector ? searchKnowledgeCards : searchRankedKnowledgeCards)({cards, query: item.query, workspaceId: task.repository, indexDir: path.join(store.raw(key), "index"), topK: 25,
+        filters: {statuses: ["reviewed"]}, lexicalScoring: "legacy", activeFiles: item.active, ranking: bounded ? "bounded" : "legacy", useActiveFiles: true,
         ...(vector ? {strictEmbedding: true, embeddings: {model: config.embedding!.model, client: {async embed(texts: string[]) {
           const response = await fetch(config.embedding!.origin + "/embeddings", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({model: config.embedding!.model, input: texts}), signal: AbortSignal.timeout(config.timeoutMs)});
           if (!response.ok) throw new Error(`Embedding HTTP ${response.status}`);
           const body = await response.json() as any;
           return body.data.sort((a: any, b: any) => a.index - b.index).map((entry: any) => entry.embedding);
         }}}} : {})});
-      const ranked = bounded ? rankBounded(results, item.active) : results;
+      const ranked = results;
       await writeJson(path.join(store.raw(key), "ranking.json"), ranked);
       await store.append({key, completed: true, task: task.id, taskKind: task.kind, repository: task.repository, condition: item.condition,
         query: item.query, queryIndex: item.queryIndex, querySource: item.source,

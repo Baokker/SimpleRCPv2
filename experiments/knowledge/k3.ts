@@ -68,12 +68,13 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
     const {project, members} = await client.create(task, raw, key);
     const member = members[0];
     const setup = conditionCards(data, task, condition);
+    const configuration = {...setup.configuration, ...(config.toolInstructionPlacement ? {toolInstructionPlacement: config.toolInstructionPlacement} : {})};
     const stateFile = path.join(raw, "started-run.json");
     const started = Date.now();
     // 已有运行的续跑不重复加载卡片与修改配置。
     if (!await exists(stateFile)) {
       if (setup.cards.length) await client.request(client.projectRoute(project, "experiments/cards/import"), member, {cards: setup.cards});
-      const actualConfig = await client.configure(project, member, setup.configuration);
+      const actualConfig = await client.configure(project, member, configuration);
       await writeJson(path.join(raw, "knowledge-config.json"), {actualConfig, cardIds: setup.cards.map(card => card.id), lengthDifference: setup.lengthDifference});
       if (condition === "C1") {
         const exported = await client.request(client.projectRoute(project, "knowledge/export/workspace"), member, {});
@@ -90,7 +91,7 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
     await store.append({key, completed: true, task: task.id, repository: task.repository, taskKind: task.kind, condition, repetition,
       projectId: project.id, runId: run.id, runStatus: run.status, functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess,
       usage: run.usage ?? null, ...usage, wallMs: run.startedAt && run.finishedAt ? Date.parse(run.finishedAt) - Date.parse(run.startedAt) : null,
-      pipelineMs: Date.now() - started, diffHash: output.diffHash, taskPromptHash: digest(task.prompt), knowledgeConfigHash: digest(setup.configuration), judgeHash: actual.judgeHash,
+      pipelineMs: Date.now() - started, diffHash: output.diffHash, taskPromptHash: digest(task.prompt), knowledgeConfigHash: digest(configuration), judgeHash: actual.judgeHash,
       artifacts: path.relative(store.directory, raw), error: run.error ?? null});
     console.log(JSON.stringify({key, functional: actual.functional, trapAvoided: actual.trapAvoided, runStatus: run.status, wallMs: Date.now() - started}));
   });

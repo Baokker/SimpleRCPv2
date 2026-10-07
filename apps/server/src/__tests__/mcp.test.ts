@@ -123,7 +123,7 @@ describe("knowledge MCP endpoint", () => {
     expect((await runtime.capture.get(second.id)).evidence.draft.content).toBe("Keep state isolated between sessions.");
   });
 
-  it("bounds the complete injection section including its heading and tool instructions", async () => {
+  it("bounds the card section and keeps tool instructions independent of injection", async () => {
     const { request, member } = await setup();
     const card = (await request("knowledge/cards", { type: "constraint", title: "sharedHelper", summary: "Preserve sharedHelper", content: "Use sharedHelper for state changes.", scope: "team" }, member.id)).card;
     await request("knowledge/config", { fixedCardIds: [card.id], maxTotalChars: 10_000 }, member.id, "PUT");
@@ -135,13 +135,19 @@ describe("knowledge MCP endpoint", () => {
     const limited = await request("knowledge/preview", { prompt: "Update state" }, member.id);
     expect(limited.totalChars).toBeLessThanOrEqual(budget);
     expect(limited.records).toEqual([]);
-    expect(limited.section).toContain("knowledge_search");
+    expect(limited.section).toBeUndefined();
+    expect(limited.toolSection).toContain("knowledge_search");
     expect(limited.estimatedInjectionTokens).toBe(Math.ceil(limited.totalChars / 4));
 
     await request("knowledge/config", { maxTotalChars: 1 }, member.id, "PUT");
     const tiny = await request("knowledge/preview", { prompt: "Update state" }, member.id);
     expect(tiny).toMatchObject({ records: [], totalChars: 0, estimatedInjectionTokens: 0 });
     expect(tiny.section).toBeUndefined();
+    expect(tiny.toolSection).toContain("Before modifying code");
+    await request("knowledge/config", {injectEnabled: false}, member.id, "PUT");
+    const toolsOnly = await request("knowledge/preview", {prompt: "Update state"}, member.id);
+    expect(toolsOnly.toolSection).toContain("knowledge_get");
+    expect(toolsOnly.records).toEqual([]);
   });
 
   it("budgets contradiction annotations and marks only the cards actually injected", async () => {

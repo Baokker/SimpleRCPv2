@@ -238,7 +238,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       const ytext = document.getText("content");
       anchor.yjsRelative = {
         start: encodeRelative(YRuntime.createRelativePositionFromTypeIndex(ytext, offsets.startOffset)),
-        end: encodeRelative(YRuntime.createRelativePositionFromTypeIndex(ytext, offsets.endOffset)),
+        end: encodeRelative(YRuntime.createRelativePositionFromTypeIndex(ytext, offsets.endOffset, -1)),
         docEpoch: epoch
       };
     }
@@ -308,6 +308,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
           const slice = text.slice(startOffset, endOffset);
           const confidence = similarity(anchor.snapshot.text, slice);
           if (confidence >= ANCHOR_SIMILARITY_THRESHOLD && changedLineRatio(anchor.snapshot.text, slice) <= 0.5) {
+            anchor.yjsRelative.end = encodeRelative(YRuntime.createRelativePositionFromTypeIndex(document.getText("content"), endOffset, -1));
             return { cardId: card.id, anchorIndex, range: toEditorRange(text, startOffset, endOffset), status: "ok", strategy: "yjs", confidence };
           }
         }

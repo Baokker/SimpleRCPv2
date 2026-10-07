@@ -20,4 +20,5 @@ export * from './extract/extract.js';
 export * from './extract/recapPrompt.js';
 export * from './extract/refine.js';
 export * from './retrieval/index.js';
+export * from './retrieval/ranking.js';
 export * from './retrieval/inject.js';

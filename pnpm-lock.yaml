@@ -233,10 +233,19 @@ importers:
 
   packages/knowledge:
     dependencies:
+      diff:
+        specifier: ^7.0.0
+        version: 7.0.0
+      minimatch:
+        specifier: ^10.0.1
+        version: 10.2.4
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
     devDependencies:
+      '@types/diff':
+        specifier: ^7.0.1
+        version: 7.0.2
       '@types/node':
         specifier: ^20.11.0
         version: 20.19.41
@@ -1171,6 +1180,10 @@ packages:
   diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  diff@7.0.0:
+    resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
+    engines: {node: '>=0.3.1'}
 
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
@@ -2996,6 +3009,8 @@ snapshots:
       dequal: 2.0.3
 
   diff-sequences@29.6.3: {}
+
+  diff@7.0.0: {}
 
   diff@8.0.4: {}
 

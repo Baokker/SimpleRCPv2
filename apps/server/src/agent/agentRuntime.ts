@@ -21,6 +21,7 @@ export interface AgentRuntime {
     workspacePath: string;
     sessionId: string;
     prompt: string;
+    system?: string;
     purpose?: "knowledge-recap";
     model?: string;
   }): Promise<{ text: string; messageId?: string; usage?: AgentRunUsage }>;

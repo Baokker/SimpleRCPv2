@@ -47,28 +47,28 @@ async function readTrace(storagePath: string): Promise<AgentTraceEvent[]> {
   }
 }
 
-export function redactSensitive(value: unknown, sensitiveValues: string[] = collectSensitiveEnvironment()): unknown {
+export function redactSensitive(value: unknown, sensitiveValues: string[] = collectSensitiveEnvironment(), options?: { preserveLength?: boolean }): unknown {
   if (typeof value === "string") {
     let filtered = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])]
       .filter(Boolean)
       .sort((left, right) => right.length - left.length)
       .reduce(
-        (filtered, sensitive) => filtered.split(sensitive).join(`[REDACTED:${sensitiveLabel(sensitive)}]`),
+        (filtered, sensitive) => filtered.split(sensitive).join(options?.preserveLength ? "*".repeat(sensitive.length) : `[REDACTED:${sensitiveLabel(sensitive)}]`),
         value
       );
-    filtered = filtered.replace(/sk-[A-Za-z0-9_-]{16,}/g, "[REDACTED:API_KEY]");
-    filtered = filtered.replace(/Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "Bearer [REDACTED:TOKEN]");
-    filtered = filtered.replace(/(Authorization:[ \t]*)[^\r\n]+/gi, "$1[REDACTED:TOKEN]");
+    filtered = filtered.replace(/sk-[A-Za-z0-9_-]{16,}/g, match => options?.preserveLength ? "*".repeat(match.length) : "[REDACTED:API_KEY]");
+    filtered = filtered.replace(/Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, match => options?.preserveLength ? "*".repeat(match.length) : "Bearer [REDACTED:TOKEN]");
+    filtered = filtered.replace(/(Authorization:[ \t]*)[^\r\n]+/gi, (match, prefix: string) => options?.preserveLength ? prefix + "*".repeat(match.length - prefix.length) : `${prefix}[REDACTED:TOKEN]`);
     return filtered;
   }
   if (Array.isArray(value)) {
-    return value.map((entry) => redactSensitive(entry, sensitiveValues));
+    return value.map((entry) => redactSensitive(entry, sensitiveValues, options));
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, entry]) => [
         key,
-        redactSensitive(entry, sensitiveValues)
+        redactSensitive(entry, sensitiveValues, options)
       ])
     );
   }

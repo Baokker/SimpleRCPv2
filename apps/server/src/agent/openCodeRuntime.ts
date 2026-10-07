@@ -120,6 +120,7 @@ export function createOpenCodeRuntime(
           directory: input.workspacePath,
           sessionID: input.sessionId,
           agent: "build",
+          ...(input.system ? {system: input.system} : {}),
           model: {
             providerID: openCodeProviderId(settings.provider),
             modelID: input.model ?? settings.model

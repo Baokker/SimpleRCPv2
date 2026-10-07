@@ -10,7 +10,8 @@ export async function buildRuntimePrompt(
   prompt: string,
   contexts: AgentPromptContext[] | undefined,
   projectName: string,
-  knowledgeSection?: string
+  knowledgeSection?: string,
+  toolSection?: string
 ) {
   const scope = [
     `You are working only on the project "${projectName}".`,
@@ -18,7 +19,7 @@ export async function buildRuntimePrompt(
     "Use only files inside this workspace as project context.",
     "Do not inspect, describe, or use any parent directory or parent repository."
   ].join("\n");
-  const knowledge = knowledgeSection ? `\n\n${knowledgeSection}` : "";
+  const knowledge = [toolSection, knowledgeSection].filter(Boolean).map(section => `\n\n${section}`).join("");
   if (!contexts || contexts.length === 0) return `${scope}${knowledge}\n\nUser request:\n${prompt}`;
   const sections: string[] = [];
   for (const context of contexts) {

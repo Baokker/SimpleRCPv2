@@ -8,7 +8,7 @@ import {
   extractKnowledgeCardDraft, isCaptureEvent, isCaptureSuggestion, searchKnowledgeCards, changedSnippet, applyCaptureOps,
   extractAgentRecapDraft, parseAgentRecapDraft,
   type CaptureEvent, type CaptureSuggestion, type CaptureChatEvent, type CaptureConfigInput,
-  type CaptureCheckpoint, type LlmUsage, type CaptureAgentRunEvent, type CaptureAgentToolEvent
+  type CaptureCheckpoint, type LlmUsage, type CaptureAgentRunEvent, type CaptureAgentToolEvent, type CaptureAgentFileChange
 } from "@simplercp/knowledge";
 import type { KnowledgeActor, KnowledgeService } from "./knowledgeService.js";
 import type { CollaborativeDocumentStore } from "../collaborativeDocuments.js";
@@ -21,6 +21,7 @@ import { readWorkspaceFile } from "../workspace.js";
 import { createEditAttribution, deltaOperations } from "./attribution.js";
 import { redactSensitive } from "../agent/traceStore.js";
 import type { ImportedDraft } from "./documentIO.js";
+import {enrichRecapEvidence} from "./recapEvidence.js";
 
 type EventInput<T = CaptureEvent> = T extends CaptureEvent ? Omit<T, "seq" | "at" | "schemaVersion"> : never;
 export interface CaptureServiceOptions {
@@ -96,6 +97,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   let operations: Promise<unknown> = Promise.resolve();
   let recapMode = options.recapMode;
   let agentSelfRecap = options.agentSelfRecap;
+  const agentRunChanges = new Map<string, CaptureAgentFileChange[]>();
   let recapLanguage = options.recapLanguage ?? "zh";
   const engine = createCaptureEngine({ clock, config: options.config,
     onSuggestion(suggestion) { if (!recovering) enqueue(() => storeSuggestion(suggestion)); },
@@ -143,6 +145,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     if (event.type === "cursor") policy.record(event.memberId, "cursor", at);
     if (event.type === "memberPresence" && event.action === "switchFile") policy.record(event.memberId, "switch", at);
     engine.process(event);
+    if (event.type === "agentRun" && event.action !== "start" && event.fileChanges) agentRunChanges.set(event.runId, event.fileChanges);
     if (event.type === "docOpen") texts.set(event.file, event.text);
     if (event.type === "edit" && event.textAfter !== undefined) texts.set(event.file, event.textAfter);
   }
@@ -178,6 +181,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
         if (!isCaptureEvent(event)) throw new Error("Invalid recorded capture event");
         if (event.seq <= seq) throw new Error("Recorded capture sequence must increase");
         clock.advanceTo(event.at); engine.process(event); seq = event.seq;
+        if (event.type === "agentRun" && event.action !== "start" && event.fileChanges) agentRunChanges.set(event.runId, event.fileChanges);
       }
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     await options.events.awaitIdle();
@@ -209,7 +213,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   }
   function capturePath(file: string) { return !isIgnoredPath(file) && !file.split("/").some(segment => segment.startsWith(".env")); }
   function mask(value: unknown): unknown {
-    return redactSensitive(value, options.llm?.apiKey ? [options.llm.apiKey] : []);
+    return redactSensitive(value, options.llm?.apiKey ? [options.llm.apiKey] : [], {preserveLength: true});
   }
   const attribution = createEditAttribution({ documents: options.documents,
     onOpen(file, text) { if (capturePath(file)) void feed({ type: "docOpen", file, text }); },
@@ -325,6 +329,18 @@ export function createCaptureService(options: CaptureServiceOptions) {
   }
   async function awaitIdle() { await ready; let pending; do { pending = operations; await pending; } while (pending !== operations); }
   async function generateDraft(suggestion: CaptureSuggestion, ai: boolean) {
+    if (ai && suggestion.origin === "human-agent") {
+      const correctionId = suggestion.actors.runIds[1];
+      const correction = correctionId ? agentRunChanges.get(correctionId) : undefined;
+      if (!suggestion.evidence.correctionFiles && correction) {
+        const previous = agentRunChanges.get(suggestion.actors.runIds[0]!) ?? [];
+        suggestion.evidence.correctionFiles = correction.flatMap(change => {
+          const beforeText = previous.find(item => item.file === change.file)?.afterText ?? change.beforeText;
+          return typeof beforeText === "string" && typeof change.afterText === "string" ? [{file: change.file, beforeText, afterText: change.afterText}] : [];
+        });
+      }
+      suggestion.evidence = mask(await enrichRecapEvidence(suggestion.evidence, options.workspaceRoot)) as Record<string, unknown>;
+    }
     if (suggestion.origin === "preset" || suggestion.origin === "agent-self") {
       const stored = suggestion.evidence.draft as ImportedDraft;
       if (!stored || typeof stored.content !== "string") throw new Error("Prepared knowledge draft is unavailable");
@@ -338,7 +354,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
     let llmModel = options.llm?.model;
     let completed = false;
     let fallback = !client;
-    let mode = "extract";
+  let mode = "extract";
+    let checkValidation: unknown;
     try {
       if (ai && suggestion.origin === "human-agent" && ["agent.interrupted", "agent.revised", "agent.corrected"].includes(suggestion.triggerType)) {
         mode = "recap";
@@ -363,9 +380,10 @@ export function createCaptureService(options: CaptureServiceOptions) {
           addLlmUsage(usage, selfResult.usage);
           const parsed = parseAgentRecapDraft(selfResult.text, suggestion.evidence);
           if (!parsed) throw new Error("Agent self recap returned invalid JSON");
+          checkValidation = parsed.checkValidation;
           completed = true;
           fallback = false;
-          return { draft: { type: parsed.type, title: parsed.title, summary: parsed.summary, content: [`## 发生了什么`, parsed.whatHappened, `## 纠正`, parsed.correction, `## 规则`, parsed.rule, `## 适用范围`, [...parsed.appliesTo.files, ...parsed.appliesTo.globs, ...parsed.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, parsed.notApplicable].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: parsed.confidence, evidenceCitations: parsed.evidenceCitations, unknowns: parsed.unknowns, ...recapCardFields(parsed), fallback: false }, fallback: false };
+          return { draft: { type: parsed.type, title: parsed.title, summary: parsed.summary, content: [`## 发生了什么`, parsed.whatHappened, `## 纠正`, parsed.correction, `## 规则`, parsed.rule, `## 适用范围`, [...parsed.appliesTo.files, ...parsed.appliesTo.globs, ...parsed.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, parsed.notApplicable, ...parsed.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: parsed.confidence, evidenceCitations: parsed.evidenceCitations, unknowns: parsed.unknowns, ...recapCardFields(parsed), fallback: false }, fallback: false };
         }
         const recap = await extractAgentRecapDraft(suggestion.evidence, {
           model: llmModel ?? "deterministic",
@@ -378,7 +396,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
           onFallback() { fallback = true; }, language: recapLanguage
         });
         completed = true;
-        return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
+        checkValidation = recap.draft.checkValidation;
+        return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable, ...recap.draft.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
       }
       const draft = await extractKnowledgeCardDraft({
         triggerType: suggestion.triggerType, suggestedType: suggestion.suggestedType,
@@ -398,7 +417,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     } finally {
       if (ai) {
         suggestion.ai = { provider: llmProvider, model: llmModel, durationMs: Date.now() - started, totalTokens: usage.totalTokens, fallback };
-        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, provider: llmProvider, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes }) + "\n", { mode: 0o600 });
+        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, provider: llmProvider, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes, checkValidation }) + "\n", { mode: 0o600 });
         await save(suggestion);
       }
     }
@@ -408,6 +427,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     setRiskWarningConfig(config: Partial<RiskWarningConfig>) { riskWarningConfig = { ...riskWarningConfig, ...config, files: config.files ?? riskWarningConfig.files }; },
     setRecapLanguage(language: "zh" | "en") { recapLanguage = language; },
     bindAgentSelfRecap(callback: (suggestion: CaptureSuggestion) => Promise<AgentSelfRecapResult>, getMode?: () => Promise<"server" | "agent-self">) { agentSelfRecap = callback; recapMode = getMode ?? recapMode; },
+    async getAgentRunChanges(runId: string) { await awaitIdle(); return agentRunChanges.get(runId) ?? []; },
     async agentRun(event: Omit<CaptureAgentRunEvent, "type" | "schemaVersion" | "seq" | "at">) {
       await feed({ type: "agentRun", ...event });
       if (["end", "failed", "cancelled", "interrupted"].includes(event.action)) {
@@ -534,6 +554,22 @@ export function createCaptureService(options: CaptureServiceOptions) {
     async propose(actor: KnowledgeActor, runId: string, input: Pick<ImportedDraft, "title" | "summary" | "content" | "type" | "files">) {
       await awaitIdle();
       return enqueue(() => storeSuggestion({ id: crypto.randomUUID(), triggerType: "agent.proposed", createdAt: Date.now(), origin: "agent-self", state: "open", actors: { memberIds: [actor.memberId], runIds: [runId] }, suggestedType: input.type, suggestedTitle: input.title, suggestedSummary: input.summary, evidence: { runId, draft: input } }));
+    },
+    async fromEpisode(suggestion: CaptureSuggestion) {
+      if (!isCaptureSuggestion(suggestion) || suggestion.evidence.captureBypassed !== true || !["agent.revised", "agent.corrected"].includes(suggestion.triggerType)) throw new Error("A correction episode is required");
+      await awaitIdle();
+      return enqueue(async () => {
+        const existing = [...suggestions.values()].find(item => item.actors.runIds.includes(suggestion.actors.runIds[0]!) && ["agent.revised", "agent.corrected", "agent.interrupted"].includes(item.triggerType));
+        if (existing) {
+          if (existing.state === "accepted" && existing.draftCardId && existing.evidence.captureBypassed === true) return existing;
+          if (existing.state && !["open", "disputed"].includes(existing.state)) throw new Error("Correction episode has already been reviewed");
+          const naturallyTriggered = existing.evidence.captureBypassed === true ? existing.evidence.naturallyTriggered === true : true;
+          const naturalEvidence = existing.evidence.captureBypassed === true ? existing.evidence.naturalEvidence : existing.evidence;
+          const merged = mask({...suggestion, id: existing.id, state: existing.state, evidence: {...existing.evidence, ...suggestion.evidence, naturallyTriggered, ...(naturalEvidence ? {naturalEvidence} : {})}}) as CaptureSuggestion;
+          suggestions.set(merged.id, merged); await save(merged); return merged;
+        }
+        return storeSuggestion(suggestion);
+      });
     },
     async get(id: string) { await awaitIdle(); return suggestions.get(id); },
     awaitIdle,

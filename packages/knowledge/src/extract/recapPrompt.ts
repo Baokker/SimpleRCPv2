@@ -1,6 +1,8 @@
 import type { KnowledgeCardType } from "../schema/card.js";
 import type { LlmClient } from "../llm/client.js";
 import { extractFirstJsonObject } from "./extract.js";
+import { correctedIdentifiers, correctedSymbolBindings, validateRecapCheck } from "./recapEvidence.js";
+export { correctedIdentifiers, correctedSymbolBindings, recapFileVersions, validateRecapCheck } from "./recapEvidence.js";
 
 export interface AgentRecapDraft {
   type: Extract<KnowledgeCardType, "negative" | "constraint" | "decision" | "risk">;
@@ -17,6 +19,7 @@ export interface AgentRecapDraft {
   evidenceCitations: string[];
   unknowns: string[];
   fallback?: boolean;
+  checkValidation?: ReturnType<typeof validateRecapCheck>;
 }
 
 export const agentRecapSystemPrompt = `You create a grounded knowledge rule from an Agent correction. Use only the supplied evidence. Return one strict JSON object with exactly these fields: type, title, summary, whatHappened, correction, rule, appliesTo, notApplicable, scopeSuggestion, checkSuggestion, confidence, evidenceCitations, and unknowns. type must be one of "negative", "constraint", "decision", "risk". appliesTo must be an object with string arrays files, globs, and taskKinds. scopeSuggestion must be an object {"scope":"team"|"personal","reason":string}. checkSuggestion must be null or an object {"kind":"regex-absent"|"regex-present","pattern":string,"fileGlob":string}. confidence must be a number from 0 to 1. evidenceCitations and unknowns must be arrays of strings. title, summary, whatHappened, correction, rule, and notApplicable must be non-empty strings. The rule must describe a checkable code-level action or prohibition and point to a concrete file, function, symbol, or code pattern. Only write a collaboration process rule when the evidence explicitly contains that process requirement. Good example: "In src/session.ts, preserve the shared helper when changing session setup." Bad example: "Agents must ask a member before editing shared files" when the evidence only shows a code correction. Natural-language fields must use the requested language; preserve code identifiers exactly. Every evidence citation must refer to a path in the supplied evidence. Use only citation paths listed in the evidence-path section. Do not include markdown fences, <think> blocks, or extra text.`;
@@ -48,7 +51,9 @@ export function parseAgentRecapDraft(text: string, evidence: Record<string, unkn
   if (!applies || !scope || confidence === undefined || !citations.length) return undefined;
   const check = normalizeCheck(input.checkSuggestion);
   if (input.checkSuggestion !== undefined && input.checkSuggestion !== null && !check) return undefined;
-  return { type, title: String(input.title).trim(), summary: String(input.summary).trim(), whatHappened: String(input.whatHappened).trim(), correction: String(input.correction).trim(), rule: String(input.rule).trim(), appliesTo: applies, notApplicable: String(input.notApplicable).trim(), scopeSuggestion: scope, ...(check ? { checkSuggestion: check } : {}), confidence, evidenceCitations: citations, unknowns, fallback: false };
+  const checkValidation = check ? validateRecapCheck(check, evidence) : undefined;
+  if (checkValidation && !checkValidation.retained) unknowns.push("自动检查未通过验证，已移除");
+  return { type, title: String(input.title).trim(), summary: String(input.summary).trim(), whatHappened: String(input.whatHappened).trim(), correction: String(input.correction).trim(), rule: String(input.rule).trim(), appliesTo: applies, notApplicable: String(input.notApplicable).trim(), scopeSuggestion: scope, ...(check && checkValidation?.retained ? { checkSuggestion: check } : {}), ...(checkValidation ? {checkValidation} : {}), confidence, evidenceCitations: citations, unknowns, fallback: false };
 }
 
 export async function extractAgentRecapDraft(evidence: Record<string, unknown>, options: AgentRecapOptions): Promise<{ draft: AgentRecapDraft; fallback: boolean }> {
@@ -61,7 +66,7 @@ export async function extractAgentRecapDraft(evidence: Record<string, unknown>, 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const result = await options.client.complete({ model: options.model, messages: [
       { role: "system", content: buildAgentRecapSystemPrompt(evidence, options.language ?? "zh") },
-      { role: "user", content: `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}` },
+      { role: "user", content: `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence)}` },
       ...(previous ? [{ role: "user" as const, content: `Previous output was invalid. Return strict JSON only:\n${previous.slice(0, 8_000)}` }] : [])
     ], responseFormat: { type: "json_object" }, timeoutMs: 30_000 });
     previous = result.text;
@@ -85,7 +90,9 @@ export function buildAgentRecapSystemPrompt(evidence: Record<string, unknown>, l
   const paths = listEvidencePaths(evidence);
   const examples = paths.filter((path) => path !== "evidence").slice(0, 6);
   if (!examples.length) examples.push("evidence");
-  return `${agentRecapSystemPrompt}\nThe rule itself must name the file or symbol shown in the correction evidence. Do not replace that concrete constraint with a general instruction to follow prompts. A regex check runs on final file content; do not match diff markers. Do not invent exceptions unsupported by evidence; list uncertain boundaries in unknowns.\n\nOutput language: ${language === "zh" ? "Chinese" : "English"}.\nEvidence paths that exist in this request:\n${paths.map((path) => `- ${path}`).join("\n") || "- evidence"}\nExamples of valid citation syntax: ${examples.join(", ")}`;
+  const identifiers = correctedIdentifiers(evidence);
+  const bindings = correctedSymbolBindings(evidence);
+  return `${agentRecapSystemPrompt}\nThe rule must name the specific corrected function, method, or field from the diff. Candidate code identifiers extracted from the evidence: ${identifiers.join(", ") || "No identifier candidates available; use the concrete evidence without inventing names"}. Choose the object that actually changed and preserve its spelling. TypeScript resolves these expressions to their declaring types: ${JSON.stringify(bindings)}. When the corrected expression has a resolved declaration, the rule MUST include that declaration's qualified identifier (Type.method or Type.field), and may also include the literal call expression. Describe the corrected behavior for this object. Do not replace that concrete constraint with a general instruction to follow prompts. A regex check runs on final file content; do not match diff markers. Propose a check only if it fails on the Agent version and passes on the corrected version; otherwise use null. Do not invent exceptions unsupported by evidence; list uncertain boundaries in unknowns.\n\nOutput language: ${language === "zh" ? "Chinese" : "English"}.\nEvidence paths that exist in this request:\n${paths.map((path) => `- ${path}`).join("\n") || "- evidence"}\nExamples of valid citation syntax: ${examples.join(", ")}`;
 }
 
 export function listEvidencePaths(evidence: Record<string, unknown>): string[] {
@@ -111,7 +118,7 @@ function strings(value: unknown) { return Array.isArray(value) ? value.filter((i
 function isStringArray(value: unknown): value is string[] { return Array.isArray(value) && value.every((item) => typeof item === "string"); }
 function normalizeApplies(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if (![input.files, input.globs, input.taskKinds].every(isStringArray)) return undefined; const files = strings(input.files); const globs = strings(input.globs); const taskKinds = strings(input.taskKinds); return { files, globs, taskKinds }; }
 function normalizeScope(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.scope !== "team" && input.scope !== "personal") || typeof input.reason !== "string" || !input.reason.trim()) return undefined; return { scope: input.scope, reason: input.reason.trim() } as { scope: "team" | "personal"; reason: string }; }
-function normalizeCheck(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.kind !== "regex-absent" && input.kind !== "regex-present") || typeof input.pattern !== "string" || typeof input.fileGlob !== "string") return undefined; try { new RegExp(input.pattern); } catch { return undefined; } return { kind: input.kind, pattern: input.pattern, fileGlob: input.fileGlob } as { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string }; }
+function normalizeCheck(value: unknown) { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const input = value as Record<string, unknown>; if ((input.kind !== "regex-absent" && input.kind !== "regex-present") || typeof input.pattern !== "string" || typeof input.fileGlob !== "string") return undefined; return { kind: input.kind, pattern: input.pattern, fileGlob: input.fileGlob } as { kind: "regex-absent" | "regex-present"; pattern: string; fileGlob: string }; }
 function citationExists(path: string, evidence: unknown): boolean {
   const normalized = normalizeCitationPath(path);
   if (normalized === "evidence") return true;

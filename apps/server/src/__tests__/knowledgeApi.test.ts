@@ -315,6 +315,23 @@ describe("knowledge API", () => {
       for (let attempt = 0; attempt < 100 && !firstText.toString().includes("anchor Xline"); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 20));
       const concurrent = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, { headers: { "X-SimpleRCP-Member": first } }).then((response) => response.json()) as { resolutions: Array<{ cardId: string; strategy?: string; status: string }> };
       expect(concurrent.resolutions.find((item) => item.cardId === createdCard.id)).toMatchObject({ strategy: "yjs", status: "ok" });
+      const metadata = app.locals.registry.getProject("demo").metadataPath;
+      const storedFile = path.join(metadata, "knowledge/cards", `${createdCard.id}.json`);
+      const stored = JSON.parse(await fs.readFile(storedFile, "utf8"));
+      const serverDocument = await runtime.documents.getPreparedDocument(documentName);
+      const currentText = serverDocument.getText("content");
+      const legacyEnd = Y.createRelativePositionFromTypeIndex(currentText, currentText.toString().indexOf("anchor Xline") + 12, 0);
+      const legacyJson = Y.relativePositionToJSON(legacyEnd);
+      stored.anchors[0].yjsRelative.end = {type: "content", assoc: 0, ...(legacyJson.item ? {item: `${legacyJson.item.client}:${legacyJson.item.clock}`} : {})};
+      await fs.writeFile(storedFile, JSON.stringify(stored));
+      await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, {headers: {"X-SimpleRCP-Member": first}});
+      expect(JSON.parse(await fs.readFile(storedFile, "utf8")).anchors[0].yjsRelative.end.assoc).toBe(-1);
+      const boundaryOffset = firstText.toString().indexOf("anchor Xline");
+      firstText.insert(boundaryOffset, "LEFT");
+      secondText.insert(boundaryOffset + 12, "RIGHT");
+      for (let attempt = 0; attempt < 100 && !firstText.toString().includes("LEFTanchor XlineRIGHT"); attempt++) await new Promise(resolve => setTimeout(resolve, 20));
+      const boundaries = await fetch(`${origin}/api/projects/demo/knowledge/cards?file=README.md`, {headers: {"X-SimpleRCP-Member": first}}).then(response => response.json()) as {resolutions: Array<{cardId: string; range?: unknown}>};
+      expect(boundaries.resolutions.find((item: {cardId: string}) => item.cardId === createdCard.id)).toMatchObject({range: {startLine: 3, startColumn: 5, endLine: 3, endColumn: 17}});
 
       const epochCardResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, {
         method: "POST",
@@ -339,8 +356,9 @@ describe("knowledge API", () => {
       expect(rebuiltResolution).toMatchObject({ range: { startLine: 4, endLine: 4 } });
       // watcher 可以在请求之前通过 snapshot 更新相对位置。
       expect(["snapshot", "yjs"]).toContain(rebuiltResolution?.strategy);
-      const refreshedCard = await fetch(`${origin}/api/projects/demo/knowledge/cards/${epochCard.id}`, { headers: { "X-SimpleRCP-Member": first } }).then((response) => response.json()) as { card: { anchors: Array<{ yjsRelative?: { docEpoch?: string } }> } };
+      const refreshedCard = await fetch(`${origin}/api/projects/demo/knowledge/cards/${epochCard.id}`, { headers: { "X-SimpleRCP-Member": first } }).then((response) => response.json()) as { card: { anchors: Array<{ yjsRelative?: { docEpoch?: string; end?: {assoc?: number} } }> } };
       expect(refreshedCard.card.anchors[0]?.yjsRelative?.docEpoch).toBe(rebuiltEpoch);
+      expect(refreshedCard.card.anchors[0]?.yjsRelative?.end?.assoc).toBe(-1);
     } finally {
       firstProvider.destroy();
       secondProvider.destroy();

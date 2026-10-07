@@ -7,8 +7,28 @@ import { createEventLog } from "../eventLog.js";
 import { createChatStore } from "../chat.js";
 import { agentEnv, terminalEnv } from "../processEnv.js";
 import { createTestWorkspace } from "./testWorkspace.js";
+import {isCaptureEvent} from "@simplercp/knowledge";
+import {enrichRecapEvidence} from "../knowledge/recapEvidence.js";
 
 describe("foundation identity and isolation", () => {
+  it("resolves JavaScript imports and records unavailable symbol sources", async () => {
+    const root = await createTestWorkspace("recap-sources-");
+    try {
+      await fs.writeFile(path.join(root, "session.js"), "import {sharedHelper} from './sharedHelper.js'; import './missing.js'; export function setup() { return sharedHelper(); }");
+      await fs.writeFile(path.join(root, "sharedHelper.js"), "export function sharedHelper() { return 1; }");
+      const evidence = await enrichRecapEvidence({correctionFiles: [{file: "session.js", beforeText: "", afterText: ""}]}, root);
+      expect(evidence.symbolSources).toHaveProperty("sharedHelper.js");
+      expect(evidence.unresolvedSymbolSources).toEqual(["session.js: ./missing.js"]);
+    } finally { await fs.rm(root, {recursive: true, force: true}); }
+  });
+  it("preserves capture coordinates when redacting source text", () => {
+    const text = "Authorization: request.credentials\n";
+    const event = {schemaVersion: 1, type: "agentRun", seq: 1, at: 1, runId: "run", memberId: "member", action: "end", prompt: "Update authentication", agentRanges: [{file: "auth.ts", start: 0, end: text.length, text}]};
+    expect(isCaptureEvent(event)).toBe(true);
+    const redacted = redactSensitive(event, [], {preserveLength: true});
+    expect(isCaptureEvent(redacted)).toBe(true);
+    expect(JSON.stringify(redacted)).not.toContain("request.credentials");
+  });
   it("assigns members, resumes an existing member, and stores the role", async () => {
     const root = await createTestWorkspace("member-");
     const project = { id: "demo", name: "Demo", source: "demo", workspacePath: path.join(root, "workspace"), metadataPath: root, createdAt: new Date().toISOString(), lastOpenedAt: new Date().toISOString() } as const;

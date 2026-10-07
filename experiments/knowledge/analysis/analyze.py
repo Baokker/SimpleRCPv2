@@ -159,9 +159,9 @@ def analyze_anchors(frame, directory):
     for row in frame.to_dict("records"):
         for result in row["results"]:
             rows.append({"kind": row["condition"], "strategy": result["strategy"], "correct": result["outcome"] == "correct",
-                         "wrong": result["outcome"] == "wrong", "review": result["outcome"] == "review", "locatable": row["truth"] is not None})
+                         "boundaryTolerant": result["boundaryTolerant"], "wrong": result["outcome"] == "wrong", "review": result["outcome"] == "review", "locatable": row["truth"] is not None})
     outcomes = pd.DataFrame(rows)
-    summary = outcomes.groupby(["kind", "strategy"])[["correct", "wrong", "review"]].mean().reset_index()
+    summary = outcomes.groupby(["kind", "strategy"])[["correct", "boundaryTolerant", "wrong", "review"]].mean().reset_index()
     summary.to_csv(directory / "anchors.csv", index=False)
     (directory / "anchors.md").write_text(summary.to_markdown(index=False))
     locatable = outcomes[outcomes.locatable].groupby("strategy")[["correct", "wrong", "review"]].mean()

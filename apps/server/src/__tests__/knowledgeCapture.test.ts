@@ -86,6 +86,24 @@ async function start(knowledge: "capture" | "off" = "capture") {
 }
 
 describe("knowledge capture with real collaboration", () => {
+  it("restores complete Agent versions and keeps episode observations on repeated requests", async () => {
+    const s = await start(), member = await s.join("Ada");
+    const changes = [{file: "code.ts", beforeText: "export const value = 1;", afterText: "export const value = 2;"}];
+    await s.runtime.capture!.feed({type: "agentRun", action: "end", runId: "recorded-run", memberId: member, prompt: "Update code.ts", fileChanges: changes});
+    const restored = await s.restartRuntime();
+    expect(await restored.capture!.getAgentRunChanges("recorded-run")).toEqual(changes);
+    const episode: CaptureSuggestion = {id: "episode", createdAt: Date.now(), triggerType: "agent.revised", origin: "human-agent", state: "open", actors: {memberIds: [member], runIds: ["recorded-run"]}, suggestedTitle: "代码纠正", suggestedSummary: "成员恢复值", suggestedType: "constraint", evidence: {captureBypassed: true, naturallyTriggered: false, correctionFiles: changes}};
+    await restored.capture!.fromEpisode(episode);
+    const repeated = await restored.capture!.fromEpisode({...episode, id: "repeated"});
+    expect(repeated.id).toBe("episode");
+    expect(repeated.evidence.naturallyTriggered).toBe(false);
+    expect(repeated.evidence.naturalEvidence).toBeUndefined();
+    const accepted = await restored.capture!.accept({memberId: member, displayName: "Ada"}, episode.id);
+    const resumed = await restored.capture!.fromEpisode({...episode, id: "resumed"});
+    expect(resumed.state).toBe("accepted");
+    expect(resumed.draftCardId).toBe(accepted.card.id);
+    expect(resumed.evidence.naturallyTriggered).toBe(false);
+  });
   it("attributes two members, delivers only to actors, confirms drafts and replays a two-minute session", async () => {
     const s = await start(); const ada = await s.join("Ada"); const bob = await s.join("Bob"); const charlie = await s.join("Charlie");
     const [a, b, c] = await Promise.all([s.presence(ada), s.presence(bob), s.presence(charlie)]);

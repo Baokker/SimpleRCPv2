@@ -16,7 +16,7 @@ export function concurrentTrace(sample: FrozenAnchorSample, kind: typeof editKin
   original.insert(0, sample.text, {anchor: false});
   original.format(sample.selectionStart, sample.selectionEnd - sample.selectionStart, {anchor: true});
   const start = Y.createRelativePositionFromTypeIndex(original, sample.selectionStart, 0);
-  const end = Y.createRelativePositionFromTypeIndex(original, sample.selectionEnd);
+  const end = Y.createRelativePositionFromTypeIndex(original, sample.selectionEnd, -1);
   const state = Y.encodeStateAsUpdate(base);
   const copies = [201, 202, 203].map(id => {const doc = new Y.Doc(); doc.clientID = id; Y.applyUpdate(doc, state); return doc;});
   const operations: Array<{member: number; start: number; deleted: number; inserted: string; tracked: boolean}> = [];
@@ -86,7 +86,9 @@ export function evaluateStrategies(text: string, anchor: KnowledgeAnchor, relati
   return strategies.map((strategy, index) => {
     const range = resolutions[index];
     const correct = Boolean(truth && range && range.startOffset === truth.startOffset && range.endOffset === truth.endOffset);
-    return {strategy, outcome: !range ? "review" : correct ? "correct" : "wrong", range: range ? {startOffset: range.startOffset, endOffset: range.endOffset} : null};
+    const lineAt = (offset: number) => text.slice(0, offset).split("\n").length;
+    const boundaryTolerant = Boolean(truth && range && range.startOffset === truth.startOffset && Math.abs(lineAt(range.endOffset) - lineAt(truth.endOffset)) <= 1);
+    return {strategy, outcome: !range ? "review" : correct ? "correct" : "wrong", boundaryTolerant, range: range ? {startOffset: range.startOffset, endOffset: range.endOffset} : null};
   });
 }
 export async function runK7(config: ExperimentConfig, store: RunStore) {

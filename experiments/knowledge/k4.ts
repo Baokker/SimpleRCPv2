@@ -41,6 +41,7 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
     const {project, members} = await api.create(pair.ta, raw, key);
     const a = members[0], b = members[1];
     const correcting = pair.correction.member.endsWith("member-b") ? b : a;
+    const correctionFiles: Array<{file: string; beforeText: string; afterText: string}> = [];
     const route = (suffix: string) => api.projectRoute(project, suffix);
     const teamFile = path.join(raw, "team-agent.json");
     const team = await exists(teamFile) ? await readJson(teamFile) : (await api.request(route("team-agents"), a, {name: "transfer-agent"})).agent;
@@ -73,17 +74,23 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
             const current = await fs.readFile(path.join(project.workspacePath, file), "utf8");
             const after = applyPatch(current, patch); if (after === false) throw new Error("Human correction patch cannot be applied");
             await collaboration.replace(correcting, file, current, after);
+            correctionFiles.push({file, beforeText: current, afterText: after});
           }
         } finally {await collaboration.close();}
       }
       const correction = await api.teamRun(project, correcting, team.handle, pair.correction.text, path.join(raw, "correction-run.json"));
       ta = await api.wait(project, a, initial);
       await writeJson(path.join(raw, "ta/run.json"), ta);
-      await writeJson(correctionFile, {at: Date.now(), memberId: correcting, correctionRunId: correction.id, text: pair.correction.text, interruptedStatus: ta.status});
+      await writeJson(correctionFile, {at: Date.now(), memberId: correcting, correctionRunId: correction.id, text: pair.correction.text, interruptedStatus: ta.status, correctionFiles});
     } else ta = await readJson(path.join(raw, "ta/run.json"));
     const revised = await readJson<AgentRun>(path.join(raw, "correction-run.json"));
     const correctionRun = await api.wait(project, a, revised);
-    await api.collect(project, a, correctionRun, path.join(raw, "correction"));
+    const savedCorrection = path.join(raw, "correction/run.json");
+    if (await exists(savedCorrection)) {
+      const saved = await readJson<AgentRun>(savedCorrection);
+      if (saved.id !== correctionRun.id || saved.status !== correctionRun.status) throw new Error("Saved correction run differs from the current run");
+      for (const artifact of ["workspace", "workspace.patch", "trace.json"]) if (!await exists(path.join(raw, "correction", artifact))) throw new Error(`Saved correction artifact is absent: ${artifact}`);
+    } else await api.collect(project, a, correctionRun, path.join(raw, "correction"));
     const cardFile = path.join(raw, "confirmed-card.json");
     let card: KnowledgeCard | null = await exists(cardFile) ? await readJson(cardFile) : null;
     if (!await exists(cardFile)) {
@@ -92,20 +99,20 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
         const response = await api.request(route("knowledge/cards"), a, {type: "context", title: "本次纠正上下文", summary: pair.correction.text, content: correctionContext(pair.correction.text, taDiff), tags: ["experiment:T1"], scope: "team"});
         card = response.card;
       } else if (condition !== "T0") {
-        let suggestion: any;
-        const deadline = Date.now() + 30000;
-        while (!suggestion && Date.now() < deadline) {
-          const {suggestions} = await api.request(route("knowledge/inbox?view=all"), a);
-          suggestion = suggestions.find((item: any) => ["agent.corrected", "agent.interrupted", "agent.revised"].includes(item.triggerType) && item.actors.runIds.includes(initial.id));
-          if (!suggestion) await pause(500);
-        }
-        if (!suggestion) throw new Error(`Correction suggestion is absent: ${key}`);
-        await writeJson(path.join(raw, "suggestion.json"), suggestion);
+        const versions = await Promise.all(((await readJson(correctionFile)).correctionFiles ?? []).map(async (file: {file: string; beforeText: string; afterText: string}) => ({...file, afterText: await fs.readFile(path.join(project.workspacePath, file.file), "utf8")})));
+        const suggestionFile = path.join(raw, "suggestion.json");
+        const observationFile = path.join(raw, "capture-observation.json");
+        const savedSuggestion = await exists(suggestionFile) ? await readJson(suggestionFile) : undefined;
+        const episode = savedSuggestion && await exists(observationFile) ? {suggestion: savedSuggestion, ...await readJson(observationFile)} : await api.request(route("experiments/recap-from-episode"), correcting, {runId: initial.id, correctionRunId: correctionRun.id, correctionAction: pair.correction.mode === "revise" ? "revise" : "correct", correctionText: pair.correction.text, correctionFiles: versions});
+        const suggestion = episode.suggestion;
+        await writeJson(observationFile, {captureBypassed: episode.captureBypassed, naturallyTriggered: episode.naturallyTriggered});
+        await writeJson(suggestionFile, suggestion);
         const draftFile = path.join(raw, "draft.json");
         let draft: KnowledgeCard;
         if (await exists(draftFile)) draft = await readJson(draftFile);
         else {
-          draft = (await api.request(route(`knowledge/inbox/${suggestion.id}/ai-draft`), a, {})).card;
+          const currentSuggestion = (await api.request(route(`knowledge/inbox/${suggestion.id}`), correcting)).suggestion;
+          draft = currentSuggestion.draftCardId ? (await api.request(route(`knowledge/cards/${currentSuggestion.draftCardId}`), correcting)).card : (await api.request(route(`knowledge/inbox/${suggestion.id}/ai-draft`), correcting, {})).card;
           await writeJson(draftFile, draft);
         }
         const owner = draft.ownerMemberId;
@@ -140,11 +147,12 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
     const taJudge = await readJson(path.join(raw, "ta-judge.json"));
     const metrics = await api.request(route("knowledge/metrics/reuse"), a);
     await writeJson(path.join(raw, "reuse.json"), metrics);
+    const captureObservation = await exists(path.join(raw, "capture-observation.json")) ? await readJson(path.join(raw, "capture-observation.json")) : {captureBypassed: false, naturallyTriggered: null};
     await store.append({key, completed: true, pair: pair.id, task: pair.tb.id, condition, variant, repetition, crossOwner: pair.crossOwner,
       ta: {runStatus: ta.status, functional: taJudge.functional, trapAvoided: taJudge.trapAvoided, actuallyTrapped: taJudge.functional && !taJudge.trapAvoided, usage: ta.usage ?? null},
       functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess, runStatus: tb.status, usage: tb.usage ?? null,
       correctionUsage: correctionRun.usage ?? null, ...knowledgeUsage(output.events, card ? [card.id] : []),
-      cardId: card?.id, cardScope: card?.scope, cardOwner: card?.ownerMemberId, reuse: metrics.metrics, wallMs: Date.now() - started,
+      cardId: card?.id, cardScope: card?.scope, cardOwner: card?.ownerMemberId, reuse: metrics.metrics, ...captureObservation, wallMs: Date.now() - started,
       artifacts: path.relative(store.directory, raw)});
     console.log(JSON.stringify({key, functional: actual.functional, trapAvoided: actual.trapAvoided, taActuallyTrapped: taJudge.functional && !taJudge.trapAvoided}));
   });

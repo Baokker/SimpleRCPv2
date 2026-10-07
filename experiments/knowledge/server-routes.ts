@@ -12,6 +12,8 @@ import type {ProjectRuntimeManager} from "../../apps/server/src/projectRuntimeMa
 import type {AgentRunManager} from "../../apps/server/src/agent/agentRunManager.js";
 import {writeJsonFileAtomically} from "../../apps/server/src/jsonFile.js";
 import {getProjectMetadataPath} from "../../apps/server/src/projects.js";
+import {enrichRecapEvidence} from "../../apps/server/src/knowledge/recapEvidence.js";
+import {redactSensitive} from "../../apps/server/src/agent/traceStore.js";
 
 export function registerExperimentRoutes(app: Express, options: {enabled: boolean; provider: string; model: string; speed: number; configuration: ServerConfig}) {
   if (!options.enabled) return;
@@ -120,7 +122,8 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
   route("post", "drafts", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;
     const runtime = manager.get(request.params.projectId);
-    const {mode, evidence, triggerType, runId} = request.body;
+    const {mode, evidence: rawEvidence, triggerType, runId} = request.body;
+    const evidence = rawEvidence && typeof rawEvidence === "object" ? redactSensitive(await enrichRecapEvidence(rawEvidence, runtime.project.workspacePath), [options.configuration.knowledgeLlm?.apiKey ?? "", options.configuration.agent?.apiKey ?? ""], {preserveLength: true}) as Record<string, unknown> : rawEvidence;
     if (!["ordinary", "server", "agent-self"].includes(mode) || !evidence || typeof evidence !== "object") throw new Error("Draft mode and evidence are required");
     const configuration = options.configuration.knowledgeLlm!;
     const started = Date.now();
@@ -148,7 +151,40 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     }
     for (const call of calls) await fs.appendFile(path.join(getProjectMetadataPath(runtime.project), "knowledge/llm-calls.jsonl"), JSON.stringify({...call, purpose: `experiment:K2:${mode}`, completed: !fallback, fallback, durationMs: Date.now() - started}) + "\n");
     runtime.events.append({type: "knowledge_config_updated", roomId: runtime.room.id, memberId: identity.memberId, payload: {experiment: "drafts", mode}});
-    response.json({draft, fallback, calls, responses, latencyMs: Date.now() - started});
+    response.json({draft, fallback, calls, responses, evidence, latencyMs: Date.now() - started});
+  });
+  route("post", "recap-from-episode", async (request, response) => {
+    const identity = requireIdentity(request, response); if (!identity) return;
+    const runtime = manager.get(request.params.projectId);
+    const {runId, correctionRunId, correctionAction, correctionText, correctionFiles = []} = request.body;
+    if (typeof runId !== "string" || typeof correctionText !== "string" || !correctionText.trim() || !["revise", "correct", "interrupt"].includes(correctionAction)) throw new Error("Run, correction action and original text are required");
+    const run = await agentRuns.awaitRunIdle(runtime.project.id, runId);
+    if (!run || !["completed", "failed", "cancelled"].includes(run.status)) throw new Error("The original run must be finished");
+    const correctionRun = correctionRunId ? await agentRuns.awaitRunIdle(runtime.project.id, correctionRunId) : undefined;
+    if (correctionRunId && (!correctionRun || !["completed", "failed", "cancelled"].includes(correctionRun.status))) throw new Error("The correction run must be finished");
+    if (correctionRun && (correctionRun.initiatorMemberId ?? correctionRun.memberId) !== identity.memberId) throw new Error("Correction must belong to the requesting member");
+    if (!Array.isArray(correctionFiles)) throw new Error("Correction file versions must be an array");
+    const previousChanges = await runtime.capture!.getAgentRunChanges(runId);
+    const correctedChanges = correctionRun ? await runtime.capture!.getAgentRunChanges(correctionRun.id) : [];
+    const files = correctionFiles.length ? correctionFiles : correctedChanges.flatMap(change => {
+      const beforeText = previousChanges.find(previous => previous.file === change.file)?.afterText ?? change.beforeText ?? "";
+      return typeof change.afterText === "string" ? [{file: change.file, beforeText, afterText: change.afterText}] : [];
+    });
+    for (const file of files) {
+      if (typeof file.file !== "string" || typeof file.beforeText !== "string" || typeof file.afterText !== "string") throw new Error("Complete correction file versions are required");
+      const current = await runtime.documents.getPreparedDocument(`${runtime.project.id}|${runtime.room.id}:${normalizeWorkspaceRelativePath(file.file)}`);
+      const text = current?.getText("content").toString() ?? await fs.readFile(path.join(runtime.project.workspacePath, normalizeWorkspaceRelativePath(file.file)), "utf8");
+      const secrets = [options.configuration.knowledgeLlm?.apiKey ?? "", options.configuration.agent?.apiKey ?? ""];
+      if (redactSensitive(text, secrets, {preserveLength: true}) !== redactSensitive(file.afterText, secrets, {preserveLength: true})) throw new Error("Correction version differs from current workspace");
+      const previous = previousChanges.find(change => change.file === normalizeWorkspaceRelativePath(file.file));
+      const expectedBefore = previous?.afterText ?? correctedChanges.find(change => change.file === normalizeWorkspaceRelativePath(file.file))?.beforeText;
+      if (typeof expectedBefore !== "string" || redactSensitive(expectedBefore, secrets, {preserveLength: true}) !== redactSensitive(file.beforeText, secrets, {preserveLength: true})) throw new Error("Agent version differs from the recorded original run");
+    }
+    const natural = (await runtime.capture!.list(identity.memberId, true)).find(item => item.evidence.captureBypassed !== true && item.actors.runIds.includes(runId) && ["agent.revised", "agent.corrected", "agent.interrupted"].includes(item.triggerType));
+    const naturallyTriggered = Boolean(natural);
+    const suggestion = await runtime.capture!.fromEpisode({id: crypto.randomUUID(), createdAt: Date.now(), triggerType: correctionAction === "revise" ? "agent.revised" : "agent.corrected", origin: "human-agent", state: "open", actors: {memberIds: [...new Set([identity.memberId, run.initiatorMemberId ?? run.memberId])], runIds: [runId, ...(correctionRun ? [correctionRun.id] : [])]}, suggestedTitle: "实验纠正记录", suggestedSummary: correctionText, suggestedType: "constraint", evidence: {previousRun: run, correctionRun, correction: correctionText, editor: identity.memberId, primaryActor: identity.memberId, correctionFiles: files, captureBypassed: true, naturallyTriggered}});
+    runtime.events.append({type: "knowledge_config_updated", roomId: runtime.room.id, memberId: identity.memberId, payload: {experiment: "recap-from-episode", runId, suggestionId: suggestion.id, captureBypassed: true, naturallyTriggered: suggestion.evidence.naturallyTriggered}});
+    response.json({suggestion, captureBypassed: true, naturallyTriggered: suggestion.evidence.naturallyTriggered});
   });
   app.use((error: Error, _request: Request, response: Response, _next: unknown) => response.status(400).json({error: error.message}));
 }

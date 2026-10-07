@@ -1,0 +1,11 @@
+{
+  "origin": "http://127.0.0.1:4305",
+  "provider": "minimax",
+  "model": "MiniMax-M2",
+  "concurrency": 1,
+  "speed": 1,
+  "delayMs": 0,
+  "repetitions": 3,
+  "seed": 20261007,
+  "toolInstructionPlacement": "system"
+}

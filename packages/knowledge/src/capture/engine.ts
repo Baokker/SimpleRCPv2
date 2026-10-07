@@ -75,6 +75,7 @@ export interface AgentRevisedEvent {
   restored?: { beforeText: string; afterText: string };
   agentPrompt?: string;
   agentFileChange?: CaptureAgentFileChange;
+  correctionFiles?: Array<{file: string; beforeText: string; afterText: string}>;
 }
 
 export function createAgentRevisedSuggestion(event: AgentRevisedEvent): CaptureSuggestion {
@@ -90,7 +91,7 @@ export function createAgentRevisedSuggestion(event: AgentRevisedEvent): CaptureS
     suggestedTitle: "成员改写了 Agent 的内容",
     suggestedSummary: `成员在 ${event.file} 上改写了 Agent 的内容`,
     suggestedAnchors: event.anchors ?? [{ file: event.file, startLine: 1, endLine: lineCount, score: 1, reasons: ["Agent 修改范围"] }],
-    evidence: { file: event.file, runId: event.runId, editor: event.editor, ownerId: event.ownerId, overwritten: event.intervals, ...(event.diff ? { diff: event.diff } : {}), ...(event.replacement !== undefined ? { replacement: event.replacement } : {}), ...(event.chatMessages ? { chatMessages: event.chatMessages } : {}), ...(event.cursors ? { cursors: event.cursors } : {}), ...(event.restored ? { restored: event.restored } : {}), ...(event.agentPrompt !== undefined ? { agentPrompt: event.agentPrompt } : {}), ...(event.agentFileChange ? { agentFileChange: event.agentFileChange } : {}) },
+    evidence: { file: event.file, runId: event.runId, editor: event.editor, ownerId: event.ownerId, overwritten: event.intervals, ...(event.diff ? { diff: event.diff } : {}), ...(event.replacement !== undefined ? { replacement: event.replacement } : {}), ...(event.chatMessages ? { chatMessages: event.chatMessages } : {}), ...(event.cursors ? { cursors: event.cursors } : {}), ...(event.restored ? { restored: event.restored } : {}), ...(event.agentPrompt !== undefined ? { agentPrompt: event.agentPrompt } : {}), ...(event.agentFileChange ? { agentFileChange: event.agentFileChange } : {}), ...(event.correctionFiles ? {correctionFiles: event.correctionFiles} : {}) },
     confidence: 0.7,
     state: "open"
   };
@@ -250,7 +251,7 @@ export function createCaptureEngine(options: {
             intervals,
             at: event.at,
             anchors: rangeAnchor(event.file, after, start, end),
-            diff: changedSnippet(before, after),
+            diff: changedSnippet(before, after), correctionFiles: [{file: event.file, beforeText: before, afterText: after}],
             replacement: event.ops.map((operation) => operation.insertText).join(""),
             chatMessages: chats.filter(message => [event.actor, ownerId].includes(message.authorId) && message.at >= Math.min(...intervals.map(item => item.at))),
             cursors: [event.actor, ownerId].filter((actor): actor is string => Boolean(actor)).map(actor => activities.filter(activity => activity.type === "cursor" && activity.actor === actor).at(-1)).filter((activity): activity is CaptureActivity => Boolean(activity)),
@@ -285,7 +286,7 @@ export function createCaptureEngine(options: {
           intervals: [],
           at: event.at,
           anchors: rangeAnchor(event.file, after, 0, after.length),
-          diff: changedSnippet(before, after),
+          diff: changedSnippet(before, after), correctionFiles: [{file: event.file, beforeText: before, afterText: after}],
           replacement: after,
           restored: { beforeText: fileChange.beforeText!, afterText: fileChange.afterText! },
           agentPrompt: run.event.prompt,

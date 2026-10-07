@@ -49,7 +49,7 @@ const summaries = {
       const result = row.results.find((item: any) => item.strategy === strategy);
       return result.outcome === "wrong" && result.range?.startOffset === row.truth.startOffset && result.range.endOffset > row.truth.endOffset;
     }).length;
-    return {strategy, locatable: locatable.length, survival: mean(locatable.map(row => Number(row.outcome === "correct"))), wrongMigration: mean(locatable.map(row => Number(row.outcome === "wrong"))), rightBoundaryExpanded, review: mean(locatable.map(row => Number(row.outcome === "review"))), deletionReview: mean(deletion.map(row => Number(row.outcome === "review")))};
+    return {strategy, locatable: locatable.length, survival: mean(locatable.map(row => Number(row.outcome === "correct"))), boundaryTolerant: mean(locatable.map(row => Number(row.boundaryTolerant))), wrongMigration: mean(locatable.map(row => Number(row.outcome === "wrong"))), rightBoundaryExpanded, review: mean(locatable.map(row => Number(row.outcome === "review"))), deletionReview: mean(deletion.map(row => Number(row.outcome === "review")))};
   })
 };
 const agentMs = mean([...k3, ...supplements].map(row => row.wallMs));

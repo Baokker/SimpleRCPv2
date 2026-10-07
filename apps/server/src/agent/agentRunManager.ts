@@ -257,7 +257,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const prompt = [
       buildAgentRecapSystemPrompt(evidence, (await projectRuntime.knowledgeProvider?.getConfig())?.recapLanguage ?? "zh"),
       "Review the completed Agent task using only this evidence.",
-      `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence).slice(0, 24_000)}`
+      `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence)}`
     ].join("\n\n");
     const promptHash = crypto.createHash("sha256").update(prompt).digest("hex");
     const settings = options.getSettings();
@@ -595,6 +595,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             mode: knowledgeContext.mode,
             config: knowledgeContext.config,
             query: knowledgeContext.query,
+            candidates: knowledgeContext.candidates,
+            ranking: knowledgeContext.config.ranking,
+            lexicalScoring: knowledgeContext.config.lexicalScoring,
+            topK: knowledgeContext.config.topK,
+            toolSection: knowledgeContext.toolSection,
+            toolInstructionPlacement: knowledgeContext.config.toolInstructionPlacement,
             activeFiles: knowledgeContext.activeFiles,
             excludedByUser: knowledgeContext.excludedByUser,
             cards: knowledgeContext.records,
@@ -614,7 +620,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
         run.contexts,
         projectRuntime.project.name,
-        knowledgeContext?.section
+        knowledgeContext?.section,
+        knowledgeContext?.toolSystem ? undefined : knowledgeContext?.toolSection
       );
       await options.runtime.prepareRun?.({
         workspacePath: projectRuntime.project.workspacePath,
@@ -628,6 +635,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           runtime: options.runtime,
           input: {
             workspacePath: projectRuntime.project.workspacePath,
+            system: knowledgeContext?.toolSystem,
             sessionId: activeRuntimeSessionId,
             prompt: runtimePrompt
           },

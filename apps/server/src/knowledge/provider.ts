@@ -5,7 +5,9 @@ import { minimatch } from "minimatch";
 import diff from "fast-diff";
 import {
   isReusable,
-  searchKnowledgeCards,
+  searchRankedKnowledgeCards,
+  rankKnowledgeResults,
+  compareKnowledgeRanks,
   type KnowledgeCard,
   type KnowledgeCardStatus,
   type KnowledgeSearchResult
@@ -38,6 +40,7 @@ export interface KnowledgeInjectionRecord {
 export interface KnowledgeProviderConfig {
   injectEnabled: boolean;
   toolEnabled: boolean;
+  toolInstructionPlacement: "prompt" | "system";
   proposeEnabled: boolean;
   recapLanguage: "zh" | "en";
   topK: number;
@@ -67,6 +70,7 @@ export interface KnowledgeRiskWarningConfig {
 export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   injectEnabled: true,
   toolEnabled: true,
+  toolInstructionPlacement: "prompt",
   proposeEnabled: false,
   recapLanguage: "zh",
   topK: 5,
@@ -93,6 +97,9 @@ export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
 
 export interface KnowledgeContextResult {
   section?: string;
+  toolSection?: string;
+  toolSystem?: string;
+  candidates: Array<{ id: string; lexical: number; boost: number; score: number; filtered: boolean; reason: string }>;
   records: KnowledgeInjectionRecord[];
   activeFiles: string[];
   excludedByUser: string[];
@@ -209,48 +216,51 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const query = [input.run.prompt, input.run.extraPrompt].filter(Boolean).join("\n\n").trim();
     const excludedByUser = input.run.knowledge?.excludeCardIds ?? [];
     const activeFiles = await collectActiveFiles(input.run, input.initiator);
-    const toolInstruction = options.mode === "full" && config.toolEnabled
-      ? `Project knowledge_search and knowledge_get tools are available. When a project convention is uncertain, query knowledge_search. Pass workspace=${JSON.stringify(options.workspaceRoot)} when calling knowledge tools.` : undefined;
-    const toolHint = toolInstruction && toolInstruction.length <= config.maxTotalChars ? toolInstruction : undefined;
+    const toolSection = options.mode === "full" && config.toolEnabled
+      ? `Project knowledge tools:\nknowledge_search searches confirmed team rules; knowledge_get reads a card in full. Before modifying code, query knowledge_search when project conventions or constraints are uncertain, then read relevant cards with knowledge_get. Pass workspace=${JSON.stringify(options.workspaceRoot)} to every knowledge tool call. These tools are available even when automatic knowledge injection is disabled.` : undefined;
     if (!isInjectionMode(options.mode) || !config.injectEnabled || input.run.knowledge?.disabled) {
-      return { section: toolHint, records: [], activeFiles, excludedByUser, query, totalChars: toolHint?.length ?? 0, estimatedInjectionTokens: Math.ceil((toolHint?.length ?? 0) / 4), config: await getConfig(), mode: options.mode };
+      return { toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, candidates: [], records: [], activeFiles, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), totalChars: 0, estimatedInjectionTokens: 0, config: await getConfig(), mode: options.mode };
     }
 
     const visibleCards = await options.knowledge.list(
       { memberId: input.initiator.id, displayName: input.initiator.displayName },
       {}
     );
-    const reusable = visibleCards.filter((card) =>
-      !["draft", "needsReview", "orphaned", "archived", "superseded"].includes(card.status) &&
-      config.statuses.includes(card.status) &&
-      (card.status === "reviewed" ? isReusable(card, { viewerMemberId: input.initiator.id }) : true) &&
-      !excludedByUser.includes(card.id)
-    );
+    function filterReason(card: KnowledgeCard): string | undefined {
+      if (["draft", "needsReview", "orphaned", "archived", "superseded"].includes(card.status)) return `status:${card.status}`;
+      if (!config.statuses.includes(card.status)) return "configured-status";
+      if (card.status === "reviewed" && !isReusable(card, { viewerMemberId: input.initiator.id })) return "not-reusable";
+      if (excludedByUser.includes(card.id)) return "excluded-by-user";
+      if (config.fixedCardIds.length && !config.fixedCardIds.includes(card.id)) return "not-fixed-card";
+      return undefined;
+    }
+    const reusable = visibleCards.filter(card => !filterReason(card));
     const selected = config.fixedCardIds.length
-      ? reusable.filter((card) => config.fixedCardIds.includes(card.id)).map((card) => fixedResult(card))
-      : await searchKnowledgeCards({
+      ? rankKnowledgeResults(reusable.map((card) => fixedResult(card)), activeFiles, config)
+      : await searchRankedKnowledgeCards({
           cards: reusable,
           workspaceId: input.project.id,
           indexDir: path.join(root, "index"),
           query,
           topK: Math.max(config.topK, 25),
           lexicalScoring: config.lexicalScoring,
-          ...(config.ranking === "legacy" && config.useActiveFiles ? { activeFiles } : {})
+          activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles
         });
     const cardById = new Map(reusable.map((card) => [card.id, card]));
-    const ranked = rankResults(selected, activeFiles, config);
+    const ranked = selected;
+    const diagnostic = new Map(ranked.map(result => [result.cardId, {id: result.cardId, lexical: result.lexical, boost: result.boost, score: result.score, filtered: false, reason: "selected"}]));
     const records: KnowledgeInjectionRecord[] = [];
     const seenSources = new Set<string>();
     const candidates: Array<{ result: KnowledgeSearchResult; card: KnowledgeCard; content: string; baseBlock: string }> = [];
     function formatCandidates(items: typeof candidates): string | undefined {
-      if (!items.length) return toolHint;
+      if (!items.length) return undefined;
       const selectedIds = new Set(items.map((item) => item.card.id));
       const blocks = items.map(({ card, baseBlock }) => {
         const contradictory = items.some((item) => (item.card.relations ?? []).some((relation) => relation.kind === "contradicts" && relation.cardId === card.id))
           || (card.relations ?? []).some((relation) => relation.kind === "contradicts" && selectedIds.has(relation.cardId));
         return `${contradictory ? "[CONTRADICTS_ANOTHER_INJECTED_CARD: unresolved]\n" : ""}${baseBlock}`;
       });
-      return [KNOWLEDGE_PROMPT_TITLE, ...blocks, ...(toolHint ? [toolHint] : [])].join("\n\n");
+      return [KNOWLEDGE_PROMPT_TITLE, ...blocks].join("\n\n");
     }
     for (const result of ranked) {
       const card = cardById.get(result.cardId);
@@ -260,22 +270,23 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
         ...(card.provenance?.evidenceRefs.chatMessageIds ?? []).map((id) => `message:${id}`),
         ...(card.provenance?.evidenceRefs.traceRefs ?? []).map((ref) => `trace:${ref.runId}:${ref.seq}`)
       ];
-      if (sourceKeys.some((key) => seenSources.has(key))) continue;
+      const detail = diagnostic.get(result.cardId)!;
+      if (candidates.length >= config.topK) { detail.filtered = true; detail.reason = "top-k"; continue; }
+      if (sourceKeys.some((key) => seenSources.has(key))) { detail.filtered = true; detail.reason = "same-source"; continue; }
       const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
       const content = truncate(safeCardText(card.content), config.maxCharsPerCard);
       const baseBlock = formatCard({ ...card, title: safeCardText(card.title), summary: safeCardText(card.summary) }, content, result.score, options.sensitiveValues);
       const candidate = { result, card, content, baseBlock };
-      if (formatCandidates([...candidates, candidate])!.length > config.maxTotalChars) continue;
+      if (formatCandidates([...candidates, candidate])!.length > config.maxTotalChars) { detail.filtered = true; detail.reason = "character-budget"; continue; }
       candidates.push(candidate);
       for (const key of sourceKeys) seenSources.add(key);
-      if (candidates.length >= config.topK) break;
     }
     for (const candidate of candidates) {
       const { result, card, content } = candidate;
       const safeCardText = (value: string) => redactKnowledgeText(value, options.sensitiveValues);
       const lexical = typeof (result as KnowledgeSearchResult & { lexical?: number }).lexical === "number"
         ? (result as KnowledgeSearchResult & { lexical: number }).lexical
-        : config.ranking === "legacy" ? result.score : Math.max(0, result.score - activeFileBoost(card, activeFiles));
+        : result.score;
       const boost = typeof (result as KnowledgeSearchResult & { boost?: number }).boost === "number"
         ? (result as KnowledgeSearchResult & { boost: number }).boost
         : Math.max(0, result.score - lexical);
@@ -313,7 +324,9 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       }
       await saveMetrics();
     }
-    return { section, records, activeFiles, excludedByUser, query: summarize(query), totalChars, estimatedInjectionTokens: Math.ceil(totalChars / 4), config: await getConfig(), mode: options.mode };
+    const rejected = config.fixedCardIds.length ? [] : await searchRankedKnowledgeCards({cards: visibleCards.filter(card => Boolean(filterReason(card))), workspaceId: input.project.id, indexDir: path.join(root, "diagnostic-index"), query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles});
+    const tracedCandidates = [...diagnostic.values(), ...rejected.map(result => ({id: result.cardId, lexical: result.lexical, boost: result.boost, score: result.score, filtered: true, reason: filterReason(visibleCards.find(card => card.id === result.cardId)!)!}))].sort((a, b) => compareKnowledgeRanks({cardId: a.id, score: a.score, type: visibleCards.find(card => card.id === a.id)!.type}, {cardId: b.id, score: b.score, type: visibleCards.find(card => card.id === b.id)!.type}, config.ranking)).slice(0, 20);
+    return { section, toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, candidates: tracedCandidates, records, activeFiles, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), totalChars, estimatedInjectionTokens: Math.ceil(totalChars / 4), config: await getConfig(), mode: options.mode };
   }
 
   async function postRunCheck(run: AgentRun): Promise<KnowledgePostCheckResult> {
@@ -412,7 +425,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const member = options.room.members[0] ?? { id: "mcp", displayName: "MCP" };
     const cards = (await options.knowledge.list({ memberId: member.id, displayName: member.displayName }, { scope: "team", status: "reviewed" }))
       .filter((card) => !types?.length || types.includes(card.type));
-    const results = rankResults(await searchKnowledgeCards({ cards, workspaceId: options.project.id, indexDir: path.join(root, "index"), query, topK: Math.max(cards.length, 1), lexicalScoring: config.lexicalScoring, ...(config.ranking === "legacy" && config.useActiveFiles ? { activeFiles } : {}), filters: { statuses: ["reviewed"] } }), activeFiles, config).slice(0, Math.min(10, Math.max(1, limit)));
+    const results = (await searchRankedKnowledgeCards({ cards, workspaceId: options.project.id, indexDir: path.join(root, "index"), query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles, filters: { statuses: ["reviewed"] } })).slice(0, Math.min(10, Math.max(1, limit)));
     const cardById = new Map(cards.map((card) => [card.id, card]));
     return Promise.all(results.map(async (result) => {
       const card = cardById.get(result.cardId)!;
@@ -493,6 +506,7 @@ export function knowledgeRunsAt(runs: AgentRun[], at: number) {
 }
 
 function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProviderConfig {
+  if (value.toolInstructionPlacement !== undefined && !["prompt", "system"].includes(value.toolInstructionPlacement)) throw new Error("Invalid tool instruction placement");
   const numberValue = (input: unknown, fallback: number, min: number, max: number) => typeof input === "number" && Number.isFinite(input) ? Math.max(min, Math.min(max, Math.floor(input))) : fallback;
   const allowedStatuses = new Set<KnowledgeCardStatus>(["draft", "reviewed", "needsReview", "archived", "orphaned", "superseded"]);
   if (value.statuses !== undefined && (!Array.isArray(value.statuses) || value.statuses.some((status) => !allowedStatuses.has(status as KnowledgeCardStatus)))) throw new Error("Knowledge statuses are invalid");
@@ -505,6 +519,7 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
   return {
     injectEnabled: value.injectEnabled ?? defaultKnowledgeProviderConfig.injectEnabled,
     toolEnabled: value.toolEnabled ?? defaultKnowledgeProviderConfig.toolEnabled,
+    toolInstructionPlacement: value.toolInstructionPlacement ?? defaultKnowledgeProviderConfig.toolInstructionPlacement,
     proposeEnabled: value.proposeEnabled ?? defaultKnowledgeProviderConfig.proposeEnabled,
     recapLanguage: value.recapLanguage ?? defaultKnowledgeProviderConfig.recapLanguage,
     topK: numberValue(value.topK, defaultKnowledgeProviderConfig.topK, 1, 25),
@@ -538,20 +553,6 @@ function normalizeRiskWarningConfig(value: unknown): KnowledgeRiskWarningConfig 
   };
 }
 
-function rankResults(results: KnowledgeSearchResult[], activeFiles: string[], config: KnowledgeProviderConfig) {
-  if (config.ranking === "legacy") return results.slice(0, 25).map((result) => ({ ...result, lexical: result.score, boost: 0 }));
-  const highest = results.reduce((value, result) => Math.max(value, result.score), 0);
-  const cap = highest * 0.5;
-  return results.map((result) => {
-    const boost = config.useActiveFiles ? activeFileBoostFromFiles(result.files, activeFiles) : 0;
-    const boundedBoost = Math.min(boost, cap);
-    return { ...result, score: result.score + boundedBoost, lexical: result.score, boost: boundedBoost };
-  }).sort((left, right) => priority(left.type) - priority(right.type) || right.score - left.score).slice(0, 25);
-}
-
-function priority(type: string) { return ["negative", "risk", "constraint"].includes(type) ? 0 : ["decision", "context"].includes(type) ? 1 : 2; }
-function activeFileBoost(card: KnowledgeCard, activeFiles: string[]) { return activeFileBoostFromFiles(card.anchors.map((anchor) => anchor.file.workspaceRelativePath), activeFiles); }
-function activeFileBoostFromFiles(files: string[], activeFiles: string[]) { return files.some((file) => activeFiles.some((active) => file === active || file.endsWith(`/${active}`))) ? 0.06 : 0; }
 function fixedResult(card: KnowledgeCard): KnowledgeSearchResult { return { cardId: card.id, score: 1, mode: "lexical", type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags, files: card.anchors.map((anchor) => anchor.file.workspaceRelativePath), excerpt: card.content }; }
 function formatCard(card: KnowledgeCard, content: string, score: number, sensitiveValues?: string[]) {
   const anchors = card.anchors.map((anchor) => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
@@ -560,7 +561,6 @@ function formatCard(card: KnowledgeCard, content: string, score: number, sensiti
   return redactKnowledgeText(`[cardId=${card.id}] ${card.type} ${card.title} (score=${score.toFixed(3)})\nsummary: ${card.summary}\ncontent: ${content}\nanchors: ${anchors || "none"}\nauthor: ${author}; confirmedBy: ${confirmedBy}`, sensitiveValues);
 }
 function truncate(value: string, max: number) { return value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`; }
-function summarize(value: string) { return value.length > 500 ? `${value.slice(0, 497)}…` : value; }
 function changedLines(patch: string | undefined, additions: number, deletions: number, beforeText?: string, afterText?: string) {
   if (!patch && beforeText !== undefined && afterText !== undefined) {
     const ranges: Array<{ start: number; end: number }> = [];
