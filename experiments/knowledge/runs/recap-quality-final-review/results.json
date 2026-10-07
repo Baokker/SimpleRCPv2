@@ -1,0 +1,416 @@
+[
+  {
+    "scenario": "K2-P01",
+    "repetition": 1,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 4,
+    "rule": "在 src/services/inventory-bulk-transfer.ts 的 transferInventoryBatch 函数中，必须使用 service.store.transaction() 包裹所有 transfer 操作，并创建新的 InventoryService 实例（传入事务隔离的 store）执行调拨。不得在 transaction 外部直接调用 service.transfer()。",
+    "mustMention": "InventoryStore.transaction",
+    "identifierCovered": false,
+    "candidates": [
+      "Date.now",
+      "InventoryService",
+      "InventoryService.store",
+      "InventoryService.transfer",
+      "InventoryStore",
+      "InventoryStore.transaction",
+      "error.message",
+      "isolatedService.transfer",
+      "service.store",
+      "service.store.transaction",
+      "service.transfer",
+      "transfer.destinationId",
+      "transfer.quantity",
+      "transfer.sku",
+      "transfer.sourceId",
+      "transferInventoryBatch",
+      "transfers.length"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": true,
+      "files": [
+        "src/services/inventory-bulk-transfer.ts"
+      ],
+      "reason": "verified-before-and-after"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "549d7e52c8e68055730cf89f04ef4bfef353398ed40bcb132ef01ab10b03afae",
+        "usage": {
+          "promptTokens": 6878,
+          "completionTokens": 882,
+          "totalTokens": 7760
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "K2-P01",
+    "repetition": 2,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 4,
+    "rule": "在 `src/services/inventory-bulk-transfer.ts` 的 `transferInventoryBatch` 函数中，必须使用 `InventoryStore.transaction` 方法包装所有调拨操作。在事务回调内创建新的 `InventoryService` 实例（如 `new InventoryService(isolated, () => Date.now())`），通过该实例调用 `transfer` 方法，禁止直接在原始 service 上循环调用 `transfer`。",
+    "mustMention": "InventoryStore.transaction",
+    "identifierCovered": true,
+    "candidates": [
+      "Date.now",
+      "InventoryService",
+      "InventoryService.store",
+      "InventoryService.transfer",
+      "InventoryStore",
+      "InventoryStore.transaction",
+      "error.message",
+      "isolatedService.transfer",
+      "service.store",
+      "service.store.transaction",
+      "service.transfer",
+      "transfer.destinationId",
+      "transfer.quantity",
+      "transfer.sku",
+      "transfer.sourceId",
+      "transferInventoryBatch",
+      "transfers.length"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": false,
+      "files": [
+        "src/services/inventory-bulk-transfer.ts"
+      ],
+      "reason": "does-not-distinguish-correction"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "549d7e52c8e68055730cf89f04ef4bfef353398ed40bcb132ef01ab10b03afae",
+        "usage": {
+          "promptTokens": 6878,
+          "completionTokens": 976,
+          "totalTokens": 7854
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "K2-P01",
+    "repetition": 3,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": true,
+    "citations": 1,
+    "rule": "",
+    "mustMention": "InventoryStore.transaction",
+    "identifierCovered": false,
+    "candidates": [
+      "Date.now",
+      "InventoryService",
+      "InventoryService.store",
+      "InventoryService.transfer",
+      "InventoryStore",
+      "InventoryStore.transaction",
+      "error.message",
+      "isolatedService.transfer",
+      "service.store",
+      "service.store.transaction",
+      "service.transfer",
+      "transfer.destinationId",
+      "transfer.quantity",
+      "transfer.sku",
+      "transfer.sourceId",
+      "transferInventoryBatch",
+      "transfers.length"
+    ],
+    "checkValidation": {
+      "offered": false,
+      "retained": false
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "549d7e52c8e68055730cf89f04ef4bfef353398ed40bcb132ef01ab10b03afae",
+        "usage": {
+          "promptTokens": 6878,
+          "completionTokens": 1194,
+          "totalTokens": 8072
+        }
+      },
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "b3d2ed44b9fc622be0f7a1a3d0bcecb5b97cdfff3393640457cc063ca9769823",
+        "usage": {
+          "promptTokens": 7297,
+          "completionTokens": 829,
+          "totalTokens": 8126
+        }
+      },
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "b3d2ed44b9fc622be0f7a1a3d0bcecb5b97cdfff3393640457cc063ca9769823",
+        "usage": {
+          "promptTokens": 7297,
+          "completionTokens": 886,
+          "totalTokens": 8183
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "revised",
+    "repetition": 1,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 3,
+    "rule": "当修正明确要求保留 sharedHelper 时，不得将其删除；应保留 sharedHelper 并重构 setup 和 renameSession 使其调用 sharedHelper",
+    "mustMention": "sharedHelper",
+    "identifierCovered": true,
+    "candidates": [
+      "SessionState.name",
+      "renameSession",
+      "setup",
+      "sharedHelper",
+      "state.name"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": true,
+      "files": [
+        "src/session.ts"
+      ],
+      "reason": "verified-before-and-after"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "9ba3dcfd777650795cbcaa4ca5202c36052dafa343f359f1e830c99450c10f53",
+        "usage": {
+          "promptTokens": 1747,
+          "completionTokens": 732,
+          "totalTokens": 2479
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "revised",
+    "repetition": 2,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 5,
+    "rule": "当纠正明确要求保留某个共享辅助函数时，必须恢复该函数并使其被相关函数调用，而非直接移除。",
+    "mustMention": "sharedHelper",
+    "identifierCovered": false,
+    "candidates": [
+      "SessionState.name",
+      "renameSession",
+      "setup",
+      "sharedHelper",
+      "state.name"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": true,
+      "files": [
+        "src/session.ts"
+      ],
+      "reason": "verified-before-and-after"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "9ba3dcfd777650795cbcaa4ca5202c36052dafa343f359f1e830c99450c10f53",
+        "usage": {
+          "promptTokens": 1747,
+          "completionTokens": 861,
+          "totalTokens": 2608
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "revised",
+    "repetition": 3,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 9,
+    "rule": "在 src/session.ts 中，重构会话状态管理时必须保留 sharedHelper 函数。setup 和 renameSession 应通过调用 sharedHelper(state) 或 sharedHelper(state, name) 来操作状态，禁止直接修改 state.name。",
+    "mustMention": "sharedHelper",
+    "identifierCovered": true,
+    "candidates": [
+      "SessionState.name",
+      "renameSession",
+      "setup",
+      "sharedHelper",
+      "state.name"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": true,
+      "files": [
+        "src/session.ts"
+      ],
+      "reason": "verified-before-and-after"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "9ba3dcfd777650795cbcaa4ca5202c36052dafa343f359f1e830c99450c10f53",
+        "usage": {
+          "promptTokens": 1747,
+          "completionTokens": 703,
+          "totalTokens": 2450
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "corrected",
+    "repetition": 1,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 4,
+    "rule": "在 src/session.ts 中，renameSession 函数必须通过 sharedHelper(state, name) 来修改 SessionState 的 name 属性，不能直接写 state.name = name。",
+    "mustMention": "sharedHelper",
+    "identifierCovered": true,
+    "candidates": [
+      "SessionState.name",
+      "renameSession",
+      "setup",
+      "sharedHelper",
+      "state.name"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": false,
+      "files": [
+        "src/session.ts"
+      ],
+      "reason": "does-not-distinguish-correction"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "2b03174cbaa04d4b6bce9569428865cd7c8b1d68c621af4b0227d7d59a7df8f5",
+        "usage": {
+          "promptTokens": 2468,
+          "completionTokens": 770,
+          "totalTokens": 3238
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "corrected",
+    "repetition": 2,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 5,
+    "rule": "在 src/session.ts 的 renameSession 函数中，必须使用 sharedHelper(state, name) 而非直接赋值 state.name = name。",
+    "mustMention": "sharedHelper",
+    "identifierCovered": true,
+    "candidates": [
+      "SessionState.name",
+      "renameSession",
+      "setup",
+      "sharedHelper",
+      "state.name"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": false,
+      "files": [
+        "src/session.ts"
+      ],
+      "reason": "does-not-distinguish-correction"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "2b03174cbaa04d4b6bce9569428865cd7c8b1d68c621af4b0227d7d59a7df8f5",
+        "usage": {
+          "promptTokens": 2468,
+          "completionTokens": 861,
+          "totalTokens": 3329
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "corrected",
+    "repetition": 3,
+    "provider": "minimax",
+    "model": "MiniMax-M2",
+    "fallback": false,
+    "citations": 5,
+    "rule": "在 src/session.ts 中，renameSession 必须使用 sharedHelper 来修改 SessionState.name，不能直接赋值 state.name。",
+    "mustMention": "sharedHelper",
+    "identifierCovered": true,
+    "candidates": [
+      "SessionState.name",
+      "renameSession",
+      "setup",
+      "sharedHelper",
+      "state.name"
+    ],
+    "checkValidation": {
+      "offered": true,
+      "retained": false,
+      "files": [
+        "src/session.ts"
+      ],
+      "reason": "does-not-distinguish-correction"
+    },
+    "calls": [
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "2b03174cbaa04d4b6bce9569428865cd7c8b1d68c621af4b0227d7d59a7df8f5",
+        "usage": {
+          "promptTokens": 2468,
+          "completionTokens": 760,
+          "totalTokens": 3228
+        }
+      },
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "fbb951df9d778a6ccdb510b54d06150e2489965da344f29fe876c793bcafdc60",
+        "usage": {
+          "promptTokens": 2798,
+          "completionTokens": 865,
+          "totalTokens": 3663
+        }
+      },
+      {
+        "provider": "minimax",
+        "model": "MiniMax-M2",
+        "promptHash": "3cc4c6316e4826aa6f32606942747530bda5ed5bd812f722e95fac6e00acbdd2",
+        "usage": {
+          "promptTokens": 2772,
+          "completionTokens": 872,
+          "totalTokens": 3644
+        }
+      }
+    ]
+  }
+]

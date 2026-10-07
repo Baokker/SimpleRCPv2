@@ -26,3 +26,9 @@ Agent 建议默认创建为 `personal` 草稿，确认人必须是成员。个�
 捕获事件文件仍位于 `<metadata>/knowledge/events.jsonl`，可以直接交给 `replayEvents` 回放。回放使用相同的引擎、配置和虚拟时钟，因此 Agent 触发与线上处理共享判定代码。工具恢复证据保留成功工具的 `traceSeq` 和修改文件列表；事件与证据写入前经过平台敏感信息清理，错误摘要最多保留 2000 个字符。服务端知识模型由 `KNOWLEDGE_LLM_PROVIDER` 选择，默认在存在 `MINIMAX_API_KEY` 时使用 MiniMax，当前兼容地址为 `https://api.minimaxi.com/v1`，默认模型为 `MiniMax-M2`。模型调用记录包含 `provider`、`model`、耗时、用量、完成状态、兜底标记、尝试次数和提示词哈希。MiniMax 返回的 `<think>...</think>` 会在 JSON 解析前清理。
 
 `correctionClassifier: "rules+llm"` 与 `contradictionJudge: "llm"` 当前尚未实现，当前配置不提供这两个取值；后续阶段可以增加模型判定。
+
+复盘证据保留纠正文件的完整 `beforeText` 与 `afterText`，录制重启后恢复这些版本。代码经 TypeScript AST 提取标识符，相对 import 使用 TypeScript 模块解析，并结合项目源文件确定 `Type.method` 或 `Type.field`。提示词列出候选和类型归属，要求规则写明被纠正的具体代码对象。证据 JSON 完整传入模型。
+
+`checkSuggestion` 在匹配 `fileGlob` 的文件全文上验证：至少一个 Agent 版本违反检查，所有纠正版本通过检查，才能保留。正则语法无效、没有完整版本或不能区分两个版本时移除检查，在草稿注明“自动检查未通过验证，已移除”。`llm-calls.jsonl.checkValidation` 保存 `offered`、`retained`、文件与原因，实验可以计算检查保留率。
+
+K4 使用独立实验接口 `POST /api/projects/:projectId/experiments/recap-from-episode`，按已经执行的纠正创建建议并进入同一复盘与人工确认流程。输入包含 `runId`、可选 `correctionRunId`、`correctionAction`、`correctionText` 和完整 `correctionFiles`。接口核验原 run 已结束、纠正 run 的发起人和文件版本，返回 `captureBypassed: true` 与 `naturallyTriggered`，重复提交保留该观察值。K1 使用产品默认纠正词表，遗漏正常计入召回率。

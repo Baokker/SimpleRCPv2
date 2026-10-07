@@ -4,12 +4,12 @@
 
 ## 四层顺序
 
-1. **Yjs 相对位置**：文件已有服务端 Y.Doc 时，使用 `Y.createRelativePositionFromTypeIndex` 保存起止位置。解析时用 `Y.createAbsolutePositionFromRelativePosition` 还原起止位置，并比较当前位置文本与快照文本的相似度。相似度低于 `0.65` 时放弃这一层。
+1. **Yjs 相对位置**：文件已有服务端 Y.Doc 时，使用 `Y.createRelativePositionFromTypeIndex` 保存起止位置。`start` 使用 `assoc=0`，关联右侧字符；`end` 使用 `assoc=-1`，关联左侧字符。左右边界新增文本均在选区之外。Yjs 13.6.31 的 `src/utils/RelativePosition.js` 在负数关联时把索引减一，关联该位置前的字符；绝对位置解析后返回这个字符之后的位置。解析时用 `Y.createAbsolutePositionFromRelativePosition` 还原起止位置，并比较当前位置文本与快照文本的相似度。相似度低于 `0.65` 时放弃这一层。
 2. **范围**：检查 `rangeAtCapture` 转换后的范围是否仍然等于快照文本。
 3. **唯一快照**：在当前文件中查找唯一的完整快照文本。
 4. **上下文指纹**：使用 landmark 行和前后缀寻找候选范围，沿用阶段一的文本解析器。
 
-范围层命中返回 `ok`。Yjs 层只要相对位置解析成功并通过相似度检查就返回 `ok`，因为位置变化属于 Yjs 相对位置的预期行为。唯一快照或指纹层命中返回 `moved`。全部策略失败，或者最佳置信度低于 `0.65`，返回 `needsReview`。读取解析保持卡片的业务状态；文本策略解析成功时会刷新相对位置与 `docEpoch`。写回操作与编辑、确认、重选使用同一项目队列。
+范围层命中返回 `ok`。Yjs 层只要相对位置解析成功并通过相似度检查就返回 `ok`，因为位置变化属于 Yjs 相对位置的预期行为。唯一快照或指纹层命中返回 `moved`。全部策略失败，或者最佳置信度低于 `0.65`，返回 `needsReview`。读取解析保持卡片的业务状态；Yjs 解析成功时按当前范围刷新结束位置，文本策略解析成功时刷新相对位置与 `docEpoch`。已有卡片按成功解析后的范围更新结束位置。写回操作与编辑、确认、重选使用同一项目队列。
 
 ## docEpoch
 

@@ -50,13 +50,19 @@ pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/r
 
 判定使用冻结 `run-judge.mjs` 的逐字副本，执行前比较 SHA-256。副本放在 `.work/judge/tools/`，判定器的临时目录因此位于实验目录内。任务和隐藏测试仍从只读数据目录读取。
 
-K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，Tb 由乙的个人 Agent 执行。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T1 使用手工创建接口返回的 reviewed 团队卡片，正文保留完整纠正原文，后接真实 diff 的增删行摘要，合计不超过 800 字符。T4 检查卡片由甲拥有且保持个人范围。草稿与确认步骤按服务端当前状态继续执行。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。需要用数据原文触发纠正识别时，启动实验实例增加 `EXPERIMENT_CORRECTION_TERMS=dataset`；实际配置保存在结果目录。该设置包含四个迁移约定标识符。
+K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，Tb 由乙的个人 Agent 执行。T2 到 T5 使用 `POST /api/projects/:projectId/experiments/recap-from-episode`，提交 `runId`、`correctionRunId`、`correctionAction`、`correctionText` 与完整 `correctionFiles`。接口创建 `agent.revised` 或 `agent.corrected` 建议，复用 Inbox 的草稿与确认流程。结果记录 `captureBypassed: true` 与 `naturallyTriggered`。K4 测量确认后的纠正迁移，产品触发是否自然识别作为附带观察；K1 使用产品默认纠正词表，遗漏计入召回率。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T1 使用手工创建接口返回的 reviewed 团队卡片，正文保留完整纠正原文，后接真实 diff 的增删行摘要，合计不超过 800 字符。T4 检查卡片由甲拥有且保持个人范围。草稿与确认步骤按服务端当前状态继续执行。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。
 
 C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
 
 K2 逐条读取来源 K4 中已经完成的纠正组合，以组合 key 区分重复与条件。缺少来源目录时仅评价脚本知识时刻。迁移草稿使用真实运行、diff、纠正原文或保存的建议证据，Agent 上下文使用纠正后的工作区；脚本代码证据取自对应知识时刻。自动 grounded 检查结构完整、原始响应的全部引用路径存在、正文覆盖指定对象；规则语义由两名标注者评价。结构解析采用产品解析器，引用评价直接读取原始 JSON 中的 evidenceCitations。原始模型响应按输入哈希缓存。续跑保留评分表的已填写内容，补充新增草稿；草稿文字改变时终止。
 
-K7 的真值由 Y.Text 的字符归属属性跟踪，所有被测策略只读取纯文本与旧锚点。移动操作给迁移后的文本保留归属标记；并发编辑在原位置保留的字符单独记录 fragmented。删除后的真值为请求复核。两个相对位置均使用产品默认 assoc=0。Yjs 分支使用 0.65 字符相似度及 0.5 行修改比例阈值；文本分支使用包返回的 confidence 与行修改比例。
+K7 的真值由 Y.Text 的字符归属属性跟踪，所有被测策略只读取纯文本与旧锚点。移动操作给迁移后的文本保留归属标记；并发编辑在原位置保留的字符单独记录 fragmented。删除后的真值为请求复核。相对位置与产品共同采用 start assoc=0、end assoc=-1。Yjs 分支使用 0.65 字符相似度及 0.5 行修改比例阈值；文本分支使用包返回的 confidence 与行修改比例。主要指标要求起止字符位置完全正确；`boundaryTolerant` 另行统计起点精确、终点行号误差最多一行的结果。
+
+K5 与线上 provider 共用 `searchRankedKnowledgeCards`。全部候选进入类型重排，同分时按卡片 id 排序，原词法打分与活动文件权重保持一致。来源 K3 的空 `activeFiles` 原样保留；每个 C2 组合在 `raw/replay-<key>/comparison.json` 保存实际 query、参数和线上、离线前五名。旧 trace 的查询摘要由完整 run 提示重建。`KNOWLEDGE_BENCH_ROOT` 可指定独立冻结数据目录，仍执行全部 manifest 校验。
+
+审阅复盘验证命令为 `pnpm --filter @simplercp/experiments exec tsx review-recaps.ts`。使用同一 K2 episode 与真实执行的两个 Session 纠正场景，每个场景请求 MiniMax 三次，记录原始响应、代码标识符与检查验证结果。`toolInstructionPlacement` 可选 `prompt` 或 `system`；对应审阅配置为 `review-fixes.json` 和 `review-fixes-system.json`。
+
+2026-10-07 审阅验证中，四个 C3 陷阱在 prompt 与 system 两种位置各执行一次，知识工具调用均为零。阶段 8 的 K3 命令显式选择 `--conditions C0,C1,C2,C5,C6,C7`，C3、C4 不进入正式矩阵，R4 标记为没有实际查询数据。汇总证据使用 `pnpm --filter @simplercp/experiments exec tsx review-evidence.ts`，输出 `runs/review-20261007.json`。复盘验证对已有响应立即报告错误，重新验证使用独立结果目录。
 
 K5 的活动文件取自 `--source` 中知识注入 trace 的 activeFiles；缺少记录时使用任务提示明确列出的 src 文件路径。每行记录 activitySource。错误活动文件使用另一张卡片的锚点文件，排除目标卡片的文件。目标卡片 id 只用于相关性评价和错误活动文件的选择。实际工具查询统一记录为 R4，以 queryIndex 与 querySource 区分各次查询；明确属于多次运行的查询单独排除。R4 统计先求每个任务的查询均值，再求任务均值。
 

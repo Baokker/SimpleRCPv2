@@ -66,7 +66,7 @@ K4 在 P01、P03 上各执行 T0、T3 的 delayed 变体一次，并对 P01 执�
 | P03-T3-delayed，跨属主 | completed | false，功能失败 | 功能与陷阱均失败 | true | 60.043 秒 |
 | P01-T1-same-session | completed | true | 功能与陷阱均通过 | true | 0.038 秒 |
 
-分析文件单独记录 taActuallyTrapped，并另外输出 Ta 确实踩坑的子集；delayed 和 same-session 分别计算。P01-T0 与 P01-T1 进入该子集。为使纠正原文被识别，实验实例使用 `EXPERIMENT_CORRECTION_TERMS=dataset`，包含 transaction、logicalId、requestId、redactSensitive、actorId 与 serverMember。实际配置随结果保存。T3 的两张卡片都正常生成、确认和注入，scope 为 team。T1 使用手工接口返回的 reviewed 团队卡片，800 字符正文保留完整纠正原文及真实 diff 的增删行摘要，Tb trace 记录正文 800 字符、完整注入 1159 字符。相同 T1 命令再次执行时跳过完成组合，没有新增 Agent run。
+分析文件单独记录 taActuallyTrapped，并另外输出 Ta 确实踩坑的子集；delayed 和 same-session 分别计算。P01-T0 与 P01-T1 进入该子集。K4 通过实验 episode 接口进入复盘，记录 `captureBypassed` 和 `naturallyTriggered`；K1 使用产品默认纠正词表。T3 的两张卡片都正常生成、确认和注入，scope 为 team。T1 使用手工接口返回的 reviewed 团队卡片，800 字符正文保留完整纠正原文及真实 diff 的增删行摘要，Tb trace 记录正文 800 字符、完整注入 1159 字符。相同 T1 命令再次执行时跳过完成组合，没有新增 Agent run。
 
 K1 离线共有 52 个标注知识时刻、34 条建议、17 次命中：精确率 50.00%，召回率 32.69%，共现 Top-1 为 15.38%，Top-3 为 46.15%。20 个标注干扰窗口中没有建议。每类触发的发现延迟保存在 results.jsonl；命中的编辑与 Agent 类事件延迟为 24 到 28 秒。
 
@@ -88,15 +88,15 @@ K5 使用 10 个陷阱、4 个对照。活动文件来自 K3 注入 trace；没�
 
 K7 完成 1440 条轨迹、7200 次策略评价。同种子两次生成的文本、操作、真值与同步更新哈希全部一致。存活率和错误范围率以下使用 1200 条可定位轨迹作为分母，删除类另计 240 条。
 
-| 策略 | 存活率 | 错误范围率 | 请求复核率 | 删除类请求复核率 |
-|---|---|---|---|---|
-| range-only | 0.00% | 100.00% | 0.00% | 0.00% |
-| snapshot-only | 40.00% | 0.00% | 60.00% | 100.00% |
-| multi-strategy | 62.08% | 32.17% | 5.75% | 100.00% |
-| yjs-relative | 39.75% | 60.25% | 0.00% | 100.00% |
-| yjs-multi | 43.58% | 40.08% | 16.33% | 100.00% |
+| 策略 | 精确存活率 | 边界容忍存活率 | 错误范围率 | 请求复核率 | 删除类请求复核率 |
+|---|---|---|---|---|---|
+| range-only | 0.00% | 0.00% | 100.00% | 0.00% | 0.00% |
+| snapshot-only | 40.00% | 40.00% | 0.00% | 60.00% | 100.00% |
+| multi-strategy | 62.08% | 67.92% | 32.17% | 5.75% | 100.00% |
+| yjs-relative | 79.42% | 79.75% | 20.08% | 0.50% | 100.00% |
+| yjs-multi | 83.42% | 83.58% | 0.25% | 16.33% | 100.00% |
 
-判定使用精确起止位置。两个相对位置均采用平台默认 assoc=0；Yjs 分支采用产品的相似度与行修改比例阈值。yjs-relative 的 723 条错误范围中，有 480 条保持正确起点、结束位置扩大；yjs-multi 的 481 条错误范围中，同样有 480 条属于结束位置扩大。assoc=0 使结束位置包含右侧新增文本，表中的错误范围率包含这种情况。真实 HTTP/Yjs 测试检查实验策略与平台接口返回的范围一致。六类操作的完整结果见 [anchors.csv](../../experiments/knowledge/runs/k7-review/analysis/anchors.csv)。这些数字来自受控并发轨迹。
+主要判定使用精确起止位置；边界容忍要求起点精确、终点所在行误差不超过一行。平台与实验均使用 start assoc=0、end assoc=-1。Yjs 分支采用产品的相似度与行修改比例阈值。真实 HTTP/Yjs 测试检查实验策略与平台接口返回的范围一致。完整轨迹见 [k7-boundary-review](../../experiments/knowledge/runs/k7-boundary-review/results.jsonl)，六类操作见本报告审阅修复记录。真值、并发操作与精确判定保持冻结。
 
 ## 数据与平台复核事项
 
@@ -106,7 +106,7 @@ R2-T02 的提示已经列明输出字段及数组格式，当前失败来自 Age
 
 人工检查中没有确认判定器误判。功能失败时，陷阱检查也可能因加载或输出格式失败；保留完整原因，解释时同时查看 functional 与 trapEvidence。卡片导入没有异常，C2 的目标卡片只命中 R2-T01；其他任务注入了相关性较低的卡片。C5 的四项陷阱都收到目标卡片，三个联合成功。知识工具虽已开启，C3 的 Agent 没有调用它，R4 尚未得到端到端输入验证。
 
-K2 的完整 196 个 episode，以及 K4 的 T2/T4/T5 和全部迁移对矩阵尚未执行。两名标注者的评分、embedding 条件，以及实验配置增加的纠正词对结果的影响，需要在阶段 8 前明确记录。K7 的右侧边界扩大需要产品负责人复核，本阶段保持产品相对位置参数。当前小样本支持工具检查；C0/C2 的四个配对任务在多数投票后没有联合成功差异，McNemar p=1。对照只有一项，TOST 返回空值及样本不足原因，不能作等价结论。混合 logistic 使用 statsmodels 的 Bayesian 估计，完整方法与参数保存在 statistics.json。
+K2 的完整 196 个 episode，以及 K4 的 T2/T4/T5 和全部迁移对矩阵尚未执行。两名标注者的评分与 embedding 条件需要在阶段 8 前明确记录。当前小样本支持工具检查；C0/C2 的四个配对任务在多数投票后没有联合成功差异，McNemar p=1。对照只有一项，TOST 返回空值及样本不足原因，不能作等价结论。混合 logistic 使用 statsmodels 的 Bayesian 估计，完整方法与参数保存在 statistics.json。
 
 ## 正式实验估算与运行顺序
 
@@ -142,6 +142,76 @@ K2 的完整 196 个 episode，以及 K4 的 T2/T4/T5 和全部迁移对矩阵�
 | 统计 | 对实际 K3、K4、K2、K5、K7 结果运行 Python | 表格、置信区间、模型参数、等价限制及三类 PNG 已生成；K4 按变体分别输出 |
 | 凭据 | 新增文件与输出检查长凭据和 JWT 模式 | 没有发现匹配；配置仅记录 apiKeyConfigured 布尔值 |
 
-server 默认 threads 测试模式在 node-pty 原生回调处终止；独立进程模式完成全部 133 项测试。产品测试内容与 runtime 保持原样。
+server 的 Vitest 配置固定为 `pool: "forks"`、`singleFork: true` 与 `fileParallelism: false`，根目录 `pnpm test` 使用该配置。
 
 提交的结果在 `experiments/knowledge/runs/`，包括 results.jsonl、配置、汇总、评分表与统计图。原始输出的绝对位置为 `/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/<目录>/raw/`，包含 trace、diff、快照、模型响应、录制与判定输出，已由 gitignore 排除。过程检查材料位于同一实验目录的 `.work/previous-runs/`。本轮两个专用服务在试跑结束后停止，4195、4197、4199、4201 均无监听，工作区与原始输出保留。
+
+## 2026-10-07 审阅修复
+
+本次使用 Node.js 22.19.0、OpenCode 1.18.31 与 `minimax / MiniMax-M2`。冻结数据通过 `KNOWLEDGE_BENCH_ROOT=experiments/knowledge/.work/frozen-bench` 指定，提交与 manifest 保持 `18f9bac` 和 `62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454`。相邻数据仓库中的本地修改保持原样。审阅实例使用 HTTP 4305、OpenCode 4307，终端关闭。
+
+实现提交为 `e18620f`。最终 C2 与其 K5 重放在该提交上执行；K7、C3、复盘和 K4 的结果记录执行开始时的 HEAD `ab157ee`，同时使用本轮审阅修改。原始记录保留各自的提交字段，本节和分支提交提供对应实现与修复范围。
+
+Yjs 13.6 的 `assoc<0` 将位置关联到左侧字符，非负值关联到右侧字符。新建与解析刷新采用 start=0、end=-1；已有卡片在成功解析后更新。K7 的 1440 条轨迹再次生成并核验一致性，正文表为本次全量结果。精确存活数分别为 0、480、745、953、1001，分母为 1200；边界容忍数分别为 0、480、815、957、1003。`yjs-relative` 精确存活率从 39.75% 达到 79.42%，`yjs-multi` 从 43.58% 达到 83.42%。
+
+| 操作，每类 240 条 | multi-strategy 精确正确 / 错误 / 复核 | yjs-relative 精确正确 / 错误 / 复核 | yjs-multi 精确正确 / 错误 / 复核 |
+|---|---|---|---|
+| insert-around | 240 / 0 / 0 | 240 / 0 / 0 | 240 / 0 / 0 |
+| interleaved | 240 / 0 / 0 | 238 / 2 / 0 | 234 / 2 / 4 |
+| move-and-edit | 240 / 0 / 0 | 0 / 234 / 6 | 240 / 0 / 0 |
+| duplicate-before | 0 / 240 / 0 | 240 / 0 / 0 | 240 / 0 / 0 |
+| delete | 0 / 0 / 240 | 0 / 0 / 240 | 0 / 0 / 240 |
+| three-members | 25 / 146 / 69 | 235 / 5 / 0 | 47 / 1 / 192 |
+
+移动通过删除后重新插入实现，旧 Yjs 字符身份无法直接跟随，组合策略通过快照与上下文重新定位。多人修改中，产品的内容变化阈值要求复核，因此组合策略在 192 条轨迹中请求复核；其精确错误数为 1。交错编辑仍有 2 条边界范围不精确，组合策略另有 4 条请求复核。这些记录保留，判定阈值与真值没有调整。
+
+C2 的五个组合均完成，完整输入重放的前五名全部相同。共享排序函数保留活动文件加分 0.06、最高词法分乘 0.5 的上限与类型优先级。同分卡片按 id 排序，全部候选排序后应用数量限制。离线重放保留空 `activeFiles`，使用完整 `run.prompt` 与 `extraPrompt`；新 trace 保存完整脱敏查询、参数与前 20 个候选。
+
+| 任务 | 原试跑目标注入 | 本次目标注入 | 线上 / 离线前五名一致 | 实际活动文件 |
+|---|---|---|---|---|
+| R1-T01 | 否 | 否 | 是 | 空集合 |
+| R1-T02 | 否 | 否 | 是 | 空集合 |
+| R2-T01 | 是 | 是 | 是 | src/extracted/agent/traceStore.ts |
+| R2-T02 | 否 | 是 | 是 | src/extracted/chat.ts |
+| R1-C01 | 无目标 | 无目标 | 是 | 空集合 |
+
+R1-T01、R1-T02 和 R1-C01 存在大量相同词法分数，活动文件为空。线上卡片读取顺序与离线 library 顺序不同，数量截取时机也不同，导致前五名差异。R2-T01 的目标由活动文件加分进入前列；R2-T02 的目标在统一同分顺序与完整排序后进入前五名。卡片集合核验为各项目 40 张 reviewed 卡片，内容一致；状态配置与排序参数一致。原 trace 将查询限制为 500 字符，重放使用保存的完整 run 请求恢复输入。离线将空活动文件替换为推断路径也会改变条件。逐项比较见 [review-20261007.json](../../experiments/knowledge/runs/review-20261007.json)、[C2 结果](../../experiments/knowledge/runs/k3-c2-delivery-review/results.jsonl) 与 [离线重放](../../experiments/knowledge/runs/k5-delivery-trace-review/results.jsonl)。四个陷阱的目标注入从 1/4 达到 2/4，R1 两项仍未命中，后续实验保留这些检索失败。
+
+原 C3 的实际提示已包含工具说明。本次提供独立说明，位于范围声明后，介绍 `knowledge_search`、`knowledge_get` 与必填 workspace，不受注入开关或卡片字符预算限制；另验证 OpenCode `session.prompt.system` 入口。说明原文与位置写入 trace，MCP 状态为 connected。
+
+| C3 任务 | prompt 工具调用次数 | system 工具调用次数 | 查询内容 |
+|---|---|---|---|
+| R1-T01 | 0 | 0 | 无查询 |
+| R1-T02 | 0 | 0 | 无查询 |
+| R2-T01 | 0 | 0 | 无查询 |
+| R2-T02 | 0 | 0 | 无查询 |
+
+八次真实 Agent 运行全部为 completed。普通提示词结果为 [k3-c3-final-review](../../experiments/knowledge/runs/k3-c3-final-review/results.jsonl)，有效 system 结果为 [k3-c3-system-final-review](../../experiments/knowledge/runs/k3-c3-system-final-review/results.jsonl)。两种位置均没有产生工具查询，阶段 8 移除 C3、C4；R4 标记为无实际查询数据。正式 K3 命令显式选择 `--conditions C0,C1,C2,C5,C6,C7`，工具接口继续供交互使用。
+
+K4 的 [P01 T3 same-session](../../experiments/knowledge/runs/k4-episode-final-review/results.jsonl) 验证了直接 episode 入口、真实复盘、人工规则修订、二次团队确认与乙的 Tb 注入。`captureBypassed`、`naturallyTriggered` 均为 true，卡片 scope 为 team，Tb 的功能和陷阱检查通过。Ta 的 `actuallyTrapped=false`，该组合只用于接口验证。缺少本地确认记录时，工具复用保存建议、观察与 Inbox 草稿，保持已保存的纠正快照。[继续执行验证](../../experiments/knowledge/runs/k4-episode-final-review/resume-validation.json) 显示没有新增 Agent run。产品纠正词表保持默认值。
+
+复盘使用同一 K2 episode 和阶段 6 的两个真实 Session 场景，各调用三次。代码证据包含完整前后文件、通过 TypeScript 解析得到的标识符与类型归属。实际响应、用量与提示词哈希见 [recap-quality-final-review/results.json](../../experiments/knowledge/runs/recap-quality-final-review/results.json)。本次验证不复用旧响应，原始证据与响应保持保存。
+
+| 场景 | 结构与引用合法 | 指定标识符覆盖 | 提出检查 | 保留检查 |
+|---|---|---|---|---|
+| K2 P01，InventoryStore.transaction | 2/3 | 1/3 | 2 | 1 |
+| 跨属主恢复 sharedHelper | 3/3 | 2/3 | 3 | 3 |
+| 追加纠正使用 sharedHelper | 3/3 | 3/3 | 3 | 0 |
+| 合计 | 8/9 | 6/9 | 8 | 4 |
+
+K2 一条规则包含具体调用 `service.store.transaction`，指定类型标识符覆盖按原要求计为未命中；另一条包含 `InventoryStore.transaction`。第三次响应的 `fileGlob` 字段缺少 JSON 引号，三次尝试均未通过解析，草稿保留空规则和 fallback 标记。跨属主场景有一条规则使用“共享辅助函数”而未写出函数名，计为未覆盖。所有生成规则原文保存在上述结果文件中，未修改模型文本。
+
+检查保留率为 4/8（50.00%）；按九次请求计算为 4/9。验证要求至少一个 Agent 文件违反、全部纠正文件通过。追加纠正的三条检查无法区分全文前后版本，全部移除；草稿注明“自动检查未通过验证，已移除”。正则语法无效同样移除检查。合法性与引用校验保持要求，模型的对象命名与 JSON 输出仍需要人工确认。
+
+DeepSeek 的 SDK `cost=0` 不表示免费或价格更低，跨模型成本比较使用 token 数。MiniMax 的人民币费用仅作为独立估算记录。
+
+| 本次检查 | 结果 |
+|---|---|
+| pnpm build | 通过 |
+| pnpm test | server 136、knowledge 155、Demo 2 项通过 |
+| pnpm test:e2e | 21 项通过、15 项按配置跳过 |
+| pnpm test:e2e:knowledge | 13 项通过 |
+| 实验工具测试 | 15 项通过，包含真实 HTTP/Yjs 与逆序卡片输入的前五名一致检查 |
+| 统计工具测试 | 5 项通过 |
+
+测试输出保存在忽略目录 `artifacts/review-20261007/`。事件证据脱敏采用保持文本长度的替换方式，敏感文本不会改变区间坐标，录制仍能通过 schema 校验。新增检查还验证旧 end 相对位置成功解析后的刷新、JavaScript 相对 import、无效正则移除、完整 Agent 版本重启恢复和 episode 观察值的重复提交。

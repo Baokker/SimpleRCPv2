@@ -118,7 +118,9 @@
 
 阶段 6 的知识配置增加 `toolEnabled`、`proposeEnabled` 与 `recapLanguage`。`POST /api/projects/:projectId/knowledge/import` 导入工作区规范文件并创建 Inbox 草稿；`GET /api/projects/:projectId/knowledge/export?format=agents-md` 返回团队卡片 Markdown，`POST /api/projects/:projectId/knowledge/export/workspace` 写入工作区。`POST /mcp/knowledge` 提供 `knowledge_search`、`knowledge_get` 和受项目配置控制的 `knowledge_propose`。
 
-Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 不包含完整卡片正文，记录 `totalChars` 与 `estimatedInjectionTokens`；`totalChars` 包含标题、卡片元数据、正文、矛盾标注、分隔符和工具说明，受项目 `maxTotalChars` 限制。`usage_summary` 记录 OpenCode assistant 消息用量。`knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。自我复盘的 `llm-calls.jsonl.usage` 包含 token 用量、SDK `cost` 和可选的 `estimatedCost`、`estimatedCostCurrency`、`estimatedCostSource`。
+Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 保存完整脱敏 `query`、`activeFiles`、`ranking`、`lexicalScoring`、`topK` 与前 20 个 `candidates`（`id`、`lexical`、`boost`、`score`、`filtered`、`reason`），并记录 `totalChars` 与 `estimatedInjectionTokens`。`totalChars` 包含标题、卡片元数据、正文、矛盾标注和分隔符，受项目 `maxTotalChars` 限制；工具说明独立于该预算，位置可配置为 `toolInstructionPlacement: "prompt" | "system"`。`usage_summary` 记录 OpenCode assistant 消息用量。`knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。自我复盘的 `llm-calls.jsonl.usage` 包含 token 用量、SDK `cost` 和可选的 `estimatedCost`、`estimatedCostCurrency`、`estimatedCostSource`。
+
+实验实例提供 `POST /api/projects/:projectId/experiments/recap-from-episode`：body 为 `{ runId, correctionRunId?, correctionAction: "revise" | "correct" | "interrupt", correctionText, correctionFiles?: [{ file, beforeText, afterText }] }`。使用已结束 run 的真实纠正版本进入 Inbox，返回 `{ suggestion, captureBypassed: true, naturallyTriggered }`。重复提交使用相同建议 id 并保留自然识别观察值。该接口仅在实验服务启用，K4 使用它独立测量确认后的迁移。
 
 在途提醒使用 `/ws` 消息：
 
