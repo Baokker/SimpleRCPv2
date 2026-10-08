@@ -24,7 +24,9 @@ describe("server config", () => {
         maxBatchDurationMs: 5_000,
         activeIdleMs: 600_000,
         cursorDebounceMs: 200,
-        bodyUnrelatedMaxAdjacentLines: 3
+        bodyUnrelatedMaxAdjacentLines: 3,
+        judgementFrameMs: 200,
+        maxJudgementsPerFrame: 20
       },
       agent: {
         apiKey: undefined,
@@ -32,7 +34,8 @@ describe("server config", () => {
         model: "deepseek-flash",
         openCodePort: 4096,
         runTimeoutMs: 600_000,
-        maxConcurrentRuns: 3
+        maxConcurrentRuns: 3,
+        activityConfig: { waitingMs: 20000, stalledMs: 60000 }
       }
     });
   });
@@ -69,7 +72,9 @@ describe("server config", () => {
         maxBatchDurationMs: 5_000,
         activeIdleMs: 600_000,
         cursorDebounceMs: 200,
-        bodyUnrelatedMaxAdjacentLines: 3
+        bodyUnrelatedMaxAdjacentLines: 3,
+        judgementFrameMs: 200,
+        maxJudgementsPerFrame: 20
       },
       agent: {
         apiKey: "configured-key",
@@ -77,7 +82,8 @@ describe("server config", () => {
         model: "DeepSeek-V4-Flash",
         openCodePort: 4096,
         runTimeoutMs: 600_000,
-        maxConcurrentRuns: 3
+        maxConcurrentRuns: 3,
+        activityConfig: { waitingMs: 20000, stalledMs: 60000 }
       }
     });
   });
@@ -98,6 +104,15 @@ describe("server config", () => {
     expect(loadConfig({ CONFLICT_GUARD_BODY_ADJACENT_LINES: "5" }).conflictGuard?.bodyUnrelatedMaxAdjacentLines).toBe(5);
     expect(loadConfig({ CONFLICT_GUARD_BODY_ADJACENT_LINES: "0" }).conflictGuard?.bodyUnrelatedMaxAdjacentLines).toBe(0);
     for (const value of ["-1", "1.5", "abc"]) expect(() => loadConfig({ CONFLICT_GUARD_BODY_ADJACENT_LINES: value })).toThrow();
+  });
+  it("活动提示与判定队列参数必须为正整数且停滞时间大于等待时间", () => {
+    expect(loadConfig({ SIMPLERCP_AGENT_WAITING_MS: "1000", SIMPLERCP_AGENT_STALLED_MS: "2000", CONFLICT_GUARD_MAX_JUDGEMENTS_PER_FRAME: "7" }).agent?.activityConfig).toEqual({ waitingMs: 1000, stalledMs: 2000 });
+    expect(loadConfig({ CONFLICT_GUARD_MAX_JUDGEMENTS_PER_FRAME: "7" }).conflictGuard?.maxJudgementsPerFrame).toBe(7);
+    for (const value of ["0", "-1", "abc", "1.5"]) {
+      expect(() => loadConfig({ SIMPLERCP_AGENT_WAITING_MS: value })).toThrow();
+      expect(() => loadConfig({ CONFLICT_GUARD_MAX_JUDGEMENTS_PER_FRAME: value })).toThrow();
+    }
+    expect(() => loadConfig({ SIMPLERCP_AGENT_WAITING_MS: "2000", SIMPLERCP_AGENT_STALLED_MS: "1000" })).toThrow();
   });
 
   it("rejects an invalid terminal setting", () => {

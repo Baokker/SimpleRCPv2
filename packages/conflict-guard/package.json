@@ -22,6 +22,7 @@
     "replay:run": "node --experimental-strip-types scripts/replay-run.ts",
     "replay:check": "node --experimental-strip-types scripts/replay-check.ts",
     "replay:agents": "node --experimental-strip-types scripts/replay-agents.ts",
+    "replay:counts": "node --experimental-strip-types scripts/replay-counts.ts",
     "replay:ui": "node --experimental-strip-types scripts/replay-ui.ts",
     "adjudication:smoke": "node --experimental-strip-types scripts/adjudication-smoke.ts",
     "adjudication:prepare-dev": "node --experimental-strip-types scripts/adjudication-prepare-dev.ts",

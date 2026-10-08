@@ -135,6 +135,8 @@ GREYLOCK_PARITY_WRITE=1 pnpm --filter @simplercp/conflict-guard test -- src/rout
 
 ## 已知局限与后续
 
+2026-10-08 的双人双 Agent 真实轨迹记录了一次 `runtime-export-removed` 误阻断：Agent 删除重复的 `formatMoney@2` 时，公开的 `formatMoney` 仍然存在。审批 diff 与恢复文本一致。符号映射现在检查同名公开声明是否仍存在；非空但无法解析的 after 使用解析状态处理。脱敏输入与回归位于 `test/fixtures/dual-agent-export.json`、`routing/dualAgent.test.ts`，核验见 [stage-ui-round2.md](stage-ui-round2.md)。
+
 冻结在客户端阻止输入，服务端接受全部 Yjs update，并记录 `freeze_violation`。写入闸门恢复时，磁盘上的外部修改通过保存的 Yjs 状态副本产生 update 后合并回主文档，当前文档内容用于后续写入；`persist_conflict` 记录闸门阻挡期间的外部写入。“我来改”使用按成员和文件维护的 `Y.UndoManager`，撤回范围为该文件本轮活跃变更，文档固定期间保留 Undo 历史。
 
 回放使用 `pair_judged` 的 revision、ruleId、双方符号键与 before/after 哈希，类型检查耗时与跳过原因，以及写入、闸门、冻结事件。人工浏览器验收与一致性检查结果以 `review-fix-checkpoint-a.md` 和检查点 A 证据目录为准。

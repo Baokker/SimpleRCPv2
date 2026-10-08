@@ -7,7 +7,7 @@ import { agentInputRevision, changedAgentDependencies, createGuardConflict, eval
 import { createSessionCoordinator } from "../coordination/session.js";
 import { classify } from "../routing/classifier.js";
 import { createSemanticIndex } from "../semantic/index.js";
-import { SemanticChangeTracker } from "../routing/candidates.js";
+import { SemanticChangeTracker, type SemanticChangeEvent } from "../routing/candidates.js";
 import { ConflictGuardTracker } from "../tracking/tracker.js";
 import { textDiffOps } from "../tracking/textDiff.js";
 import { MemoryFileProvider } from "./files.js";
@@ -18,18 +18,34 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
   injection?: boolean;
   initialFiles?: Record<string, string>;
   libs?: Record<string, string>;
+  judgementFrameMs?: number;
+  maxJudgementsPerFrame?: number;
+  onSemanticEvent?(event: SemanticChangeEvent, at: number): void;
   adjudicate?(input: ZoneInput, local: ZoneVerdict, signal: AbortSignal, point: "T1" | "T2" | "T3"): Promise<ZoneVerdict>;
 }) {
   const clock = new VirtualClock(events[0]?.at ?? 0);
   const snapshot = events.find((event) => event.type === "project_snapshot")?.files as Record<string, string> | undefined;
   const injectionEnabled = options.injection ?? (events.find((event) => event.type === "session_start")?.intentInjection as boolean | undefined) ?? events.some((event) => event.type === "intent_injected");
   const files = new MemoryFileProvider(options.initialFiles ?? snapshot, options.libs);
-  const config = events.find((event) => event.type === "session_start")?.config as { idleMs?: number; activeIdleMs?: number; maxBatchDurationMs?: number; cursorLeaveLines?: number; cursorDebounceMs?: number } | undefined;
+  const config = events.find((event) => event.type === "session_start")?.config as { idleMs?: number; activeIdleMs?: number; maxBatchDurationMs?: number; cursorLeaveLines?: number; cursorDebounceMs?: number; judgementFrameMs?: number; maxJudgementsPerFrame?: number } | undefined;
   let sequence = 0;
   const tracker = new ConflictGuardTracker({ ...config, clock, idleMs: config?.idleMs ?? 1500, activeIdleMs: config?.activeIdleMs ?? 600000, createId: () => `agent-replay-${++sequence}` });
   const index = createSemanticIndex({ files, now: () => clock.now() }); index.update();
   const semantic = new SemanticChangeTracker({ index, readFile: (file) => files.readFile(file), now: () => clock.now() });
+  if (options.onSemanticEvent) semantic.onEvent((event) => options.onSemanticEvent!(event, clock.now()));
   const actions: Array<Record<string, unknown>> = [];
+  const judgements: Array<{ at: number; point: "T1" | "T2" | "T3"; pair: PairRecord["pair"]; revision: number; verdict: ZoneVerdict }> = [];
+  const published = new Map<string, string>();
+  const resultCaches = new Map<string, Map<string, { verdict: ZoneVerdict; pair: PairRecord["pair"] }>>();
+  const closedBatches: NonNullable<Parameters<typeof semantic.update>[1]> = [];
+  const recordJudgement = (record: PairRecord, point: "T1" | "T2" | "T3") => {
+    if (!record.verdict) return;
+    const key = `${point}:${record.pair.id}`;
+    const value = JSON.stringify([record.verdict.zone, record.verdict.decision, record.verdict.ruleId, record.verdict.summary]);
+    if (published.get(key) === value) return;
+    published.set(key, value);
+    judgements.push({ at: clock.now(), point, pair: record.pair, revision: record.revision, verdict: record.verdict });
+  };
   const interruptions: Interruption[] = [];
   const injections: Array<{ at: number; runId: string; count: number; hash: string }> = [];
   const board = createIntentBoard({ changed() {} });
@@ -92,8 +108,10 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
     const left = session.symbolFor(pair.left.actor, pair.left.symbol); const right = session.symbolFor(pair.right.actor, pair.right.symbol);
     if (!left || !right) throw new Error("Replay pair has no symbols");
     return classify({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: index });
-  } });
-  session.coordinator.onEvent((event) => { if (event.type === "pair_judged" && event.record.verdict?.decision === "lock") {
+  }, judgementFrameMs: options.judgementFrameMs ?? config?.judgementFrameMs ?? 0, maxJudgementsPerFrame: options.maxJudgementsPerFrame ?? config?.maxJudgementsPerFrame ?? 20 });
+  session.coordinator.onEvent((event) => {
+    if (event.type === "pair_judged") recordJudgement(event.record, "T1");
+    if (event.type === "pair_judged" && event.record.verdict?.decision === "lock") {
     const sides = [event.record.pair.left, event.record.pair.right];
     if (sides.some((side) => side.actor.kind === "human")) {
       const latest = sides.every((side) => side.actor.kind === "human") ? sides.sort((left, right) => (session.symbolFor(right.actor, right.symbol)?.lastTouchedAt ?? 0) - (session.symbolFor(left.actor, left.symbol)?.lastTouchedAt ?? 0))[0]! : sides.find((side) => side.actor.kind === "human")!;
@@ -101,7 +119,7 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
     }
   } });
   function refresh() {
-    semantic.captureStaleEdges(tracker.getActiveChangeSets()); index.update(); session.refresh();
+    semantic.captureStaleEdges(tracker.getActiveChangeSets()); index.update(); session.refresh(closedBatches.splice(0));
     for (const set of semantic.getActiveChangeSets()) history.push({ at: clock.now(), set: { ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, proposalText: files.readFile(file), ranges: change.ranges.map((range) => ({ ...range })), semanticRanges: change.semanticRanges?.map((range) => ({ ...range })), symbols: change.symbols?.map((symbol) => ({ ...symbol })) }])) } });
   }
   async function advanceTo(at: number) {
@@ -120,9 +138,11 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
     }
   }
   async function evaluate(point: "T2" | "T3", actor: Extract<ActorRef, { kind: "agent" }>, build: () => Parameters<typeof evaluateAgentChanges>[0], accepted?: () => void, startedAt = clock.now()) {
+    const cacheKey = `${point}:${actor.runId}`;
+    if (!resultCaches.has(cacheKey)) resultCaches.set(cacheKey, new Map());
     const view = () => { const input = build(); return agentInputRevision(input.proposals, input.active, (file) => files.readFile(file)); };
     const before = view(); let latencyMs = 0;
-    const result = await evaluateAgentChanges({ ...build(), ...(options.adjudicate ? { adjudicate: async (input, local, signal) => {
+    const result = await evaluateAgentChanges({ ...build(), resultCache: resultCaches.get(cacheKey), ...(options.adjudicate ? { adjudicate: async (input, local, signal) => {
       const verdict = await options.adjudicate!(input, local, signal, point);
       latencyMs += verdict.adjudication?.latencyMs ?? 0;
       if (verdict.adjudication?.status !== "success") errors.push(`provider:${verdict.adjudication?.status ?? "unavailable"}`);
@@ -131,13 +151,17 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
     scheduled.push({ at: clock.now() + latencyMs, order: ++schedulingOrder, async complete() {
       if (before !== view() && clock.now() - startedAt < (point === "T2" ? 30000 : 60000)) { refresh(); await evaluate(point, actor, build, accepted, startedAt); return; }
       if (point === "T2") board.statusForActors([actor], "running", cards.waitingActors());
+      for (const record of result.records) recordJudgement(record, point);
       if (result.decision !== "lock") accepted?.();
       const arbitration = result.records.filter((record) => record.verdict?.decision === "lock").map((record) => recordAction(record, actor, point));
       if (point === "T2" && arbitration.some((action) => action.type === "retry-agent")) board.statusForActors([actor], "waiting", cards.waitingActors());
       if (point === "T2" && result.decision === "lock" && arbitration.every((action) => action.type !== "owner-card")) inject(actor, build().proposals.flatMap((proposal) => [...proposalSymbolKeys(proposal)]));
     } });
   }
-  tracker.onEvent((event) => { if (["batch_closed", "change_set_closed"].includes(event.type)) refresh(); });
+  tracker.onEvent((event) => {
+    if (event.type === "batch_closed") closedBatches.push({ batch: event.batch, change: tracker.getActiveChangeSets().find((set) => participantKey(set.actor) === participantKey(event.batch.actor))?.files.get(event.batch.file) });
+    if (["batch_closed", "change_set_closed"].includes(event.type)) refresh();
+  });
   try {
     for (const event of events) {
       await advanceTo(event.at);
@@ -222,8 +246,8 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
       }
       await Promise.all(pendingJudgements.splice(0));
     }
-    await advanceTo(clock.now());
+    await advanceTo(clock.now() + Math.ceil(semantic.getCandidatePairs().length / (options.maxJudgementsPerFrame ?? config?.maxJudgementsPerFrame ?? 20)) * (options.judgementFrameMs ?? config?.judgementFrameMs ?? 0));
     for (const attribution of pendingAttributions) errors.push(`unmatched-attribution:${attribution}`);
-    return { mode: options.mode, actions, injections, interruptions, statistics: interruptionStats(interruptions, clock.now()), outcomes: cards.stats(), cards: cards.list(), intents: board.list(), errors, modelSimulation: options.adjudicate ? "provider" : "local-rules" };
+    return { mode: options.mode, actions, judgements, changeUnits: semantic.statistics(), changeUnitsByActor: semantic.statisticsByActor(), injections, interruptions, statistics: interruptionStats(interruptions, clock.now()), outcomes: cards.stats(), cards: cards.list(), intents: board.list(), errors, modelSimulation: options.adjudicate ? "provider" : "local-rules" };
   } finally { await cards.dispose(); tracker.flush(); session.dispose(); }
 }

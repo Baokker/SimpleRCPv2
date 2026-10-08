@@ -43,11 +43,12 @@ export async function createApp(config: ServerConfig) {
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
+    activityConfig: config.agent?.activityConfig,
     getSettings: () => agentSettings.get(),
     editPermission: ["rules", "full"].includes(config.conflictGuard?.mode ?? "off") ? "ask" : "allow"
   });
   const agentRuntime = config.fakeAgentRuntime
-    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime({ editPermission: ["rules", "full"].includes(config.conflictGuard?.mode ?? "off") ? "ask" : "allow" }), Boolean(config.agent?.apiKey), () => agentSettings.get().model)
+    ? createTestAgentRuntime(openCodeRuntime, createFakeAgentRuntime({ editPermission: ["rules", "full"].includes(config.conflictGuard?.mode ?? "off") ? "ask" : "allow", activityConfig: config.agent?.activityConfig }), Boolean(config.agent?.apiKey), () => agentSettings.get().model)
     : openCodeRuntime;
   const agentRuns = createAgentRunManager({
     members,
@@ -59,6 +60,7 @@ export async function createApp(config: ServerConfig) {
     sensitiveValues,
     runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000,
     maxConcurrentRuns: config.agent?.maxConcurrentRuns ?? 3,
+    activityConfig: config.agent?.activityConfig,
     appendActivity(projectId, input) {
       return runtimeManager.get(projectId).events.append(input);
     }

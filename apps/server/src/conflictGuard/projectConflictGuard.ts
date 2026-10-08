@@ -24,6 +24,7 @@ import {
   defaultAdjudicationConfig,
   defaultRoutingConfig,
   createSessionCoordinator,
+  createJudgementQueue,
   createGuardConflict,
   type PairCoordinator
 } from "@simplercp/conflict-guard";
@@ -49,6 +50,8 @@ export interface ProjectConflictGuardConfig {
   arbitration?: ArbitrationMode;
   intentInjection?: boolean;
   bodyUnrelatedMaxAdjacentLines?: number;
+  judgementFrameMs?: number;
+  maxJudgementsPerFrame?: number;
 }
 
 interface ConnectionIdentity {
@@ -119,18 +122,21 @@ export function createProjectConflictGuard(options: {
   const trackedFiles = new Set<string>();
   const externalOrigins = new Map<string, { actor: Extract<ActorRef, { kind: "agent" }>; text: string; before: string }>();
   const adjudicationSettings = options.config.adjudication?.settings ?? defaultAdjudicationConfig;
+  const judgementQueue = createJudgementQueue({ clock, frameMs: options.config.judgementFrameMs ?? defaultRoutingConfig.judgementFrameMs, maximum: options.config.maxJudgementsPerFrame ?? defaultRoutingConfig.maxJudgementsPerFrame });
   const adjudication = options.config.mode === "full" && options.config.adjudication && adjudicationSettings.strategy !== "G0" ? createServerAdjudication(options.config.adjudication, clock, options.sensitiveValues ?? [], (call) => {
     void appendTrace({ type: "provider_call", ...call });
     stateVersion += 1;
     options.onStateChanged?.(stateVersion);
   }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); }) : undefined;
-  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, arbitrationMode: options.config.arbitration, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
+  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, judgementQueue, judgementFrameMs: options.config.judgementFrameMs ?? defaultRoutingConfig.judgementFrameMs, maxJudgementsPerFrame: options.config.maxJudgementsPerFrame ?? defaultRoutingConfig.maxJudgementsPerFrame, arbitrationMode: options.config.arbitration, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
     if (pair.left.actor.kind !== "human" || pair.right.actor.kind !== "human") { complete(local); return; }
     try {
       const left = session.symbolFor(pair.left.actor, pair.left.symbol);
       const right = session.symbolFor(pair.right.actor, pair.right.symbol);
       if (!left || !right) throw new Error("研判输入缺少符号");
-      const input = buildAdjudicationInput({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, path: pair.path, nested: false, typeOnly: Boolean(pair.path?.typeOnly), project: { ...semanticIndex, readFile: semanticFiles.readFile } }, local, adjudicationSettings, semanticFiles.contextFiles());
+      const cluster = { left: (pair.left.symbols ?? [pair.left.symbol]).map((key) => session.symbolFor(pair.left.actor, key)!), right: (pair.right.symbols ?? [pair.right.symbol]).map((key) => session.symbolFor(pair.right.actor, key)!), paths: pair.relations?.map((relation) => relation.path) ?? [pair.path] };
+      if ([...cluster.left, ...cluster.right].some((symbol) => !symbol)) throw new Error("研判输入缺少簇内符号");
+      const input = buildAdjudicationInput({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, cluster, path: pair.path, nested: false, typeOnly: Boolean(pair.path?.typeOnly), project: { ...semanticIndex, readFile: semanticFiles.readFile } }, local, adjudicationSettings, semanticFiles.contextFiles());
       void adjudication.judge(input, local, signal).then(complete).catch(() => { if (!signal.aborted) complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); });
     } catch { complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); }
   } } : {}), intervene: options.config.mode === "rules" || options.config.mode === "full", onError(error) { console.error("Conflict guard pair classification failed", error); }, onEvent(event) {
@@ -205,6 +211,17 @@ export function createProjectConflictGuard(options: {
   const agentAdjudication = options.config.mode === "full" && options.config.adjudication ? Object.fromEntries((["T2", "T3"] as const).map((point) => [point, createServerAdjudication({ ...options.config.adjudication!, settings: { ...adjudicationSettings, strategy: "G4", point, reasoning: point === "T2" ? adjudicationSettings.t2Reasoning ?? false : adjudicationSettings.t3Reasoning ?? false, hardDeadlineMs: point === "T2" ? 30000 : 60000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call }); }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); })])) as Record<"T2" | "T3", ReturnType<typeof createServerAdjudication>> : undefined;
   const agentGuard = createProjectAgentGuard({
     mode: options.config.mode, tracker, clock, files: semanticFiles, bodyUnrelatedMaxAdjacentLines: options.config.bodyUnrelatedMaxAdjacentLines,
+    beforePair(signal) {
+      signal.throwIfAborted();
+      return new Promise<void>((resolve, reject) => {
+        const id = `agent:${crypto.randomUUID()}`;
+        const abort = () => judgementQueue.cancel(id);
+        const cleanup = () => signal.removeEventListener("abort", abort);
+        signal.addEventListener("abort", abort, { once: true });
+        judgementQueue.enqueue(id, () => { cleanup(); resolve(); }, () => { cleanup(); reject(signal.reason ?? new Error("判定队列已关闭")); });
+        if (signal.aborted) abort();
+      });
+    },
     active: () => semantic.getActiveChangeSets(), refresh: updateSemantic, gate: persistGate,
     current: (file) => { try { return semanticFiles.readFile(file); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; } },
     readDisk: async (file) => { try { return await fs.readFile(resolveWorkspacePath(options.workspacePath, file), "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return ""; } },
@@ -280,11 +297,15 @@ export function createProjectConflictGuard(options: {
       activeIdleMs: options.config.activeIdleMs,
       cursorDebounceMs: options.config.cursorDebounceMs,
       bodyUnrelatedMaxAdjacentLines: options.config.bodyUnrelatedMaxAdjacentLines ?? defaultRoutingConfig.bodyUnrelatedMaxAdjacentLines,
-      routingVersion: defaultRoutingConfig.version
+      routingVersion: defaultRoutingConfig.version,
+      judgementFrameMs: options.config.judgementFrameMs ?? defaultRoutingConfig.judgementFrameMs,
+      maxJudgementsPerFrame: options.config.maxJudgementsPerFrame ?? defaultRoutingConfig.maxJudgementsPerFrame
     },
     ...(adjudication ? { adjudication: adjudicationSettings } : {}),
     gitCommit: options.gitCommit
   });
+
+  void appendTrace({ type: "candidate_summary", statistics: semantic.statistics(), aggregation: "batch-connected-symbols", skippedPaths: "unchanged-type-reference" });
 
   void appendTrace({ type: "project_snapshot", files: Object.fromEntries(semanticFiles.contextFiles().map((file) => [file, semanticFiles.readFile(file)])) });
 
@@ -894,6 +915,7 @@ export function createProjectConflictGuard(options: {
     pairCoordinator,
     async dispose() {
       session.dispose();
+      judgementQueue.dispose();
       removeArbitrationListener();
       adjudication?.dispose();
       advice?.dispose();

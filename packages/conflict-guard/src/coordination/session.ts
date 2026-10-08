@@ -7,7 +7,7 @@ import type { RelationPath } from "../semantic/types.js";
 import { innermostSymbols, parseSymbols, isSourceParsable } from "../semantic/symbols.js";
 import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
-import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode } from "./pairState.js";
+import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode, type JudgementQueue } from "./pairState.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
 
 export interface FrozenRegion {
@@ -33,6 +33,9 @@ export function createSessionCoordinator(options: {
   adjudicate?: PairAdjudicator;
   clock?: ConflictGuardClock;
   softDeadlineMs?: number;
+  judgementFrameMs?: number;
+  maxJudgementsPerFrame?: number;
+  judgementQueue?: JudgementQueue;
   revisionMode?: PairRevisionMode;
   onError(error: unknown, pairId: string): void;
   onEvent?(event: Record<string, unknown>): void;
@@ -47,7 +50,7 @@ export function createSessionCoordinator(options: {
   const batchSymbols = new Map<string, Set<string>>();
   const batchPaths = new Map<string, Array<{ actor: string; path: RelationPath }>>();
   let lastFrozen = "[]";
-  const coordinator = createPairCoordinator({ now: options.now, adjudicate: options.adjudicate, revisionMode: options.revisionMode, classify(pair) {
+  const coordinator = createPairCoordinator({ now: options.now, clock: options.clock, judgementFrameMs: options.judgementFrameMs, maxJudgementsPerFrame: options.maxJudgementsPerFrame, judgementQueue: options.judgementQueue, adjudicate: options.adjudicate, revisionMode: options.revisionMode, classify(pair) {
     try { return options.classify(pair); }
     catch (error) {
       options.onError(error, pair.id);
@@ -63,7 +66,7 @@ export function createSessionCoordinator(options: {
       const symbol = symbolFor(side.actor, side.symbol);
       return { key: side.symbol, beforeHash: symbol ? hash(symbol.before) : undefined, afterHash: symbol ? hash(symbol.after) : undefined };
     });
-    emit({ type: event.type, pairId: record.pair.id, revision: record.revision, status: record.status, verdict: record.verdict, resolution: record.resolution, pair: record.pair, symbols: sides });
+    if (event.type !== "pair_unchanged") emit({ type: event.type, pairId: record.pair.id, revision: record.revision, status: record.status, verdict: record.verdict, resolution: record.resolution, pair: record.pair, symbols: sides });
     syncFrozen();
     refreshGates();
   });
@@ -76,7 +79,7 @@ export function createSessionCoordinator(options: {
     return [...new Set([...(cached ?? []), ...(batch.semanticRanges ?? batch.ranges).flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key)])];
   }
   function relevantBatch(pair: CandidatePair) {
-    return options.tracker.getOpenBatches().some((batch) => [pair.left, pair.right].some((side) => actorKey(batch.actor) === actorKey(side.actor) && touchedKeys(batch).some((key) => nested(key, side.symbol))));
+    return options.tracker.getOpenBatches().some((batch) => [pair.left, pair.right].some((side) => actorKey(batch.actor) === actorKey(side.actor) && touchedKeys(batch).some((key) => (side.symbols ?? [side.symbol]).some((symbol) => nested(key, symbol)))));
   }
   function refresh(batches: Array<{ batch: EditBatch; change?: FileChange }> = [], pairs?: (pairs: CandidatePair[]) => CandidatePair[]) {
     options.semantic.update(options.tracker.getActiveChangeSets(), batches);
@@ -104,7 +107,7 @@ export function createSessionCoordinator(options: {
         const paths = [...options.semantic.findPaths(keys, otherKeys, 2), ...(batchPaths.get(`${actorKey(batch.actor)}:${batch.file}`) ?? []).filter((entry) => entry.actor === actorKey(other.actor) && otherKeys.includes(entry.path.to)).map((entry) => entry.path)];
         for (const from of keys) for (const to of otherKeys) if (nested(from, to)) paths.push({ from, to, hops: [], typeOnly: false });
         for (const path of paths) {
-          const record = coordinator.records().find((record) => [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(batch.actor) && side.symbol === path.from) && [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(other.actor) && side.symbol === path.to));
+          const record = coordinator.records().find((record) => [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(batch.actor) && (side.symbols ?? [side.symbol]).includes(path.from)) && [record.pair.left, record.pair.right].some((side) => actorKey(side.actor) === actorKey(other.actor) && (side.symbols ?? [side.symbol]).includes(path.to)));
           if (!record || record.status === "pending" || record.status === "stale" || record.status === "closed" || record.status === "analyzing") return true;
           const current = symbolFor(batch.actor, path.from);
           const text = options.index.readFile?.(file);
@@ -118,9 +121,10 @@ export function createSessionCoordinator(options: {
   function gate(file: string) {
     if (!options.intervene) return { allowed: true, reason: undefined };
     const records = coordinator.records().filter((record) => coordinateHumans(record.pair));
-    if (records.some((record) => record.status === "analyzing" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "analyzing" };
-    if (records.some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "lock" };
-    if (records.some((record) => ["pending", "stale"].includes(record.status) && [record.pair.left.symbol, record.pair.right.symbol].some((key) => key.startsWith(`${file}#`)))) return { allowed: false, reason: "pending-judgement" };
+    const involves = (pair: CandidatePair) => [pair.left, pair.right].flatMap((side) => side.symbols ?? [side.symbol]).some((key) => key.startsWith(`${file}#`));
+    if (records.some((record) => record.status === "analyzing" && involves(record.pair))) return { allowed: false, reason: "analyzing" };
+    if (records.some((record) => ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && involves(record.pair))) return { allowed: false, reason: "lock" };
+    if (records.some((record) => ["pending", "stale"].includes(record.status) && involves(record.pair))) return { allowed: false, reason: "pending-judgement" };
     if (options.enableSemanticPending !== false && pending(file)) return { allowed: false, reason: "pending-judgement" };
     return { allowed: true, reason: undefined };
   }
@@ -140,7 +144,7 @@ export function createSessionCoordinator(options: {
       if (!coordinateHumans(record.pair) || options.arbitrationMode === "all-auto") continue;
       const isAnalyzing = record.status === "analyzing";
       if (!isAnalyzing && (!["judged", "stale"].includes(record.status) || record.verdict?.decision !== "lock")) continue;
-      for (const side of [record.pair.left, record.pair.right]) {
+      for (const side of [record.pair.left, record.pair.right].flatMap((side) => (side.symbols ?? [side.symbol]).map((symbol) => ({ ...side, symbol })))) {
         if (side.actor.kind !== "human") continue;
         const key = `${record.pair.id}:${actorKey(side.actor)}:${side.symbol}`;
         const target = isAnalyzing ? analyzing : frozen;

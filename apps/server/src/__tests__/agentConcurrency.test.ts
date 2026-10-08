@@ -7,6 +7,7 @@ import { joinMember } from "./memberTestHelper.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 import { getProjectMetadataPath } from "../projects.js";
 import type { AgentRuntime } from "../agent/agentRuntime.js";
+import type { AgentRun, AgentTraceEvent } from "@simplercp/shared";
 import { createOpenCodeRuntime } from "../agent/openCodeRuntime.js";
 import { createLocalProcessLifecycle } from "./testProcessLifecycle.js";
 
@@ -281,13 +282,22 @@ describe("Agent concurrency with fake runtime", () => {
 
   it("keeps an independent run completed when another run fails", async () => {
     const [failed, completed] = await Promise.all([
-      createRun("fake-delay=100 fake-fail"),
+      createRun("fake-delay=100 fake-write=partial.ts fake-fail"),
       createRun("fake-delay=180 fake-write=survivor.ts")
     ]);
     await waitFor(async () => (await getRuns()).filter((run) => [failed.id, completed.id].includes(run.id)).every((run) => ["failed", "completed"].includes(run.status)));
     const runs = (await getRuns()).filter((run) => [failed.id, completed.id].includes(run.id));
     expect(runs.find((run) => run.id === failed.id)?.status).toBe("failed");
     expect(runs.find((run) => run.id === completed.id)?.status).toBe("completed");
+    const partial = runs.find((run) => run.id === failed.id)!;
+    expect(partial.failure).toMatchObject({ phase: "streaming", source: "server", errorType: "Error", retryable: false });
+    expect(partial.fileChanges).toEqual(expect.arrayContaining([expect.objectContaining({ file: "partial.ts", attribution: "tool" })]));
+    expect(partial.conflictGuard?.t3Executed).not.toBe(true);
+    const events = await getTrace(failed.id);
+    const failureEvent = events.find((event) => event.type === "run_failed")!;
+    expect(failureEvent.data).toMatchObject(partial.failure!);
+    expect(partial.failure!.lastSuccessfulSequence).toBeGreaterThan(0);
+    expect(partial.failure!.lastSuccessfulSequence).toBeLessThan(failureEvent.sequence);
   });
 
   it("runs three independent sessions together when the limit is three", async () => {
@@ -399,12 +409,12 @@ describe("Agent concurrency with fake runtime", () => {
     const response = await fetch(`${origin}/api/projects/demo/agent/runs`, {
       headers: { "X-SimpleRCP-Member": memberId }
     });
-    return (await response.json() as { runs: Array<{ id: string; status: string; source?: string; sessionId?: string; model?: string; startedAt?: string; finishedAt?: string; interruptedByRunId?: string; fileChanges?: Array<{ file?: string; attribution?: string }> }> }).runs;
+    return (await response.json() as { runs: AgentRun[] }).runs;
   }
 
   async function getTrace(runId: string) {
     const response = await fetch(`${origin}/api/projects/demo/agent/runs/${runId}/trace`, { headers: { "X-SimpleRCP-Member": memberId } });
-    return (await response.json() as { events: Array<{ type: string; data?: Record<string, unknown> }> }).events;
+    return (await response.json() as { events: AgentTraceEvent[] }).events;
   }
 
   async function waitFor(predicate: () => Promise<boolean>) {

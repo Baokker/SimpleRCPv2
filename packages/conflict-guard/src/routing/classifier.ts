@@ -41,6 +41,7 @@ export interface ZoneInput {
   typeOnly: boolean;
   project: SemanticIndexReadonly;
   bodyUnrelatedMaxAdjacentLines?: number;
+  cluster?: { left: SymbolChange[]; right: SymbolChange[]; paths: Array<RelationPath | null> };
 }
 
 export interface ZoneVerdict {

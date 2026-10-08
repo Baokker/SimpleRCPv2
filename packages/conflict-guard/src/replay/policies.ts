@@ -115,7 +115,8 @@ export function createReplayModelPolicy(config: AdjudicationConfig, responses: M
     ...(config.strategy === "G0" ? {} : { adjudicate(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]) {
       const left = input.pair && input.symbols(input.pair.left); const right = input.pair && input.symbols(input.pair.right);
       if (!input.pair || !left || !right) { complete({ ...local, decision: "warn", ruleId: "model-unavailable" }); return; }
-      const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles);
+      const cluster = { left: (input.pair.left.symbols ?? [input.pair.left.symbol]).map((symbol) => input.symbols({ ...input.pair!.left, symbol })!), right: (input.pair.right.symbols ?? [input.pair.right.symbol]).map((symbol) => input.symbols({ ...input.pair!.right, symbol })!), paths: input.pair.relations?.map((relation) => relation.path) ?? [input.pair.path] };
+      const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, cluster, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles);
       const hash = inputHash(request);
       const occurrence = (occurrences.get(hash) ?? 0) + 1;
       occurrences.set(hash, occurrence);

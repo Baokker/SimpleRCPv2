@@ -1,0 +1,372 @@
+{
+  "branch": "feature/conflict-guard",
+  "baseCommit": "5cd3909616ade2df5e707928406b24e7cd99bef5",
+  "createdAt": "2026-10-08T15:40:39.289Z",
+  "configurations": {
+    "routing": {
+      "version": "routing-run-2",
+      "judgementFrameMs": 200,
+      "maxJudgementsPerFrame": 20
+    },
+    "agentActivity": {
+      "waitingMs": 20000,
+      "stalledMs": 60000
+    },
+    "regression": {
+      "SIMPLERCP_LIVE_AGENT_TESTS": "0",
+      "CONFLICT_GUARD_PROVIDER_MODE": "replay"
+    },
+    "acceptance": {
+      "SIMPLERCP_ROUND2_LIVE": "1",
+      "SIMPLERCP_FAKE_AGENT_RUNTIME": "false",
+      "SIMPLERCP_OPENCODE_PORT": "4195",
+      "CONFLICT_GUARD": "full",
+      "CONFLICT_GUARD_PROVIDER_MODE": "record",
+      "model": "deepseek-flash"
+    }
+  },
+  "tests": [
+    {
+      "id": "build",
+      "command": "pnpm -r build",
+      "passed": true,
+      "log": "verification-logs/build.log.gz"
+    },
+    {
+      "id": "guard-full",
+      "command": "pnpm --filter @simplercp/conflict-guard test",
+      "passed": true,
+      "summary": "Tests  259 passed (259)",
+      "log": "verification-logs/guard-full.log.gz"
+    },
+    {
+      "id": "guard-current",
+      "command": "pnpm --filter @simplercp/conflict-guard exec vitest run --exclude src/adjudication/cli.test.ts",
+      "passed": true,
+      "summary": "Tests  259 passed (259)",
+      "log": "verification-logs/guard-current.log.gz"
+    },
+    {
+      "id": "server",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 CONFLICT_GUARD_PROVIDER_MODE=replay pnpm --filter @simplercp/server test",
+      "passed": true,
+      "summary": "Tests  292 passed | 9 skipped (301)",
+      "log": "verification-logs/server.log.gz"
+    },
+    {
+      "id": "statistics",
+      "command": "pnpm --filter @simplercp/conflict-guard exec vitest run src/routing/dualAgent.test.ts src/routing/candidates.test.ts src/coordination/pairState.test.ts src/replay/agents.test.ts src/replay/metrics.test.ts",
+      "passed": true,
+      "summary": "Tests  56 passed (56)",
+      "log": "verification-logs/statistics.log.gz"
+    },
+    {
+      "id": "type-path-server",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 CONFLICT_GUARD_PROVIDER_MODE=replay pnpm --filter @simplercp/server exec vitest run src/__tests__/agentGuard.integration.test.ts src/__tests__/conflictGuardSemantic.integration.test.ts src/__tests__/projectArbitration.integration.test.ts",
+      "passed": true,
+      "summary": "Tests  63 passed (63)",
+      "log": "verification-logs/type-path-server.log.gz"
+    },
+    {
+      "id": "activity-config-server",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 CONFLICT_GUARD_PROVIDER_MODE=replay pnpm --filter @simplercp/server exec vitest run src/__tests__/agentProgress.test.ts src/__tests__/agentConcurrency.test.ts src/__tests__/teamAgentApi.test.ts src/__tests__/agentSessionApi.test.ts",
+      "passed": true,
+      "summary": "Tests  32 passed (32)",
+      "log": "verification-logs/activity-config-server.log.gz"
+    },
+    {
+      "id": "activity-config-browser",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_FAKE_AGENT_RUNTIME=true CONFLICT_GUARD=rules CONFLICT_GUARD_PROVIDER_MODE=replay pnpm test:e2e tests/e2e/agent-progress.spec.ts tests/e2e/team-agent.spec.ts",
+      "passed": true,
+      "summary": "9 passed (1.6m)",
+      "log": "verification-logs/activity-config-browser.log.gz"
+    },
+    {
+      "id": "queue-server",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 pnpm --filter @simplercp/server exec vitest run src/__tests__/agentGuard.integration.test.ts src/__tests__/conflictGuardBody.integration.test.ts",
+      "passed": true,
+      "summary": "Tests  51 passed (51)",
+      "log": "verification-logs/queue-server.log.gz"
+    },
+    {
+      "id": "queue-browser",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_SKIP_MODEL_REQUESTS=true CONFLICT_GUARD=rules CONFLICT_GUARD_PROVIDER_MODE=replay pnpm test:e2e tests/e2e/agent-progress.spec.ts tests/e2e/conflict-guard-agent.spec.ts tests/e2e/conflict-guard-ui.spec.ts tests/e2e/conflict-guard-intervention.spec.ts tests/e2e/conflict-guard-replay.spec.ts",
+      "passed": true,
+      "summary": "13 passed (3.4m)",
+      "log": "verification-logs/queue-browser.log.gz"
+    },
+    {
+      "id": "stage3-browser",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 CONFLICT_GUARD=rules pnpm test:e2e tests/e2e/conflict-guard-checkpoint.spec.ts tests/e2e/conflict-guard-intervention.spec.ts",
+      "passed": true,
+      "summary": "13 passed (1.6m)",
+      "log": "verification-logs/stage3-browser.log.gz"
+    },
+    {
+      "id": "demo",
+      "command": "pnpm test:demo",
+      "passed": true,
+      "summary": "ℹ pass 2",
+      "log": "verification-logs/demo.log.gz"
+    },
+    {
+      "id": "real-acceptance",
+      "command": "SIMPLERCP_ROUND2_LIVE=1 SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_FAKE_AGENT_RUNTIME=false SIMPLERCP_OPENCODE_PORT=4195 CONFLICT_GUARD=full CONFLICT_GUARD_PROVIDER_MODE=record pnpm test:e2e tests/e2e/round2-dual-agent.spec.ts",
+      "passed": true,
+      "summary": "1 passed (59.1s)",
+      "log": "verification-logs/real-acceptance.log.gz"
+    },
+    {
+      "id": "original-counts",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:counts --trace ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz --run ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/run.json.gz --out ../../docs/conflict-guard/evidence/round2-dual-agent/original-replay",
+      "passed": true,
+      "log": "verification-logs/original-counts.log.gz"
+    },
+    {
+      "id": "collab-off",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_FAKE_AGENT_RUNTIME=true CONFLICT_GUARD=off CONFLICT_GUARD_PROVIDER_MODE=replay pnpm test:collab",
+      "passed": true,
+      "summary": "2 passed (26.6s)",
+      "log": "verification-logs/collab-off.log.gz"
+    },
+    {
+      "id": "collab-observe",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_FAKE_AGENT_RUNTIME=true CONFLICT_GUARD=observe CONFLICT_GUARD_PROVIDER_MODE=replay pnpm test:collab",
+      "passed": true,
+      "summary": "2 passed (31.0s)",
+      "log": "verification-logs/collab-observe.log.gz"
+    },
+    {
+      "id": "collab-rules",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_FAKE_AGENT_RUNTIME=true CONFLICT_GUARD=rules CONFLICT_GUARD_PROVIDER_MODE=replay pnpm test:collab",
+      "passed": true,
+      "summary": "2 passed (28.4s)",
+      "log": "verification-logs/collab-rules.log.gz"
+    },
+    {
+      "id": "collab-full",
+      "command": "SIMPLERCP_LIVE_AGENT_TESTS=0 SIMPLERCP_FAKE_AGENT_RUNTIME=true CONFLICT_GUARD=full CONFLICT_GUARD_PROVIDER_MODE=replay pnpm test:collab",
+      "passed": true,
+      "summary": "2 passed (28.1s)",
+      "log": "verification-logs/collab-full.log.gz"
+    }
+  ],
+  "sourceHashes": {
+    "apps/client/src/App.tsx": "43f91a023829eb8c9bbc84dfd7b5f88ef7034e05e9f4647f26f539a2636631be",
+    "apps/client/src/components/AgentPanel.tsx": "fc9941a6c465e376306aa5636226cfb6c2cd8a3337ec69acf918f63810693f58",
+    "apps/client/src/components/AgentRunProgress.tsx": "6eb522925e93c863e2c68f46dcc126e9cd0f48775781ac3dd8d5df966ca5fe69",
+    "apps/client/src/components/CollaborationPanel.tsx": "71b5a209ac83b4bb039e2c81cf54e65fc808d791a874908ce22e596530e1331a",
+    "apps/client/src/styles.css": "f25dccd013b7f7b431ecbb45411bf672cd3500d1eef43abe90badf2cb2e5ea4e",
+    "apps/server/src/__tests__/agentConcurrency.test.ts": "52af1ba962f220ea09e6530e5d5725abb729eb8f637e67ca1ff04ce7db07d8ba",
+    "apps/server/src/__tests__/agentGuard.integration.test.ts": "62d88e3598bf064c4efed606d8a38277194c9016ebef0a95fb8dc48897d31b8e",
+    "apps/server/src/__tests__/agentProgress.test.ts": "c26ea9d81764b0df7d1abdb928612811eb66f950ab342aed6f0e5219b622e8a4",
+    "apps/server/src/__tests__/agentRunApi.integration.test.ts": "689b5f71e638e3c27ba59921171788046ea405786c8fc0c10509671dfee35563",
+    "apps/server/src/__tests__/config.test.ts": "715567e18cd21d0d78f2a02684655b0f1dfe206adb29fdd419d062c5f741f092",
+    "apps/server/src/__tests__/conflictGuardBody.integration.test.ts": "5d2a264d2d917cb21a043a96c7c2794a986c8bfbd48caea6dee18a9600754542",
+    "apps/server/src/__tests__/guardNotifications.test.ts": "b298d460a4c37b2c4bd86522a31d816a39668f21cd6d559062acc46ee89337ca",
+    "apps/server/src/__tests__/openCodeRuntime.integration.test.ts": "e899300b598dc61f97850adc4b522145bba9a74a1aafe0d52973a72a5ba1aab9",
+    "apps/server/src/__tests__/openCodeStatus.test.ts": "e67cb5064b179148969b68bd04dfec9c5616f3d8b7090e8c9afe37bfb5fc2015",
+    "apps/server/src/__tests__/traceStore.test.ts": "feecbafefa0f15cecaca0913753ce8394ba1104c98c425142f154848c792a5e6",
+    "apps/server/src/agent/agentProgress.ts": "5fb2bfb82ba8642880e053ceb8c61e4c27b142ac82cf5cc1b728d0cd22753d8e",
+    "apps/server/src/agent/agentRunFailure.ts": "3a8b0bb3ea78ecfef917cc89bfc5dcd6b939d438edd5145ba6311d978386973b",
+    "apps/server/src/agent/agentRunManager.ts": "137ddca71ee293b7bec2928676062fb43856745d126e5aa321e375a5feac1780",
+    "apps/server/src/agent/fakeAgentRuntime.ts": "b8e286f0e39cdbe51cf9afc54105148e5a4d018bf2ad48f240a723b79f719f36",
+    "apps/server/src/agent/openCodeProcess.ts": "d0d2c0d2a408743c6f2d4a80cd10ed4630b2261074758b1c050d77a0ba69daac",
+    "apps/server/src/agent/openCodeRuntime.ts": "2b818b9286dd0c9cce22c0c88cd5433a90206199e49dd72c6cdbcb9829ce42ba",
+    "apps/server/src/agent/traceStore.ts": "b46d094bb37e15478c0e43fa65f890babe5e16f0a078750c746532a0e09a021f",
+    "apps/server/src/config.ts": "a4bc6e809ec084eeeb8e0ab6b4bc778390fee2e2c4422cc3628873e15e1dbb51",
+    "apps/server/src/conflictGuard/notificationStore.ts": "a0ac3460b707be50a0b306ce208f20afb8b1eeb3f907f340bc7028d8a10d20d7",
+    "apps/server/src/conflictGuard/projectAgentGuard.ts": "5eab96d2983b93c3e5033eceb50c5d85e0694db23449ea4425e653413e5d220e",
+    "apps/server/src/conflictGuard/projectConflictGuard.ts": "144fd45b040fa88f2c428e4b87f932fc1efb02217a654132af44addab8c6bd7d",
+    "apps/server/src/createApp.ts": "774a72f3a74d92ecf1ffc0f13c540fb84558f0e660cb68ecc842625aa5016439",
+    "apps/server/src/realtime.ts": "68132c607c42d301ef817c9fb2f5aec9f7ddcdfac5849bfd4d00ddef65b8b11f",
+    "apps/server/src/routes/agentRoutes.ts": "64645757b943da1117ead0c26840cf84315e3675c5c32ea560382280fb33a11e",
+    "packages/conflict-guard/package.json": "ad40b927eb9e7729dd0fa57e4ef75764fe9d8b9a0abcb6a51c81590321cc28cc",
+    "packages/conflict-guard/scripts/replay-counts.ts": "4159b1571e2e0f421fb556a56ce9e9c4b727e15d97353975113c836f5c0b83f4",
+    "packages/conflict-guard/src/adjudication/cli.test.ts": "00c16817143f22aedd5ce52b6f1238475dc46971717776a526986ab594f0509d",
+    "packages/conflict-guard/src/adjudication/invariants.ts": "45946e80dc8cbdf6931944109381e9a1c147233179bc51a089eacd0306dd9a37",
+    "packages/conflict-guard/src/coordination/agentGuard.test.ts": "643d59e3eb3cc5dff52d5996b69c9ffe6fe0d17857e5816e4a33e55aaba79dc1",
+    "packages/conflict-guard/src/coordination/agentGuard.ts": "f8ab5544f06158a36a8f73f9acedd38dcd077333dbc504e91879840dae8b443e",
+    "packages/conflict-guard/src/coordination/pairState.test.ts": "4bee27939c0cd2f44892e31c273da81a224d6f834df3ab401c9d6105ba1b75aa",
+    "packages/conflict-guard/src/coordination/pairState.ts": "e63a8624d7de5f27e8c66ccbb31e6b16a20f4d6444b6b3a8e71f1c26231e14c7",
+    "packages/conflict-guard/src/coordination/session.ts": "ffe368f87aa851a44c0f8107dfc751036675136ec03530641a8fb95b73002a0c",
+    "packages/conflict-guard/src/replay/agents.test.ts": "5e20213f076dceaeda3c3ca4cf05e67a1ee392e7c470d28605b5b0e99861a30f",
+    "packages/conflict-guard/src/replay/agents.ts": "ae9fdfcb54e35d7a141d7b9ef4fce3cad7da89d2cee196046dd59b7b4ac383b7",
+    "packages/conflict-guard/src/replay/engine.ts": "5367903af9df41890cee1c37e0ec76499fb4168d17a91db65f6afdb4090a96ea",
+    "packages/conflict-guard/src/replay/policies.ts": "cfc90fa5ee373e65c7c73f1a2b6a9e0414cdceab2ae29aee4857ecb809bc25de",
+    "packages/conflict-guard/src/routing/candidates.ts": "cc40f5e092f9ae9e07fedb0dc861eca82025911c16f78f8d0cb0ec317cf33075",
+    "packages/conflict-guard/src/routing/classifier.ts": "4337b6855e23b1a69b4f48f4fab5bb1a286f50f12f7cf08fc784c6439abd0088",
+    "packages/conflict-guard/src/routing/config.ts": "079d3429b9dd0b47fa5adc9b7a183d67539714158478d09418cd8594f65e4162",
+    "packages/conflict-guard/src/routing/dualAgent.test.ts": "b05cdbc736b34f554fe3ec3f9e32a88b07578529891deb6c0cd5897ddb5a6c16",
+    "packages/conflict-guard/src/routing/rules/runtime-export-removed.ts": "6403f535dd09f043106b8b4ab84bfd29ff3b7e30c7f7987eadcb74662aabd519",
+    "packages/conflict-guard/src/semantic/changes.ts": "334d0544bbda8453c9266fc38746f738db4de541ea3a31beaeb3a82582839c0e",
+    "packages/conflict-guard/src/trace/trace.ts": "3372eee2adb43ee637ae2c998cf47530445ca55eba747fc5ff55d8bec83b2e45",
+    "packages/conflict-guard/test/fixtures/dual-agent-export.json": "35a163024b8b2fcf5ef2d3a5bf9c3e8ded5713992db4d57ef3b81322616c8357",
+    "packages/shared/src/index.ts": "8a3e75e1fab06861bb015a0b3a907d6f1e670e34399489a97bd77df4c12a51d8",
+    "tests/e2e/agent-progress.spec.ts": "5bcce8facf3967747db9c1883717fb345d388aed4e2adbc19fce6cd8d7cf33c4",
+    "tests/e2e/round2-dual-agent.spec.ts": "6fb00430b74f7ff8c636746fe8bcf28f096ffb7711889872ff1370fe93b65393",
+    "tests/fixtures/round2-promotions.mjs": "ca7b18a22b1b3594af4b7d619932b93141ebf0480e30f843556f28759b876980"
+  },
+  "verificationStages": {
+    "fullGuardTests": 259,
+    "nonCliGuardTests": 259,
+    "offlineCliTests": 2,
+    "latestTargetedGuardTests": 56,
+    "currentCoverageTotal": 262,
+    "serverTests": 292,
+    "skippedServerTests": 9,
+    "skips": "两个手动真实调用文件需要 SIMPLERCP_LIVE_AGENT_TESTS=1",
+    "acceptanceBeforeFinalChanges": [
+      "公共判定队列",
+      "通知级别持久保存",
+      "变更单元历史关联统计",
+      "第三位参与者的共享类型过滤",
+      "活动阈值同步"
+    ],
+    "laterChangesVerification": [
+      "guard-current",
+      "server",
+      "queue-browser",
+      "statistics",
+      "type-path-server",
+      "activity-config-server",
+      "activity-config-browser",
+      "collab-off",
+      "collab-observe",
+      "collab-rules",
+      "collab-full"
+    ]
+  },
+  "originalReplay": {
+    "sourceSha256": "04633f1c8da512a7ed1d98a709306beefa0bac5d9a511cb70749b740ce1fe0ce",
+    "recordedJudged": 573,
+    "currentTargetJudged": 4,
+    "currentSessionJudged": 13,
+    "matchedRecorded": {
+      "total": 19,
+      "related": 18,
+      "unrelated": 1,
+      "unrelatedRatio": 0.05263157894736842
+    },
+    "matchedReplayed": {
+      "total": 19,
+      "related": 16,
+      "unrelated": 3,
+      "unrelatedRatio": 0.15789473684210525
+    },
+    "newlyUnrelatedOnlyTypePaths": true,
+    "extraRebuiltUnits": 1,
+    "errors": [],
+    "simulation": "local-rules"
+  },
+  "realAcceptance": {
+    "completed": 2,
+    "judged": 4,
+    "deepCalls": 2,
+    "humanEditsPreserved": true,
+    "promotionTestsPassed": true
+  },
+  "realCallBudget": {
+    "initialAgentRunLimit": 6,
+    "attemptedAgentRunsLowerBound": 19,
+    "attemptsBeforeAdditionalAuthorizationLowerBound": 17,
+    "additionallyAuthorizedAgentRuns": 2,
+    "additionalAcceptanceRunsUsed": 2,
+    "remainingAuthorizedAgentRuns": 0,
+    "initialDeepJudgementLimit": 60,
+    "recoverableProviderRecords": [
+      {
+        "evidence": "trace.jsonl",
+        "seq": 113,
+        "role": "deep",
+        "adapter": "deepseek",
+        "model": "deepseek-flash",
+        "status": "success",
+        "inputHash": "96f61d37088b75f9b9bced6a193c058e7cce69f49a1cd8d62b38586338f878a7",
+        "cacheKey": "7d9827b7ae07552a70102010b7e573b75d7e11047a20cad49c4a0c78d3d6c69b"
+      },
+      {
+        "evidence": "trace.jsonl",
+        "seq": 123,
+        "role": "deep",
+        "adapter": "deepseek",
+        "model": "deepseek-flash",
+        "status": "success",
+        "inputHash": "ba90b6e5a3eca32a4663f651b6bfe7e38d02b6306eabf4cc51b00d99fd8a60fb",
+        "cacheKey": "c8abd5d74a247f996507f4068c8922dda66d1d8fb242cfdf6a1d06474ad77016"
+      },
+      {
+        "evidence": "attempt-1/trace.jsonl",
+        "seq": 108,
+        "role": "deep",
+        "adapter": "deepseek",
+        "model": "deepseek-flash",
+        "status": "success",
+        "inputHash": "5619319a4e749e0ee5bfddca5524ac19173177f0b942b04b4d8e710362b3eb2c",
+        "cacheKey": "d433942e36c2c1178d3065658c5cd2e35715836e457a739807d578e09475cf5b"
+      }
+    ],
+    "totalDeepHttpCallsKnown": false,
+    "note": "provider_call 条目含缓存与失败状态，历史集成测试记录不完整，无法核验全部实际 HTTP 次数。"
+  },
+  "diagnostics": {
+    "historicalFetchFailureCause": "历史记录未包含 cause、请求目标和 HTTP 状态，无法确定来源。",
+    "currentFields": [
+      "phase",
+      "source",
+      "errorType",
+      "target",
+      "statusCode",
+      "errno",
+      "lastSuccessfulSequence",
+      "retryable",
+      "guidance"
+    ]
+  },
+  "hashAlgorithm": "SHA-256",
+  "artifactHashes": {
+    "acceptance.json": "65f72199876bf89f10b9f249ffaffc7e7677b2eb618e1febbee2403440057c3c",
+    "alice-completed.png": "46ebe0de5c8eacf76a45f6f2992a9e0802e91ba10d5d617b087a6d91089b026a",
+    "alice-running.png": "74ac6356f500b341c51fd1733cc93cbfe2d820745a6e0f5f239aaffb1d08e66b",
+    "attempt-1/alice-running.png": "0c6cb3b0c5ac9052e9ed145e97633d972ba587c860e92232604eb49e718eddc8",
+    "attempt-1/bob-running.png": "8ccdf26a637103c662643e80cc6ed0dd5e7536c165fe2b777b1d978439b554ec",
+    "attempt-1/promotion-tests.log": "0b8610d0012cf2162f04c9de3883f20421c9017038f7d3c21c385e19d80e0d20",
+    "attempt-1/run-RDrPwNcxN1hp.jsonl": "2bfcbf9f0ce41bc8b7f342b0432e7c616a65fa4454e9c1d4ad3ddd7a1ee5a4ba",
+    "attempt-1/run-zU5wptUVfPR4.jsonl": "e6f138d8386ce70781e378493e4d7d489c0743ab6296c9c1529a1ff822de6383",
+    "attempt-1/runs.json": "b44cb4945fb19f9d220fcd26025ef12d2fc45049168b9f5c2df0cc874c41322a",
+    "attempt-1/shop-tests.log": "1828c5789fd3e938aaa3fe1e84afd25a975b1750cf3dcd14e0dc3b37122c03b9",
+    "attempt-1/trace.jsonl": "e287e4b014f9e3593cecb0a6d87fb1ed6da2eebbdada1eef0f9f9daf985bb5e1",
+    "bob-completed.png": "4396eb0260b090c8f4c5a8f4bc2dcf04e4f4d366aef14b59cba77bc1c72fcb45",
+    "bob-running.png": "b7f140e5ad4faa0ec0f48f67bff05e25c237d69acf74158ce38465e5f2d1f5a8",
+    "original-replay/candidate-counts.json": "fa0b8193813062923472826d4347104b5e3fe180dba0df85ba3959b5263cd88e",
+    "original-source/project-trace.jsonl.gz": "5f31c3560f539b275222928d3ef6b32e8c8c307af42f3c77d6990e3cf89887e7",
+    "original-source/run.json.gz": "6d76ab33c0c4f66643d4946aa2c1213f600312b9d3bf6c03532e084d07d681e1",
+    "original-source/trace.jsonl.gz": "df70abc080733f2f59cb6a99856b6ed914f28d17e3aceff46b21b788b44fd9fd",
+    "promotion-tests.log": "520fb0f8aa8933bb5cce29f3190ee487675b101ada574b8ed98e6c93741a0772",
+    "run-0l_6b2lFzerL.jsonl": "11cf5ef58ff36a9eba9c7521df44952a563110b3d5a81755fca0cc1a2e1370ab",
+    "run-RDrPwNcxN1hp.jsonl": "2bfcbf9f0ce41bc8b7f342b0432e7c616a65fa4454e9c1d4ad3ddd7a1ee5a4ba",
+    "run-UlCzhJhKE5Dl.jsonl": "ab81fa132ebbd2cf7e43941571ebd84a140fa1e7270d30ab34941b9dbdb37c9d",
+    "run-zU5wptUVfPR4.jsonl": "e6f138d8386ce70781e378493e4d7d489c0743ab6296c9c1529a1ff822de6383",
+    "runs.json": "e0c1b67ac6050e96634e952a99011c5b6f7796fd0ce627d182ac34b3f7270adc",
+    "shop-tests.log": "436db5185019aaf4d70366c8eee52d603d6176df90800a367ab0fdfc9325b581",
+    "trace.jsonl": "36e42a70495c541f251147d9d7e1c4243397119c095f9b51114f27fe88347ad1",
+    "verification-logs/activity-config-browser.log.gz": "1d34a6a02da4522a662655a38f3e95cf434b9a8667790f50ce79d20000822c38",
+    "verification-logs/activity-config-server.log.gz": "20ca090232f6f40c4121ae08380b7a43e16e729764f721809f42afcaa74e49ed",
+    "verification-logs/build.log.gz": "af881a5ebd9a17e279b106176b34220f45fba3e0d378b13e5da6bfc6c689d324",
+    "verification-logs/collab-full.log.gz": "8c4596bc875f46ed3e742da09ac6eb6cf9f223ececc87854f69b65b9443e9c37",
+    "verification-logs/collab-observe.log.gz": "dd37862c34f0edd19e4f17b106fab458a12ab1d5cbb362cb179dc96a49118734",
+    "verification-logs/collab-off.log.gz": "4010e41a6e4b1ef67db1fdcdbff2ab90939b1d4b8f0db5359e9414863135f287",
+    "verification-logs/collab-rules.log.gz": "429bab244e49b25705909de9c6086ab6b7f99134823655d9954744c072624a10",
+    "verification-logs/demo.log.gz": "72448dc7c4cd9af1513cd4ac8aef996338f46c6cdb53eeadca9879f9e76e0cc8",
+    "verification-logs/guard-current.log.gz": "0d6826adcd87603d2ac5393f7517d9ada36bb0b9b84e825aeb6170488ec3b0ca",
+    "verification-logs/guard-full.log.gz": "b24dceee31204ad7705830235e7b17e26d5782e121d18d1db48c759d3b95ee28",
+    "verification-logs/original-counts.log.gz": "ce0862dc66ac6cf5c76bf0a865515ee7407e1ce69dee85ae975c161db99a8b03",
+    "verification-logs/queue-browser.log.gz": "b1d1055fa6f83d2f02fad722880b51f469328cd65df7fa7241005e104ed709bb",
+    "verification-logs/queue-server.log.gz": "fe73809cfddb09f5128079a78f6050b681f50cccffbfd742ff5e0af99f7162f2",
+    "verification-logs/real-acceptance.log.gz": "f05ee5103e6f76e63492c4a2d9e93811c5d022083860f5250c49902a2ed72c94",
+    "verification-logs/server.log.gz": "b2a07a6ae2c4c605e2903a966ad42187678dd7301ca0df9b806b524c48d5ee77",
+    "verification-logs/stage3-browser.log.gz": "ee472d7d35cd2707cc21e2c388ef9b6bb0be4b3a1eff22740fb6ef719b078c9a",
+    "verification-logs/statistics.log.gz": "6121d05ea128d91ac6b6074acafc5f5e6b85f0116bda2ddc707f7cd25b354e74",
+    "verification-logs/type-path-server.log.gz": "cc35952ca44e945052f3002c21faac2f5690ededc9e192afb4b997bd343278f1"
+  }
+}

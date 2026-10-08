@@ -36,9 +36,11 @@ function usageOf(call: ts.CallExpression, tree: ts.SourceFile) {
 export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, extraFiles: string[] = []): InvariantContext {
   const result: InvariantContext = { callers: [], tests: [], comments: [], usage: [] };
   if (!config.invariants) return result;
-  const sides = [input.left, input.right];
+  const left = (input.cluster?.left ?? [input.left.symbol]).map((symbol) => ({ actor: input.left.actor, symbol }));
+  const right = (input.cluster?.right ?? [input.right.symbol]).map((symbol) => ({ actor: input.right.actor, symbol }));
+  const sides = [...left, ...right];
   for (let sideIndex = 0; sideIndex < sides.length; sideIndex += 1) {
-    const side = sides[sideIndex]!; const other = sides[1 - sideIndex]!;
+    const side = sides[sideIndex]!; const other = sideIndex < left.length ? right[0]! : left[0]!;
     const aliases = new Set([side.symbol.key]);
     const pending = [side.symbol.key];
     while (pending.length) {
@@ -135,11 +137,15 @@ export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, 
 
 export function buildAdjudicationInput(input: ZoneInput, local: ZoneVerdict, config: AdjudicationConfig, extraFiles: string[] = []): AdjudicationInput {
   const bound = (text: string) => text.slice(0, config.contextLimit);
-  const side = (value: ZoneInput["left"]) => ({ actorKind: value.actor.kind, file: value.symbol.file, symbol: value.symbol.key, before: bound(value.symbol.before), after: bound(value.symbol.after) });
+  const side = (value: ZoneInput["left"], symbols = [value.symbol]) => {
+    const budget = Math.max(0, Math.floor(config.contextLimit / symbols.length) - 100);
+    const text = (state: "before" | "after") => symbols.length === 1 ? bound(symbols[0]![state]) : bound(symbols.map((symbol) => `${symbol.key}\n${symbol[state].slice(0, budget)}`).join("\n\n"));
+    return { actorKind: value.actor.kind, file: [...new Set(symbols.map((symbol) => symbol.file))].join(", "), symbol: symbols.map((symbol) => symbol.key).join(", "), before: text("before"), after: text("after") };
+  };
   const context = extractInvariants(input, config, extraFiles);
   const sectionLimit = Math.max(0, Math.floor((config.contextLimit - 44) / 4));
   const sections = Object.entries(context).map(([key, values]) => [key, values.join("\n").slice(0, sectionLimit)] as const);
   const invariantText = sections.map(([key, text]) => `${key}:\n${text}`).join("\n");
   const invariantCoverage = Object.fromEntries(sections.map(([key, text]) => [key, config.invariants && text.length > 0])) as NonNullable<AdjudicationInput["invariantCoverage"]>;
-  return { promptVersion: config.promptVersion, left: side(input.left), right: side(input.right), relationship: bound(input.path?.hops.map((hop) => `${hop.from} ${hop.kind} ${hop.to} (${hop.direction})`).join("; ") ?? "same declaration"), invariants: config.invariants ? bound(invariantText) : "", invariantCoverage, local: { excludedRules: ["same-symbol-concurrent-write", "referenced-symbol-removed", "runtime-export-removed", "call-signature-incompatible", "consumed-return-property-removed", "interface-required-member-incompatible", "merge-only-type-error"], typecheck: local.typecheck ? { ...local.typecheck, durationMs: undefined } : undefined } };
+  return { promptVersion: config.promptVersion, left: side(input.left, input.cluster?.left), right: side(input.right, input.cluster?.right), relationship: bound((input.cluster?.paths ?? [input.path]).map((path) => path?.hops.map((hop) => `${hop.from} ${hop.kind} ${hop.to} (${hop.direction})`).join("; ") ?? "same declaration").join("\n")), invariants: config.invariants ? bound(invariantText) : "", invariantCoverage, local: { excludedRules: ["same-symbol-concurrent-write", "referenced-symbol-removed", "runtime-export-removed", "call-signature-incompatible", "consumed-return-property-removed", "interface-required-member-incompatible", "merge-only-type-error"], typecheck: local.typecheck ? { ...local.typecheck, durationMs: undefined } : undefined } };
 }

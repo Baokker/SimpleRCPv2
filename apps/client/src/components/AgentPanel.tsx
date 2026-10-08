@@ -37,6 +37,7 @@ import type {
 } from "../types";
 import { formatTime, titleCase } from "../format";
 import { GuardBadge, GuardMetrics, ReadableText } from "./ConflictGuardText";
+import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 
@@ -252,6 +253,14 @@ export function AgentPanel({
     }
   }
 
+  async function retryRun(run: AgentRun) {
+    if (!run.sessionId || !run.failure?.retryable) return;
+    try {
+      const response = await createAgentSessionRun(projectId, run.sessionId, { prompt: run.prompt, contexts: run.contexts });
+      setRuns((current) => [response.run, ...current]);
+    } catch (error) { onErrorRef.current(error); }
+  }
+
   const runtimeLabel = runtime ? `OpenCode ${titleCase(runtime.state)}` : "Checking OpenCode";
 
   return (
@@ -266,13 +275,15 @@ export function AgentPanel({
         </div>
       </header>
 
+      {runningRuns.map((run) => <AgentRunProgress key={run.id} run={run} config={runtime?.activityConfig} onCancel={run.memberId === member?.id ? () => void cancelRun(run) : undefined} />)}
+
       {runningRuns.length > 0 ? (
         <div className="agent-active-runs" data-testid="agent-active-runs">
           <strong>运行中任务</strong>
           <ul>
             {runningRuns.map((run) => (
               <li key={run.id}>
-                <span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span></span>
+                <span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span><AgentRunStatus run={run} /></span>
                 <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
               </li>
             ))}
@@ -347,6 +358,8 @@ export function AgentPanel({
             <AgentMessage
               projectId={projectId}
               run={run}
+              activityConfig={runtime?.activityConfig}
+              onRetry={() => void retryRun(run)}
               trace={traces[run.id] ?? []}
               onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
@@ -451,7 +464,9 @@ function AgentMessage({
   canCancel,
   onCancel,
   onOpenFile,
-  onError
+  onError,
+  activityConfig,
+  onRetry
 }: {
   projectId: string;
   run: AgentRun;
@@ -463,6 +478,8 @@ function AgentMessage({
   onCancel(): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
+  activityConfig?: AgentRuntimeStatus["activityConfig"];
+  onRetry(): void;
 }) {
   const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
   useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
@@ -482,6 +499,8 @@ function AgentMessage({
           </button>
         ) : null}
       </header>
+
+      {run.status !== "running" ? <AgentRunProgress run={run} config={activityConfig} onRetry={onRetry} /> : null}
 
       <details
         className={`agent-trace-block ${run.status}`}
@@ -532,7 +551,6 @@ function AgentMessage({
         {run.conflictGuard.t3 ? <div className="agent-guard-check"><span className="conflict-field-label">结束后复检（T3）</span><GuardBadge tone={run.conflictGuard.t3 === "passed" ? "success" : "warning"}>{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</GuardBadge></div> : null}
       </section> : null}
       {run.output ? <div className="agent-run-output">{run.output}</div> : null}
-      {run.error ? <p className="agent-run-error">{run.error}</p> : null}
       {run.fileChanges?.length ? (
         <ul className="agent-file-changes">
           {run.fileChanges.map((change) => (

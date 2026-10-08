@@ -3,7 +3,7 @@ import { PermissionEditRejected } from "../agent/permissionDispatcher.js";
 import type { AgentRun } from "@simplercp/shared";
 import type { GuardConflict } from "@simplercp/conflict-guard";
 import { createGuardNotificationStore } from "./notificationStore.js";
-import { agentInputRevision, evaluateAgentChanges, changedAgentDependencies, mergeActiveChanges, proposalFileChange, proposalSymbolKeys, selectAgentReverts, createGuardConflict, sanitize, type ActiveChangeSet, type ActorRef, type AgentTextProposal, type ConflictGuardClock, type ConflictGuardTracker, type PairRecord, type SemanticFileProvider, type ZoneInput, type ZoneVerdict } from "@simplercp/conflict-guard";
+import { agentInputRevision, evaluateAgentChanges, changedAgentDependencies, mergeActiveChanges, proposalFileChange, proposalSymbolKeys, selectAgentReverts, createGuardConflict, verdictFingerprint, sanitize, type ActiveChangeSet, type ActorRef, type AgentTextProposal, type ConflictGuardClock, type ConflictGuardTracker, type PairRecord, type SemanticFileProvider, type ZoneInput, type ZoneVerdict } from "@simplercp/conflict-guard";
 
 type AgentActor = Extract<ActorRef, { kind: "agent" }>;
 interface RunState {
@@ -14,6 +14,8 @@ interface RunState {
   writes: AgentTextProposal[];
   warnings: string[];
   forceRevert?: boolean;
+  consecutiveRejection?: { opponent: string; count: number };
+  judgements: Map<string, Map<string, { verdict: ZoneVerdict; pair: PairRecord["pair"] }>>;
 }
 export interface AgentGuardNotice { id: string; memberId: string; runId: string; summary: string; at: number }
 
@@ -36,25 +38,27 @@ export function createProjectAgentGuard(options: {
   onT3Conflict?(runId: string, conflict: GuardConflict, input: ZoneInput | undefined): Promise<"revert" | "continue" | "retry" | "warn">;
   emit(event: Record<string, unknown>): void;
   changed(): void;
+  beforePair?(signal: AbortSignal): Promise<void>;
 }) {
   const runs = new Map<string, RunState>();
   const completed = new Map<string, { run: RunState; revert: Parameters<typeof finish>[2] }>();
   type Reservation = { actor: AgentActor; proposal: AgentTextProposal; hash: string; pending: boolean; timer?: ReturnType<typeof setTimeout> };
   const approved = new Map<string, Reservation[]>();
   const decisions = new Map<string, PairRecord & { point: "T2" | "T3"; shadow?: boolean }>();
+  const published = new Map<string, string>();
   const noticeStore = createGuardNotificationStore(options.notificationsPath, options.sensitiveValues);
   const history: Array<{ at: number; set: ActiveChangeSet }> = [];
   const listeners = new Set<(event: Record<string, unknown>) => void>();
   const emit = (event: Record<string, unknown>) => { try { options.emit(event); } catch { console.error("Agent guard trace failed"); } for (const listener of listeners) { try { listener(event); } catch { console.error("Agent guard event listener failed"); } } };
   const queues = new Map<string, Promise<unknown>>();
   const notify = (run: RunState, summary: string, conflict?: GuardConflict, level: "light" | "action" = "light") => {
-    const notice = { id: crypto.randomUUID(), memberId: run.actor.ownerId, runId: run.actor.runId, summary: summary.trim(), at: options.clock.now(), ...(conflict ? { conflict } : {}) };
+    const notice = { id: crypto.randomUUID(), memberId: run.actor.ownerId, runId: run.actor.runId, summary: summary.trim(), at: options.clock.now(), level, ...(conflict ? { conflict } : {}) };
     noticeStore.add(notice);
     emit({ type: "agent_notice", actor: run.actor, notice, level });
     options.changed();
   };
   function start(actor: AgentActor, baseline: Map<string, string>) {
-    runs.set(actor.runId, { actor, startedAt: options.clock.now(), baseline, files: new Map(), writes: [], warnings: [] });
+    runs.set(actor.runId, { actor, startedAt: options.clock.now(), baseline, files: new Map(), writes: [], warnings: [], judgements: new Map() });
     options.tracker.startAgent(actor);
     emit({ type: "agent_run_started", actor, baseline: Object.fromEntries(baseline) });
   }
@@ -64,8 +68,11 @@ export function createProjectAgentGuard(options: {
     while (history.length && history[0]!.at < earliest) history.shift();
   }
   async function evaluate(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: ActiveChangeSet[], shadow = false, changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>) {
+    const cacheKey = `${point}:${shadow}`;
+    if (!run.judgements.has(cacheKey)) run.judgements.set(cacheKey, new Map());
+    const resultCache = run.judgements.get(cacheKey)!;
     const reservations = new Map([...approved.values()].flat().map((entry) => [entry.proposal.file, entry.proposal.after]));
-    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines, active: mergeActiveChanges(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
+    const result = await evaluateAgentChanges({ actor: run.actor, proposals, beforePair: options.beforePair, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines, active: mergeActiveChanges(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
       const key = `${point}:${event.record.pair.id}`;
       const previous = decisions.get(key);
       const pair = { ...event.record.pair, id: key };
@@ -73,9 +80,14 @@ export function createProjectAgentGuard(options: {
       if (!previous) emit({ type: "pair_candidate_opened", pair, point, shadow });
       else if (previous.revisionKey !== event.record.revisionKey) emit({ type: "pair_candidate_updated", pair, point, shadow });
       decisions.set(key, { ...event.record, pair, revision, point, shadow });
+      if (event.type === "pair_judged" && event.record.verdict) {
+        const fingerprint = verdictFingerprint(event.record.verdict);
+        if (published.get(key) === fingerprint) return;
+        published.set(key, fingerprint);
+      }
       emit({ type: event.type, pairId: key, revision, pair, status: event.record.status, verdict: event.record.verdict, symbols: event.symbols, point, shadow });
       options.changed();
-    } });
+    }, resultCache });
     return result;
   }
   function reserve(run: RunState, proposals: AgentTextProposal[]) {
@@ -181,7 +193,16 @@ export function createProjectAgentGuard(options: {
       if (verdict?.ruleId === "agent-analysis-unavailable") throw new Error("检查组件无法核验本次修改，请停止修改此文件并向用户报告");
       const conflict = conflictFor(run, result, "T2");
       const recent = run.warnings.length ? ` 近期警告：${run.warnings.slice(-3).join("；")}` : "";
-      const message = result.decision === "lock" ? conflict ? `修改被拒绝：与 ${conflict.otherDisplayName} 修改的 ${conflict.symbols.other} 存在冲突。规则 ${conflict.ruleId}。${conflict.summaryZh} 对方修改后：${conflict.afterSignature || "请重新读取关联符号"}。${conflict.suggestionZh ?? "请使用当前接口与行为调整实现，或暂停修改此处。"}${recent}` : "冲突检查未完成，请停止重复同一修改并向用户报告。" : undefined;
+      let message = result.decision === "lock" ? conflict ? `修改被拒绝：与 ${conflict.otherDisplayName} 修改的 ${conflict.symbols.other} 存在冲突。规则 ${conflict.ruleId}。${conflict.summaryZh} 对方修改后：${conflict.afterSignature || "请重新读取关联符号"}。${conflict.suggestionZh ?? "请使用当前接口与行为调整实现，或暂停修改此处。"}${recent}` : "冲突检查未完成，请停止重复同一修改并向用户报告。" : undefined;
+      if (result.decision === "lock" && conflict) {
+        const opponent = actorKey(conflict.other);
+        const count = run.consecutiveRejection?.opponent === opponent ? run.consecutiveRejection.count + 1 : 1;
+        run.consecutiveRejection = { opponent, count };
+        if (count >= 3) {
+          message = `停止修改该文件，向用户说明冲突并等待指示。${message}`;
+          if (count === 3) notify(run, "Agent 已连续提交与同一参与者冲突的修改，请处理冲突后提供继续执行的指示。", conflict, "action");
+        }
+      } else run.consecutiveRejection = undefined;
       emit({ type: "t2_judged", actor: run.actor, decision: result.decision, files: proposals.map((proposal) => ({ file: proposal.file, beforeHash: hash(proposal.before), afterHash: hash(proposal.after) })), message, conflict });
       if (result.decision === "warn") run.warnings.push(verdict?.summary.trim() ?? "关联修改需要检查。");
       if (result.decision === "warn") notify(run, `Agent 修改警告：${conflict?.summaryZh ?? "请检查关联修改。"}`, conflict);

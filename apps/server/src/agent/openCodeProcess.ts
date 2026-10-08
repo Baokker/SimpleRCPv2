@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { createOpencodeClient, type Config } from "@opencode-ai/sdk/v2";
 import { agentEnv } from "../processEnv.js";
+import { AgentRuntimeRequestError, safeRequestTarget } from "./agentRunFailure.js";
 
 export const OPEN_CODE_PROVIDER_ID = "simplercp-deepseek";
 const OPEN_CODE_VERSION = "1.18.31";
@@ -49,8 +50,16 @@ export function createOpenCodeProcess(options: OpenCodeProcessOptions) {
 
     try {
       const url = await waitForServerUrl(nextChild, 15_000);
-      const client = createOpencodeClient({ baseUrl: url });
-      const health = await client.global.health({ throwOnError: true });
+      const client = createOpencodeClient({ baseUrl: url, fetch: async (request) => {
+        try { return await fetch(request); }
+        catch (error) {
+          throw new AgentRuntimeRequestError({ source: "local-runtime", phase: "creating-session", target: safeRequestTarget(request instanceof Request ? request.url : String(request)), message: error instanceof Error ? error.message : String(error) }, error);
+        }
+      } });
+      const health = await client.global.health({ throwOnError: true }).catch((error: unknown) => {
+        if (error instanceof AgentRuntimeRequestError) throw error;
+        throw new AgentRuntimeRequestError({ source: "local-runtime", phase: "creating-session", target: new URL("/global/health", url).toString(), message: error instanceof Error ? error.message : String(error) }, error);
+      });
       if (!health.data.healthy) {
         throw new Error("OpenCode health check failed");
       }

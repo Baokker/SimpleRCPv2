@@ -22,6 +22,8 @@ export interface ReplayOptions {
   maxBatchDurationMs?: number;
   activeIdleMs?: number;
   bodyUnrelatedMaxAdjacentLines?: number;
+  judgementFrameMs?: number;
+  maxJudgementsPerFrame?: number;
   initialFiles?: Record<string, string>;
   libs?: Record<string, string>;
   endAt?: number;
@@ -51,6 +53,7 @@ export interface ReplayResult {
   endedAt: number;
   errors: Array<{ at: number; pairId: string; message: string }>;
   semanticRelations: number;
+  changeUnits: ReturnType<SemanticChangeTracker["statistics"]>;
   persisted: Array<{ at: number; file: string; text: string; counterfactual: boolean }>;
   persistBlockedCount: number;
   finalDecision: "allow" | "warn" | "lock";
@@ -59,7 +62,8 @@ export interface ReplayResult {
 export function replayTrace(events: TraceEvent[], options: ReplayOptions): ReplayResult {
   if (events.some((event) => event.redacted || event.skipped === "sensitive")) throw new Error("脱敏轨迹不能执行语义回放");
   const clock = new VirtualClock(events[0]?.at ?? 0);
-  const files = new MemoryFileProvider(options.initialFiles, options.libs);
+  const snapshot = events.find((event) => event.type === "project_snapshot")?.files as Record<string, string> | undefined;
+  const files = new MemoryFileProvider(options.initialFiles ?? snapshot, options.libs);
   const config = (events.find((event) => event.type === "session_start")?.config ?? {}) as ReplayOptions;
   const trackerClock: ConflictGuardClock = { now: () => clock.now(), setTimeout: (callback, delay) => clock.setTimeout(callback, delay), clearTimeout: (handle) => clock.clearTimeout(handle) };
   let batchCount = 0;
@@ -103,13 +107,13 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
     coordinationEvents.push(event as ReplayResult["coordinationEvents"][number]);
     if (event.type === "freeze" && !["P1", "P2"].includes(policy.id)) updateFreezeIntervals(event.regions as FrozenRegion[]);
     if (event.type === "persist_gate") updateGate(String(event.file), Boolean(event.allowed), String(event.reason ?? ""));
-  } });
+  }, judgementFrameMs: options.judgementFrameMs ?? config.judgementFrameMs ?? 0, maxJudgementsPerFrame: options.maxJudgementsPerFrame ?? config.maxJudgementsPerFrame ?? 20 });
   const coordinator = session.coordinator;
   coordinator.onEvent((event) => {
     const list = recordMap.get(event.record.pair.id) ?? [];
     list.push(cloneRecord(event.record));
     recordMap.set(event.record.pair.id, list);
-    if ((event.type === "pair_judged" || event.type === "pair_analyzing") && event.record.verdict) {
+    if ((event.type === "pair_judged" || event.type === "pair_unchanged" || event.type === "pair_analyzing") && event.record.verdict) {
       const keys = [event.record.pair.left.symbol, event.record.pair.right.symbol].map((key) => key.slice(0, key.indexOf("#")));
       const batchTriggers = judgementBatches.filter(({ batch, symbols }) => [event.record.pair.left, event.record.pair.right].some((side) => {
         if (actorKey(batch.actor) !== actorKey(side.actor) || !side.symbol.startsWith(`${batch.file}#`)) return false;
@@ -224,12 +228,17 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       }
     }
   }
-  clock.advanceTo(options.endAt ?? clock.now() + (options.idleMs ?? config.idleMs ?? 1500) + 25 + (policy.maxLatencyMs ?? 0));
+  clock.advanceTo(options.endAt ?? clock.now() + (options.idleMs ?? config.idleMs ?? 1500) + 25);
+  if (options.endAt === undefined) {
+    const frames = Math.ceil(candidatePairs.length / (options.maxJudgementsPerFrame ?? config.maxJudgementsPerFrame ?? 20));
+    clock.advanceTo(clock.now() + frames * (options.judgementFrameMs ?? config.judgementFrameMs ?? 0) + (policy.maxLatencyMs ?? 0));
+  }
   for (const [file, gate] of openGates) gateIntervals.push({ file, start: gate.start, end: clock.now(), reason: gate.reason });
   for (const interval of freezeIntervals) if (interval.end === undefined) interval.end = clock.now();
+  const changeUnits = semantic.statistics();
   const pairs = [...recordMap].sort(([left], [right]) => left.localeCompare(right)).map(([id, records]) => ({ id, records, final: records.at(-1) }));
   const decisions = pairs.flatMap((pair) => pair.final?.verdict ? [pair.final.verdict.decision] : []);
-  return { policy: policy.id, seed: options.seed ?? 0, events, judgements, coordinationEvents, timeoutSimulation: recordedChecks.length > 0 ? "recorded" : "unavailable", pairs, freezeIntervals, gateIntervals, blockedEdits, endedAt: clock.now(), errors, semanticRelations: semanticRelations.size, persisted, persistBlockedCount, finalDecision: decisions.includes("lock") ? "lock" : decisions.includes("warn") ? "warn" : "allow", finalTexts: Object.fromEntries([...currentText].sort(([left], [right]) => left.localeCompare(right))) };
+  return { policy: policy.id, seed: options.seed ?? 0, events, judgements, coordinationEvents, timeoutSimulation: recordedChecks.length > 0 ? "recorded" : "unavailable", pairs, freezeIntervals, gateIntervals, blockedEdits, endedAt: clock.now(), errors, semanticRelations: semanticRelations.size, changeUnits, persisted, persistBlockedCount, finalDecision: decisions.includes("lock") ? "lock" : decisions.includes("warn") ? "warn" : "allow", finalTexts: Object.fromEntries([...currentText].sort(([left], [right]) => left.localeCompare(right))) };
 
   function persist(file: string) {
     persistTimers.delete(file);

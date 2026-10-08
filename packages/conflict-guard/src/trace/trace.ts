@@ -174,6 +174,11 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       if (!event.files || typeof event.files !== "object" || Array.isArray(event.files) || Object.values(event.files).some((value) => typeof value !== "string")) throw new Error("project_snapshot is incomplete");
       continue;
     }
+    if (event.type === "candidate_summary") {
+      const statistics = event.statistics as Record<string, unknown> | undefined;
+      if (!statistics || ["total", "related", "unrelated", "typeOnly"].some((key) => !Number.isInteger(statistics[key]) || Number(statistics[key]) < 0) || Number(statistics.total) !== Number(statistics.related) + Number(statistics.unrelated)) throw new Error("candidate_summary 字段不完整");
+      continue;
+    }
     if (event.type === "agent_proposal" || event.type === "agent_review") {
       if (!event.actor || event.type === "agent_proposal" && typeof event.requestId !== "string" || !Array.isArray(event.proposals) || event.proposals.some((proposal) => !proposal || typeof proposal.file !== "string" || typeof proposal.before !== "string" || typeof proposal.after !== "string")) throw new Error("Agent proposal is incomplete");
       actorKey(event.actor);
@@ -185,7 +190,7 @@ export function validateTraceDetailed(events: TraceEvent[]): TraceValidationResu
       continue;
     }
     if (["arbitration_action", "arbitration_retry", "arbitration_continuation", "arbitration_error", "arbitration_suggestion_error", "interruption", "agent_notice"].includes(event.type)) continue;
-    if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
+    if (event.type.startsWith("opencode.") || ["run_cancel_requested", "run_cancelled", "run_interrupted", "run_completed", "run_failed", "runtime_cancel_error", "session_diff_observed", "listener_error", "unattributed_change"].includes(event.type)) continue;
     throw new Error(`Unknown trace event type: ${event.type}`);
   }
   if (!hasSession) throw new Error("Trace has no session_start");

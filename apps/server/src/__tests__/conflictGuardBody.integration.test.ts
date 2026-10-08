@@ -55,7 +55,7 @@ it("full 模式的远距离修改保持本地警告，轨迹记录相邻行配�
     await runtime.conflictGuard!.waitForTrace();
     const events = readTrace(await runtime.conflictGuard!.exportTrace());
     expect(events.filter((event) => event.type === "provider_call")).toEqual([]);
-    expect(events.find((event) => event.type === "session_start")?.config).toMatchObject({ bodyUnrelatedMaxAdjacentLines: 4, routingVersion: "routing-ui-1" });
+    expect(events.find((event) => event.type === "session_start")?.config).toMatchObject({ bodyUnrelatedMaxAdjacentLines: 4, routingVersion: "routing-run-2", judgementFrameMs: 200, maxJudgementsPerFrame: 20 });
     expect(checkReplay(events, { policy: createReplayModelPolicy({ ...defaultAdjudicationConfig, strategy: "G3" }, new Map()) })).toMatchObject({ valid: true, differences: [] });
   } finally {
     for (const { provider, document } of connections) { provider.destroy(); document.destroy(); }

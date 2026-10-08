@@ -18,7 +18,7 @@ const environment = fs.existsSync(environmentPath)
 const apiKey = environment.DEEPSEEK_API_KEY?.trim();
 const baseUrl = environment.DEEPSEEK_BASE_URL?.trim();
 const model = environment.DEEPSEEK_MODEL?.trim();
-const configured = Boolean(apiKey && baseUrl && model);
+const configured = process.env.SIMPLERCP_LIVE_AGENT_TESTS === "1" && Boolean(apiKey && baseUrl && model);
 let root: string;
 
 beforeEach(async () => {
@@ -330,7 +330,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       );
       const body = await response.json() as { run: AgentRunResult & { error?: string } };
       expect(body.run.status).toBe("failed");
-      expect(body.run.error).toBe("Agent run was interrupted by a server restart");
+      expect(body.run.error).toBe("服务端重启中断了任务。");
 
       const traceResponse = await fetch(
         `${running.origin}/api/projects/demo/agent/runs/${runId}/trace`, { headers: memberHeaders(memberId) }
@@ -340,7 +340,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       };
       expect(traceBody.events.at(-1)).toMatchObject({
         type: "run_failed",
-        summary: "Agent run was interrupted by a server restart"
+        summary: "服务端重启中断了任务。"
       });
     } finally {
       await running.close();

@@ -1,0 +1,1011 @@
+{
+  "sourceSha256": "04633f1c8da512a7ed1d98a709306beefa0bac5d9a511cb70749b740ce1fe0ce",
+  "runId": "_3IyfXyObhle",
+  "start": 1791460209222,
+  "end": 1791460578157,
+  "simulation": "local-rules",
+  "configuration": {
+    "judgementFrameMs": 200,
+    "maxJudgementsPerFrame": 20
+  },
+  "recorded": {
+    "run": {
+      "candidateOpened": 573,
+      "judged": 573
+    },
+    "projectTarget": {
+      "candidateOpened": 592,
+      "judged": 592
+    },
+    "changeUnits": {
+      "total": 19,
+      "related": 18,
+      "unrelated": 1,
+      "unrelatedRatio": 0.05263157894736842
+    },
+    "targetChangeUnits": {
+      "total": 1,
+      "related": 1,
+      "unrelated": 0,
+      "unrelatedRatio": 0
+    },
+    "commentOnly": 10
+  },
+  "replayed": {
+    "judged": 4,
+    "sessionJudged": 13,
+    "byPoint": {
+      "T1": 0,
+      "T2": 4,
+      "T3": 0
+    },
+    "changeUnits": {
+      "total": 20,
+      "related": 17,
+      "unrelated": 3,
+      "unrelatedRatio": 0.15,
+      "typeOnly": 0
+    },
+    "targetChangeUnits": {
+      "total": 1,
+      "related": 0,
+      "unrelated": 1,
+      "unrelatedRatio": 1,
+      "typeOnly": 0
+    },
+    "rules": {
+      "observability-only": 3,
+      "semantic-interaction-uncertain": 1
+    }
+  },
+  "unitComparison": {
+    "matchedRecorded": {
+      "total": 19,
+      "related": 18,
+      "unrelated": 1,
+      "unrelatedRatio": 0.05263157894736842
+    },
+    "matchedReplayed": {
+      "total": 19,
+      "related": 16,
+      "unrelated": 3,
+      "unrelatedRatio": 0.15789473684210525
+    },
+    "newlyUnrelated": [
+      {
+        "actor": "agent:xZ4VFDhs619L",
+        "batchId": "guard-29",
+        "at": 1791460424713,
+        "symbols": [
+          {
+            "key": "src/promotions618.ts#MemberLevel",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e49f2b5d19591834d4c8a0083dd3f87f50596be716916c60142448a758f969bd"
+          },
+          {
+            "key": "src/promotions618.ts#ItemCategory",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "2de8e8e9e6927db7cd3a9edb0ca6c5742530f035fbc5947333a17b35fa7ab50b"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "0b930296f2b129499a4a9de07d5b0a10e16c43ee7d210ab893124ff535498ef8"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.title",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "d0c69370924d2b01b57ad08f1ed13617ce65fbd17929d8cf624f66808b68c9af"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.price",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "0851d33a77bf8a002644e0a9f72a9e42ae6ea394ac8df82a4a675c76f4d4cd0a"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.quantity",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a3d57cf6bc981306fd4b40e9d1f3d45865a07eb4b636664cadbb4d771097b2b9"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.category",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "10439f543a5071ce0f49a1b52c3e3ff14c0e8c4aa0ac982392b34114cb037d8d"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.participatesIn618",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "4d8c645dc1b1c534922233721d794117df778981dcdf1abb9b7bd0365398588e"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.isDepositPaid",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e943a70fe6d3b5887fb162389a1443fcb96ef1b0bf659f56d9d7a271636b38b3"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.depositAmount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "eb8c300a0f34d77037887b00290defeade0e0b6a51cc67392b3e42fc54884850"
+          },
+          {
+            "key": "src/promotions618.ts#PromotionItem.maxDiscountedQuantity",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "980820845d280272c3e7c67cf7242a4f6b7942f45a6fd74860a2db2985e6394d"
+          },
+          {
+            "key": "src/promotions618.ts#TierRule",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "f0689969c3207dfb1a04702a26dbecce10d00984e429a83a5095664c07d9a20f"
+          },
+          {
+            "key": "src/promotions618.ts#TierRule.threshold",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "13ead3f95a4811544f2438aabe46aa30ebc0c9b6c0487c5a51385f222f980ddc"
+          },
+          {
+            "key": "src/promotions618.ts#TierRule.reduce",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "adea140823078c266fb13c3cdff75c0467b9995a8294924aec23acbb08e4450a"
+          },
+          {
+            "key": "src/promotions618.ts#TierRule.label",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a7792714b672e2b08743262b7b52c1e3c82dde1a46379e685e2dfee62eee99d2"
+          },
+          {
+            "key": "src/promotions618.ts#CategoryRule",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "9034fa90ef7d528f140575eb22c05d000953190010a2e734115ee4524b9919d3"
+          },
+          {
+            "key": "src/promotions618.ts#CategoryRule.category",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a5502e292b1ae2d2293d9f53f3f531c2fe43c4e40654bc2f709fbc9aa0e99d58"
+          },
+          {
+            "key": "src/promotions618.ts#CategoryRule.rate",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "39a91fe55e9380b50decf86891a7427321032277ebc9b623c31ff2ed987a54dc"
+          },
+          {
+            "key": "src/promotions618.ts#CategoryRule.maxReduce",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "32ece37abf656b9b33ae4b58b7da43aee6f3678d35a47e2b3411a22109cf4176"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "c0af3e61348917c639c7cb177b2697e6a5a7bb6e0c49b6e9406de23be585cbc9"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon.code",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "0265102e331b5a48a3421c416cee001760b1257ba4766be196c396646802f4d0"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon.type",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "357ee9eb4544adb5df065026b37c9fe9dece7179359af8a5df065f22993ee4d1"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon.value",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "75616d83538956ea1a92fdce20999b64f8f2d158355ec6ca48f38702ced8ec36"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon.minSpend",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "c941d1c5464383824a296d626b9faf09dc6f40b126985e8dba8be21e7876f58a"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon.exclusiveGroup",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "927fcbaef5ae37b15d31b61ca40769a347abfffab52e4c8c78e63635ae958691"
+          },
+          {
+            "key": "src/promotions618.ts#Coupon.stackable",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "f4a25c165eada62ad4914eb6a91fb62e634b3b529da25e71fd30d684d979bd78"
+          },
+          {
+            "key": "src/promotions618.ts#MemberRule",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "ec79a2cfdc288898fdd45ae64eac25a637ebf963598176017c1989b6f1cc368e"
+          },
+          {
+            "key": "src/promotions618.ts#MemberRule.level",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e1517a415ad07a94e883ca7745c3588fef6598b0d2409ea264d6ee58c8d99b83"
+          },
+          {
+            "key": "src/promotions618.ts#MemberRule.rate",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "39a91fe55e9380b50decf86891a7427321032277ebc9b623c31ff2ed987a54dc"
+          },
+          {
+            "key": "src/promotions618.ts#FlashRule",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e2422ef36e63a623fcba86d67aa8e1cad645c561bb354d22d217da2a41dea98c"
+          },
+          {
+            "key": "src/promotions618.ts#FlashRule.startHour",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "3106ea87825f1e97fafefc8da43ff1c383d08ea448c3ca596fb3a7541a80a3dd"
+          },
+          {
+            "key": "src/promotions618.ts#FlashRule.endHour",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "b211c3e14040d9b76fede2852fb26ee578b57967662c359c1100ce622a21bdff"
+          },
+          {
+            "key": "src/promotions618.ts#FlashRule.rate",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "39a91fe55e9380b50decf86891a7427321032277ebc9b623c31ff2ed987a54dc"
+          },
+          {
+            "key": "src/promotions618.ts#FlashRule.label",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a7792714b672e2b08743262b7b52c1e3c82dde1a46379e685e2dfee62eee99d2"
+          },
+          {
+            "key": "src/promotions618.ts#ShippingRule",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "77723a14a26ac9ccebbbf87dcac58eeeafc2eb9db327158fc40c6e4228dcbbc6"
+          },
+          {
+            "key": "src/promotions618.ts#ShippingRule.freeThreshold",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "34726ac084af47d13e7c18fb0f39e4cb658c3dfaeb4a70ae0a84b422cca7f2fa"
+          },
+          {
+            "key": "src/promotions618.ts#ShippingRule.fee",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "d10f80a4be837fbefd726c4625bbf6ce061a875384b4678069641758893efd54"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "b46b3160b1e610bce4c8cd16ea45a71a7bfe924f6f59bc879d1d65bc421d8431"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.activeFrom",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "750fb79653a9db4c2a235772492e5e500b1af4fdce7fa47f832a472d844710eb"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.activeTo",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "f1707e03acafac571fea12d0ea67e74ba0365e543a77a599c3aa113ecb1486d4"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.depositExpansion",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "5009e4f65d5c1e631bc1de84595fd6b7f076048cb734f3745f48779d7dd60fc8"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.categoryRules",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "888fbc96083c9451fff92a0376250fd727cc5005681c9097f82bd6f71ec666c6"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.tiers",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a51deea46471e4ae4f168c9b864cf026a248f9b4f4a6ac9064058e0c81148d7c"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.memberRules",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "5d89b03fe857cdcf1cee5dc1eecc72033d6424df6b821648af2fe684379029da"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.coupons",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "824f55433c36a064db64ef04a5cf01d47af9cf544f02bb315d5de26c512202a7"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.flashRules",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "cb36d7c22a570a458ef0bab75c09425ce4c9daad4edd8e4ac4e1761458209398"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.shipping",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "ac5ac9c010521a933e49cfac79b9e3779dbf6a0277fd7ba6f50c87597b0b29b8"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.maxTotalDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "7e8cc38ad0c4d54566653fb97bdd6fec32fac85259a822eaf2eae72f380de3eb"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Config.roundingDigits",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "c29b7fbce90cdeef84bad585f3c5dfd5b5c1f68012fbee18688c165c3efb355c"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Options",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "cde20b08dd47f90e36b7310ac8f4144527f56037e9f45a90cc6eeb8cfe0a675f"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Options.now",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "7ab5024766d2882986e4adb7ff068846d9c4c61b9babb3f767e5ec560bf36dae"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Options.memberLevel",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "afdbbecc601fc18d67c347385951c447f529cb2e045a2cf23082df2a1416a970"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Options.couponCodes",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "4a497dfb77da3b55eb31cfb2583e35aa077ecd3cd15945aa274224f7d10db5e9"
+          },
+          {
+            "key": "src/promotions618.ts#DiscountLine",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "3654077ca644826b89fb893951789e2aa13b08c1e931d368fc0f39fec87b3613"
+          },
+          {
+            "key": "src/promotions618.ts#DiscountLine.source",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "65aced0e1f41da3f4dcf0532b44390c9abea8da66fca559337d33a6fa502cba0"
+          },
+          {
+            "key": "src/promotions618.ts#DiscountLine.amount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "17475b926ef201fd7beae0609a10fc8fe87b06a0560ecb172561c4343804d342"
+          },
+          {
+            "key": "src/promotions618.ts#DiscountLine.note",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "8215ee75e49198685bef298d239951b9a88090e72550963f28ca59e49dc674fd"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "4227dc707896531c8faefe035c7413de446df10c355ea5e815e8b8890be7f507"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.festivalActive",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "8fa638b8179923440572c8233c470bf83bf927805f852e22208ec454e7268b94"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.subtotal",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "58a0129f8fd8acd66b8a08579f0a46b67be09f610d3d7536227dc1fb75ccb272"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.lines",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "b0441113d2948db1089ff6f90e2e75fcbe7fe9d6cf444fc026f23cd8c9f8c3f3"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.itemDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "3899e6f14b840d328d8b2b6620fdba30b89f8151ac8b66f1a3a0c0754acab5da"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.depositDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "88dfbe1124a67fac80cbf5db2d5529260b26a3759a841b205452eb7a6d9303eb"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.flashDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "990a0047da0ee4b9a1dfac35245b249fa99145b36255c5f66d09d8317ae8f2a7"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.tierDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "853201055a7f0fe6ef64b9323a1acb331928702c571ecf8797109de8afddf905"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.memberDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "bb57b16788a0d06b74442abb19c5916032e0153cba68c6c4e8ba69490e0d8b1f"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.couponDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "4f27724b3301dec2515fbdd12b87b76b6fb30c7fb324e217d32d17c37d1a59c6"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.totalDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "8fe6eb77762d3c5cc0ba377b1b7a94fd9ff63b73e51f291b0e948cdc38aa06d4"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.shippingFee",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "4bf4b32293c8f98407957c0f92b42af17ce5ec12adc46b08fe487df2faa57bd9"
+          },
+          {
+            "key": "src/promotions618.ts#Promotion618Result.payable",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "c5a6be189cd14a5c79b12c1e1ff479a55fe9b840b8004ef303d21238b58245ce"
+          },
+          {
+            "key": "src/promotions618.ts#DEFAULT_618_CONFIG",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "5529878c0a0076977577861fb2ab4a2ae2e8d47c3a34b3d8e519c5b6d6db72b2"
+          },
+          {
+            "key": "src/promotions618.ts#roundMoney",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "2631b4613f72ddfbabfb31482b88aebbe9bc8cfcc362451d10f1022d9b3cdf85"
+          },
+          {
+            "key": "src/promotions618.ts#itemGross",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "05180e2feffca121133abafdbe4bf40d84221c08eb5a6ee0dd34060c4d5344b3"
+          },
+          {
+            "key": "src/promotions618.ts#isFestivalActive",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "bcb4dd08e1ae0c0748ae48a495dd837ebc9725ad409786a20f32b95ec1e1b90e"
+          },
+          {
+            "key": "src/promotions618.ts#currentFlash",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "344feaf3ee4d188af0e329cad2eafb7b04b5811a87984488848b7d15372ca919"
+          },
+          {
+            "key": "src/promotions618.ts#memberRule",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e86fe608d39c68c1c178ded1360e9c6dd9052ee518bf163a65b964219eeb8b5f"
+          },
+          {
+            "key": "src/promotions618.ts#bestTier",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "b2891620cdc9219c2d8d30ae6f1878331ba30fbdc532b0a56dfd0156a49bfaf9"
+          },
+          {
+            "key": "src/promotions618.ts#depositExpansionValue",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "715e1272923c34cc45c80ead6c729eab28efd1a26a3bcb2b550b2446234fd1b6"
+          },
+          {
+            "key": "src/promotions618.ts#itemCategoryDiscount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "d714ba12be5fc351b2dd335569fe92ef29edd9e0595de1d84b0843bde7f8a953"
+          },
+          {
+            "key": "src/promotions618.ts#itemCategoryDiscount.discount",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e50e623af15c031468b61c423458011c39fe70e75ac836e6e6db404b98ecd8d4"
+          },
+          {
+            "key": "src/promotions618.ts#itemCategoryDiscount.note",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "87a848a0bccff799f79d532475380da27b2b9f6814710d6e299277e0af15b0cb"
+          },
+          {
+            "key": "src/promotions618.ts#couponBenefit",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "e4ce5d14b99aa00fe00fdf5ec05b0a7230fa59d999a3db7e8271765d5b9000aa"
+          },
+          {
+            "key": "src/promotions618.ts#selectCoupons",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "0878f0e71db2d97c6f0cdd0087449a16d86c9a1f8ca543d8436fae78afd31e50"
+          },
+          {
+            "key": "src/promotions618.ts#compute618",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "68ed14d4eb3401b8de8b3a0d88a300d38285db09b7587cb3d3080d40e56b3a12"
+          },
+          {
+            "key": "src/promotions618.ts#format618Money",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "6f30f7a9c10e9812b6b416aae1611afbb3718c04a7e84d2133ddbe2226dd18a4"
+          },
+          {
+            "key": "src/promotions618.ts#checkout618",
+            "file": "src/promotions618.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "65a642de5b5cdea4d3014cdbe450d2e41238a4b9ebadb92b097d850cc4362da0"
+          }
+        ],
+        "related": true,
+        "valueRelated": false
+      },
+      {
+        "actor": "agent:_3IyfXyObhle",
+        "batchId": "guard-31",
+        "at": 1791460480884,
+        "symbols": [
+          {
+            "key": "src/types.ts#CartItem.shopId",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "3653d64f2e525a84558cad266e20a6269caac8db1a93c782f5a1ec024d68b487"
+          },
+          {
+            "key": "src/types.ts#CartItem.isFlashSale",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "cc58b8bcbc075e3d89d02f45f9782e43c796156ea467d72afa712df8f191ad61"
+          },
+          {
+            "key": "src/types.ts#CartItem.doubleElevenPrice",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "495deced7f203082cf8f22d7b95bb1acd215f2821d3e559b505ecd136e95caf6"
+          },
+          {
+            "key": "src/types.ts#PromotionPhase",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a2b9c7af246a982a028e03df8ead21c66061a80c46f6fdc40bcdec9d27b014c8"
+          },
+          {
+            "key": "src/types.ts#MembershipTier",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "5f707e130f790ff4fcc816644ad5a88f8669bea07a439ba104b7ecd824f86e48"
+          },
+          {
+            "key": "src/types.ts#Coupon",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "f38aba0eb4929e83f5fafeab18b298e75dca00f0d212c5862ad7bdf54aaab5db"
+          },
+          {
+            "key": "src/types.ts#Coupon.id",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "3046801a00cfd5fd022260ff28080d070925c573443a89e554609181304f1a48"
+          },
+          {
+            "key": "src/types.ts#Coupon.threshold",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "13ead3f95a4811544f2438aabe46aa30ebc0c9b6c0487c5a51385f222f980ddc"
+          },
+          {
+            "key": "src/types.ts#Coupon.amount",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "17475b926ef201fd7beae0609a10fc8fe87b06a0560ecb172561c4343804d342"
+          },
+          {
+            "key": "src/types.ts#Coupon.stackable",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "53c6cf19883bae01f20df1fe7ad29d2208ec7722b02f265d0d059e4af10603ed"
+          },
+          {
+            "key": "src/types.ts#Coupon.phase",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "458969091d89ea7933e366bcfa8eb976996b5f410fb229eef4067766e0bf80b3"
+          },
+          {
+            "key": "src/types.ts#RedPacket",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "6ba926d4dbf0186e8443ef3fc2b2cf0ee8bbe54e22881ad22715c745cde440c4"
+          },
+          {
+            "key": "src/types.ts#RedPacket.id",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "3046801a00cfd5fd022260ff28080d070925c573443a89e554609181304f1a48"
+          },
+          {
+            "key": "src/types.ts#RedPacket.amount",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "17475b926ef201fd7beae0609a10fc8fe87b06a0560ecb172561c4343804d342"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "aa8d4c84bd7134f6b71a602400b9831e6d817e194e36a1c7ffe56d48508514a1"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig.depositMultiplier",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "a8cd799ef9d4fd5a8a00d33696be5c5bb31ff679d46a4ceab2876355f0b17390"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig.crossStoreEvery",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "bd0ce2cac3f5692f9cf5b4c58dbfa1efd947ba242a2787840ef819b81a0b53a0"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig.crossStoreOff",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "6039872f3d15d404ace73cda76d7a6d2abc53587199f3b17aa9d40dd016c3c04"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig.membershipRates",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "abf465281ba0a3e5c36cd64d5ebf1e25593ec8f1090ae60e57c2fd8f999101d6"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig.finalHoursBonusRate",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "769847ea23153f078042415d5693f9d0b2671ed2a19374ba1b950a7673dc385a"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenConfig.floorPrice",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "81efcb94bf9b83b076f8b3b0c17ee2a82f63ca3d54f47a0666b2ae5fda7a5d34"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "2c4f63f87bd73aa0a5f96b4d06d9f4e462f25eb229d7e96bafd61a191c49ef27"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder.items",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "6ce169ace5b0375f84b76cc782f2520c854dd3f6aa32550e998c9f87a3419c0b"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder.phase",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "458969091d89ea7933e366bcfa8eb976996b5f410fb229eef4067766e0bf80b3"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder.tier",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "000d12f561a81a1ee0f8fcc950bb787e3e662e365b1dcc08442984ce3def4e5e"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder.depositPaid",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "5295141fcd58178f366f09f5336703df46a97118c3a7ccce691a530541a5f6bf"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder.coupons",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "824f55433c36a064db64ef04a5cf01d47af9cf544f02bb315d5de26c512202a7"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenOrder.redPackets",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "ddb5a2851f1431d02a5ab29c48d11d5f90f28dc6f0ef0fb7f7f8edc084d342d3"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "48cac9009fb65c2a9256a9dfdec23127e071e79e4054913573f92a913679eaf3"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.rawSubtotal",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "96c05c1965f1ada1ccc61ce60cf2d29c47c83d5458a39fbe76222456a5434c87"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.subtotal",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "58a0129f8fd8acd66b8a08579f0a46b67be09f610d3d7536227dc1fb75ccb272"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.flashSaleSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "c7e9ea5f0ac6e9e5d4dd5c662c0208124104880acf1f0bcaf640994732744351"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.depositExpansion",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "499ff099a1be043abfecbcc90b524ddcb1f74747c1105b7affefa781fcfa8f2d"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.storeThresholdSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "df055adef8007309e49da8f2d2b9fb1a341180367ca133de3474cee65e9412ab"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.crossStoreSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "1dff3f66a9567a1b3b04ca5d5f55ec2dec949d8c394e1707926be29d9b4d86e5"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.couponSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "0d8f06ff6376a64f95367f4874427ae2097c1c37975567259d7699e3714270ab"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.redPacketSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "201bad6e6c97b2c071b207b3c05eed3b3229808d3a09cdd18fa477c91dbdaadc"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.membershipSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "93ca8da15dcadad19e273d3accdbb49090d6af88bbbe4e099feec6f16ccf7649"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.finalHoursSaving",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "02c85ddf5c8918492f9785cf7c9f0789ca4cd37ffbe8fe0d541cea102bd46fd8"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.total",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "bab492121226eb274edca51fed1b1d286ff955760856d8172145cf7b22ca419c"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.appliedCouponIds",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "11ae96d6f17ab6a09b6a0377ce96f2a35512903067c45c07ba8d230bae4d171c"
+          },
+          {
+            "key": "src/types.ts#DoubleElevenResult.notes",
+            "file": "src/types.ts",
+            "status": "added",
+            "beforeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "afterHash": "b22b4f973ffb7699eedfdaedb0fe67e463d5f1e037c753a0497b5679ae4cdf2d"
+          }
+        ],
+        "related": true,
+        "valueRelated": false
+      }
+    ],
+    "recordedOnly": [],
+    "rebuiltOnly": [
+      {
+        "actor": "human:c0fb4929-7893-4337-93c7-73c78a2a7f83",
+        "batchId": "agent-replay-13",
+        "at": 1791459831652,
+        "symbols": [
+          {
+            "key": "src/pricing.ts#PriceRule.apply",
+            "file": "src/pricing.ts",
+            "status": "modified",
+            "beforeHash": "153747369736876b78cb2c2945ce32fe65608bf2385817266b8d64afbe5efa29",
+            "afterHash": "6af25750d271ea63b49ddd5d4d895c3b72d18a7e3057fc993205f6e8674aa5ff"
+          }
+        ],
+        "related": true,
+        "valueRelated": true
+      }
+    ]
+  },
+  "errors": []
+}

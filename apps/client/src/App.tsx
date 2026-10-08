@@ -639,7 +639,7 @@ function WorkspacePage({
 
   function scheduleAgentRefresh() {
     if (agentRefreshTimerRef.current) {
-      window.clearTimeout(agentRefreshTimerRef.current);
+      return;
     }
     agentRefreshTimerRef.current = window.setTimeout(() => {
       agentRefreshTimerRef.current = undefined;

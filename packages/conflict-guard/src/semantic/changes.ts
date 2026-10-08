@@ -57,7 +57,7 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
     return candidate && !currentKeys.has(candidate.key) ? [candidate.key] : [];
   }));
   const deletedCandidates = [...new Map([...touchedBase, ...baseline.filter((symbol) => renamedBaselineKeys.has(symbol.key) || change.deletedSymbolKeys?.includes(symbol.key))].map((symbol) => [symbol.key, symbol])).values()];
-  for (const symbol of deletedCandidates) if (!currentKeys.has(symbol.key) && (change.deletedSymbolKeys?.includes(symbol.key) || renamedBaselineKeys.has(symbol.key) || addedTouched.some((added) => added.start <= symbol.end && symbol.start <= added.end))) {
+  for (const symbol of deletedCandidates) if (!currentKeys.has(symbol.key) && !current.some((remaining) => remaining.name === symbol.name && remaining.container === symbol.container && remaining.kind === symbol.kind && (!symbol.exported || remaining.exported)) && (change.deletedSymbolKeys?.includes(symbol.key) || renamedBaselineKeys.has(symbol.key) || addedTouched.some((added) => added.start <= symbol.end && symbol.start <= added.end))) {
     changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, status: "deleted", before: change.baseText.slice(symbol.start, symbol.end), after: "", startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt, beforeComments: change.baseText.slice(symbol.node.getFullStart(), symbol.start).trim() });
   }
   return changes;

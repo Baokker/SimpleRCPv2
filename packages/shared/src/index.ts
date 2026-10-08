@@ -109,6 +109,32 @@ export interface AgentRuntimeStatus {
   model: string;
   apiKeyConfigured: boolean;
   modelChangePending?: boolean;
+  activityConfig?: { waitingMs: number; stalledMs: number };
+}
+
+export type AgentRunPhase = "creating-session" | "first-request" | "streaming" | "tool" | "approval";
+
+export interface AgentRunFailure {
+  phase: AgentRunPhase;
+  source: "local-runtime" | "model-provider" | "server";
+  errorType: string;
+  message: string;
+  target?: string;
+  statusCode?: number;
+  errno?: string;
+  lastSuccessfulSequence: number;
+  retryable: boolean;
+  guidance: string;
+}
+
+export interface AgentRunActivity {
+  phase: AgentRunPhase;
+  config?: { waitingMs: number; stalledMs: number };
+  updatedAt: string;
+  lastPartAt?: string;
+  tools: Array<{ id: string; name: string; summary: string; startedAt: string; status: "pending" | "running" }>;
+  reasoning: Array<{ id: string; text: string }>;
+  tokens?: { input: number; output: number; reasoning: number; cacheRead: number; cacheWrite: number; total: number };
 }
 
 export type AgentRunStatus =
@@ -156,6 +182,9 @@ export interface AgentRun {
   runtimeSessionId?: string;
   output?: string;
   error?: string;
+  failure?: AgentRunFailure;
+  activity?: AgentRunActivity;
+  overlappingRunIds?: string[];
   fileChanges?: AgentFileChange[];
   conflictGuard?: {
     rejectedEdits: number;
@@ -163,6 +192,9 @@ export interface AgentRun {
     approvalWaitMs?: number;
     warnings?: string[];
     t3?: "reverted" | "partially-reverted" | "passed" | "warned";
+    t3Executed?: boolean;
+    t3Error?: string;
+    needsAttention?: boolean;
   };
   createdAt: string;
   startedAt?: string;

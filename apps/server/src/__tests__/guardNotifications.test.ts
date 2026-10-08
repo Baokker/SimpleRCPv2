@@ -9,11 +9,11 @@ it("restores notification read and handled state and restricts updates to its ow
   try {
     const file = path.join(root, "project", "notifications.json");
     const store = createGuardNotificationStore(file);
-    store.add({ id: "notice", memberId: "owner", runId: "run", summary: "请检查修改", at: 100 });
+    store.add({ id: "notice", memberId: "owner", runId: "run", summary: "请检查修改", at: 100, level: "action" });
     expect(store.update("notice", "other", { handled: true })).toBe(false);
     expect(store.update("notice", "owner", { read: true, handled: true })).toBe(true);
     await store.flush();
-    expect(createGuardNotificationStore(file).list("owner")).toEqual([{ id: "notice", memberId: "owner", runId: "run", summary: "请检查修改", at: 100, read: true, handled: true }]);
+    expect(createGuardNotificationStore(file).list("owner")).toEqual([{ id: "notice", memberId: "owner", runId: "run", summary: "请检查修改", at: 100, read: true, handled: true, level: "action" }]);
   } finally { await fs.rm(root, { recursive: true, force: true }); }
 });
 

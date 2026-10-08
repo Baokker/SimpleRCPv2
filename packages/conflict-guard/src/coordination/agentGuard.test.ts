@@ -12,6 +12,16 @@ it("includes multiline parameters in function and method signatures", () => {
   expect(symbolSignature("total(\n currency: string\n): number { return 1; }")).toContain("currency: string");
 });
 
+it("待审批插入声明保持另一位 Agent 的文本坐标与符号归属", async () => {
+  const file = "types.ts";
+  const before = "export type Money = number;\n";
+  const first = `${before}export interface DoubleElevenPromotion { threshold: Money; discount: Money; }\n`;
+  const proposed = `${before}export interface Promotion618Options { rate: number; }\n${first.slice(before.length)}`;
+  const result = await evaluateAgentChanges({ actor: { kind: "agent", runId: "618", ownerId: "bob" }, proposals: [{ file, before: first, after: proposed }], active: [{ actor: { kind: "agent", runId: "double-eleven", ownerId: "alice" }, status: "settled", files: new Map([[file, { ...proposalFileChange({ file, before, after: first }, 1), proposalText: undefined }]]) }], files: new MemoryFileProvider({ [file]: first }), now: () => 2, signal: new AbortController().signal });
+  expect(result.decision).toBe("allow");
+  expect(result.records).toEqual([]);
+});
+
 it("uses the product signature rule and state machine for an Agent proposal against a human", async () => {
   const baseline = "export function price(value: number) { return value; }\n";
   const current = baseline.replace("value: number", "value: number, currency: string");
@@ -21,6 +31,25 @@ it("uses the product signature rule and state machine for an Agent proposal agai
   const result = await evaluateAgentChanges({ actor: { kind: "agent", runId: "run-b", ownerId: "bob" }, proposals: [{ file: "cart.ts", before: consumer, after: consumer.replace("price(10)", "price(20)") }], active: [{ actor: { kind: "human", memberId: "alice" }, status: "settled", files: new Map([["pricing.ts", { file: "pricing.ts", baseText: baseline, ranges: [{ start: 0, end: current.length }], firstTouchedAt: 0, lastTouchedAt: 1 }]]) }], files: { listFiles: () => [...files.keys()], readFile: (file) => files.get(file)!, version: () => 1 }, now: () => clock.now(), signal: new AbortController().signal });
   expect(result.decision).toBe("lock");
   expect(result.records).toMatchObject([{ status: "judged", verdict: { ruleId: "call-signature-incompatible", decision: "lock" } }]);
+});
+
+for (const signatureChanged of [false, true]) it(`符号簇保留全部灰区输入，任一签名不兼容控制整簇：${signatureChanged}`, async () => {
+  const before = "export function price(value: number) { return value; }\nexport function discount(value: number) { return price(value); }\n";
+  const after = before.replace("return value;", "return value * 2;").replace("return price(value);", "return price(value) - 1;").replace("discount(value: number)", signatureChanged ? "discount(value: number, currency: string)" : "discount(value: number)");
+  const consumer = 'import { discount } from "./pricing";\nexport function total() { return discount(10); }\n';
+  const result = await evaluateAgentChanges({
+    actor: { kind: "agent", runId: "cluster-consumer", ownerId: "bob" },
+    proposals: [{ file: "cart.ts", before: consumer, after: consumer.replace("discount(10)", "discount(20)") }],
+    active: [{ actor: { kind: "human", memberId: "alice" }, status: "settled", files: new Map([["pricing.ts", proposalFileChange({ file: "pricing.ts", before, after }, 1)]]) }],
+    files: new MemoryFileProvider({ "pricing.ts": after, "cart.ts": consumer }, await replayLibraries()),
+    now: () => 2, signal: new AbortController().signal
+  });
+  expect(result.records).toHaveLength(1);
+  expect(result.records[0]!.pair.left.symbols).toEqual(["cart.ts#total"]);
+  expect(result.records[0]!.pair.right.symbols).toEqual(["pricing.ts#discount", "pricing.ts#price"]);
+  expect(result.inputs[0]!.cluster?.right.map((symbol) => symbol.key)).toEqual(["pricing.ts#discount", "pricing.ts#price"]);
+  expect(result.decision).toBe(signatureChanged ? "lock" : "warn");
+  if (signatureChanged) expect(result.records[0]!.verdict?.ruleId).toBe("call-signature-incompatible");
 });
 
 it("reverts unchanged Agent blocks while preserving other participants' changes", () => {

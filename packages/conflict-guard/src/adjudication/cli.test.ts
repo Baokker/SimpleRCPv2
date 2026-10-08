@@ -45,7 +45,7 @@ it("verifies subscription records through the offline CLI without network calls"
   const directory = await fs.mkdtemp(path.join(workspace, "adjudication-subscriptions-"));
   try {
     const source = JSON.parse(gunzipSync(await fs.readFile(path.join(repository, "docs/conflict-guard/evidence/checkpoint-b-dev-report/calibrated/results.json.gz"))).toString());
-    const sample = source.policies.G3.groups.find((row: { result: { judgements: Array<{ verdict: { adjudication?: unknown } }> } }) => row.result.judgements.some((entry) => entry.verdict.adjudication));
+    const sample = source.policies.G3.groups.find((row: { result: { judgements: Array<{ pair: { id: string }; verdict: { adjudication?: unknown } }> } }) => new Set(row.result.judgements.map((entry) => entry.pair.id)).size === 1 && row.result.judgements.some((entry) => entry.verdict.adjudication));
     expect(sample).toBeDefined();
     const original = path.join(packageDirectory, "bench/datasets/d1-v2");
     const manifest = JSON.parse(await fs.readFile(path.join(original, "manifest.json"), "utf8"));

@@ -195,6 +195,11 @@ export function attachRealtimeServer(
       });
       return;
     }
+    if (event.event.type === "opencode.message.part.delta") return;
+    if (event.event.type === "opencode.message.part.updated") {
+      const part = event.event.data?.part as { type?: string; state?: { status?: string } } | undefined;
+      if (part?.type !== "tool" || !["completed", "error"].includes(part.state?.status ?? "")) return;
+    }
     broadcastToProject(projectSockets, event.projectId, {
       type: "agent_trace_appended",
       runId: event.runId,

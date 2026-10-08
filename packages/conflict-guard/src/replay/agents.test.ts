@@ -24,6 +24,8 @@ it("recomputes different interruption counts with deterministic owner arbitratio
   const counts: number[] = [];
   for (const mode of ["owner", "all-human", "all-auto"] as const) {
     const result = await replayAgentTrace(trace, { mode });
+    expect(result.errors).toEqual([]);
+    expect(result.actions).toHaveLength(2);
     expect(JSON.stringify(await replayAgentTrace(trace, { mode }))).toBe(JSON.stringify(result));
     counts.push(result.statistics.reduce((sum, member) => sum + member.interruptions, 0));
   }

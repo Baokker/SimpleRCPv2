@@ -1,11 +1,37 @@
 import { describe, expect, test } from "vitest";
-import { createPairCoordinator } from "./pairState.js";
+import { createJudgementQueue, createPairCoordinator } from "./pairState.js";
+import { VirtualClock } from "../replay/clock.js";
 import type { CandidatePair } from "../routing/candidates.js";
 
 const pair: CandidatePair = { id: "p", left: { actor: { kind: "human", memberId: "a" }, symbol: "a.ts#run", status: "modified" }, right: { actor: { kind: "human", memberId: "b" }, symbol: "b.ts#call", status: "modified" }, distance: 1, path: { from: "a.ts#run", to: "b.ts#call", hops: [{ from: "a.ts#run", to: "b.ts#call", kind: "call", direction: "forward" }], typeOnly: false }, firstSeenAt: 1, updatedAt: 1 };
 const verdict = { zone: "black" as const, decision: "lock" as const, ruleId: "call-signature-incompatible", summary: "冲突", evidence: [], contractChanged: { left: true, right: false } };
 
 describe("变更对状态机", () => {
+  test("人与 Agent 共用每帧上限，取消与关闭结束排队请求", () => {
+    const clock = new VirtualClock();
+    const queue = createJudgementQueue({ clock, frameMs: 200, maximum: 20 });
+    const completed: string[] = [];
+    for (const point of ["T1", "T2", "T3"]) for (let ordinal = 0; ordinal < 15; ordinal += 1) queue.enqueue(`${point}:${ordinal}`, () => completed.push(`${point}:${ordinal}`));
+    clock.advanceTo(199);
+    expect(completed).toHaveLength(0);
+    clock.advanceTo(200);
+    expect(completed).toHaveLength(20);
+    expect(completed).toContain("T2:4");
+    clock.advanceTo(400);
+    expect(completed).toHaveLength(40);
+    expect(completed).toContain("T3:9");
+    const cancelled: string[] = [];
+    queue.enqueue("cancelled", () => completed.push("cancelled"), () => cancelled.push("cancelled"));
+    queue.cancel("cancelled");
+    queue.enqueue("closing", () => completed.push("closing"), () => cancelled.push("closing"));
+    queue.dispose();
+    clock.advanceTo(1000);
+    expect(completed).toHaveLength(40);
+    expect(cancelled).toEqual(["cancelled", "closing"]);
+    queue.enqueue("closed", () => completed.push("closed"), () => cancelled.push("closed"));
+    expect(cancelled).toEqual(["cancelled", "closing", "closed"]);
+  });
+
   test("pending and stale inputs retain their revision across refreshes and temporary removal", () => {
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
     const defer = () => false;
@@ -45,7 +71,7 @@ describe("变更对状态机", () => {
     coordinator.confirm(pair.id, "left");
     coordinator.confirm(pair.id, "right");
     expect(coordinator.get(pair.id)?.resolution).toBe("overridden");
-    expect(events).toEqual(["pair_judged", "pair_stale", "pair_judged", "pair_resolved"]);
+    expect(events).toEqual(["pair_judged", "pair_stale", "pair_unchanged", "pair_resolved"]);
   });
   test("重判放行后自动解除冻结", () => {
     let lock = true;

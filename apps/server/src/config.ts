@@ -24,6 +24,7 @@ export interface ServerConfig {
     openCodePort?: number;
     runTimeoutMs?: number;
     maxConcurrentRuns?: number;
+    activityConfig?: { waitingMs: number; stalledMs: number };
   };
 }
 
@@ -107,6 +108,8 @@ export function loadConfig(
       activeIdleMs: 600_000,
       cursorDebounceMs: 200,
       bodyUnrelatedMaxAdjacentLines: validateBodyUnrelatedMaxAdjacentLines(Number(env.CONFLICT_GUARD_BODY_ADJACENT_LINES ?? defaultRoutingConfig.bodyUnrelatedMaxAdjacentLines)),
+      judgementFrameMs: positiveInteger(env.CONFLICT_GUARD_JUDGEMENT_FRAME_MS, "CONFLICT_GUARD_JUDGEMENT_FRAME_MS", defaultRoutingConfig.judgementFrameMs),
+      maxJudgementsPerFrame: positiveInteger(env.CONFLICT_GUARD_MAX_JUDGEMENTS_PER_FRAME, "CONFLICT_GUARD_MAX_JUDGEMENTS_PER_FRAME", defaultRoutingConfig.maxJudgementsPerFrame),
       arbitration: (() => { const mode = env.CONFLICT_GUARD_ARBITRATION ?? "owner"; if (!["owner", "all-human", "all-auto"].includes(mode)) throw new Error("CONFLICT_GUARD_ARBITRATION must be owner, all-human, or all-auto"); return mode as "owner" | "all-human" | "all-auto"; })(),
       intentInjection: (() => { const value = env.CONFLICT_GUARD_INTENT_INJECTION ?? "on"; if (!["on", "off"].includes(value)) throw new Error("CONFLICT_GUARD_INTENT_INJECTION must be on or off"); return value === "on"; })(),
       ...(conflictGuardMode === "full" ? { adjudication: {
@@ -124,10 +127,21 @@ export function loadConfig(
       model: agentModel,
       openCodePort,
       runTimeoutMs,
-      maxConcurrentRuns
+      maxConcurrentRuns,
+      activityConfig: {
+        waitingMs: positiveInteger(env.SIMPLERCP_AGENT_WAITING_MS, "SIMPLERCP_AGENT_WAITING_MS", 20_000),
+        stalledMs: positiveInteger(env.SIMPLERCP_AGENT_STALLED_MS, "SIMPLERCP_AGENT_STALLED_MS", 60_000)
+      }
     }
   };
+  if (config.agent!.activityConfig!.stalledMs <= config.agent!.activityConfig!.waitingMs) throw new Error("SIMPLERCP_AGENT_STALLED_MS 必须大于 SIMPLERCP_AGENT_WAITING_MS");
   return config;
+}
+
+function positiveInteger(value: string | undefined, name: string, fallback: number) {
+  const number = Number(value ?? fallback);
+  if (!Number.isInteger(number) || number < 1) throw new Error(`${name} 必须为正整数`);
+  return number;
 }
 
 function readBoolean(

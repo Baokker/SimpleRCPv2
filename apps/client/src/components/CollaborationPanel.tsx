@@ -25,6 +25,7 @@ import { GuardMetrics } from "./ConflictGuardText";
 import { conflictActionCount } from "../conflictGuardPresentation";
 import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
+import { AgentRunProgress } from "./AgentRunProgress";
 import type {
   AgentRun,
   AgentSession,
@@ -573,6 +574,7 @@ function ChatAgentMessage({
       ) : null}
       {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
+          <AgentRunProgress run={run} onCancel={active ? () => void onCancelAgentRun(run.id).catch(onError) : undefined} />
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
           {run.fileChanges?.length ? (
             <ul>

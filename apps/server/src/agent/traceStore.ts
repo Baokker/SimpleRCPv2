@@ -7,22 +7,24 @@ export function createTraceStore(storagePath: string, sensitiveValues: string[] 
   let operations = Promise.resolve();
   let writeFailures = 0;
   let readFailures = 0;
+  let sequence: number | undefined;
 
   return {
     async append(input: Omit<AgentTraceEvent, "sequence" | "timestamp">) {
       let result: AgentTraceEvent | undefined;
       operations = operations.catch(() => undefined).then(async () => {
-        const events = await readTrace(storagePath);
+        if (sequence === undefined) sequence = (await readTrace(storagePath)).at(-1)?.sequence ?? 0;
         const event = redactSensitive(
           {
             ...input,
-            sequence: (events.at(-1)?.sequence ?? 0) + 1,
+            sequence: sequence + 1,
             timestamp: new Date().toISOString()
           },
           collectedValues
         ) as AgentTraceEvent;
         await fs.mkdir(path.dirname(storagePath), { recursive: true });
         await fs.appendFile(storagePath, `${JSON.stringify(event)}\n`, "utf8");
+        sequence = event.sequence;
         result = event;
       });
       try {

@@ -1,0 +1,4 @@
+双十一与618的独立验收测试全部通过。
+(node:31650) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31650) ExperimentalWarning: Transform Types is an experimental feature and might change at any time

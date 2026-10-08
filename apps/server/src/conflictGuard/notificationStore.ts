@@ -7,6 +7,7 @@ export interface GuardNotification {
   id: string; memberId: string; runId: string; summary: string; at: number;
   read: boolean; handled: boolean;
   conflict?: GuardConflict;
+  level?: "light" | "action";
 }
 
 export function createGuardNotificationStore(file: string | undefined, sensitiveValues: string[] = []) {

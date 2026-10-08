@@ -4,7 +4,8 @@
 
 ## 事件字段
 
-- `session_start`：`mode`、阈值配置和服务端提交号。新服务端与合成轨迹增加 `pairRevisionMode: "judged-input"`：有效判定或分析输入首次变化时增加 revision，pending/stale 的连续输入保留 revision。服务重启后追加事件，回放保留跨会话文本、批次、变更集和脱敏状态。
+- `session_start`：`mode`、阈值配置和服务端提交号。新服务端与合成轨迹增加 `pairRevisionMode: "judged-input"`：有效判定或分析输入首次变化时增加 revision，pending/stale 的连续输入保留 revision。服务重启后追加事件，回放保留跨会话文本、批次、变更集和脱敏状态。配置同时记录 `judgementFrameMs` 与 `maxJudgementsPerFrame`。
+- `candidate_summary`：会话开始时记录 `statistics`、`aggregation: "batch-connected-symbols"` 与 `skippedPaths: "unchanged-type-reference"`。单元统计包含 total、related、unrelated、unrelatedRatio、typeOnly；实时累计值由 state API 提供。
 - `doc_open`：普通文件记录 `file`、初始全文 `text` 和 `textHash`；敏感文件记录 `{ file, skipped: "sensitive" }`。
 - `edit`：`file`、`origin`、`ops`、`revisionAfter`。每个操作包含相对于修改前文本的 `from`、`deleted` 和 `inserted`；按顺序应用时累计前序操作的长度变化。`revisionAfter` 为 collaborativeDocuments 写入后的真实 revision。服务端撤回使用 `origin.kind = "guard-revert"` 并带成员编号。
 - `cursor`：`memberId`、`file`、`position`、`selection` 和时间。服务端内存保留每个成员的最新光标，轨迹每 200 毫秒窗口登记最后一个位置。
@@ -12,7 +13,7 @@
 - `change_set_opened`、`change_set_closed`：参与者与涉及文件，文件记录包含范围及触碰时间。打开事件已经包含首个文件。
 - `change_set_file_closed`：`actor`、`file` 和 `reason`。
 - `change_unit`：`actor`、已经关闭的 `batchId`、`commentOnly` 与 `symbols` 数组，每项包含 `key`、`file`、`status`、`beforeHash`、`afterHash`。哈希为符号 before/after 的 SHA-256，事件没有符号全文。有效符号变化的关闭批次记录一个单元；仅修改注释或空白的批次记录 `commentOnly=true`、空符号列表，不计入有效符号单元统计。每侧 before 使用其基线恢复本人修改范围，并保留范围外的当前共享代码。旧轨迹可以缺少 `commentOnly`。
-- `pair_candidate_opened`、`pair_candidate_updated`、`pair_candidate_closed`：包含 `pair`，字段为稳定 `id`、`left`、`right`、`distance`、`path`、`firstSeenAt`、`updatedAt`。每侧包含 `actor`、`symbol` 和 `status`。距离 0 时两个符号相同且 `path: null`；距离 1 或 2 时路径包含相应数量的 hops，每项记录 `from`、`to`、`kind` 和 `direction`，并可带有 `typeOnly`。候选关闭后，相同参与者与符号再次关联时使用相同编号和新的首次发现时间。
+- `pair_candidate_opened`、`pair_candidate_updated`、`pair_candidate_closed`：包含 `pair`，字段为稳定 `id`、`left`、`right`、`distance`、`path`、`firstSeenAt`、`updatedAt`。每侧包含 `actor`、代表 `symbol`、簇内 `symbols` 和 `status`；`relations` 保存簇之间的全部关联。距离 0 时 `path: null`；距离 1 或 2 时路径包含相应数量的 hops，每项记录 `from`、`to`、`kind` 和 `direction`，并可带有 `typeOnly`。候选关闭后，相同参与者与符号再次关联时使用相同编号和新的首次发现时间。只有候选新增、输入指纹变化或关闭时写入事件。
 - `pair_judged`：记录 `pairId`、`revision`、完整 `pair` 和 `verdict`，包括区、动作、规则编号、证据、`contractChanged` 和四状态检查的耗时、执行及跳过原因。`symbols` 保存双方的 `key`、`beforeHash` 与 `afterHash`，哈希使用 SHA-256。
   同一声明的检查结果还包含 `typecheck.inferredReturnTypeChanged: { left, right }`，表示双方单独修改时的返回类型是否改变。远距离灰区警告也记录四状态结果；检查超时与无法组合修改范围会记录跳过原因。
 - `pair_analyzing`：灰区开始异步研判，记录变更对、修订号与本地结果；相关文件暂停写入。
@@ -41,7 +42,15 @@
 - `mirror_resync`：文件、修改前文本哈希、替换后的全文和新文本哈希。该事件成为该文件的回放起点。
 - 脱敏按已配置的敏感值执行。写入轨迹时，已标记文件的编辑文本使用等长占位字符。导出接口会按事件顺序重放文件；一旦重建文本出现敏感值，就把该文件所有编辑、`doc_open` 与 `mirror_resync` 文本改为等长占位字符并标记 `redacted: true`。原始轨迹保留在磁盘。校验结果通过 `validateTraceDetailed` 返回 `redactedFiles` 和 `skippedFiles`，脱敏文件按跳过文本校验处理。
 
-## 最小回放条件
+## 通用 Agent 活动与失败记录
+
+Agent run 记录中的 `activity` 包含 phase、updatedAt、lastPartAt、tools、reasoning 与可选 tokens、config。config 保存 waitingMs 与 stalledMs，个人和团队 Agent 共用这两个阈值。工具记录包含 id、name、summary、startedAt、status。推理文本保留最近三个 part，每个 part 最多 16000 字符；界面按每秒时钟显示持续时间。服务端每 500 ms 合并活动推送，原始 `opencode.message.part.delta` 继续保存到 run trace。
+
+`run_failed.data` 与 run 记录的 `failure` 共享字段：phase、source、errorType、message、可选 target、statusCode、errno，以及 lastSuccessfulSequence、retryable、guidance。phase 为 creating-session、first-request、streaming、tool 或 approval；source 为 local-runtime、model-provider 或 server。target 只保存协议、主机、端口和路径，认证信息与查询参数被移除。
+
+文件归属独立于成功或失败状态，保留已记录的 fileChanges。`conflictGuard.t3Executed` 与 `t3Error` 说明结束检查是否执行。需要用户处理的 Agent 通知保存 `level: "action"`，轻提示保存 `level: "light"`，与 read、handled 一起持久保存。
+
+## 模型回放条件
 
 `provider_call` 增加 `role` 和 `cacheKey`，缓存键包含提示词正文与请求参数。full 模式的 `replay:check` 根据 session 配置读取缓存、校验 SHA-256，重新执行灰区策略；完整初始项目文件保存为轨迹旁的 `<trace>-project.json`，包含相关测试。核验禁止联网，并比较判定、闸门、写入和冻结。
 

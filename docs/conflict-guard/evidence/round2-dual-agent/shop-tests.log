@@ -1,0 +1,22 @@
+人工检查双十一
+人工检查双十一
+人工检查双十一
+人工检查618
+人工检查双十一
+人工检查双十一
+(node:31649) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31649) ExperimentalWarning: Transform Types is an experimental feature and might change at any time
+[32m✔ 折扣返回折后价格 [90m(0.778708ms)[39m[39m
+[32m✔ 结账使用购物车折后总价 [90m(0.16325ms)[39m[39m
+[32m✔ 季节规则与重导出报告使用折后价格 [90m(0.101584ms)[39m[39m
+[34mℹ tests 3[39m
+[34mℹ suites 0[39m
+[34mℹ pass 3[39m
+[34mℹ fail 0[39m
+[34mℹ cancelled 0[39m
+[34mℹ skipped 0[39m
+[34mℹ todo 0[39m
+[34mℹ duration_ms 134.010792[39m
+(node:31648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

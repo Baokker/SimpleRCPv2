@@ -37,6 +37,9 @@ import { conflictGuardEditHandler } from "./conflictGuardEditHandler.js";
 import fs from "node:fs/promises";
 import { agentPlanInstruction } from "@simplercp/conflict-guard";
 import { canonicalWorkspacePath } from "../workspacePath.js";
+import { createAgentProgress } from "./agentProgress.js";
+import { AgentRuntimeRequestError, diagnoseAgentFailure } from "./agentRunFailure.js";
+import type { AgentRunPhase } from "@simplercp/shared";
 import {
   createAgentScheduler,
   getCompletedOverlapGroup,
@@ -53,6 +56,7 @@ interface AgentRunManagerOptions {
   sensitiveValues?: string[];
   runTimeoutMs: number;
   maxConcurrentRuns: number;
+  activityConfig?: { waitingMs: number; stalledMs: number };
   appendActivity?: (
     projectId: string,
     input: Omit<EventRecord, "id" | "timestamp">
@@ -365,7 +369,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         if (!workspaceBefore || !workspaceAfter) unverified.push({ reason: "Run workspace snapshot could not be read" });
         const t3 = await project.conflictGuard?.agentGuard.finish(runId, net, (file, expected, text, owner, remove) => project.documents.applyGuardRevert(file, expected, text, owner, remove), unverified);
         const latest = await getStore(projectId).get(runId);
-        await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3 } });
+        await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3, t3Executed: true } });
         await appendTrace(projectId, runId, { type: "t3_completed", data: { result: t3 } });
         if (workspaceBefore) {
           const finalSnapshot = await createAgentWorkspaceSnapshot(workspacePath);
@@ -373,7 +377,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           fileChanges = await attributeFileChanges(projectId, runId, compareAgentWorkspaceSnapshots(workspaceBefore, finalSnapshot).filter((change) => runFiles.has(change.file)), runOverlapIds.get(runId) ?? new Set(), memberChangedFiles);
           await updateRun(projectId, runId, { fileChanges });
         }
-      } catch (error) { await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) }); }
+      } catch (error) {
+        const latest = await getStore(projectId).get(runId);
+        await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3Executed: false, t3Error: error instanceof Error ? error.message : String(error) } });
+        await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) });
+      }
     }
     return fileChanges;
     } catch (error) {
@@ -471,6 +479,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let stopRuntimeEvents: (() => Promise<void>) | undefined;
     let drainPermissions: (() => Promise<void>) | undefined;
     const continuationOutputs: string[] = [];
+    let phase: AgentRunPhase = "creating-session";
+    let lastSuccessfulSequence = 0;
+    let progress: ReturnType<typeof createAgentProgress> | undefined;
+    let progressTimer: ReturnType<typeof setTimeout> | undefined;
+    let progressWrites = Promise.resolve();
+    const saveProgress = () => {
+      if (!progress) return;
+      const activity = redactSensitive(progress.snapshot(), options.sensitiveValues) as AgentRun["activity"];
+      progressWrites = progressWrites.then(async () => { await updateRun(projectId, runId, { activity, overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }); }).catch((error) => recordInternalError(projectId, runId, "listener", error));
+    };
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
       workspacePathForRun = projectRuntime.project.workspacePath;
@@ -526,12 +544,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const revisionsBefore = projectRuntime.documents.getRevisions();
       revisionsBeforeForRun = revisionsBefore;
       const startedAt = new Date().toISOString();
+      progress = createAgentProgress(startedAt, options.activityConfig);
       const concurrentRunIds = [...(runConcurrentIds.get(runId) ?? [])];
       const beforeRunning = await store.get(runId);
       if (!beforeRunning || beforeRunning.status === "cancelled") return;
       const runStarted = await updateQueuedRun(projectId, runId, {
         status: "running",
         startedAt,
+        activity: progress.snapshot(),
+        overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])],
         model: options.runtime.getCurrentModel?.() ?? current.model
       });
       if (!runStarted) {
@@ -576,6 +597,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await getSessionStore(projectId).update(run.sessionId!, { lastRunId: run.id });
       }
       runtimeSessionIdForRun = runtimeSessionId;
+      phase = "first-request";
 
       appendActivity(projectId, {
         type: "agent_task_started",
@@ -640,8 +662,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       }, trace: async (type, data) => {
         await appendTrace(projectId, runId, { type, data });
         if (type === "permission_reply") {
+          progress?.resumed();
+          saveProgress();
           const latest = await getStore(projectId).get(runId);
-          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, ...(data.reply === "reject" ? { rejectedEdits: (latest?.conflictGuard?.rejectedEdits ?? 0) + 1, lastRejection: String(redactSensitive(data.message ?? "Edit rejected", options.sensitiveValues)) } : {}), approvalWaitMs: approval.waitMs(), warnings: guard?.agentGuard.warnings(runId) } });
+          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, ...(data.reply === "reject" ? { rejectedEdits: (latest?.conflictGuard?.rejectedEdits ?? 0) + 1, lastRejection: String(redactSensitive(data.message ?? "Edit rejected", options.sensitiveValues)), needsAttention: String(data.message ?? "").includes("停止修改该文件") } : {}), approvalWaitMs: approval.waitMs(), warnings: guard?.agentGuard.warnings(runId) } });
         }
       } });
       const active = activeRuns.get(runId);
@@ -676,6 +700,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionId: runtimeSessionId
         },
         async (event) => {
+          progress?.event(event, new Date().toISOString());
+          phase = progress?.snapshot().phase ?? phase;
+          if (progressTimer === undefined) progressTimer = setTimeout(() => { progressTimer = undefined; saveProgress(); }, 500);
           const part = event.data.part as { callID?: string; tool?: string; state?: { input?: Record<string, unknown> } } | undefined;
           const textPart = event.data.part as { id?: string; type?: string; text?: string } | undefined;
           if (textPart?.type === "text" && textPart.id && typeof textPart.text === "string") { assistantTexts.set(textPart.id, textPart.text); guard?.arbitration.board.plan(runId, textPart.text); }
@@ -688,10 +715,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           if (event.type === "permission.asked") {
             void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
           }
-          await appendTrace(projectId, runId, {
+          const recorded = await appendTrace(projectId, runId, {
             type: `opencode.${event.type}`,
             data: event.data
           });
+          if (recorded) lastSuccessfulSequence = recorded.sequence;
           if (event.type === "permission.asked") {
             return;
           }
@@ -709,6 +737,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             event.data
           );
           if (entries) {
+            const currentFiles = new Map((await store.get(runId))?.fileChanges?.map((change) => [change.file, change]) ?? []);
+            for (const entry of entries) currentFiles.set(entry.file, { file: entry.file, additions: 0, deletions: 0, attribution: "tool" });
+            await updateRun(projectId, runId, { fileChanges: [...currentFiles.values()] });
             for (const entry of entries) await appendTrace(projectId, runId, {
               type: "agent_write",
               summary: `${entry.file} written by Agent tool`,
@@ -819,11 +850,18 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await recordCancellationCompletion(projectId, runId);
         return;
       }
+      const failure = diagnoseAgentFailure(error, phase, lastSuccessfulSequence, options.sensitiveValues);
+      activeRuns.get(runId)?.cancelPermissions?.();
+      if (workspacePathForRun && runtimeSessionIdForRun) {
+        try { await options.runtime.cancel({ workspacePath: workspacePathForRun, sessionId: runtimeSessionIdForRun }); }
+        catch (cancelError) { await appendTrace(projectId, runId, { type: "runtime_cancel_error", summary: cancelError instanceof Error ? cancelError.message : String(cancelError) }); }
+      }
       if (workspacePathForRun && runtimeSessionIdForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
-      const message = error instanceof Error ? error.message : "Agent run failed";
+      const message = failure.message;
       const failed = await finishRunningRun(projectId, runId, {
         status: "failed",
         error: message,
+        failure,
         finishedAt: new Date().toISOString()
       });
       if (!failed) return;
@@ -855,7 +893,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       await appendTrace(projectId, runId, {
         type: "run_failed",
         summary: message,
-        data: { overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }
+        data: { ...failure, overlappingRunIds: [...(runOverlapIds.get(runId) ?? [])] }
       });
     } finally {
       if (guardRuns.delete(runId)) {
@@ -863,15 +901,22 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           const project = options.runtimeManager.get(projectId);
           const t3 = await project.conflictGuard?.agentGuard.finish(runId, [], (file, expected, text, owner, remove) => project.documents.applyGuardRevert(file, expected, text, owner, remove));
           const latest = await getStore(projectId).get(runId);
-          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3 } });
+          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3, t3Executed: true } });
           project.conflictGuard?.arbitration.finish(runId, t3 === "reverted" || t3 === "partially-reverted");
-        } catch (error) { await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) }); }
+        } catch (error) {
+          const latest = await getStore(projectId).get(runId);
+          await updateRun(projectId, runId, { conflictGuard: { rejectedEdits: 0, ...latest?.conflictGuard, t3Executed: false, t3Error: String(redactSensitive(error instanceof Error ? error.message : String(error), options.sensitiveValues)) } });
+          await appendTrace(projectId, runId, { type: "t3_error", summary: error instanceof Error ? error.message : String(error) });
+        }
       }
       activeRuns.get(runId)?.cancelPermissions?.();
       await drainPermissions?.();
       try { await stopRuntimeEvents?.(); }
       catch (error) { recordInternalError(projectId, runId, "listener", error); await appendTrace(projectId, runId, { type: "listener_error", data: { phase: "stop", error: error instanceof Error ? error.message : String(error) } }); }
       stopGuardEvents?.();
+      if (progressTimer !== undefined) clearTimeout(progressTimer);
+      saveProgress();
+      await progressWrites;
       const completedRun = await getStore(projectId).get(runId);
       options.runtimeManager.get(projectId).conflictGuard?.arbitration.finish(runId, completedRun?.conflictGuard?.t3 === "reverted" || completedRun?.conflictGuard?.t3 === "partially-reverted");
       activeRuns.delete(runId);
@@ -889,11 +934,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         console.error("Agent scheduler failed to select a run", error);
         return;
       }
-      const message = error instanceof Error ? error.message : String(error);
       const run = await getStore(projectId).get(runId);
       if (!run || run.status === "completed" || run.status === "failed" || run.status === "cancelled") return;
-      await updateRun(projectId, runId, { status: "failed", error: message, finishedAt: new Date().toISOString() });
-      await appendTrace(projectId, runId, { type: "run_failed", summary: message, data: { scheduler: true } });
+      const sequence = (await getTrace(projectId, runId).list()).at(-1)?.sequence ?? 0;
+      const failure = diagnoseAgentFailure(error, "creating-session", sequence, options.sensitiveValues);
+      await updateRun(projectId, runId, { status: "failed", error: failure.message, failure, finishedAt: new Date().toISOString() });
+      await appendTrace(projectId, runId, { type: "run_failed", summary: failure.message, data: { ...failure, scheduler: true } });
       console.error("Agent scheduler failed to start run", error);
     },
     onRunStart({ projectId, runId, overlappingRunIds }) {
@@ -920,15 +966,21 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           (run) => run.status === "queued" || run.status === "running"
         );
         for (const run of interrupted) {
-          const message = "Agent run was interrupted by a server restart";
+          const sequence = (await getTrace(project.id, run.id).list()).at(-1)?.sequence ?? 0;
+          const failure = diagnoseAgentFailure(new AgentRuntimeRequestError({
+            source: "server", errorType: "ServerRestart", retryable: true,
+            message: "服务端重启中断了任务。", guidance: "已经记录的文件修改继续保留，可以重新发起任务。"
+          }), run.activity?.phase ?? "creating-session", sequence, options.sensitiveValues);
           await updateRun(project.id, run.id, {
             status: "failed",
-            error: message,
+            error: failure.message,
+            failure,
             finishedAt: new Date().toISOString()
           });
           await appendTrace(project.id, run.id, {
             type: "run_failed",
-            summary: message
+            summary: failure.message,
+            data: { ...failure }
           });
           appendActivity(project.id, {
             type: "agent_task_failed",
@@ -938,7 +990,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
               runId: run.id,
               sessionId: run.sessionId,
               name: run.memberName,
-              error: message
+              error: failure.message
             }
           });
         }

@@ -73,6 +73,8 @@ export async function evaluateAgentChanges(options: {
   changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>;
   now(): number;
   signal: AbortSignal;
+  beforePair?(signal: AbortSignal): Promise<void>;
+  resultCache?: Map<string, { verdict: ZoneVerdict; pair: import("../routing/candidates.js").CandidatePair }>;
   adjudicate?(input: ZoneInput, local: ZoneVerdict, signal: AbortSignal): Promise<ZoneVerdict>;
   onEvent?(event: PairEvent & { symbols: Array<{ key: string; beforeHash: string; afterHash: string }> }): void;
   onError?(error: unknown): void;
@@ -97,21 +99,24 @@ export async function evaluateAgentChanges(options: {
     if (allowed) change.deletedSymbolKeys = change.deletedSymbolKeys?.filter((key) => allowed.has(key));
     own.files.set(proposal.file, change);
   }
-  const active = options.active.filter((set) => actorKey(set.actor) !== actorKey(options.actor)).map((set) => ({ ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })) }])) }));
+  const active = options.active.filter((set) => actorKey(set.actor) !== actorKey(options.actor)).map((set) => ({ ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, proposalText: change.proposalText ?? options.files.readFile(file), ranges: change.ranges.map((range) => ({ ...range })) }])) }));
   semantic.update([...active, own]);
   const records: PairRecord[] = [];
   const inputs: ZoneInput[] = [];
   for (const pair of semantic.getCandidatePairs().filter((pair) => [pair.left.actor, pair.right.actor].some((actor) => actorKey(actor) === actorKey(options.actor)))) {
+    await options.beforePair?.(options.signal);
+    if (options.signal.aborted) break;
     const side = (target: typeof pair.left) => ({ actor: target.actor, symbol: semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(target.actor))!.files.get(target.symbol.slice(0, target.symbol.indexOf("#")))!.symbols!.find((symbol) => symbol.key === target.symbol)! });
-    const input: ZoneInput = { left: side(pair.left), right: side(pair.right), path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: index, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines };
-    inputs.push(input);
+    const inputFor = (candidate: typeof pair): ZoneInput => ({ left: side(candidate.left), right: side(candidate.right), path: candidate.path, nested: candidate.distance === 0 && candidate.left.symbol !== candidate.right.symbol, typeOnly: Boolean(candidate.path?.typeOnly), project: index, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines, cluster: { left: (candidate.left.symbols ?? [candidate.left.symbol]).map((symbol) => side({ ...candidate.left, symbol }).symbol), right: (candidate.right.symbols ?? [candidate.right.symbol]).map((symbol) => side({ ...candidate.right, symbol }).symbol), paths: candidate.relations?.map((relation) => relation.path) ?? [candidate.path] } });
+    let input = inputFor(pair);
     const unavailable: ZoneVerdict = { zone: "grey", decision: "lock", ruleId: "agent-analysis-unavailable", summary: "冲突检查暂不可用，请停止修改此文件并向用户报告。", evidence: [], contractChanged: { left: false, right: false } };
     let finish!: () => void;
     const done = new Promise<void>((resolve) => { finish = resolve; });
-    const coordinator = createPairCoordinator({ now: options.now, classify: () => {
-      try { return classify(input); }
+    const coordinator = createPairCoordinator({ now: options.now, resultCache: options.resultCache, classify: (candidate) => {
+      try { return classify(inputFor(candidate)); }
       catch (error) { options.onError?.(error); return unavailable; }
-    }, ...(options.adjudicate ? { adjudicate(_pair, local, signal, complete) {
+    }, ...(options.adjudicate ? { adjudicate(selected, local, signal, complete) {
+      input = inputFor(selected);
       const combined = AbortSignal.any([signal, options.signal]);
       const abort = () => complete(unavailable);
       combined.addEventListener("abort", abort, { once: true });
@@ -127,7 +132,9 @@ export async function evaluateAgentChanges(options: {
     });
     coordinator.update([pair]);
     await done;
-    records.push(coordinator.get(pair.id)!);
+    const record = coordinator.get(pair.id)!;
+    inputs.push(inputFor(record.pair));
+    records.push(record);
     coordinator.dispose();
     if (options.signal.aborted) break;
   }

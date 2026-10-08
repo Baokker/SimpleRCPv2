@@ -5,6 +5,7 @@ import type { AgentRunManager } from "../agent/agentRunManager.js";
 import type { AgentSettingsStore } from "../agent/agentSettingsStore.js";
 import { can, requirePermission } from "../auth/permissions.js";
 import { requireIdentity } from "../auth/permissions.js";
+import { diagnoseAgentFailure } from "../agent/agentRunFailure.js";
 
 export function registerAgentRoutes(
   app: Express,
@@ -41,7 +42,8 @@ export function registerAgentRoutes(
     try {
       res.json(await agentRuntime.status());
     } catch (error) {
-      next(error);
+      const failure = diagnoseAgentFailure(error, "creating-session", 0);
+      res.status(503).json({ error: failure.guidance, failure });
     }
   });
 

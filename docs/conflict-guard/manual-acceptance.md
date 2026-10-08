@@ -54,6 +54,8 @@ CONFLICT_GUARD_THRESHOLD=0
 CONFLICT_GUARD_PROVIDER_MODE=live
 CONFLICT_GUARD_INVARIANTS=true
 CONFLICT_GUARD_BODY_ADJACENT_LINES=3
+CONFLICT_GUARD_JUDGEMENT_FRAME_MS=200
+CONFLICT_GUARD_MAX_JUDGEMENTS_PER_FRAME=20
 CONFLICT_GUARD_ARBITRATION=owner
 CONFLICT_GUARD_INTENT_INJECTION=on
 CONFLICT_GUARD_T2_STRATEGY=G1
@@ -70,6 +72,8 @@ TYPESAFE_BASE_URL=https://api.typesafe.ai
 SIMPLERCP_OPENCODE_PORT=4096
 SIMPLERCP_AGENT_RUN_TIMEOUT_MS=600000
 SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3
+SIMPLERCP_AGENT_WAITING_MS=20000
+SIMPLERCP_AGENT_STALLED_MS=60000
 ```
 
 其中 `SIMPLERCP_IMPORT_ROOTS` 必须写绝对路径。路径中包含空格时，直接在 `.env` 中填写完整路径即可。API Key 只放在根目录 `.env`，客户端页面和浏览器请求中不填写 API Key。
@@ -214,6 +218,14 @@ T3 是“任务结束检查”。Agent 可能连续工作几分钟，开始任�
 可以把两者理解为：T2 检查“这一次写入能否发生”，T3 检查“整个任务完成后是否仍然符合最新代码”。
 
 ### 7.2 Agent 验收
+
+个人与团队 Agent 都显示实时活动：工具名称、参数摘要、工具持续时间、任务总时长、已记录的文件数量和可获得的 token 用量。模型提供推理文字时，可以展开“推理过程”阅读；未提供文字时显示“该模型未提供推理过程”。
+
+持续 20 秒没有 part 增量时，显示等待模型响应的秒数；持续 60 秒时，显示执行较慢的提示与取消按钮。对应配置为 `SIMPLERCP_AGENT_WAITING_MS` 和 `SIMPLERCP_AGENT_STALLED_MS`，单位为毫秒。审批等待会单独显示，任务超时计算排除审批等待时间。
+
+任务失败时，面板显示失败阶段、请求位置、HTTP 状态或 errno、配置提示与 T3 执行情况。已归属的文件修改保留在文件列表中。可重试的网络错误提供“重试任务”；认证与模型配置错误需要修改配置后重新发起任务。
+
+人工查看并发任务时，检查“运行中任务”中的审批状态、拒绝次数、需要处理状态和同时执行的 run。与同一参与者连续发生三次拒绝时，Agent 收到停止修改并等待用户指示的消息，属主收到需要处理的通知。
 
 保持 `CONFLICT_GUARD=full`、`SIMPLERCP_FAKE_AGENT_RUNTIME=false`、`DEEPSEEK_MODEL=deepseek-flash`。
 

@@ -56,6 +56,30 @@ function replace(document: Y.Doc, before: string, after: string) { const text = 
 async function waitFor(check: () => boolean | Promise<boolean>, timeout = 9000) { const deadline = performance.now() + timeout; while (!await check()) { if (performance.now() > deadline) throw new Error("等待 Agent 检查超时"); await new Promise((resolve) => setTimeout(resolve, 25)); } }
 const edit = (file: string, from: string, to: string) => `${file}:${encodeURIComponent(from)}=>${encodeURIComponent(to)}`;
 
+it("deduplicates repeated T2 verdicts and requests owner attention on the third conflict with one participant", async () => {
+  const context = await setup();
+  const guard = context.runtime.conflictGuard!;
+  const before = await context.disk("src/cart.ts");
+  const pricing = await context.connect("src/pricing.ts");
+  replace(pricing, "rate: number)", "rate: number, currency: string)");
+  await waitFor(() => guard.state().activeSymbols.some((set) => set.actor.kind === "human"));
+  const runId = "repeated-signature-conflict";
+  guard.beginAgentRun({ kind: "agent", runId, ownerId: context.bob.member.id }, new Map([["src/cart.ts", before]]));
+  const events: Record<string, unknown>[] = [];
+  const remove = guard.agentGuard.onEvent((event) => events.push(event));
+  try {
+    const proposal = { file: "src/cart.ts", before, after: before.replace("applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)") };
+    const results = [];
+    for (let attempt = 0; attempt < 3; attempt += 1) results.push(await guard.agentGuard.judge(runId, [proposal], new AbortController().signal));
+    expect(results.map((result) => result.decision)).toEqual(["lock", "lock", "lock"]);
+    expect(results[0]!.message).toContain("Alice（人）");
+    expect(results[0]!.message).not.toContain("停止修改该文件");
+    expect(results[2]!.message).toContain("停止修改该文件，向用户说明冲突并等待指示");
+    expect(events.filter((event) => event.type === "pair_judged")).toHaveLength(1);
+    expect(guard.agentGuard.notices(context.bob.member.id).filter((notice) => notice.level === "action")).toHaveLength(1);
+  } finally { remove(); }
+}, 15000);
+
 it("accepts and rejects Agent edits through a symbolic workspace using production timings", async () => {
   const context = await setup("rules", undefined, true);
   const workspace = context.workspacePath;

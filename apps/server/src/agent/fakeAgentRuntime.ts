@@ -56,7 +56,7 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
   };
 }
 
-export function createFakeAgentRuntime(options: { editPermission?: "allow" | "ask" } = {}): AgentRuntime {
+export function createFakeAgentRuntime(options: { editPermission?: "allow" | "ask"; activityConfig?: { waitingMs: number; stalledMs: number } } = {}): AgentRuntime {
   const abortControllers = new Map<string, AbortController>();
   const listeners = new Map<string, Set<(event: { type: string; data: Record<string, unknown> }) => void | Promise<void>>>();
   const writtenFiles = new Map<string, Set<string>>();
@@ -73,7 +73,8 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
         state: "ready",
         version: "fake",
         model: "fake-agent",
-        apiKeyConfigured: true
+        apiKeyConfigured: true,
+        activityConfig: options.activityConfig
       };
     },
     async createSession() {
@@ -103,6 +104,11 @@ export function createFakeAgentRuntime(options: { editPermission?: "allow" | "as
         }
       };
       await emit("fake.started", { prompt: input.prompt });
+      const reasoning = [...input.prompt.matchAll(/fake-reasoning=([^\n]+)/g)].at(-1)?.[1];
+      if (reasoning) {
+        await emit("message.part.updated", { part: { id: "reasoning-part", sessionID: input.sessionId, type: "reasoning", text: "" } });
+        for (const delta of reasoning.split("|")) await emit("message.part.delta", { sessionID: input.sessionId, partID: "reasoning-part", field: "text", delta: `${delta}\n` });
+      }
       const editSessionId = /fake-child=true/.test(input.prompt) ? `${input.sessionId}-child` : input.sessionId;
       if (editSessionId !== input.sessionId) await emit("session.created", { info: { id: editSessionId, parentID: input.sessionId } });
       const bashEdit = [...input.prompt.matchAll(/fake-bash-edit=([^\s]+)/g)].at(-1)?.[1];

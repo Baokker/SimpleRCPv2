@@ -7,8 +7,9 @@ import { parseSymbols } from "../semantic/symbols.js";
 
 export interface CandidatePair {
   id: string;
-  left: { actor: ActorRef; symbol: string; status: SymbolChange["status"] };
-  right: { actor: ActorRef; symbol: string; status: SymbolChange["status"] };
+  left: { actor: ActorRef; symbol: string; symbols?: string[]; status: SymbolChange["status"] };
+  right: { actor: ActorRef; symbol: string; symbols?: string[]; status: SymbolChange["status"] };
+  relations?: Array<{ left: string; right: string; path: RelationPath | null }>;
   distance: 0 | 1 | 2;
   path: RelationPath | null;
   firstSeenAt: number;
@@ -29,6 +30,7 @@ export class SemanticChangeTracker {
   private readonly fingerprints = new Map<string, string>();
   private readonly units = new Map<string, { actor: string; file: string; generation: string; symbols: string[] }>();
   private readonly relatedUnits = new Set<string>();
+  private readonly relatedSymbols = new Map<string, Set<string>>();
   private readonly listeners = new Set<(event: SemanticChangeEvent) => void>();
   private readonly staleEdges = new Map<string, RelationEdge>();
 
@@ -72,7 +74,10 @@ export class SemanticChangeTracker {
       const leftSet = active[leftIndex]!;
       const leftSymbols = symbolsByKey(leftSet);
       const rightSymbols = symbolsByKey(rightSet);
-      const paths = this.findPaths([...leftSymbols.keys()], [...rightSymbols.keys()], 2);
+      const leftClusters = this.clusters(leftSet, leftSymbols);
+      const rightClusters = this.clusters(rightSet, rightSymbols);
+      const modifiedTypes = new Set([...leftSymbols.values(), ...rightSymbols.values()].filter((symbol) => ["interface", "type", "enum"].includes(symbol.kind)).map((symbol) => symbol.key));
+      const paths = this.findPaths([...leftSymbols.keys()], [...rightSymbols.keys()], 2).filter((path) => !path.typeOnly || [path.from, path.to, ...path.hops.flatMap((hop) => [hop.from, hop.to])].some((key) => modifiedTypes.has(key)));
       for (const leftSymbol of leftSymbols.values()) for (const rightSymbol of rightSymbols.values()) {
         if (leftSymbol.key === rightSymbol.key || isNestedPair(leftSymbol.key, rightSymbol.key)) paths.push({ from: leftSymbol.key, to: rightSymbol.key, hops: [], typeOnly: true });
       }
@@ -82,20 +87,43 @@ export class SemanticChangeTracker {
         const previous = shortest.get(key);
         if (!previous || path.hops.length < previous.hops.length) shortest.set(key, path);
       }
+      const grouped = new Map<string, RelationPath[]>();
       for (const path of shortest.values()) {
+        const clusterKey = JSON.stringify([leftClusters.get(path.from), rightClusters.get(path.to)]);
+        const group = grouped.get(clusterKey) ?? [];
+        group.push(path);
+        grouped.set(clusterKey, group);
+      }
+      for (const group of grouped.values()) {
+        group.sort((a, b) => a.hops.length - b.hops.length || a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
+        const path = group[0]!;
         const leftSymbol = leftSymbols.get(path.from)!;
         const rightSymbol = rightSymbols.get(path.to)!;
-        const id = hash(JSON.stringify([actorKey(leftSet.actor), path.from, actorKey(rightSet.actor), path.to]));
+        const leftKeys = leftClusters.get(path.from)!;
+        const rightKeys = rightClusters.get(path.to)!;
+        const id = hash(JSON.stringify([actorKey(leftSet.actor), leftKeys.length === 1 ? leftKeys[0] : leftKeys, actorKey(rightSet.actor), rightKeys.length === 1 ? rightKeys[0] : rightKeys]));
         const previous = this.pairs.get(id);
-        const fingerprint = hash(JSON.stringify([
+        const fingerprint = hash(JSON.stringify(leftKeys.length === 1 && rightKeys.length === 1 ? [
           { key: leftSymbol.key, before: hash(leftSymbol.before), after: hash(leftSymbol.after) },
           { key: rightSymbol.key, before: hash(rightSymbol.before), after: hash(rightSymbol.after) },
           path
+        ] : [
+          leftKeys.map((key) => ({ key, before: hash(leftSymbols.get(key)!.before), after: hash(leftSymbols.get(key)!.after) })),
+          rightKeys.map((key) => ({ key, before: hash(rightSymbols.get(key)!.before), after: hash(rightSymbols.get(key)!.after) })),
+          group
         ]));
         const changed = this.fingerprints.get(id) !== fingerprint;
         const at = this.options.now();
-        const pair: CandidatePair = { id, left: { actor: leftSet.actor, symbol: path.from, status: leftSymbol.status }, right: { actor: rightSet.actor, symbol: path.to, status: rightSymbol.status }, distance: path.hops.length as 0 | 1 | 2, path: path.hops.length === 0 ? null : path, firstSeenAt: previous?.firstSeenAt ?? at, updatedAt: changed ? at : previous!.updatedAt, revisionKey: fingerprint };
+        const pair: CandidatePair = { id, left: { actor: leftSet.actor, symbol: path.from, symbols: leftKeys, status: leftSymbol.status }, right: { actor: rightSet.actor, symbol: path.to, symbols: rightKeys, status: rightSymbol.status }, relations: group.map((relation) => ({ left: relation.from, right: relation.to, path: relation.hops.length ? relation : null })), distance: path.hops.length as 0 | 1 | 2, path: path.hops.length === 0 ? null : path, firstSeenAt: previous?.firstSeenAt ?? at, updatedAt: changed ? at : previous!.updatedAt, revisionKey: fingerprint };
         nextPairs.set(id, pair);
+        for (const [set, keys] of [[leftSet, leftKeys], [rightSet, rightKeys]] as const) for (const key of keys) {
+          const file = key.slice(0, key.indexOf("#"));
+          const change = set.files.get(file)!;
+          const identity = JSON.stringify([actorKey(set.actor), generation(change)]);
+          const related = this.relatedSymbols.get(identity) ?? new Set<string>();
+          related.add(key);
+          this.relatedSymbols.set(identity, related);
+        }
         this.fingerprints.set(id, fingerprint);
         if (!previous || changed) this.emit({ type: previous ? "pair_candidate_updated" : "pair_candidate_opened", pair });
       }
@@ -105,13 +133,31 @@ export class SemanticChangeTracker {
       this.emit({ type: "pair_candidate_closed", pair: { ...pair, updatedAt: this.options.now() } });
     }
     this.pairs = nextPairs;
-    const activeByActor = new Map(active.map((set) => [actorKey(set.actor), set]));
     for (const [id, unit] of this.units) {
-      const change = activeByActor.get(unit.actor)?.files.get(unit.file);
-      if (!change || generation(change) !== unit.generation) continue;
-      if ([...this.pairs.values()].some((pair) => [pair.left, pair.right].some((side) => actorKey(side.actor) === unit.actor && unit.symbols.includes(side.symbol)))) this.relatedUnits.add(id);
+      const related = this.relatedSymbols.get(JSON.stringify([unit.actor, unit.generation]));
+      if (unit.symbols.some((key) => related?.has(key))) this.relatedUnits.add(id);
     }
     return this.getActiveChangeSets();
+  }
+
+  private clusters(set: ActiveChangeSet, symbols: Map<string, SymbolChange>) {
+    const parents = new Map([...symbols.keys()].map((key) => [key, key]));
+    const root = (key: string): string => { const parent = parents.get(key)!; return parent === key ? key : root(parent); };
+    for (const change of set.files.values()) {
+      const known = [...this.units.values()].filter((unit) => unit.actor === actorKey(set.actor) && unit.file === change.file && unit.generation === generation(change));
+      const batches = known.length ? known.map((unit) => unit.symbols) : [(change.symbols ?? []).map((symbol) => symbol.key)];
+      for (const batch of batches) {
+        const keys = [...new Set(batch.filter((key) => symbols.has(key)))].sort();
+        for (let position = 0; position < keys.length; position += 1) for (const other of keys.slice(position + 1)) {
+          const key = keys[position]!;
+          if (!isNestedPair(key, other) && !this.options.index.findPaths([key], [other], 1).length) continue;
+          parents.set(root(other), root(key));
+        }
+      }
+    }
+    const groups = new Map<string, string[]>();
+    for (const key of symbols.keys()) { const id = root(key); const group = groups.get(id) ?? []; group.push(key); groups.set(id, group); }
+    return new Map([...symbols.keys()].map((key) => [key, groups.get(root(key))!.sort()]));
   }
 
   captureStaleEdges(changeSets = this.changeSets) {
@@ -131,7 +177,7 @@ export class SemanticChangeTracker {
     const incoming = (key: string) => [...this.options.index.incoming(key), ...[...this.staleEdges.values()].filter((edge) => edge.to === key)];
     for (const from of [...new Set(fromKeys)]) {
       const queue: RelationPath[] = [{ from, to: from, hops: [], typeOnly: true }];
-      const visited = new Set([from]);
+      const visited = new Set([`${from}:true`]);
       for (let cursor = 0; cursor < queue.length; cursor += 1) {
         const path = queue[cursor]!;
         if (targets.has(path.to) && path.hops.length > 0) paths.push(path);
@@ -140,22 +186,31 @@ export class SemanticChangeTracker {
           ...outgoing(path.to).filter((edge) => edge.kind !== "contains").map((edge) => ({ from: path.to, to: edge.to, kind: edge.kind, direction: "forward" as const })),
           ...incoming(path.to).filter((edge) => edge.kind !== "contains").map((edge) => ({ from: path.to, to: edge.from, kind: edge.kind, direction: "backward" as const }))
         ];
-        for (const hop of neighbors) if (!visited.has(hop.to)) {
-          visited.add(hop.to);
-          queue.push({ from, to: hop.to, hops: [...path.hops, hop], typeOnly: path.typeOnly && hop.kind === "type-reference" });
+        for (const hop of neighbors) {
+          const typeOnly = path.typeOnly && hop.kind === "type-reference";
+          const visitKey = `${hop.to}:${typeOnly}`;
+          if (visited.has(visitKey)) continue;
+          visited.add(visitKey);
+          queue.push({ from, to: hop.to, hops: [...path.hops, hop], typeOnly });
         }
       }
     }
-    return paths;
+    const changedTypes = new Set(this.changeSets.flatMap((set) => [...set.files.values()].flatMap((change) => (change.symbols ?? []).filter((symbol) => ["interface", "type", "enum"].includes(symbol.kind)).map((symbol) => symbol.key))));
+    return paths.filter((path) => !path.typeOnly || [path.from, path.to, ...path.hops.flatMap((hop) => [hop.from, hop.to])].some((key) => changedTypes.has(key)));
   }
 
   getActiveChangeSets() { return this.changeSets; }
   getCandidatePairs() { return [...this.pairs.values()].sort((a, b) => b.updatedAt - a.updatedAt || a.id.localeCompare(b.id)); }
-  statistics(): ChangeUnitStatistics {
-    const total = this.units.size;
-    const related = this.relatedUnits.size;
+  statistics(actor?: ActorRef | string): ChangeUnitStatistics {
+    const key = typeof actor === "string" ? actor : actor ? actorKey(actor) : undefined;
+    const units = [...this.units].filter(([, unit]) => !key || unit.actor === key);
+    const total = units.length;
+    const related = units.filter(([id]) => this.relatedUnits.has(id)).length;
     const typeOnly = [...this.pairs.values()].filter((pair) => pair.path?.typeOnly === true).length;
     return { total, related, unrelated: total - related, unrelatedRatio: total === 0 ? 0 : (total - related) / total, typeOnly };
+  }
+  statisticsByActor() {
+    return Object.fromEntries([...new Set([...this.units.values()].map((unit) => unit.actor))].sort().map((key) => [key, this.statistics(key)]));
   }
   onEvent(listener: (event: SemanticChangeEvent) => void) { this.listeners.add(listener); return () => this.listeners.delete(listener); }
   private emit(event: SemanticChangeEvent) { for (const listener of this.listeners) listener(event); }

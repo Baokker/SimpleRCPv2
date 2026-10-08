@@ -116,3 +116,20 @@ D2 包含 GreyLock 的 51 个规则案例与六个交付场景的 schema 3 轨�
 `bench:validate-d3` 验证种子原有测试全部通过，并确认十三个任务对的原始项目均需要新增功能才能满足验收。`bench:agents --dataset d3 --injection on|off --repeat 3` 使用真实 OpenCode 与 DeepSeek，在独立项目中同时启动两个 Agent，记录审批、意图、仲裁、通知及最终验收结果。批量运行的自动属主动作默认双方采纳可用建议；建议不可用时后到者让路，配置 card-action=yield 可以固定选择让路。
 
 阶段七真实冒烟使用 d3-01、d3-02、d3-03，注入开启和关闭各一轮。当前记录用于验证命令与流程，样本数量不足以判断注入效果。保留集没有执行，CooperBench 数据引入和正式重复留至阶段八。
+
+## 真实并发轨迹的候选计数
+
+在仓库根目录执行以下命令，无需模型密钥，也不请求模型：
+
+```bash
+pnpm --filter @simplercp/conflict-guard replay:counts \
+  --trace ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz \
+  --run ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/run.json.gz \
+  --out ../../docs/conflict-guard/evidence/round2-dual-agent/original-replay
+```
+
+`candidate-counts.json` 同时报告原 run、项目内涉及该 run 的事件、重建的 T1/T2/T3 判定和有效变更单元。原 run 记录 573 次候选新增及判定，当前本地规则重放为 4 次 T2 判定；整个重建会话为 13 次判定。项目原记录包含额外 T1 事件，涉及目标 run 的计数为 592。
+
+匹配原记录的 19 个有效单元时，形成变更对的单元由 18 个变为 16 个，无关系单元由 1 个变为 3 个。新增的两个无关系单元原本全部通过共享类型连接，`unitComparison.newlyUnrelated[*].valueRelated=false` 给出检查依据。候选关系在批次结束前关闭时，同一活跃周期的关联记录继续用于统计；新的活跃周期独立计算。重建另外识别了任务开始前的 `src/pricing.ts#PriceRule.apply` 批次，所以当前全会话分母为 20；同源比较使用匹配的 19 个单元。
+
+候选聚合保持有效单元的计数，减少符号组合数量。原始轨迹的模型输入与当前符号簇不同，本命令的 `simulation=local-rules` 用于检查候选数量和关系统计。模型质量与延迟须使用相应配置和录放缓存评价。
