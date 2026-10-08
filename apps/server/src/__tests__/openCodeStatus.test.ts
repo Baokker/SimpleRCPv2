@@ -27,7 +27,7 @@ describe("OpenCode status", () => {
       demoProjectRoot: path.join(root, "demo", "workspace"),
       agent: {
         baseUrl: "https://api.deepseek.com/v1",
-        model: "deepseek-chat",
+        model: "deepseek-flash",
         openCodePort
       }
     });
@@ -48,7 +48,7 @@ describe("OpenCode status", () => {
         runtime: "opencode",
         state: "ready",
         version: "1.18.31",
-        model: "deepseek-chat",
+        model: "deepseek-flash",
         apiKeyConfigured: false
       });
     } finally {

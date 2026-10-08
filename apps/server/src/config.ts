@@ -53,7 +53,7 @@ export function loadConfig(
   if (!["http:", "https:"].includes(agentBaseUrl.protocol)) {
     throw new Error("DEEPSEEK_BASE_URL must use http or https");
   }
-  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
+  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
     throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");

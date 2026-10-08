@@ -36,7 +36,7 @@ export async function createApp(config: ServerConfig) {
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
-    defaultModel: config.agent?.model ?? "deepseek-chat",
+    defaultModel: config.agent?.model ?? "deepseek-flash",
     apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
   });
   const openCodeRuntime = createOpenCodeRuntime({

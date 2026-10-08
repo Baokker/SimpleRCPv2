@@ -27,7 +27,7 @@ describe("agent settings API", () => {
       expect(response.status).toBe(200);
       expect(body).toEqual({
         provider: "deepseek",
-        model: "deepseek-chat",
+        model: "deepseek-flash",
         enabled: true,
         apiKeyConfigured: false
       });

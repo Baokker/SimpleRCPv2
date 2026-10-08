@@ -28,7 +28,7 @@ describe("server config", () => {
       agent: {
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
-        model: "deepseek-chat",
+        model: "deepseek-flash",
         openCodePort: 4096,
         runTimeoutMs: 600_000,
         maxConcurrentRuns: 3

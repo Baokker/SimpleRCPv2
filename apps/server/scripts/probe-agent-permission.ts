@@ -14,7 +14,7 @@ const evidence = path.join(repository, "docs/conflict-guard/evidence/stage-6-smo
 await fs.mkdir(workspace, { recursive: true });
 await fs.mkdir(evidence, { recursive: true });
 await fs.writeFile(path.join(workspace, "probe.ts"), "export const probeValue = 1;\n");
-const model = process.env.DEEPSEEK_MODEL ?? "deepseek-chat";
+const model = process.env.DEEPSEEK_MODEL ?? "deepseek-flash";
 const runtime = createOpenCodeProcess({ port: 4196, apiKey: process.env.DEEPSEEK_API_KEY, baseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1", model });
 const controller = new AbortController();
 const events: unknown[] = [];

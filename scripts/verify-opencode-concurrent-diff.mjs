@@ -11,7 +11,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 require("../apps/server/node_modules/dotenv/lib/main.js").config({ path: path.join(repositoryRoot, ".env") });
 const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
 const baseUrl = process.env.DEEPSEEK_BASE_URL?.trim() || "https://api.deepseek.com/v1";
-const model = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
+const model = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
 if (!apiKey) throw new Error("DEEPSEEK_API_KEY is required");
 
 const workspacePath = path.join(repositoryRoot, ".scratch/verify-opencode-concurrent-diff");

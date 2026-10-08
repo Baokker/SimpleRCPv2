@@ -201,7 +201,7 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `VITE_SIMPLERCP_API_ORIGIN`：开发客户端代理连接的服务端地址，默认值为 `http://127.0.0.1:4000`。
 - `DEEPSEEK_API_KEY`：DeepSeek API Key，Agent 任务需要该变量。
 - `DEEPSEEK_BASE_URL`：OpenAI-compatible API 地址，默认值为 `https://api.deepseek.com/v1`。
-- `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-chat`。
+- `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-flash`。
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 
