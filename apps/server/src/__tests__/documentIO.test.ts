@@ -63,6 +63,14 @@ describe("knowledge document IO", () => {
     await expect(resolveKnowledgeDocument(workspace, "../outside.md")).rejects.toThrow("escapes");
     await expect(resolveKnowledgeDocument(workspace, "AGENTS.knowledge.md", true)).resolves.toBe(path.join(workspace, "AGENTS.knowledge.md"));
   });
+  it("preserves summaries that begin with the scope label", () => {
+    const [card] = createDemoKnowledgeCards({ workspaceRelativePath: "README.md", selectedText: "Use sharedHelper", now: 1 });
+    for (const content of ["保留 sharedHelper。", ""]) {
+      const source = { ...card!, scope: "team" as const, summary: "适用范围：价格计算", content, appliesTo: { kind: "glob" as const, patterns: ["src/**"] } };
+      const [imported] = deterministicImport(exportAgentsMarkdown([source]), "AGENTS.md");
+      expect(imported).toMatchObject({ title: source.title, summary: source.summary, content, files: ["src/**"] });
+    }
+  });
   it("exports explicit project scope independently of source evidence anchors", () => {
     const [card] = createDemoKnowledgeCards({ workspaceRelativePath: "README.md", selectedText: "Use sharedHelper", now: 1 });
     const markdown = exportAgentsMarkdown([{ ...card!, scope: "team", appliesTo: { kind: "project" } }]);

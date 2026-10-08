@@ -529,8 +529,12 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     }
     if (card.scope !== "personal" && card.scope !== "team" && card.scope !== "proposedTeam") throw new Error("Card scope must be personal, proposedTeam or team");
     if (patch.anchors !== undefined) {
-      card.anchors = [];
+      const retained = patch.retainAnchorIds;
+      if (retained !== undefined && (!Array.isArray(retained) || retained.some(id => typeof id !== "string" || !cardBeforeUpdate.anchors.some(anchor => anchor.anchorId === id)))) throw new Error("Retained anchor ids must belong to this card");
+      card.anchors = cardBeforeUpdate.anchors.filter(anchor => Array.isArray(retained) && retained.includes(anchor.anchorId));
       for (const input of anchorInputs(patch.anchors)) card.anchors.push(await anchorFromInput(input));
+    } else if (patch.retainAnchorIds !== undefined) {
+      throw new Error("Retained anchor ids require an anchors update");
     }
     if (patch.appliesTo !== undefined) card.appliesTo = normalizeAppliesTo(patch.appliesTo);
     if (patch.check !== undefined) card.check = normalizeCheck(patch.check, card.type);

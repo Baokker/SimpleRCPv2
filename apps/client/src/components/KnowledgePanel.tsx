@@ -16,9 +16,11 @@ import type {
 type View = "current" | "all" | "guide" | "timeline" | "inbox";
 type Selection = { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
 type CardInput = import("../types").KnowledgeCardInput;
+type SuggestionAction = "accept" | "ai-draft" | "discard" | "merge";
 
 export function KnowledgePanel({
   projectId, members, refreshVersion, focusCardId, onRefresh,
+  isActive,
   inboxRequestVersion,
   cards,
   guide,
@@ -38,6 +40,7 @@ export function KnowledgePanel({
   onClearPinSelection
 }: {
   projectId: string; members: import("../types").RoomMember[]; refreshVersion: number; onRefresh(): Promise<void>;
+  isActive: boolean;
   focusCardId?: string;
   inboxRequestVersion?: number;
   cards: KnowledgeCard[];
@@ -65,7 +68,7 @@ export function KnowledgePanel({
   const [actionCardId, setActionCardId] = useState<string>();
   const [actionName, setActionName] = useState("");
   const [slowAction, setSlowAction] = useState(false);
-  const [suggestionErrors, setSuggestionErrors] = useState<Record<string, string>>({});
+  const [suggestionErrors, setSuggestionErrors] = useState<Record<string, { message: string; action: SuggestionAction; targetCardId?: string }>>({});
   const [editorNotice, setEditorNotice] = useState("");
   const [formError, setFormError] = useState<string>();
   const [title, setTitle] = useState("");
@@ -80,6 +83,7 @@ export function KnowledgePanel({
   const [allSuggestions, setAllSuggestions] = useState(false);
   const [draftEvidence, setDraftEvidence] = useState<import("../types").KnowledgeSuggestion>();
   const [selectedAnchors, setSelectedAnchors] = useState<number[]>([]);
+  const anchorSelectionChangedRef = useRef(false);
   const [authorMemberId, setAuthorMemberId] = useState("");
   const [mergeCardId, setMergeCardId] = useState("");
   const [disputeReason, setDisputeReason] = useState<Record<string, string>>({});
@@ -115,16 +119,17 @@ export function KnowledgePanel({
 
   useEffect(() => { setDeferredTeam(JSON.parse(sessionStorage.getItem(deferredKey) ?? "[]") as string[]); }, [deferredKey]);
   useEffect(() => { if (inboxRequestVersion) setView("inbox"); }, [inboxRequestVersion]);
+  useEffect(() => { setTimelineCard(""); }, [activePath]);
 
   useLayoutEffect(() => {
-    if (!formOpen) return;
+    if (!formOpen || !isActive) return;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
     backgroundRef.current?.setAttribute("inert", "");
     editorBodyRef.current?.scrollTo(0, 0);
     titleRef.current?.focus({ preventScroll: true });
     titleRef.current?.scrollIntoView({ block: "nearest" });
     return () => { backgroundRef.current?.removeAttribute("inert"); previousFocus?.focus({ preventScroll: true }); };
-  }, [formOpen, editingCard?.id, pinSelection]);
+  }, [formOpen, editingCard?.id, pinSelection, isActive]);
 
   useEffect(() => {
     setSlowAction(false);
@@ -180,26 +185,32 @@ export function KnowledgePanel({
   }, [projectId, allSuggestions, refreshVersion, cards]);
 
   useEffect(() => {
-    if (view !== "inbox" || !memberId) return;
+    if (!isActive || formOpen || view !== "inbox" || !memberId) return;
     markPendingKnowledgeSeen(projectId, memberId, pendingTeam);
-  }, [projectId, view, memberId, pendingTeam]);
+  }, [projectId, view, memberId, pendingTeam, isActive, formOpen]);
   useEffect(() => {
-    if (view !== "inbox" || !memberId) return;
+    if (!isActive || formOpen || view !== "inbox" || !memberId) return;
     const ids = suggestions.filter(item => !item.seenBy?.includes(memberId)).map(item => item.id).slice(0, 100);
     if (!ids.length) return;
     void markKnowledgeSuggestionsRead(projectId, ids).catch(error => setFormError(String(error)));
-  }, [projectId, view, memberId, suggestions]);
+  }, [projectId, view, memberId, suggestions, isActive, formOpen]);
   useEffect(() => {
-    if (view !== "inbox") return;
+    if (!isActive || formOpen || view !== "inbox") return;
     const ids = warnings.filter(item => !item.seen).map(item => item.id).slice(0, 100);
     if (ids.length) void markKnowledgeWarningsRead(projectId, ids).catch(error => setFormError(String(error)));
-  }, [projectId, view, warnings]);
+  }, [projectId, view, warnings, isActive, formOpen]);
 
   useEffect(() => {
     const suggestionId = editingCard?.provenance?.trigger?.suggestionId;
     if (!suggestionId) return;
     let active = true;
-    void getKnowledgeSuggestion(projectId, suggestionId).then(result => { if (active) setDraftEvidence(result.suggestion); }).catch(error => { if (active) setFormError(String(error)); });
+    void getKnowledgeSuggestion(projectId, suggestionId).then(result => {
+      if (!active) return;
+      setDraftEvidence(result.suggestion);
+      if (!anchorSelectionChangedRef.current) {
+        setSelectedAnchors((result.suggestion.suggestedAnchors ?? []).flatMap((suggestion, index) => editingCard.anchors.some(anchor => matchesSuggestedAnchor(anchor, suggestion)) ? [index] : []));
+      }
+    }).catch(error => { if (active) setFormError(String(error)); });
     return () => { active = false; };
   }, [projectId, editingCard?.id]);
 
@@ -209,15 +220,12 @@ export function KnowledgePanel({
     return () => window.removeEventListener("knowledge-open-card", open);
   }, []);
   useEffect(() => { if (focusCardId) revealCard(focusCardId); }, [focusCardId]);
-  useEffect(() => {
-    if (expanded && cards.some(card => card.id === expanded)) void markKnowledgeCardViewed(projectId, expanded).catch(error => setFormError(String(error)));
-  }, [projectId, expanded, cards.some(card => card.id === expanded)]);
   useLayoutEffect(() => {
-    if (!expanded || view !== "all" || revealedCardRef.current === expanded) return;
+    if (!isActive || !expanded || view !== "all" || revealedCardRef.current === expanded) return;
     const entry = [...(viewContentRef.current?.querySelectorAll<HTMLElement>("[data-card-id]") ?? [])].find(element => element.dataset.cardId === expanded);
     entry?.scrollIntoView({ block: "nearest" });
     if (entry) revealedCardRef.current = expanded;
-  }, [expanded, view, cards]);
+  }, [expanded, view, cards, isActive]);
 
   function revealCard(id: string) {
     revealedCardRef.current = undefined;
@@ -243,12 +251,17 @@ export function KnowledgePanel({
   const visibleCards = view === "current" ? currentCards : view === "all" ? filteredCards : [];
   const history = distinctTimeline(timeline).filter(item => !timelineCard || item.card.id === timelineCard);
   const historyDays = [...new Set(history.map(item => new Date(item.at).toLocaleDateString("zh-CN")))];
+  const expandedIsVisible = view === "guide" ? guide.some(item => item.card.id === expanded) : visibleCards.some(card => card.id === expanded);
+  useEffect(() => {
+    if (isActive && !formOpen && expanded && expandedIsVisible) void markKnowledgeCardViewed(projectId, expanded).catch(error => setFormError(String(error)));
+  }, [projectId, expanded, expandedIsVisible, isActive, formOpen]);
 
   function openCreate() {
     setEditorNotice("");
     setEditingCard(undefined);
     setDraftEvidence(undefined);
     setSelectedAnchors([]);
+    anchorSelectionChangedRef.current = false;
     setTitle("");
     setSummary("");
     setContent("");
@@ -264,6 +277,7 @@ export function KnowledgePanel({
     setEditingCard(card);
     setDraftEvidence(undefined);
     setSelectedAnchors([]);
+    anchorSelectionChangedRef.current = false;
     setTitle(card.title);
     setSummary(card.summary);
     setContent(card.content);
@@ -299,12 +313,19 @@ export function KnowledgePanel({
     if (editingCard?.status === "draft") {
       input.authorMemberId = authorMemberId;
       input.authorName = members.find(member => member.id === authorMemberId)?.displayName ?? authorMemberId;
-      if (draftEvidence) input.anchors = selectedAnchors.map(index => draftEvidence.suggestedAnchors![index]!);
+      if (draftEvidence && anchorSelectionChangedRef.current) {
+        const candidates = draftEvidence.suggestedAnchors ?? [];
+        input.retainAnchorIds = editingCard.anchors.filter(anchor => {
+          const index = candidates.findIndex(candidate => matchesSuggestedAnchor(anchor, candidate));
+          return index < 0 || selectedAnchors.includes(index);
+        }).map(anchor => anchor.anchorId);
+        input.anchors = selectedAnchors.map(index => candidates[index]!).filter(candidate => !editingCard.anchors.some(anchor => matchesSuggestedAnchor(anchor, candidate)));
+      }
     }
     try {
       if (editingCard) {
         if (editingCard.status === "draft") {
-          const edited = input.title !== editingCard.title || input.summary !== editingCard.summary || input.content !== editingCard.content || input.type !== editingCard.type || input.scope !== editingCard.scope || input.tags.join(",") !== editingCard.tags.join(",") || selectedAnchors.length > 0 || input.authorMemberId !== editingCard.provenance?.author.memberId;
+          const edited = input.title !== editingCard.title || input.summary !== editingCard.summary || input.content !== editingCard.content || input.type !== editingCard.type || input.scope !== editingCard.scope || input.tags.join(",") !== editingCard.tags.join(",") || anchorSelectionChangedRef.current || input.authorMemberId !== editingCard.provenance?.author.memberId;
           await onConfirm(editingCard.id, edited, Date.now() - openedAt.current, input);
         } else await onUpdate(editingCard.id, input);
       }
@@ -321,16 +342,16 @@ export function KnowledgePanel({
     openEdit(card);
   }
 
-  async function resolveSuggestion(suggestion: import("../types").KnowledgeSuggestion, action: "accept" | "ai-draft" | "discard" | "merge") {
+  async function resolveSuggestion(suggestion: import("../types").KnowledgeSuggestion, action: SuggestionAction, targetCardId = mergeCardId || suggestion.dedupe?.cardId) {
     if (actionCardId) return;
     setActionCardId(suggestion.id); setActionName(action); setFormError(undefined);
     setSuggestionErrors(errors => { const next = { ...errors }; delete next[suggestion.id]; return next; });
     try {
-      const result = await resolveKnowledgeSuggestion(projectId, suggestion.id, action, mergeCardId || suggestion.dedupe?.cardId);
+      const result = await resolveKnowledgeSuggestion(projectId, suggestion.id, action, targetCardId);
       setSuggestions(items => items.filter(item => item.id !== suggestion.id));
       await onRefresh();
       if (result.card && action !== "merge") { openEdit(result.card); setEditorNotice("草案已生成，请核对后确认"); setDraftEvidence(result.suggestion ?? suggestion); setSelectedAnchors(suggestion.origin === "preset" ? (suggestion.suggestedAnchors ?? []).map((_, index) => index) : []); }
-    } catch (error) { setSuggestionErrors(errors => ({ ...errors, [suggestion.id]: error instanceof Error ? error.message : String(error) })); }
+    } catch (error) { setSuggestionErrors(errors => ({ ...errors, [suggestion.id]: { message: error instanceof Error ? error.message : String(error), action, targetCardId } })); }
     finally { setActionCardId(undefined); setActionName(""); }
   }
 
@@ -419,6 +440,8 @@ export function KnowledgePanel({
       onDeferTeam={() => { const ids = [...new Set([...deferredTeam, card.id])]; setDeferredTeam(ids); sessionStorage.setItem(deferredKey, JSON.stringify(ids)); setDocumentNotice("已暂不确认这条申请，申请仍然保留，可随时重新查看。"); }}
       onCopyLink={() => void navigator.clipboard.writeText(`${window.location.origin}/projects/${encodeURIComponent(projectId)}?knowledge=${encodeURIComponent(card.id)}`).then(() => setDocumentNotice("知识链接已复制")).catch(error => setFormError(String(error)))}
       onRelate={() => void relate(card)}
+      relatedCards={cards}
+      onOpenRelatedCard={revealCard}
       relationCandidates={relationCandidates[card.id] ?? cards.filter(candidate => candidate.id !== card.id && candidate.status === "reviewed" && candidate.scope === "team").slice(0, 5)}
       relationKind={relationKind[card.id] ?? "contradicts"}
       relationTarget={relationTarget[card.id] ?? ""}
@@ -429,7 +452,7 @@ export function KnowledgePanel({
   );
 
   return (
-    <section className="knowledge-panel" data-testid="knowledge-panel">
+    <section className="knowledge-panel" data-testid="knowledge-panel" hidden={!isActive}>
       <div ref={backgroundRef} className="knowledge-panel-background">
         <nav className="knowledge-toolbar" aria-label="知识视图">
           {(["inbox", "current", "all", "guide", "timeline"] as View[]).map(candidate => (
@@ -494,7 +517,7 @@ export function KnowledgePanel({
               <div className="knowledge-anchor-links">{suggestion.suggestedAnchors?.map((anchor, index) => <button key={index} onClick={() => onOpenAnchor(anchor.file, { startLine: anchor.startLine, startColumn: 1, endLine: anchor.endLine, endColumn: 1 })}><FileText size={13} />{anchor.file}:{anchor.startLine}–{anchor.endLine}</button>)}</div>
               <details><summary>原始证据</summary><pre>{JSON.stringify(suggestion.evidence, null, 2)}</pre></details>
               {actionCardId === suggestion.id ? <p className="knowledge-notice" role="status"><LoaderCircle size={14} className="loading-icon" />{actionName === "ai-draft" ? "正在根据证据生成草稿…" : "正在处理这条建议…"}{slowAction ? <span>模型整理较慢，请稍候</span> : null}</p> : null}
-              {suggestionErrors[suggestion.id] ? <div role="alert" className="knowledge-error"><p>{suggestionErrors[suggestion.id]}</p><div className="workspace-dialog-actions"><button disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "ai-draft")}>重试</button></div></div> : null}
+              {suggestionErrors[suggestion.id] ? <div role="alert" className="knowledge-error"><p>{suggestionErrors[suggestion.id]!.message}</p><div className="workspace-dialog-actions"><button disabled={Boolean(actionCardId)} onClick={() => { const failed = suggestionErrors[suggestion.id]!; void resolveSuggestion(suggestion, failed.action, failed.targetCardId); }}>重试</button></div></div> : null}
               <div className="knowledge-actions workspace-dialog-actions">
                 <button disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "accept")}>{actionCardId === suggestion.id && actionName === "accept" ? "接受中" : "接受"}</button>
                 <button className="primary" disabled={Boolean(actionCardId)} onClick={() => void resolveSuggestion(suggestion, "ai-draft")}>{actionCardId === suggestion.id && actionName === "ai-draft" ? <><LoaderCircle size={14} className="loading-icon" />生成中</> : "AI 草稿"}</button>
@@ -556,7 +579,7 @@ export function KnowledgePanel({
             {editingCard ? <section className="knowledge-editor-anchors"><strong>关联代码</strong>{editingCard.anchors.length ? editingCard.anchors.map(anchor => <button className="knowledge-text-button" key={anchor.anchorId} onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath)}>{anchor.file.workspaceRelativePath}</button>) : <p>这张卡片没有代码锚点。</p>}<p className="knowledge-hint">需要重新关联时，请在卡片详情中使用当前选区。</p></section> : null}
             {draftEvidence ? <aside className="knowledge-draft-evidence">
               <details><summary>原始证据</summary><pre>{JSON.stringify(draftEvidence.evidence, null, 2)}</pre></details>
-              <strong>建议锚点</strong>{draftEvidence.suggestedAnchors?.map((anchor, index) => <label className="knowledge-check-label" key={index}><input type="checkbox" disabled={saving} checked={selectedAnchors.includes(index)} onChange={event => setSelectedAnchors(items => event.target.checked ? [...items, index] : items.filter(item => item !== index))} />{anchor.file}:{anchor.startLine}–{anchor.endLine}<span>{anchor.reasons.join("、")}</span></label>)}
+              <strong>建议锚点</strong>{draftEvidence.suggestedAnchors?.map((anchor, index) => <label className="knowledge-check-label" key={index}><input type="checkbox" disabled={saving} checked={selectedAnchors.includes(index)} onChange={event => { anchorSelectionChangedRef.current = true; setSelectedAnchors(items => event.target.checked ? [...items, index] : items.filter(item => item !== index)); }} />{anchor.file}:{anchor.startLine}–{anchor.endLine}<span>{anchor.reasons.join("、")}</span></label>)}
               {readDispute(draftEvidence.evidence) ? <p>{members.find(member => member.id === readDispute(draftEvidence.evidence)?.memberId)?.displayName ?? "成员"}的意见：{readDispute(draftEvidence.evidence)?.reason}</p> : null}
             </aside> : null}
           </div>
@@ -585,6 +608,8 @@ function KnowledgeCardItem({
   onDeferTeam,
   onCopyLink,
   onRelate,
+  relatedCards,
+  onOpenRelatedCard,
   relationCandidates,
   relationKind,
   relationTarget,
@@ -609,6 +634,8 @@ function KnowledgeCardItem({
   onDeferTeam(): void;
   onCopyLink(): void;
   onRelate?(): void;
+  relatedCards: KnowledgeCard[];
+  onOpenRelatedCard(id: string): void;
   relationCandidates?: KnowledgeCard[];
   relationKind?: "contradicts" | "supersedes" | "duplicates" | "refines";
   relationTarget?: string;
@@ -636,6 +663,10 @@ function KnowledgeCardItem({
           <p className="knowledge-card-body">{card.content}</p>
           <p className="knowledge-hint">确认人：{card.review?.confirmedBy.length ? card.review.confirmedBy.map(id => members.find(member => member.id === id)?.displayName ?? "成员").join("、") : "尚未确认"}</p>
           {card.appliesTo ? <p className="knowledge-hint">适用范围：{card.appliesTo.kind === "project" ? "整个项目" : card.appliesTo.patterns.join("、")}</p> : null}
+          {card.relations?.length ? <section aria-label="已建立的知识关系"><strong>已建立的知识关系</strong><ul>{card.relations.map(relation => {
+            const target = relatedCards.find(candidate => candidate.id === relation.cardId);
+            return <li key={`${relation.kind}-${relation.cardId}`}><span>{{ contradicts: "存在矛盾，尚未裁决", supersedes: "替代以下知识", duplicates: "内容重复", refines: "补充以下知识" }[relation.kind]}：</span><button className="knowledge-text-button" disabled={!target} onClick={() => onOpenRelatedCard(relation.cardId)}>{target?.title ?? relation.cardId}</button></li>;
+          })}</ul></section> : null}
           {card.provenance ? <details><summary>来源记录</summary><pre>{JSON.stringify(card.provenance.evidenceRefs, null, 2)}</pre></details> : null}
           {card.anchors.length === 0 ? <small>无代码锚点</small> : card.anchors.map((anchor, index) => {
             const resolution = resolutions.find((candidate) => candidate.anchorIndex === index);
@@ -670,6 +701,12 @@ function KnowledgeCardItem({
 
 function normalizeKnowledgePath(value: string) {
   return value.replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function matchesSuggestedAnchor(anchor: KnowledgeCard["anchors"][number], suggestion: import("../types").SuggestedKnowledgeAnchor) {
+  return normalizeKnowledgePath(anchor.file.workspaceRelativePath) === normalizeKnowledgePath(suggestion.file)
+    && anchor.rangeAtCapture?.start.line === suggestion.startLine - 1
+    && anchor.rangeAtCapture?.end.line === suggestion.endLine - 1;
 }
 
 function readDispute(evidence: Record<string, unknown>) {

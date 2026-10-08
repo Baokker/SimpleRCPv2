@@ -274,8 +274,9 @@ export function CollaborationPanel({
       </nav>
 
       <div className="collab-tab-body">
-        {activeTab === "knowledge" && knowledgeEnabled ? (
+        {knowledgeEnabled && member ? (
           <KnowledgePanel
+            isActive={activeTab === "knowledge"}
             projectId={projectId}
             members={members}
             refreshVersion={knowledgeRefreshVersion + chatKnowledgeVersion}

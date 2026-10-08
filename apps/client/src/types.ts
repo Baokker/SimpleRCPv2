@@ -117,7 +117,7 @@ export interface KnowledgeSuggestion {
 }
 export interface KnowledgeCardInput {
   type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "proposedTeam" | "team";
-  anchors?: SuggestedKnowledgeAnchor[]; authorMemberId?: string; authorName?: string;
+  anchors?: SuggestedKnowledgeAnchor[]; retainAnchorIds?: string[]; authorMemberId?: string; authorName?: string;
   appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] };
   check?: { kind: "regex-absent" | "regex-present"; pattern: string; flags?: string; fileGlob: string };
 }

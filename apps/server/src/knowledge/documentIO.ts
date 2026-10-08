@@ -92,9 +92,9 @@ export function deterministicImport(source: string, file: string): ImportedDraft
     if (!exported && first?.type === "heading" && !lines.slice(boundary.startLine, endLine).join("\n").trim()) return [];
     if (exported) {
       const nodes = tree.children.filter(node => node.position!.start.line > boundary.startLine && node.position!.end.line <= endLine);
-      const summaryNode = nodes.find(node => node.type === "paragraph" && !toString(node).startsWith("适用范围："));
+      const summaryNode = nodes.find(node => node.type === "paragraph");
       const body = nodes.find(node => node.type === "blockquote");
-      const scopeNode = nodes.find(node => node.type === "paragraph" && toString(node).startsWith("适用范围："));
+      const scopeNode = [...nodes].reverse().find(node => node !== summaryNode && node.type === "paragraph" && toString(node).startsWith("适用范围："));
       const scopeText = scopeNode ? toString(scopeNode).slice("适用范围：".length).trim() : "";
       const scopes = scopeNode?.type === "paragraph" ? scopeNode.children.flatMap(node => node.type === "inlineCode" ? [node.value] : []) : [];
       return [{ type: boundary.type ?? "context", title: boundary.title, summary: summaryNode ? toString(summaryNode) : boundary.title, content: body?.type === "blockquote" ? toMarkdown({ type: "root", children: body.children }).trim() : toString(tree.children[0]!) === "团队过程性知识" ? "" : content, startLine: boundary.startLine, endLine, files: scopes.length ? scopes : !scopeText || scopeText === "整个项目" ? [] : scopeText.split(",").map(value => value.trim()).filter(Boolean), fallback: true }];

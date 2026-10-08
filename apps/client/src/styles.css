@@ -2834,6 +2834,10 @@ button.activity-entry:hover strong {
   overflow: hidden;
 }
 
+.knowledge-panel[hidden] {
+  display: none;
+}
+
 .knowledge-toolbar {
   display: flex;
   flex: 0 0 auto;
