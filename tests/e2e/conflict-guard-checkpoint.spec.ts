@@ -90,7 +90,7 @@ for (const kind of ["white", "grey"] as const) test(`阶段3第${kind === "white
     await expect(bob.locator(".conflict-frozen-range")).toHaveCount(0);
     await expect(alice.getByTestId("conflict-card")).toHaveCount(0);
     if (kind === "grey") { await expect(alice.getByTestId("conflict-warning")).toBeVisible(); await expect(bob.getByTestId("conflict-warning")).toBeVisible(); }
-    else await expect(alice.getByTestId("conflict-candidate-labels").first().locator(".conflict-tags > span")).toHaveText(["白区", "放行", "只改日志"]);
+    else await expect(alice.getByTestId("conflict-candidate-labels").first().locator(".conflict-tags > span")).toHaveText(["白区", "放行", "只改了日志"]);
     await expect.poll(() => disk(bob, projectId, "src/checkout.ts")).toContain("cart.total() + 1");
     await snapshot(alice, kind === "white" ? "05-white" : "06-grey");
     checks.push({ scenario: kind, checks: [kind === "white" ? "05" : "06"] });
@@ -104,7 +104,7 @@ test("阶段3第7项合并类型错误", async ({ browser }) => {
     await edit(alice, "src/pricing.ts", '): string {\n  return `${currency} ${amount.toFixed(2)}`;', "): number {\n  return amount;");
     await edit(bob, "src/checkout.ts", "formatMoney(cart.total())", "formatMoney(cart.total()).toUpperCase()");
     await locked(alice, bob, projectId, "merge-only-type-error");
-    await expect(alice.getByTestId("conflict-card")).toContainText("合并后才出现类型错误");
+    await expect(alice.getByTestId("conflict-card")).toContainText("合并后出现类型错误");
     await snapshot(alice, "07-merge-type-error"); checks.push({ scenario: "merge-type-error", checks: ["07"] });
   } finally { await pair.close(); }
 });

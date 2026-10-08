@@ -40,7 +40,9 @@ test("Agent receives a rejection and retries while the human remains editable", 
     await expect(alice.locator(".conflict-frozen-range")).toHaveCount(0);
     await expect(alice.getByTestId("conflict-card")).toHaveCount(0);
     await edit(alice, "src/pricing.ts", "price * (1 - rate)", "price * (1 - rate) + 0");
-    await expect(alice.getByTestId("agent-conflict-record").first()).toContainText(shadow ? "若启用将被拒绝" : "T2");
+    await alice.getByTestId("conflict-history").locator(":scope > summary").click();
+    await expect(alice.getByTestId("agent-conflict-record").first()).toContainText(shadow ? "若启用将被拒绝" : "Agent 写入前检查");
+    await alice.getByTestId("agent-conflict-record").first().locator(":scope > summary").click();
     await expect(alice.getByTestId("agent-conflict-record").first()).toContainText("Bob 的 Agent");
     const content = await bob.evaluate(async (projectId) => {
       const response = await fetch(`/api/projects/${projectId}/workspace/file?path=src%2Fcart.ts`, { headers: { "X-SimpleRCP-Member": sessionStorage.getItem(`simplercp.memberId.${projectId}`)! } });
@@ -80,7 +82,9 @@ test("the later Agent receives a rejection for an active Agent dependency", asyn
       await expect(bob.getByTestId("owner-intent-card")).toHaveCount(1);
       await expect(alice.getByTestId("conflict-tab-count")).toHaveText("1");
       await expect(bob.getByTestId("conflict-tab-count")).toHaveText("1");
-      await expect(bob.getByTestId("agent-conflict-record").first()).toContainText("调用签名不兼容");
+      await bob.getByTestId("conflict-history").locator(":scope > summary").click();
+      await bob.getByTestId("agent-conflict-record").first().locator(":scope > summary").click();
+      await expect(bob.getByTestId("agent-conflict-record").first()).toContainText("改了函数签名");
       await expect(bob.getByTestId("agent-conflict-record").first()).toContainText("Alice 的 Agent");
       await bob.getByTestId("owner-intent-card").getByRole("button", { name: "让我的 Agent 让路" }).click();
       await expect(bob.getByTestId("owner-intent-card")).toHaveCount(0);

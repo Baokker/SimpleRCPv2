@@ -43,8 +43,8 @@ export interface ConflictGuardState {
   activeSymbols: Array<{ actor: GuardActorRef; symbols: ActiveSymbol[] }>;
   candidatePairs: Array<{
     id: string;
-    left: { actor: GuardActorRef; symbol: string; status: ActiveSymbol["status"] };
-    right: { actor: GuardActorRef; symbol: string; status: ActiveSymbol["status"] };
+    left: { actor: GuardActorRef; symbol: string; symbols?: string[]; status: ActiveSymbol["status"] };
+    right: { actor: GuardActorRef; symbol: string; symbols?: string[]; status: ActiveSymbol["status"] };
     distance: number;
     path: { hops: Array<{ from: string; to: string; kind: string; direction: "forward" | "backward" }>; typeOnly?: boolean } | null;
     firstSeenAt: number;
@@ -55,6 +55,7 @@ export interface ConflictGuardState {
     pair: ConflictGuardState["candidatePairs"][number];
     status: string;
     revision: number;
+    updatedAt?: number;
     conflict?: GuardConflict;
     point?: "T2" | "T3";
     shadow?: boolean;

@@ -240,7 +240,7 @@ export function CollaborationPanel({
       </nav>
 
       <div className="collab-tab-body">
-        {activeTab === "conflict" && conflictState ? <ConflictGuardPanel state={conflictState} projectId={projectId} members={members} memberId={member?.id} onOpenSymbol={onOpenSymbol} onError={onError} onChat={(text, pairId) => { void sendConflictPairChat(projectId, pairId, text).catch(onError); setActiveTab("chat"); }} /> : null}
+        {activeTab === "conflict" && conflictState ? <ConflictGuardPanel key={`${projectId}:${member?.id}`} state={conflictState} projectId={projectId} members={members} memberId={member?.id} onOpenSymbol={onOpenSymbol} onError={onError} onChat={(text, pairId) => { void sendConflictPairChat(projectId, pairId, text).catch(onError); setActiveTab("chat"); }} /> : null}
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
             <div className="team-agent-bar" data-testid="team-agent-bar">

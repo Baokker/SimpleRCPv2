@@ -26,6 +26,7 @@ import {
   readWorkspaceFile
 } from "../api";
 import { presentTrace } from "../agentTracePresentation";
+import { guardCheckLabels, readableGuardText } from "../conflictGuardLabels";
 import type {
   AgentPromptContext,
   AgentRun,
@@ -547,8 +548,8 @@ function AgentMessage({
           { id: "rejected-edits", label: "修改被拒绝", value: `${run.conflictGuard.rejectedEdits} 次` },
           { id: "approval-wait", label: "审批等待", value: `${Math.round(run.conflictGuard.approvalWaitMs ?? 0)} ms` }
         ]} />
-        {run.conflictGuard.lastRejection ? <div className="agent-guard-explanation"><span className="conflict-field-label">最近一次拒绝</span><ReadableText text={run.conflictGuard.lastRejection} testId="agent-last-rejection" /></div> : null}
-        {run.conflictGuard.t3 ? <div className="agent-guard-check"><span className="conflict-field-label">结束后复检（T3）</span><GuardBadge tone={run.conflictGuard.t3 === "passed" ? "success" : "warning"}>{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</GuardBadge></div> : null}
+        {run.conflictGuard.lastRejection ? <div className="agent-guard-explanation"><span className="conflict-field-label">最近一次拒绝</span><ReadableText text={readableGuardText(run.conflictGuard.lastRejection)} testId="agent-last-rejection" /></div> : null}
+        {run.conflictGuard.t3 ? <div className="agent-guard-check"><span className="conflict-field-label">{guardCheckLabels.T3}</span><GuardBadge tone={run.conflictGuard.t3 === "passed" ? "success" : "warning"}>{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</GuardBadge></div> : null}
       </section> : null}
       {run.output ? <div className="agent-run-output">{run.output}</div> : null}
       {run.fileChanges?.length ? (

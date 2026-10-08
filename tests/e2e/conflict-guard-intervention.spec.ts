@@ -44,6 +44,7 @@ test("rules 模式显示黑区判定与冻结区域", async ({ browser }) => {
   await expect(alice.locator(".conflict-frozen-range").first()).toBeVisible();
   await expect(alice.getByTestId("conflict-current")).toContainText("黑区");
   if (saveEvidence) { await fs.mkdir(evidenceRoot, { recursive: true }); await alice.screenshot({ path: path.join(evidenceRoot, "01-black-zone-card.png"), fullPage: true }); await bob.screenshot({ path: path.join(evidenceRoot, "01-bob-black-zone-card.png"), fullPage: true }); }
+  await alice.getByTestId("conflict-progress").locator(":scope > summary").click();
   await alice.getByTestId("conflict-candidate").first().getByRole("button").click();
   await expect(alice.getByTestId("conflict-card").getByRole("button", { name: "我来改" })).toBeVisible();
   if (saveEvidence) await fs.writeFile(path.join(evidenceRoot, "acceptance.json"), JSON.stringify({ mode: health.features.conflictGuard, automatedChecks: { blackZoneCard: true, freezeDecoration: true, candidateExpansion: true, confirmationButton: true }, manualChecks: "未在本次自动运行中执行完整十项人工操作" }, null, 2));
@@ -95,8 +96,13 @@ test("rules 模式双方确认后解除冻结并写入当前修改", async ({ br
     await openAs(observer, "Charlie", projectId);
     await observer.getByTestId("collab-tab-conflict").click();
     await createSameSymbolConflict(alice, bob, projectId);
-    await expect(observer.getByTestId("conflict-card")).toBeVisible();
-    await expect(observer.getByTestId("conflict-card").getByRole("button", { name: "双方确认后继续" })).toHaveCount(0);
+    await expect(observer.getByTestId("conflict-card")).toHaveCount(0);
+    await expect(observer.getByTestId("conflict-attention")).toContainText("当前没有需要你处理的冲突");
+    await observer.getByTestId("conflict-history").locator(":scope > summary").click();
+    await expect(observer.getByTestId("human-conflict-record")).toHaveCount(1);
+    await observer.getByTestId("human-conflict-record").locator(":scope > summary").click();
+    await expect(observer.getByTestId("human-conflict-record")).toContainText("同时修改同一处代码");
+    await expect(observer.getByTestId("human-conflict-record").getByRole("button", { name: "双方确认后继续" })).toHaveCount(0);
     await alice.getByTestId("conflict-card").getByRole("button", { name: "双方确认后继续" }).click();
     await expect(alice.getByTestId("conflict-card")).toContainText("你已确认，等待对方确认");
     await expect(bob.getByTestId("conflict-card")).toContainText("对方已确认，等待你的确认");

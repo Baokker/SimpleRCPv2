@@ -35,6 +35,19 @@ export function getServerInfo() {
 export function getConflictGuardState(projectId: string) {
   return request<ConflictGuardState>(`${projectPath(projectId)}/conflict-guard/state`);
 }
+
+export async function downloadConflictGuardTrace(projectId: string) {
+  const response = await fetch(`${projectPath(projectId)}/conflict-guard/trace`, {
+    headers: { "X-SimpleRCP-Member": storedMemberId(projectId) ?? "" }
+  });
+  if (!response.ok) throw new Error(response.status === 500 ? "服务端可能正在重启，请稍后刷新" : `导出轨迹失败：${response.status}`);
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "conflict-guard-trace.jsonl";
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 export function actOnOwnerCard(projectId: string, cardId: string, action: "accept" | "yield" | "chat") {
   return request(`${projectPath(projectId)}/conflict-guard/cards/${encodeURIComponent(cardId)}/${action}`, { method: "POST" });
 }

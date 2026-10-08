@@ -3,6 +3,7 @@
   "consumer": "src/subscription.ts",
   "ghostMembers": true,
   "freezeDecoration": true,
-  "conflictCard": true,
+  "checkRecord": true,
+  "uninvolvedMemberHasNoAction": true,
   "commandCompleted": true
 }

@@ -1,0 +1,101 @@
+{
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "themes": {
+    "dark": {
+      "scrollTop": 0,
+      "sections": [
+        {
+          "id": "conflict-guide",
+          "top": 83,
+          "bottom": 291.28125,
+          "viewportTop": 74,
+          "viewportBottom": 696,
+          "windowHeight": 720
+        },
+        {
+          "id": "conflict-overview",
+          "top": 301.28125,
+          "bottom": 332.28125,
+          "viewportTop": 74,
+          "viewportBottom": 696,
+          "windowHeight": 720
+        },
+        {
+          "id": "conflict-attention",
+          "top": 342.28125,
+          "bottom": 363.671875,
+          "viewportTop": 74,
+          "viewportBottom": 696,
+          "windowHeight": 720
+        }
+      ],
+      "contrast": [
+        {
+          "text": "白区",
+          "color": "rgb(145, 160, 183)",
+          "background": "rgb(16, 23, 34)"
+        },
+        {
+          "text": "黑区",
+          "color": "rgb(255, 155, 155)",
+          "background": "rgb(16, 23, 34)"
+        },
+        {
+          "text": "灰区",
+          "color": "rgb(213, 170, 85)",
+          "background": "rgb(16, 23, 34)"
+        }
+      ]
+    },
+    "light": {
+      "scrollTop": 0,
+      "sections": [
+        {
+          "id": "conflict-guide",
+          "top": 83,
+          "bottom": 291.28125,
+          "viewportTop": 74,
+          "viewportBottom": 696,
+          "windowHeight": 720
+        },
+        {
+          "id": "conflict-overview",
+          "top": 301.28125,
+          "bottom": 332.28125,
+          "viewportTop": 74,
+          "viewportBottom": 696,
+          "windowHeight": 720
+        },
+        {
+          "id": "conflict-attention",
+          "top": 342.28125,
+          "bottom": 363.671875,
+          "viewportTop": 74,
+          "viewportBottom": 696,
+          "windowHeight": 720
+        }
+      ],
+      "contrast": [
+        {
+          "text": "白区",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "黑区",
+          "color": "rgb(180, 35, 24)",
+          "background": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "灰区",
+          "color": "rgb(161, 98, 7)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    }
+  },
+  "persistedGuide": true
+}

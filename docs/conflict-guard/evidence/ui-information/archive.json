@@ -1,0 +1,13 @@
+{
+  "source": "docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz",
+  "records": 779,
+  "counts": {
+    "human-human": 6,
+    "human-agent": 221,
+    "agent-agent": 552
+  },
+  "firstPage": 20,
+  "secondPage": 40,
+  "ownRecords": 719,
+  "translationsComplete": true
+}

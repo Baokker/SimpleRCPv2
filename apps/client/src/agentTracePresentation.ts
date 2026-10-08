@@ -1,4 +1,5 @@
 import type { AgentTraceEvent } from "./types";
+import { guardCheckLabels, readableGuardText } from "./conflictGuardLabels";
 
 export interface TraceEntry {
   sequence: number;
@@ -42,17 +43,17 @@ function presentTraceEvent(
       );
     }
     case "concurrent_change": return entry(event, "Concurrent edit detected", event.summary, "warning");
-    case "permission_reply": return entry(event, event.data?.reply === "reject" ? "修改被拒绝" : "修改已批准", typeof event.data?.message === "string" ? event.data.message : undefined, event.data?.reply === "reject" ? "warning" : "success");
-    case "t3_revert": return { ...entry(event, "结束后撤回（T3）", undefined, "warning"), metrics: [
+    case "permission_reply": return entry(event, event.data?.reply === "reject" ? "修改被拒绝" : "修改已批准", typeof event.data?.message === "string" ? readableGuardText(event.data.message) : undefined, event.data?.reply === "reject" ? "warning" : "success");
+    case "t3_revert": return { ...entry(event, "Agent 任务完成后撤回修改", undefined, "warning"), metrics: [
       { id: "reverted-blocks", label: "已撤回修改", value: `${event.data?.reverted ?? 0} 处` },
       { id: "retained-blocks", label: "保留修改", value: `${event.data?.skipped ?? 0} 处` }
     ] };
     case "t3_completed": {
       const result = String(event.data?.result ?? "passed");
       const labels: Record<string, string> = { passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" };
-      return entry(event, "结束后复检完成（T3）", labels[result] ?? result);
+      return entry(event, `${guardCheckLabels.T3}完成`, labels[result] ?? `${result}（未翻译）`);
     }
-    case "t3_incomplete": return entry(event, "T3 检查不完整", "修改归属无法核验，需要人工处理", "warning");
+    case "t3_incomplete": return entry(event, `${guardCheckLabels.T3}未完成`, "修改归属无法核验，需要人工处理", "warning");
     case "run_completed": return entry(event, "Run completed", undefined, "success");
     case "run_cancelled": return entry(event, "Run cancelled", event.summary, "warning");
     case "run_failed": return hasProviderError

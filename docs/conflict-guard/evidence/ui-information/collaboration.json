@@ -1,0 +1,2269 @@
+{
+  "state": {
+    "mode": "rules",
+    "version": 23,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 1,
+      "symbols": 12,
+      "edges": 0,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 1,
+        "durationMs": 1.7427089999982854,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "symbols.ts",
+            "ranges": [
+              {
+                "start": 54,
+                "end": 56
+              },
+              {
+                "start": 57,
+                "end": 59
+              },
+              {
+                "start": 170,
+                "end": 172
+              },
+              {
+                "start": 173,
+                "end": 175
+              },
+              {
+                "start": 287,
+                "end": 289
+              },
+              {
+                "start": 290,
+                "end": 292
+              },
+              {
+                "start": 404,
+                "end": 406
+              },
+              {
+                "start": 407,
+                "end": 409
+              },
+              {
+                "start": 523,
+                "end": 525
+              },
+              {
+                "start": 526,
+                "end": 528
+              },
+              {
+                "start": 639,
+                "end": 641
+              },
+              {
+                "start": 642,
+                "end": 644
+              },
+              {
+                "start": 754,
+                "end": 756
+              },
+              {
+                "start": 757,
+                "end": 759
+              },
+              {
+                "start": 871,
+                "end": 873
+              },
+              {
+                "start": 874,
+                "end": 876
+              },
+              {
+                "start": 987,
+                "end": 989
+              },
+              {
+                "start": 990,
+                "end": 992
+              },
+              {
+                "start": 1104,
+                "end": 1106
+              },
+              {
+                "start": 1107,
+                "end": 1109
+              },
+              {
+                "start": 1222,
+                "end": 1224
+              },
+              {
+                "start": 1225,
+                "end": 1227
+              },
+              {
+                "start": 1336,
+                "end": 1338
+              },
+              {
+                "start": 1339,
+                "end": 1341
+              }
+            ],
+            "firstTouchedAt": 1791476583780,
+            "lastTouchedAt": 1791476583780
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "symbols.ts",
+            "ranges": [
+              {
+                "start": 85,
+                "end": 86
+              },
+              {
+                "start": 87,
+                "end": 88
+              },
+              {
+                "start": 201,
+                "end": 202
+              },
+              {
+                "start": 203,
+                "end": 204
+              },
+              {
+                "start": 318,
+                "end": 319
+              },
+              {
+                "start": 320,
+                "end": 321
+              },
+              {
+                "start": 435,
+                "end": 436
+              },
+              {
+                "start": 437,
+                "end": 438
+              },
+              {
+                "start": 554,
+                "end": 555
+              },
+              {
+                "start": 556,
+                "end": 557
+              },
+              {
+                "start": 670,
+                "end": 671
+              },
+              {
+                "start": 672,
+                "end": 673
+              },
+              {
+                "start": 785,
+                "end": 786
+              },
+              {
+                "start": 787,
+                "end": 788
+              },
+              {
+                "start": 902,
+                "end": 903
+              },
+              {
+                "start": 904,
+                "end": 905
+              },
+              {
+                "start": 1018,
+                "end": 1019
+              },
+              {
+                "start": 1020,
+                "end": 1021
+              },
+              {
+                "start": 1135,
+                "end": 1136
+              },
+              {
+                "start": 1137,
+                "end": 1138
+              },
+              {
+                "start": 1253,
+                "end": 1254
+              },
+              {
+                "start": 1255,
+                "end": 1256
+              },
+              {
+                "start": 1367,
+                "end": 1368
+              },
+              {
+                "start": 1369,
+                "end": 1370
+              }
+            ],
+            "firstTouchedAt": 1791476584574,
+            "lastTouchedAt": 1791476584574
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+        },
+        "symbols": [
+          {
+            "key": "symbols.ts#alpha",
+            "file": "symbols.ts",
+            "name": "alpha",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 1,
+            "endLine": 5,
+            "editedLineRanges": [
+              {
+                "start": 2,
+                "end": 2
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#beta",
+            "file": "symbols.ts",
+            "name": "beta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 6,
+            "endLine": 10,
+            "editedLineRanges": [
+              {
+                "start": 7,
+                "end": 7
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#gamma",
+            "file": "symbols.ts",
+            "name": "gamma",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "editedLineRanges": [
+              {
+                "start": 12,
+                "end": 12
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#delta",
+            "file": "symbols.ts",
+            "name": "delta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 16,
+            "endLine": 20,
+            "editedLineRanges": [
+              {
+                "start": 17,
+                "end": 17
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#epsilon",
+            "file": "symbols.ts",
+            "name": "epsilon",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 21,
+            "endLine": 25,
+            "editedLineRanges": [
+              {
+                "start": 22,
+                "end": 22
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#zeta",
+            "file": "symbols.ts",
+            "name": "zeta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 26,
+            "endLine": 30,
+            "editedLineRanges": [
+              {
+                "start": 27,
+                "end": 27
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#eta",
+            "file": "symbols.ts",
+            "name": "eta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 31,
+            "endLine": 35,
+            "editedLineRanges": [
+              {
+                "start": 32,
+                "end": 32
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#theta",
+            "file": "symbols.ts",
+            "name": "theta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 36,
+            "endLine": 40,
+            "editedLineRanges": [
+              {
+                "start": 37,
+                "end": 37
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#iota",
+            "file": "symbols.ts",
+            "name": "iota",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 41,
+            "endLine": 45,
+            "editedLineRanges": [
+              {
+                "start": 42,
+                "end": 42
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#kappa",
+            "file": "symbols.ts",
+            "name": "kappa",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 46,
+            "endLine": 50,
+            "editedLineRanges": [
+              {
+                "start": 47,
+                "end": 47
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#lambda",
+            "file": "symbols.ts",
+            "name": "lambda",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 51,
+            "endLine": 55,
+            "editedLineRanges": [
+              {
+                "start": 52,
+                "end": 52
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          },
+          {
+            "key": "symbols.ts#mu",
+            "file": "symbols.ts",
+            "name": "mu",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 56,
+            "endLine": 60,
+            "editedLineRanges": [
+              {
+                "start": 57,
+                "end": 57
+              }
+            ],
+            "lastTouchedAt": 1791476583780
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+        },
+        "symbols": [
+          {
+            "key": "symbols.ts#alpha",
+            "file": "symbols.ts",
+            "name": "alpha",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 1,
+            "endLine": 5,
+            "editedLineRanges": [
+              {
+                "start": 3,
+                "end": 3
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#beta",
+            "file": "symbols.ts",
+            "name": "beta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 6,
+            "endLine": 10,
+            "editedLineRanges": [
+              {
+                "start": 8,
+                "end": 8
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#gamma",
+            "file": "symbols.ts",
+            "name": "gamma",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 11,
+            "endLine": 15,
+            "editedLineRanges": [
+              {
+                "start": 13,
+                "end": 13
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#delta",
+            "file": "symbols.ts",
+            "name": "delta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 16,
+            "endLine": 20,
+            "editedLineRanges": [
+              {
+                "start": 18,
+                "end": 18
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#epsilon",
+            "file": "symbols.ts",
+            "name": "epsilon",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 21,
+            "endLine": 25,
+            "editedLineRanges": [
+              {
+                "start": 23,
+                "end": 23
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#zeta",
+            "file": "symbols.ts",
+            "name": "zeta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 26,
+            "endLine": 30,
+            "editedLineRanges": [
+              {
+                "start": 28,
+                "end": 28
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#eta",
+            "file": "symbols.ts",
+            "name": "eta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 31,
+            "endLine": 35,
+            "editedLineRanges": [
+              {
+                "start": 33,
+                "end": 33
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#theta",
+            "file": "symbols.ts",
+            "name": "theta",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 36,
+            "endLine": 40,
+            "editedLineRanges": [
+              {
+                "start": 38,
+                "end": 38
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#iota",
+            "file": "symbols.ts",
+            "name": "iota",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 41,
+            "endLine": 45,
+            "editedLineRanges": [
+              {
+                "start": 43,
+                "end": 43
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#kappa",
+            "file": "symbols.ts",
+            "name": "kappa",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 46,
+            "endLine": 50,
+            "editedLineRanges": [
+              {
+                "start": 48,
+                "end": 48
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#lambda",
+            "file": "symbols.ts",
+            "name": "lambda",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 51,
+            "endLine": 55,
+            "editedLineRanges": [
+              {
+                "start": 53,
+                "end": 53
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          },
+          {
+            "key": "symbols.ts#mu",
+            "file": "symbols.ts",
+            "name": "mu",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 56,
+            "endLine": 60,
+            "editedLineRanges": [
+              {
+                "start": 58,
+                "end": 58
+              }
+            ],
+            "lastTouchedAt": 1791476584574
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "5f00f2ed08c5a8831c9ea8f246f879ddae2c9e05641b9480791017b9372e30be",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#mu",
+          "symbols": [
+            "symbols.ts#mu"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#mu",
+          "symbols": [
+            "symbols.ts#mu"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#mu",
+            "right": "symbols.ts#mu",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584822,
+        "updatedAt": 1791476584822,
+        "revisionKey": "276f2eb9d83298797ea1312ca92d63c4902c32bcacc008f538760477a70d1631"
+      },
+      {
+        "id": "1b2f8cbaf5c704403bf69802958c5cf1936d908ce5591ed0f5a68e9cee9eac57",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#kappa",
+          "symbols": [
+            "symbols.ts#kappa"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#kappa",
+          "symbols": [
+            "symbols.ts#kappa"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#kappa",
+            "right": "symbols.ts#kappa",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "30a2c2d2658c9da15ea4a20c32cb74c425888725201b43fe8b51ab8cead5459e"
+      },
+      {
+        "id": "215b07b32e036d3f6a2ef10c4b99ec6a888960b067a635cd8735d047828e9063",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#gamma",
+          "symbols": [
+            "symbols.ts#gamma"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#gamma",
+          "symbols": [
+            "symbols.ts#gamma"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#gamma",
+            "right": "symbols.ts#gamma",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "c957caaa408ef8243000f72d1b222c59d91871bd21561b447fbe73854819fbdd"
+      },
+      {
+        "id": "3b78dfbb1c5299302f37ec7d5cb036296f989093733d1e6ed9a439fbb14ce651",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#lambda",
+          "symbols": [
+            "symbols.ts#lambda"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#lambda",
+          "symbols": [
+            "symbols.ts#lambda"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#lambda",
+            "right": "symbols.ts#lambda",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "9aa4f1ae590275ee0e118daa1be56e1b152a592fa4d638290830c96b78c26bf1"
+      },
+      {
+        "id": "588d9087d4017eeb3ed29148ee4efc4ab57e6055db3f3bd3abf42231e996357a",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#delta",
+          "symbols": [
+            "symbols.ts#delta"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#delta",
+          "symbols": [
+            "symbols.ts#delta"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#delta",
+            "right": "symbols.ts#delta",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "5e4f37cb336de95b2f8b2fb486a20fe62a3208df7e0774342260b09d543dcebe"
+      },
+      {
+        "id": "68ad5dc1230f34c9cbf342ed3e88a3d2b76e49ed68370dab59baea841670b518",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#iota",
+          "symbols": [
+            "symbols.ts#iota"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#iota",
+          "symbols": [
+            "symbols.ts#iota"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#iota",
+            "right": "symbols.ts#iota",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "d0e034b2b386a8dc1caec029c09b6223bf569a7cb4eb21a74d142ce28213bd55"
+      },
+      {
+        "id": "81396c9d966a73add0871bb7a60514cdc629683ef313507b4e148267cb131bde",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#eta",
+          "symbols": [
+            "symbols.ts#eta"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#eta",
+          "symbols": [
+            "symbols.ts#eta"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#eta",
+            "right": "symbols.ts#eta",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "f258c2a844c577b3db733ef46cd6eace8054a42d7d02ec490d2de63e5804603a"
+      },
+      {
+        "id": "9c90b790c5b5fed1e934eb2b49f827b529d7fcb1791ed07fa5948215ffb07b85",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#theta",
+          "symbols": [
+            "symbols.ts#theta"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#theta",
+          "symbols": [
+            "symbols.ts#theta"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#theta",
+            "right": "symbols.ts#theta",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "af803967cd0caa438046bd35333d7aebe30d978266b9f543675c1b452e470f48"
+      },
+      {
+        "id": "bc15aeb468b38e2de63033aa60e2128a73e105ca5a71e6f4c890ff00e12cd4c6",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#alpha",
+          "symbols": [
+            "symbols.ts#alpha"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#alpha",
+          "symbols": [
+            "symbols.ts#alpha"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#alpha",
+            "right": "symbols.ts#alpha",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "30c833794ca1ee5f7a14f4841b5a467703e278c462fe68ae211a0ba960f4b09a"
+      },
+      {
+        "id": "bef972c6ba2bc77e472298594c6768f852257239fb97f85d6243e10088572d6f",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#epsilon",
+          "symbols": [
+            "symbols.ts#epsilon"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#epsilon",
+          "symbols": [
+            "symbols.ts#epsilon"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#epsilon",
+            "right": "symbols.ts#epsilon",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "8edc087e286a034983a5f5b193deb2baccc12f790680024cb38952b877174a71"
+      },
+      {
+        "id": "cb6f8c51580a1b0471a9adf827b216aaa13793c865a713c37dfc4a1c0dc0947f",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#beta",
+          "symbols": [
+            "symbols.ts#beta"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#beta",
+          "symbols": [
+            "symbols.ts#beta"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#beta",
+            "right": "symbols.ts#beta",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "47c7ea5fb5ad3261612f5e4f10d78387dc3e69c85b12b05ff575678e4fe8a5b6"
+      },
+      {
+        "id": "f233437ac7ec8803e1e95b95d67d0ca0081efe779e7661b59d3a4e6b0fadc27c",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "symbol": "symbols.ts#zeta",
+          "symbols": [
+            "symbols.ts#zeta"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "symbol": "symbols.ts#zeta",
+          "symbols": [
+            "symbols.ts#zeta"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "symbols.ts#zeta",
+            "right": "symbols.ts#zeta",
+            "path": null
+          }
+        ],
+        "distance": 0,
+        "path": null,
+        "firstSeenAt": 1791476584821,
+        "updatedAt": 1791476584821,
+        "revisionKey": "45407ff2120e573279dc80c5aa8022da85dd9db11c6e71ba10d389d1dae0c538"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "5f00f2ed08c5a8831c9ea8f246f879ddae2c9e05641b9480791017b9372e30be",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#mu",
+            "symbols": [
+              "symbols.ts#mu"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#mu",
+            "symbols": [
+              "symbols.ts#mu"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#mu",
+              "right": "symbols.ts#mu",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584822,
+          "updatedAt": 1791476584822,
+          "revisionKey": "276f2eb9d83298797ea1312ca92d63c4902c32bcacc008f538760477a70d1631"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586417,
+        "revisionKey": "276f2eb9d83298797ea1312ca92d63c4902c32bcacc008f538760477a70d1631",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#mu",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#mu",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "5f00f2ed08c5a8831c9ea8f246f879ddae2c9e05641b9480791017b9372e30be",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#mu",
+            "other": "symbols.ts#mu"
+          },
+          "beforeSignature": "export function mu(value: number)",
+          "afterSignature": "export function mu(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "1b2f8cbaf5c704403bf69802958c5cf1936d908ce5591ed0f5a68e9cee9eac57",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#kappa",
+            "symbols": [
+              "symbols.ts#kappa"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#kappa",
+            "symbols": [
+              "symbols.ts#kappa"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#kappa",
+              "right": "symbols.ts#kappa",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "30a2c2d2658c9da15ea4a20c32cb74c425888725201b43fe8b51ab8cead5459e"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586419,
+        "revisionKey": "30a2c2d2658c9da15ea4a20c32cb74c425888725201b43fe8b51ab8cead5459e",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#kappa",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#kappa",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "1b2f8cbaf5c704403bf69802958c5cf1936d908ce5591ed0f5a68e9cee9eac57",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#kappa",
+            "other": "symbols.ts#kappa"
+          },
+          "beforeSignature": "export function kappa(value: number)",
+          "afterSignature": "export function kappa(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "215b07b32e036d3f6a2ef10c4b99ec6a888960b067a635cd8735d047828e9063",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#gamma",
+            "symbols": [
+              "symbols.ts#gamma"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#gamma",
+            "symbols": [
+              "symbols.ts#gamma"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#gamma",
+              "right": "symbols.ts#gamma",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "c957caaa408ef8243000f72d1b222c59d91871bd21561b447fbe73854819fbdd"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586421,
+        "revisionKey": "c957caaa408ef8243000f72d1b222c59d91871bd21561b447fbe73854819fbdd",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#gamma",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#gamma",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "215b07b32e036d3f6a2ef10c4b99ec6a888960b067a635cd8735d047828e9063",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#gamma",
+            "other": "symbols.ts#gamma"
+          },
+          "beforeSignature": "export function gamma(value: number)",
+          "afterSignature": "export function gamma(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "3b78dfbb1c5299302f37ec7d5cb036296f989093733d1e6ed9a439fbb14ce651",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#lambda",
+            "symbols": [
+              "symbols.ts#lambda"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#lambda",
+            "symbols": [
+              "symbols.ts#lambda"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#lambda",
+              "right": "symbols.ts#lambda",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "9aa4f1ae590275ee0e118daa1be56e1b152a592fa4d638290830c96b78c26bf1"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586423,
+        "revisionKey": "9aa4f1ae590275ee0e118daa1be56e1b152a592fa4d638290830c96b78c26bf1",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#lambda",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#lambda",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "3b78dfbb1c5299302f37ec7d5cb036296f989093733d1e6ed9a439fbb14ce651",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#lambda",
+            "other": "symbols.ts#lambda"
+          },
+          "beforeSignature": "export function lambda(value: number)",
+          "afterSignature": "export function lambda(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "588d9087d4017eeb3ed29148ee4efc4ab57e6055db3f3bd3abf42231e996357a",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#delta",
+            "symbols": [
+              "symbols.ts#delta"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#delta",
+            "symbols": [
+              "symbols.ts#delta"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#delta",
+              "right": "symbols.ts#delta",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "5e4f37cb336de95b2f8b2fb486a20fe62a3208df7e0774342260b09d543dcebe"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586424,
+        "revisionKey": "5e4f37cb336de95b2f8b2fb486a20fe62a3208df7e0774342260b09d543dcebe",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#delta",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#delta",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "588d9087d4017eeb3ed29148ee4efc4ab57e6055db3f3bd3abf42231e996357a",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#delta",
+            "other": "symbols.ts#delta"
+          },
+          "beforeSignature": "export function delta(value: number)",
+          "afterSignature": "export function delta(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "68ad5dc1230f34c9cbf342ed3e88a3d2b76e49ed68370dab59baea841670b518",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#iota",
+            "symbols": [
+              "symbols.ts#iota"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#iota",
+            "symbols": [
+              "symbols.ts#iota"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#iota",
+              "right": "symbols.ts#iota",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "d0e034b2b386a8dc1caec029c09b6223bf569a7cb4eb21a74d142ce28213bd55"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586469,
+        "revisionKey": "d0e034b2b386a8dc1caec029c09b6223bf569a7cb4eb21a74d142ce28213bd55",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#iota",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#iota",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "68ad5dc1230f34c9cbf342ed3e88a3d2b76e49ed68370dab59baea841670b518",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#iota",
+            "other": "symbols.ts#iota"
+          },
+          "beforeSignature": "export function iota(value: number)",
+          "afterSignature": "export function iota(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "81396c9d966a73add0871bb7a60514cdc629683ef313507b4e148267cb131bde",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#eta",
+            "symbols": [
+              "symbols.ts#eta"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#eta",
+            "symbols": [
+              "symbols.ts#eta"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#eta",
+              "right": "symbols.ts#eta",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "f258c2a844c577b3db733ef46cd6eace8054a42d7d02ec490d2de63e5804603a"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586473,
+        "revisionKey": "f258c2a844c577b3db733ef46cd6eace8054a42d7d02ec490d2de63e5804603a",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#eta",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#eta",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "81396c9d966a73add0871bb7a60514cdc629683ef313507b4e148267cb131bde",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#eta",
+            "other": "symbols.ts#eta"
+          },
+          "beforeSignature": "export function eta(value: number)",
+          "afterSignature": "export function eta(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "9c90b790c5b5fed1e934eb2b49f827b529d7fcb1791ed07fa5948215ffb07b85",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#theta",
+            "symbols": [
+              "symbols.ts#theta"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#theta",
+            "symbols": [
+              "symbols.ts#theta"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#theta",
+              "right": "symbols.ts#theta",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "af803967cd0caa438046bd35333d7aebe30d978266b9f543675c1b452e470f48"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586487,
+        "revisionKey": "af803967cd0caa438046bd35333d7aebe30d978266b9f543675c1b452e470f48",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#theta",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#theta",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "9c90b790c5b5fed1e934eb2b49f827b529d7fcb1791ed07fa5948215ffb07b85",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#theta",
+            "other": "symbols.ts#theta"
+          },
+          "beforeSignature": "export function theta(value: number)",
+          "afterSignature": "export function theta(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "bc15aeb468b38e2de63033aa60e2128a73e105ca5a71e6f4c890ff00e12cd4c6",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#alpha",
+            "symbols": [
+              "symbols.ts#alpha"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#alpha",
+            "symbols": [
+              "symbols.ts#alpha"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#alpha",
+              "right": "symbols.ts#alpha",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "30c833794ca1ee5f7a14f4841b5a467703e278c462fe68ae211a0ba960f4b09a"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586490,
+        "revisionKey": "30c833794ca1ee5f7a14f4841b5a467703e278c462fe68ae211a0ba960f4b09a",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#alpha",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#alpha",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "bc15aeb468b38e2de63033aa60e2128a73e105ca5a71e6f4c890ff00e12cd4c6",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#alpha",
+            "other": "symbols.ts#alpha"
+          },
+          "beforeSignature": "export function alpha(value: number)",
+          "afterSignature": "export function alpha(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "bef972c6ba2bc77e472298594c6768f852257239fb97f85d6243e10088572d6f",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#epsilon",
+            "symbols": [
+              "symbols.ts#epsilon"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#epsilon",
+            "symbols": [
+              "symbols.ts#epsilon"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#epsilon",
+              "right": "symbols.ts#epsilon",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "8edc087e286a034983a5f5b193deb2baccc12f790680024cb38952b877174a71"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586501,
+        "revisionKey": "8edc087e286a034983a5f5b193deb2baccc12f790680024cb38952b877174a71",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#epsilon",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#epsilon",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "bef972c6ba2bc77e472298594c6768f852257239fb97f85d6243e10088572d6f",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#epsilon",
+            "other": "symbols.ts#epsilon"
+          },
+          "beforeSignature": "export function epsilon(value: number)",
+          "afterSignature": "export function epsilon(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "cb6f8c51580a1b0471a9adf827b216aaa13793c865a713c37dfc4a1c0dc0947f",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#beta",
+            "symbols": [
+              "symbols.ts#beta"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#beta",
+            "symbols": [
+              "symbols.ts#beta"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#beta",
+              "right": "symbols.ts#beta",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "47c7ea5fb5ad3261612f5e4f10d78387dc3e69c85b12b05ff575678e4fe8a5b6"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586533,
+        "revisionKey": "47c7ea5fb5ad3261612f5e4f10d78387dc3e69c85b12b05ff575678e4fe8a5b6",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#beta",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#beta",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "cb6f8c51580a1b0471a9adf827b216aaa13793c865a713c37dfc4a1c0dc0947f",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#beta",
+            "other": "symbols.ts#beta"
+          },
+          "beforeSignature": "export function beta(value: number)",
+          "afterSignature": "export function beta(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      },
+      {
+        "pair": {
+          "id": "f233437ac7ec8803e1e95b95d67d0ca0081efe779e7661b59d3a4e6b0fadc27c",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+            },
+            "symbol": "symbols.ts#zeta",
+            "symbols": [
+              "symbols.ts#zeta"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+            },
+            "symbol": "symbols.ts#zeta",
+            "symbols": [
+              "symbols.ts#zeta"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "symbols.ts#zeta",
+              "right": "symbols.ts#zeta",
+              "path": null
+            }
+          ],
+          "distance": 0,
+          "path": null,
+          "firstSeenAt": 1791476584821,
+          "updatedAt": 1791476584821,
+          "revisionKey": "45407ff2120e573279dc80c5aa8022da85dd9db11c6e71ba10d389d1dae0c538"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791476586575,
+        "revisionKey": "45407ff2120e573279dc80c5aa8022da85dd9db11c6e71ba10d389d1dae0c538",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#zeta",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "symbols.ts",
+              "symbol": "symbols.ts#zeta",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "f233437ac7ec8803e1e95b95d67d0ca0081efe779e7661b59d3a4e6b0fadc27c",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "ec4df15f-f001-4866-a9d5-6eba97dfe581"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "097cb96b-b9cc-47ef-a529-458a8a41b05b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "symbols.ts#zeta",
+            "other": "symbols.ts#zeta"
+          },
+          "beforeSignature": "export function zeta(value: number)",
+          "afterSignature": "export function zeta(value: number)",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        }
+      }
+    ],
+    "agentNotices": [],
+    "intents": [],
+    "ownerCards": [],
+    "arbitration": {
+      "mode": "owner",
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 1,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 12,
+      "localDecisionRatio": 1,
+      "white": 12,
+      "black": 0,
+      "grey": 0,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 1,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "visibleActive": 10,
+  "visibleCandidates": 10,
+  "filteredCandidates": 12,
+  "unrelatedMemberCandidates": 0,
+  "download": true
+}

@@ -28,6 +28,7 @@ async function pair(browser: Browser, name: string) {
   const id = new URL(alice.url()).pathname.split("/").at(-1)!;
   await openAs(alice, "Alice", id); await openAs(bob, "Bob", id);
   await alice.getByTestId("collab-tab-conflict").click(); await bob.getByTestId("collab-tab-conflict").click();
+  for (const page of [alice, bob]) await page.getByTestId("conflict-progress").locator(":scope > summary").click();
   return { alice, bob, id, async close() { await a.close(); await b.close(); } };
 }
 async function run(page: Page, id: string, prompt: string) {
@@ -71,7 +72,9 @@ test("real owner arbitration: intents, both accept, yield, same-owner retry, and
       if (action === "accept") {
         await expect(aliceCard.getByRole("button", { name: "采纳建议" })).toBeEnabled({ timeout: 35000 });
         await aliceCard.getByRole("button", { name: "采纳建议" }).click();
-        await expect(aliceCard).toBeVisible();
+        await expect(context.alice.getByTestId("owner-intent-card")).toHaveCount(0);
+        await expect(context.alice.getByTestId("intent-board")).toContainText("你已采纳，等待对方");
+        await expect.poll(async () => (await state(context.alice, context.id)).ownerCards[0].accepted.length).toBe(1);
         await bobCard.getByRole("button", { name: "采纳建议" }).click();
         await expect.poll(async () => (await state(context.alice, context.id)).arbitration.outcomes.accepted).toBe(1);
       } else {
@@ -81,6 +84,8 @@ test("real owner arbitration: intents, both accept, yield, same-owner retry, and
       }
       await finished(context.alice, context.id, first); const result = await finished(context.bob, context.id, second);
       if (action === "accept") expect(result.status).toBe("completed");
+      await context.alice.getByTestId("conflict-history").locator(":scope > summary").click();
+      await context.alice.getByTestId("conflict-detailed-statistics").locator(":scope > summary").click();
       await expect(context.alice.getByTestId("arbitration-statistics")).toContainText("累计 1 次");
       await save(context, `01-cross-${action}`);
     } finally { await context.close(); }

@@ -56,8 +56,8 @@ test("端点鉴权失败时显示警告并保持编辑可用", async ({ browser 
   const pair = await openPair(browser);
   try {
     await grey(pair.alice, pair.bob);
-    await expect(pair.alice.getByTestId("adjudication-result").first()).toContainText("研判失败，已降级为警告", { timeout: 15000 });
-    await expect(pair.bob.getByTestId("conflict-warning")).toContainText("研判失败，已降级为警告");
+    await expect(pair.alice.getByTestId("adjudication-result").first()).toContainText("研判失败，已改为提醒", { timeout: 15000 });
+    await expect(pair.bob.getByTestId("conflict-warning")).toContainText("研判失败，已改为提醒");
     expect((await guard(pair.alice, pair.id)).frozenFiles).toEqual([]);
     await edit(pair.alice, "src/pricing.ts", "price - rate", "price - rate * 2");
     await fs.mkdir(evidence, { recursive: true });
@@ -71,7 +71,7 @@ async function openPair(browser: Browser) {
   await alice.goto("/"); await alice.getByTestId("import-directory").click(); await alice.getByTestId("project-name").fill(`stage5-${Date.now()}`); await alice.getByTestId("project-directory").fill(shop); await alice.getByTestId("create-project-submit").click();
   await expect(alice).toHaveURL(/\/projects\/[^/]+$/); const id = new URL(alice.url()).pathname.split("/").at(-1)!;
   await openAs(alice, "Alice", id); await openAs(bob, "Bob", id);
-  for (const page of [alice, bob]) { await page.getByTestId("collab-tab-conflict").click(); await page.getByTestId("dir-src").click(); }
+  for (const page of [alice, bob]) { await page.getByTestId("collab-tab-conflict").click(); await page.getByTestId("conflict-progress").locator(":scope > summary").click(); await page.getByTestId("conflict-history").locator(":scope > summary").click(); await page.getByTestId("conflict-detailed-statistics").locator(":scope > summary").click(); await page.getByTestId("dir-src").click(); }
   await alice.getByTestId("file-src/pricing.ts").click(); await bob.getByTestId("file-src/checkout.ts").click();
   await alice.waitForFunction(() => window.__simplercpYjsSynced?.["src/pricing.ts"]); await bob.waitForFunction(() => window.__simplercpYjsSynced?.["src/checkout.ts"]);
   return { alice, bob, id, close: async () => { await a.close(); await b.close(); } };

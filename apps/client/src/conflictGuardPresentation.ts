@@ -1,5 +1,6 @@
 import type { ConflictGuardState, GuardActorRef } from "./conflictGuardTypes";
 import type { RoomMember } from "./types";
+import { readableGuardText } from "./conflictGuardLabels";
 
 export function guardActorName(actor: GuardActorRef, members: RoomMember[]) {
   const name = (id?: string) => members.find((member) => member.id === id)?.displayName ?? id ?? "成员";
@@ -14,6 +15,17 @@ export function conflictActionCount(state: ConflictGuardState, memberId?: string
   const pairs = (state.pairDecisions ?? []).filter((record) => humanConflict(record.pair) && ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.actor.memberId, record.pair.right.actor.memberId].includes(memberId));
   const cards = (state.ownerCards ?? []).filter((card) => card.status === "waiting" && card.owners.includes(memberId) && !card.accepted.includes(memberId));
   return new Set(pairs.map((record) => record.pair.id)).size + cards.length;
+}
+
+export function guardDecisionCounts(state: ConflictGuardState) {
+  const records = [...new Map((state.pairDecisions ?? []).filter((record) => record.verdict).map((record) => [record.pair.id, record])).values()];
+  const additional = state.intervention ? records.filter((record) => record.point) : records;
+  return {
+    decisions: (state.intervention?.decisions ?? 0) + additional.length,
+    white: (state.intervention?.white ?? 0) + additional.filter((record) => record.verdict!.zone === "white").length,
+    black: (state.intervention?.black ?? 0) + additional.filter((record) => record.verdict!.zone === "black").length,
+    grey: (state.intervention?.grey ?? 0) + additional.filter((record) => record.verdict!.zone === "grey").length
+  };
 }
 
 const relations: Record<string, string> = {
@@ -41,9 +53,9 @@ export function conflictWarning(record: NonNullable<ConflictGuardState["pairDeci
   const model = record.verdict.adjudication;
   return {
     id: `${record.pair.id}:${record.revision}`,
-    summary: model ? record.conflict?.explanationZh ?? model.userExplanation : record.conflict?.summaryZh ?? record.verdict.summary,
-    suggestion: model ? record.conflict?.suggestionZh ?? model.suggestedAction : undefined,
-    modelLabel: model ? model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定，耗时 ${Math.round(model.latencyMs)} ms` : undefined,
+    summary: readableGuardText(model ? record.conflict?.explanationZh ?? model.userExplanation : record.conflict?.summaryZh ?? record.verdict.summary),
+    suggestion: model ? readableGuardText(record.conflict?.suggestionZh ?? model.suggestedAction) : undefined,
+    modelLabel: model ? model.status === "degraded" ? "研判失败，已改为提醒" : `由${model.source === "fast" ? "快判" : "深判"}模型判定，耗时 ${Math.round(model.latencyMs)} ms` : undefined,
     path: relationPathText(record.pair.path)
   };
 }

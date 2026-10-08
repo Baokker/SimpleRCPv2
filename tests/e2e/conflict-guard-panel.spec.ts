@@ -35,6 +35,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
   await expect(bob.getByTestId("collab-tab-conflict")).toBeVisible();
   await alice.getByTestId("collab-tab-conflict").click();
   await bob.getByTestId("collab-tab-conflict").click();
+  for (const page of [alice, bob]) await page.getByTestId("conflict-progress").locator(":scope > summary").click();
   if (saveEvidence) await fs.mkdir(evidenceRoot, { recursive: true });
   await capture(alice, "01-alice-panel");
   await capture(bob, "01-bob-panel");
@@ -94,6 +95,9 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
   for (const page of [alice, bob]) {
     await expect(page.getByTestId("conflict-candidate")).toHaveCount(1);
     await expect(page.getByTestId("conflict-candidate")).toContainText("两人在改同一个函数");
+    await page.getByTestId("conflict-history").locator(":scope > summary").click();
+    await page.getByTestId("conflict-detailed-statistics").locator(":scope > summary").click();
+    await page.getByTestId("conflict-statistics").locator(".conflict-stat-details > summary").click();
     await expect(page.getByTestId("conflict-statistics").locator('[data-metric="indexed-files"] dd')).toHaveText("7 个");
     await expect(page.getByTestId("conflict-statistics")).toContainText("最近更新");
   }

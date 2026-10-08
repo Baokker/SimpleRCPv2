@@ -27,6 +27,7 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     await expect(alice.getByTestId("conflict-tab-count")).toHaveCount(0);
     for (const page of [alice, bob]) {
       await page.getByTestId("collab-tab-conflict").click();
+      await page.getByTestId("conflict-progress").locator(":scope > summary").click();
       await page.getByTestId("dir-src").click();
       await openFile(page, "src/cart.ts");
     }
@@ -45,7 +46,7 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     await expect(alice.getByTestId("editor-conflict-banner")).toHaveCount(1);
     await expect(alice.getByTestId("conflict-candidate")).toHaveCount(2);
     await expect(alice.locator(".editor-conflict-overlays, .editor-conflict-card")).toHaveCount(0);
-    const card = alice.getByTestId("conflict-card").first();
+    const card = alice.getByTestId("conflict-card").filter({ hasText: "Cart.total" });
     const actions = card.getByTestId("conflict-action-list");
     await expect(actions.locator(":scope > li")).toHaveCount(3);
     await expect(actions.getByRole("button")).toHaveText(["我来改", "双方确认后继续", "去聊天里商量"]);
@@ -55,7 +56,7 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     expect(new Set(layout.map((box) => box.x)).size).toBe(1);
     expect(layout[1].y).toBeGreaterThanOrEqual(layout[0].y + layout[0].height);
     expect(layout[2].y).toBeGreaterThanOrEqual(layout[1].y + layout[1].height);
-    await expect(card.getByTestId("conflict-tags").locator(":scope > span")).toHaveText(["黑区", "冻结", "同一声明并发修改"]);
+    await expect(card.getByTestId("conflict-tags").locator(":scope > span")).toHaveText(["黑区", "冻结", "同时修改同一处代码"]);
     const summary = await card.getByTestId("conflict-summary").textContent();
     expect(summary!.length).toBeLessThan(100);
     expect(summary).not.toMatch(/[·；]/);
@@ -78,6 +79,8 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     await expect(card.getByTestId("conflict-participants")).toContainText("Alice");
     await expect(card.getByTestId("conflict-participants")).toContainText("Bob");
     const state = await guardState(alice, id);
+    await alice.getByTestId("conflict-history").locator(":scope > summary").click();
+    await alice.getByTestId("conflict-detailed-statistics").locator(":scope > summary").click();
     const statistics = alice.getByTestId("conflict-statistics");
     await expect(statistics.locator('[data-metric="pairs"] dd')).toHaveText(`${state.intervention!.decisions} 个`);
     await expect(statistics.locator('[data-metric="black"] dd')).toHaveText(`${state.intervention!.black} 个`);
@@ -124,7 +127,7 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     }
     await card.getByRole("button", { name: "双方确认后继续" }).click();
     await expect(card.getByRole("button", { name: "双方确认后继续（已确认）" })).toBeDisabled();
-    await bob.getByTestId("conflict-card").first().getByRole("button", { name: "双方确认后继续" }).click();
+    await bob.getByTestId("conflict-card").filter({ hasText: "Cart.total" }).getByRole("button", { name: "双方确认后继续" }).click();
     await expect(alice.getByTestId("conflict-tab-count")).toHaveText("1");
     await expect(bob.getByTestId("conflict-tab-count")).toHaveText("1");
     await expect(alice.getByTestId("conflict-card")).toHaveCount(1);

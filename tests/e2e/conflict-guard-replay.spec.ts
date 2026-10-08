@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { openAs } from "./helpers";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-test("第三名成员看到幽灵成员输入、冻结与冲突卡片", async ({ page }, testInfo) => {
+test("第三名成员看到幽灵成员输入、冻结与检查记录", async ({ page }, testInfo) => {
   test.setTimeout(120_000);
   const health = await (await page.request.get("/api/health")).json();
   test.skip(health.features.conflictGuard !== "rules", "界面回放验收需要 rules 模式");
@@ -20,6 +20,8 @@ test("第三名成员看到幽灵成员输入、冻结与冲突卡片", async ({
   const projectId = decodeURIComponent(new URL(page.url()).pathname.split("/").at(-1)!);
   await openAs(page, "Observer", projectId);
   await page.getByTestId("collab-tab-conflict").click();
+  await page.getByTestId("conflict-progress").locator(":scope > summary").click();
+  await page.getByTestId("conflict-history").locator(":scope > summary").click();
   const dataset = path.join(root, "packages/conflict-guard/bench/datasets/d1-v1");
   const manifest = JSON.parse(await fs.readFile(path.join(dataset, "manifest.json"), "utf8")) as { groups: Array<{ split: string; operator: { id: string }; variants: { conflict: { id: string; truth: string; traceFile: string; entryPoints: { consumer: string } } } }> };
   const group = manifest.groups.find((group) => group.split === "dev" && group.operator.id === "IC-1" && group.variants.conflict.truth === "lock");
@@ -36,9 +38,13 @@ test("第三名成员看到幽灵成员输入、冻结与冲突卡片", async ({
     await page.getByTestId(`file-${consumer}`).click();
     await page.waitForFunction((file) => Boolean(window.__simplercpYjsSynced?.[file]), consumer);
     await expect(page.getByTestId("conflict-guard-panel")).toContainText("Replay origin", { timeout: 20_000 });
-    await expect(page.getByTestId("conflict-card").first().getByTestId("conflict-tags").locator(":scope > span")).toHaveText(["黑区", "冻结", "合并后才出现类型错误"], { timeout: 20_000 });
+    const conflictRecord = page.getByTestId("human-conflict-record").filter({ hasText: "合并后出现类型错误" }).first();
+    await expect(conflictRecord).toContainText("黑区", { timeout: 20_000 });
     await expect(page.locator(".conflict-frozen-range").first()).toBeVisible();
-    await expect(page.getByTestId("conflict-card").first()).toBeVisible();
+    await conflictRecord.locator(":scope > summary").click();
+    await expect(conflictRecord).toBeVisible();
+    await expect(page.getByTestId("conflict-attention")).toContainText("当前没有需要你处理的冲突");
+    await expect(page.getByTestId("conflict-card")).toHaveCount(0);
     expect(await completed, output).toBe(0);
     expect(browserErrors).toEqual([]);
     expect(output).toContain('"participants":["origin","candidate"]');
@@ -47,7 +53,7 @@ test("第三名成员看到幽灵成员输入、冻结与冲突卡片", async ({
     const directory = path.join(root, "docs/conflict-guard/evidence/stage-4-ui");
     await fs.mkdir(directory, { recursive: true });
     await fs.writeFile(path.join(directory, "trace.jsonl"), recorded);
-    await fs.writeFile(path.join(directory, "acceptance.json"), JSON.stringify({ trace: group.variants.conflict.id, consumer, ghostMembers: true, freezeDecoration: true, conflictCard: true, commandCompleted: true }, null, 2) + "\n");
+    await fs.writeFile(path.join(directory, "acceptance.json"), JSON.stringify({ trace: group.variants.conflict.id, consumer, ghostMembers: true, freezeDecoration: true, checkRecord: true, uninvolvedMemberHasNoAction: true, commandCompleted: true }, null, 2) + "\n");
   } finally {
     await testInfo.attach("replay-cli", { body: output, contentType: "text/plain" });
     await testInfo.attach("browser-errors", { body: JSON.stringify(browserErrors), contentType: "application/json" });
