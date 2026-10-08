@@ -1,0 +1,18 @@
+{
+  "parentCommit": "27c74e52ca5593b80437b16e2b49d8b9cbf5dc6a",
+  "hashAlgorithm": "SHA-256",
+  "files": {
+    "apps/client/src/App.tsx": "778043a998bd3f42f488489fd6c9fc32a4bfaece3d3f3bec0979acc3b4221d58",
+    "apps/client/src/agentTracePresentation.ts": "fae64c89758f85a50596d1281d10076d8918639bdacc2f63b1890e69a7377aca",
+    "apps/client/src/components/AgentPanel.tsx": "9bb6159f845ee199ced6f3d55a14abdefb8321584cce4a75524a4468bc826851",
+    "apps/client/src/components/CollaborationPanel.tsx": "2d53aaa7e0580724c0f0c803e01235a6fae6f1b1edea6935926869212df9dbed",
+    "apps/client/src/components/ConflictGuardPanel.tsx": "c933b414a324bd9eb4520531ef7854a5b75bc5ccfe42016613a492b77ad1686b",
+    "apps/client/src/components/ConflictGuardText.tsx": "752bc4cc0750fc2d00120c9f750dc1f515474375096210321201aa00e7c175fb",
+    "apps/client/src/components/EditorArea.tsx": "eab960f6d03c51706441e098ccc6c04bef1f94d9cace999e3880a87570ed54ec",
+    "apps/client/src/conflictGuardPresentation.ts": "9faca9bf5f5ec0a56cec7a01b79c75c154f1217ebd11fddae1dc81ec4db70005",
+    "apps/client/src/styles.css": "593b4a987b06ffb69d67a49c49fe1c0e0a1584e97ca00a81db9fd34053fb1c15",
+    "tests/e2e/conflict-guard-panel.spec.ts": "3bd85dffe418a6fc2fb7552ffe53a5bc98ff1989bd13950c749e9341955c9541",
+    "tests/e2e/conflict-guard-ui.spec.ts": "befaefc29e27c08842bf49c46c4a45961262aaad92b4a1caf45f124353a7550c",
+    "tests/e2e/theme.spec.ts": "0c23620288d9b452415e8d2ffa95fa71fd3350106b5521528a13753d351eb9f2"
+  }
+}

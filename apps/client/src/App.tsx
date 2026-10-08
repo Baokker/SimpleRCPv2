@@ -1,4 +1,4 @@
-import { MessagesSquare, Moon, PanelBottom, PanelRight, Sun } from "lucide-react";
+import { MessagesSquare, Moon, PanelBottom, PanelRight, ShieldAlert, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -24,7 +24,7 @@ import { getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
 import { conflictWarning, humanConflict } from "./conflictGuardPresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
-import { ReadableText } from "./components/ConflictGuardText";
+import { GuardBadge, ReadableText } from "./components/ConflictGuardText";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
   JoinProject,
@@ -902,7 +902,7 @@ function WorkspacePage({
       ) : null}
       <div className="conflict-warning-list">{conflictWarnings.map((warning) => (
         <div className="workspace-notice conflict-warning" role="status" data-testid="conflict-warning" key={warning.id}>
-          <div className="conflict-warning-content"><strong>冲突预防警告</strong><ReadableText text={warning.summary} />{warning.suggestion ? <ReadableText text={`建议：${warning.suggestion}`} /> : null}{warning.modelLabel ? <small>{warning.modelLabel}</small> : null}<small>{warning.path}</small></div>
+          <div className="conflict-warning-content"><div className="conflict-item-header"><strong className="conflict-warning-title"><ShieldAlert size={14} aria-hidden="true" />冲突预防警告</strong><GuardBadge tone="warning">警告</GuardBadge></div><ReadableText text={warning.summary} />{warning.suggestion ? <ReadableText text={`建议：${warning.suggestion}`} /> : null}{warning.modelLabel ? <small>{warning.modelLabel}</small> : null}<div className="conflict-relation"><span className="conflict-field-label">关联路径</span><ul className="conflict-relation-lines">{warning.path.split(" → ").map((line, index) => <li key={index}>{line}</li>)}</ul></div></div>
           <button type="button" aria-label="关闭通知" onClick={() => setConflictWarnings((previous) => previous.filter((entry) => entry.id !== warning.id))}>×</button>
         </div>
       ))}</div>

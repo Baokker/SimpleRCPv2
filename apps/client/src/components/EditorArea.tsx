@@ -1,5 +1,5 @@
 import Editor, { loader } from "@monaco-editor/react";
-import { LoaderCircle, X } from "lucide-react";
+import { ChevronDown, LoaderCircle, ShieldAlert, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import * as monacoRuntime from "monaco-editor";
 import type * as Monaco from "monaco-editor";
@@ -271,7 +271,7 @@ function CollaborativeEditor({
       data-collaboration-status={connectionStatus}
       aria-busy={connectionStatus === "connecting"}
     >
-      {conflictCards && conflictCards.length > 0 ? <details className="editor-conflict-banner" data-testid="editor-conflict-banner"><summary><span>当前有 {conflictCards.length} 个冲突</span><small>在“冲突预防”页签处理</small></summary><ul>{conflictCards.map((card) => <li key={card.pairId}>{card.summary}</li>)}</ul><p>相关区域的冻结提示可通过悬停查看。</p></details> : null}
+      {conflictCards && conflictCards.length > 0 ? <details className="editor-conflict-banner" data-testid="editor-conflict-banner"><summary><ShieldAlert size={14} aria-hidden="true" /><span>当前有 {conflictCards.length} 个冲突</span><small>在“冲突预防”页签处理</small><ChevronDown className="editor-conflict-chevron" size={14} aria-hidden="true" /></summary><ul>{conflictCards.map((card) => <li key={card.pairId}>{card.summary}</li>)}</ul><p>相关区域的冻结提示可通过悬停查看。</p></details> : null}
       <Editor
         path={file.path}
         defaultValue={file.content}

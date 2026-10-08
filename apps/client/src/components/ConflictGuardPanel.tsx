@@ -1,12 +1,12 @@
-import { Check, CheckCheck, MessageSquareText, Undo2 } from "lucide-react";
+import { ArrowRight, BarChart3, Bot, Check, CheckCheck, ChevronDown, GitBranch, MessageSquareText, ShieldAlert, Undo2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { actOnOwnerCard, confirmConflictPair, getConflictGuardSymbol, revertConflictPair } from "../api";
 import type { ActiveSymbol, AgentIntent, ConflictGuardState, ConflictGuardSymbol, GuardActorRef, GuardConflict } from "../conflictGuardTypes";
 import type { RoomMember } from "../types";
-import { relationPathText, guardActorName, guardActorKey, humanConflict } from "../conflictGuardPresentation";
-import { ReadableText } from "./ConflictGuardText";
+import { relationPathLines, guardActorName, guardActorKey, humanConflict } from "../conflictGuardPresentation";
+import { GuardBadge, GuardMetrics, GuardScope, ReadableText } from "./ConflictGuardText";
 
 const statuses = { modified: "修改", added: "新增", deleted: "删除" };
 
@@ -42,34 +42,39 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
     });
   };
   return <section className="collab-section conflict-guard-panel" data-testid="conflict-guard-panel">
-    <h3>意图板</h3>
+    <h3><Bot size={14} aria-hidden="true" />意图板</h3>
     <div data-testid="intent-board">{intents.filter((intent) => !["done", "reverted"].includes(intent.status)).map((intent) => <article key={intent.actor.runId} className="conflict-candidate" data-testid="agent-intent">
-      <strong>{actorName(intent.actor)} · {({ planning: "正在规划", running: "正在执行", waiting: "等待审批", blocked: "等待属主处理", done: "已经完成", reverted: "已经撤回" })[intent.status]}</strong>
-      <p>{intent.task}</p><small>计划范围：{intent.plannedScope.join("、") || "尚未声明"}<br />实际范围：{intent.actualScope.join("、") || "尚未修改"}<br />任务修订 {intent.taskRevision}</small>
-      {intent.actualScope.some((key) => !intent.plannedScope.includes(key)) ? <p>超出计划：{intent.actualScope.filter((key) => !intent.plannedScope.includes(key)).join("、")}</p> : null}
+      <div className="conflict-item-header"><strong>{actorName(intent.actor)}</strong><GuardBadge tone={intent.status === "blocked" || intent.status === "waiting" ? "warning" : "info"}>{({ planning: "正在规划", running: "正在执行", waiting: "等待审批", blocked: "等待属主处理", done: "已经完成", reverted: "已经撤回" })[intent.status]}</GuardBadge></div>
+      <ReadableText text={intent.task} />
+      <GuardScope label="计划范围" scope={intent.plannedScope} />
+      <GuardScope label="实际范围" scope={intent.actualScope} extraScope={intent.actualScope.filter((key) => !intent.plannedScope.includes(key))} empty="尚未修改" />
+      <small className="conflict-caption">任务修订 {intent.taskRevision}</small>
     </article>)}</div>
+    {intents.every((intent) => ["done", "reverted"].includes(intent.status)) ? <p className="empty-panel-state">当前没有 Agent 任务。</p> : null}
     <div data-testid="owner-cards">{state.ownerCards?.filter((card) => card.status === "waiting").map((card) => <article className="conflict-card" key={card.id} data-testid="owner-intent-card">
-      <strong>跨属主意图差异</strong>
-      {card.intents.map((intent) => <div key={intent.actor.runId}><p>{actorName(intent.actor)}：{intent.task}</p><small>计划：{intent.plannedScope.join("、") || "尚未声明"}<br />已修改：{intent.actualScope.join("、") || "尚未修改"}</small></div>)}
-      <p className="conflict-symbols">{displayName(card.conflict.symbols.self)} ⟷ {displayName(card.conflict.symbols.other)}</p>
-      <p className="conflict-relation">{card.path}</p>
+      <h4 className="conflict-card-title">跨属主意图差异</h4>
+      <div className="conflict-tags"><GuardBadge tone="warning">等待双方处理</GuardBadge></div>
+      {card.intents.map((intent) => <section className="conflict-owner-side" key={intent.actor.runId}><strong>{actorName(intent.actor)}</strong><ReadableText text={intent.task} /><GuardScope label="计划范围" scope={intent.plannedScope} /><GuardScope label="已修改" scope={intent.actualScope} empty="尚未修改" /></section>)}
+      <PairParticipants sides={[{ actor: card.conflict.self, symbol: card.conflict.symbols.self }, { actor: card.conflict.other, symbol: card.conflict.symbols.other }]} actorName={actorName} />
+      <RelationPath lines={card.path.split(" → ")} />
       <ReadableText text={card.explanation} />
       <ReadableText text={card.suggestionStatus === "analyzing" ? "正在生成折中建议" : card.suggestion ? `折中建议：${card.suggestion}` : "当前没有模型建议，请协商修改方式。"} />
       {memberId && card.owners.includes(memberId) ? <ul className="conflict-card-actions" aria-label="意图差异处理方式"><li><button className="primary" disabled={!card.suggestion || card.accepted.includes(memberId)} onClick={() => performAction(card.id, () => actOnOwnerCard(projectId, card.id, "accept"))}><CheckCheck size={14} />{card.accepted.includes(memberId) ? "已采纳，等待对方" : "采纳建议"}</button></li><li><button onClick={() => performAction(card.id, () => actOnOwnerCard(projectId, card.id, "yield"))}><Undo2 size={14} />让我的 Agent 让路</button></li><li><button className="auxiliary" onClick={() => performAction(card.id, () => actOnOwnerCard(projectId, card.id, "chat"))}><MessageSquareText size={14} />去聊天里商量</button></li></ul> : null}
       {actionErrors[card.id] ? <p role="alert">{actionErrors[card.id]}</p> : null}
     </article>)}</div>
-    <h3>正在修改</h3>
+    <h3><Users size={14} aria-hidden="true" />正在修改</h3>
     {state.activeSymbols.filter((group) => group.symbols.length > 0).map((group) => <div key={guardActorKey(group.actor)}>
       <strong>{actorName(group.actor)}</strong>
       <ul className="conflict-symbol-list">{group.symbols.map((symbol) => <li key={symbol.key}>
-        <button type="button" data-testid={`conflict-symbol-${group.actor.memberId ?? group.actor.runId}-${symbol.key}`} onClick={() => { if (symbol.status === "deleted") onError(new Error("该符号已删除")); onOpenSymbol(symbol.file, symbol.status === "deleted" ? 1 : symbol.startLine); }}>
-          {symbol.file}:{symbol.startLine}–{symbol.endLine} {displayName(symbol.key, symbol.kind)}
+        <button type="button" data-symbol={symbol.key} aria-label={`${symbol.file}:${symbol.startLine}–${symbol.endLine} ${displayName(symbol.key, symbol.kind)}`} data-testid={`conflict-symbol-${group.actor.memberId ?? group.actor.runId}-${symbol.key}`} onClick={() => { if (symbol.status === "deleted") onError(new Error("该符号已删除")); onOpenSymbol(symbol.file, symbol.status === "deleted" ? 1 : symbol.startLine); }}>
+          <span className="conflict-symbol-heading"><code>{displayName(symbol.key, symbol.kind)}</code><GuardBadge tone={symbol.status === "deleted" ? "danger" : symbol.status === "added" ? "success" : "neutral"}>{statuses[symbol.status]}</GuardBadge></span>
+          <span className="conflict-symbol-location">{symbol.file}:{symbol.startLine}–{symbol.endLine}</span>
         </button>
-        <small>{statuses[symbol.status]} · {elapsed(symbol.lastTouchedAt)}</small>
+        <small>{elapsed(symbol.lastTouchedAt)}</small>
       </li>)}</ul>
     </div>)}
-    {state.activeSymbols.every((group) => group.symbols.length === 0) ? <p>当前没有符号修改。</p> : null}
-    <h3>当前冲突</h3>
+    {state.activeSymbols.every((group) => group.symbols.length === 0) ? <p className="empty-panel-state">当前没有符号修改。</p> : null}
+    <h3><ShieldAlert size={14} aria-hidden="true" />当前冲突</h3>
     <div data-testid="conflict-current">
       {(state.pairDecisions ?? []).filter((record) => state.arbitration?.mode !== "all-auto" && humanConflict(record.pair) && record.status === "judged" && record.verdict?.decision === "lock").map((record) => {
         const participant = Boolean(memberId && (record.pair.left.actor.memberId === memberId || record.pair.right.actor.memberId === memberId));
@@ -77,11 +82,11 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
         const otherConfirmed = record.pair.left.actor.memberId === memberId ? record.rightConfirmed : record.leftConfirmed;
         return <article key={record.pair.id} className="conflict-card" data-testid="conflict-card">
           <h4 className="conflict-card-title">{participant ? `与 ${memberName(record.pair.left.actor.memberId === memberId ? record.pair.right.actor.memberId : record.pair.left.actor.memberId)} 的修改冲突` : `${memberName(record.pair.left.actor.memberId)} 与 ${memberName(record.pair.right.actor.memberId)} 的修改冲突`}</h4>
-          <div className="conflict-tags" data-testid="conflict-tags"><span>{record.verdict ? zoneName(record.verdict.zone) : "黑区"}</span><span>{state.mode === "observe" ? "观察" : "冻结"}</span><span>{ruleName(record.conflict?.ruleId ?? record.verdict?.ruleId)}</span></div>
+          <div className="conflict-tags" data-testid="conflict-tags"><GuardBadge tone="danger">{record.verdict ? zoneName(record.verdict.zone) : "黑区"}</GuardBadge><GuardBadge tone={state.mode === "observe" ? "neutral" : "danger"}>{state.mode === "observe" ? "观察" : "冻结"}</GuardBadge><GuardBadge>{ruleName(record.conflict?.ruleId ?? record.verdict?.ruleId)}</GuardBadge></div>
           <ReadableText text={record.conflict?.summaryZh ?? record.verdict?.summary ?? ""} testId="conflict-summary" />
           <ModelDetail metadata={record.verdict?.adjudication} conflict={record.conflict} />
-          <p className="conflict-symbols">{actorName(record.pair.left.actor)}：{displayName(record.pair.left.symbol)} ⟷ {actorName(record.pair.right.actor)}：{displayName(record.pair.right.symbol)}</p>
-          <p className="conflict-relation">{relationPathText(record.pair.path)}</p>
+          <PairParticipants sides={[record.pair.left, record.pair.right]} actorName={actorName} symbolKinds={symbolKinds} />
+          <RelationPath lines={relationPathLines(record.pair.path)} />
           <PairCode pair={record.pair} projectId={projectId} actorName={actorName} onError={onError} />
           {participant && (state.mode === "rules" || state.mode === "full") ? <>
             <p className="conflict-confirmation">{ownConfirmed ? "你已确认，等待对方确认" : otherConfirmed ? "对方已确认，等待你的确认" : "双方尚未确认"}</p>
@@ -94,32 +99,97 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
           {actionErrors[record.pair.id] ? <p role="alert" data-testid="conflict-action-error">{actionErrors[record.pair.id]}</p> : null}
         </article>;
       })}
-      {(state.blockedPersists ?? []).map((entry) => <p key={entry.file} className="conflict-lock">{entry.file}：暂停写入（{persistReason(entry.reason)}）</p>)}
-      {(state.pairDecisions ?? []).every((record) => !humanConflict(record.pair) || record.status !== "judged" || record.verdict?.decision !== "lock") && !(state.blockedPersists?.length) ? <p>当前没有冻结。</p> : null}
+      {(state.blockedPersists ?? []).map((entry) => <div key={entry.file} className="conflict-persist-row"><div className="conflict-item-header"><GuardBadge tone={entry.reason === "lock" ? "danger" : "warning"}>暂停写入</GuardBadge><span className="conflict-caption">{persistReason(entry.reason)}</span></div><code>{entry.file}</code></div>)}
+      {(state.pairDecisions ?? []).every((record) => !humanConflict(record.pair) || record.status !== "judged" || record.verdict?.decision !== "lock") && !(state.blockedPersists?.length) ? <p className="empty-panel-state">当前没有冻结。</p> : null}
     </div>
-    <h3>相互关联的修改</h3>
+    <h3><GitBranch size={14} aria-hidden="true" />相互关联的修改</h3>
     <div data-testid="conflict-candidates">{[...state.candidatePairs].sort((left, right) => Number(Boolean(left.path?.typeOnly)) - Number(Boolean(right.path?.typeOnly)) || right.updatedAt - left.updatedAt).map((pair) => {
       const record = [...(state.pairDecisions ?? [])].reverse().find((record) => record.pair.id === pair.id || record.pair.id.endsWith(`:${pair.id}`));
       return <Candidate key={pair.id} pair={pair} projectId={projectId} actorName={actorName} symbolKinds={symbolKinds} onError={onError} decision={record?.verdict} recordStatus={record?.status} />;
     })}</div>
-    {state.candidatePairs.length === 0 ? <p>当前没有相互关联的修改。</p> : null}
-    <h3>Agent 检查</h3>
+    {state.candidatePairs.length === 0 ? <p className="empty-panel-state">当前没有相互关联的修改。</p> : null}
+    <h3><Bot size={14} aria-hidden="true" />Agent 检查</h3>
     {(state.pairDecisions ?? []).filter((record) => record.point).map((record) => <article key={record.pair.id} className={`conflict-candidate ${record.verdict?.zone ?? ""}`} data-testid="agent-conflict-record">
-      <strong>{record.point} · {actorName(record.pair.left.actor)} ⟷ {actorName(record.pair.right.actor)}</strong>
-      <p>{record.status === "analyzing" ? "Agent 修改正在研判" : record.shadow ? record.verdict?.decision === "lock" ? "若启用将被拒绝" : "观察记录" : record.verdict?.decision === "lock" ? record.point === "T2" ? "修改被拒绝" : "结束检查发现冲突" : record.verdict?.decision === "warn" ? "修改警告" : "放行"} · {ruleName(record.verdict?.ruleId)}：{record.verdict?.summary}</p>
-      <small>{displayName(record.pair.left.symbol)} ⟷ {displayName(record.pair.right.symbol)} · {relationPathText(record.pair.path)}</small>
+      <div className="conflict-item-header"><strong>{record.point === "T2" ? "写入前检查（T2）" : "结束后复检（T3）"}</strong><GuardBadge tone={record.status === "analyzing" ? "warning" : zoneTone(record.verdict?.zone)}>{agentOutcome(record)}</GuardBadge></div>
+      {record.verdict ? <div className="conflict-tags"><GuardBadge tone={zoneTone(record.verdict.zone)}>{zoneName(record.verdict.zone)}</GuardBadge><GuardBadge>{ruleName(record.verdict.ruleId)}</GuardBadge></div> : null}
+      <ReadableText text={record.conflict?.summaryZh ?? record.verdict?.summary ?? "正在检查修改之间的影响。"} />
+      <PairParticipants sides={[record.pair.left, record.pair.right]} actorName={actorName} symbolKinds={symbolKinds} />
+      <RelationPath lines={relationPathLines(record.pair.path)} />
       <ModelDetail metadata={record.verdict?.adjudication} conflict={record.conflict} />
     </article>)}
-    <h3>统计</h3>
-    {state.arbitration ? <div data-testid="arbitration-statistics">{state.arbitration.members.map((entry) => <p key={entry.memberId}>{memberName(entry.memberId)}：每小时打扰 {entry.perHour} 次，累计 {entry.interruptions} 次，轻提示 {entry.light} 次<br />{Object.entries(entry.byKind).map(([kind, count]) => `${actorKindName(kind)}：${count}`).join("，")}</p>)}<p>等待属主处理 {Math.round(state.arbitration.suspendedMs / 1000)} 秒<br />{Object.entries(state.arbitration.outcomes).map(([outcome, count]) => `${outcomeName(outcome)}：${count}`).join("，")}</p></div> : null}
-    {state.arbitration?.automaticRetries ? <p>同属主自动处理 {state.arbitration.automaticRetries} 次</p> : null}
-    {state.adjudication ? <p data-testid="adjudication-statistics">模型调用 {state.adjudication.calls} 次 · 缓存命中 {state.adjudication.cacheHits} 次 · 升级比例 {(state.adjudication.escalationRatio * 100).toFixed(1)}%<br />延迟 p50/p95 {Math.round(state.adjudication.p50Ms)}/{Math.round(state.adjudication.p95Ms)} ms · 失败 {state.adjudication.failures} 次 · 费用估算 ${state.adjudication.costUsd.toFixed(6)}</p> : null}
-    <p data-testid="conflict-statistics">{state.index.files} 个文件 · {state.index.symbols} 个符号 · {state.index.edges} 条关系<br />最近更新 {state.index.latestUpdate.durationMs.toFixed(1)} ms<br />变更单元 {state.statistics.total} 个 · 无关系 {state.statistics.unrelated} 个（{(state.statistics.unrelatedRatio * 100).toFixed(1)}%） · 仅类型关联 {state.statistics.typeOnly ?? 0} 个<br />变更对 {state.intervention?.decisions ?? (state.pairDecisions ?? []).length} 个 · 白区 {state.intervention?.white ?? (state.pairDecisions ?? []).filter((record) => record.verdict?.zone === "white").length} · 黑区 {state.intervention?.black ?? (state.pairDecisions ?? []).filter((record) => record.verdict?.zone === "black").length} · 灰区 {state.intervention?.grey ?? (state.pairDecisions ?? []).filter((record) => record.verdict?.zone === "grey").length}<br />本地决定比例 {((state.intervention?.localDecisionRatio ?? 0) * 100).toFixed(1)}% · 冻结总时长 {Math.round(state.intervention?.frozenDurationMs ?? 0)} ms<br />写盘被挡 {state.intervention?.persistBlockedCount ?? state.persistBlockedCount ?? 0} 次 · 卡片操作 {state.intervention?.uiActionCount ?? state.uiActionCount ?? 0} 次 · 轨迹写盘冲突 {state.persistConflicts ?? 0} 次</p>
+    {(state.pairDecisions ?? []).every((record) => !record.point) ? <p className="empty-panel-state">当前没有 Agent 检查记录。</p> : null}
+    <h3><BarChart3 size={14} aria-hidden="true" />统计</h3>
+    <GuardStatistics state={state} memberName={memberName} />
     {state.indexing ? <p>语义索引正在建立。</p> : null}
     {state.degraded ? <p>冲突预防已降级：{state.degradedReason ?? "内部错误"}</p> : null}
     {state.traceWriteFailures ? <p>轨迹写入失败 {state.traceWriteFailures} 次。</p> : null}
     {state.index.truncated ? <p>文件数量超过 2000，当前只索引前 2000 个文件。</p> : null}
   </section>;
+}
+
+function GuardStatistics({ state, memberName }: { state: ConflictGuardState; memberName(id?: string): string }) {
+  const decisions = state.pairDecisions ?? [];
+  return <div className="conflict-statistics-groups">
+    <section className="conflict-stat-group" data-testid="conflict-statistics">
+      <h4>冲突处理</h4>
+      <GuardMetrics items={[
+        { id: "pairs", label: "变更对", value: `${state.intervention?.decisions ?? decisions.length} 个` },
+        ...(["white", "grey", "black"] as const).map((zone) => ({ id: zone, label: zoneName(zone), value: <span className="conflict-metric-zone" data-tone={zoneTone(zone)}>{state.intervention?.[zone] ?? decisions.filter((record) => record.verdict?.zone === zone).length} 个</span> })),
+        { id: "local-decisions", label: "本地决定比例", value: `${((state.intervention?.localDecisionRatio ?? 0) * 100).toFixed(1)}%` },
+        { id: "freeze-duration", label: "冻结总时长", value: `${Math.round(state.intervention?.frozenDurationMs ?? 0)} ms` },
+        { id: "blocked-writes", label: "写入被阻止", value: `${state.intervention?.persistBlockedCount ?? state.persistBlockedCount ?? 0} 次` },
+        { id: "card-actions", label: "卡片操作", value: `${state.intervention?.uiActionCount ?? state.uiActionCount ?? 0} 次` }
+      ]} />
+      <details className="conflict-stat-details"><summary>索引与运行统计</summary><GuardMetrics items={[
+        { id: "indexed-files", label: "文件数量", value: `${state.index.files} 个` },
+        { id: "indexed-symbols", label: "符号数量", value: `${state.index.symbols} 个` },
+        { id: "indexed-edges", label: "关系数量", value: `${state.index.edges} 条` },
+        { id: "index-duration", label: "最近更新时间", value: `${state.index.latestUpdate.durationMs.toFixed(1)} ms` },
+        { id: "change-units", label: "变更单元", value: `${state.statistics.total} 个` },
+        { id: "unrelated-units", label: "无关系的变更", value: `${state.statistics.unrelated} 个` },
+        { id: "unrelated-ratio", label: "无关系比例", value: `${(state.statistics.unrelatedRatio * 100).toFixed(1)}%` },
+        { id: "type-only", label: "仅类型关联", value: `${state.statistics.typeOnly ?? 0} 个` },
+        { id: "persist-conflicts", label: "文件写入冲突", value: `${state.persistConflicts ?? 0} 次` }
+      ]} /></details>
+    </section>
+    {state.adjudication ? <section className="conflict-stat-group"><h4>模型研判</h4><GuardMetrics testId="adjudication-statistics" items={[
+      { id: "model-calls", label: "模型调用", value: `${state.adjudication.calls} 次` },
+      { id: "cache-hits", label: "缓存命中", value: `${state.adjudication.cacheHits} 次` },
+      { id: "escalation-ratio", label: "升级比例", value: `${(state.adjudication.escalationRatio * 100).toFixed(1)}%` },
+      { id: "model-failures", label: "研判失败", value: `${state.adjudication.failures} 次` },
+      { id: "latency-p50", label: "延迟中位数（p50）", value: `${Math.round(state.adjudication.p50Ms)} ms` },
+      { id: "latency-p95", label: "延迟第 95 百分位（p95）", value: `${Math.round(state.adjudication.p95Ms)} ms` },
+      { id: "estimated-cost", label: "费用估算", value: `$${state.adjudication.costUsd.toFixed(6)}` }
+    ]} /></section> : null}
+    {state.arbitration ? <section className="conflict-stat-group" data-testid="arbitration-statistics"><h4>属主处理</h4>
+      {state.arbitration.members.map((entry) => <section className="conflict-member-stat" key={entry.memberId}><strong>{memberName(entry.memberId)}</strong><GuardMetrics items={[
+        { id: "interruptions-hour", label: "每小时打扰", value: `${entry.perHour} 次` },
+        { id: "interruptions-total", label: "累计", value: `${entry.interruptions} 次` },
+        { id: "light-notices", label: "轻提示", value: `${entry.light} 次` }
+      ]} />{Object.keys(entry.byKind).length ? <details className="conflict-stat-details"><summary>按冲突类型查看</summary><GuardMetrics items={Object.entries(entry.byKind).map(([kind, count]) => ({ id: kind, label: actorKindName(kind), value: `${count} 次` }))} /></details> : null}</section>)}
+      <GuardMetrics items={[
+        { id: "suspended-duration", label: "等待属主处理", value: `${Math.round(state.arbitration.suspendedMs / 1000)} 秒` },
+        { id: "automatic-retries", label: "同属主自动处理", value: `${state.arbitration.automaticRetries ?? 0} 次` },
+        ...Object.entries(state.arbitration.outcomes).map(([outcome, count]) => ({ id: outcome, label: outcomeName(outcome), value: `${count} 次` }))
+      ]} />
+    </section> : null}
+  </div>;
+}
+
+function PairParticipants({ sides, actorName, symbolKinds, editing = false }: { sides: Array<{ actor: GuardActorRef; symbol: string }>; actorName(actor: GuardActorRef): string; symbolKinds?: Map<string, ActiveSymbol["kind"]>; editing?: boolean }) {
+  return <span className="conflict-participants" data-testid="conflict-participants">{sides.map((side) => <span className="conflict-participant" key={`${guardActorKey(side.actor)}-${side.symbol}`}><span className="conflict-actor">{actorName(side.actor)}{editing ? <span className="conflict-caption">正在修改</span> : null}</span><code>{displayName(side.symbol, symbolKinds?.get(side.symbol))}</code></span>)}</span>;
+}
+
+function RelationPath({ lines }: { lines: string[] }) {
+  return <div className="conflict-relation" data-testid="conflict-relation"><span className="conflict-field-label">关联路径</span><ul className="conflict-relation-lines">{lines.map((line, index) => <li key={index}><ArrowRight size={12} aria-hidden="true" /><span>{line}</span></li>)}</ul></div>;
+}
+
+function zoneTone(zone?: "white" | "black" | "grey") { return zone === "black" ? "danger" : zone === "grey" ? "warning" : zone === "white" ? "success" : "neutral"; }
+function agentOutcome(record: NonNullable<ConflictGuardState["pairDecisions"]>[number]) {
+  if (record.status === "analyzing") return "分析中";
+  if (record.shadow) return record.verdict?.decision === "lock" ? "若启用将被拒绝" : "观察记录";
+  if (record.verdict?.decision === "lock") return record.point === "T2" ? "修改被拒绝" : "结束检查发现冲突";
+  return record.verdict?.decision === "warn" ? "修改警告" : "放行";
 }
 
 function Candidate({ pair, projectId, actorName, symbolKinds, onError, decision, recordStatus }: {
@@ -137,18 +207,20 @@ function Candidate({ pair, projectId, actorName, symbolKinds, onError, decision,
   }, [expanded, projectId, pair.id, pair.updatedAt]);
   const leftKind = texts?.[0]?.symbol?.kind ?? symbolKinds.get(pair.left.symbol);
   const rightKind = texts?.[1]?.symbol?.kind ?? symbolKinds.get(pair.right.symbol);
-  const path = pair.distance === 0 ? zeroDistanceText(leftKind, rightKind, pair.left.symbol, pair.right.symbol) : relationPathText(pair.path);
+  const lines = pair.distance === 0 ? [zeroDistanceText(leftKind, rightKind, pair.left.symbol, pair.right.symbol)] : relationPathLines(pair.path);
   return <article className={`conflict-candidate ${decision?.zone ?? ""}`} data-testid="conflict-candidate">
-    <button type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-      {actorName(pair.left.actor)} 正在改 {displayName(pair.left.symbol, leftKind)} ⟷ {actorName(pair.right.actor)} 正在改 {displayName(pair.right.symbol, rightKind)}
+    <button className="conflict-candidate-toggle" type="button" aria-label={`查看 ${actorName(pair.left.actor)} 与 ${actorName(pair.right.actor)} 的关联修改`} aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+      <PairParticipants sides={[pair.left, pair.right]} actorName={actorName} symbolKinds={new Map([[pair.left.symbol, leftKind], [pair.right.symbol, rightKind]])} editing />
+      <ChevronDown size={14} aria-hidden="true" />
     </button>
-    <div className="conflict-candidate-labels" data-testid="conflict-candidate-labels">{decision ? <span className="conflict-tags"><span>{zoneName(decision.zone)}</span><span>{recordStatus === "resolved" ? "已解除" : recordStatus === "stale" ? "等待重新判定" : decision.decision === "lock" && !humanConflict(pair) ? "Agent 修改被拒绝" : decisionName(decision.decision)}</span><span>{ruleName(decision.ruleId)}</span></span> : null}<span className="conflict-relation" title={path}>{pair.path?.typeOnly ? "仅类型关联：" : ""}{path}</span></div>
+    <div className="conflict-candidate-labels" data-testid="conflict-candidate-labels">{decision ? <div className="conflict-tags"><GuardBadge tone={zoneTone(decision.zone)}>{zoneName(decision.zone)}</GuardBadge><GuardBadge tone={zoneTone(decision.zone)}>{recordStatus === "resolved" ? "已解除" : recordStatus === "stale" ? "等待重新判定" : decision.decision === "lock" && !humanConflict(pair) ? "Agent 修改被拒绝" : decisionName(decision.decision)}</GuardBadge><GuardBadge>{ruleName(decision.ruleId)}</GuardBadge></div> : null}{pair.path?.typeOnly ? <GuardBadge>仅类型关联</GuardBadge> : null}</div>
+    <RelationPath lines={lines} />
     {recordStatus === "analyzing" ? <p data-testid="adjudication-analyzing">分析中，相关文件等待研判结果。</p> : <ModelDetail metadata={decision?.adjudication} />}
     {detailError ? <p role="alert">读取符号详情失败：{detailError}</p> : null}
     {expanded ? <div className="conflict-pair-texts">{[pair.left, pair.right].map((side, index) => {
       const change = texts?.[index]?.changes.find((change) => guardActorKey(change.actor) === guardActorKey(side.actor));
       return <div key={`${guardActorKey(side.actor)}-${side.symbol}`}>
-        <strong>{actorName(side.actor)} · {displayName(side.symbol, texts?.[index]?.symbol?.kind)}</strong>
+        <header className="conflict-side-heading"><strong>{actorName(side.actor)}</strong><code>{displayName(side.symbol, texts?.[index]?.symbol?.kind)}</code></header>
         <h4>修改前</h4><pre>{detailError ? "读取失败" : change?.before ?? "正在读取"}</pre>
         <h4>修改后</h4><pre>{detailError ? "读取失败" : change?.after ?? "正在读取"}</pre>
       </div>;
@@ -167,8 +239,11 @@ function ModelDetail({ metadata, conflict }: { metadata?: NonNullable<NonNullabl
   if (!metadata) return null;
   const degraded = metadata.point === "T2" ? "Agent 研判未完成，本次修改被拒绝" : metadata.point === "T3" ? "Agent 结束研判未完成，请检查撤回结果" : "研判失败，已降级为警告";
   return <div className="conflict-model-detail" data-testid="adjudication-result">
-    <div className="conflict-tags"><span>{metadata.status === "degraded" ? degraded : "已判定"}</span>{metadata.status !== "degraded" ? <span>由{metadata.source === "fast" ? "快判" : "深判"}模型判定</span> : null}</div>
-    <small>置信度 {metadata.confidence === undefined ? "未提供" : `${(metadata.confidence * 100).toFixed(1)}%`}，耗时 {Math.round(metadata.latencyMs)} ms</small>
+    <div className="conflict-tags"><GuardBadge tone={metadata.status === "degraded" ? "warning" : "info"}>{metadata.status === "degraded" ? degraded : "已判定"}</GuardBadge>{metadata.status !== "degraded" ? <GuardBadge>由{metadata.source === "fast" ? "快判" : "深判"}模型判定</GuardBadge> : null}</div>
+    <GuardMetrics items={[
+      { id: "confidence", label: "置信度", value: metadata.confidence === undefined ? "未提供" : `${(metadata.confidence * 100).toFixed(1)}%` },
+      { id: "latency", label: "研判耗时", value: `${Math.round(metadata.latencyMs)} ms` }
+    ]} />
     <ReadableText text={conflict?.explanationZh ?? metadata.userExplanation} testId="model-explanation" />
     <ReadableText text={`建议：${conflict?.suggestionZh ?? metadata.suggestedAction}`} testId="model-suggestion" />
   </div>;
@@ -188,7 +263,7 @@ function PairCode({ pair, projectId, actorName, onError }: { pair: ConflictGuard
   }, [expanded, pair.id, pair.updatedAt, projectId]);
   return <details className="conflict-code-detail" onToggle={(event) => setExpanded(event.currentTarget.open)}><summary>查看双方修改前后代码</summary>{expanded ? <div className="conflict-pair-texts">{[pair.left, pair.right].map((side, index) => {
     const change = texts?.[index]?.changes.find((entry) => guardActorKey(entry.actor) === guardActorKey(side.actor));
-    return <section key={guardActorKey(side.actor)}><strong>{actorName(side.actor)}：{displayName(side.symbol)}</strong><h4>修改前</h4><pre>{error ?? change?.before ?? (texts ? "当前没有符号修改" : "正在读取")}</pre><h4>修改后</h4><pre>{error ?? change?.after ?? (texts ? "当前没有符号修改" : "正在读取")}</pre></section>;
+    return <section key={guardActorKey(side.actor)}><header className="conflict-side-heading"><strong>{actorName(side.actor)}</strong><code>{displayName(side.symbol)}</code></header><h4>修改前</h4><pre>{error ?? change?.before ?? (texts ? "当前没有符号修改" : "正在读取")}</pre><h4>修改后</h4><pre>{error ?? change?.after ?? (texts ? "当前没有符号修改" : "正在读取")}</pre></section>;
   })}</div> : null}</details>;
 }
 function zoneName(zone: "white" | "black" | "grey") { return zone === "white" ? "白区" : zone === "black" ? "黑区" : "灰区"; }

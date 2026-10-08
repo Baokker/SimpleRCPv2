@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-08",
+  "branch": "feature/conflict-guard",
+  "parentCommit": "27c74e5",
+  "sourceHashes": "source-hashes.json",
+  "checks": {
+    "build": {
+      "command": "pnpm -r build",
+      "status": "passed",
+      "log": "build.log.gz"
+    },
+    "browser": {
+      "command": "CONFLICT_GUARD=rules SIMPLERCP_FAKE_AGENT_RUNTIME=false SIMPLERCP_UI_LAYOUT_EVIDENCE=1 SIMPLERCP_E2E_SERVER_PORT=4314 SIMPLERCP_E2E_CLIENT_PORT=5198 pnpm test:e2e tests/e2e/conflict-guard-ui.spec.ts tests/e2e/conflict-guard-panel.spec.ts tests/e2e/conflict-guard-intervention.spec.ts tests/e2e/theme.spec.ts",
+      "status": "passed",
+      "files": 4,
+      "tests": 10,
+      "log": "playwright.log.gz",
+      "layoutEvidence": "layout.json"
+    },
+    "ui": {
+      "statisticsMatchStateApi": true,
+      "participantRows": 2,
+      "relationStepsSeparate": true,
+      "joinedLabelsRemoved": true,
+      "actionsSameWidthAndHeight": true,
+      "themes": ["dark", "light"],
+      "fontInheritedFromSystem": true,
+      "themeAndMemberPreservedAfterReload": true,
+      "narrowPanelWidthPx": 280,
+      "horizontalOverflow": false,
+      "confirmAndRevertPassed": true
+    },
+    "secrets": {
+      "command": "node scripts/verify-evidence-secrets.mjs",
+      "configuredValuesFound": 0
+    },
+    "diff": {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  },
+  "realAgentRunsAdded": 0,
+  "realModelCallsAdded": 0
+}

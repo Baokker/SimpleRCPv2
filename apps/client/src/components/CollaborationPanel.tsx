@@ -21,6 +21,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
 import { downloadAgentTrace, getServerInfo, getConflictGuardState, sendConflictPairChat } from "../api";
 import { ConflictGuardPanel } from "./ConflictGuardPanel";
+import { GuardMetrics } from "./ConflictGuardText";
 import { conflictActionCount } from "../conflictGuardPresentation";
 import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
@@ -596,7 +597,7 @@ function ChatAgentMessage({
                   {presentation.visible.map((item) => (
                     <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
                       <span className="agent-trace-entry-marker" aria-hidden="true" />
-                      <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}</div>
+                      <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}{item.metrics ? <GuardMetrics items={item.metrics} /> : null}</div>
                     </li>
                   ))}
                 </ol>

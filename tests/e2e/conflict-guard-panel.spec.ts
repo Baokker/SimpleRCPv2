@@ -43,8 +43,12 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
 
   await openFile(alice, "src/pricing.ts");
   await editText(alice, "src/pricing.ts", "price * (1 - rate)", "price - price * rate");
-  await expect(alice.getByTestId("conflict-guard-panel")).toContainText("src/pricing.ts:3–5 applyDiscount");
-  await expect(bob.getByTestId("conflict-guard-panel")).toContainText("src/pricing.ts:3–5 applyDiscount");
+  for (const page of [alice, bob]) {
+    const symbol = page.locator('button[data-symbol="src/pricing.ts#applyDiscount"]');
+    await expect(symbol).toContainText("applyDiscount()");
+    await expect(symbol.locator(".conflict-symbol-location")).toHaveText("src/pricing.ts:3–5");
+    await expect(symbol.locator(".conflict-badge")).toHaveText("修改");
+  }
   await capture(alice, "02-active-symbol");
 
   await openFile(bob, "src/checkout.ts");
@@ -55,6 +59,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
     await expect(page.getByTestId("conflict-candidate")).toContainText("checkout()");
     await expect(page.getByTestId("conflict-candidate")).toContainText("checkout 调用 Cart.total");
     await expect(page.getByTestId("conflict-candidate")).toContainText("Cart.total 调用 applyDiscount");
+    await expect(page.getByTestId("conflict-candidate").locator(".conflict-relation-lines > li")).toHaveCount(2);
     await page.getByTestId("conflict-candidate").getByRole("button").click();
     await expect(page.locator(".conflict-pair-texts")).toContainText("price * (1 - rate)");
     await expect(page.locator(".conflict-pair-texts")).toContainText("price - price * rate");
@@ -89,7 +94,7 @@ test("两个成员看到符号修改、关联路径和修改文本，off 时隐�
   for (const page of [alice, bob]) {
     await expect(page.getByTestId("conflict-candidate")).toHaveCount(1);
     await expect(page.getByTestId("conflict-candidate")).toContainText("两人在改同一个函数");
-    await expect(page.getByTestId("conflict-statistics")).toContainText("7 个文件");
+    await expect(page.getByTestId("conflict-statistics").locator('[data-metric="indexed-files"] dd')).toHaveText("7 个");
     await expect(page.getByTestId("conflict-statistics")).toContainText("最近更新");
   }
   await expect.poll(async () => (await guardRequest(alice, projectId, "state")).statistics.total).toBe(unrelatedState.statistics.total + 2);

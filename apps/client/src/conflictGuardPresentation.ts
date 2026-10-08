@@ -22,12 +22,16 @@ const relations: Record<string, string> = {
   "state-write": "写入状态", contains: "包含", override: "覆写", "implements-member": "实现成员"
 };
 
-export function relationPathText(path: ConflictGuardState["candidatePairs"][number]["path"]) {
+export function relationPathLines(path: ConflictGuardState["candidatePairs"][number]["path"]) {
   return path?.hops.map((hop) => {
     const from = hop.direction === "forward" ? hop.from : hop.to;
     const to = hop.direction === "forward" ? hop.to : hop.from;
     return `${from.slice(from.indexOf("#") + 1)} ${relations[hop.kind] ?? hop.kind} ${to.slice(to.indexOf("#") + 1)}`;
-  }).join(" → ") ?? "双方正在修改同一声明";
+  }) ?? ["双方正在修改同一声明"];
+}
+
+export function relationPathText(path: ConflictGuardState["candidatePairs"][number]["path"]) {
+  return relationPathLines(path).join(" → ");
 }
 
 export function conflictWarning(record: NonNullable<ConflictGuardState["pairDecisions"]>[number], memberId?: string) {

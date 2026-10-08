@@ -36,6 +36,7 @@ import type {
   WorkspaceNode
 } from "../types";
 import { formatTime, titleCase } from "../format";
+import { GuardBadge, GuardMetrics, ReadableText } from "./ConflictGuardText";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 
@@ -271,7 +272,7 @@ export function AgentPanel({
           <ul>
             {runningRuns.map((run) => (
               <li key={run.id}>
-                <span>{runMemberName(run, members)} · {sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span>
+                <span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span></span>
                 <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
               </li>
             ))}
@@ -422,7 +423,7 @@ export function AgentPanel({
               </div>
             ) : null}
           </div>
-          <small>Enter to send · Shift + Enter for a new line</small>
+          <small className="agent-keyboard-hints"><span>Enter to send</span><span>Shift + Enter for a new line</span></small>
           <button
             type="button"
             className="agent-send-button"
@@ -473,7 +474,7 @@ function AgentMessage({
         <span className="agent-avatar"><Bot size={14} /></span>
         <div>
           <strong>{run.memberName ?? "OpenCode"}</strong>
-          <small>{runStatusLabel(run, queuedRuns, activeSessionIds)} · {run.model}</small>
+          <small className="agent-run-metadata"><span>{runStatusLabel(run, queuedRuns, activeSessionIds)}</span><code>{run.model}</code></small>
         </div>
         {ACTIVE_STATUSES.has(run.status) && canCancel ? (
           <button type="button" className="agent-cancel-button" onClick={onCancel} title="Cancel run">
@@ -506,7 +507,7 @@ function AgentMessage({
             {presentation.visible.map((item) => (
               <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
                 <span className="agent-trace-entry-marker" aria-hidden="true" />
-                <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}</div>
+                <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}{item.metrics ? <GuardMetrics items={item.metrics} /> : null}</div>
               </li>
             ))}
           </ol>
@@ -521,11 +522,15 @@ function AgentMessage({
         </div>
       </details>
 
-      {run.conflictGuard ? <div data-testid="agent-guard-result">
-        <p>修改被拒绝 {run.conflictGuard.rejectedEdits} 次 · 审批等待 {Math.round(run.conflictGuard.approvalWaitMs ?? 0)} ms</p>
-        {run.conflictGuard.lastRejection ? <p data-testid="agent-last-rejection">{run.conflictGuard.lastRejection}</p> : null}
-        {run.conflictGuard.t3 ? <p>T3：{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</p> : null}
-      </div> : null}
+      {run.conflictGuard ? <section className="agent-guard-result" data-testid="agent-guard-result">
+        <h4>冲突检查</h4>
+        <GuardMetrics items={[
+          { id: "rejected-edits", label: "修改被拒绝", value: `${run.conflictGuard.rejectedEdits} 次` },
+          { id: "approval-wait", label: "审批等待", value: `${Math.round(run.conflictGuard.approvalWaitMs ?? 0)} ms` }
+        ]} />
+        {run.conflictGuard.lastRejection ? <div className="agent-guard-explanation"><span className="conflict-field-label">最近一次拒绝</span><ReadableText text={run.conflictGuard.lastRejection} testId="agent-last-rejection" /></div> : null}
+        {run.conflictGuard.t3 ? <div className="agent-guard-check"><span className="conflict-field-label">结束后复检（T3）</span><GuardBadge tone={run.conflictGuard.t3 === "passed" ? "success" : "warning"}>{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</GuardBadge></div> : null}
+      </section> : null}
       {run.output ? <div className="agent-run-output">{run.output}</div> : null}
       {run.error ? <p className="agent-run-error">{run.error}</p> : null}
       {run.fileChanges?.length ? (
@@ -570,7 +575,7 @@ function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds:
     return "Waiting for the previous task in this session";
   }
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
-  return position > 0 ? `Waiting for a concurrent slot · #${position}` : "Waiting for a concurrent slot";
+  return position > 0 ? `Waiting for a concurrent slot (#${position})` : "Waiting for a concurrent slot";
 }
 
 function TraceStatusIcon({ status }: { status: AgentRun["status"] }) {

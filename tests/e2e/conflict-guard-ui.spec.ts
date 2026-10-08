@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { openAs } from "./helpers";
+import type { ConflictGuardState } from "../../apps/client/src/conflictGuardTypes";
 
 const shop = fileURLToPath(new URL("../../demo/conflict-shop/", import.meta.url));
 const evidence = fileURLToPath(new URL("../../docs/conflict-guard/evidence/ui-round1/", import.meta.url));
@@ -71,6 +72,47 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     await banner.locator("summary").click();
     await expect(banner.locator("li")).toHaveCount(1);
     await banner.locator("summary").click();
+    const panel = alice.getByTestId("conflict-guard-panel");
+    expect(await panel.innerText()).not.toMatch(/[·•⟷]/);
+    await expect(card.getByTestId("conflict-participants").locator(".conflict-participant")).toHaveCount(2);
+    await expect(card.getByTestId("conflict-participants")).toContainText("Alice");
+    await expect(card.getByTestId("conflict-participants")).toContainText("Bob");
+    const state = await guardState(alice, id);
+    const statistics = alice.getByTestId("conflict-statistics");
+    await expect(statistics.locator('[data-metric="pairs"] dd')).toHaveText(`${state.intervention!.decisions} 个`);
+    await expect(statistics.locator('[data-metric="black"] dd')).toHaveText(`${state.intervention!.black} 个`);
+    await expect(statistics.locator('[data-metric="grey"] dd')).toHaveText(`${state.intervention!.grey} 个`);
+    await expect(statistics.locator('[data-metric="white"] dd')).toHaveText(`${state.intervention!.white} 个`);
+    const details = statistics.locator(".conflict-stat-details");
+    expect(await details.evaluate((element) => element.hasAttribute("open"))).toBe(false);
+    await details.locator("summary").click();
+    await expect(statistics.locator('[data-metric="indexed-files"] dd')).toBeVisible();
+    await expect(statistics.locator('[data-metric="indexed-files"] dd')).toHaveText(`${state.index.files} 个`);
+    await details.locator("summary").click();
+    const dark = await panelStyles(alice);
+    expect(dark.cardFont).toBe(dark.systemFont);
+    await alice.getByTestId("theme-toggle").click();
+    await expect(alice.locator("html")).toHaveAttribute("data-theme", "light");
+    const light = await panelStyles(alice);
+    expect(light.cardFont).toBe(light.systemFont);
+    expect(light.cardBackground).not.toBe(dark.cardBackground);
+    expect(light.metricBackground).not.toBe(dark.metricBackground);
+    expect(light.headingColor).not.toBe(dark.headingColor);
+    await alice.getByTestId("theme-toggle").click();
+    const handle = await alice.getByRole("separator", { name: "Resize collaboration panel" }).boundingBox();
+    await alice.mouse.move(handle!.x + handle!.width / 2, handle!.y + 80);
+    await alice.mouse.down();
+    await alice.mouse.move(handle!.x + handle!.width / 2 + 100, handle!.y + 80, { steps: 5 });
+    await alice.mouse.up();
+    await expect.poll(() => alice.locator(".app-shell").evaluate((element) => getComputedStyle(element).getPropertyValue("--collaboration-pane-width"))).toBe("280px");
+    await statistics.scrollIntoViewIfNeeded();
+    const layoutChecks = await panel.locator(".conflict-metric, .conflict-participant, .conflict-candidate, .conflict-card").evaluateAll((elements) => elements.map((element) => ({ className: element.className, width: element.clientWidth, scrollWidth: element.scrollWidth })));
+    for (const entry of layoutChecks) expect(entry.scrollWidth, entry.className).toBeLessThanOrEqual(entry.width + 1);
+    if (process.env.SIMPLERCP_UI_LAYOUT_EVIDENCE === "1") {
+      const layoutEvidence = fileURLToPath(new URL("../../docs/conflict-guard/evidence/ui-round2/", import.meta.url));
+      await fs.mkdir(layoutEvidence, { recursive: true });
+      await fs.writeFile(path.join(layoutEvidence, "layout.json"), JSON.stringify({ dark, light, panelWidth: 280, layoutChecks, displayedCounts: { pairs: state.intervention!.decisions, black: state.intervention!.black, grey: state.intervention!.grey, white: state.intervention!.white }, checks: { noJoinedLabels: true, themesFollowSystem: true, noHorizontalOverflow: true } }, null, 2) + "\n");
+    }
     if (process.env.SIMPLERCP_UI_EVIDENCE) {
       await fs.mkdir(evidence, { recursive: true });
       const phase = process.env.SIMPLERCP_UI_EVIDENCE;
@@ -84,6 +126,9 @@ test("两个冲突的卡片、关联列表、页签与编辑器横幅", async ({
     await expect(card.getByRole("button", { name: "双方确认后继续（已确认）" })).toBeDisabled();
     await bob.getByTestId("conflict-card").first().getByRole("button", { name: "双方确认后继续" }).click();
     await expect(alice.getByTestId("conflict-tab-count")).toHaveText("1");
+    await expect(bob.getByTestId("conflict-tab-count")).toHaveText("1");
+    await expect(alice.getByTestId("conflict-card")).toHaveCount(1);
+    await expect(bob.getByTestId("conflict-card")).toHaveCount(1);
     await expect(alice.getByTestId("editor-conflict-banner")).toHaveCount(0);
     alice.once("dialog", (dialog) => void dialog.accept());
     await alice.getByTestId("conflict-card").getByRole("button", { name: "我来改" }).click();
@@ -106,6 +151,21 @@ async function openFile(page: Page, file: string) {
   await page.waitForFunction((file) => window.__simplercpYjsSynced?.[file], file);
 }
 async function value(page: Page, file: string) { return page.evaluate((file) => window.__simplercpEditors?.[file]?.getValue(), file); }
+async function guardState(page: Page, id: string): Promise<ConflictGuardState> {
+  return page.evaluate(async (id) => {
+    const response = await fetch(`/api/projects/${id}/conflict-guard/state`, { headers: { "X-SimpleRCP-Member": sessionStorage.getItem(`simplercp.memberId.${id}`)! } });
+    if (!response.ok) throw new Error(`冲突预防请求失败：${response.status}`);
+    return response.json();
+  }, id);
+}
+async function panelStyles(page: Page) {
+  return page.evaluate(() => {
+    const card = getComputedStyle(document.querySelector('[data-testid="conflict-card"]')!);
+    const metric = getComputedStyle(document.querySelector('[data-testid="conflict-statistics"] .conflict-metric')!);
+    const heading = getComputedStyle(document.querySelector(".conflict-card-title")!);
+    return { systemFont: getComputedStyle(document.body).fontFamily, cardFont: card.fontFamily, cardBackground: card.backgroundColor, metricBackground: metric.backgroundColor, headingColor: heading.color };
+  });
+}
 async function edit(page: Page, file: string, before: string, after: string) {
   await page.evaluate(({ file, before, after }) => {
     const editor = window.__simplercpEditors![file];
