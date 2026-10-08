@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 const dataDir = fileURLToPath(
   new URL("../.test-workspaces/e2e-data/", import.meta.url)
 );
-const serverPort = 4100;
-const clientPort = 5174;
+const serverPort = Number(process.env.SIMPLERCP_E2E_SERVER_PORT ?? 4100);
+const clientPort = Number(process.env.SIMPLERCP_E2E_CLIENT_PORT ?? 5174);
 const terminalEnabled = process.env.SIMPLERCP_TERMINAL_ENABLED ?? "true";
 const fakeAgentRuntime = process.env.SIMPLERCP_FAKE_AGENT_RUNTIME ?? "true";
 const maxConcurrentRuns = process.env.SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS ?? "3";
@@ -24,7 +24,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_DATA_DIR='${dataDir}' SIMPLERCP_IMPORT_ROOTS='${importRoot}' SIMPLERCP_SHELL=/bin/sh SIMPLERCP_TERMINAL_ENABLED=${terminalEnabled} SIMPLERCP_FAKE_AGENT_RUNTIME=${fakeAgentRuntime} SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS='${maxConcurrentRuns}' pnpm --filter @simplercp/server dev`,
+      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_DATA_DIR='${dataDir}' SIMPLERCP_IMPORT_ROOTS='${importRoot}' SIMPLERCP_SHELL=/bin/sh SIMPLERCP_TERMINAL_ENABLED=${terminalEnabled} SIMPLERCP_FAKE_AGENT_RUNTIME=${fakeAgentRuntime} SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS='${maxConcurrentRuns}' pnpm --filter @simplercp/server dev:once`,
       url: `http://127.0.0.1:${serverPort}/api/health`,
       reuseExistingServer: false,
       timeout: 30_000

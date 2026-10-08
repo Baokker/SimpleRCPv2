@@ -23,7 +23,8 @@ describe("server config", () => {
         cursorLeaveLines: 3,
         maxBatchDurationMs: 5_000,
         activeIdleMs: 600_000,
-        cursorDebounceMs: 200
+        cursorDebounceMs: 200,
+        bodyUnrelatedMaxAdjacentLines: 3
       },
       agent: {
         apiKey: undefined,
@@ -67,7 +68,8 @@ describe("server config", () => {
         cursorLeaveLines: 3,
         maxBatchDurationMs: 5_000,
         activeIdleMs: 600_000,
-        cursorDebounceMs: 200
+        cursorDebounceMs: 200,
+        bodyUnrelatedMaxAdjacentLines: 3
       },
       agent: {
         apiKey: "configured-key",
@@ -90,6 +92,12 @@ describe("server config", () => {
     expect(() => loadConfig({ CONFLICT_GUARD: "invalid" })).toThrow(
       "CONFLICT_GUARD must be off, observe, rules, or full"
     );
+  });
+
+  it("读取相邻行参数并拒绝无效数值", () => {
+    expect(loadConfig({ CONFLICT_GUARD_BODY_ADJACENT_LINES: "5" }).conflictGuard?.bodyUnrelatedMaxAdjacentLines).toBe(5);
+    expect(loadConfig({ CONFLICT_GUARD_BODY_ADJACENT_LINES: "0" }).conflictGuard?.bodyUnrelatedMaxAdjacentLines).toBe(0);
+    for (const value of ["-1", "1.5", "abc"]) expect(() => loadConfig({ CONFLICT_GUARD_BODY_ADJACENT_LINES: value })).toThrow();
   });
 
   it("rejects an invalid terminal setting", () => {

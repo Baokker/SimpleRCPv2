@@ -9,6 +9,7 @@ export * from "./semantic/changes.js";
 export { parseSymbols, innermostSymbols, isSourceParsable } from "./semantic/symbols.js";
 export * from "./routing/candidates.js";
 export * from "./routing/classifier.js";
+export * from "./routing/config.js";
 export * from "./routing/typecheck.js";
 export * from "./coordination/pairState.js";
 export * from "./coordination/session.js";

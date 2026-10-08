@@ -22,6 +22,7 @@ export function createProjectAgentGuard(options: {
   tracker: ConflictGuardTracker;
   clock: ConflictGuardClock;
   files: SemanticFileProvider;
+  bodyUnrelatedMaxAdjacentLines?: number;
   active(): ActiveChangeSet[];
   refresh(): void;
   gate(file: string): { allowed: boolean; reason?: string };
@@ -64,7 +65,7 @@ export function createProjectAgentGuard(options: {
   }
   async function evaluate(run: RunState, proposals: AgentTextProposal[], point: "T2" | "T3", signal: AbortSignal, active: ActiveChangeSet[], shadow = false, changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>) {
     const reservations = new Map([...approved.values()].flat().map((entry) => [entry.proposal.file, entry.proposal.after]));
-    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, active: mergeActiveChanges(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
+    const result = await evaluateAgentChanges({ actor: run.actor, proposals, mergeShared: point === "T2" && !shadow, currentView: point === "T3", changedSymbols, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines, active: mergeActiveChanges(active), files: { ...options.files, readFile: (file) => reservations.get(file) ?? options.current(file), listFiles: () => [...new Set([...options.files.listFiles(), ...reservations.keys()])], version: (file) => reservations.has(file) ? hash(reservations.get(file)!) : options.files.version(file) }, now: options.clock.now, signal, onError: (error) => emit({ type: "agent_guard_error", point, runId: run.actor.runId, reason: error instanceof Error ? error.message : String(error) }), ...(options.adjudicate ? { adjudicate: (input, local, incoming) => options.adjudicate!(point, input, local, incoming) } : {}), onEvent(event) {
       const key = `${point}:${event.record.pair.id}`;
       const previous = decisions.get(key);
       const pair = { ...event.record.pair, id: key };

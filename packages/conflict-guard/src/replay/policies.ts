@@ -19,6 +19,7 @@ export interface PolicyInput {
   activeFiles: ActiveFileChange[];
   project: SemanticIndexReadonly;
   symbols: (side: { actor: ActorRef; symbol: string }) => SymbolChange | undefined;
+  bodyUnrelatedMaxAdjacentLines?: number;
 }
 
 export interface ZoningPolicy {
@@ -72,7 +73,8 @@ export function createP3Policy(): ZoningPolicy {
         path: input.pair.path,
         nested: input.pair.distance === 0 && input.pair.left.symbol !== input.pair.right.symbol,
         typeOnly: Boolean(input.pair.path?.typeOnly),
-        project: input.project
+        project: input.project,
+        bodyUnrelatedMaxAdjacentLines: input.bodyUnrelatedMaxAdjacentLines
       });
     }
   };

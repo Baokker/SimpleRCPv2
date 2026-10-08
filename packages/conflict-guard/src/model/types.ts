@@ -33,6 +33,7 @@ export interface FileChange {
   baseText: string;
   proposalText?: string;
   ranges: TrackedRange[];
+  semanticRanges?: TrackedRange[];
   firstTouchedAt: number;
   lastTouchedAt: number;
   symbols?: SymbolChange[];
@@ -66,6 +67,8 @@ export interface EditBatch {
   endedAt: number;
   closeReason: BatchCloseReason;
   ranges: TrackedRange[];
+  semanticRanges?: TrackedRange[];
+  commentOnly?: boolean;
   textBefore: string;
   textAfter: string;
   deletionEdits?: Array<Pick<TextEdit, "file" | "ops" | "textBefore" | "textAfter">>;

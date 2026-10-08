@@ -4,7 +4,7 @@ import type { ConflictGuardTracker } from "../tracking/tracker.js";
 import type { SemanticChangeTracker, CandidatePair } from "../routing/candidates.js";
 import type { SemanticIndex } from "../semantic/types.js";
 import type { RelationPath } from "../semantic/types.js";
-import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
+import { innermostSymbols, parseSymbols, isSourceParsable } from "../semantic/symbols.js";
 import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
 import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode } from "./pairState.js";
@@ -71,9 +71,9 @@ export function createSessionCoordinator(options: {
   function symbolFor(actor: ActorRef, key: string) {
     return options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(actor))?.files && [...(options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(actor))?.files.values() ?? [])].flatMap((file) => file.symbols ?? []).find((symbol) => symbol.key === key);
   }
-  function touchedKeys(batch: { file: string; ranges: Array<{ start: number; end: number }> }) {
+  function touchedKeys(batch: { file: string; ranges: Array<{ start: number; end: number }>; semanticRanges?: Array<{ start: number; end: number }> }) {
     const cached = "actor" in batch ? batchSymbols.get(`${actorKey(batch.actor as ActorRef)}:${batch.file}`) : undefined;
-    return [...new Set([...(cached ?? []), ...batch.ranges.flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key)])];
+    return [...new Set([...(cached ?? []), ...(batch.semanticRanges ?? batch.ranges).flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key)])];
   }
   function relevantBatch(pair: CandidatePair) {
     return options.tracker.getOpenBatches().some((batch) => [pair.left, pair.right].some((side) => actorKey(batch.actor) === actorKey(side.actor) && touchedKeys(batch).some((key) => nested(key, side.symbol))));
@@ -176,17 +176,18 @@ export function createSessionCoordinator(options: {
   }
   function batchOpened(batch: EditBatch) {
     if (batch.actor.kind !== "human") return;
-    const beforeRanges = batch.deletionEdits?.flatMap((edit) => edit.ops.filter((op) => op.deleted.length > 0).map((op) => ({ start: op.from, end: op.from + op.deleted.length }))) ?? [];
-    const touched = [...new Set([...batch.ranges, ...beforeRanges].flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key))];
+    const ranges = batch.semanticRanges ?? batch.ranges;
+    const beforeRanges = ranges.length ? batch.deletionEdits?.flatMap((edit) => edit.ops.filter((op) => op.deleted.length > 0).map((op) => ({ start: op.from, end: op.from + op.deleted.length }))) ?? [] : [];
+    const touched = [...new Set([...ranges, ...beforeRanges].flatMap((range) => options.index.symbolsInRange(batch.file, range.start, range.end)).map((symbol) => symbol.key))];
     const batchKey = `${actorKey(batch.actor)}:${batch.file}`;
     batchSymbols.set(batchKey, new Set(touched));
     batchPaths.set(batchKey, options.semantic.getActiveChangeSets().filter((set) => actorKey(set.actor) !== actorKey(batch.actor)).flatMap((set) => {
       const otherKeys = [...set.files.values()].flatMap((file) => (file.symbols ?? []).map((symbol) => symbol.key));
       return options.semantic.findPaths(touched, otherKeys, 2).map((path) => ({ actor: actorKey(set.actor), path }));
     }));
-    if (options.enableT0 === false) return;
+    if (options.enableT0 === false || !isSourceParsable(batch.file, batch.textAfter)) return;
     const symbols = parseSymbols(batch.file, batch.textAfter);
-    const keys = batch.ranges.flatMap((range) => innermostSymbols(symbols, range.start, range.end)).map((symbol) => symbol.key);
+    const keys = ranges.flatMap((range) => innermostSymbols(symbols, range.start, range.end)).map((symbol) => symbol.key);
     for (const entry of contracts.values()) {
       if (actorKey(entry.actor) === actorKey(batch.actor)) continue;
       for (const targetSymbol of [...new Set(keys)]) {

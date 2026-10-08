@@ -271,6 +271,7 @@ function CollaborativeEditor({
       data-collaboration-status={connectionStatus}
       aria-busy={connectionStatus === "connecting"}
     >
+      {conflictCards && conflictCards.length > 0 ? <details className="editor-conflict-banner" data-testid="editor-conflict-banner"><summary><span>当前有 {conflictCards.length} 个冲突</span><small>在“冲突预防”页签处理</small></summary><ul>{conflictCards.map((card) => <li key={card.pairId}>{card.summary}</li>)}</ul><p>相关区域的冻结提示可通过悬停查看。</p></details> : null}
       <Editor
         path={file.path}
         defaultValue={file.content}
@@ -445,7 +446,6 @@ function CollaborativeEditor({
             : "Reconnecting collaboration"}
         </div>
       ) : null}
-      {conflictCards && conflictCards.length > 0 ? <details className="editor-conflict-banner" data-testid="editor-conflict-banner"><summary>当前有 {conflictCards.length} 个冲突 · 在“冲突预防”页签查看详情</summary><p>相关区域的冻结提示可通过悬停查看。</p></details> : null}
     </div>
   );
 }

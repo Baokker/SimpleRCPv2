@@ -65,6 +65,7 @@ export async function evaluateAgentChanges(options: {
   active: ActiveChangeSet[];
   files: SemanticFileProvider;
   mergeShared?: boolean;
+  bodyUnrelatedMaxAdjacentLines?: number;
   currentView?: boolean;
   changedSymbols?: ReadonlyMap<string, ReadonlySet<string>>;
   now(): number;
@@ -99,7 +100,7 @@ export async function evaluateAgentChanges(options: {
   const inputs: ZoneInput[] = [];
   for (const pair of semantic.getCandidatePairs().filter((pair) => [pair.left.actor, pair.right.actor].some((actor) => actorKey(actor) === actorKey(options.actor)))) {
     const side = (target: typeof pair.left) => ({ actor: target.actor, symbol: semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(target.actor))!.files.get(target.symbol.slice(0, target.symbol.indexOf("#")))!.symbols!.find((symbol) => symbol.key === target.symbol)! });
-    const input: ZoneInput = { left: side(pair.left), right: side(pair.right), path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: index };
+    const input: ZoneInput = { left: side(pair.left), right: side(pair.right), path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: index, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines };
     inputs.push(input);
     const unavailable: ZoneVerdict = { zone: "grey", decision: "lock", ruleId: "agent-analysis-unavailable", summary: "冲突检查暂不可用，请停止修改此文件并向用户报告。", evidence: [], contractChanged: { left: false, right: false } };
     let finish!: () => void;
@@ -244,7 +245,7 @@ export function mergeActiveChanges(sets: ActiveChangeSet[]) {
     if (!previous) { result.set(key, { ...set, files: new Map(set.files), status: "settled" }); continue; }
     for (const [file, change] of set.files) {
       const earlier = previous.files.get(file);
-      previous.files.set(file, earlier ? { ...change, baseText: earlier.baseText, ranges: [...earlier.ranges, ...change.ranges], deletedSymbolKeys: [...new Set([...(earlier.deletedSymbolKeys ?? []), ...(change.deletedSymbolKeys ?? [])])], firstTouchedAt: Math.min(earlier.firstTouchedAt, change.firstTouchedAt), lastTouchedAt: Math.max(earlier.lastTouchedAt, change.lastTouchedAt) } : change);
+      previous.files.set(file, earlier ? { ...change, baseText: earlier.baseText, ranges: [...earlier.ranges, ...change.ranges], semanticRanges: [...(earlier.semanticRanges ?? earlier.ranges), ...(change.semanticRanges ?? change.ranges)], deletedSymbolKeys: [...new Set([...(earlier.deletedSymbolKeys ?? []), ...(change.deletedSymbolKeys ?? [])])], firstTouchedAt: Math.min(earlier.firstTouchedAt, change.firstTouchedAt), lastTouchedAt: Math.max(earlier.lastTouchedAt, change.lastTouchedAt) } : change);
     }
   }
   return [...result.values()];
@@ -257,6 +258,6 @@ export function changedAgentDependencies(options: { actor: ActorRef; startedAt: 
     const keys = new Set((change.symbols ?? []).filter((symbol) => (beforeSymbols.get(symbol.key) ?? "") !== symbol.after).map((symbol) => symbol.key));
     const ranges = parseSymbols(file, options.current(file)).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
     if ([...keys].some((key) => change.symbols?.some((symbol) => symbol.key === key && symbol.status === "deleted"))) ranges.push(...change.ranges);
-    return ranges.length ? [[file, { ...change, baseText: baseline, ranges }] as const] : [];
+    return ranges.length ? [[file, { ...change, baseText: baseline, ranges, semanticRanges: ranges }] as const] : [];
   })) })).filter((set) => set.files.size > 0));
 }

@@ -15,6 +15,8 @@ import { interfaceRequiredMemberIncompatible } from "./rules/interface-required-
 import { mergeOnlyTypeError } from "./rules/merge-only-type-error.js";
 import { unparsableSide } from "./rules/unparsable-side.js";
 import { semanticInteractionUncertain } from "./rules/semantic-interaction-uncertain.js";
+import { commentOnly } from "./rules/comment-only-edit.js";
+import { declarationBodyUnrelated } from "./rules/declaration-body-unrelated.js";
 
 export type Zone = "white" | "black" | "grey";
 export type Decision = "allow" | "warn" | "lock";
@@ -38,6 +40,7 @@ export interface ZoneInput {
   nested: boolean;
   typeOnly: boolean;
   project: SemanticIndexReadonly;
+  bodyUnrelatedMaxAdjacentLines?: number;
 }
 
 export interface ZoneVerdict {
@@ -47,6 +50,7 @@ export interface ZoneVerdict {
   summary: string;
   evidence: Array<{ file: string; symbol?: string; detail: string }>;
   contractChanged: { left: boolean; right: boolean };
+  localOnly?: boolean;
   typecheck?: { ran: boolean; skipped?: string; durationMs?: number; mergeOnlyDiagnostics?: string[] };
   adjudication?: import("../adjudication/types.js").ModelVerdictMetadata;
 }
@@ -73,10 +77,8 @@ export function classify(input: ZoneInput): ZoneVerdict {
     evidence: [{ file: input.left.symbol.file, symbol: input.left.symbol.key, detail: left.detail }, { file: input.right.symbol.file, symbol: input.right.symbol.key, detail: right.detail }],
     incompatibilities: []
   };
-  const immediate = sameSymbolConcurrentWrite(context) ?? typeOnlyUnchanged(context);
-  if (immediate) return immediate;
   context.incompatibilities = [referencedSymbolRemoved, runtimeExportRemoved, callSignatureIncompatible, consumedReturnPropertyRemoved, interfaceRequiredMemberIncompatible].map((rule) => rule(context));
-  for (const rule of [commentFormatOnly, observabilityOnly, equivalentRefactor] satisfies ZoneRule[]) {
+  for (const rule of [commentOnly, commentFormatOnly, observabilityOnly, declarationBodyUnrelated, sameSymbolConcurrentWrite, typeOnlyUnchanged, equivalentRefactor] satisfies ZoneRule[]) {
     const result = rule(context);
     if (result) return result;
   }

@@ -380,6 +380,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error("Cannot reach the SimpleRCP server");
   }
   if (!response.ok) {
+    if (response.status === 500) throw new Error("服务端可能正在重启，请稍后刷新");
     const contentType = response.headers.get("content-type") ?? "";
     const body = await response.text();
     const message = contentType.includes("application/json") && body.trim()

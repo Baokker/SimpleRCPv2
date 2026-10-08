@@ -13,6 +13,7 @@ import {
   Plus,
   Pencil,
   Settings2,
+  ShieldAlert,
   Trash2,
   Users
 } from "lucide-react";
@@ -20,6 +21,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
 import { downloadAgentTrace, getServerInfo, getConflictGuardState, sendConflictPairChat } from "../api";
 import { ConflictGuardPanel } from "./ConflictGuardPanel";
+import { conflictActionCount } from "../conflictGuardPresentation";
 import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
 import type {
@@ -170,6 +172,7 @@ export function CollaborationPanel({
     ? []
     : mentionCandidates.filter((candidate) => candidate.handle.startsWith(mentionQuery));
   const runsById = useMemo(() => new Map(agentRuns.map((run) => [run.id, run])), [agentRuns]);
+  const conflictCount = conflictState ? conflictActionCount(conflictState, member?.id) : 0;
 
   useLayoutEffect(() => {
     const transcript = chatTranscriptRef.current;
@@ -231,7 +234,7 @@ export function CollaborationPanel({
           <Users size={14} />
           Team
         </button>
-        {conflictState ? <button className={activeTab === "conflict" ? "active" : ""} onClick={() => setActiveTab("conflict")} data-testid="collab-tab-conflict">冲突预防</button> : null}
+        {conflictState ? <button className={activeTab === "conflict" ? "active" : ""} onClick={() => setActiveTab("conflict")} data-testid="collab-tab-conflict"><ShieldAlert size={14} aria-hidden="true" />冲突预防{conflictCount > 0 ? <span className="collab-tab-count" data-testid="conflict-tab-count" aria-label={`${conflictCount} 个待处理冲突`}>{conflictCount}</span> : null}</button> : null}
       </nav>
 
       <div className="collab-tab-body">

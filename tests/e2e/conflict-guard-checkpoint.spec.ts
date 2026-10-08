@@ -90,7 +90,7 @@ for (const kind of ["white", "grey"] as const) test(`阶段3第${kind === "white
     await expect(bob.locator(".conflict-frozen-range")).toHaveCount(0);
     await expect(alice.getByTestId("conflict-card")).toHaveCount(0);
     if (kind === "grey") { await expect(alice.getByTestId("conflict-warning")).toBeVisible(); await expect(bob.getByTestId("conflict-warning")).toBeVisible(); }
-    else await expect(alice.getByTestId("conflict-candidates")).toContainText("白区 · 放行 · 只改日志");
+    else await expect(alice.getByTestId("conflict-candidate-labels").first().locator(".conflict-tags > span")).toHaveText(["白区", "放行", "只改日志"]);
     await expect.poll(() => disk(bob, projectId, "src/checkout.ts")).toContain("cart.total() + 1");
     await snapshot(alice, kind === "white" ? "05-white" : "06-grey");
     checks.push({ scenario: kind, checks: [kind === "white" ? "05" : "06"] });

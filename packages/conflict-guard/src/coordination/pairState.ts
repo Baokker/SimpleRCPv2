@@ -75,7 +75,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     invalidated.delete(record.pair.id);
     const previous = record.verdict;
     const verdict = options.classify(record.pair);
-    if (verdict.zone === "grey" && options.adjudicate) {
+    if (verdict.zone === "grey" && !verdict.localOnly && options.adjudicate) {
       const request = new AbortController();
       analyses.set(record.pair.id, request);
       const revision = record.revision;

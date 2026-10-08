@@ -9,8 +9,9 @@ import type {
   TextEdit,
   TrackedRange
 } from "../model/types.js";
-import { mergeRanges, transformRanges } from "./rangeTransform.js";
-import { deletedSymbolKeys } from "../semantic/changes.js";
+import { mergeRanges, transformEditRanges } from "./rangeTransform.js";
+import { deletedSymbolKeys, reconstructOwnedBefore } from "../semantic/changes.js";
+import { commentOnlyEdit, semanticEditRanges } from "../semantic/trivia.js";
 
 export interface ConflictGuardClock {
   now(): number;
@@ -76,12 +77,20 @@ export class ConflictGuardTracker {
 
     for (const activeState of this.active.values()) {
       const change = activeState.changeSet.files.get(edit.file);
-      if (change) change.ranges = transformRanges(change.ranges, edit.ops);
+      if (change) {
+        change.ranges = transformEditRanges(change.ranges, edit.ops);
+        if (change.semanticRanges) change.semanticRanges = transformEditRanges(change.semanticRanges, edit.ops);
+      }
     }
-    for (const batch of state.batches.values()) batch.batch.ranges = transformRanges(batch.batch.ranges, edit.ops);
+    for (const { batch } of state.batches.values()) {
+      batch.ranges = transformEditRanges(batch.ranges, edit.ops);
+      if (batch.semanticRanges) batch.semanticRanges = transformEditRanges(batch.semanticRanges, edit.ops);
+    }
     this.emit({ type: "edit", edit });
 
     if (edit.origin.kind === "human" || edit.origin.kind === "agent") {
+      const semanticRanges = semanticEditRanges(edit);
+      const commentOnly = commentOnlyEdit(edit.file, edit.textBefore, edit.textAfter);
       const actorKey = actorKeyOf(edit.origin);
       let activeState = this.active.get(actorKey);
       let change = activeState?.changeSet.files.get(edit.file);
@@ -96,20 +105,26 @@ export class ConflictGuardTracker {
           file: edit.file,
           baseText: edit.textBefore,
           ranges: mergeRanges(rangesForOps(edit.ops)),
+          semanticRanges,
           firstTouchedAt: edit.at,
           lastTouchedAt: edit.at
         };
         activeState.changeSet.files.set(edit.file, change);
       } else {
         change.ranges = mergeRanges([...change.ranges, ...rangesForOps(edit.ops)]);
+        change.semanticRanges = mergeRanges([...(change.semanticRanges ?? []), ...semanticRanges]);
         change.lastTouchedAt = edit.at;
       }
+      if (commentOnlyEdit(edit.file, reconstructOwnedBefore(change.baseText, edit.textAfter, 0, change.ranges), edit.textAfter)) change.semanticRanges = [];
       if (created) this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(activeState.changeSet) });
       this.resetActiveTimer(actorKey, edit.file);
 
       const existing = state.batches.get(actorKey);
       if (existing) {
         existing.batch.ranges = mergeRanges([...existing.batch.ranges, ...rangesForOps(edit.ops)]);
+        existing.batch.semanticRanges = mergeRanges([...(existing.batch.semanticRanges ?? []), ...semanticRanges]);
+        existing.batch.commentOnly = commentOnlyEdit(edit.file, reconstructOwnedBefore(existing.batch.textBefore, edit.textAfter, 0, existing.batch.ranges), edit.textAfter);
+        if (existing.batch.commentOnly) existing.batch.semanticRanges = [];
         existing.batch.endedAt = edit.at;
         existing.batch.textAfter = edit.textAfter;
         if (edit.ops.some((op) => op.deleted.length > 0)) existing.batch.deletionEdits = [...(existing.batch.deletionEdits ?? []), { file: edit.file, ops: edit.ops, textBefore: edit.textBefore, textAfter: edit.textAfter }];
@@ -123,6 +138,8 @@ export class ConflictGuardTracker {
           endedAt: edit.at,
           closeReason: "flush",
           ranges: mergeRanges(rangesForOps(edit.ops)),
+          semanticRanges,
+          commentOnly,
           textBefore: edit.textBefore,
           textAfter: edit.textAfter,
           ...(edit.ops.some((op) => op.deleted.length > 0) ? { deletionEdits: [{ file: edit.file, ops: edit.ops, textBefore: edit.textBefore, textAfter: edit.textAfter }] } : {})
@@ -213,7 +230,8 @@ export class ConflictGuardTracker {
     return [...this.files.entries()].flatMap(([file, state]) => [...state.batches.values()].map(({ batch }) => ({
       actor: { ...batch.actor },
       file,
-      ranges: batch.ranges.map((range) => ({ ...range }))
+      ranges: batch.ranges.map((range) => ({ ...range })),
+      semanticRanges: batch.semanticRanges?.map((range) => ({ ...range }))
     })));
   }
 
@@ -319,13 +337,13 @@ function lineNumberAt(text: string, position: number) {
 }
 
 function snapshotBatch(batch: EditBatch): EditBatch {
-  return { ...batch, actor: { ...batch.actor }, ranges: batch.ranges.map((range) => ({ ...range })) };
+  return { ...batch, actor: { ...batch.actor }, ranges: batch.ranges.map((range) => ({ ...range })), semanticRanges: batch.semanticRanges?.map((range) => ({ ...range })) };
 }
 
 function snapshotChangeSet(changeSet: ActiveChangeSet): ActiveChangeSet {
   return {
     actor: { ...changeSet.actor },
     status: changeSet.status,
-    files: new Map([...changeSet.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })) }]))
+    files: new Map([...changeSet.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })), semanticRanges: change.semanticRanges?.map((range) => ({ ...range })) }]))
   };
 }

@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { gzipSync, gunzipSync } from "node:zlib";
+import { gunzipSync } from "node:zlib";
 import { expect, it } from "vitest";
 
 const repository = fileURLToPath(new URL("../../../../", import.meta.url));
@@ -16,9 +16,16 @@ it("verifies a G3-only recording with its original configuration and model versi
   try {
     for (const args of [["--dataset", "bench/datasets/d1-v2"], ["--cache", "bench/model-cache/checkpoint-b-calibrated"]]) await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/data-artifacts.ts", ...args, "--restore"], { cwd: packageDirectory });
     const source = JSON.parse(gunzipSync(await fs.readFile(path.join(repository, "docs/conflict-guard/evidence/checkpoint-b-dev-report/calibrated/results.json.gz"))).toString());
-    const report = { ...source, config: { ...source.config, version: "adjudication-review-test", prices: { ...source.config.prices, deepOutputPerMillion: 1.5 } }, policies: { G3: source.policies.G3 } };
-    await fs.writeFile(path.join(directory, "results.json.gz"), gzipSync(JSON.stringify(report)));
-    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/adjudication-verify.ts", "--record", directory, "--cache", "bench/model-cache/checkpoint-b-calibrated", "--dataset", "bench/datasets/d1-v2"], { cwd: packageDirectory, env: { ...process.env, DEEPSEEK_MODEL: "review-different-model" }, timeout: 900000, maxBuffer: 1024 * 1024 });
+    const config = { ...source.config, version: "adjudication-review-test", prices: { ...source.config.prices, deepOutputPerMillion: 1.5 } };
+    const configuration = path.join(directory, "config.json");
+    const models = path.join(directory, "models.json");
+    await fs.writeFile(configuration, JSON.stringify(config));
+    await fs.writeFile(models, JSON.stringify(Object.fromEntries(source.policies.G3.model.calls.map((call: { adapter: string; model: string }) => [call.adapter, call.model]))));
+    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", "bench/datasets/d1-v2", "--policy", "G3", "--provider-mode", "replay", "--config", configuration, "--models", models, "--cache", "bench/model-cache/checkpoint-b-calibrated", "--out", directory], { cwd: packageDirectory, timeout: 600000, maxBuffer: 1024 * 1024 });
+    const report = JSON.parse(gunzipSync(await fs.readFile(path.join(directory, "results.json.gz"))).toString());
+    expect(report.policies.G3.model.httpCalls).toBe(0);
+    expect(report.policies.G3.groups).toHaveLength(source.policies.G3.groups.length);
+    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/adjudication-verify.ts", "--record", directory, "--cache", "bench/model-cache/checkpoint-b-calibrated", "--dataset", "bench/datasets/d1-v2"], { cwd: packageDirectory, env: { ...process.env, DEEPSEEK_MODEL: "review-different-model" }, timeout: 1800000, maxBuffer: 1024 * 1024 });
     const verification = JSON.parse(await fs.readFile(path.join(directory, "repeatability.json"), "utf8"));
     expect(verification.valid).toBe(true);
     expect(verification.byteIdentical).toBe(true);
@@ -30,7 +37,7 @@ it("verifies a G3-only recording with its original configuration and model versi
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 910000);
+}, 2410000);
 
 it("verifies subscription records through the offline CLI without network calls", async () => {
   const workspace = path.join(repository, ".test-workspaces");

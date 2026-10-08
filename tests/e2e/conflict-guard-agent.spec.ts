@@ -73,9 +73,26 @@ test("the later Agent receives a rejection for an active Agent dependency", asyn
     }).toBe(true);
     await bob.getByTestId("agent-prompt").fill(`fake-edit=${declaration("src/cart.ts", "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)")} fake-delay=100`);
     await bob.getByTestId("agent-run-submit").click();
-    await expect(bob.getByTestId("agent-guard-result")).toContainText("修改被拒绝 1 次", { timeout: 20000 });
-    await expect(bob.getByTestId("agent-last-rejection")).toContainText("signature");
-    await expect(bob.getByTestId("agent-last-rejection")).toContainText("Alice 的 Agent");
+    const mode = (await guardState(alice, id)).arbitration.mode;
+    if (mode === "owner") {
+      for (const page of [alice, bob]) await page.getByTestId("collab-tab-conflict").click();
+      await expect(alice.getByTestId("owner-intent-card")).toHaveCount(1);
+      await expect(bob.getByTestId("owner-intent-card")).toHaveCount(1);
+      await expect(alice.getByTestId("conflict-tab-count")).toHaveText("1");
+      await expect(bob.getByTestId("conflict-tab-count")).toHaveText("1");
+      await expect(bob.getByTestId("agent-conflict-record").first()).toContainText("调用签名不兼容");
+      await expect(bob.getByTestId("agent-conflict-record").first()).toContainText("Alice 的 Agent");
+      await bob.getByTestId("owner-intent-card").getByRole("button", { name: "让我的 Agent 让路" }).click();
+      await expect(bob.getByTestId("owner-intent-card")).toHaveCount(0);
+      await expect(bob.getByTestId("conflict-tab-count")).toHaveCount(0);
+      const content = await bob.request.get(`/api/projects/${id}/workspace/file?path=src%2Fcart.ts`, { headers: { "X-SimpleRCP-Member": await memberId(bob, id) } }).then((response) => response.json());
+      expect(content.content).toContain("applyDiscount(amount, 0.1)");
+      await alice.getByTestId("collab-tab-agent").click();
+    } else {
+      await expect(bob.getByTestId("agent-guard-result")).toContainText("修改被拒绝 1 次", { timeout: 20000 });
+      await expect(bob.getByTestId("agent-last-rejection")).toContainText("signature");
+      await expect(bob.getByTestId("agent-last-rejection")).toContainText("Alice 的 Agent");
+    }
     await expect(alice.getByTestId("agent-message-list")).toContainText("Completed", { timeout: 20000 });
     await saveEvidence("agent-agent", alice, id, { laterEditRejected: true });
   } finally { await context.close(); }

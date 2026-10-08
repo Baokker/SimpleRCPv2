@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ProjectConflictGuardConfig } from "./conflictGuard/projectConflictGuard.js";
-import { defaultAdjudicationConfig, validateAdjudicationConfig } from "@simplercp/conflict-guard";
+import { defaultAdjudicationConfig, validateAdjudicationConfig, defaultRoutingConfig, validateBodyUnrelatedMaxAdjacentLines } from "@simplercp/conflict-guard";
 
 const defaultRepositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -106,6 +106,7 @@ export function loadConfig(
       maxBatchDurationMs: 5_000,
       activeIdleMs: 600_000,
       cursorDebounceMs: 200,
+      bodyUnrelatedMaxAdjacentLines: validateBodyUnrelatedMaxAdjacentLines(Number(env.CONFLICT_GUARD_BODY_ADJACENT_LINES ?? defaultRoutingConfig.bodyUnrelatedMaxAdjacentLines)),
       arbitration: (() => { const mode = env.CONFLICT_GUARD_ARBITRATION ?? "owner"; if (!["owner", "all-human", "all-auto"].includes(mode)) throw new Error("CONFLICT_GUARD_ARBITRATION must be owner, all-human, or all-auto"); return mode as "owner" | "all-human" | "all-auto"; })(),
       intentInjection: (() => { const value = env.CONFLICT_GUARD_INTENT_INJECTION ?? "on"; if (!["on", "off"].includes(value)) throw new Error("CONFLICT_GUARD_INTENT_INJECTION must be on or off"); return value === "on"; })(),
       ...(conflictGuardMode === "full" ? { adjudication: {

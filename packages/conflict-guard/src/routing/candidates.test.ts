@@ -25,7 +25,7 @@ describe("候选对", () => {
     source = "export function a() { return 3; /* Bob */ }";
     version += 1;
     index.update(["a.ts"]);
-    tracker.update([set("alice", nextBaseline, 2), set("bob", "export function a() { return 3; }", 3)], [{ batch: batch("second", "alice", nextBaseline) }, { batch: batch("third", "bob", "export function a() { return 3; }") }]);
+    tracker.update([set("alice", nextBaseline, 2), set("bob", "export function a() { return 4; }", 3)], [{ batch: batch("second", "alice", nextBaseline) }, { batch: batch("third", "bob", "export function a() { return 4; }") }]);
     expect(tracker.statistics()).toEqual({ total: 3, related: 2, unrelated: 1, unrelatedRatio: 1 / 3, typeOnly: 0 });
     expect(events.filter((event) => event.type === "change_unit")).toHaveLength(3);
     tracker.update([]);

@@ -40,6 +40,20 @@ describe("检查点 A 回放指标", () => {
     expect(metrics.decisionLatencyMs.byVariant.safe).toMatchObject({ samples: 2, p50: 0, p95: 5 });
   });
 
+  it("同一声明不同部分的灰区警告计入本地决定", () => {
+    const text = "export function total() {\n  let first = 1;\n\n\n\n\n  let second = 2;\n  return first + second;\n}\n";
+    const trace: TraceEvent[] = [
+      { schema: 3, seq: 1, at: 0, type: "doc_open", file: "a.ts", text },
+      { schema: 3, seq: 2, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "1", inserted: "3" }] },
+      { schema: 3, seq: 3, at: 200, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("2"), deleted: "2", inserted: "4" }] }
+    ];
+    const result = replayTrace(trace, { policy: "P3" });
+    expect(result.judgements.map((item) => item.verdict)).toEqual([expect.objectContaining({ ruleId: "declaration-body-unrelated", zone: "grey", decision: "warn", localOnly: true })]);
+    const value = replayOutcome({ truth: "warn", variantKind: "conflict", operatorFamily: "SS", detectability: "runtime-only", trace, result, baseline: { "a.ts": text }, merged: result.finalTexts });
+    expect(value.localDecisionCount).toBe(1);
+    expect(calculateReplayMetrics([value]).localDecisionRatio?.value).toBe(1);
+  });
+
   it("预言机只锁定真值为冲突的候选关系", () => {
     const trace = relatedTrace();
     expect(replayTrace(trace, { policy: createOraclePolicy("allow") }).finalDecision).toBe("allow");
@@ -213,12 +227,12 @@ describe("检查点 A 回放指标", () => {
       { schema: 3, seq: 2, at: 0, type: "doc_open", file: "b.ts", text: consumer },
       { schema: 3, seq: 3, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: producer.indexOf("1") + 1, deleted: "", inserted: ", tax: 0" }] },
       { schema: 3, seq: 4, at: 3000, type: "edit", file: "b.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: consumer.lastIndexOf("1"), deleted: "1", inserted: "2" }] },
-      { schema: 3, seq: 5, at: 6000, type: "edit", file: "b.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: consumer.lastIndexOf("1"), deleted: "2", inserted: "1 /* checked */" }] }
+      { schema: 3, seq: 5, at: 6000, type: "edit", file: "b.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: consumer.lastIndexOf("1"), deleted: "2", inserted: "3 /* checked */" }] }
     ];
     const result = replayTrace(trace, { policy: "P3" });
     expect(result.coordinationEvents.filter((event) => event.type === "t0_warning")).toHaveLength(2);
-    expect(result.judgements.map((item) => [item.revision, item.verdict.decision])).toEqual([[0, "warn"], [1, "allow"]]);
-    expect(replayOutcome({ truth: "allow", variantKind: "safe", operatorFamily: "CP", detectability: "none", trace, result, baseline: { "a.ts": producer, "b.ts": consumer }, merged: result.finalTexts }).cardCount).toBe(2);
+    expect(result.judgements.map((item) => [item.revision, item.verdict.decision])).toEqual([[0, "warn"], [1, "warn"]]);
+    expect(replayOutcome({ truth: "warn", variantKind: "conflict", operatorFamily: "CP", detectability: "runtime-only", trace, result, baseline: { "a.ts": producer, "b.ts": consumer }, merged: result.finalTexts }).cardCount).toBe(2);
   });
 
   it.each(["P0", "P1"] as const)("%s 跨文件放行时不产生 T0 或语义闸门", (policy) => {

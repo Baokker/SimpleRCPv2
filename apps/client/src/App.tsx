@@ -24,6 +24,7 @@ import { getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
 import { conflictWarning, humanConflict } from "./conflictGuardPresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
+import { ReadableText } from "./components/ConflictGuardText";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
   JoinProject,
@@ -227,7 +228,7 @@ function WorkspacePage({
   const [conflictGuardState, setConflictGuardState] = useState<ConflictGuardState>();
   const seenT0WarningsRef = useRef(new Set<string>());
   const seenConflictWarningsRef = useRef(new Set<string>());
-  const [conflictWarnings, setConflictWarnings] = useState<Array<{ id: string; summary: string; path: string }>>([]);
+  const [conflictWarnings, setConflictWarnings] = useState<Array<NonNullable<ReturnType<typeof conflictWarning>>>>([]);
   const [collaborationVisible, setCollaborationVisible] = useState(true);
   const [terminalVisible, setTerminalVisible] = useState(terminalEnabled);
   const [workspaceWidth, setWorkspaceWidth] = useState(() => readLayoutDimension(WORKSPACE_WIDTH_KEY, 252, 180, 420));
@@ -901,7 +902,7 @@ function WorkspacePage({
       ) : null}
       <div className="conflict-warning-list">{conflictWarnings.map((warning) => (
         <div className="workspace-notice conflict-warning" role="status" data-testid="conflict-warning" key={warning.id}>
-          <span>冲突预防：{warning.summary}<br /><small>{warning.path}</small></span>
+          <div className="conflict-warning-content"><strong>冲突预防警告</strong><ReadableText text={warning.summary} />{warning.suggestion ? <ReadableText text={`建议：${warning.suggestion}`} /> : null}{warning.modelLabel ? <small>{warning.modelLabel}</small> : null}<small>{warning.path}</small></div>
           <button type="button" aria-label="关闭通知" onClick={() => setConflictWarnings((previous) => previous.filter((entry) => entry.id !== warning.id))}>×</button>
         </div>
       ))}</div>

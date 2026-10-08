@@ -20,7 +20,7 @@ export interface CandidatePair {
 export interface ChangeUnitStatistics { total: number; related: number; unrelated: number; unrelatedRatio: number; typeOnly: number }
 
 export type SemanticChangeEvent =
-  | { type: "change_unit"; actor: ActorRef; batchId: string; symbols: Array<{ key: string; file: string; status: SymbolChange["status"]; beforeHash: string; afterHash: string }> }
+  | { type: "change_unit"; actor: ActorRef; batchId: string; commentOnly: boolean; symbols: Array<{ key: string; file: string; status: SymbolChange["status"]; beforeHash: string; afterHash: string }> }
   | { type: "pair_candidate_opened" | "pair_candidate_updated" | "pair_candidate_closed"; pair: CandidatePair };
 
 export class SemanticChangeTracker {
@@ -45,13 +45,15 @@ export class SemanticChangeTracker {
         ...cumulative,
         baseText: cumulative.baseText,
         ranges: batch.ranges,
+        semanticRanges: batch.semanticRanges,
         firstTouchedAt: cumulative.firstTouchedAt,
         lastTouchedAt: batch.endedAt,
         symbols: undefined
       } : undefined;
       const symbols = fileChange ? mapSymbolChanges(fileChange, batch.textAfter, this.options.index) : [];
+      if (symbols.length === 0 && !batch.commentOnly) continue;
+      this.emit({ type: "change_unit", actor: batch.actor, batchId: batch.id, commentOnly: batch.commentOnly === true, symbols: symbols.map((symbol) => ({ key: symbol.key, file: symbol.file, status: symbol.status, beforeHash: hash(symbol.before), afterHash: hash(symbol.after) })) });
       if (symbols.length === 0) continue;
-      this.emit({ type: "change_unit", actor: batch.actor, batchId: batch.id, symbols: symbols.map((symbol) => ({ key: symbol.key, file: symbol.file, status: symbol.status, beforeHash: hash(symbol.before), afterHash: hash(symbol.after) })) });
       this.units.set(JSON.stringify([actorKey(batch.actor), batch.id]), { actor: actorKey(batch.actor), file: batch.file, generation: generation(fileChange!), symbols: symbols.map((symbol) => symbol.key) });
     }
     const active = this.changeSets.filter((set) => ["human", "agent"].includes(set.actor.kind) && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));

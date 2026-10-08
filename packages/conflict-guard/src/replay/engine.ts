@@ -21,6 +21,7 @@ export interface ReplayOptions {
   cursorLeaveLines?: number;
   maxBatchDurationMs?: number;
   activeIdleMs?: number;
+  bodyUnrelatedMaxAdjacentLines?: number;
   initialFiles?: Record<string, string>;
   libs?: Record<string, string>;
   endAt?: number;
@@ -97,7 +98,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
     const recorded = recordedChecks.find((event) => event.pairId === pair.id && event.revision === revision);
     const recordedCheck = (recorded?.verdict as ZoneVerdict | undefined)?.typecheck;
     const project = recordedCheck && !recordedCheck.ran && recordedCheck.skipped ? { ...index, checkFourStates: () => ({ ...recordedCheck }) } : index;
-    return policy.decide({ pair, activeFiles: activeFiles(), project, symbols: (side) => session.symbolFor(side.actor, side.symbol) });
+    return policy.decide({ pair, activeFiles: activeFiles(), project, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines ?? config.bodyUnrelatedMaxAdjacentLines, symbols: (side) => session.symbolFor(side.actor, side.symbol) });
   }, onEvent(event) {
     coordinationEvents.push(event as ReplayResult["coordinationEvents"][number]);
     if (event.type === "freeze" && !["P1", "P2"].includes(policy.id)) updateFreezeIntervals(event.regions as FrozenRegion[]);

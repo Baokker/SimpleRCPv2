@@ -9,6 +9,13 @@ export function guardActorName(actor: GuardActorRef, members: RoomMember[]) {
 export function guardActorKey(actor: GuardActorRef) { return actor.kind === "agent" ? `agent:${actor.runId}` : `${actor.kind}:${actor.memberId}`; }
 export function humanConflict(pair: ConflictGuardState["candidatePairs"][number]) { return pair.left.actor.kind === "human" && pair.right.actor.kind === "human"; }
 
+export function conflictActionCount(state: ConflictGuardState, memberId?: string) {
+  if (!memberId || state.mode === "observe" || state.arbitration?.mode === "all-auto") return 0;
+  const pairs = (state.pairDecisions ?? []).filter((record) => humanConflict(record.pair) && ["judged", "stale"].includes(record.status) && record.verdict?.decision === "lock" && [record.pair.left.actor.memberId, record.pair.right.actor.memberId].includes(memberId));
+  const cards = (state.ownerCards ?? []).filter((card) => card.status === "waiting" && card.owners.includes(memberId) && !card.accepted.includes(memberId));
+  return new Set(pairs.map((record) => record.pair.id)).size + cards.length;
+}
+
 const relations: Record<string, string> = {
   call: "调用", "value-reference": "引用值", "type-reference": "引用类型",
   inheritance: "继承", implementation: "实现", "state-read": "读取状态",
@@ -20,7 +27,7 @@ export function relationPathText(path: ConflictGuardState["candidatePairs"][numb
     const from = hop.direction === "forward" ? hop.from : hop.to;
     const to = hop.direction === "forward" ? hop.to : hop.from;
     return `${from.slice(from.indexOf("#") + 1)} ${relations[hop.kind] ?? hop.kind} ${to.slice(to.indexOf("#") + 1)}`;
-  }).join("；") ?? "双方正在修改同一声明";
+  }).join(" → ") ?? "双方正在修改同一声明";
 }
 
 export function conflictWarning(record: NonNullable<ConflictGuardState["pairDecisions"]>[number], memberId?: string) {
@@ -30,7 +37,9 @@ export function conflictWarning(record: NonNullable<ConflictGuardState["pairDeci
   const model = record.verdict.adjudication;
   return {
     id: `${record.pair.id}:${record.revision}`,
-    summary: model ? `${record.conflict?.explanationZh ?? model.userExplanation} 建议：${record.conflict?.suggestionZh ?? model.suggestedAction} · ${model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定 · ${Math.round(model.latencyMs)} ms`}` : record.conflict?.summaryZh ?? record.verdict.summary,
+    summary: model ? record.conflict?.explanationZh ?? model.userExplanation : record.conflict?.summaryZh ?? record.verdict.summary,
+    suggestion: model ? record.conflict?.suggestionZh ?? model.suggestedAction : undefined,
+    modelLabel: model ? model.status === "degraded" ? "研判失败，已降级为警告" : `由${model.source === "fast" ? "快判" : "深判"}模型判定，耗时 ${Math.round(model.latencyMs)} ms` : undefined,
     path: relationPathText(record.pair.path)
   };
 }

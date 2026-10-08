@@ -13,6 +13,18 @@ export function transformRanges(ranges: TrackedRange[], ops: TextEditOp[]) {
   }));
 }
 
+export function transformEditRanges(ranges: TrackedRange[], ops: TextEditOp[]) {
+  const replacements: TextEditOp[] = [];
+  for (const op of ops) {
+    const previous = replacements.at(-1);
+    if (previous && op.from === previous.from + previous.deleted.length) {
+      previous.deleted += op.deleted;
+      previous.inserted += op.inserted;
+    } else replacements.push({ ...op });
+  }
+  return transformRanges(ranges, replacements);
+}
+
 function transformRange(range: TrackedRange, from: number, deletedLength: number, insertedLength: number): TrackedRange {
   const to = from + deletedLength;
   const delta = insertedLength - deletedLength;

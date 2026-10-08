@@ -246,7 +246,7 @@ export function replayOutcome(input: {
     operatorFamily: input.operatorFamily,
     detectability: input.detectability,
     totalPairCount,
-    ...(result.policy === "P3" || result.policy.startsWith("G") ? { localDecisionCount: result.pairs.filter((pair) => pair.final?.verdict && !pair.final.verdict.adjudication && pair.final.verdict.zone !== "grey").length } : {}),
+    ...(result.policy === "P3" || result.policy.startsWith("G") ? { localDecisionCount: result.pairs.filter((pair) => pair.final?.verdict && !pair.final.verdict.adjudication && (pair.final.verdict.zone !== "grey" || pair.final.verdict.localOnly)).length } : {}),
     unnotifiedEscape: exposure.escaped && interventions.length === 0,
     ...(exposure.conflictPersistAt === undefined ? {} : { conflictPersistAt: exposure.conflictPersistAt }),
     ...(exposure.exposureWindowMs === undefined ? {} : { exposureWindowMs: exposure.exposureWindowMs })

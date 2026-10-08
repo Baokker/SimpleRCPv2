@@ -4,10 +4,7 @@ import * as ts from "typescript";
 const receivers = new Set(["audit", "console", "log", "logger", "metric", "metrics", "telemetry", "trace", "tracer"]);
 const methods = new Set(["debug", "error", "info", "log", "trace", "warn"]);
 const printer = ts.createPrinter({ removeComments: true });
-
-export function syntaxFingerprint(source: ts.SourceFile) {
-  return printer.printFile(source);
-}
+export { syntaxFingerprint } from "../semantic/trivia.js";
 
 export function equivalentFingerprint(source: ts.SourceFile) {
   return semanticNode(source, source, new Map());

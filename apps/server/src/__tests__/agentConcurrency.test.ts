@@ -143,6 +143,7 @@ describe("Agent concurrency with fake runtime", () => {
       await waitFor(async () => (await getRuns()).some((item) => item.id === run.id && ["completed", "failed"].includes(item.status)));
       expect((await getRuns()).find((item) => item.id === run.id)?.status).toBe("completed");
       expect(app.locals.agentRuns.diagnostics().failures.trace).toBeGreaterThan(0);
+      await waitFor(async () => app.locals.agentRuns.diagnostics().failures.listener === 1);
       expect(app.locals.agentRuns.diagnostics().failures.listener).toBe(1);
     } finally {
       await fs.rmdir(tracePath);

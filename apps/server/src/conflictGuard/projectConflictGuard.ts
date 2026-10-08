@@ -22,6 +22,7 @@ import {
   classify,
   buildAdjudicationInput,
   defaultAdjudicationConfig,
+  defaultRoutingConfig,
   createSessionCoordinator,
   createGuardConflict,
   type PairCoordinator
@@ -47,6 +48,7 @@ export interface ProjectConflictGuardConfig {
   adjudication?: ServerAdjudicationConfig;
   arbitration?: ArbitrationMode;
   intentInjection?: boolean;
+  bodyUnrelatedMaxAdjacentLines?: number;
 }
 
 interface ConnectionIdentity {
@@ -153,7 +155,7 @@ export function createProjectConflictGuard(options: {
       const left = find(pair.left);
       const right = find(pair.right);
       if (!left || !right) return { zone: "grey", decision: "warn", ruleId: "semantic-interaction-uncertain", summary: "修改可能互相影响，需要进一步判断。", evidence: [], contractChanged: { left: false, right: false } };
-      return classify({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: semanticIndex });
+      return classify({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, path: pair.path, nested: pair.distance === 0 && pair.left.symbol !== pair.right.symbol, typeOnly: Boolean(pair.path?.typeOnly), project: semanticIndex, bodyUnrelatedMaxAdjacentLines: options.config.bodyUnrelatedMaxAdjacentLines });
   } });
   const pairCoordinator: PairCoordinator = session.coordinator;
 
@@ -202,7 +204,7 @@ export function createProjectConflictGuard(options: {
 
   const agentAdjudication = options.config.mode === "full" && options.config.adjudication ? Object.fromEntries((["T2", "T3"] as const).map((point) => [point, createServerAdjudication({ ...options.config.adjudication!, settings: { ...adjudicationSettings, strategy: "G4", point, reasoning: point === "T2" ? adjudicationSettings.t2Reasoning ?? false : adjudicationSettings.t3Reasoning ?? false, hardDeadlineMs: point === "T2" ? 30000 : 60000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call }); }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); })])) as Record<"T2" | "T3", ReturnType<typeof createServerAdjudication>> : undefined;
   const agentGuard = createProjectAgentGuard({
-    mode: options.config.mode, tracker, clock, files: semanticFiles,
+    mode: options.config.mode, tracker, clock, files: semanticFiles, bodyUnrelatedMaxAdjacentLines: options.config.bodyUnrelatedMaxAdjacentLines,
     active: () => semantic.getActiveChangeSets(), refresh: updateSemantic, gate: persistGate,
     current: (file) => { try { return semanticFiles.readFile(file); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; } },
     readDisk: async (file) => { try { return await fs.readFile(resolveWorkspacePath(options.workspacePath, file), "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return ""; } },
@@ -276,7 +278,9 @@ export function createProjectConflictGuard(options: {
       cursorLeaveLines: options.config.cursorLeaveLines,
       maxBatchDurationMs: options.config.maxBatchDurationMs,
       activeIdleMs: options.config.activeIdleMs,
-      cursorDebounceMs: options.config.cursorDebounceMs
+      cursorDebounceMs: options.config.cursorDebounceMs,
+      bodyUnrelatedMaxAdjacentLines: options.config.bodyUnrelatedMaxAdjacentLines ?? defaultRoutingConfig.bodyUnrelatedMaxAdjacentLines,
+      routingVersion: defaultRoutingConfig.version
     },
     ...(adjudication ? { adjudication: adjudicationSettings } : {}),
     gitCommit: options.gitCommit
@@ -616,7 +620,7 @@ export function createProjectConflictGuard(options: {
       uiActionCount,
       intervention: {
         decisions: decisions.length,
-        localDecisionRatio: decisions.length === 0 ? 0 : decisions.filter((record) => record.verdict?.zone !== "grey").length / decisions.length,
+        localDecisionRatio: decisions.length === 0 ? 0 : decisions.filter((record) => record.verdict && (record.verdict.zone !== "grey" || record.verdict.localOnly)).length / decisions.length,
         white: decisions.filter((record) => record.verdict?.zone === "white").length,
         black: decisions.filter((record) => record.verdict?.zone === "black").length,
         grey: decisions.filter((record) => record.verdict?.zone === "grey").length,

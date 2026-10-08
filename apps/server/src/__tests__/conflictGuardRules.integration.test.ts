@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
-import { checkReplay, readTrace, validateTraceDetailed } from "@simplercp/conflict-guard";
+import { checkReplay, replayTrace, readTrace, validateTraceDetailed } from "@simplercp/conflict-guard";
 import { createApp } from "../createApp.js";
 import { attachRealtimeServer } from "../realtime.js";
 import { joinMember } from "./memberTestHelper.js";
@@ -53,6 +53,121 @@ describe("rules 模式冲突干预", () => {
     await app?.locals.runtimeManager.dispose();
     if (server) await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await fs.rm(root, { recursive: true, force: true });
+  });
+
+  it.each([
+    ["类体增加注释", "  items: CartItem[] = [];", "  // 购物车数据\n  items: CartItem[] = [];"],
+    ["注释前面回车再写注释", "  total(): number {", "\n  // 计算金额\n  total(): number {"],
+    ["注释文字中间修改", "// 原说明", "// 新的说明"],
+    ["两个声明之间添加空白注释", "export class Cart", "\n// 说明\nexport class Cart"]
+  ])("%s 与他人同文件修改保持同步、没有符号冲突与 T0", async (name, before, after) => {
+    if (name === "注释文字中间修改") {
+      const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+      await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("    let amount = 0;", "    // 原说明\n    let amount = 0;"));
+    }
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    replace(first, "applyDiscount(amount, 0.1)", "applyDiscount(amount, 0.2)");
+    await waitFor(() => second.getText("content").toString().includes("amount, 0.2"));
+    replace(second, before, after);
+    await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await waitFor(async () => (await fs.readFile(file, "utf8")).includes(after));
+    await waitFor(async () => readTrace(await (await bob.request("/conflict-guard/trace")).text()).some((event) => event.type === "change_unit" && event.commentOnly === true));
+    const state = currentGuard().state();
+    expect(state.activeSymbols.find((set) => set.actor.kind === "human" && set.actor.memberId === bob.member.id)?.symbols).toEqual([]);
+    expect(state.candidatePairs).toEqual([]);
+    expect(state.frozenFiles).toEqual([]);
+    expect(state.blockedPersists).toEqual([]);
+    const events = readTrace(await (await bob.request("/conflict-guard/trace")).text());
+    expect(events.some((event) => event.type === "change_unit" && (event.actor as { memberId?: string })?.memberId === bob.member.id && event.commentOnly === true && (event.symbols as unknown[]).length === 0)).toBe(true);
+    expect(events.filter((event) => event.type === "t0_warning" && event.memberId === bob.member.id)).toEqual([]);
+    expect(validateTraceDetailed(events).valid).toBe(true);
+    const replay = replayTrace(events, { policy: "P3" });
+    expect(replay.errors).toEqual([]);
+    expect(replay.judgements).toEqual([]);
+    expect(replay.freezeIntervals).toEqual([]);
+    expect(replay.finalTexts["src/cart.ts"]).toBe(second.getText("content").toString());
+  });
+
+  it("console.log 内容修改与同函数计算修改放行并写入双方内容", async () => {
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("    let amount = 0;", "    console.log('aaa');\n    let amount = 0;"));
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    replace(first, "'aaa'", "'bbb'");
+    await waitFor(() => second.getText("content").toString().includes("'bbb'"));
+    replace(second, "let amount = 0", "let amount = 1");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "observability-only") === true);
+    expect(currentState().pairDecisions?.every((record) => record.verdict?.decision === "allow")).toBe(true);
+    expect(currentState().frozenFiles).toEqual([]);
+    await waitFor(async () => (await fs.readFile(file, "utf8")).includes("let amount = 1"));
+    expect(await fs.readFile(file, "utf8")).toContain("console.log('bbb')");
+  });
+
+  it("相隔较远的同函数计算修改进入灰区，邻近行仍然冻结", async () => {
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("    let amount = 0;", "    let amount = 0;\n    amount += 1;\n    amount += 2;\n    amount += 3;\n    amount += 4;\n    amount += 5;"));
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    replace(first, "let amount = 0", "let amount = 1");
+    await waitFor(() => second.getText("content").toString().includes("let amount = 1"));
+    replace(second, "amount += 5", "amount += 50");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "declaration-body-unrelated") === true);
+    expect(currentState().pairDecisions?.every((record) => record.verdict?.decision === "warn")).toBe(true);
+    expect(currentState().frozenFiles).toEqual([]);
+    await waitFor(async () => (await fs.readFile(file, "utf8")).includes("amount += 50"));
+    expect(await fs.readFile(file, "utf8")).toContain("let amount = 1");
+    replace(second, "amount += 1", "amount += 10");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.decision === "lock") === true);
+    expect(currentState().frozenFiles?.length).toBeGreaterThan(0);
+  });
+
+  it("签名变化后依赖函数中的注释修改不产生 T0 与候选对", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    replace(pricing, "rate: number)", "rate: number, currency: string)");
+    await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
+    await waitFor(() => currentGuard().state().activeSymbols.some((set) => set.symbols.some((symbol) => symbol.name === "applyDiscount")));
+    const cart = await connect("src/cart.ts", bob.member.id);
+    replace(cart, "    let amount = 0;", "    // 检查金额\n    let amount = 0;");
+    await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
+    await waitFor(async () => readTrace(await (await bob.request("/conflict-guard/trace")).text()).some((event) => event.type === "change_unit" && event.commentOnly === true));
+    const events = readTrace(await (await bob.request("/conflict-guard/trace")).text());
+    expect(events.some((event) => event.type === "change_unit" && event.commentOnly === true)).toBe(true);
+    expect(events.filter((event) => event.type === "t0_warning" && event.memberId === bob.member.id)).toEqual([]);
+    expect(currentGuard().state().candidatePairs).toEqual([]);
+  });
+
+  it("逐字符输入回车与注释后不生成符号修改与 T0", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    replace(pricing, "rate: number)", "rate: number, currency: string)");
+    await waitFor(() => currentGuard().state().activeSymbols.some((set) => set.symbols.some((symbol) => symbol.name === "applyDiscount")));
+    const cart = await connect("src/cart.ts", bob.member.id);
+    const content = cart.getText("content");
+    let position = content.toString().indexOf("    let amount = 0;");
+    for (const character of "\n    // 金额说明\n") {
+      content.insert(position++, character);
+      await waitFor(() => currentGuard().tracker.getOpenBatches().some((batch) => batch.actor.kind === "human" && batch.actor.memberId === bob.member.id));
+    }
+    await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
+    await waitFor(async () => readTrace(await (await bob.request("/conflict-guard/trace")).text()).some((event) => event.type === "change_unit" && event.commentOnly === true));
+    expect(currentGuard().state().activeSymbols.find((set) => set.actor.kind === "human" && set.actor.memberId === bob.member.id)?.symbols).toEqual([]);
+    expect(currentGuard().state().candidatePairs).toEqual([]);
+    const events = readTrace(await (await bob.request("/conflict-guard/trace")).text());
+    expect(events.filter((event) => event.type === "t0_warning" && event.memberId === bob.member.id)).toEqual([]);
+    expect(events.some((event) => event.type === "change_unit" && event.commentOnly === true)).toBe(true);
+  });
+
+  it("同位置先后替换文本仍然产生双方的黑区变更对", async () => {
+    const first = await connect("src/report.ts", alice.member.id);
+    const second = await connect("src/report.ts", bob.member.id);
+    replace(first, '"Shop report"', '"Daily report"');
+    await waitFor(() => second.getText("content").toString().includes("Daily report"));
+    replace(second, '"Daily report"', '"Weekly report"');
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.decision === "lock") === true);
+    expect(currentGuard().state().activeSymbols.filter((set) => set.symbols.some((symbol) => symbol.name === "reportTime"))).toHaveLength(2);
+    expect(currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "same-symbol-concurrent-write")).toBe(true);
+    expect(checkReplay(readTrace(await (await alice.request("/conflict-guard/trace")).text()))).toMatchObject({ checked: true, valid: true, differences: [] });
   });
 
   it("同一函数判黑、冻结并阻止写盘，轨迹保留判定", async () => {
@@ -226,4 +341,4 @@ async function saveReplayEvidence(name: string, events: ReturnType<typeof readTr
   await fs.writeFile(path.join(directory, `${name}-check.json`), JSON.stringify(checkReplay(events), null, 2) + "\n");
 }
 
-async function waitFor(check: () => boolean) { const end = Date.now() + 5_000; while (!check()) { if (Date.now() >= end) throw new Error("等待规则判定超时"); await new Promise((resolve) => setTimeout(resolve, 10)); } }
+async function waitFor(check: () => boolean | Promise<boolean>) { const end = Date.now() + 5_000; while (!await check()) { if (Date.now() >= end) throw new Error("等待规则判定超时"); await new Promise((resolve) => setTimeout(resolve, 10)); } }
