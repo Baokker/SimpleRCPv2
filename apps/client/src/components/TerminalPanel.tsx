@@ -26,7 +26,7 @@ export function TerminalPanel({
         <span>Terminal</span>
         <div className="terminal-controls">
           <span className="terminal-state" data-testid="terminal-state">
-            Shared · {connectionState}
+            <span>Shared</span>{" "}<span className="ui-badge">{connectionState}</span>
           </span>
           {connectionState === "Offline" ? (
             <button

@@ -228,7 +228,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await ada.getByTestId("collab-tab-chat").click();
   await expect(
-    ada.getByText("Enter to send / Shift + Enter for new line")
+    ada.locator("#chat-keyboard-hint")
   ).toBeVisible();
   const chatInput = ada.getByTestId("chat-input");
   await expect(ada.getByTestId("send-chat")).toBeDisabled();
@@ -242,7 +242,8 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await linus.getByTestId("collab-tab-chat").click();
   const receivedMessage = linus.locator(".chat-message p").last();
   await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
-  await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · student");
+  await expect(linus.locator(".chat-message .chat-author-name").last()).toHaveText("Ada");
+  await expect(linus.locator(".chat-message .chat-author-role").last()).toHaveText("student");
 
   await ada.getByTestId("terminal-output").click();
   await ada.keyboard.type("printf 'shared-pty-ok\\n'");

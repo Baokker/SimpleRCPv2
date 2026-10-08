@@ -508,8 +508,8 @@ export function KnowledgePanel({
             <label className="knowledge-check-label"><input type="checkbox" checked={allSuggestions} onChange={event => setAllSuggestions(event.target.checked)} />查看所有成员的建议</label>
             <select aria-label="合并到已有卡片" value={mergeCardId} onChange={event => setMergeCardId(event.target.value)}><option value="">选择合并目标</option>{cards.filter(card => card.status === "reviewed").map(card => <option key={card.id} value={card.id}>{card.title}</option>)}</select>
             <ol className="knowledge-list">{suggestions.length === 0 ? <li className="empty-panel-state">还没有需要你处理的知识建议。系统在讨论、调试和修改配置等时机自动收集。</li> : suggestions.map(suggestion => <li className="knowledge-suggestion" key={suggestion.id} data-testid={`suggestion-${suggestion.triggerType}`} aria-busy={actionCardId === suggestion.id}>
-              <strong title={suggestion.triggerType}>{knowledgeTriggers[suggestion.triggerType] ?? suggestion.suggestedTitle}</strong><time>{new Date(suggestion.createdAt).toLocaleString()}</time>
-              <p className="knowledge-hint">参与成员：{suggestion.actors.memberIds.map(id => members.find(member => member.id === id)?.displayName ?? id).join("、")}</p>
+              <header className="knowledge-suggestion-heading"><strong title={suggestion.triggerType}>{knowledgeTriggers[suggestion.triggerType] ?? suggestion.suggestedTitle}</strong><time dateTime={new Date(suggestion.createdAt).toISOString()}>{new Date(suggestion.createdAt).toLocaleString("zh-CN")}</time></header>
+              <dl className="knowledge-card-facts knowledge-suggestion-facts"><div><dt>参与成员</dt><dd>{suggestion.actors.memberIds.map(id => <span className="ui-badge" key={id}>{members.find(member => member.id === id)?.displayName ?? "成员"}</span>)}</dd></div></dl>
               <p>{suggestion.suggestedSummary}</p>
               {suggestion.state === "disputed" ? <span className="knowledge-badge">有不同意见</span> : null}
               {readDispute(suggestion.evidence) ? <p>{members.find(member => member.id === readDispute(suggestion.evidence)?.memberId)?.displayName ?? "成员"}：{readDispute(suggestion.evidence)?.reason}</p> : null}
@@ -536,7 +536,7 @@ export function KnowledgePanel({
           </div> : view === "guide" ? <>
             <p className="knowledge-hint">按当前文件组织的阅读顺序，适合新成员快速了解这段代码。</p>
             <ol className="knowledge-list">{guide.length ? guide.map((item, index) => <li className={`knowledge-guide-entry${index === 0 ? " first" : ""}`} key={item.card.id}>
-              <p className="knowledge-guide-reason">{index === 0 ? "推荐从这里阅读。" : ""}{item.isCurrentFile ? "与当前文件相关。" : "补充项目背景。"}{item.card.type === "tutorial" ? "教程类优先。" : `${knowledgeTypes[item.card.type].label}帮助理解代码。`}</p>
+              <div className="knowledge-guide-reason">{index === 0 ? <strong><BookOpen size={14} aria-hidden="true" />推荐从这里阅读</strong> : null}<span className="ui-badge">{item.isCurrentFile ? "与当前文件相关" : "补充项目背景"}</span><span className="ui-badge">{item.card.type === "tutorial" ? "教程类优先" : `${knowledgeTypes[item.card.type].label}帮助理解代码`}</span></div>
               <ol className="knowledge-list">{renderCard(item.card)}</ol>
             </li>) : <li className="empty-panel-state">还没有可用于导览的知识。可以关联当前文件的卡片，建立阅读顺序。</li>}</ol>
           </> : view === "timeline" ? <>
@@ -650,8 +650,15 @@ function KnowledgeCardItem({
       <button type="button" className="knowledge-card-summary" onClick={onToggle} aria-expanded={expanded}>
         <span className="knowledge-card-title"><span className="knowledge-type-icon" title={`${knowledgeTypes[card.type].label} (${card.type})`}><TypeIcon size={16} /></span><strong>{card.title}</strong></span>
         <span className="knowledge-card-description">{card.summary}</span>
-        <span className="knowledge-card-metadata"><span title={card.type}>{knowledgeTypes[card.type].label}</span><span>{knowledgeScopes[card.scope ?? "team"]}</span><span className={`knowledge-badge status-${card.status}`}>{knowledgeStatuses[card.status]}</span><span>作者：{card.provenance?.author.displayName ?? card.metadata?.createdBy?.name ?? "未知成员"}</span><span>确认人：{card.review?.confirmedBy.length ? card.review.confirmedBy.map(id => members.find(member => member.id === id)?.displayName ?? "成员").join("、") : "尚未确认"}</span><time dateTime={new Date(card.updatedAt).toISOString()}>更新于 {new Date(card.updatedAt).toLocaleString("zh-CN")}</time></span>
       </button>
+      <div className="knowledge-card-metadata">
+        <div className="knowledge-card-badges"><span className="knowledge-badge knowledge-type-badge" title={card.type}>{knowledgeTypes[card.type].label}</span><span className="knowledge-badge">{knowledgeScopes[card.scope ?? "team"]}</span><span className={`knowledge-badge status-${card.status}`}>{knowledgeStatuses[card.status]}</span></div>
+        <dl className="knowledge-card-facts">
+          <div><dt>作者</dt><dd>{card.provenance?.author.displayName ?? card.metadata?.createdBy?.name ?? "未知成员"}</dd></div>
+          <div><dt>确认人</dt><dd>{card.review?.confirmedBy.length ? card.review.confirmedBy.map(id => members.find(member => member.id === id)?.displayName ?? "成员").join("、") : "尚未确认"}</dd></div>
+          <div><dt>更新时间</dt><dd><time dateTime={new Date(card.updatedAt).toISOString()}>{new Date(card.updatedAt).toLocaleString("zh-CN")}</time></dd></div>
+        </dl>
+      </div>
       <div className="knowledge-card-actions workspace-dialog-actions">
         {canManage ? <button type="button" disabled={actionPending} onClick={onEdit}>编辑</button> : null}
         {canManage && card.status !== "archived" ? <button type="button" disabled={actionPending} onClick={onArchive}>{actionPending ? "处理中" : "归档"}</button> : null}
@@ -661,7 +668,6 @@ function KnowledgeCardItem({
       {expanded ? (
         <div className="knowledge-card-content">
           <p className="knowledge-card-body">{card.content}</p>
-          <p className="knowledge-hint">确认人：{card.review?.confirmedBy.length ? card.review.confirmedBy.map(id => members.find(member => member.id === id)?.displayName ?? "成员").join("、") : "尚未确认"}</p>
           {card.appliesTo ? <p className="knowledge-hint">适用范围：{card.appliesTo.kind === "project" ? "整个项目" : card.appliesTo.patterns.join("、")}</p> : null}
           {card.relations?.length ? <section aria-label="已建立的知识关系"><strong>已建立的知识关系</strong><ul>{card.relations.map(relation => {
             const target = relatedCards.find(candidate => candidate.id === relation.cardId);
@@ -673,7 +679,7 @@ function KnowledgeCardItem({
             const canReanchor = currentSelection && normalizeKnowledgePath(currentSelection.file) === normalizeKnowledgePath(anchor.file.workspaceRelativePath) && resolution?.status === "needsReview" && canManage;
             return (
               <div className="knowledge-anchor-row" key={anchor.anchorId}>
-                <button type="button" onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath, resolution?.range)}>⌖ {anchor.file.workspaceRelativePath}</button>
+                <button type="button" onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath, resolution?.range)}><FileText size={13} aria-hidden="true" />{anchor.file.workspaceRelativePath}</button>
                 <small>{resolution?.status === "needsReview" ? "需要重新关联" : resolution?.status === "moved" ? "已跟随代码移动" : resolution?.status === "ok" ? "已定位" : "尚未解析"}</small>
                 {canReanchor ? <button type="button" disabled={actionPending} onClick={() => onReanchor(index)}>用当前选区重新锚定</button> : null}
               </div>

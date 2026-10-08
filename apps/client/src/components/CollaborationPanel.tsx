@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
+import { AgentKnowledgeSummary } from "./AgentKnowledgeSummary";
 import { KnowledgePanel } from "./KnowledgePanel";
 import { downloadAgentTrace, captureKnowledgeFromChat } from "../api";
 import { presentTrace } from "../agentTracePresentation";
@@ -314,7 +315,9 @@ export function CollaborationPanel({
                 );
                 return (
                   <span key={agent.id} className="team-agent-status">
-                    <Bot size={13} /> @{agent.handle ?? agent.title} · {active ? "Running" : "Idle"}
+                    <Bot size={13} aria-hidden="true" />
+                    <span>@{agent.handle ?? agent.title}</span>
+                    <span className={`ui-badge${active ? " success" : ""}`}>{active ? "Running" : "Idle"}</span>
                   </span>
                 );
               })}
@@ -375,8 +378,8 @@ export function CollaborationPanel({
                     <span>
                       <strong>
                         {message.kind === "agent" ? <Bot size={13} /> : null}
-                        {message.authorName}
-                        {message.authorRole ? ` · ${message.authorRole}` : ""}
+                        <span className="chat-author-name">{message.authorName}</span>{" "}
+                        {message.authorRole ? <span className="ui-badge chat-author-role">{message.authorRole}</span> : null}
                       </strong>
                       <time>{formatTime(message.timestamp)}</time>
                     </span>
@@ -387,6 +390,8 @@ export function CollaborationPanel({
                         message={message}
                         run={message.runId ? runsById.get(message.runId) : undefined}
                         trace={message.runId ? agentTraces[message.runId] ?? [] : []}
+                        knowledgeCards={knowledgeCards}
+                        knowledgeUpdateCardIds={message.runId ? knowledgeUpdateRuns[message.runId] ?? [] : []}
                         projectId={projectId}
                         showCard={false}
                         onOpenFile={onOpenFile}
@@ -403,6 +408,8 @@ export function CollaborationPanel({
                             message={message}
                             run={runsById.get(message.runId)}
                             trace={agentTraces[message.runId] ?? []}
+                            knowledgeCards={knowledgeCards}
+                            knowledgeUpdateCardIds={knowledgeUpdateRuns[message.runId] ?? []}
                             projectId={projectId}
                             showText={false}
                             onOpenFile={onOpenFile}
@@ -456,7 +463,8 @@ export function CollaborationPanel({
                           onChatTextChange(`${prefix}@${candidate.handle} `);
                         }}
                       >
-                        {candidate.team ? <Bot size={13} /> : <Users size={13} />} @{candidate.handle} · {candidate.name}
+                        {candidate.team ? <Bot size={13} aria-hidden="true" /> : <Users size={13} aria-hidden="true" />}
+                        <span className="mention-candidate-label"><strong>@{candidate.handle}</strong><small>{candidate.name}</small></span>
                       </button>
                     </li>
                   ))}
@@ -466,8 +474,8 @@ export function CollaborationPanel({
                 Create a shared Agent with <code>/agent new reviewer code reviews</code>, then mention <code>@reviewer</code> in Chat.
               </small>
               <div className="chat-actions">
-                <small id="chat-keyboard-hint">
-                  Enter to send / Shift + Enter for new line
+                <small id="chat-keyboard-hint" className="composer-keyboard-hint">
+                  <span><kbd>Enter</kbd> 发送</span><span><kbd>Shift + Enter</kbd> 换行</span>
                 </small>
                 <button
                   onClick={onSendChat}
@@ -527,10 +535,9 @@ export function CollaborationPanel({
                           </button>
                         ) : null}
                       </span>
-                      <small>
-                        {cursor
-                          ? `${cursor.path} · Ln ${cursor.position.lineNumber}, Col ${cursor.position.column}`
-                          : candidate.currentFile ?? (candidate.online ? "Browsing" : "Offline")}
+                      <small className="member-location">
+                        {cursor || candidate.currentFile ? <><FilePenLine size={12} aria-hidden="true" /><span>{cursor?.path ?? candidate.currentFile}</span></> : candidate.online ? "Browsing" : "Offline"}
+                        {cursor ? <span className="ui-badge">第 {cursor.position.lineNumber} 行，第 {cursor.position.column} 列</span> : null}
                       </small>
                     </li>
                   );
@@ -573,6 +580,7 @@ export function CollaborationPanel({
             projectId={projectId}
             member={member}
             knowledgeEnabled={knowledgeEnabled}
+            knowledgeCards={knowledgeCards}
             members={members}
             refreshVersion={agentRefreshVersion}
             traces={agentTraces}
@@ -603,6 +611,8 @@ function ChatAgentMessage({
   message,
   run,
   trace,
+  knowledgeCards,
+  knowledgeUpdateCardIds,
   projectId,
   showText = true,
   showCard = true,
@@ -615,6 +625,8 @@ function ChatAgentMessage({
   message: ChatMessage;
   run?: AgentRun;
   trace: AgentTraceEvent[];
+  knowledgeCards: KnowledgeCard[];
+  knowledgeUpdateCardIds: string[];
   projectId: string;
   showText?: boolean;
   showCard?: boolean;
@@ -640,9 +652,10 @@ function ChatAgentMessage({
       ) : null}
       {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
-          <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
+          <header className="chat-agent-card-heading"><strong>Requested by {run.memberName ?? run.memberId}</strong><span className={`ui-badge run-status-${run.status}`}>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></header>
+          <div className="agent-run-model">模型 <strong>{run.model}</strong></div>
           {run.fileChanges?.length ? (
-            <ul>
+            <ul className="chat-agent-files">
               {run.fileChanges.map((change) => (
                 <li key={change.file}>
                   <button type="button" onClick={() => onOpenFile(change.file)}>{change.file}</button>
@@ -650,18 +663,7 @@ function ChatAgentMessage({
               ))}
             </ul>
           ) : <small>No file changes recorded.</small>}
-          {trace.some((event) => event.type === "knowledge_injected") ? (
-            <small data-testid="chat-agent-knowledge-reference">
-              本次参考的知识：{((trace.find((event) => event.type === "knowledge_injected")?.data?.cards as Array<{ id?: string; title?: string }> | undefined) ?? []).filter((card) => card.id && card.title).map((card) => (
-                <button key={card.id} type="button" onClick={() => openKnowledgeCard(card.id!)}>{card.title}</button>
-              ))}
-            </small>
-          ) : null}
-          {trace.some((event) => event.type === "knowledge_post_check") ? (
-            <small data-testid="chat-agent-knowledge-post-check">
-              任务后核对：{((trace.find((event) => event.type === "knowledge_post_check")?.data?.hits as Array<unknown> | undefined) ?? []).length ? "涉及已知问题" : "未发现已知问题"}
-            </small>
-          ) : null}
+          <AgentKnowledgeSummary trace={trace} cards={knowledgeCards} updateCardIds={knowledgeUpdateCardIds} testIdPrefix="chat-agent" onOpenFile={onOpenFile} />
           <details className={`chat-agent-trace ${run.status}`} open={active} onToggle={(event) => {
             if (event.currentTarget.open) onLoadAgentTrace(run.id);
           }}>
@@ -701,10 +703,6 @@ function ChatAgentMessage({
       ) : null}
     </>
   );
-}
-
-function openKnowledgeCard(cardId: string) {
-  window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: cardId }));
 }
 
 function memberHandle(name: string) {
@@ -886,8 +884,8 @@ function fileChanges(value: unknown): AgentActivityFile[] {
 function formatAgentFiles(files: AgentActivityFile[]) {
   const additions = files.reduce((total, file) => total + file.additions, 0);
   const deletions = files.reduce((total, file) => total + file.deletions, 0);
-  const summary = `${files.length} ${files.length === 1 ? "file" : "files"} changed · +${additions} / -${deletions}`;
-  return files.length === 1 ? `${summary} · ${files[0]?.file}` : summary;
+  const summary = `${files.length} ${files.length === 1 ? "file" : "files"} changed, ${additions} lines added and ${deletions} lines removed.`;
+  return files.length === 1 ? `${files[0]?.file}: ${summary}` : summary;
 }
 
 function formatEditDetail(payload: Record<string, unknown>) {
@@ -914,11 +912,11 @@ function formatEditDetail(payload: Record<string, unknown>) {
   const addedLines = numberValue(payload.addedLines);
   const removedLines = numberValue(payload.removedLines);
   if (addedLines > 0 || removedLines > 0) {
-    return `${prefix} ${label} · +${addedLines} / -${removedLines}`;
+    return `${prefix} ${label}: ${addedLines} lines added and ${removedLines} lines removed.`;
   }
   const changedLines = ranges.reduce(
     (count, range) => count + range.endLine - range.startLine + 1,
     0
   );
-  return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
+  return `${prefix} ${label}: ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed.`;
 }

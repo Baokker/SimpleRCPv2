@@ -27,12 +27,14 @@ import {
   readWorkspaceFile
 } from "../api";
 import { presentTrace } from "../agentTracePresentation";
+import { AgentKnowledgeSummary } from "./AgentKnowledgeSummary";
 import type {
   AgentPromptContext,
   AgentRun,
   AgentRuntimeStatus,
   AgentSession,
   AgentTraceEvent,
+  KnowledgeCard,
   RoomMember,
   WorkspaceNode
 } from "../types";
@@ -44,6 +46,7 @@ export function AgentPanel({
   projectId,
   member,
   knowledgeEnabled,
+  knowledgeCards,
   knowledgeUpdateRuns,
   members,
   workspaceTree,
@@ -56,6 +59,7 @@ export function AgentPanel({
   projectId: string;
   member: RoomMember | null;
   knowledgeEnabled: boolean;
+  knowledgeCards: KnowledgeCard[];
   knowledgeUpdateRuns: Record<string, string[]>;
   members: RoomMember[];
   workspaceTree: WorkspaceNode[];
@@ -161,14 +165,21 @@ export function AgentPanel({
 
   useEffect(() => {
     if (!knowledgeEnabled || !member || !prompt.trim()) { setKnowledgePreview([]); return; }
+    let active = true;
     const timer = window.setTimeout(() => {
       void previewAgentKnowledge(projectId, {
         prompt,
         contexts,
         knowledge: { excludeCardIds: [...excludedKnowledge] }
-      }).then((result) => setKnowledgePreview(result.records)).catch((error) => onErrorRef.current(error));
+      }).then((result) => {
+        if (!active) return;
+        setKnowledgePreview(current => [
+          ...result.records,
+          ...current.filter(card => excludedKnowledge.has(card.id) && !result.records.some(record => record.id === card.id))
+        ]);
+      }).catch((error) => { if (active) onErrorRef.current(error); });
     }, 250);
-    return () => window.clearTimeout(timer);
+    return () => { active = false; window.clearTimeout(timer); };
   }, [knowledgeEnabled, member?.id, projectId, prompt, contexts, excludedKnowledge]);
 
   async function createSession() {
@@ -344,6 +355,7 @@ export function AgentPanel({
               projectId={projectId}
               run={run}
               trace={traces[run.id] ?? []}
+              knowledgeCards={knowledgeCards}
               knowledgeUpdateCardIds={knowledgeUpdateRuns[run.id] ?? []}
               onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
@@ -359,13 +371,15 @@ export function AgentPanel({
       <div className="agent-composer">
         {knowledgePreview.length ? (
           <div className="agent-knowledge-preview" data-testid="agent-knowledge-preview">
-            <strong>将参考的知识</strong>
+            <header><strong>将参考的知识</strong><span className="ui-badge">{knowledgePreview.filter(card => !excludedKnowledge.has(card.id)).length} 条已选</span></header>
+            <p>取消勾选后，这条知识不会提供给本次任务。</p>
             <ul>
               {knowledgePreview.map((card) => (
                 <li key={card.id}>
                   <label>
                     <input
                       type="checkbox"
+                      disabled={submitting}
                       checked={!excludedKnowledge.has(card.id)}
                       onChange={() => setExcludedKnowledge((current) => {
                         const next = new Set(current);
@@ -373,8 +387,8 @@ export function AgentPanel({
                         return next;
                       })}
                     />
-                    <span>{card.title}</span>
-                    <small>{card.chars} chars</small>
+                    <span className="agent-knowledge-preview-title">{card.title}</span>
+                    <small>{card.chars} 字符</small>
                   </label>
                 </li>
               ))}
@@ -443,7 +457,7 @@ export function AgentPanel({
               </div>
             ) : null}
           </div>
-          <small>Enter to send · Shift + Enter for a new line</small>
+          <small className="composer-keyboard-hint"><span><kbd>Enter</kbd> 发送</span><span><kbd>Shift + Enter</kbd> 换行</span></small>
           <button
             type="button"
             className="agent-send-button"
@@ -465,6 +479,7 @@ function AgentMessage({
   projectId,
   run,
   trace,
+  knowledgeCards,
   knowledgeUpdateCardIds,
   onLoadTrace,
   queuedRuns,
@@ -476,6 +491,7 @@ function AgentMessage({
   projectId: string;
   run: AgentRun;
   trace: AgentTraceEvent[];
+  knowledgeCards: KnowledgeCard[];
   knowledgeUpdateCardIds: string[];
   onLoadTrace(): void;
   queuedRuns: AgentRun[];
@@ -487,8 +503,6 @@ function AgentMessage({
   const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
   useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
   const presentation = useMemo(() => presentTrace(trace), [trace]);
-  const postCheckHits = ((trace.find((event) => event.type === "knowledge_post_check")?.data?.hits as Array<{ cardId?: string; checkResult?: { passed?: boolean } }> | undefined) ?? []);
-  const postCheckFailed = postCheckHits.some((hit) => hit.checkResult?.passed === false);
 
   return (
     <article className="agent-assistant-message" data-testid="agent-selected-run">
@@ -496,7 +510,7 @@ function AgentMessage({
         <span className="agent-avatar"><Bot size={14} /></span>
         <div>
           <strong>OpenCode</strong>
-          <small>{runStatusLabel(run, queuedRuns)} · {run.model}</small>
+          <div className="agent-run-metadata"><span className={`ui-badge run-status-${run.status}`}>{runStatusLabel(run, queuedRuns)}</span><span className="agent-run-model">模型 <strong>{run.model}</strong></span></div>
         </div>
         {ACTIVE_STATUSES.has(run.status) && canCancel ? (
           <button type="button" className="agent-cancel-button" onClick={onCancel} title="Cancel run">
@@ -545,23 +559,7 @@ function AgentMessage({
       </details>
 
       {run.output ? <div className="agent-run-output">{run.output}</div> : null}
-      {knowledgeUpdateCardIds.length ? (
-        <div className="agent-knowledge-update" data-testid="agent-knowledge-update">
-          任务运行期间确认了新的知识卡片，可在下一次任务中参考（{knowledgeUpdateCardIds.join("、")}）。
-        </div>
-      ) : null}
-      {trace.some((event) => event.type === "knowledge_injected") ? (
-        <div className="agent-knowledge-reference" data-testid="agent-knowledge-reference">
-          本次参考的知识：{((trace.find((event) => event.type === "knowledge_injected")?.data?.cards as Array<{ id?: string; title?: string }> | undefined) ?? []).filter((card) => card.id && card.title).map((card) => (
-            <button key={card.id} type="button" onClick={() => openKnowledgeCard(card.id!)}>{card.title}</button>
-          ))}
-        </div>
-      ) : null}
-      {trace.some((event) => event.type === "knowledge_post_check") ? (
-        <div className={`agent-knowledge-post-check${postCheckFailed ? " failed" : ""}`} data-testid="agent-knowledge-post-check">
-          任务后核对：{postCheckHits.length ? "涉及已知问题" : "未发现已知问题"}{postCheckFailed ? "，检查未通过" : ""}
-        </div>
-      ) : null}
+      <AgentKnowledgeSummary trace={trace} cards={knowledgeCards} updateCardIds={knowledgeUpdateCardIds} testIdPrefix="agent" onOpenFile={onOpenFile} />
       {run.error ? <p className="agent-run-error">{run.error}</p> : null}
       {run.fileChanges?.length ? (
         <ul className="agent-file-changes">
@@ -570,7 +568,7 @@ function AgentMessage({
               <button type="button" onClick={() => onOpenFile(change.file)}>
                 <FileCode2 size={13} />
                 <span>{change.file}</span>
-                <small>+{change.additions} / -{change.deletions}</small>
+                <small className="file-change-counts"><span className="ui-badge success">新增 {change.additions} 行</span><span className="ui-badge error">删除 {change.deletions} 行</span></small>
               </button>
             </li>
           ))}
@@ -578,10 +576,6 @@ function AgentMessage({
       ) : null}
     </article>
   );
-}
-
-function openKnowledgeCard(cardId: string) {
-  window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: cardId }));
 }
 
 function flattenFiles(nodes: WorkspaceNode[]): string[] {

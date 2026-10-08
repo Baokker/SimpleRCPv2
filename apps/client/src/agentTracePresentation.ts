@@ -59,7 +59,7 @@ function presentProviderError(event: AgentTraceEvent): TraceEntry {
     ? String(data.statusCode)
     : undefined;
   const message = compactText(firstString(data?.message, error?.name, event.summary));
-  const detail = [statusCode, message].filter(Boolean).join(" · ");
+  const detail = [statusCode ? `HTTP ${statusCode}` : undefined, message].filter(Boolean).join(": ");
   return entry(event, "Provider request failed", detail || undefined, "error");
 }
 

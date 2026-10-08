@@ -92,9 +92,9 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
               <dt>Runtime</dt>
               <dd>
                 OpenCode {titleCase(runtime.state)}
-                {runtime.version ? ` · v${runtime.version}` : ""}
               </dd>
             </div>
+            {runtime.version ? <div><dt>Version</dt><dd>v{runtime.version}</dd></div> : null}
             <div><dt>Provider</dt><dd>{provider === "minimax" ? "MiniMax" : "DeepSeek"}</dd></div>
             <div>
               <dt>API Key</dt>

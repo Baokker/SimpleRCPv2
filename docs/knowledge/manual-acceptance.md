@@ -1,6 +1,6 @@
 # 过程性知识分支人工验收
 
-适用仓库：`/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2`。适用分支：`feature/process-knowledge`。整理日期：2026-10-08；依据代码提交 `f5d91f1`。
+适用仓库：`/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2`。适用分支：`feature/process-knowledge`。整理日期：2026-10-08；验收入口与命令适用于当前分支。
 
 ## 1. 分支完成内容
 
@@ -28,6 +28,8 @@
 | F16 | 团队知识导出 | reviewed/team 卡片生成 Markdown，可写入工作区供静态知识条件使用 |
 | F17 | 模型与用量 | MiniMax/DeepSeek provider，Agent token 汇总、知识调用记录与注入字符数 |
 | F18 | 录制与实验 | 规范化事件录制、相同引擎离线回放；K1/K2/K3/K4/K5/K7、续跑、判定和统计工具 |
+
+界面验收可参照 [知识界面验收记录](ui-review-20261008.md)：卡片用标签显示类型、作用域和状态，用带名称的字段显示作者、确认人和时间；个人与团队任务使用相同的知识列表和任务后核对样式。记录包含浅色和深色主题截图，以及预览重新勾选、卡片链接和代码文件跳转的验证方法。
 
 ### 1.2 卡片类型与状态
 

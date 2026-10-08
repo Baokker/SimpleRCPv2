@@ -78,7 +78,7 @@ export function JoinProject({
               {participants.map((participant) => (
                 <option key={participant.id} value={participant.id}>
                   {participant.displayName}
-                  {participant.profileRole ? ` · ${participant.profileRole}` : ""}
+                  {participant.profileRole ? ` (${participant.profileRole})` : ""}
                 </option>
               ))}
               <option value="new">Create a new participant</option>

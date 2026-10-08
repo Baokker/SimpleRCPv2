@@ -1126,7 +1126,7 @@ function WorkspacePage({
           }}
         />
       </aside>
-      {knowledgeWarning ? <div className="knowledge-warning" role="status" data-testid="knowledge-risk-warning">
+      {knowledgeWarning ? <div className="knowledge-warning workspace-dialog-actions" role="status" data-testid="knowledge-risk-warning">
         <span>风险提醒：{knowledgeCards.find(card => card.id === knowledgeWarning.cardId)?.title ?? knowledgeWarning.file}</span>
         <button onClick={() => { const card = knowledgeCards.find(candidate => candidate.id === knowledgeWarning.cardId); if (card) window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id })); if (knowledgeWarning.warningId) void markKnowledgeWarningsRead(projectId, [knowledgeWarning.warningId]).catch(showWorkspaceError); setKnowledgeWarning(undefined); }}>打开卡片</button>
         <button onClick={() => setKnowledgeWarning(undefined)}>关闭</button>

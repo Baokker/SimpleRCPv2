@@ -336,11 +336,15 @@ test.describe("knowledge UI review", () => {
     await panel.getByLabel("筛选作用域").selectOption("");
     await panel.getByLabel("知识排序").selectOption("createdAt");
     await expect(panel.locator(".knowledge-card-title strong")).toHaveText(["验收模块用途", "验收运行测试", "验收保留 helper"]);
+    const target = panel.locator(`[data-card-id="${created[0]!.id}"]`);
+    await expect(target.locator(".knowledge-card-badges .knowledge-badge")).toHaveText(["约束", "团队", "已确认"]);
+    await expect(target.locator(".knowledge-card-facts dt")).toHaveText(["作者", "确认人", "更新时间"]);
     for (const theme of ["dark", "light"]) {
       if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await expect(target.locator(".knowledge-card-facts")).toHaveCSS("font-size", "12px");
+      await expect(target.locator(".knowledge-badge").first()).toHaveCSS("border-radius", "4px");
       await page.screenshot({ path: `${screenshotDirectory}/S6-UI-1-all-knowledge-${theme}.png` });
     }
-    const target = panel.locator(`[data-card-id="${created[0]!.id}"]`);
     await target.getByRole("button", { name: "编辑", exact: true }).click();
     const editor = page.getByRole("dialog", { name: "知识卡片编辑器" });
     await expect(editor.getByPlaceholder("标题", { exact: true })).toBeFocused();
@@ -356,7 +360,7 @@ test.describe("knowledge UI review", () => {
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied).toContain(`?knowledge=${created[0]!.id}`);
     await target.getByRole("button", { name: "查看锚点", exact: true }).click();
-    await expect(target).toContainText("确认人：知识验收成员");
+    await expect(target.locator(".knowledge-card-facts > div").filter({ hasText: "确认人" })).toContainText("知识验收成员");
     await target.getByRole("button", { name: "归档", exact: true }).click();
     await panel.getByLabel("筛选状态").selectOption("archived");
     await expect(target).toContainText("已归档");
@@ -772,14 +776,81 @@ test.describe("knowledge stage 4", () => {
       data: { type: "constraint", title: "Agent project rule", summary: "Keep the project rule", content: "Keep the project rule in the final change.", scope: "team", tags: [] }
     });
     expect(created.status()).toBe(201);
+    const optional = await page.request.post("/api/projects/demo/knowledge/cards", {
+      headers,
+      data: { type: "constraint", title: "Agent project rule optional", summary: "Optional project rule", content: "Optional project rule for this task.", scope: "team", tags: [] }
+    });
+    expect(optional.status()).toBe(201);
+    const optionalId = (await optional.json()).card.id as string;
     await page.getByTestId("collab-tab-agent").click();
     await page.getByTestId("agent-prompt").fill("Follow the project rule fake-reply=done");
     await expect(page.getByTestId("agent-knowledge-preview")).toContainText("Agent project rule");
+    const preview = page.getByTestId("agent-knowledge-preview");
+    const optionalCheckbox = preview.getByRole("checkbox", { name: /Agent project rule optional/ });
+    await expect(optionalCheckbox).toBeChecked();
+    const excludedPreview = () => page.waitForResponse(response => response.url().endsWith("/knowledge/preview")
+      && (response.request().postDataJSON()?.knowledge?.excludeCardIds ?? []).includes(optionalId));
+    let updatedPreview = excludedPreview();
+    await optionalCheckbox.uncheck();
+    await updatedPreview;
+    await expect(optionalCheckbox).not.toBeChecked();
+    await optionalCheckbox.check();
+    await expect(optionalCheckbox).toBeChecked();
+    updatedPreview = excludedPreview();
+    await optionalCheckbox.uncheck();
+    await updatedPreview;
+    await expect(optionalCheckbox).not.toBeChecked();
+    await expect(preview).toContainText("取消勾选后");
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await expect(preview.getByRole("checkbox").first()).toHaveCSS("width", "15px");
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-7-agent-preview-${theme}.png` });
+    }
     await page.getByTestId("agent-run-submit").click();
     await expect(page.getByTestId("agent-selected-run")).toContainText("done", { timeout: 20_000 });
     await expect(page.getByTestId("agent-knowledge-reference")).toContainText("Agent project rule");
+    await expect(page.getByTestId("agent-knowledge-reference")).not.toContainText("Agent project rule optional");
+    await expect(page.getByTestId("agent-selected-run").locator(".agent-run-metadata .ui-badge")).toHaveText("Completed");
+    await expect(page.getByTestId("agent-selected-run").locator(".agent-run-model")).toContainText("模型");
     await expect(page.getByTestId("agent-knowledge-post-check")).toContainText("未发现已知问题");
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await expect(page.getByTestId("agent-knowledge-reference")).toHaveCSS("border-radius", "6px");
+      await expect(page.getByTestId("agent-knowledge-post-check")).toHaveCSS("font-size", "12px");
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-8-agent-knowledge-${theme}.png` });
+    }
     await page.screenshot({ path: `${screenshotDirectory}/S4-1-agent-injection.png` });
+    await page.getByTestId("agent-knowledge-reference").getByRole("button", { name: "Agent project rule", exact: true }).click();
+    await expect(page.getByTestId("collab-tab-knowledge")).toHaveClass("active");
+    await expect(page.locator(".knowledge-card-content")).toContainText("Keep the project rule in the final change.");
+  });
+
+  test("团队任务使用同样的知识列表与核对样式", async ({ page }) => {
+    await openAs(page, "团队知识验收成员", "demo", "Developer");
+    const headers = await memberHeaders(page);
+    const created = await page.request.post("/api/projects/demo/knowledge/cards", {
+      headers,
+      data: { type: "constraint", title: "团队验收保留 sharedHelper", summary: "团队验收保留 sharedHelper", content: "修改代码时保留 sharedHelper。", scope: "team", tags: ["团队验收"] }
+    });
+    expect(created.status()).toBe(201);
+    await page.getByTestId("chat-input").fill("@agent 团队验收保留 sharedHelper，说明这条项目约束。");
+    await page.getByTestId("send-chat").click();
+    const reference = page.getByTestId("chat-agent-knowledge-reference").last();
+    await expect(reference).toContainText("团队验收保留 sharedHelper", { timeout: 20_000 });
+    const card = page.getByTestId("chat-agent-card").last();
+    await expect(card.locator(".agent-run-model")).toContainText("模型");
+    await expect(page.getByTestId("chat-agent-knowledge-post-check").last()).toContainText("未发现已知问题");
+    await expect(page.getByTestId("chat-transcript").locator(".chat-author-role").last()).toHaveText("Developer");
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await expect(reference).toHaveCSS("border-radius", "6px");
+      await expect(reference.locator(".agent-knowledge-list")).toHaveCSS("padding-left", "0px");
+      await expect(reference.locator("button").first()).toHaveCSS("font-size", "12px");
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-9-team-agent-knowledge-${theme}.png` });
+    }
+    await reference.getByRole("button", { name: "团队验收保留 sharedHelper", exact: true }).click();
+    await expect(page.getByTestId("collab-tab-knowledge")).toHaveClass("active");
+    await expect(page.locator(".knowledge-card-content")).toContainText("修改代码时保留 sharedHelper。");
   });
 });
 
@@ -798,6 +869,12 @@ test.describe("knowledge stage 5", () => {
       await expect.poll(() => page.evaluate(() => Boolean(window.__simplercpEditors?.["src/hello.ts"]?.getModel()))).toBe(true);
     }
     const adaHeaders = await memberHeaders(first);
+    const bobHeaders = await memberHeaders(second);
+    const constraint = await second.request.post("/api/projects/demo/knowledge/cards", {
+      headers: bobHeaders,
+      data: { type: "constraint", title: "任务核对验收约束", summary: "检查 Agent 新增的声明", content: "src/hello.ts 中不得增加 agentStage5 声明。", scope: "team", tags: [], appliesTo: { kind: "project" }, check: { kind: "regex-absent", pattern: "agentStage5", fileGlob: "src/hello.ts" } }
+    });
+    expect(constraint.status()).toBe(201);
     const sessionResponse = await first.request.post("/api/projects/demo/agent/sessions", { headers: adaHeaders, data: { title: "Stage5 capture" } });
     expect(sessionResponse.status()).toBe(201);
     const session = (await sessionResponse.json() as { session: { id: string } }).session;
@@ -812,6 +889,24 @@ test.describe("knowledge stage 5", () => {
       return (await response.json() as { run: { status: string } }).run.status;
     }, { timeout: 30_000 }).toBe("completed");
     await expect.poll(() => second.evaluate(() => window.__simplercpEditors!["src/hello.ts"]!.getModel()!.getValue())).toContain("agentStage5");
+    await first.getByTestId("collab-tab-agent").click();
+    const postCheck = first.getByTestId("agent-knowledge-post-check");
+    const hit = postCheck.locator("li").filter({ hasText: "任务核对验收约束" });
+    await expect(hit).toContainText("src/hello.ts");
+    await expect(hit).toContainText("检查未通过");
+    await expect(hit.locator(".agent-knowledge-location")).toContainText("行");
+    await expect(postCheck).toHaveClass(/failed/);
+    for (const theme of ["dark", "light"]) {
+      if (await first.locator("html").getAttribute("data-theme") !== theme) await first.getByTestId("theme-toggle").click();
+      await expect(hit.locator(".ui-badge.error")).toBeVisible();
+      const headingColor = await postCheck.locator("h4").evaluate(element => getComputedStyle(element).color);
+      await expect(hit.locator(".ui-badge.error")).toHaveCSS("color", headingColor);
+      await postCheck.scrollIntoViewIfNeeded();
+      await first.screenshot({ path: `${screenshotDirectory}/S6-UI-10-post-check-${theme}.png` });
+    }
+    await hit.locator(".agent-knowledge-location").click();
+    await expect(first.locator(".tab.active")).toContainText("src/hello.ts");
+    await first.getByTestId("collab-tab-knowledge").click();
     await second.evaluate(() => {
       const editor = window.__simplercpEditors!["src/hello.ts"]!;
       editor.executeEdits("stage5-revision", [{ range: editor.getModel()!.getFullModelRange(), text: "export const humanStage5 = true;\n" }]);
