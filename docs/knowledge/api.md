@@ -6,18 +6,21 @@
 
 | 方法 | 路径 | 返回内容 |
 | --- | --- | --- |
-| `GET` | `/cards?file=&type=&status=&scope=` | `{ cards, resolutions }`。`file` 存在时只返回锚定该文件的卡片，并附带解析结果。 |
+| `GET` | `/cards?file=&type=&status=&scope=` | `{ cards, resolutions }`。`file` 存在时返回代码关联、文件关联、项目范围与匹配路径模式的卡片，并附带锚点解析结果。待复核卡片仍然可见。 |
 | `GET` | `/cards/:id` | `{ card }`。个人卡片与 `proposedTeam` 卡片只对属主可见。 |
-| `POST` | `/cards` | 创建手动卡片。字段包括 `type`、`title`、`summary`、`content`、`tags`、`scope`，锚点使用 `{ file, selection }`。手动卡片直接进入 `reviewed`。 |
+| `POST` | `/cards` | 创建手动卡片。字段包括 `type`、`title`、`summary`、`content`、`tags`、`scope`；摘要为空时使用内容第一句。代码关联使用 `{ file, associationLevel: "block", selection }`，文件关联使用 `{ file, associationLevel: "file" }`。项目或路径模式使用 `appliesTo`。手动卡片直接进入 `reviewed`。`aiAssisted: true` 在创建历史中注明经 AI 整理。 |
 | `PATCH` | `/cards/:id` | 修改卡片字段与锚点。属主或确认人可以修改。草稿可带 `authorMemberId`、`authorName`，修改作者；候选锚点可使用 `{ file, startLine, endLine }`。 |
 | `POST` | `/cards/:id/confirm` | 确认可见草稿。body 可带 `edited`、非负的 `durationMs` 与可选 `patch`；修改与确认在一次原子保存中完成。 |
 | `POST` | `/cards/:id/archive` | 归档卡片。body 可带 `reason`。 |
 | `POST` | `/cards/:id/anchors/:index` | 使用 body 中的 `selection` 重选锚点。 |
+| `POST` | `/cards/:id/review` | 属主或确认人复核卡片。`{ action: "reassociate", anchorIndex?, file, selection }` 关联新的代码；`{ action: "file", anchorIndex? }` 改为整个文件；`{ action: "valid", anchorIndex? }` 确认仍然有效，并使用可靠匹配位置或整个文件。每次写入 `reviewed` 历史，多锚点卡片须全部有效才恢复 `reviewed` 状态。 |
+| `POST` | `/manual-assist` | `{ description, selection?: { file, selection } }`，返回 `{ draft, fallback, applicability }`，填入新建表单并由人核对保存。服务端读取选区作为证据、使用项目知识模型与抽取校验，调用统计写入 `llm-calls.jsonl`，`mode: "manual-assist"`。此接口不会创建卡片或 Inbox 建议。 |
+| `GET` | `/activity` | `{ items }`。项目知识活动按时间倒序，包含 `capture`、`confirmation`、`application`、`evolution`；每项有 `id`、`at`、成员信息、说明及关联卡片、建议或任务 id。读取已有活动日志和卡片演化记录，可见卡片的应用记录遵守成员权限。 |
 | `POST` | `/demo` | 在 Demo 工作区真实文件上生成六张示例卡片。 |
 
 所有写操作把卡片保存到项目元数据目录的 `knowledge/cards/<id>.json`，每次保存使用临时文件后原子替换。捕获建议使用 `knowledge/inbox/<id>.json`。
 
-演化记录保留 `action`、`by`、`at`、`note`，可选 `summary` 用于直接说明关系与复现的内容；`note` 继续保留来源标识。字段修改记录包含正文增加与删除的字符数，重新关联锚点记录文件与行号。客户端按日期分组和时间倒序展示，并支持选择单张卡片。
+演化记录保留 `action`、`by`、`at`、`note`，可选 `summary` 用于直接说明关系与复现的内容；`note` 继续保留来源标识。字段修改记录包含正文增加与删除的字符数，重新关联锚点记录文件与行号。单张卡片的历史在详情中折叠展示，按时间倒序；项目知识动态按日期分组和时间倒序展示。
 
 ## Inbox 与聊天选择
 
@@ -44,6 +47,8 @@
 
 修改锚点时，可同时提交 `anchors` 与 `retainAnchorIds`。后者只允许包含当前卡片已有的 anchorId，指定的完整锚点保留原有相对位置，再添加 `anchors` 中的新锚点。省略 `anchors` 时保留全部已有锚点；提交 `anchors: []` 且省略 `retainAnchorIds` 时清除锚点。知识编辑器在成员调整建议锚点时保留其人工关联的锚点。
 
+文件级关联只保存路径与 `snapshot: { text: "" }`，没有捕获范围、文本快照内容或 Yjs 相对位置。`appliesTo: { kind: "project" }` 用于整个项目，`{ kind: "glob", patterns: ["**/*.md"] }` 用于一类文件；更新时 `appliesTo: null` 清除原范围。选区覆盖全文时仍为 block 关联，范围由成员明确选择。
+
 ## 规范文档导入与导出
 
 | 方法 | 路径 | 输入与结果 |
@@ -62,7 +67,7 @@
 
 ## 锚点解析结果
 
-`resolutions` 中每一项包含 `cardId`、`anchorIndex`、`range`、`status`、`strategy` 与 `confidence`。`status` 为 `ok`、`moved` 或 `needsReview`。解析只在读取时计算，读取过程不会把卡片状态写成 `needsReview`。
+`resolutions` 中每一项包含 `cardId`、`anchorIndex`、`range`、`status`、`strategy` 与 `confidence`。`status` 为 `ok`、`moved` 或 `needsReview`；需要复核时附带 `reason: "changed" | "missing"`。解析只在读取时计算，读取过程不会把卡片状态写成 `needsReview`。
 
 ## WebSocket
 
@@ -101,7 +106,7 @@
 { "type": "knowledge_anchor_needs_review", "cardId": "card-id", "file": "src/example.ts", "status": "needsReview" }
 ```
 
-`status` 为 `needsReview` 或 `orphaned`。客户端收到后刷新知识列表并提示重新锚定。
+`status` 为 `needsReview` 或 `orphaned`。客户端收到后刷新知识列表并提示复核。文件级关联在目标路径不存在时发送 `reason: "file-missing"`，卡片状态保持有效，提示成员检查文件路径。
 
 ## 活动日志
 
@@ -114,7 +119,7 @@
 | --- | --- | --- |
 | `GET` | `/api/projects/:projectId/knowledge/config` | 返回项目 Agent 知识注入配置。 |
 | `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`lexicalScoring`、`ranking`、`statuses`、`fixedCardIds`、任务后核对、在途提醒、团队二次确认、复盘模式、锚点孤立期限和 `riskWarning`。`lexicalScoring` 与 `ranking` 独立。`riskWarning` 包含 `files`、`lexicalThreshold`、`vectorThreshold`、`cooldownMs`、`dedupeThreshold`。 |
-| `POST` | `/api/projects/:projectId/knowledge/preview` | 输入 `{ prompt, contexts, knowledge? }`，返回活动文件、排除卡片、候选记录、字符数量和按 `Math.ceil(totalChars / 4)` 估算的注入 token 数。 |
+| `POST` | `/api/projects/:projectId/knowledge/preview` | 输入 `{ prompt, contexts, knowledge? }`，返回活动文件、排除卡片、候选记录、字符数量和按 `Math.ceil(totalChars / 4)` 估算的注入 token 数。`reviewCards` 列出相关待复核卡片的 id 和标题，它们不会进入 `records` 或 Agent 知识正文。 |
 | `POST` | `/api/projects/:projectId/knowledge/cards/:id/view` | 记录当前成员首次打开卡片，用于复用延迟。 |
 | `GET` | `/api/projects/:projectId/knowledge/metrics/reuse` | 返回知识时刻、确认、首次查看和首次注入时间点。 |
 

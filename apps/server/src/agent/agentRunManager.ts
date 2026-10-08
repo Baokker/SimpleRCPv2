@@ -227,6 +227,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     if (!provider || (provider.mode !== "inject" && provider.mode !== "full")) return;
     postChecks.add(`${projectId}:${run.id}`);
     const postCheck = await provider.postRunCheck(run);
+    appendActivity(projectId, { type: "knowledge_post_check", memberId: run.initiatorMemberId ?? run.memberId, payload: { runId: run.id, hits: postCheck.hits } });
     await appendTrace(projectId, run.id, {
       type: "knowledge_post_check",
       data: { hits: postCheck.hits }

@@ -33,9 +33,7 @@ import type {
   RoomMember,
   WorkspaceNode,
   KnowledgeCard,
-  KnowledgeAnchorResolution,
-  KnowledgeGuideItem,
-  KnowledgeTimelineItem
+  KnowledgeAnchorResolution
 } from "../types";
 import { formatTime } from "../format";
 
@@ -93,15 +91,12 @@ export function CollaborationPanel({
   activePath,
   knowledgeCards,
   knowledgeResolutions,
-  knowledgeGuide,
-  knowledgeTimeline,
   knowledgePinSelection,
   knowledgeCurrentSelection,
   onCreateKnowledgeCard,
   onUpdateKnowledgeCard,
   onConfirmKnowledgeCard,
   onArchiveKnowledgeCard,
-  onReanchorKnowledgeCard,
   onClearKnowledgePinSelection,
   onGenerateKnowledgeDemo,
   onRefreshKnowledge
@@ -138,15 +133,12 @@ export function CollaborationPanel({
   activePath?: string;
   knowledgeCards: KnowledgeCard[];
   knowledgeResolutions: KnowledgeAnchorResolution[];
-  knowledgeGuide: KnowledgeGuideItem[];
-  knowledgeTimeline: KnowledgeTimelineItem[];
   knowledgePinSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
   knowledgeCurrentSelection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
-  onCreateKnowledgeCard(input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }): Promise<void>;
+  onCreateKnowledgeCard(input: import("../types").KnowledgeCardInput): Promise<void>;
   onUpdateKnowledgeCard(id: string, input: import("../types").KnowledgeCardInput): Promise<void>;
   onConfirmKnowledgeCard(id: string, edited?: boolean, durationMs?: number, patch?: import("../types").KnowledgeCardInput): Promise<void>;
-  onArchiveKnowledgeCard(id: string): Promise<void>;
-  onReanchorKnowledgeCard(id: string, anchorIndex: number, selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }): Promise<void>;
+  onArchiveKnowledgeCard(id: string, reason?: string): Promise<void>;
   onClearKnowledgePinSelection(): void;
   onGenerateKnowledgeDemo(): Promise<void>;
   onRefreshKnowledge(): Promise<void>;
@@ -285,8 +277,6 @@ export function CollaborationPanel({
             focusCardId={focusedKnowledgeCardId}
             onRefresh={onRefreshKnowledge}
             cards={knowledgeCards}
-            guide={knowledgeGuide}
-            timeline={knowledgeTimeline}
             resolutions={knowledgeResolutions}
             activePath={activePath}
             pinSelection={knowledgePinSelection}
@@ -296,7 +286,6 @@ export function CollaborationPanel({
             onUpdate={onUpdateKnowledgeCard}
             onConfirm={onConfirmKnowledgeCard}
             onArchive={onArchiveKnowledgeCard}
-            onReanchor={onReanchorKnowledgeCard}
             onGenerateDemo={onGenerateKnowledgeDemo}
             onOpenAnchor={onOpenKnowledgeAnchor}
             onClearPinSelection={onClearKnowledgePinSelection}

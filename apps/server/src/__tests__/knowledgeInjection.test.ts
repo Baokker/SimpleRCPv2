@@ -51,6 +51,27 @@ describe("knowledge agent injection", () => {
     expect(cardResponse.status).toBe(201);
     const card = (await cardResponse.json() as { card: { id: string } }).card;
 
+    const immediateResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "constraint", title: "README，请全部使用英文", summary: "README 请全部使用英文", content: "请使用英文来写，因为项目涉及外部人员。", scope: "team", anchors: [{ file: "README.md", associationLevel: "file" }] }) });
+    expect(immediateResponse.status).toBe(201);
+    const immediateCard = (await immediateResponse.json() as { card: { id: string } }).card;
+    const immediateRun = await fetch(`${origin}/api/projects/demo/agent/runs`, { method: "POST", headers, body: JSON.stringify({ prompt: "完善一下这个项目的README fake-reply=done", contexts: [{ type: "file", path: "README.md" }] }) });
+    expect(immediateRun.status).toBe(202);
+    const immediateRunId = (await immediateRun.json() as { run: { id: string } }).run.id;
+    let immediateEvents: Array<{ type: string; data?: { candidates?: Array<{ id: string }>; cards?: Array<{ id: string }> } }> = [];
+    for (let attempt = 0; attempt < 100; attempt++) {
+      immediateEvents = (await (await fetch(`${origin}/api/projects/demo/agent/runs/${immediateRunId}/trace`, { headers })).json() as { events: typeof immediateEvents }).events;
+      if (immediateEvents.some(event => event.type === "knowledge_injected")) break;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    const immediateInjection = immediateEvents.find(event => event.type === "knowledge_injected")?.data;
+    expect(immediateInjection?.candidates?.map(candidate => candidate.id)).toContain(immediateCard.id);
+    expect(immediateInjection?.cards?.map(candidate => candidate.id)).toContain(immediateCard.id);
+
+    const identifierResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "decision", title: "任务状态设计", summary: "createProjectStatus 保持字段含义", content: "createProjectStatus 统一计算项目状态。", scope: "team" }) });
+    const identifierCard = (await identifierResponse.json() as { card: { id: string } }).card;
+    const identifierPreview = await fetch(`${origin}/api/projects/demo/agent/knowledge/preview`, { method: "POST", headers, body: JSON.stringify({ prompt: "createProjectStatus给它新增一个内容" }) });
+    expect((await identifierPreview.json() as { candidates: Array<{ id: string }> }).candidates.map(item => item.id)).toContain(identifierCard.id);
+
     const personalResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "context", title: "Ada private note", summary: "Only Ada can use this note", content: "Private note", tags: [], scope: "personal" }) });
     expect(personalResponse.status).toBe(201);
     const personalCard = (await personalResponse.json() as { card: { id: string } }).card;

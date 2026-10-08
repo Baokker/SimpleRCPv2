@@ -1,19 +1,19 @@
 import { useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
-import { BookOpen, FileText, Link2, LoaderCircle, Plus, Search, Upload, X } from "lucide-react";
-import { removeKnowledgeEvidenceBlocks } from "@simplercp/knowledge/util/content";
-import { distinctTimeline, knowledgeScopes, knowledgeStatuses, knowledgeTriggers, knowledgeTypes, markPendingKnowledgeSeen, timelineDescription } from "../knowledgePresentation";
+import { BookOpen, FileText, Link2, LoaderCircle, Plus, Search, Upload, X, MoreHorizontal, Sparkles } from "lucide-react";
+import { cardMatchesFile } from "@simplercp/knowledge/util/applicability";
+import { removeKnowledgeEvidenceBlocks, summarizeKnowledgeContent } from "@simplercp/knowledge/util/content";
+import { knowledgeScopes, knowledgeStatuses, knowledgeTriggers, knowledgeTypes, markPendingKnowledgeSeen, pendingKnowledgeSeen, timelineDescription } from "../knowledgePresentation";
 import { confirmKnowledgeTeamScope, disputeKnowledgeSuggestion, getKnowledgeInbox, getKnowledgeRelationCandidates, getKnowledgeSuggestion, getPendingKnowledgeTeamCards, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, relateKnowledgeCards, requestKnowledgeTeamScope, resolveKnowledgeSuggestion } from "../api";
-import { importKnowledgeDocuments, exportKnowledgeToWorkspace } from "../api";
+import { importKnowledgeDocuments, exportKnowledgeToWorkspace, getKnowledgeActivity, reviewKnowledgeAnchor, assistKnowledgeCreation } from "../api";
+import { KnowledgeActivity } from "./KnowledgeActivity";
 import type {
   KnowledgeCard,
   KnowledgeCardType,
-  KnowledgeGuideItem,
   KnowledgeScope,
-  KnowledgeTimelineItem,
   KnowledgeAnchorResolution
 } from "../types";
 
-type View = "current" | "all" | "guide" | "timeline" | "inbox";
+type View = "cards" | "activity" | "inbox";
 type Selection = { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } };
 type CardInput = import("../types").KnowledgeCardInput;
 type SuggestionAction = "accept" | "ai-draft" | "discard" | "merge";
@@ -23,8 +23,6 @@ export function KnowledgePanel({
   isActive,
   inboxRequestVersion,
   cards,
-  guide,
-  timeline,
   resolutions,
   activePath,
   pinSelection,
@@ -34,7 +32,6 @@ export function KnowledgePanel({
   onUpdate,
   onConfirm,
   onArchive,
-  onReanchor,
   onGenerateDemo,
   onOpenAnchor,
   onClearPinSelection
@@ -44,8 +41,6 @@ export function KnowledgePanel({
   focusCardId?: string;
   inboxRequestVersion?: number;
   cards: KnowledgeCard[];
-  guide: KnowledgeGuideItem[];
-  timeline: KnowledgeTimelineItem[];
   resolutions: KnowledgeAnchorResolution[];
   activePath?: string;
   pinSelection?: Selection;
@@ -54,13 +49,12 @@ export function KnowledgePanel({
   onCreate(input: CardInput): Promise<void>;
   onUpdate(id: string, input: CardInput): Promise<void>;
   onConfirm(id: string, edited?: boolean, durationMs?: number, patch?: CardInput): Promise<void>;
-  onArchive(id: string): Promise<void>;
-  onReanchor(id: string, anchorIndex: number, selection: Selection["selection"]): Promise<void>;
+  onArchive(id: string, reason?: string): Promise<void>;
   onGenerateDemo(): Promise<void>;
   onOpenAnchor(path: string, range?: { startLine: number; startColumn: number; endLine: number; endColumn: number }): void;
   onClearPinSelection(): void;
 }) {
-  const [view, setView] = useState<View>("current");
+  const [view, setView] = useState<View>("cards");
   const [expanded, setExpanded] = useState<string>();
   const [formOpen, setFormOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<KnowledgeCard>();
@@ -106,7 +100,20 @@ export function KnowledgePanel({
   const [filterStatus, setFilterStatus] = useState("");
   const [filterAuthor, setFilterAuthor] = useState("");
   const [sort, setSort] = useState("updatedAt");
-  const [timelineCard, setTimelineCard] = useState("");
+  const [filterRange, setFilterRange] = useState("current");
+  const [page, setPage] = useState(1);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [activity, setActivity] = useState<import("../types").KnowledgeActivityItem[]>([]);
+  const [activityCategory, setActivityCategory] = useState("");
+  const [focusedSuggestion, setFocusedSuggestion] = useState<import("../types").KnowledgeSuggestion>();
+  const [association, setAssociation] = useState<"block" | "file" | "project">("project");
+  const [associationFile, setAssociationFile] = useState("");
+  const [patterns, setPatterns] = useState("");
+  const [associationChanged, setAssociationChanged] = useState(false);
+  const [assistDescription, setAssistDescription] = useState("");
+  const [assisting, setAssisting] = useState(false);
+  const [aiAssisted, setAiAssisted] = useState(false);
+  const [reassociation, setReassociation] = useState<{ cardId: string; anchorIndex: number }>();
   const [deferredTeam, setDeferredTeam] = useState<string[]>([]);
   const [showDeferred, setShowDeferred] = useState(false);
   const deferredKey = `simplercp.knowledge.deferred.${projectId}.${memberId ?? ""}`;
@@ -116,10 +123,24 @@ export function KnowledgePanel({
   const titleRef = useRef<HTMLInputElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
   const editorBodyRef = useRef<HTMLDivElement>(null);
+  const filterMenuRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const dismiss = (event: PointerEvent) => {
+      if (event.target instanceof Node && !filterMenuRef.current?.contains(event.target) && filterMenuRef.current) filterMenuRef.current.open = false;
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, []);
 
   useEffect(() => { setDeferredTeam(JSON.parse(sessionStorage.getItem(deferredKey) ?? "[]") as string[]); }, [deferredKey]);
   useEffect(() => { if (inboxRequestVersion) setView("inbox"); }, [inboxRequestVersion]);
-  useEffect(() => { setTimelineCard(""); }, [activePath]);
+  useEffect(() => { setPage(1); }, [activePath, query, filterTypes, filterScope, filterStatus, filterAuthor, filterRange, sort]);
+  useEffect(() => {
+    let active = true;
+    void getKnowledgeActivity(projectId).then(result => { if (active) setActivity(result.items); }).catch(error => { if (active) setFormError(String(error)); });
+    return () => { active = false; };
+  }, [projectId, refreshVersion, cards]);
 
   useLayoutEffect(() => {
     if (!formOpen || !isActive) return;
@@ -221,16 +242,16 @@ export function KnowledgePanel({
   }, []);
   useEffect(() => { if (focusCardId) revealCard(focusCardId); }, [focusCardId]);
   useLayoutEffect(() => {
-    if (!isActive || !expanded || view !== "all" || revealedCardRef.current === expanded) return;
+    if (!isActive || !expanded || view !== "cards" || revealedCardRef.current === expanded) return;
     const entry = [...(viewContentRef.current?.querySelectorAll<HTMLElement>("[data-card-id]") ?? [])].find(element => element.dataset.cardId === expanded);
     entry?.scrollIntoView({ block: "nearest" });
     if (entry) revealedCardRef.current = expanded;
-  }, [expanded, view, cards, isActive]);
+  }, [expanded, view, cards, page, isActive]);
 
-  function revealCard(id: string) {
+  function revealCard(id?: string) {
     revealedCardRef.current = undefined;
     setQuery(""); setFilterTypes([]); setFilterScope(""); setFilterStatus(""); setFilterAuthor("");
-    setExpanded(id); setView("all");
+    setFilterRange("all"); setPage(1); setSort("updatedAt"); setExpanded(id); setView("cards");
   }
 
   useEffect(() => {
@@ -239,19 +260,22 @@ export function KnowledgePanel({
   }, [pinSelection]);
 
   const currentCards = activePath
-    ? cards.filter((card) => card.anchors.some((anchor) => normalizeKnowledgePath(anchor.file.workspaceRelativePath) === normalizeKnowledgePath(activePath)))
+    ? cards.filter((card) => cardMatchesFile(card, activePath))
     : [];
   const filteredCards = useMemo(() => {
     const text = query.trim().toLocaleLowerCase();
-    const selected = cards.filter(card => (!text || [card.title, card.summary, card.content, ...card.tags].join("\n").toLocaleLowerCase().includes(text))
+    const selected = cards.filter(card => (filterRange !== "current" || currentCards.some(current => current.id === card.id)) && (!text || [card.title, card.summary, card.content, ...card.tags].join("\n").toLocaleLowerCase().includes(text))
       && (!filterTypes.length || filterTypes.includes(card.type)) && (!filterScope || card.scope === filterScope)
-      && (!filterStatus || card.status === filterStatus) && (!filterAuthor || (card.provenance?.author.memberId ?? card.metadata?.createdBy?.peerId) === filterAuthor));
-    return selected.sort((left, right) => sort === "type" ? Object.keys(knowledgeTypes).indexOf(left.type) - Object.keys(knowledgeTypes).indexOf(right.type) || right.updatedAt - left.updatedAt : sort === "createdAt" ? right.createdAt - left.createdAt : right.updatedAt - left.updatedAt);
-  }, [cards, query, filterTypes, filterScope, filterStatus, filterAuthor, sort]);
-  const visibleCards = view === "current" ? currentCards : view === "all" ? filteredCards : [];
-  const history = distinctTimeline(timeline).filter(item => !timelineCard || item.card.id === timelineCard);
-  const historyDays = [...new Set(history.map(item => new Date(item.at).toLocaleDateString("zh-CN")))];
-  const expandedIsVisible = view === "guide" ? guide.some(item => item.card.id === expanded) : visibleCards.some(card => card.id === expanded);
+      && (!filterStatus || knowledgeStatuses[card.status] === filterStatus) && (!filterAuthor || (card.provenance?.author.memberId ?? card.metadata?.createdBy?.peerId) === filterAuthor));
+    const readingPriority = (card: KnowledgeCard) => (activePath && cardMatchesFile(card, activePath) ? 0 : 10) + ({ tutorial: 0, decision: 1, constraint: 2, context: 3, risk: 4, negative: 5 }[card.type]);
+    return selected.sort((left, right) => (sort === "reading" ? readingPriority(left) - readingPriority(right) : 0) || right.updatedAt - left.updatedAt);
+  }, [cards, query, filterTypes, filterScope, filterStatus, filterAuthor, filterRange, activePath, sort]);
+  const pageCount = Math.max(1, Math.ceil(filteredCards.length / 10));
+  const currentPage = Math.min(page, pageCount);
+  const visibleCards = view === "cards" ? filteredCards.slice((currentPage - 1) * 10, currentPage * 10) : [];
+  const filteredActivity = activity.filter(item => !activityCategory || item.category === activityCategory);
+  const expandedIsVisible = visibleCards.some(card => card.id === expanded);
+  useEffect(() => { if (expanded && revealedCardRef.current === undefined) { const index = filteredCards.findIndex(card => card.id === expanded); if (index >= 0) setPage(Math.floor(index / 10) + 1); } }, [expanded, filteredCards]);
   useEffect(() => {
     if (isActive && !formOpen && expanded && expandedIsVisible) void markKnowledgeCardViewed(projectId, expanded).catch(error => setFormError(String(error)));
   }, [projectId, expanded, expandedIsVisible, isActive, formOpen]);
@@ -268,6 +292,8 @@ export function KnowledgePanel({
     setTags("");
     setType("decision");
     setScope("team");
+    setAssociation(pinSelection ? "block" : "project"); setAssociationFile(pinSelection?.file ?? activePath ?? ""); setPatterns(""); setAssociationChanged(true);
+    setAssistDescription(""); setAiAssisted(false);
     setFormError(undefined);
     setFormOpen(true);
   }
@@ -284,6 +310,7 @@ export function KnowledgePanel({
     setTags(card.tags.join(", "));
     setType(card.type);
     setScope(card.scope ?? "team");
+    setAssociation(card.anchors[0]?.associationLevel === "file" ? "file" : card.anchors.length ? "block" : "project"); setAssociationFile(card.anchors[0]?.file.workspaceRelativePath ?? activePath ?? ""); setPatterns(card.appliesTo?.kind === "glob" ? card.appliesTo.patterns.join("\n") : ""); setAssociationChanged(false);
     setFormError(undefined);
     setFormOpen(true);
     openedAt.current = Date.now();
@@ -299,21 +326,26 @@ export function KnowledgePanel({
   }
 
   async function submit() {
-    if (!title.trim() || !summary.trim() || saving) return;
+    if (!title.trim() || !content.trim() || saving) return;
     setSaving(true);
     setFormError(undefined);
     const input: CardInput = {
       type,
       title: title.trim(),
-      summary: summary.trim(),
+      summary: summary.trim() || summarizeKnowledgeContent(content),
       content,
       tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-      scope
+      scope, aiAssisted
     };
+    if (associationChanged) {
+      input.appliesTo = association === "project" ? patterns.trim() ? { kind: "glob", patterns: patterns.split(/[\n,]/).map(value => value.trim()).filter(Boolean) } : { kind: "project" } : null;
+      input.anchors = association === "file" ? [{ file: associationFile, associationLevel: "file" }] : association === "block" && (pinSelection ?? currentSelection) ? [{ ...(pinSelection ?? currentSelection)!, associationLevel: "block" }] : [];
+      if (association === "block" && !input.anchors.length) { setFormError("请在编辑器中选择要关联的代码"); setSaving(false); return; }
+    }
     if (editingCard?.status === "draft") {
       input.authorMemberId = authorMemberId;
       input.authorName = members.find(member => member.id === authorMemberId)?.displayName ?? authorMemberId;
-      if (draftEvidence && anchorSelectionChangedRef.current) {
+      if (draftEvidence && anchorSelectionChangedRef.current && !associationChanged) {
         const candidates = draftEvidence.suggestedAnchors ?? [];
         input.retainAnchorIds = editingCard.anchors.filter(anchor => {
           const index = candidates.findIndex(candidate => matchesSuggestedAnchor(anchor, candidate));
@@ -329,7 +361,10 @@ export function KnowledgePanel({
           await onConfirm(editingCard.id, edited, Date.now() - openedAt.current, input);
         } else await onUpdate(editingCard.id, input);
       }
-      else await onCreate(input);
+      else {
+        await onCreate(input);
+        revealCard();
+      }
       closeForm();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : String(error));
@@ -395,11 +430,11 @@ export function KnowledgePanel({
     void getKnowledgeRelationCandidates(projectId, card.id).then(result => setRelationCandidates(items => ({ ...items, [card.id]: result.candidates.map(candidate => candidate.card) }))).catch(error => setFormError(String(error)));
   }
 
-  async function archive(card: KnowledgeCard) {
+  async function archive(card: KnowledgeCard, reason?: string) {
     setActionCardId(card.id);
     setFormError(undefined);
     try {
-      await onArchive(card.id);
+      await onArchive(card.id, reason);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : String(error));
     } finally {
@@ -407,17 +442,26 @@ export function KnowledgePanel({
     }
   }
 
-  async function reanchor(card: KnowledgeCard, anchorIndex: number) {
-    if (!currentSelection || (currentSelection.selection.startLineNumber === currentSelection.selection.endLineNumber && currentSelection.selection.startColumn === currentSelection.selection.endColumn)) return;
-    setActionCardId(card.id);
-    setFormError(undefined);
+  async function review(card: KnowledgeCard, action: "valid" | "file" | "reassociate", anchorIndex = 0) {
+    setActionCardId(card.id); setFormError(undefined);
     try {
-      await onReanchor(card.id, anchorIndex, currentSelection.selection);
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setActionCardId(undefined);
-    }
+      await reviewKnowledgeAnchor(projectId, card.id, { action, anchorIndex, ...(action === "reassociate" ? { file: currentSelection?.file, selection: currentSelection?.selection } : {}) });
+      setReassociation(undefined); await onRefresh();
+    } catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setActionCardId(undefined); }
+  }
+
+  async function assist() {
+    if (!assistDescription.trim() || assisting) return;
+    setAssisting(true); setFormError(undefined);
+    try {
+      const result = await assistKnowledgeCreation(projectId, assistDescription, pinSelection);
+      setType(result.draft.type); setTitle(result.draft.title); setSummary(result.draft.summary); setContent(result.draft.content); setTags(result.draft.tags.join(", ")); setAiAssisted(true);
+      setAssociation(result.applicability.kind === "block" ? "block" : "project"); setAssociationFile(result.applicability.file ?? ""); setAssociationChanged(true);
+      setPatterns(result.applicability.patterns?.join("\n") ?? "");
+      setEditorNotice(result.fallback ? "请核对描述并补充可复用的知识" : "草案已生成，请核对后保存");
+    } catch (error) { setFormError(error instanceof Error ? error.message : String(error)); }
+    finally { setAssisting(false); }
   }
 
   const renderCard = (card: KnowledgeCard) => (
@@ -433,8 +477,11 @@ export function KnowledgePanel({
       onToggle={() => { setExpanded(expanded === card.id ? undefined : card.id); if (expanded !== card.id) loadRelationCandidates(card); }}
       onEdit={() => openEdit(card)}
       onConfirm={() => void confirm(card)}
-      onArchive={() => void archive(card)}
-      onReanchor={(index) => void reanchor(card, index)}
+      onArchive={(reason) => void archive(card, reason)}
+      onReview={(action, index) => void review(card, action, index)}
+      reassociating={reassociation?.cardId === card.id ? reassociation.anchorIndex : undefined}
+      onStartReassociate={(index) => { setReassociation({ cardId: card.id, anchorIndex: index }); onOpenAnchor(card.anchors[index]!.file.workspaceRelativePath); }}
+      onCancelReassociate={() => setReassociation(undefined)}
       onRequestTeam={() => void requestTeam(card)}
       onConfirmTeam={() => void confirmTeam(card)}
       onDeferTeam={() => { const ids = [...new Set([...deferredTeam, card.id])]; setDeferredTeam(ids); sessionStorage.setItem(deferredKey, JSON.stringify(ids)); setDocumentNotice("已暂不确认这条申请，申请仍然保留，可随时重新查看。"); }}
@@ -455,19 +502,23 @@ export function KnowledgePanel({
     <section className="knowledge-panel" data-testid="knowledge-panel" hidden={!isActive}>
       <div ref={backgroundRef} className="knowledge-panel-background">
         <nav className="knowledge-toolbar" aria-label="知识视图">
-          {(["inbox", "current", "all", "guide", "timeline"] as View[]).map(candidate => (
-            <button type="button" key={candidate} className={view === candidate ? "active" : ""} aria-pressed={view === candidate} onClick={() => setView(candidate)}>
-              {{ inbox: "待处理", current: "本文件相关", all: "全部知识", guide: "导览", timeline: "时间线" }[candidate]}
+          {(["inbox", "cards", "activity"] as View[]).map(candidate => (
+            <button type="button" key={candidate} className={view === candidate ? "active" : ""} aria-label={{ inbox: "待处理", cards: "知识卡片", activity: "知识动态" }[candidate]} aria-pressed={view === candidate} onClick={() => setView(candidate)}>
+              {{ inbox: "待处理", cards: "知识卡片", activity: "知识动态" }[candidate]}
+              {candidate === "inbox" && suggestions.filter(item => !item.seenBy?.includes(memberId ?? "")).length + pendingTeam.filter(card => !memberId || !pendingKnowledgeSeen(projectId, memberId, card)).length > 0 ? <span className="collab-unread-badge">{suggestions.filter(item => !item.seenBy?.includes(memberId ?? "")).length + pendingTeam.filter(card => !memberId || !pendingKnowledgeSeen(projectId, memberId, card)).length}</span> : null}
             </button>
           ))}
+          <div className="knowledge-toolbar-create workspace-dialog-actions">
+            <button type="button" className="primary" disabled={saving} onClick={openCreate}><Plus size={14} />新建</button>
+            <button type="button" aria-expanded={moreOpen} aria-label="知识更多操作" onClick={() => setMoreOpen(open => !open)}><MoreHorizontal size={16} />更多</button>
+            {moreOpen ? <div className="knowledge-more-menu workspace-dialog-actions">
+              <button type="button" disabled={saving} onClick={async () => { setSaving(true); setDocumentAction("demo"); try { await onGenerateDemo(); setMoreOpen(false); } catch (error) { setFormError(String(error)); } finally { setSaving(false); setDocumentAction(""); } }}><BookOpen size={14} />{documentAction === "demo" ? "生成中" : "生成示例卡片"}</button>
+              <button type="button" onClick={() => { setImportOpen(open => !open); setMoreOpen(false); }}><Upload size={14} />导入规范文档</button>
+              <button type="button" disabled={saving} onClick={() => void exportDocuments()}>{documentAction === "export" ? "导出中" : "导出团队 AGENTS.md"}</button>
+              <p className="knowledge-hint">导出有效的团队知识，供 Agent 读取</p>
+            </div> : null}
+          </div>
         </nav>
-        <div className="knowledge-actions workspace-dialog-actions">
-          <button type="button" className="primary" disabled={saving} onClick={openCreate}><Plus size={14} />新建卡片</button>
-          <button type="button" disabled={saving} onClick={async () => { setSaving(true); setDocumentAction("demo"); try { await onGenerateDemo(); } catch (error) { setFormError(String(error)); } finally { setSaving(false); setDocumentAction(""); } }}>{documentAction === "demo" ? <LoaderCircle className="loading-icon" size={14} /> : <BookOpen size={14} />}{documentAction === "demo" ? "生成中" : "生成示例卡片"}</button>
-          <button type="button" disabled={saving} onClick={() => setImportOpen(open => !open)}><Upload size={14} />导入规范文档</button>
-          <button type="button" disabled={saving} onClick={() => void exportDocuments()}>{documentAction === "export" ? "导出中" : "导出团队 AGENTS.md"}</button>
-        </div>
-        <p className="knowledge-hint">导出已确认的团队知识，供 Agent 读取</p>
         {documentNotice ? <p className="knowledge-notice" role="status">{documentNotice}</p> : null}
         {formError ? <p className="knowledge-error" role="alert">{formError}</p> : null}
         <div ref={viewContentRef} className="knowledge-view-content" key={view} data-testid={`knowledge-content-${view}`}>
@@ -484,21 +535,26 @@ export function KnowledgePanel({
             </li>)}</ol>
             <div className="workspace-dialog-actions"><button className="primary" disabled={saving || !importSelected.some(id => imported.some(item => item.id === id))} onClick={() => void confirmImported()}>{documentAction === "confirm" ? "确认中" : "确认选中的草稿"}</button></div>
           </section> : null}
-          {view === "all" ? <div className="knowledge-filters">
-            <label className="knowledge-search"><Search size={15} /><input type="search" aria-label="搜索知识" placeholder="搜索标题、摘要、正文或标签" value={query} onChange={event => setQuery(event.target.value)} /></label>
-            <details><summary>筛选与排序</summary>
+          {view === "cards" ? <div className="knowledge-filters">
+            <div className="knowledge-list-controls">
+            <label className="knowledge-search"><Search size={15} /><input type="search" aria-label="搜索知识" placeholder="搜索知识" title="搜索标题、摘要、正文或标签" value={query} onChange={event => setQuery(event.target.value)} /></label>
+            <select aria-label="筛选范围" value={filterRange} onChange={event => { setFilterRange(event.target.value); if (filterMenuRef.current) filterMenuRef.current.open = false; }}><option value="current">本文件</option><option value="all">全部</option></select>
+            <details ref={filterMenuRef} className="knowledge-filter-menu"><summary>筛选</summary><div className="knowledge-filter-popup">
               <fieldset className="knowledge-type-filters"><legend>类型，可选择多项</legend>{Object.entries(knowledgeTypes).map(([value, entry]) => <label key={value} title={value}><input type="checkbox" checked={filterTypes.includes(value as KnowledgeCardType)} onChange={event => setFilterTypes(types => event.target.checked ? [...types, value as KnowledgeCardType] : types.filter(type => type !== value))} />{entry.label}</label>)}</fieldset>
               <div className="knowledge-filter-grid">
                 <label>作用域<select aria-label="筛选作用域" value={filterScope} onChange={event => setFilterScope(event.target.value)}><option value="">全部作用域</option>{Object.entries(knowledgeScopes).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-                <label>状态<select aria-label="筛选状态" value={filterStatus} onChange={event => setFilterStatus(event.target.value)}><option value="">全部状态</option>{Object.entries(knowledgeStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                <label>状态<select aria-label="筛选状态" value={filterStatus} onChange={event => setFilterStatus(event.target.value)}><option value="">全部状态</option>{["有效", "草稿", "待复核", "已归档"].map(label => <option key={label} value={label}>{label}</option>)}</select></label>
                 <label>作者<select aria-label="筛选作者" value={filterAuthor} onChange={event => setFilterAuthor(event.target.value)}><option value="">全部作者</option>{[...new Map([...members.map(member => [member.id, member.displayName] as const), ...cards.filter(card => card.provenance?.author.memberId).map(card => [card.provenance!.author.memberId!, card.provenance!.author.displayName ?? "成员"] as const)]).entries()].map(([id, name]) => <option value={id} key={id}>{name}</option>)}</select></label>
-                <label>排序<select aria-label="知识排序" value={sort} onChange={event => setSort(event.target.value)}><option value="updatedAt">更新时间</option><option value="createdAt">创建时间</option><option value="type">类型</option></select></label>
               </div>
               <div className="workspace-dialog-actions"><button onClick={() => { setQuery(""); setFilterTypes([]); setFilterScope(""); setFilterStatus(""); setFilterAuthor(""); }}>清除筛选</button></div>
-            </details>
-            <p className="knowledge-hint" role="status">共 {cards.length} 条，符合筛选 {filteredCards.length} 条</p>
+            </div></details>
+            <select aria-label="知识排序" value={sort} onChange={event => { setSort(event.target.value); if (filterMenuRef.current) filterMenuRef.current.open = false; }}><option value="updatedAt">最近更新</option><option value="reading">阅读顺序</option></select>
+            </div>
+            <p className="knowledge-hint" role="status">共 {filteredCards.length} 条{cards.length !== filteredCards.length ? `，全部知识 ${cards.length} 条` : ""}</p>
+            {sort === "reading" ? <p className="knowledge-hint">适合第一次接触这段代码的成员按顺序阅读。当前文件优先，教程、决策和约束排在前面。</p> : null}
           </div> : null}
           {view === "inbox" ? <div data-testid="knowledge-inbox">
+            {focusedSuggestion ? <article className="knowledge-suggestion" data-testid="knowledge-focused-suggestion"><header><strong>{focusedSuggestion.suggestedTitle ?? knowledgeTriggers[focusedSuggestion.triggerType]}</strong><button className="knowledge-text-button" onClick={() => setFocusedSuggestion(undefined)} aria-label="关闭建议详情"><X size={16} /></button></header><p>{focusedSuggestion.suggestedSummary}</p><details open><summary>原始证据</summary><pre>{JSON.stringify(focusedSuggestion.evidence, null, 2)}</pre></details></article> : null}
             <h3>知识建议</h3>
             {warnings.map(warning => <article className="knowledge-suggestion" key={warning.id} data-testid="knowledge-inbox-warning">
               <strong>风险提醒</strong><p>{warning.file}</p><time>{new Date(warning.createdAt).toLocaleString()}</time>
@@ -533,25 +589,19 @@ export function KnowledgePanel({
             <p className="knowledge-hint">其他成员申请把个人知识提供给团队，请阅读后确认。</p>
             {deferredTeam.length ? <label className="knowledge-check-label"><input type="checkbox" checked={showDeferred} onChange={event => setShowDeferred(event.target.checked)} />显示暂不确认的申请</label> : null}
             <ol className="knowledge-list">{pendingTeam.filter(card => showDeferred || !deferredTeam.includes(card.id)).length ? pendingTeam.filter(card => showDeferred || !deferredTeam.includes(card.id)).map(renderCard) : <li className="empty-panel-state">目前没有需要你确认的团队升级申请。</li>}</ol>
-          </div> : view === "guide" ? <>
-            <p className="knowledge-hint">按当前文件组织的阅读顺序，适合新成员快速了解这段代码。</p>
-            <ol className="knowledge-list">{guide.length ? guide.map((item, index) => <li className={`knowledge-guide-entry${index === 0 ? " first" : ""}`} key={item.card.id}>
-              <div className="knowledge-guide-reason">{index === 0 ? <strong><BookOpen size={14} aria-hidden="true" />推荐从这里阅读</strong> : null}<span className="ui-badge">{item.isCurrentFile ? "与当前文件相关" : "补充项目背景"}</span><span className="ui-badge">{item.card.type === "tutorial" ? "教程类优先" : `${knowledgeTypes[item.card.type].label}帮助理解代码`}</span></div>
-              <ol className="knowledge-list">{renderCard(item.card)}</ol>
-            </li>) : <li className="empty-panel-state">还没有可用于导览的知识。可以关联当前文件的卡片，建立阅读顺序。</li>}</ol>
-          </> : view === "timeline" ? <>
-            <p className="knowledge-hint">查看知识的创建、修改、确认与复核记录。</p>
-            <label>查看卡片<select aria-label="时间线卡片" value={timelineCard} onChange={event => setTimelineCard(event.target.value)}><option value="">这个文件的全部卡片</option>{[...new Map(timeline.map(item => [item.card.id, item.card])).values()].map(card => <option key={card.id} value={card.id}>{card.title}</option>)}</select></label>
-            {history.length ? historyDays.map(day => <section className="knowledge-history-day" key={day}><h3>{day}</h3><ol className="knowledge-list">{history.filter(item => new Date(item.at).toLocaleDateString("zh-CN") === day).map((item, index) => <li key={`${item.card.id}-${item.kind}-${item.at}-${index}`} className="knowledge-timeline-item"><time dateTime={new Date(item.at).toISOString()}>{new Date(item.at).toLocaleTimeString("zh-CN")}</time><strong>{timelineDescription(item, members)}</strong><button className="knowledge-text-button" onClick={() => revealCard(item.card.id)}>{item.card.title}</button></li>)}</ol></section>) : <p className="empty-panel-state">这张卡片或这个文件还没有历史记录。</p>}
+          </div> : view === "activity" ? <>
+            <p className="knowledge-hint">查看知识如何产生、由谁确认，以及在哪些 Agent 任务中使用。</p>
+            <select aria-label="动态类别" value={activityCategory} onChange={event => setActivityCategory(event.target.value)}><option value="">全部动态</option><option value="capture">捕获</option><option value="confirmation">确认</option><option value="application">应用</option><option value="evolution">演化</option></select>
+            <KnowledgeActivity items={filteredActivity} members={members} onOpenCard={revealCard} onOpenSuggestion={id => { void getKnowledgeSuggestion(projectId, id).then(result => { setFocusedSuggestion(result.suggestion); setView("inbox"); }).catch(error => setFormError(String(error))); }} />
           </> : <>
-            {view === "current" ? <p className="knowledge-hint">当前打开文件上有关联的知识卡片。</p> : null}
-            <ol className="knowledge-list">{visibleCards.length === 0 ? <li className="empty-panel-state">{view === "current" ? "当前打开文件上还没有关联的知识卡片。选择代码后，可以创建关联知识。" : "没有符合筛选的知识。可以调整搜索条件，或新建一张卡片。"}</li> : visibleCards.map(renderCard)}</ol>
+            <ol className="knowledge-list">{visibleCards.length === 0 ? <li className="empty-panel-state">{filterRange === "current" ? "当前打开文件上还没有符合条件的知识卡片。可以选择全部知识，或创建关联知识。" : "没有符合筛选的知识。可以调整搜索条件，或新建一张卡片。"}</li> : visibleCards.map(renderCard)}</ol>
+            <div className="knowledge-pagination workspace-dialog-actions"><button disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>上一页</button><span>第 {currentPage} 页，共 {pageCount} 页</span><button disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>下一页</button></div>
           </>}
         </div>
       </div>
       {formOpen ? <div className="knowledge-editor-backdrop">
         <div ref={editorRef} className="workspace-dialog knowledge-editor" role="dialog" aria-modal="true" aria-label="知识卡片编辑器" onKeyDown={event => {
-          if (event.key === "Escape" && !saving) { event.stopPropagation(); closeForm(); }
+          if (event.key === "Escape" && !saving && !assisting) { event.stopPropagation(); closeForm(); }
           if (event.key === "Tab") {
             const controls = editorRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary');
             if (!controls?.length) return;
@@ -560,21 +610,22 @@ export function KnowledgePanel({
             if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
           }
         }}>
-          <header className="workspace-dialog-heading"><h2>{editingCard ? "编辑知识卡片" : "新建知识卡片"}</h2><button type="button" aria-label="关闭卡片编辑器" disabled={saving} onClick={closeForm}><X size={16} /></button></header>
+          <header className="workspace-dialog-heading"><h2>{editingCard ? "编辑知识卡片" : "新建知识卡片"}</h2><button type="button" aria-label="关闭卡片编辑器" disabled={saving || assisting} onClick={closeForm}><X size={16} /></button></header>
           <div ref={editorBodyRef} className="knowledge-editor-body">
             {pinSelection && !editingCard ? <div className="knowledge-editor-context"><p>这段知识关联到你刚才选中的代码</p><button className="knowledge-text-button" onClick={() => onOpenAnchor(pinSelection.file, { startLine: pinSelection.selection.startLineNumber, startColumn: pinSelection.selection.startColumn, endLine: pinSelection.selection.endLineNumber, endColumn: pinSelection.selection.endColumn })}>{pinSelection.file}:{pinSelection.selection.startLineNumber}–{pinSelection.selection.endLineNumber}</button></div> : null}
             {editorNotice ? <p className="knowledge-notice" role="status">{editorNotice}</p> : null}
             {formError ? <p className="knowledge-error" role="alert">{formError}</p> : null}
+            {!editingCard ? <section className="knowledge-manual-assist" aria-busy={assisting}><label>用一句话描述这条知识<textarea aria-label="知识描述" value={assistDescription} disabled={assisting} onChange={event => setAssistDescription(event.target.value)} placeholder="例如：README 面向外部成员，全部使用英文" /></label><div className="workspace-dialog-actions"><button type="button" disabled={assisting || !assistDescription.trim()} onClick={() => void assist()}>{assisting ? <LoaderCircle className="loading-icon" size={14} /> : <Sparkles size={14} />}{assisting ? "整理中" : "AI 整理"}</button></div>{assisting ? <p className="knowledge-notice" role="status">正在根据描述和选中代码整理草稿，请稍候…</p> : null}</section> : null}
             {editingCard?.fallback || draftEvidence?.ai?.fallback ? <p className="knowledge-error" role="alert">模型未能生成规则，请人工填写</p> : null}
-            <fieldset disabled={saving} className="knowledge-editor-fields">
-              <label>标题<input ref={titleRef} value={title} onChange={event => setTitle(event.target.value)} placeholder="标题" /></label>
-              <label>摘要<input value={summary} onChange={event => setSummary(event.target.value)} placeholder="摘要" /></label>
-              <label>正文<textarea value={content} onChange={event => setContent(event.target.value)} placeholder="正文 Markdown" /></label>
-              {removeKnowledgeEvidenceBlocks(content) !== content.trim() ? <div className="knowledge-clean-content"><p>正文包含证据章节。可以清理正文，并在保存前核对保留的知识。</p><div className="workspace-dialog-actions"><button type="button" onClick={() => setContent(removeKnowledgeEvidenceBlocks(content))}>清理正文中的证据块</button></div></div> : null}
+            <fieldset disabled={saving || assisting} className="knowledge-editor-fields">
               <label>类型<select value={type} onChange={event => setType(event.target.value as KnowledgeCardType)} aria-label="卡片类型">{Object.entries(knowledgeTypes).map(([value, entry]) => <option key={value} value={value}>{entry.label}</option>)}</select></label>
-              <label>标签<input value={tags} onChange={event => setTags(event.target.value)} placeholder="标签，用逗号分隔" /></label>
-              <label>作用域<select value={scope} onChange={event => setScope(event.target.value as KnowledgeScope)} aria-label="作用域"><option value="personal">个人</option><option value="team" disabled={Boolean(editingCard && editingCard.scope !== "team")}>团队</option>{editingCard?.scope === "proposedTeam" ? <option value="proposedTeam">待确认</option> : null}</select></label>
-              {editingCard?.status === "draft" ? <label>卡片作者<select value={authorMemberId} onChange={event => setAuthorMemberId(event.target.value)} aria-label="卡片作者">{members.map(member => <option key={member.id} value={member.id}>{member.displayName}</option>)}</select></label> : null}
+              <label>标题<input ref={titleRef} value={title} onChange={event => setTitle(event.target.value)} placeholder="标题" /></label>
+              <label>内容<textarea value={content} onChange={event => setContent(event.target.value)} placeholder="正文 Markdown" /></label>
+              {removeKnowledgeEvidenceBlocks(content) !== content.trim() ? <div className="knowledge-clean-content"><p>正文包含证据章节。可以清理正文，并在保存前核对保留的知识。</p><div className="workspace-dialog-actions"><button type="button" onClick={() => setContent(removeKnowledgeEvidenceBlocks(content))}>清理正文中的证据块</button></div></div> : null}
+              <label>适用范围<select aria-label="适用范围" value={association} onChange={event => { setAssociation(event.target.value as "block" | "file" | "project"); setAssociationChanged(true); }}><option value="block">这段代码</option><option value="file">整个文件</option><option value="project">整个项目或一类文件</option></select></label>
+              {association === "block" ? <p className="knowledge-hint">仅关联选中的代码，代码大幅修改后需要复核。{!pinSelection && !editingCard ? "请在编辑器中选择代码。" : ""}</p> : association === "file" ? <label>文件路径<input aria-label="适用文件" value={associationFile} onChange={event => { setAssociationFile(event.target.value); setAssociationChanged(true); }} placeholder="README.md" /><span className="knowledge-hint">适用于整份文件，修改文件内容不会使知识失效。</span></label> : <label>路径模式，留空表示整个项目<textarea aria-label="适用路径模式" value={patterns} onChange={event => { setPatterns(event.target.value); setAssociationChanged(true); }} placeholder="例如 **/*.md，每行一个模式" /></label>}
+              <label>团队或个人<select value={scope} onChange={event => setScope(event.target.value as KnowledgeScope)} aria-label="作用域"><option value="personal">个人</option><option value="team" disabled={Boolean(editingCard && editingCard.scope !== "team")}>团队</option>{editingCard?.scope === "proposedTeam" ? <option value="proposedTeam">待确认</option> : null}</select></label>
+              <details><summary>更多字段</summary><label>摘要<input value={summary} onChange={event => setSummary(event.target.value)} placeholder="留空使用内容第一句" /></label><label>标签<input value={tags} onChange={event => setTags(event.target.value)} placeholder="标签，用逗号分隔" /></label>{editingCard?.status === "draft" ? <label>卡片作者<select value={authorMemberId} onChange={event => setAuthorMemberId(event.target.value)} aria-label="卡片作者">{members.map(member => <option key={member.id} value={member.id}>{member.displayName}</option>)}</select></label> : null}</details>
             </fieldset>
             {editingCard ? <section className="knowledge-editor-anchors"><strong>关联代码</strong>{editingCard.anchors.length ? editingCard.anchors.map(anchor => <button className="knowledge-text-button" key={anchor.anchorId} onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath)}>{anchor.file.workspaceRelativePath}</button>) : <p>这张卡片没有代码锚点。</p>}<p className="knowledge-hint">需要重新关联时，请在卡片详情中使用当前选区。</p></section> : null}
             {draftEvidence ? <aside className="knowledge-draft-evidence">
@@ -583,7 +634,7 @@ export function KnowledgePanel({
               {readDispute(draftEvidence.evidence) ? <p>{members.find(member => member.id === readDispute(draftEvidence.evidence)?.memberId)?.displayName ?? "成员"}的意见：{readDispute(draftEvidence.evidence)?.reason}</p> : null}
             </aside> : null}
           </div>
-          <footer className="workspace-dialog-actions"><button type="button" disabled={saving} onClick={closeForm}>取消</button><button className="primary" type="button" disabled={saving || !title.trim() || !summary.trim()} onClick={() => void submit()}>{saving ? <><LoaderCircle className="loading-icon" size={14} />保存中</> : editingCard?.status === "draft" ? "确认并保存" : "保存"}</button></footer>
+          <footer className="workspace-dialog-actions"><button type="button" disabled={saving || assisting} onClick={closeForm}>取消</button><button className="primary" type="button" disabled={saving || assisting || !title.trim() || !content.trim() || (association === "file" && !associationFile.trim())} onClick={() => void submit()}>{saving ? <><LoaderCircle className="loading-icon" size={14} />保存中</> : editingCard?.status === "draft" ? "确认并保存" : "保存"}</button></footer>
         </div>
       </div> : null}
     </section>
@@ -602,7 +653,10 @@ function KnowledgeCardItem({
   onEdit,
   onConfirm,
   onArchive,
-  onReanchor,
+  onReview,
+  reassociating,
+  onStartReassociate,
+  onCancelReassociate,
   onRequestTeam,
   onConfirmTeam,
   onDeferTeam,
@@ -627,8 +681,11 @@ function KnowledgeCardItem({
   onToggle(): void;
   onEdit(): void;
   onConfirm(): void;
-  onArchive(): void;
-  onReanchor(index: number): void;
+  onArchive(reason?: string): void;
+  onReview(action: "valid" | "file" | "reassociate", index: number): void;
+  reassociating?: number;
+  onStartReassociate(index: number): void;
+  onCancelReassociate(): void;
   onRequestTeam?(): void;
   onConfirmTeam?(): void;
   onDeferTeam(): void;
@@ -645,46 +702,52 @@ function KnowledgeCardItem({
 }) {
   const canManage = Boolean(memberId && (card.ownerMemberId === memberId || card.review?.confirmedBy.includes(memberId)));
   const TypeIcon = knowledgeTypes[card.type].icon;
+  const [archiveReason, setArchiveReason] = useState("");
+  const needsReview = card.status === "needsReview" || card.status === "orphaned";
+  const hasSelection = currentSelection && !(currentSelection.selection.startLineNumber === currentSelection.selection.endLineNumber && currentSelection.selection.startColumn === currentSelection.selection.endColumn);
   return (
     <li className={`knowledge-card knowledge-card-${card.type}`} data-card-id={card.id}>
       <button type="button" className="knowledge-card-summary" onClick={onToggle} aria-expanded={expanded}>
         <span className="knowledge-card-title"><span className="knowledge-type-icon" title={`${knowledgeTypes[card.type].label} (${card.type})`}><TypeIcon size={16} /></span><strong>{card.title}</strong></span>
+        <span className={`knowledge-badge status-${card.status}`}>{knowledgeStatuses[card.status]}</span>
         <span className="knowledge-card-description">{card.summary}</span>
       </button>
       <div className="knowledge-card-metadata">
-        <div className="knowledge-card-badges"><span className="knowledge-badge knowledge-type-badge" title={card.type}>{knowledgeTypes[card.type].label}</span><span className="knowledge-badge">{knowledgeScopes[card.scope ?? "team"]}</span><span className={`knowledge-badge status-${card.status}`}>{knowledgeStatuses[card.status]}</span></div>
+        <div className="knowledge-card-badges"><span className="knowledge-badge knowledge-type-badge" title={card.type}>{knowledgeTypes[card.type].label}</span><span className="knowledge-badge">{knowledgeScopes[card.scope ?? "team"]}</span></div>
         <dl className="knowledge-card-facts">
           <div><dt>作者</dt><dd>{card.provenance?.author.displayName ?? card.metadata?.createdBy?.name ?? "未知成员"}</dd></div>
-          <div><dt>确认人</dt><dd>{card.review?.confirmedBy.length ? card.review.confirmedBy.map(id => members.find(member => member.id === id)?.displayName ?? "成员").join("、") : "尚未确认"}</dd></div>
           <div><dt>更新时间</dt><dd><time dateTime={new Date(card.updatedAt).toISOString()}>{new Date(card.updatedAt).toLocaleString("zh-CN")}</time></dd></div>
         </dl>
       </div>
       <div className="knowledge-card-actions workspace-dialog-actions">
         {canManage ? <button type="button" disabled={actionPending} onClick={onEdit}>编辑</button> : null}
-        {canManage && card.status !== "archived" ? <button type="button" disabled={actionPending} onClick={onArchive}>{actionPending ? "处理中" : "归档"}</button> : null}
+        {canManage && !["archived", "superseded"].includes(card.status) && !needsReview ? <button type="button" disabled={actionPending} onClick={() => onArchive()}>{actionPending ? "处理中" : "归档"}</button> : null}
         <button type="button" onClick={onCopyLink}><Link2 size={13} />复制链接</button>
         <button type="button" onClick={onToggle}>{expanded ? "收起详情" : "查看锚点"}</button>
       </div>
       {expanded ? (
         <div className="knowledge-card-content">
+          {needsReview ? <section className="knowledge-review" data-testid="knowledge-review">
+            <h3>这张知识需要复核</h3>
+            <p>{[...card.evolution].reverse().find(entry => entry.note === "anchor review")?.summary?.includes("大幅修改") || resolutions.some(resolution => resolution.reason === "changed") ? "关联的代码已被大幅修改" : "找不到原来关联的代码"}</p>
+            {card.anchors.map((anchor, index) => <div key={anchor.anchorId}><strong>{anchor.file.workspaceRelativePath} 原来的代码</strong><pre>{anchor.snapshot.text || "关联的是整个文件"}</pre>{canManage ? <div className="workspace-dialog-actions">{reassociating === index ? <><p className="knowledge-hint">在编辑器中选中新的代码，然后点确认。</p><button className="primary" disabled={actionPending || !hasSelection} onClick={() => onReview("reassociate", index)}>确认关联</button><button disabled={actionPending} onClick={onCancelReassociate}>取消</button></> : <button disabled={actionPending} onClick={() => onStartReassociate(index)}>重新关联</button>}<button disabled={actionPending} onClick={() => onReview("file", index)}>改为关联整个文件</button><button disabled={actionPending} onClick={() => onReview("valid", index)}>仍然有效</button></div> : null}</div>)}
+            {canManage ? <div className="workspace-dialog-actions"><input aria-label="归档理由" placeholder="归档理由，可选" value={archiveReason} onChange={event => setArchiveReason(event.target.value)} /><button disabled={actionPending} onClick={() => onArchive(archiveReason)}>归档</button></div> : null}
+          </section> : null}
+          {card.status === "superseded" ? <p className="knowledge-notice">已被另一张卡片取代</p> : null}
+          {resolutions.some(resolution => resolution.status === "needsReview" && card.anchors[resolution.anchorIndex]?.associationLevel === "file") ? <p className="knowledge-notice">关联的文件不存在，请编辑适用范围中的文件路径。</p> : null}
+          <h3>内容</h3>
           <p className="knowledge-card-body">{card.content}</p>
+          <h3>适用范围</h3>
           {card.appliesTo ? <p className="knowledge-hint">适用范围：{card.appliesTo.kind === "project" ? "整个项目" : card.appliesTo.patterns.join("、")}</p> : null}
+          {card.anchors.map((anchor, index) => { const resolution = resolutions.find(candidate => candidate.anchorIndex === index); const range = resolution?.range ?? (anchor.rangeAtCapture ? { startLine: anchor.rangeAtCapture.start.line + 1, startColumn: anchor.rangeAtCapture.start.character + 1, endLine: anchor.rangeAtCapture.end.line + 1, endColumn: anchor.rangeAtCapture.end.character + 1 } : undefined); return <div className="knowledge-anchor-row" key={anchor.anchorId}><button onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath, range)}><FileText size={13} />{anchor.file.workspaceRelativePath}{anchor.associationLevel !== "file" && range ? `:${range.startLine}–${range.endLine}` : ""}</button><span>{anchor.associationLevel === "file" ? "整个文件" : "这段代码"}</span></div>; })}
+          {!card.appliesTo && !card.anchors.length ? <p className="knowledge-hint">尚未指定适用范围</p> : null}
+          <details><summary>来源</summary><p>{({ manual: "成员手动创建", "human-human": "来自成员之间的讨论或修改", "human-agent": "来自人与 Agent 的纠正", "agent-self": "由 Agent 提议", preset: "来自团队规范文档" } as Record<string, string>)[card.provenance?.origin ?? "manual"] ?? "成员确认的项目知识"}{card.evolution.some(entry => entry.note?.includes("AI 整理")) ? "，经 AI 整理" : ""}</p><p>确认人：{card.review?.confirmedBy.length ? card.review.confirmedBy.map(id => members.find(member => member.id === id)?.displayName ?? "成员").join("、") : "尚未确认"}</p>{card.provenance?.evidenceRefs.runIds?.map(id => <p key={id}>Agent 任务：<code>{id}</code></p>)}{card.provenance?.evidenceRefs.chatMessageIds?.length ? <p>参考了 {card.provenance.evidenceRefs.chatMessageIds.length} 条聊天消息</p> : null}</details>
+          <details><summary>历史</summary><ol className="knowledge-list">{[...card.evolution].sort((left, right) => right.at - left.at).map((entry, index) => <li className="knowledge-timeline-item" key={index}><time dateTime={new Date(entry.at).toISOString()}>{new Date(entry.at).toLocaleString("zh-CN")}</time><span>{timelineDescription({ card, at: entry.at, kind: "evolution", label: entry.action, evolution: entry }, members)}</span></li>)}</ol>{!card.evolution.length ? <p>这张卡片还没有历史记录。</p> : null}</details>
+          <section className="knowledge-usage"><strong>Agent 使用</strong><p>参考 {card.usage?.injectedCount ?? 0} 次，工具读取 {card.usage?.toolHitCount ?? 0} 次</p><p className="knowledge-hint">{card.usage?.lastUsedAt ? `最近使用于 ${new Date(card.usage.lastUsedAt).toLocaleString("zh-CN")}` : "尚未被 Agent 使用"}</p></section>
           {card.relations?.length ? <section aria-label="已建立的知识关系"><strong>已建立的知识关系</strong><ul>{card.relations.map(relation => {
             const target = relatedCards.find(candidate => candidate.id === relation.cardId);
             return <li key={`${relation.kind}-${relation.cardId}`}><span>{{ contradicts: "存在矛盾，尚未裁决", supersedes: "替代以下知识", duplicates: "内容重复", refines: "补充以下知识" }[relation.kind]}：</span><button className="knowledge-text-button" disabled={!target} onClick={() => onOpenRelatedCard(relation.cardId)}>{target?.title ?? relation.cardId}</button></li>;
           })}</ul></section> : null}
-          {card.provenance ? <details><summary>来源记录</summary><pre>{JSON.stringify(card.provenance.evidenceRefs, null, 2)}</pre></details> : null}
-          {card.anchors.length === 0 ? <small>无代码锚点</small> : card.anchors.map((anchor, index) => {
-            const resolution = resolutions.find((candidate) => candidate.anchorIndex === index);
-            const canReanchor = currentSelection && normalizeKnowledgePath(currentSelection.file) === normalizeKnowledgePath(anchor.file.workspaceRelativePath) && resolution?.status === "needsReview" && canManage;
-            return (
-              <div className="knowledge-anchor-row" key={anchor.anchorId}>
-                <button type="button" onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath, resolution?.range)}><FileText size={13} aria-hidden="true" />{anchor.file.workspaceRelativePath}</button>
-                <small>{resolution?.status === "needsReview" ? "需要重新关联" : resolution?.status === "moved" ? "已跟随代码移动" : resolution?.status === "ok" ? "已定位" : "尚未解析"}</small>
-                {canReanchor ? <button type="button" disabled={actionPending} onClick={() => onReanchor(index)}>用当前选区重新锚定</button> : null}
-              </div>
-            );
-          })}
           <div className="knowledge-card-actions workspace-dialog-actions">
             {card.status === "draft" ? <button type="button" disabled={actionPending} onClick={onConfirm}>确认</button> : null}
             {card.scope === "personal" && card.status === "reviewed" && card.ownerMemberId === memberId && onRequestTeam ? <button type="button" disabled={actionPending} onClick={onRequestTeam}>{actionPending ? "申请中" : "申请团队确认"}</button> : null}

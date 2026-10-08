@@ -80,6 +80,7 @@ export interface KnowledgeCard {
   check?: { kind: "regex-absent" | "regex-present"; pattern: string; flags?: string; fileGlob: string };
   anchors: KnowledgeAnchor[];
   evolution: KnowledgeEvolutionEntry[];
+  usage?: { injectedCount: number; toolHitCount: number; recurrenceCount: number; lastUsedAt?: number };
 }
 
 export interface KnowledgeAnchorResolution {
@@ -89,6 +90,7 @@ export interface KnowledgeAnchorResolution {
   status: "ok" | "moved" | "needsReview";
   strategy?: "yjs" | "range" | "snapshot" | "fingerprint";
   confidence: number;
+  reason?: "missing" | "changed";
 }
 
 export interface KnowledgeGuideItem {
@@ -117,7 +119,13 @@ export interface KnowledgeSuggestion {
 }
 export interface KnowledgeCardInput {
   type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "proposedTeam" | "team";
-  anchors?: SuggestedKnowledgeAnchor[]; retainAnchorIds?: string[]; authorMemberId?: string; authorName?: string;
-  appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] };
+  anchors?: Array<{ file: string; associationLevel?: "block" | "file"; selection?: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }; startLine?: number; endLine?: number }>; retainAnchorIds?: string[]; authorMemberId?: string; authorName?: string;
+  appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] } | null;
+  aiAssisted?: boolean;
   check?: { kind: "regex-absent" | "regex-present"; pattern: string; flags?: string; fileGlob: string };
+}
+
+export interface KnowledgeActivityItem {
+  id: string; at: number; category: "capture" | "confirmation" | "application" | "evolution";
+  memberId?: string; memberName?: string; text: string; cardId?: string; suggestionId?: string; runId?: string; triggerType?: string; participantIds?: string[];
 }

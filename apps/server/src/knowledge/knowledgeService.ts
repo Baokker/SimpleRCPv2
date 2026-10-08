@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { summarizeKnowledgeContent } from "@simplercp/knowledge/util/content";
 import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -9,6 +10,7 @@ import {
   buildKnowledgeGuideItems,
   buildKnowledgeTimelineItems,
   confirmCard,
+  cardMatchesFile,
   createDemoKnowledgeCards,
   isKnowledgeCard,
   normalizeWorkspaceRelativePath,
@@ -49,6 +51,7 @@ export interface KnowledgeAnchorResolution {
   status: "ok" | "moved" | "needsReview";
   strategy?: "yjs" | "range" | "snapshot" | "fingerprint";
   confidence: number;
+  reason?: "missing" | "changed";
 }
 
 export interface KnowledgeAnchorSelection {
@@ -229,7 +232,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     const anchor: KnowledgeAnchor = {
       anchorId: crypto.randomUUID(),
       file: { workspaceRelativePath: normalizeWorkspaceRelativePath(file) },
-      associationLevel: offsets.startOffset === 0 && offsets.endOffset === text.length ? "file" : "block",
+      associationLevel: "block",
       rangeAtCapture: range,
       snapshot: { text: snapshotText, sha256: crypto.createHash("sha256").update(snapshotText).digest("hex") },
       fingerprint: { prefix, suffix, landmarkLines }
@@ -245,8 +248,9 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     return anchor;
   }
 
-  async function anchorFromInput(input: { file: string; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }) {
+  async function anchorFromInput(input: { file: string; associationLevel?: "file" | "block"; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }) {
     const current = await currentDocument(input.file);
+    if (input.associationLevel === "file") return { anchorId: crypto.randomUUID(), file: { workspaceRelativePath: normalizeWorkspaceRelativePath(input.file) }, associationLevel: "file" as const, snapshot: { text: "" } };
     if (input.selection) return createAnchor(input.file, current.text, toTextRange(input.selection), current.document, current.epoch);
     if (!Number.isInteger(input.startLine) || !Number.isInteger(input.endLine) || input.startLine! < 1 || input.endLine! < input.startLine!) throw new Error("Suggested anchor range is invalid");
     const lines = current.text.split("\n");
@@ -256,7 +260,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   function anchorInputs(value: unknown) {
-    if (value === undefined) return [] as Array<{ file: string; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }>;
+    if (value === undefined) return [] as Array<{ file: string; associationLevel?: "file" | "block"; selection?: KnowledgeAnchorSelection; startLine?: number; endLine?: number }>;
     if (!Array.isArray(value)) throw new Error("Card anchors must be an array");
     return value.map((input, index) => {
       if (!input || typeof input !== "object" || typeof (input as { file?: unknown }).file !== "string") {
@@ -264,11 +268,17 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       }
       return {
         file: (input as { file: string }).file,
+        associationLevel: validateAssociationLevel((input as { associationLevel?: unknown }).associationLevel),
         selection: (input as { selection?: KnowledgeAnchorSelection }).selection,
         startLine: (input as { startLine?: number }).startLine,
         endLine: (input as { endLine?: number }).endLine
       };
     });
+  }
+
+  function validateAssociationLevel(value: unknown): "block" | "file" | undefined {
+    if (value === undefined || value === "block" || value === "file") return value;
+    throw new Error("请选择代码或文件作为适用范围");
   }
 
   function lineColumnAt(text: string, offset: number) {
@@ -298,6 +308,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   function resolveOne(card: KnowledgeCard, anchorIndex: number, anchor: KnowledgeAnchor, text: string, document?: Y.Doc, epoch?: string): KnowledgeAnchorResolution {
+    if (anchor.associationLevel === "file") return { cardId: card.id, anchorIndex, range: toEditorRange(text, 0, text.length), status: "ok", confidence: 1 };
     if (document && epoch && anchor.yjsRelative?.docEpoch === epoch) {
       try {
         const start = YRuntime.createAbsolutePositionFromRelativePosition(decodeRelative(anchor.yjsRelative.start), document);
@@ -327,6 +338,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         anchorIndex,
         range: { startLine: line + 1, startColumn: column + 1, endLine: line + 1, endColumn: column + 1 },
         status: "needsReview",
+        reason: "missing",
         confidence: resolved?.confidence ?? 0
       };
     }
@@ -337,6 +349,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         anchorIndex,
         range: toEditorRange(text, resolved.startOffset, resolved.endOffset),
         status: "needsReview",
+        reason: "changed",
         confidence: resolved.confidence
       };
     }
@@ -387,6 +400,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
 
   async function resolveCardAnchors(cards: KnowledgeCard[], normalized: string) {
     const current = await currentDocument(normalized, true);
+    const exists = await pathExists(resolveWorkspacePath(options.workspaceRoot, normalized));
     const resolutions: KnowledgeAnchorResolution[] = [];
     const refreshedCards: KnowledgeCard[] = [];
     for (const card of cards) {
@@ -395,7 +409,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         const anchor = card.anchors[index]!;
         if (normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) !== normalized) continue;
         const before = JSON.stringify(anchor.yjsRelative);
-        const result = resolveOne(card, index, anchor, current.text, current.document, current.epoch);
+        const result = exists ? resolveOne(card, index, anchor, current.text, current.document, current.epoch) : { cardId: card.id, anchorIndex: index, status: "needsReview" as const, confidence: 0, reason: "missing" as const };
         if (before !== JSON.stringify(anchor.yjsRelative)) changed = true;
         resolutions.push(result);
       }
@@ -420,7 +434,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (filter.type && card.type !== filter.type) return false;
       if (filter.status && card.status !== filter.status) return false;
       if (filter.scope && card.scope !== filter.scope) return false;
-      if (normalizedFile && !card.anchors.some((anchor) => normalizeWorkspaceRelativePath(anchor.file.workspaceRelativePath) === normalizedFile)) return false;
+      if (normalizedFile && !cardMatchesFile(card, normalizedFile)) return false;
       return true;
     });
   }
@@ -459,10 +473,10 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     const created = await enqueue(async () => {
       const type = draft.type as KnowledgeCardType;
       if (!["decision", "constraint", "risk", "context", "negative", "tutorial"].includes(type)) throw new Error("Card type is invalid");
-      if (typeof draft.title !== "string" || typeof draft.summary !== "string" || (draft.content !== undefined && typeof draft.content !== "string")) throw new Error("Card title, summary and content must be text");
+      if (typeof draft.title !== "string" || (draft.summary !== undefined && typeof draft.summary !== "string") || (draft.content !== undefined && typeof draft.content !== "string")) throw new Error("Card title, summary and content must be text");
       if (draft.tags !== undefined && (!Array.isArray(draft.tags) || draft.tags.some((tag) => typeof tag !== "string"))) throw new Error("Card tags are invalid");
       const title = draft.title.trim();
-      const summary = draft.summary.trim();
+      const summary = typeof draft.summary === "string" && draft.summary.trim() ? draft.summary.trim() : summarizeKnowledgeContent(String(draft.content ?? ""));
       const content = draft.content ?? "";
       if (!title || !summary) throw new Error("Card title and summary are required");
       const scope = draft.scope === "personal" ? "personal" : draft.scope === "team" ? "team" : undefined;
@@ -493,7 +507,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         ...(check ? { check } : {}),
         anchors,
         evolution: [
-          { at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName } },
+          { at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName }, note: draft.aiAssisted === true ? "手动创建，经 AI 整理并由成员核对" : undefined },
           { at: now, action: "confirmed", by: { peerId: actor.memberId, name: actor.displayName } }
         ]
       };
@@ -563,7 +577,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   function normalizeAppliesTo(value: unknown) {
-    if (value === undefined) return undefined;
+    if (value === undefined || value === null) return undefined;
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Card appliesTo is invalid");
     const input = value as { kind?: unknown; patterns?: unknown };
     if (input.kind === "project") return { kind: "project" } as const;
@@ -670,11 +684,58 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (!current) throw new Error("Knowledge anchor not found");
       const anchor = await anchorFromInput({ file: current.file.workspaceRelativePath, selection });
       const now = Date.now();
-      const updated: KnowledgeCard = { ...stored.card, status: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : stored.card.status, updatedAt: now, anchors: stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate), evolution: [...stored.card.evolution, { at: now, action: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `锚点重新关联到 ${anchor.file.workspaceRelativePath}:${selection.startLineNumber}–${selection.endLineNumber}` }] };
+      const anchors = stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate);
+      const reviewing = stored.card.status === "needsReview" || stored.card.status === "orphaned";
+      const invalid = reviewing && await anchorsNeedReview(stored.card, anchors);
+      const updated: KnowledgeCard = { ...stored.card, status: reviewing ? invalid ? "needsReview" : "reviewed" : stored.card.status, updatedAt: now, anchors, evolution: [...stored.card.evolution, { at: now, action: reviewing ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `锚点重新关联到 ${anchor.file.workspaceRelativePath}:${selection.startLineNumber}–${selection.endLineNumber}` }] };
       await saveCard(updated);
       event(updated.id, "knowledge_card_updated", actor);
       return updated;
     });
+  }
+
+  async function reviewAnchor(actor: KnowledgeActor, id: string, input: { action: "reassociate" | "file" | "valid"; anchorIndex?: number; file?: string; selection?: KnowledgeAnchorSelection }) {
+    return enqueue(async () => {
+      const stored = await readCard(id);
+      if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
+      if (!canEdit(stored.card, actor)) throw new Error("只有卡片属主或确认人可以复核这张卡片");
+      if (!["reviewed", "needsReview", "orphaned"].includes(stored.card.status)) throw new Error("只有已确认的知识卡片可以复核");
+      const index = input.anchorIndex ?? 0;
+      const previous = stored.card.anchors[index];
+      if (!previous) throw new Error("Knowledge anchor not found");
+      const file = input.file ?? previous.file.workspaceRelativePath;
+      let anchor: KnowledgeAnchor;
+      if (input.action === "reassociate") {
+        if (!input.selection) throw new Error("请在编辑器中选中代码后确认关联");
+        anchor = await anchorFromInput({ file, selection: input.selection });
+      } else if (input.action === "file") {
+        anchor = await anchorFromInput({ file, associationLevel: "file" });
+      } else if (input.action === "valid") {
+        const current = await currentDocument(file);
+        const resolution = resolveOne(stored.card, index, previous, current.text, current.document, current.epoch);
+        const range = resolution.confidence >= ANCHOR_SIMILARITY_THRESHOLD ? resolution.range : undefined;
+        anchor = range && !(range.startLine === range.endLine && range.startColumn === range.endColumn)
+          ? await anchorFromInput({ file, selection: { startLineNumber: range.startLine, startColumn: range.startColumn, endLineNumber: range.endLine, endColumn: range.endColumn } })
+          : await anchorFromInput({ file, associationLevel: "file" });
+      } else throw new Error("请选择重新关联、整个文件或仍然有效");
+      const now = Date.now();
+      const anchors = stored.card.anchors.map((candidate, anchorIndex) => anchorIndex === index ? anchor : candidate);
+      const invalid = await anchorsNeedReview(stored.card, anchors);
+      const note = input.action === "valid" ? `确认知识仍然有效，关联到 ${file}` : `重新关联到 ${file}${anchor.associationLevel === "file" ? " 整个文件" : `:${input.selection!.startLineNumber}–${input.selection!.endLineNumber}`}`;
+      const updated: KnowledgeCard = { ...stored.card, anchors, status: invalid ? "needsReview" : "reviewed", updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: "reviewed", by: { peerId: actor.memberId, name: actor.displayName }, note }] };
+      await saveCard(updated);
+      event(updated.id, "knowledge_card_updated", actor);
+      return updated;
+    });
+  }
+
+  async function anchorsNeedReview(card: KnowledgeCard, anchors: KnowledgeAnchor[]) {
+    const invalid = await Promise.all(anchors.map(async (anchor, index) => {
+      if (anchor.associationLevel === "file") return false;
+      const current = await currentDocument(anchor.file.workspaceRelativePath, true);
+      return resolveOne(card, index, anchor, current.text, current.document, current.epoch).status === "needsReview";
+    }));
+    return invalid.some(Boolean);
   }
 
   async function refreshExpired(actor: KnowledgeActor, file: string, orphanedAfterMs = options.orphanedAfterMs ?? 7 * 24 * 60 * 60_000) {
@@ -690,12 +751,16 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         if (resolution.status !== "needsReview") continue;
         const stored = await readCard(resolution.cardId);
         if (!stored || (stored.card.status !== "reviewed" && stored.card.status !== "needsReview")) continue;
+        if (stored.card.anchors[resolution.anchorIndex]?.associationLevel === "file") {
+          for (const memberId of new Set([stored.card.ownerMemberId, ...(stored.card.review?.confirmedBy ?? [])])) if (memberId) options.onNotify?.(memberId, { type: "knowledge_anchor_needs_review", cardId: stored.card.id, file: normalizedFile, status: "needsReview", reason: "file-missing" });
+          continue;
+        }
         const reviewStartedAt = stored.card.status === "needsReview"
           ? [...stored.card.evolution].reverse().find((entry) => entry.note === "anchor review" && entry.action === "updated")?.at ?? stored.card.updatedAt
           : now;
-        const status: KnowledgeCardStatus = stored.card.status === "needsReview" && now - reviewStartedAt >= orphanedAfterMs ? "orphaned" : "needsReview";
+        const status: KnowledgeCardStatus = resolution.reason === "missing" && stored.card.status === "needsReview" && now - reviewStartedAt >= orphanedAfterMs ? "orphaned" : "needsReview";
         if (status === stored.card.status) continue;
-        const updated: KnowledgeCard = { ...stored.card, status, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: status === "orphaned" ? "orphaned" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "anchor review" }] };
+        const updated: KnowledgeCard = { ...stored.card, status, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: status === "orphaned" ? "orphaned" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "anchor review", summary: resolution.reason === "changed" ? "关联的代码已被大幅修改，标记为待复核" : "找不到原来关联的代码，标记为待复核" }] };
         await saveCard(updated); event(updated.id, "knowledge_card_updated", actor); changed.push(updated);
         for (const memberId of new Set([updated.ownerMemberId, ...(updated.review?.confirmedBy ?? [])])) {
           if (!memberId) continue;
@@ -826,6 +891,13 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     confirm,
     archive,
     reanchor,
+    reviewAnchor,
+    async selectionEvidence(file: string, selection: KnowledgeAnchorSelection) {
+      const current = await currentDocument(file);
+      const offsets = offsetsFromRange(current.text, toTextRange(selection));
+      if (!offsets || offsets.endOffset <= offsets.startOffset) throw new Error("请在编辑器中选择需要作为证据的代码");
+      return { file: normalizeWorkspaceRelativePath(file), text: current.text.slice(offsets.startOffset, offsets.endOffset).slice(0, 8000) };
+    },
     refreshExpired,
     requestTeam,
     confirmTeam,

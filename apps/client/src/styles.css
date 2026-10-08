@@ -2878,9 +2878,52 @@ button.activity-entry:hover strong {
   display: flex;
   flex: 0 0 auto;
   gap: 4px;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow: visible;
   border-bottom: 1px solid var(--border-main);
 }
+
+.knowledge-toolbar-create { margin-left: auto !important; position: relative; }
+.knowledge-more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  width: 230px;
+  padding: 10px;
+  border: 1px solid var(--border-control);
+  border-radius: 6px;
+  background: var(--background-panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+.knowledge-list-controls { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.knowledge-list-controls > select { width: auto; flex: 0 0 auto; }
+.knowledge-list-controls .knowledge-search { flex: 1; min-width: 0; margin: 0; }
+.knowledge-list-controls .knowledge-search input { min-width: 0; }
+.knowledge-filter-menu { position: relative; flex: 0 0 auto; }
+.knowledge-filter-menu > summary { margin: 0; padding: 6px; }
+.knowledge-filter-popup {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  top: calc(100% + 4px);
+  width: 260px;
+  padding: 12px;
+  border: 1px solid var(--border-control);
+  border-radius: 6px;
+  background: var(--background-panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+.knowledge-pagination { padding: 12px 0; align-items: center; }
+.knowledge-review, .knowledge-manual-assist {
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-control);
+  border-radius: 6px;
+  background: var(--background-control);
+}
+.knowledge-review { border-left: 3px solid var(--folder); }
+.knowledge-usage { margin: 12px 0; }
 
 .knowledge-toolbar button {
   flex: 0 0 auto;
@@ -2971,10 +3014,10 @@ button.activity-entry:hover strong {
 :root[data-theme="light"] .knowledge-card-tutorial { --knowledge-type-color: #7650ae; }
 
 .knowledge-card-summary {
-  display: flex;
+  display: grid;
   width: 100%;
-  flex-direction: column;
-  align-items: flex-start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 8px;
   border: 0;
   background: transparent;
@@ -3005,18 +3048,26 @@ button.activity-entry:hover strong {
 }
 
 .knowledge-card-description {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-secondary);
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
 
 .knowledge-card-metadata {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 0 12px 12px;
   color: var(--text-muted);
   font-size: 12px;
 }
+
+.knowledge-card-metadata .knowledge-card-facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.knowledge-card-metadata .knowledge-card-facts > div { display: flex; gap: 4px; }
 
 .knowledge-card-badges {
   display: flex;

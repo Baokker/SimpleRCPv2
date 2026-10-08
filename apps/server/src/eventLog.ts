@@ -41,6 +41,8 @@ const durableEventTypes = new Set([
   "knowledge_review_completed",
   "knowledge_config_updated",
   "knowledge_injected",
+  "knowledge_post_check",
+  "knowledge_tool_used",
   "knowledge_reuse_injected",
   "knowledge_reuse_viewed",
   "knowledge_reuse_confirmed",

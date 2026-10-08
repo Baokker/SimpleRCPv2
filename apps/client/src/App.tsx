@@ -20,8 +20,6 @@ import {
   sendChatMessage,
   sendConnectionOffline,
   getKnowledgeCards,
-  getKnowledgeGuide,
-  getKnowledgeTimeline,
   createKnowledgeCard,
   generateKnowledgeDemo,
   updateKnowledgeCard,
@@ -82,9 +80,7 @@ import type {
   WorkspaceChange,
   WorkspaceNode,
   KnowledgeAnchorResolution,
-  KnowledgeCard,
-  KnowledgeGuideItem,
-  KnowledgeTimelineItem
+  KnowledgeCard
 } from "./types";
 
 type ResizeTarget = "workspace" | "collaboration" | "terminal";
@@ -223,8 +219,6 @@ function WorkspacePage({
   const activeKnowledgeMemberIdRef = useRef<string>();
   const [knowledgeWarning, setKnowledgeWarning] = useState<{ cardId: string; file: string; warningId?: string }>();
   const [knowledgeResolutions, setKnowledgeResolutions] = useState<KnowledgeAnchorResolution[]>([]);
-  const [knowledgeGuide, setKnowledgeGuide] = useState<KnowledgeGuideItem[]>([]);
-  const [knowledgeTimeline, setKnowledgeTimeline] = useState<KnowledgeTimelineItem[]>([]);
   const [knowledgePinSelection, setKnowledgePinSelection] = useState<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>();
   const [knowledgeCurrentSelection, setKnowledgeCurrentSelection] = useState<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>();
   const activeKnowledgePathRef = useRef(activePath);
@@ -430,7 +424,8 @@ function WorkspacePage({
           }
           if (message.type === "knowledge_anchor_needs_review") {
             setKnowledgeRefreshVersion(version => version + 1);
-            showWorkspaceNotice(message.status === "orphaned" ? "知识卡片锚点已孤立，请重新锚定。" : "知识卡片锚点需要复核。");
+            showWorkspaceNotice(message.reason === "file-missing" ? `知识关联的文件 ${message.file} 不存在，请检查文件路径。` : "知识关联的代码需要复核，请打开卡片查看原因。");
+            scheduleKnowledgeRefresh();
           }
           if (message.type === "knowledge_update_available") {
             setKnowledgeRefreshVersion(version => version + 1);
@@ -455,6 +450,7 @@ function WorkspacePage({
               ...current,
               [message.runId]: mergeTraceEvents(current[message.runId] ?? [], [message.event])
             }));
+            if (knowledgeEnabled && ["knowledge_injected", "knowledge_post_check", "knowledge_tool_call"].includes(message.event.type)) scheduleKnowledgeRefresh();
           }
         }
       });
@@ -544,8 +540,6 @@ function WorkspacePage({
     if (!knowledgeEnabled || !member) {
       setKnowledgeCards([]);
       setKnowledgeResolutions([]);
-      setKnowledgeGuide([]);
-      setKnowledgeTimeline([]);
       setKnowledgeCurrentSelection(undefined);
       return;
     }
@@ -641,7 +635,7 @@ function WorkspacePage({
       paths.map(async (path) => [path, await getWorkspaceDirectory(projectId, path)] as const)
     );
     const directories = new Map(entries);
-    setTree(composeWorkspaceTree(directories.get("") ?? [], directories));
+    setTree(nodes => composeWorkspaceTree(directories.get("") ?? [], directories, nodes));
   }
 
   function scheduleWorkspaceRefresh() {
@@ -686,20 +680,16 @@ function WorkspacePage({
     const viewerMemberId = activeKnowledgeMemberIdRef.current;
     const path = activeKnowledgePathRef.current;
     const requestVersion = ++knowledgeRequestVersionRef.current;
-    const [cards, fileCards, guide, timeline, inbox, pending] = await Promise.all([
+    const [cards, fileCards, inbox, pending] = await Promise.all([
       getKnowledgeCards(projectId),
       path ? getKnowledgeCards(projectId, path) : Promise.resolve({ cards: [], resolutions: [] }),
-      getKnowledgeGuide(projectId, path),
-      getKnowledgeTimeline(projectId, path),
       getKnowledgeInbox(projectId),
       getPendingKnowledgeTeamCards(projectId)
     ]);
     if (requestVersion !== knowledgeRequestVersionRef.current || path !== activeKnowledgePathRef.current) return;
     setKnowledgeCards(cards.cards);
     setKnowledgeResolutions(fileCards.resolutions);
-    setKnowledgeGuide(guide.items);
-    setKnowledgeTimeline(timeline.items);
-    setKnowledgeUnread(inbox.suggestions.filter(item => !viewerMemberId || !item.seenBy?.includes(viewerMemberId)).length + inbox.warnings.filter(item => !item.seen).length + pending.cards.filter(card => !viewerMemberId || !pendingKnowledgeSeen(projectId, viewerMemberId, card)).length);
+    setKnowledgeUnread(inbox.suggestions.filter(item => !viewerMemberId || !item.seenBy?.includes(viewerMemberId)).length + pending.cards.filter(card => !viewerMemberId || !pendingKnowledgeSeen(projectId, viewerMemberId, card)).length);
   }
 
   async function openFile(path: string) {
@@ -799,8 +789,8 @@ function WorkspacePage({
     setKnowledgeCurrentSelection({ file, selection });
   }
 
-  async function savePinnedKnowledge(input: { type: "decision" | "constraint" | "risk" | "context" | "negative" | "tutorial"; title: string; summary: string; content: string; tags: string[]; scope: "personal" | "team" }) {
-    const result = await createKnowledgeCard(projectId, { ...input, anchors: knowledgePinSelection ? [knowledgePinSelection] : undefined });
+  async function savePinnedKnowledge(input: import("./types").KnowledgeCardInput) {
+    const result = await createKnowledgeCard(projectId, input);
     setKnowledgeCards((current) => [result.card, ...current]);
     setKnowledgePinSelection(undefined);
     scheduleKnowledgeRefresh();
@@ -816,8 +806,8 @@ function WorkspacePage({
     await refreshKnowledgeState();
   }
 
-  async function archiveKnowledge(id: string) {
-    await archiveKnowledgeCard(projectId, id);
+  async function archiveKnowledge(id: string, reason?: string) {
+    await archiveKnowledgeCard(projectId, id, reason);
     await refreshKnowledgeState();
   }
 
@@ -1109,8 +1099,6 @@ function WorkspacePage({
           knowledgeUnread={knowledgeUnread}
           knowledgeCards={knowledgeCards}
           knowledgeResolutions={knowledgeResolutions}
-          knowledgeGuide={knowledgeGuide}
-          knowledgeTimeline={knowledgeTimeline}
           knowledgePinSelection={knowledgePinSelection}
           knowledgeCurrentSelection={knowledgeCurrentSelection}
           onCreateKnowledgeCard={savePinnedKnowledge}
@@ -1118,7 +1106,6 @@ function WorkspacePage({
           onConfirmKnowledgeCard={confirmKnowledge}
           onRefreshKnowledge={refreshKnowledgeState}
           onArchiveKnowledgeCard={archiveKnowledge}
-          onReanchorKnowledgeCard={reanchorKnowledge}
           onClearKnowledgePinSelection={() => setKnowledgePinSelection(undefined)}
           onGenerateKnowledgeDemo={async () => {
             await generateKnowledgeDemo(projectId);

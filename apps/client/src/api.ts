@@ -124,6 +124,7 @@ export async function previewAgentKnowledge(
     activeFiles: string[];
     excludedByUser: string[];
     totalChars: number;
+    reviewCards?: Array<{ id: string; title: string }>;
   }>(`${projectPath(projectId)}/agent/knowledge/preview`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -368,15 +369,7 @@ export async function getKnowledgeCards(projectId: string, file?: string) {
   );
 }
 
-export async function createKnowledgeCard(projectId: string, input: {
-  type: KnowledgeCardType;
-  title: string;
-  summary: string;
-  content: string;
-  tags: string[];
-  scope: KnowledgeScope;
-  anchors?: Array<{ file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }>;
-}) {
+export async function createKnowledgeCard(projectId: string, input: KnowledgeCardInput) {
   return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -453,6 +446,15 @@ function projectPath(projectId: string) {
 
 export function getKnowledgeInbox(projectId: string, all = false) {
   return request<{ suggestions: import("./types").KnowledgeSuggestion[]; warnings: import("./types").KnowledgeRiskWarning[] }>(`${projectPath(projectId)}/knowledge/inbox${all ? "?view=all" : ""}`);
+}
+export function getKnowledgeActivity(projectId: string) {
+  return request<{ items: import("./types").KnowledgeActivityItem[] }>(`${projectPath(projectId)}/knowledge/activity`);
+}
+export function reviewKnowledgeAnchor(projectId: string, id: string, input: { action: "valid" | "file" | "reassociate"; anchorIndex?: number; file?: string; selection?: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }) {
+  return request<{ card: KnowledgeCard }>(`${projectPath(projectId)}/knowledge/cards/${encodeURIComponent(id)}/review`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+}
+export function assistKnowledgeCreation(projectId: string, description: string, selection?: { file: string; selection: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number } }) {
+  return request<{ draft: { type: KnowledgeCardType; title: string; summary: string; content: string; tags: string[] }; fallback: boolean; applicability: { kind: "block" | "project" | "glob"; file?: string; patterns?: string[] } }>(`${projectPath(projectId)}/knowledge/manual-assist`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description, selection }) });
 }
 export function importKnowledgeDocuments(projectId: string, files?: string[]) {
   return request<{ drafts: Array<{ suggestionId: string; suggestion: import("./types").KnowledgeSuggestion }> }>(`${projectPath(projectId)}/knowledge/import`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files }) });

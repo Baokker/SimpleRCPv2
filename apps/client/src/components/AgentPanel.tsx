@@ -83,6 +83,7 @@ export function AgentPanel({
   const [sessionCreating, setSessionCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [knowledgePreview, setKnowledgePreview] = useState<Array<{ id: string; title: string; score: number; chars: number }>>([]);
+  const [reviewKnowledge, setReviewKnowledge] = useState<Array<{ id: string; title: string }>>([]);
   const [excludedKnowledge, setExcludedKnowledge] = useState<Set<string>>(new Set());
   const transcriptRef = useRef<HTMLOListElement>(null);
   const onErrorRef = useRef(onError);
@@ -164,7 +165,7 @@ export function AgentPanel({
   }, [selectedSessionId, sessionRunIds, onLoadTrace]);
 
   useEffect(() => {
-    if (!knowledgeEnabled || !member || !prompt.trim()) { setKnowledgePreview([]); return; }
+    if (!knowledgeEnabled || !member || !prompt.trim()) { setKnowledgePreview([]); setReviewKnowledge([]); return; }
     let active = true;
     const timer = window.setTimeout(() => {
       void previewAgentKnowledge(projectId, {
@@ -173,6 +174,7 @@ export function AgentPanel({
         knowledge: { excludeCardIds: [...excludedKnowledge] }
       }).then((result) => {
         if (!active) return;
+        setReviewKnowledge(result.reviewCards ?? []);
         setKnowledgePreview(current => [
           ...result.records,
           ...current.filter(card => excludedKnowledge.has(card.id) && !result.records.some(record => record.id === card.id))
@@ -180,7 +182,7 @@ export function AgentPanel({
       }).catch((error) => { if (active) onErrorRef.current(error); });
     }, 250);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [knowledgeEnabled, member?.id, projectId, prompt, contexts, excludedKnowledge]);
+  }, [knowledgeEnabled, member?.id, projectId, prompt, contexts, excludedKnowledge, knowledgeCards]);
 
   async function createSession() {
     if (!member || sessionCreating) return;
@@ -369,6 +371,7 @@ export function AgentPanel({
       </ol>
 
       <div className="agent-composer">
+        {reviewKnowledge.length ? <div className="agent-knowledge-preview" data-testid="agent-knowledge-needs-review"><p>有 {reviewKnowledge.length} 张相关卡片待复核，未提供给 Agent</p><div className="workspace-dialog-actions">{reviewKnowledge.map(card => <button key={card.id} onClick={() => window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id }))}>复核「{card.title}」</button>)}</div></div> : null}
         {knowledgePreview.length ? (
           <div className="agent-knowledge-preview" data-testid="agent-knowledge-preview">
             <header><strong>将参考的知识</strong><span className="ui-badge">{knowledgePreview.filter(card => !excludedKnowledge.has(card.id)).length} 条已选</span></header>

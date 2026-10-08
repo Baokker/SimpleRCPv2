@@ -3,6 +3,14 @@ import { toString } from 'mdast-util-to-string';
 
 const evidenceHeadings = new Set(['evidence', '原始证据', '证据', '编辑证据', 'discussion evidence (examples)']);
 
+export function summarizeKnowledgeContent(content: string): string {
+    const tree = fromMarkdown(content);
+    const node = tree.children.find(candidate => ['paragraph', 'list', 'blockquote'].includes(candidate.type));
+    const text = toString(node?.type === 'list' ? node.children[0]! : node ?? tree).trim();
+    const sentences = new Intl.Segmenter('zh', { granularity: 'sentence' }).segment(text);
+    return (sentences[Symbol.iterator]().next().value?.segment ?? text).trim().slice(0, 200);
+}
+
 export function removeKnowledgeEvidenceBlocks(content: string): string {
     const nodes = fromMarkdown(content).children;
     const ranges: Array<{ start: number; end: number }> = [];

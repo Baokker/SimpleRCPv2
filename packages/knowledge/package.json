@@ -5,6 +5,10 @@
   "type": "module",
   "types": "./dist/src/index.d.ts",
   "exports": {
+    "./util/applicability": {
+      "types": "./dist/src/util/applicability.d.ts",
+      "default": "./dist/src/util/applicability.js"
+    },
     "./util/content": {
       "types": "./dist/src/util/content.d.ts",
       "default": "./dist/src/util/content.js"

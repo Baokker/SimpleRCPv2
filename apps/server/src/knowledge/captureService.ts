@@ -255,7 +255,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     if (best && best.score >= riskWarningConfig.dedupeThreshold) suggestion.dedupe = { cardId: best.cardId, score: Math.min(1, best.score) };
     suggestions.set(suggestion.id, suggestion);
     await save(suggestion);
-    options.events.append({ type: "knowledge_suggestion_created", roomId: options.roomId, payload: { suggestionId: suggestion.id, trigger: suggestion.triggerType, actors } });
+    options.events.append({ type: "knowledge_suggestion_created", roomId: options.roomId, payload: { suggestionId: suggestion.id, trigger: suggestion.triggerType, actors, title: suggestion.suggestedTitle, summary: suggestion.suggestedSummary } });
     for (const actor of actors) notify(actor, { type: "knowledge_suggestion", suggestionId: suggestion.id }, suggestion.createdAt);
     return suggestion;
   }

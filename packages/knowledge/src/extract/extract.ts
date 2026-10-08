@@ -4,7 +4,7 @@
 // terms of the MIT License, which is available in the project root.
 // ******************************************************************************
 
-import type { KnowledgeCardType } from '../schema/card.js';
+import type { KnowledgeCardType, KnowledgeAppliesTo } from '../schema/card.js';
 import type { LlmClient } from '../llm/client.js';
 import { knowledgeExtractionSystemPrompt } from './prompt.js';
 import { removeKnowledgeEvidenceBlocks } from '../util/content.js';
@@ -28,6 +28,7 @@ export interface KnowledgeCardDraftV2 {
     confidence: number;
     evidenceCitations: string[];
     unknowns: string[];
+    appliesTo?: KnowledgeAppliesTo;
 }
 
 export interface ExtractKnowledgeCardDraftOptions {
@@ -178,7 +179,9 @@ function normalizeDraft(parsed: Partial<KnowledgeCardDraftV2>, input: KnowledgeE
         tags,
         confidence,
         evidenceCitations,
-        unknowns
+        unknowns,
+        ...(input.triggerType === 'manual.assist' && parsed.appliesTo?.kind === 'project' ? { appliesTo: { kind: 'project' as const } } : {}),
+        ...(input.triggerType === 'manual.assist' && parsed.appliesTo?.kind === 'glob' && Array.isArray(parsed.appliesTo.patterns) && parsed.appliesTo.patterns.length > 0 && parsed.appliesTo.patterns.every(pattern => typeof pattern === 'string' && pattern.length > 0) ? { appliesTo: { kind: 'glob' as const, patterns: parsed.appliesTo.patterns } } : {})
     };
 }
 
@@ -393,6 +396,13 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
     let contentLines: string[] = [];
 
     switch (input.triggerType) {
+        case 'manual.assist': {
+            const description = String(evidence.description ?? '');
+            summary = description.slice(0, 200);
+            contentLines = [description];
+            addCitationIf('evidence.description', evidence.description);
+            break;
+        }
         case 'diagnostics.fixed': {
             const file = typeof evidence.file === 'string' ? evidence.file : '';
             const errs = Array.isArray(evidence.lastErrors) ? evidence.lastErrors : [];

@@ -23,3 +23,4 @@ export * from './util/content.js';
 export * from './retrieval/index.js';
 export * from './retrieval/ranking.js';
 export * from './retrieval/inject.js';
+export { cardMatchesFile } from './util/applicability.js';

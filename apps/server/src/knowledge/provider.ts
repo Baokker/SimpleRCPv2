@@ -4,6 +4,7 @@ import { minimatch } from "minimatch";
 import diff from "fast-diff";
 import {
   searchRankedKnowledgeCards,
+  cardMatchesFile,
   type KnowledgeCard,
   type KnowledgeCardStatus
 } from "@simplercp/knowledge";
@@ -103,6 +104,7 @@ export interface KnowledgeContextResult {
   estimatedInjectionTokens: number;
   config: KnowledgeProviderConfig;
   mode: string;
+  reviewCards?: Array<{ id: string; title: string }>;
 }
 
 export interface KnowledgePostCheckHit {
@@ -222,6 +224,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       {}
     );
     const selection = await selectKnowledgeInjection({cards: visibleCards, viewerMemberId: input.initiator.id, query, activeFiles, config, excludedByUser, workspaceId: input.project.id, indexDir: path.join(root, "index"), sensitiveValues: options.sensitiveValues});
+    const reviewCards = visibleCards.filter(card => ["needsReview", "orphaned"].includes(card.status) && (activeFiles.some(file => cardMatchesFile(card, file)) || selection.candidates.some(candidate => candidate.id === card.id))).map(card => ({ id: card.id, title: card.title }));
     const {records} = selection;
     const cardById = new Map(visibleCards.map(card => [card.id, card]));
     if (recordUsage) {
@@ -244,7 +247,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       }
       await saveMetrics();
     }
-    return { ...selection, toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, activeFiles, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), config: await getConfig(), mode: options.mode };
+    return { ...selection, reviewCards, toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, activeFiles, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), config: await getConfig(), mode: options.mode };
   }
 
   async function postRunCheck(run: AgentRun): Promise<KnowledgePostCheckResult> {
@@ -377,6 +380,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const at = input.startedAt ?? Date.now();
     const running = knowledgeRunsAt(activeRuns, at);
     const association = running.length === 1 ? running[0]!.id : running.length > 1 ? "ambiguous" : undefined;
+    if (input.resultIds?.length && input.tool !== "knowledge_propose") options.events.append({ type: "knowledge_tool_used", roomId: options.roomId, memberId: running.length === 1 ? running[0]!.initiatorMemberId ?? running[0]!.memberId : undefined, payload: { runId: association, cardIds: input.resultIds } });
     const call = redactSensitive({ at: input.startedAt ?? Date.now(), ...input, runId: association, ...(association === "ambiguous" ? { candidates: running.map((run) => run.id) } : {}) }, options.sensitiveValues) as Record<string, unknown>;
     await fs.appendFile(path.join(root, "tool-calls.jsonl"), `${JSON.stringify(call)}\n`, { encoding: "utf8", mode: 0o600 });
     if (input.tool !== "knowledge_propose") for (const id of input.resultIds ?? []) {

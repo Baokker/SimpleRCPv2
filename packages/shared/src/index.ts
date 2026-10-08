@@ -288,7 +288,7 @@ export type ClientMessage =
 export type ServerMessage =
   | { type: "knowledge_suggestion"; suggestionId: string; popup?: boolean }
   | { type: "knowledge_risk_warning"; cardId: string; file: string; popup?: boolean; warningId?: string }
-  | { type: "knowledge_anchor_needs_review"; cardId: string; file: string; status: "needsReview" | "orphaned" }
+  | { type: "knowledge_anchor_needs_review"; cardId: string; file: string; status: "needsReview" | "orphaned"; reason?: "file-missing" }
   | { type: "knowledge_update_available"; runId: string; cardId: string }
   | {
       type: "presence";

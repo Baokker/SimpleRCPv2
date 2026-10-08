@@ -5,15 +5,16 @@ import { isKnowledgeCard, normalizeWorkspaceRelativePath } from '../schema/card.
 import type { KnowledgeCard, KnowledgeCardStatus, KnowledgeCardType } from '../schema/card.js';
 import { resolveNow } from '../clock.js';
 import { migrateKnowledgeCard } from '../schema/migrate.js';
+import { minimatch } from 'minimatch';
 
 export type KnowledgeSearchMode = 'vector' | 'lexical';
 export interface EmbeddingsConfig { client?: { embed(texts: string[]): Promise<number[][]> }; timeoutMs?: number; model?: string; }
-export interface KnowledgeIndexEntry { cardId: string; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; embeddingTextHash: string; embeddingText: string; vector?: number[]; }
+export interface KnowledgeIndexEntry { cardId: string; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; appliesTo?: KnowledgeCard['appliesTo']; embeddingTextHash: string; embeddingText: string; vector?: number[]; }
 export interface KnowledgeIndex { schemaVersion: 3; workspaceRoot: string; workspaceHash: string; embeddingModel: string; updatedAt: number; entries: KnowledgeIndexEntry[]; embeddingFallbackReason?: string; }
 export interface EnsureKnowledgeIndexOptions { workspaceRoot?: string; workspaceId?: string; cards?: unknown[]; cardsDirectory?: string; embeddings?: EmbeddingsConfig; indexDir: string; forceRebuild?: boolean; now?: () => number; strictEmbedding?: boolean; }
 export interface KnowledgeSearchFilters { types?: KnowledgeCardType[]; statuses?: KnowledgeCardStatus[]; }
-export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; activeFiles?: string[]; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; returnAll?: boolean; viewerMemberId?: string; lexicalScoring?: 'legacy' | 'exact-boost'; }
-export interface KnowledgeSearchResult { cardId: string; score: number; mode: KnowledgeSearchMode; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; excerpt: string; fallbackReason?: string; }
+export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; activeFiles?: string[]; candidateFiles?: string[]; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; returnAll?: boolean; viewerMemberId?: string; lexicalScoring?: 'legacy' | 'exact-boost'; }
+export interface KnowledgeSearchResult { cardId: string; score: number; mode: KnowledgeSearchMode; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; appliesTo?: KnowledgeCard['appliesTo']; excerpt: string; fallbackReason?: string; }
 
 const DEFAULT_EMBEDDINGS_MODEL = 'text-embedding-v4';
 const MAX_EMBEDDING_TEXT_CHARS = 12_000;
@@ -54,7 +55,7 @@ async function buildIndex(options: EnsureKnowledgeIndexOptions & { cards: Knowle
     const entries: KnowledgeIndexEntry[] = [];
     for (const card of cards) {
         const embeddingText = buildEmbeddingText(card);
-        const entry: KnowledgeIndexEntry = { cardId: card.id, type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags.slice(0, 64), files: extractCardFiles(card), embeddingTextHash: sha256Hex(embeddingText), embeddingText, vector: previousById.get(card.id)?.embeddingTextHash === sha256Hex(embeddingText) ? previousById.get(card.id)?.vector : undefined };
+        const entry: KnowledgeIndexEntry = { cardId: card.id, type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags.slice(0, 64), files: extractCardFiles(card), appliesTo: card.appliesTo, embeddingTextHash: sha256Hex(embeddingText), embeddingText, vector: previousById.get(card.id)?.embeddingTextHash === sha256Hex(embeddingText) ? previousById.get(card.id)?.vector : undefined };
         entries.push(entry);
     }
     let embeddingFallbackReason: string | undefined;
@@ -102,7 +103,7 @@ export async function searchKnowledgeCards(options: SearchKnowledgeCardsOptions)
     }
     const tokens = tokenize(queryText);
     const lexicalScoring = options.lexicalScoring ?? 'legacy';
-    return entries.map(entry => ({ entry, score: lexicalScore(tokens, entry.embeddingText, entry.files, activeFiles, lexicalScoring) })).filter(item => item.score > 0).sort((a, b) => b.score - a.score).slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'lexical', fallbackReason));
+    return entries.map(entry => ({ entry, score: lexicalScore(tokens, entry.embeddingText, entry.files, activeFiles, lexicalScoring) })).filter(item => item.score > 0 || resultMatchesFiles(item.entry, options.candidateFiles ?? [])).sort((a, b) => b.score - a.score).slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'lexical', fallbackReason));
 }
 
 function resolveSourceId(options: EnsureKnowledgeIndexOptions): string { return options.workspaceId?.trim() || (options.workspaceRoot ? path.resolve(options.workspaceRoot) : options.cards ? 'cards:in-memory' : process.cwd()); }
@@ -178,6 +179,7 @@ function hashIndexedCardContent(cards: KnowledgeCard[]): string {
         ownerMemberId: card.ownerMemberId,
         tags: card.tags.slice(0, 64),
         files: extractCardFiles(card),
+        appliesTo: card.appliesTo,
         embeddingText: buildEmbeddingText(card)
     }))));
 }
@@ -202,7 +204,8 @@ function buildQueryText(query: string, selectionText: string, activeFile?: strin
 }
 function tokenize(value: string): string[] {
     const raw = String(value ?? '').toLowerCase();
-    const tokens = raw.split(/[^a-z0-9_\u4e00-\u9fa5]+/g).map(token => token.trim()).filter(Boolean);
+    const segmenter = new Intl.Segmenter('zh', { granularity: 'word' });
+    const tokens = (raw.match(/[a-z0-9_]+|[\p{Script=Han}]+/gu) ?? []).flatMap(part => /^[a-z0-9_]+$/.test(part) ? [part] : [...segmenter.segment(part)].filter(segment => segment.isWordLike).map(segment => segment.segment));
     return tokens.length > 64 ? tokens.slice(0, 64) : tokens;
 }
 function lexicalScore(queryTokens: string[], text: string, files: string[], activeFiles: string[], scoring: 'legacy' | 'exact-boost'): number {
@@ -231,5 +234,8 @@ function activeFileBoost(entry: Pick<KnowledgeIndexEntry, 'files'>, activeFiles:
     return 0;
 }
 function cosineSimilarity(a: number[], b: number[]): number { let dot = 0; let aa = 0; let bb = 0; for (let i = 0; i < a.length; i++) { const av = a[i] ?? 0; const bv = b[i] ?? 0; dot += av * bv; aa += av * av; bb += bv * bv; } return aa && bb ? dot / Math.sqrt(aa * bb) : 0; }
-function toResult(entry: KnowledgeIndexEntry, score: number, mode: KnowledgeSearchMode, fallbackReason?: string): KnowledgeSearchResult { return { cardId: entry.cardId, score, mode, type: entry.type, status: entry.status, scope: entry.scope, ownerMemberId: entry.ownerMemberId, title: entry.title, summary: entry.summary, tags: entry.tags, files: entry.files, excerpt: entry.embeddingText.slice(0, 800), ...(fallbackReason ? { fallbackReason } : {}) }; }
+export function resultMatchesFiles(entry: Pick<KnowledgeSearchResult, 'files' | 'appliesTo'>, activeFiles: string[]): boolean {
+    return activeFiles.length > 0 && (entry.appliesTo?.kind === 'project' || entry.files.some(file => activeFiles.some(active => file === active || file.endsWith(`/${active}`))) || (entry.appliesTo?.kind === 'glob' && activeFiles.some(file => entry.appliesTo?.kind === 'glob' && entry.appliesTo.patterns.some(pattern => minimatch(file, pattern, { dot: true })))));
+}
+function toResult(entry: KnowledgeIndexEntry, score: number, mode: KnowledgeSearchMode, fallbackReason?: string): KnowledgeSearchResult { return { cardId: entry.cardId, score, mode, type: entry.type, status: entry.status, scope: entry.scope, ownerMemberId: entry.ownerMemberId, title: entry.title, summary: entry.summary, tags: entry.tags, files: entry.files, appliesTo: entry.appliesTo, excerpt: entry.embeddingText.slice(0, 800), ...(fallbackReason ? { fallbackReason } : {}) }; }
 function clampInt(value: number, min: number, max: number): number { const n = Math.floor(Number(value)); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : min; }

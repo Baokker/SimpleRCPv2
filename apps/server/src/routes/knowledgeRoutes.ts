@@ -10,6 +10,8 @@ import { readWorkspaceFile } from "../workspace.js";
 import { splitImportedDocument, exportAgentsMarkdown, resolveKnowledgeDocument } from "../knowledge/documentIO.js";
 import { redactSensitive } from "../agent/traceStore.js";
 import { getProjectMetadataPath } from "../projects.js";
+import { assistManualKnowledge } from "../knowledge/manualAssist.js";
+import { buildKnowledgeActivity } from "../knowledge/activity.js";
 
 export function registerKnowledgeRoutes(
   app: Express,
@@ -143,6 +145,46 @@ export function registerKnowledgeRoutes(
       if (!service) return;
       const card = await service.archive(identity, req.params.id, typeof req.body?.reason === "string" ? req.body.reason : undefined);
       res.json({ card });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/cards/:id/review", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const service = serviceFor(req.params.projectId, res); if (!service) return;
+      res.json({ card: await service.reviewAnchor(identity, req.params.id, req.body ?? {}) });
+    } catch (error) { next(error); }
+  });
+
+  app.post("/api/projects/:projectId/knowledge/manual-assist", async (req, res, next) => {
+    const writeCall = async (call: Record<string, unknown>) => {
+      const runtime = runtimeManager.get(req.params.projectId);
+      await runtime.knowledgeProvider?.initialize();
+      await fs.appendFile(path.join(getProjectMetadataPath(runtime.project), "knowledge", "llm-calls.jsonl"), JSON.stringify(call) + "\n", { mode: 0o600 });
+    };
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId); const service = serviceFor(req.params.projectId, res); if (!service) return;
+      const selected = req.body?.selection;
+      const selection = selected ? await service.selectionEvidence(selected.file, selected.selection) : undefined;
+      const result = await assistManualKnowledge({ description: req.body?.description ?? "", selection, model: runtime.llm?.model ?? "deterministic", provider: runtime.llm?.provider, client: runtime.llm?.apiKey ? createOpenAICompatibleClient(runtime.llm) : undefined, sensitiveValues: runtime.llm?.apiKey ? [runtime.llm.apiKey] : [] });
+      await writeCall(result.call);
+      res.json({ draft: result.draft, fallback: result.fallback, applicability: result.applicability });
+    } catch (error) {
+      const call = (error as { knowledgeCall?: Record<string, unknown> }).knowledgeCall;
+      if (call) await writeCall(call);
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:projectId/knowledge/activity", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const runtime = runtimeManager.get(req.params.projectId); const service = serviceFor(req.params.projectId, res); if (!service) return;
+      await runtime.events.awaitIdle();
+      const cards = await service.list(identity);
+      const suggestions = await runtime.capture?.list(identity.memberId, true) ?? [];
+      res.json({ items: buildKnowledgeActivity(cards, suggestions, runtime.events.list()) });
     } catch (error) { next(error); }
   });
 

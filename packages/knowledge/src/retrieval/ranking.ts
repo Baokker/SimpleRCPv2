@@ -1,4 +1,4 @@
-import { searchKnowledgeCards, type KnowledgeSearchResult, type SearchKnowledgeCardsOptions } from "./index.js";
+import { searchKnowledgeCards, resultMatchesFiles, type KnowledgeSearchResult, type SearchKnowledgeCardsOptions } from "./index.js";
 
 export interface KnowledgeRankingOptions {
   ranking: "legacy" | "bounded";
@@ -11,15 +11,16 @@ export function compareKnowledgeRanks(a: Pick<KnowledgeSearchResult, "type" | "s
 }
 
 export function rankKnowledgeResults(results: KnowledgeSearchResult[], activeFiles: string[], options: KnowledgeRankingOptions) {
-  const cap = Math.max(0, ...results.map(result => result.score)) * 0.5;
+  const maximum = Math.max(0, ...results.map(result => result.score));
+  const cap = maximum > 0 ? maximum * 0.5 : 0.06;
   return results.map(result => {
-    const boost = options.ranking === "bounded" && options.useActiveFiles && result.files.some(file => activeFiles.some(active => file === active || file.endsWith(`/${active}`))) ? Math.min(0.06, cap) : 0;
+    const boost = options.ranking === "bounded" && options.useActiveFiles && resultMatchesFiles(result, activeFiles) ? Math.min(0.06, cap) : 0;
     return {...result, lexical: result.score, boost, score: result.score + boost};
   }).sort((a, b) => compareKnowledgeRanks(a, b, options.ranking));
 }
 
 export async function searchRankedKnowledgeCards(options: SearchKnowledgeCardsOptions & KnowledgeRankingOptions) {
   const activeFiles = options.useActiveFiles ? options.activeFiles ?? [] : [];
-  const results = await searchKnowledgeCards({...options, activeFiles: options.ranking === "legacy" ? activeFiles : [], returnAll: true});
+  const results = await searchKnowledgeCards({...options, activeFiles: options.ranking === "legacy" ? activeFiles : [], candidateFiles: activeFiles, returnAll: true});
   return rankKnowledgeResults(results, activeFiles, options);
 }

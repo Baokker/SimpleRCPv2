@@ -119,6 +119,7 @@ export function createProjectRuntime(
     await capture?.external(change);
     if (change.type === "change" || change.type === "add") {
       await documents.reloadPath(change.path);
+      await knowledge?.refreshExpired({ memberId: "filesystem", displayName: "系统" }, change.path);
     }
     if (change.type !== "change" && !isSuppressedWorkspaceChange(change)) {
       for (const listener of workspaceListeners) listener(change);

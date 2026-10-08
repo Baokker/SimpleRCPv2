@@ -24,13 +24,16 @@ export function setDirectoryChildren(
 
 export function composeWorkspaceTree(
   nodes: WorkspaceNode[],
-  directories: Map<string, WorkspaceNode[]>
+  directories: Map<string, WorkspaceNode[]>,
+  previousNodes: WorkspaceNode[] = []
 ): WorkspaceNode[] {
   return nodes.map((node) => {
     if (node.type !== "directory") return node;
-    const children = directories.get(node.path);
+    const previous = previousNodes.find(candidate => candidate.path === node.path);
+    const previousChildren = previous?.type === "directory" ? previous.children : undefined;
+    const children = directories.get(node.path) ?? previousChildren;
     return children
-      ? { ...node, children: composeWorkspaceTree(children, directories) }
+      ? { ...node, children: composeWorkspaceTree(children, directories, previousChildren) }
       : node;
   });
 }
