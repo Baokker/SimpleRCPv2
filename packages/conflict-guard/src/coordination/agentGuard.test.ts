@@ -1,9 +1,11 @@
 import { expect, it } from "vitest";
-import { agentInputRevision, evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalFileChange, proposalSymbolKeys, symbolSignature } from "./agentGuard.js";
+import { agentInputRevision, changedAgentDependencies, evaluateAgentChanges, selectAgentReverts, mergeAgentProposal, proposalFileChange, proposalSymbolKeys, symbolSignature } from "./agentGuard.js";
 import { VirtualClock } from "../replay/clock.js";
 import { MemoryFileProvider } from "../replay/files.js";
 import { replayLibraries } from "../../scripts/replay-libs.ts";
 import { ConflictGuardTracker } from "../tracking/tracker.js";
+import { createSemanticIndex } from "../semantic/index.js";
+import { mapSymbolChanges } from "../semantic/changes.js";
 
 it("includes multiline parameters in function and method signatures", () => {
   expect(symbolSignature("export function price(\n value: number,\n currency: string\n): number { return value; }")).toBe("export function price( value: number, currency: string ): number");
@@ -85,4 +87,29 @@ it("changes the Agent input revision when an active participant finishes", () =>
   const before = agentInputRevision([proposal], tracker.getActiveChangeSets(), () => proposal.after);
   tracker.markDone(actor);
   expect(agentInputRevision([proposal], tracker.getActiveChangeSets(), () => proposal.after)).not.toBe(before);
+});
+
+it("T2 与 T3 保留人与 Agent 的精确修改范围", async () => {
+  const file = "body.ts";
+  const before = "export function calculate(value: number): number {\n  let total = value;\n  total += 1;\n  total += 2;\n  total += 3;\n  total += 4;\n  total += 5;\n  total += 6;\n  return total;\n}\n";
+  const agent = before.replace("total += 1", "total += 10");
+  const human = before.replace("return total", "return total + 1");
+  const merged = agent.replace("return total", "return total + 1");
+  const actor = { kind: "agent" as const, runId: "precise-t3", ownerId: "alice" };
+  const humanActor = { kind: "human" as const, memberId: "bob" };
+  const humanChange = proposalFileChange({ file, before, after: human }, 2);
+  const project = createSemanticIndex({ files: new MemoryFileProvider({ [file]: human }), now: () => performance.now() });
+  project.update();
+  humanChange.symbols = mapSymbolChanges(humanChange, human, project);
+  const active = [{ actor: humanActor, status: "settled" as const, files: new Map([[file, humanChange]]) }];
+  const t2 = await evaluateAgentChanges({ actor, proposals: [{ file, before, after: agent }], active, files: new MemoryFileProvider({ [file]: human }), mergeShared: true, now: () => performance.now(), signal: new AbortController().signal });
+  const current = `// 共享说明\n${merged}`;
+  const dependencies = changedAgentDependencies({ actor, startedAt: 0, baseline: new Map([[file, before]]), history: [{ at: 2, set: active[0]! }], active: [], now: 3, current: () => current });
+  const t3 = await evaluateAgentChanges({ actor, proposals: [{ file, before, after: agent }], active: dependencies, files: new MemoryFileProvider({ [file]: current }), currentView: true, changedSymbols: new Map([[file, new Set([`${file}#calculate`])]]), now: () => performance.now(), signal: new AbortController().signal });
+  for (const result of [t2, t3]) {
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]!.verdict).toMatchObject({ zone: "grey", decision: "warn", ruleId: "declaration-body-unrelated", typecheck: { ran: true } });
+  }
+  expect(t3.inputs[0]!.left.symbol.editedLineRanges).toEqual([{ start: 4, end: 4 }]);
+  expect(t3.inputs[0]!.right.symbol.editedLineRanges).toEqual([{ start: 10, end: 10 }]);
 });

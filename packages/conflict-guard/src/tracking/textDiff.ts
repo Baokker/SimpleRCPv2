@@ -11,3 +11,15 @@ export function textDiffOps(before: string, after: string): TextEditOp[] {
   }
   return ops;
 }
+
+export function normalizeEditOps(ops: TextEditOp[]): TextEditOp[] {
+  const replacements: TextEditOp[] = [];
+  for (const op of ops) {
+    const previous = replacements.at(-1);
+    if (previous && op.from === previous.from + previous.deleted.length) {
+      previous.deleted += op.deleted;
+      previous.inserted += op.inserted;
+    } else replacements.push({ ...op });
+  }
+  return replacements.flatMap((op) => op.deleted.length && op.inserted.length ? textDiffOps(op.deleted, op.inserted).map((part) => ({ ...part, from: op.from + part.from })) : [op]);
+}

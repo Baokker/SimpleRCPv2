@@ -162,7 +162,8 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         realtimeMessages.some(
           (message) =>
             message.type === "agent_trace_appended" &&
-            message.runId === created.run.id
+            message.runId === created.run.id &&
+            (message.event as { type?: string } | undefined)?.type === "run_completed"
         )
       );
       socket.close();

@@ -14,6 +14,7 @@
 - `change_unit`：`actor`、已经关闭的 `batchId`、`commentOnly` 与 `symbols` 数组，每项包含 `key`、`file`、`status`、`beforeHash`、`afterHash`。哈希为符号 before/after 的 SHA-256，事件没有符号全文。有效符号变化的关闭批次记录一个单元；仅修改注释或空白的批次记录 `commentOnly=true`、空符号列表，不计入有效符号单元统计。每侧 before 使用其基线恢复本人修改范围，并保留范围外的当前共享代码。旧轨迹可以缺少 `commentOnly`。
 - `pair_candidate_opened`、`pair_candidate_updated`、`pair_candidate_closed`：包含 `pair`，字段为稳定 `id`、`left`、`right`、`distance`、`path`、`firstSeenAt`、`updatedAt`。每侧包含 `actor`、`symbol` 和 `status`。距离 0 时两个符号相同且 `path: null`；距离 1 或 2 时路径包含相应数量的 hops，每项记录 `from`、`to`、`kind` 和 `direction`，并可带有 `typeOnly`。候选关闭后，相同参与者与符号再次关联时使用相同编号和新的首次发现时间。
 - `pair_judged`：记录 `pairId`、`revision`、完整 `pair` 和 `verdict`，包括区、动作、规则编号、证据、`contractChanged` 和四状态检查的耗时、执行及跳过原因。`symbols` 保存双方的 `key`、`beforeHash` 与 `afterHash`，哈希使用 SHA-256。
+  同一声明的检查结果还包含 `typecheck.inferredReturnTypeChanged: { left, right }`，表示双方单独修改时的返回类型是否改变。远距离灰区警告也记录四状态结果；检查超时与无法组合修改范围会记录跳过原因。
 - `pair_analyzing`：灰区开始异步研判，记录变更对、修订号与本地结果；相关文件暂停写入。
 - `pair_analysis_progress`：超过软时间预算的分析进度，记录变更对及修订号。
 - `provider_call`：`adapter`、`model`、`promptVersion`、`inputHash`、`decision`、`confidence`、`latencyMs`、`usage`、`costUsd` 与 `status`。状态为 `success/timeout/failed/invalid-format/cancelled/cache-hit`，失败可以没有 decision 与 confidence。事件不包含请求正文与原始响应。

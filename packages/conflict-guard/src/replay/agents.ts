@@ -102,7 +102,7 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
   } });
   function refresh() {
     semantic.captureStaleEdges(tracker.getActiveChangeSets()); index.update(); session.refresh();
-    for (const set of semantic.getActiveChangeSets()) history.push({ at: clock.now(), set: { ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })), symbols: change.symbols?.map((symbol) => ({ ...symbol })) }])) } });
+    for (const set of semantic.getActiveChangeSets()) history.push({ at: clock.now(), set: { ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, proposalText: files.readFile(file), ranges: change.ranges.map((range) => ({ ...range })), semanticRanges: change.semanticRanges?.map((range) => ({ ...range })), symbols: change.symbols?.map((symbol) => ({ ...symbol })) }])) } });
   }
   async function advanceTo(at: number) {
     while (true) {

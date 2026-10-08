@@ -12,6 +12,7 @@ import type {
 import { mergeRanges, transformEditRanges } from "./rangeTransform.js";
 import { deletedSymbolKeys, reconstructOwnedBefore } from "../semantic/changes.js";
 import { commentOnlyEdit, semanticEditRanges } from "../semantic/trivia.js";
+import { normalizeEditOps, textDiffOps } from "./textDiff.js";
 
 export interface ConflictGuardClock {
   now(): number;
@@ -74,17 +75,18 @@ export class ConflictGuardTracker {
     const state = this.files.get(edit.file) ?? { text: edit.textBefore, batches: new Map() };
     if (!this.files.has(edit.file)) this.files.set(edit.file, state);
     if (state.text !== edit.textBefore) throw new Error(`Conflict guard text mirror is stale for ${edit.file}`);
+    const rangeOps = normalizeEditOps(edit.ops);
 
     for (const activeState of this.active.values()) {
       const change = activeState.changeSet.files.get(edit.file);
       if (change) {
-        change.ranges = transformEditRanges(change.ranges, edit.ops);
-        if (change.semanticRanges) change.semanticRanges = transformEditRanges(change.semanticRanges, edit.ops);
+        change.ranges = transformEditRanges(change.ranges, rangeOps);
+        if (change.semanticRanges) change.semanticRanges = transformEditRanges(change.semanticRanges, rangeOps);
       }
     }
     for (const { batch } of state.batches.values()) {
-      batch.ranges = transformEditRanges(batch.ranges, edit.ops);
-      if (batch.semanticRanges) batch.semanticRanges = transformEditRanges(batch.semanticRanges, edit.ops);
+      batch.ranges = transformEditRanges(batch.ranges, rangeOps);
+      if (batch.semanticRanges) batch.semanticRanges = transformEditRanges(batch.semanticRanges, rangeOps);
     }
     this.emit({ type: "edit", edit });
 
@@ -104,27 +106,28 @@ export class ConflictGuardTracker {
         change = {
           file: edit.file,
           baseText: edit.textBefore,
-          ranges: mergeRanges(rangesForOps(edit.ops)),
+          ranges: mergeRanges(rangesForOps(rangeOps)),
           semanticRanges,
           firstTouchedAt: edit.at,
           lastTouchedAt: edit.at
         };
         activeState.changeSet.files.set(edit.file, change);
       } else {
-        change.ranges = mergeRanges([...change.ranges, ...rangesForOps(edit.ops)]);
-        change.semanticRanges = mergeRanges([...(change.semanticRanges ?? []), ...semanticRanges]);
+        change.ranges = mergeRanges([...change.ranges, ...rangesForOps(rangeOps)]);
         change.lastTouchedAt = edit.at;
       }
-      if (commentOnlyEdit(edit.file, reconstructOwnedBefore(change.baseText, edit.textAfter, 0, change.ranges), edit.textAfter)) change.semanticRanges = [];
+      const ownedBefore = reconstructOwnedBefore(change.baseText, edit.textAfter, 0, change.ranges);
+      change.semanticRanges = semanticEditRanges({ file: edit.file, textBefore: ownedBefore, textAfter: edit.textAfter, ops: textDiffOps(ownedBefore, edit.textAfter) });
+      change.deletedSymbolKeys = [...new Set([...(change.deletedSymbolKeys ?? []), ...deletedSymbolKeys(edit)])];
       if (created) this.emit({ type: "change_set_opened", changeSet: snapshotChangeSet(activeState.changeSet) });
       this.resetActiveTimer(actorKey, edit.file);
 
       const existing = state.batches.get(actorKey);
       if (existing) {
-        existing.batch.ranges = mergeRanges([...existing.batch.ranges, ...rangesForOps(edit.ops)]);
-        existing.batch.semanticRanges = mergeRanges([...(existing.batch.semanticRanges ?? []), ...semanticRanges]);
-        existing.batch.commentOnly = commentOnlyEdit(edit.file, reconstructOwnedBefore(existing.batch.textBefore, edit.textAfter, 0, existing.batch.ranges), edit.textAfter);
-        if (existing.batch.commentOnly) existing.batch.semanticRanges = [];
+        existing.batch.ranges = mergeRanges([...existing.batch.ranges, ...rangesForOps(rangeOps)]);
+        const batchBefore = reconstructOwnedBefore(existing.batch.textBefore, edit.textAfter, 0, existing.batch.ranges);
+        existing.batch.commentOnly = commentOnlyEdit(edit.file, batchBefore, edit.textAfter);
+        existing.batch.semanticRanges = semanticEditRanges({ file: edit.file, textBefore: batchBefore, textAfter: edit.textAfter, ops: textDiffOps(batchBefore, edit.textAfter) });
         existing.batch.endedAt = edit.at;
         existing.batch.textAfter = edit.textAfter;
         if (edit.ops.some((op) => op.deleted.length > 0)) existing.batch.deletionEdits = [...(existing.batch.deletionEdits ?? []), { file: edit.file, ops: edit.ops, textBefore: edit.textBefore, textAfter: edit.textAfter }];
@@ -137,7 +140,7 @@ export class ConflictGuardTracker {
           startedAt: edit.at,
           endedAt: edit.at,
           closeReason: "flush",
-          ranges: mergeRanges(rangesForOps(edit.ops)),
+          ranges: mergeRanges(rangesForOps(rangeOps)),
           semanticRanges,
           commentOnly,
           textBefore: edit.textBefore,
@@ -178,7 +181,7 @@ export class ConflictGuardTracker {
     this.startAgent(actor);
     const state = this.active.get(actorKeyOf(actor))!;
     const previous = state.changeSet.files.get(change.file);
-    state.changeSet.files.set(change.file, { ...change, baseText: previous?.baseText ?? change.baseText, firstTouchedAt: previous?.firstTouchedAt ?? change.firstTouchedAt, ranges: [...(previous?.ranges ?? []), ...change.ranges] });
+    state.changeSet.files.set(change.file, { ...change, baseText: previous?.baseText ?? change.baseText, firstTouchedAt: previous?.firstTouchedAt ?? change.firstTouchedAt, ranges: [...(previous?.ranges ?? []), ...change.ranges], semanticRanges: [...(previous?.semanticRanges ?? previous?.ranges ?? []), ...(change.semanticRanges ?? change.ranges)], deletedSymbolKeys: [...new Set([...(previous?.deletedSymbolKeys ?? []), ...(change.deletedSymbolKeys ?? [])])] });
   }
 
   flushActorBatches(actor: Extract<ActorRef, { kind: "human" | "agent" }>) {
@@ -227,12 +230,7 @@ export class ConflictGuardTracker {
   }
 
   getOpenBatches() {
-    return [...this.files.entries()].flatMap(([file, state]) => [...state.batches.values()].map(({ batch }) => ({
-      actor: { ...batch.actor },
-      file,
-      ranges: batch.ranges.map((range) => ({ ...range })),
-      semanticRanges: batch.semanticRanges?.map((range) => ({ ...range }))
-    })));
+    return [...this.files.values()].flatMap((state) => [...state.batches.values()].map(({ batch }) => snapshotBatch(batch)));
   }
 
   onEvent(listener: (event: ConflictGuardEvent) => void) {

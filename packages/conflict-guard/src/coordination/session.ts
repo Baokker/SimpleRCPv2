@@ -82,6 +82,7 @@ export function createSessionCoordinator(options: {
     options.semantic.update(options.tracker.getActiveChangeSets(), batches);
     for (const { batch } of batches) recordContracts(batch);
     for (const [key, entry] of contracts) if (!symbolFor(entry.actor, entry.symbol)) contracts.delete(key);
+    for (const batch of options.tracker.getOpenBatches()) warnBatch(batch);
     coordinator.update(pairs ? pairs(options.semantic.getCandidatePairs()) : options.semantic.getCandidatePairs(), (pair) => !relevantBatch(pair));
     for (const { batch } of batches) {
       awaitingBatches.delete(batch.id);
@@ -185,7 +186,11 @@ export function createSessionCoordinator(options: {
       const otherKeys = [...set.files.values()].flatMap((file) => (file.symbols ?? []).map((symbol) => symbol.key));
       return options.semantic.findPaths(touched, otherKeys, 2).map((path) => ({ actor: actorKey(set.actor), path }));
     }));
-    if (options.enableT0 === false || !isSourceParsable(batch.file, batch.textAfter)) return;
+    warnBatch(batch);
+  }
+  function warnBatch(batch: EditBatch) {
+    if (batch.actor.kind !== "human" || options.enableT0 === false || !isSourceParsable(batch.file, batch.textAfter)) return;
+    const ranges = batch.semanticRanges ?? batch.ranges;
     const symbols = parseSymbols(batch.file, batch.textAfter);
     const keys = ranges.flatMap((range) => innermostSymbols(symbols, range.start, range.end)).map((symbol) => symbol.key);
     for (const entry of contracts.values()) {

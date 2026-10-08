@@ -1,9 +1,10 @@
 import type { FileChange, TextEdit, TrackedRange } from "../model/types.js";
 import type { SemanticIndex, SymbolInfo } from "./types.js";
-import { innermostSymbols, parseSymbols } from "./symbols.js";
+import { innermostSymbols, isSourceParsable, parseSymbols } from "./symbols.js";
 import { isSemanticFile } from "./index.js";
 import { commentOnlyEdit } from "./trivia.js";
 import { textDiffOps } from "../tracking/textDiff.js";
+import { mergeRanges } from "../tracking/rangeTransform.js";
 
 export interface SymbolChange {
   key: string;
@@ -24,8 +25,8 @@ export interface SymbolChange {
 
 export function deletedSymbolKeys(edit: TextEdit) {
   if (!isSemanticFile(edit.file)) return [];
-  if (!edit.ops.some((op) => op.deleted.length > 0)) return [];
-  return parseSymbols(edit.file, edit.textBefore).filter((symbol) => edit.ops.some((op) => op.deleted.length > 0 && op.from <= symbol.nameStart && op.from + op.deleted.length >= symbol.nameEnd)).map((symbol) => symbol.key);
+  const currentKeys = isSourceParsable(edit.file, edit.textBefore) && isSourceParsable(edit.file, edit.textAfter) ? new Set(parseSymbols(edit.file, edit.textAfter).map((symbol) => symbol.key)) : undefined;
+  return parseSymbols(edit.file, edit.textBefore).filter((symbol) => currentKeys ? !currentKeys.has(symbol.key) : edit.ops.some((op) => op.deleted.length > 0 && op.from <= symbol.nameStart && op.from + op.deleted.length >= symbol.nameEnd)).map((symbol) => symbol.key);
 }
 
 export function mapSymbolChanges(change: FileChange, text: string, index: SemanticIndex): SymbolChange[] {
@@ -43,7 +44,7 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
     const after = text.slice(symbol.start, symbol.end);
     const before = previous ? reconstructOwnedBefore(change.baseText.slice(previous.start, previous.end), after, symbol.start, change.ranges) : "";
     if (before === after || previous && commentOnlyEdit(change.file, replaceSymbol(change.baseText, previous, before), replaceSymbol(change.baseText, previous, after))) continue;
-    const editedLineRanges = ranges.filter((range) => innermostSymbols([symbol], range.start, range.end).length > 0).map((range) => ({ start: lineAt(text, Math.max(symbol.start, range.start)), end: lineAt(text, Math.max(symbol.start, Math.min(symbol.end - 1, range.end > range.start ? range.end - 1 : range.end))) }));
+    const editedLineRanges = mergeRanges(ranges.filter((range) => innermostSymbols([symbol], range.start, range.end).length > 0).map((range) => ({ start: lineAt(text, Math.max(symbol.start, range.start)), end: lineAt(text, Math.max(symbol.start, Math.min(symbol.end - 1, range.end > range.start ? range.end - 1 : range.end))) })));
     changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, editedLineRanges, lastTouchedAt: change.lastTouchedAt, beforeComments: previous ? change.baseText.slice(previous.node.getFullStart(), previous.start).trim() : undefined });
   }
   const touchedBase = baseline.filter((symbol) => ranges.some((range) => range.start < symbol.end && symbol.start <= range.end));

@@ -14,6 +14,6 @@ it("participants receive the model warning after a lock is automatically cleared
   coordinator.update([{ ...pair, revisionKey: "second" }]);
   const record = coordinator.get(pair.id)!;
   expect(record).toMatchObject({ status: "resolved", resolution: "auto-cleared", revision: 1, verdict: { decision: "warn" } });
-  for (const memberId of ["alice", "bob"]) expect(conflictWarning(record, memberId)).toMatchObject({ id: "pair:1", summary: "双方需要检查计算方式。 建议：请 Alice 检查 price 的计算单位。 · 由深判模型判定 · 1200 ms" });
+  for (const memberId of ["alice", "bob"]) expect(conflictWarning(record, memberId)).toEqual({ id: "pair:1", summary: "双方需要检查计算方式。", suggestion: "请 Alice 检查 price 的计算单位。", modelLabel: "由深判模型判定，耗时 1200 ms", path: "checkout 调用 price" });
   expect(conflictWarning(record, "charlie")).toBeUndefined();
 });

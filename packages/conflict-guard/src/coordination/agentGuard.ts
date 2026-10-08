@@ -6,6 +6,9 @@ import type { ActiveChangeSet, ActorRef, FileChange, GuardConflict } from "../mo
 import { createSemanticIndex, isSemanticFile } from "../semantic/index.js";
 import type { SemanticFileProvider } from "../semantic/types.js";
 import { innermostSymbols, parseSymbols } from "../semantic/symbols.js";
+import { semanticEditRanges } from "../semantic/trivia.js";
+import { textDiffOps } from "../tracking/textDiff.js";
+import { transformEditRanges } from "../tracking/rangeTransform.js";
 import { SemanticChangeTracker } from "../routing/candidates.js";
 import { classify, type Decision, type ZoneInput, type ZoneVerdict } from "../routing/classifier.js";
 import { createPairCoordinator, type PairEvent, type PairRecord } from "./pairState.js";
@@ -88,11 +91,11 @@ export async function evaluateAgentChanges(options: {
     const before = new Map(parseSymbols(proposal.file, proposal.before).map((symbol) => [symbol.key, proposal.before.slice(symbol.start, symbol.end)]));
     const allowed = options.changedSymbols?.get(proposal.file);
     const keys = new Set(parseSymbols(proposal.file, proposal.after).filter((symbol) => (!allowed || allowed.has(symbol.key)) && before.get(symbol.key) !== proposal.after.slice(symbol.start, symbol.end)).map((symbol) => symbol.key));
-    const change = own.files.get(proposal.file)!;
-    change.proposalText = options.files.readFile(proposal.file);
-    change.ranges = index.symbolsInFile(proposal.file).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
+    const change = currentFileChange(own.files.get(proposal.file)!, options.files.readFile(proposal.file));
+    const symbols = index.symbolsInFile(proposal.file);
+    change.semanticRanges = change.semanticRanges?.filter((range) => innermostSymbols(symbols, range.start, range.end).some((symbol) => keys.has(symbol.key)));
     if (allowed) change.deletedSymbolKeys = change.deletedSymbolKeys?.filter((key) => allowed.has(key));
-    for (const symbol of parseSymbols(proposal.file, proposal.before)) if (change.deletedSymbolKeys?.includes(symbol.key)) change.ranges.push({ start: symbol.start, end: symbol.end });
+    own.files.set(proposal.file, change);
   }
   const active = options.active.filter((set) => actorKey(set.actor) !== actorKey(options.actor)).map((set) => ({ ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })) }])) }));
   semantic.update([...active, own]);
@@ -141,7 +144,7 @@ export function proposalFileChange(proposal: AgentTextProposal, at: number): Fil
     else if (operation === diff.INSERT) { ranges.push({ start: position, end: position + text.length }); position += text.length; }
     else ranges.push({ start: position, end: position });
   }
-  return { file: proposal.file, baseText: proposal.before, proposalText: proposal.after, ranges, firstTouchedAt: at, lastTouchedAt: at, deletedSymbolKeys: parseSymbols(proposal.file, proposal.before).filter((symbol) => !currentKeys.has(symbol.key)).map((symbol) => symbol.key) };
+  return { file: proposal.file, baseText: proposal.before, proposalText: proposal.after, ranges, semanticRanges: semanticEditRanges({ file: proposal.file, textBefore: proposal.before, textAfter: proposal.after, ops: textDiffOps(proposal.before, proposal.after) }), firstTouchedAt: at, lastTouchedAt: at, deletedSymbolKeys: parseSymbols(proposal.file, proposal.before).filter((symbol) => !currentKeys.has(symbol.key)).map((symbol) => symbol.key) };
 }
 
 export function proposalSymbolKeys(proposal: AgentTextProposal): Set<string> {
@@ -237,6 +240,11 @@ function textEdits(before: string, after: string) {
 function hash(text: string) { return createHash("sha256").update(text).digest("hex"); }
 function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
 
+function currentFileChange(change: FileChange, current: string): FileChange {
+  const ops = textDiffOps(change.proposalText ?? current, current);
+  return { ...change, proposalText: current, ranges: transformEditRanges(change.ranges, ops), semanticRanges: transformEditRanges(change.semanticRanges ?? change.ranges, ops) };
+}
+
 export function mergeActiveChanges(sets: ActiveChangeSet[]) {
   const result = new Map<string, ActiveChangeSet>();
   for (const set of sets) {
@@ -256,8 +264,11 @@ export function changedAgentDependencies(options: { actor: ActorRef; startedAt: 
     const baseline = options.baseline.get(file) ?? "";
     const beforeSymbols = new Map(parseSymbols(file, baseline).map((symbol) => [symbol.key, baseline.slice(symbol.start, symbol.end)]));
     const keys = new Set((change.symbols ?? []).filter((symbol) => (beforeSymbols.get(symbol.key) ?? "") !== symbol.after).map((symbol) => symbol.key));
-    const ranges = parseSymbols(file, options.current(file)).filter((symbol) => keys.has(symbol.key)).map((symbol) => ({ start: symbol.start, end: symbol.end }));
-    if ([...keys].some((key) => change.symbols?.some((symbol) => symbol.key === key && symbol.status === "deleted"))) ranges.push(...change.ranges);
-    return ranges.length ? [[file, { ...change, baseText: baseline, ranges, semanticRanges: ranges }] as const] : [];
+    const current = options.current(file);
+    const mapped = currentFileChange(change, current);
+    const symbols = parseSymbols(file, current);
+    const semanticRanges = mapped.semanticRanges!.filter((range) => innermostSymbols(symbols, range.start, range.end).some((symbol) => keys.has(symbol.key)));
+    const deletedSymbolKeys = mapped.deletedSymbolKeys?.filter((key) => keys.has(key));
+    return semanticRanges.length || deletedSymbolKeys?.length ? [[file, { ...mapped, baseText: baseline, semanticRanges, deletedSymbolKeys }] as const] : [];
   })) })).filter((set) => set.files.size > 0));
 }

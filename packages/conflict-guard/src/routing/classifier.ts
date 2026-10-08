@@ -66,6 +66,7 @@ export interface FourStateResult {
   skipped?: string;
   durationMs?: number;
   mergeOnlyDiagnostics?: string[];
+  inferredReturnTypeChanged?: { left: boolean; right: boolean };
 }
 
 export function classify(input: ZoneInput): ZoneVerdict {

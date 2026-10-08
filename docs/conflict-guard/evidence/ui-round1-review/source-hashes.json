@@ -1,0 +1,24 @@
+{
+  "parentCommit": "111e4924fd60de3f731e997f4af2c397bf63a831",
+  "hashAlgorithm": "SHA-256",
+  "files": {
+    "apps/server/src/__tests__/agentRunApi.integration.test.ts": "f40ad9f489f51168a2d6095c704c4a72bd841a195565e2cf785413bc57124214",
+    "apps/server/src/__tests__/conflictGuardRules.integration.test.ts": "74f49873ce0c61b2eef94d849cf3b25a299aeafd8f152ec612f4f3a6821bf014",
+    "apps/server/src/conflictGuard/projectAgentGuard.ts": "cdf627ea81cd2c2f754b46efcc6b44d433c8ffb2c5f99f8ec17dcac8dfe12dba",
+    "packages/conflict-guard/src/adjudication/warnings.test.ts": "a675f762a24d48587988582afdf88803933eaabab7a58045be33b6d3fd768e31",
+    "packages/conflict-guard/src/coordination/agentGuard.test.ts": "aa1131e981264649fc7425798333cc97f8014c535c4c2066523c5c41e415039c",
+    "packages/conflict-guard/src/coordination/agentGuard.ts": "1b5959cbe01fb5ff9dc4ab5dd0063f73efc4794cae908f7047a33a79cede41db",
+    "packages/conflict-guard/src/coordination/session.ts": "17605e78a3a3dc66d87eb892d39ed74791e9a07b577a5d941dc44cc77e98387c",
+    "packages/conflict-guard/src/replay/agents.ts": "eb16385640999df513f1ba37866524e4fe717ae996c186e4955bba03ae22c720",
+    "packages/conflict-guard/src/routing/classifier.ts": "ba6fb84d1af828d242671e2d0539ece1e075e032752745aacc2540595da6dd71",
+    "packages/conflict-guard/src/routing/comment-body.test.ts": "c94d2362d02b0aac6cf3590aa2767d8e3f6ca30bd379dfd8a874a275aaf17ab0",
+    "packages/conflict-guard/src/routing/rules/declaration-body-unrelated.ts": "6df2ec27a2e037b53cc0edf4c0018a8456c957920c6afda2613770631125e063",
+    "packages/conflict-guard/src/routing/rules/merge-only-type-error.ts": "ebcc773f3ed4c8abae5d232a0cda3e2f08b56eb92df2f126e50ed63292be0a28",
+    "packages/conflict-guard/src/routing/typecheck.ts": "644a6a4999144c2769691a3eb45af4cdee11188ad747290dc68cc9ae9cfe317c",
+    "packages/conflict-guard/src/semantic/changes.ts": "df77d3131b18fd60ba1face0df376d5e45f8faec0a42f2ec7b056970c4535767",
+    "packages/conflict-guard/src/semantic/trivia.ts": "0b3f2606669a914513da230943c4ab080f15182b9963f1636906deb76611bda0",
+    "packages/conflict-guard/src/tracking/textDiff.ts": "5ccdb0fb26cd531c215a8587899efa77ad3b79e9be16c0cdab9433dcf6400b58",
+    "packages/conflict-guard/src/tracking/tracker.test.ts": "c14159c471ebdfc9c362177e5b4573fb061a9181aa7b8b30f4b571596301d552",
+    "packages/conflict-guard/src/tracking/tracker.ts": "25871c53d67c1993413c896652a974b013bca70b10980752f51ce9bab9f24a49"
+  }
+}

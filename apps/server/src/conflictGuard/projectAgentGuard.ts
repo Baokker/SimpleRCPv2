@@ -59,7 +59,7 @@ export function createProjectAgentGuard(options: {
     emit({ type: "agent_run_started", actor, baseline: Object.fromEntries(baseline) });
   }
   function remember(set: ActiveChangeSet, at: number) {
-    history.push({ at, set: { ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, ranges: change.ranges.map((range) => ({ ...range })), symbols: change.symbols?.map((symbol) => ({ ...symbol })) }])) } });
+    history.push({ at, set: { ...set, files: new Map([...set.files].map(([file, change]) => [file, { ...change, proposalText: options.current(file), ranges: change.ranges.map((range) => ({ ...range })), semanticRanges: change.semanticRanges?.map((range) => ({ ...range })), symbols: change.symbols?.map((symbol) => ({ ...symbol })) }])) } });
     const earliest = Math.min(...[...runs.values()].map((run) => run.startedAt));
     while (history.length && history[0]!.at < earliest) history.shift();
   }

@@ -123,6 +123,92 @@ describe("rules 模式冲突干预", () => {
     expect(currentState().frozenFiles?.length).toBeGreaterThan(0);
   });
 
+  it("同函数远距离新增同名变量仍然冻结并阻止冲突版本写入", async () => {
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("    let amount = 0;", "    let amount = 0;\n    amount += 1;\n    amount += 2;\n    amount += 3;\n    amount += 4;\n    amount += 5;"));
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    replace(first, "let amount = 0;", "const shared = 1;\n    let amount = 0;");
+    await waitFor(() => second.getText("content").toString().includes("shared = 1"));
+    replace(second, "return applyDiscount(amount, 0.1);", "const shared = 2;\n    return applyDiscount(amount, 0.1);");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "merge-only-type-error") === true);
+    expect(currentGuard().state().frozenFiles.length).toBeGreaterThan(0);
+    expect(await fs.readFile(file, "utf8")).not.toContain("shared = 2");
+    expect(checkReplay(readTrace(await (await bob.request("/conflict-guard/trace")).text()))).toMatchObject({ checked: true, valid: true, differences: [] });
+  }, 12000);
+
+  it("同函数远距离修改改变推断返回类型时保持冻结", async () => {
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("total(): number", "total()").replace("    let amount = 0;", "    let amount = 0;\n    amount += 1;\n    amount += 2;\n    amount += 3;\n    amount += 4;\n    amount += 5;"));
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    replace(first, "amount += 1", "amount += 10");
+    await waitFor(() => second.getText("content").toString().includes("amount += 10"));
+    replace(second, "return applyDiscount(amount, 0.1);", "return `${applyDiscount(amount, 0.1)}`;");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.status === "judged" && record.verdict?.decision === "lock") === true);
+    const record = currentGuard().state().pairDecisions[0]!;
+    const bobSide = record.pair.left.actor.kind === "human" && record.pair.left.actor.memberId === bob.member.id ? "left" : "right";
+    expect(record.verdict!.contractChanged[bobSide]).toBe(true);
+    expect(currentGuard().state().frozenFiles.length).toBeGreaterThan(0);
+    expect(checkReplay(readTrace(await (await bob.request("/conflict-guard/trace")).text()))).toMatchObject({ checked: true, valid: true, differences: [] });
+  }, 12000);
+
+  it("同批次修改代码与逐字符输入注释后，远距离修改保持警告并写入双方内容", async () => {
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("    let amount = 0;", "    let amount = 0;\n    amount += 1;\n    amount += 2;\n    amount += 3;\n    amount += 4;\n    amount += 5;\n    "));
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    replace(first, "amount += 1", "amount += 10");
+    await waitFor(() => second.getText("content").toString().includes("amount += 10"));
+    const text = first.getText("content");
+    const from = text.toString().indexOf("    \n    for");
+    expect(from).toBeGreaterThanOrEqual(0);
+    text.insert(from + 4, "/");
+    await waitFor(() => second.getText("content").toString().includes("    /\n"));
+    text.insert(from + 5, "/");
+    await waitFor(() => second.getText("content").toString().includes("    //\n"));
+    replace(second, "amount, 0.1", "amount, 0.2");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "declaration-body-unrelated") === true);
+    expect(currentGuard().state().frozenFiles).toEqual([]);
+    await waitFor(async () => (await fs.readFile(file, "utf8")).includes("amount, 0.2"));
+    expect(await fs.readFile(file, "utf8")).toContain("amount += 10");
+    expect(await fs.readFile(file, "utf8")).toContain("    //\n");
+    expect(checkReplay(readTrace(await (await bob.request("/conflict-guard/trace")).text()))).toMatchObject({ checked: true, valid: true, differences: [] });
+  }, 12000);
+
+  it("代码与成对块注释的混合修改保留双方内容并保持灰区", async () => {
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/cart.ts");
+    await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("    let amount = 0;", "    let amount = 0;\n    amount += 1;\n    amount += 2;\n    amount += 3;\n    amount += 4;\n    // 金额说明\n    // 保留说明\n    amount += 5;"));
+    const first = await connect("src/cart.ts", alice.member.id);
+    const second = await connect("src/cart.ts", bob.member.id);
+    const before = first.getText("content").toString();
+    replace(first, before, before.replace("amount += 1", "amount += 10").replace("    // 金额说明", "    /*\n    // 金额说明").replace("    // 保留说明", "    // 保留说明\n    */"));
+    await waitFor(() => second.getText("content").toString().includes("amount += 10"));
+    replace(second, "amount, 0.1", "amount, 0.2");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "declaration-body-unrelated") === true);
+    expect(currentGuard().state().frozenFiles).toEqual([]);
+    await waitFor(async () => (await fs.readFile(file, "utf8")).includes("amount, 0.2"));
+    expect(await fs.readFile(file, "utf8")).toContain("amount += 10");
+    expect(await fs.readFile(file, "utf8")).toContain("/*\n    // 金额说明");
+    expect(checkReplay(readTrace(await (await bob.request("/conflict-guard/trace")).text()))).toMatchObject({ checked: true, valid: true, differences: [] });
+  }, 12000);
+
+  it("整个被引用函数被注释禁用时仍然形成黑区删除保护", async () => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    const cart = await connect("src/cart.ts", bob.member.id);
+    const declaration = "export function applyDiscount(price: number, rate: number): number {\n  return price * (1 - rate);\n}";
+    expect(pricing.getText("content").toString()).toContain(declaration);
+    replace(pricing, declaration, `/* ${declaration} */`);
+    replace(cart, "amount, 0.1", "amount, 0.2");
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.status === "judged" && record.verdict?.decision === "lock") === true);
+    expect(currentGuard().state().activeSymbols.find((set) => set.actor.kind === "human" && set.actor.memberId === alice.member.id)?.symbols).toContainEqual(expect.objectContaining({ key: "src/pricing.ts#applyDiscount", status: "deleted" }));
+    expect(currentGuard().state().frozenFiles.length).toBeGreaterThan(0);
+    const file = path.join(app.locals.runtimeManager.get(projectId).project.workspacePath, "src/pricing.ts");
+    expect(await fs.readFile(file, "utf8")).toContain(declaration);
+    expect(await fs.readFile(file, "utf8")).not.toContain(`/* ${declaration}`);
+    expect(checkReplay(readTrace(await (await bob.request("/conflict-guard/trace")).text()))).toMatchObject({ checked: true, valid: true, differences: [] });
+  }, 12000);
+
   it("签名变化后依赖函数中的注释修改不产生 T0 与候选对", async () => {
     const pricing = await connect("src/pricing.ts", alice.member.id);
     replace(pricing, "rate: number)", "rate: number, currency: string)");
@@ -157,6 +243,30 @@ describe("rules 模式冲突干预", () => {
     expect(events.filter((event) => event.type === "t0_warning" && event.memberId === bob.member.id)).toEqual([]);
     expect(events.some((event) => event.type === "change_unit" && event.commentOnly === true)).toBe(true);
   });
+
+  it.each(["空白", "暂时无法解析"])("批次从%s开始，后续有效代码修改仍然收到一次 T0", async (start) => {
+    const pricing = await connect("src/pricing.ts", alice.member.id);
+    replace(pricing, "rate: number)", "rate: number, currency: string)");
+    await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
+    await waitFor(() => currentGuard().state().activeSymbols.some((set) => set.symbols.some((symbol) => symbol.name === "applyDiscount")));
+    const cart = await connect("src/cart.ts", bob.member.id);
+    if (start === "空白") replace(cart, "    let amount = 0;", "\n    let amount = 0;");
+    else replace(cart, "return applyDiscount(amount, 0.1);", "return applyDiscount(amount, 0.1) +;");
+    await waitFor(() => currentGuard().tracker.getOpenBatches().some((batch) => batch.actor.kind === "human" && batch.actor.memberId === bob.member.id));
+    if (start === "空白") replace(cart, "amount, 0.1", "amount, 0.2");
+    else replace(cart, "amount, 0.1) +;", "amount, 0.2);");
+    await waitFor(() => currentGuard().state(bob.member.id).t0Warnings.length === 1);
+    expect(currentGuard().tracker.getOpenBatches().some((batch) => batch.actor.kind === "human" && batch.actor.memberId === bob.member.id)).toBe(true);
+    await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
+    await waitFor(() => currentState().pairDecisions?.some((record) => record.status === "judged" && record.verdict?.decision === "lock") === true);
+    const events = readTrace(await (await bob.request("/conflict-guard/trace")).text());
+    const warnings = events.filter((event) => event.type === "t0_warning" && event.memberId === bob.member.id);
+    const closed = events.find((event) => event.type === "batch_closed" && (event.actor as { memberId?: string })?.memberId === bob.member.id)!;
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]!.seq).toBeLessThan(closed.seq);
+    expect(replayTrace(events, { policy: "P3" }).coordinationEvents.filter((event) => event.type === "t0_warning")).toHaveLength(1);
+    expect(checkReplay(events)).toMatchObject({ checked: true, valid: true, differences: [] });
+  }, 12000);
 
   it("同位置先后替换文本仍然产生双方的黑区变更对", async () => {
     const first = await connect("src/report.ts", alice.member.id);

@@ -158,10 +158,10 @@ describe("tracker", () => {
     const tracker = new ConflictGuardTracker({ clock });
     tracker.openDocument("a.ts", "0123456789");
     tracker.edit(edit("a.ts", { kind: "human", memberId: "alice" }, 1, "", "A", "0A123456789", 0));
-    tracker.edit({ file: "a.ts", origin: { kind: "human", memberId: "bob" }, at: 1, revisionAfter: 2, ops: [{ from: 9, deleted: "", inserted: "B" }], textBefore: "0A123456789", textAfter: "0A12345678B9" });
+    tracker.edit({ file: "a.ts", origin: { kind: "human", memberId: "bob" }, at: 1, revisionAfter: 2, ops: [{ from: 10, deleted: "", inserted: "B" }], textBefore: "0A123456789", textAfter: "0A12345678B9" });
     const sets = tracker.getActiveChangeSets();
     expect(sets.find((set) => set.actor.kind === "human" && set.actor.memberId === "alice")?.files.get("a.ts")?.ranges).toEqual([{ start: 1, end: 2 }]);
-    expect(sets.find((set) => set.actor.kind === "human" && set.actor.memberId === "bob")?.files.get("a.ts")?.ranges).toEqual([{ start: 9, end: 10 }]);
+    expect(sets.find((set) => set.actor.kind === "human" && set.actor.memberId === "bob")?.files.get("a.ts")?.ranges).toEqual([{ start: 10, end: 11 }]);
   });
 
   it("keeps a zero length range for a pure deletion", () => {

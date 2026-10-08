@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-08",
+  "branch": "feature/conflict-guard",
+  "reviewBase": "9365ee9",
+  "parentCommit": "111e4924fd60de3f731e997f4af2c397bf63a831",
+  "sourceHashes": "source-hashes.json",
+  "productionTiming": {
+    "idleMs": 1500,
+    "persistDelayMs": 300
+  },
+  "checks": {
+    "build": {
+      "command": "pnpm -r build",
+      "status": "passed",
+      "log": "build.log.gz"
+    },
+    "packageTests": {
+      "command": "pnpm --filter @simplercp/conflict-guard exec vitest run --exclude src/adjudication/cli.test.ts",
+      "status": "passed",
+      "files": 24,
+      "tests": 249,
+      "log": "package-tests.log.gz"
+    },
+    "cliOffline": {
+      "command": "pnpm --filter @simplercp/conflict-guard exec vitest run src/adjudication/cli.test.ts -t 'subscription records'",
+      "status": "passed",
+      "tests": 1,
+      "unselectedTests": 1,
+      "replayRounds": 3,
+      "log": "cli-offline.log.gz"
+    },
+    "serverTests": {
+      "command": "pnpm --filter @simplercp/server exec vitest run --exclude '**/{agentRunApi,openCodeRuntime}.integration.test.ts'",
+      "status": "passed",
+      "files": 45,
+      "tests": 282,
+      "excludedFiles": [
+        "src/__tests__/agentRunApi.integration.test.ts",
+        "src/__tests__/openCodeRuntime.integration.test.ts"
+      ],
+      "excludedTests": 9,
+      "log": "server-tests.log.gz"
+    },
+    "demo": {
+      "command": "pnpm test:demo",
+      "status": "passed",
+      "tests": 2,
+      "log": "demo-tests.log.gz"
+    },
+    "playwright": {
+      "command": "CONFLICT_GUARD=rules SIMPLERCP_E2E_SERVER_PORT=4310 SIMPLERCP_E2E_CLIENT_PORT=5194 pnpm test:e2e tests/e2e/conflict-guard-checkpoint.spec.ts tests/e2e/conflict-guard-intervention.spec.ts tests/e2e/conflict-guard-replay.spec.ts tests/e2e/conflict-guard-ui.spec.ts",
+      "status": "passed",
+      "tests": 15,
+      "log": "playwright.log.gz",
+      "screenshots": "../checkpoint-a-manual/"
+    },
+    "collaboration": {
+      "commandTemplate": "CONFLICT_GUARD=<mode> SIMPLERCP_E2E_SERVER_PORT=4312 SIMPLERCP_E2E_CLIENT_PORT=5196 pnpm test:collab",
+      "status": "passed",
+      "modes": ["off", "observe", "rules", "full"],
+      "testsPerMode": 2,
+      "totalTests": 8,
+      "logs": [
+        "collaboration-off.log.gz",
+        "collaboration-observe.log.gz",
+        "collaboration-rules.log.gz",
+        "collaboration-full.log.gz"
+      ]
+    },
+    "replay": {
+      "command": "pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/stage-4-ui/trace.jsonl",
+      "status": "passed",
+      "trace": "../stage-4-ui/trace.jsonl",
+      "differences": [],
+      "coordinationDifferences": [],
+      "errors": [],
+      "categories": ["judgement", "persist_gate", "persist", "freeze"],
+      "timeoutSimulation": "recorded",
+      "log": "replay-check.log.gz"
+    },
+    "typeProtectionMutation": {
+      "status": "detected",
+      "testsFailedWithoutProtection": 3,
+      "restoredTests": "packageTests",
+      "log": "type-protection-mutation.log.gz"
+    },
+    "secrets": {
+      "command": "node scripts/verify-evidence-secrets.mjs",
+      "configuredValuesFound": 0
+    },
+    "diff": {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  },
+  "limits": {
+    "realAgentRunsAdded": 0,
+    "realModelCallsAdded": 0,
+    "holdoutExecuted": false,
+    "formalExperimentsExecuted": false,
+    "notes": [
+      "两个真实端点测试文件及阶段五、阶段七真实浏览器验收没有在本次重复执行。",
+      "另一个长时间 CLI 用例没有在最终代码上重复执行。",
+      "正式实验需要人工重新确认冻结配置。"
+    ]
+  }
+}
