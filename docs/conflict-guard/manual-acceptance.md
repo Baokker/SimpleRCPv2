@@ -14,15 +14,19 @@
 - Agent 意图板、意图注入、属主仲裁、意图差异卡片和打扰统计。
 - Yjs 文档保持、撤回、外部修改合并、轨迹记录和回放一致性。
 
-## 二、准备环境
+## 二、开始之前
+
+开发时，如果另一个进程正在修改这个仓库，`pnpm dev` 中的服务端会随文件变化重新启动。重新启动期间，页面可能出现 500，Vite 可能显示 `ws proxy error: socket hang up`。等待修改停止、终端重新显示监听地址与时间戳后，刷新页面即可。通常不需要重新启动开发服务器。页面会提示“服务端可能正在重启，请稍后刷新”；如果服务端已经启动后仍然持续出现错误，请检查服务端日志。
 
 在项目根目录执行：
 
 ```bash
 cd "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2"
 pnpm install
-cp .env.example .env
+pnpm -r build
 ```
+
+尚未创建 `.env` 时，执行 `cp .env.example .env`，填写自己的 API Key。已有 `.env` 时，直接修改其中的配置。
 
 `pnpm dev` 必须从 `SimpleRCPv2` 根目录执行。上级目录还包含另一个项目，`pnpm` 从上级目录启动时会扫描到该项目的临时目录，可能出现 `ENAMETOOLONG`。如果终端当前位于上级目录，可以使用：
 
@@ -49,6 +53,7 @@ CONFLICT_GUARD_STRATEGY=G3
 CONFLICT_GUARD_THRESHOLD=0
 CONFLICT_GUARD_PROVIDER_MODE=live
 CONFLICT_GUARD_INVARIANTS=true
+CONFLICT_GUARD_BODY_ADJACENT_LINES=3
 CONFLICT_GUARD_ARBITRATION=owner
 CONFLICT_GUARD_INTENT_INJECTION=on
 CONFLICT_GUARD_T2_STRATEGY=G1
@@ -80,6 +85,7 @@ SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3
 | `CONFLICT_GUARD_PROVIDER_MODE` | `live` | `live` | `live` 请求模型，`record` 请求模型并保存缓存，`replay` 只读缓存并禁止联网。 |
 | `CONFLICT_GUARD_THRESHOLD` | `0` | `0` | G3 快判升级阈值，当前冻结配置来自开发集校准。 |
 | `CONFLICT_GUARD_INVARIANTS` | `true` | `true` | 给模型加入调用点、测试断言、注释和返回值使用方式。 |
+| `CONFLICT_GUARD_BODY_ADJACENT_LINES` | `3` | `3` | 同一声明中，两侧修改行距离超过 3 行、公开接口保持不变时给出灰区警告。注释与空白不计入符号修改。 |
 | `CONFLICT_GUARD_ARBITRATION` | `owner` | `owner` | 按 Agent 属主决定拒绝、等待、通知和卡片。 |
 | `CONFLICT_GUARD_INTENT_INJECTION` | `on` | `on` | 把相关协作者意图加入 Agent 上下文。 |
 | `CONFLICT_GUARD_T2_STRATEGY` | `G1` | `G1` | Agent 每次写入前使用深判检查。 |
@@ -94,7 +100,7 @@ SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3
 - `G3`：先使用 Jev；置信度低、快判结果为 `lock` 或快判失败时，再使用 DeepSeek。人工验收推荐这个策略。
 - `G4`：按时点选择策略。当前人与人场景按配置使用 G3，Agent 的 T2、T3 分别读取 `CONFLICT_GUARD_T2_STRATEGY` 和 `CONFLICT_GUARD_T3_STRATEGY`。
 
-白区和黑区由本地规则直接处理，不调用模型。灰区在模型返回前显示“分析中”，相关文件暂缓写入；模型失败时人与人场景降为警告，Agent 的 T2 采用拒绝处理。
+白区和黑区由本地规则直接处理，不调用模型。同一声明中距离较远、公开接口保持不变的修改使用本地灰区警告。其余灰区在模型返回前显示“分析中”，相关文件暂缓写入；模型失败时人与人场景降为警告，Agent 的 T2 采用拒绝处理。
 
 ### 3.4 启动服务
 
@@ -104,6 +110,8 @@ SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS=3
 pnpm dev
 ```
 
+人工验收时，可以使用 `pnpm dev:stable` 同时启动前后端。服务端只启动一次，修改服务端源文件不会触发重新启动。修改 `.env` 或服务端代码后，需要结束当前命令并重新执行 `pnpm dev:stable`。只启动服务端的命令为 `pnpm --filter @simplercp/server dev:once`。
+
 打开 <http://127.0.0.1:5173>。服务端地址为 <http://127.0.0.1:4000>，健康检查地址为 <http://127.0.0.1:4000/api/health>。
 
 首页点击 **Add directory**，项目名称填写 `conflict-shop`，目录填写：
@@ -112,7 +120,7 @@ pnpm dev
 /Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/demo/conflict-shop
 ```
 
-创建项目后，使用两个浏览器窗口打开同一个项目，分别加入为 Alice 和 Bob。在右侧打开“冲突预防”页签。
+创建项目后，使用不同浏览器，或普通窗口与无痕窗口，打开同一个项目，分别加入为 Alice 和 Bob。在右侧打开“冲突预防”页签。
 
 客户端默认使用 `127.0.0.1:4000` 和 `127.0.0.1:5173`，所以 `pnpm dev` 不需要额外设置 `VITE_*` 变量。需要自定义客户端地址时，在启动命令前设置 `VITE_SIMPLERCP_API_ORIGIN`、`VITE_SIMPLERCP_CLIENT_HOST` 和 `VITE_SIMPLERCP_CLIENT_PORT`。
 
@@ -143,7 +151,7 @@ pnpm dev
 ### 5.2 灰区、白区和 T0
 
 1. Alice 只修改 `applyDiscount` 的计算方式，保持签名不变；Bob 修改 `checkout` 的计算。确认页签显示灰区警告，文件保持可编辑。
-2. Alice 只增加日志；Bob 修改无关系函数。确认显示白区和放行，文件可以写入。
+2. Alice 在 `applyDiscount` 中只增加无副作用的日志；Bob 修改有关联的 `checkout` 计算。确认显示白区和放行，文件可以写入。
 3. Bob 在 Alice 的签名修改已经判定后开始新的相关批次。确认 Bob 收到 T0 提示，提示中包含 Alice、`applyDiscount` 和接口变化。
 
 ### 5.3 撤回、重开文件和外部修改
@@ -152,6 +160,25 @@ pnpm dev
 2. 锁定期间关闭 `cart.ts`，再重新打开。确认未写入的协作修改仍然存在，冻结状态没有因为关闭文件消失。
 3. 锁定期间从终端在文件开头、中间和末尾各插入一行。确认共享文本保留双方修改，内容顺序合理，没有把一行插入到错误位置。
 4. 查看“冲突预防”页签，确认冻结范围随编辑移动，卡片和状态实时更新。
+
+### 5.4 注释、日志与声明内部修改
+
+每个场景使用新建项目，双方编辑完成后等待约 2 秒。
+
+1. 在 `Cart.total` 中准备 `console.log('aaa');`。Alice 将文字改为 `bbb`，Bob 修改同一函数的金额计算。确认白区放行，双方修改都能保留。
+2. Alice 修改 `Cart.total` 的金额计算，Bob 在函数或类体中增加、修改注释。确认 Bob 的注释不出现在符号修改列表中，没有冻结。
+3. Bob 在已有注释前面按回车，再输入一行注释；然后单独尝试修改注释文字中间的字符。确认两种操作均不产生新的符号变更或 T0 提示。
+4. 双方修改同一函数中相隔超过 3 行的计算语句，保持参数、返回类型和导出状态不变。确认显示“灰区”“警告”“同一声明的不同部分”，编辑保持可用。`full` 模式下该情形也使用本地警告。
+5. Alice 修改函数签名，Bob 修改同一声明。确认仍然出现黑区与冻结。
+
+### 5.5 卡片、角标与横幅
+
+1. 制造两个独立黑区冲突。确认双方“冲突预防”页签角标显示 `2`，关联修改每项显示身份与符号，以及中文区、动作、规则标签和关系路径。
+2. 查看卡片，确认标题、标签、摘要、符号和路径分别显示，双方代码通过“查看双方修改前后代码”展开。较长的解释与建议可以展开或收起。
+3. 确认三个操作按“我来改”“双方确认后继续”“去聊天里商量”纵向排列，每项同宽、同高。
+4. 点击一次确认，确认按钮显示“已确认”并禁用；双方完成确认后，角标减少。全部冲突处理后，角标消失。
+5. 确认编辑器顶部只有一条可折叠横幅，展开可查看当前文件的冲突列表，代码区域保留冻结装饰与悬停提示。
+6. 使用“我来改”处理本人仍可撤回的修改，确认文本恢复，页面没有 JSON 解析错误。修改与他人交叠时，确认页面提示协商，并保留当前文本和冲突状态。
 
 ## 六、阶段五：灰区模型研判
 
@@ -163,7 +190,7 @@ pnpm dev
 4. 研判完成后，查看页签、通知或卡片中的决策、模型来源、置信度、耗时、中文解释和建议。
 5. 返回 `allow` 时确认标记消失且文件可以写入；返回 `warn` 时确认出现通知；返回 `lock` 时确认出现冻结和卡片。
 6. 在分析期间继续修改同一相关区域，确认旧请求取消，新的 revision 重新研判。
-7. 将 `TYPESAFE_API_KEY` 临时改为无效值后重启并重复灰区场景，确认人与人场景显示“研判失败，已降级为警告”，文件保持可编辑。
+7. 临时设置 `CONFLICT_GUARD_STRATEGY=G2`，将 `TYPESAFE_API_KEY` 改为无效值，重启并重复灰区场景。确认显示“研判失败，已降级为警告”，文件保持可编辑。完成后恢复密钥与 `G3`，重新启动服务。
 
 页签中的统计应显示模型调用次数、升级比例、失败次数、p50、p95 和费用估算。`DEEPSEEK_MODEL` 应显示为 `deepseek-flash`。
 

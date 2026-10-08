@@ -1,6 +1,6 @@
 # 阶段 3：规则分区与干预
 
-`src/routing/rules/` 中每条分区规则有独立文件。`classify` 按配置的规则顺序返回首个结果，白区放行条件同时检查双方之间可确认的接口不兼容。`same-symbol-concurrent-write` 位于 `type-only-unchanged` 之前，`call-signature-incompatible` 位于 `consumed-return-property-removed` 之前。
+`src/routing/rules/` 中每条分区规则有独立文件。`classify` 按规则顺序返回首个结果，白区放行条件同时检查双方之间可确认的接口不兼容。注释与空白在符号映射前过滤；`comment-only-edit`、`comment-format-only` 和无副作用的日志修改位于 `same-symbol-concurrent-write` 之前。`declaration-body-unrelated` 对公开接口保持不变、修改行距离超过配置值的同声明修改给出灰区警告。`same-symbol-concurrent-write` 位于 `type-only-unchanged` 之前，`call-signature-incompatible` 位于 `consumed-return-property-removed` 之前。完整顺序见 [分区规则](routing-rules.md)。
 
 四状态检查使用一个 LanguageService 临时切换受影响文件的快照，读取 TypeScript lib，超过 500 ms 返回跳过结果。返回局部对象变量时提取其已知属性；返回未知变量或者带有未知 spread 的对象时保留属性集合的不确定性。外部接口变化分析只分析具名声明自身的参数、返回类型、导出与返回属性，内部函数变化保持独立。
 

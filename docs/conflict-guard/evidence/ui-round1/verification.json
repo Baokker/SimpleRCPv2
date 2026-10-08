@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-08",
+  "baseCommit": "9365ee9",
+  "codeCommit": "0b884a0689ad47d0c91a004912d3980f5951e90d",
+  "branch": "feature/conflict-guard",
+  "assertions": ["DOM", "Monaco", "Yjs", "server state", "trace", "element dimensions"],
+  "build": { "command": "pnpm -r build", "passed": true },
+  "packageTests": { "command": "pnpm --filter @simplercp/conflict-guard test", "files": 25, "passed": 231, "failed": 0 },
+  "serverTests": { "command": "pnpm --filter @simplercp/server test", "files": 47, "passed": 284, "failed": 0 },
+  "demoTests": { "command": "pnpm test:demo", "passed": 2, "failed": 0 },
+  "collaboration": {
+    "command": "CONFLICT_GUARD=<mode> SIMPLERCP_E2E_SERVER_PORT=4310 SIMPLERCP_E2E_CLIENT_PORT=5194 pnpm test:collab",
+    "off": { "passed": 2, "failed": 0 },
+    "observe": { "passed": 2, "failed": 0 },
+    "rules": { "passed": 2, "failed": 0 },
+    "full": { "passed": 2, "failed": 0 }
+  },
+  "playwright": {
+    "command": "CONFLICT_GUARD=rules SIMPLERCP_E2E_SERVER_PORT=4200 SIMPLERCP_E2E_CLIENT_PORT=5184 SIMPLERCP_UI_EVIDENCE=after pnpm test:e2e",
+    "passed": 40,
+    "failed": 0,
+    "skipped": 10
+  },
+  "live": {
+    "command": "CONFLICT_GUARD=full CONFLICT_GUARD_STRATEGY=G3 CONFLICT_GUARD_PROVIDER_MODE=live SIMPLERCP_STAGE5_LIVE=1 SIMPLERCP_STAGE7_LIVE=1 SIMPLERCP_STAGE7_SCENARIOS=human SIMPLERCP_FAKE_AGENT_RUNTIME=false SIMPLERCP_E2E_SERVER_PORT=4200 SIMPLERCP_E2E_CLIENT_PORT=5184 pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts tests/e2e/conflict-guard-arbitration.spec.ts",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 1,
+    "stage7Scenarios": ["human"],
+    "stage7ScenariosNotRepeated": ["accept", "yield", "same"],
+    "agentRunsAdded": 1,
+    "stage7AgentRunsTotal": 40,
+    "fastCalls": 3,
+    "deepCalls": 4,
+    "providerStatuses": { "success": 6, "cancelled": 1 }
+  },
+  "authenticationFailure": {
+    "command": "CONFLICT_GUARD=full CONFLICT_GUARD_STRATEGY=G2 CONFLICT_GUARD_PROVIDER_MODE=live TYPESAFE_API_KEY=<invalid-credential> SIMPLERCP_STAGE5_LIVE=1 SIMPLERCP_STAGE5_FAILURE=1 SIMPLERCP_E2E_SERVER_PORT=4200 SIMPLERCP_E2E_CLIENT_PORT=5184 pnpm test:e2e tests/e2e/conflict-guard-adjudication.spec.ts",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 2,
+    "fastCalls": 1,
+    "deepCalls": 0,
+    "providerStatuses": { "failed": 1 }
+  },
+  "offlineReplay": { "rounds": 3, "byteIdentical": true, "networkCalls": 0 },
+  "browserTraceCheck": {
+    "command": "pnpm --filter @simplercp/conflict-guard replay:check ../../docs/conflict-guard/evidence/stage-4-ui/trace.jsonl",
+    "valid": true,
+    "checked": true,
+    "differences": [],
+    "errors": [],
+    "categories": ["judgement", "persist_gate", "persist", "freeze"]
+  },
+  "secrets": { "command": "node scripts/verify-evidence-secrets.mjs", "configuredValuesFound": 0 }
+}
