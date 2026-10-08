@@ -55,6 +55,8 @@ describe('knowledge-extract', () => {
         });
         expect(draft.type).toBe('decision');
         expect(draft.evidenceCitations).toEqual(['evidence.chatMessages[0].text']);
-        expect(draft.content).toContain('## Evidence');
+        expect(draft.content).not.toContain('## Evidence');
+        expect(draft.content).not.toContain('"chatMessages"');
+        expect(draft.content).toContain('bounded retries');
     });
 });

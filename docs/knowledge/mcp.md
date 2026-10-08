@@ -36,7 +36,7 @@ OpenCode 1.18.31 的 remote MCP 实现按顺序尝试 Streamable HTTP 和 SSE。
 
 ## 静态文件
 
-导出只包括 reviewed/team 卡片，按六类分组，卡片正文使用 Markdown 引用块，附适用文件。工作区没有 AGENTS.md 时创建该文件；已经存在时写 AGENTS.knowledge.md。OpenCode 默认读取 AGENTS.md；AGENTS.knowledge.md 需要通过 `instructions: ["AGENTS.knowledge.md"]` 明确配置，或由成员合并内容。全局 OpenCode instructions 会影响多个工作区，实验使用时应记录启用条件。
+导出只包括 reviewed/team 卡片，按决策、约束、风险、上下文、负向经验、教程分组；每条包含标题、摘要、正文和适用范围。正文使用 Markdown 引用块保留章节层级，证据章节在导出时清理。确定性导入保留一条卡片对应一条草稿、类型、标题、摘要与适用范围。工作区没有 AGENTS.md 时创建该文件；已经存在时写 AGENTS.knowledge.md。OpenCode 默认读取 AGENTS.md；AGENTS.knowledge.md 需要通过 `instructions: ["AGENTS.knowledge.md"]` 明确配置，或由成员合并内容。全局 OpenCode instructions 会影响多个工作区，实验使用时应记录启用条件。
 
 ## 限制
 

@@ -7,6 +7,7 @@
 import type { KnowledgeCardType } from '../schema/card.js';
 import type { LlmClient } from '../llm/client.js';
 import { knowledgeExtractionSystemPrompt } from './prompt.js';
+import { removeKnowledgeEvidenceBlocks } from '../util/content.js';
 
 export interface KnowledgeExtractionInput {
     triggerType: string;
@@ -157,7 +158,7 @@ function normalizeDraft(parsed: Partial<KnowledgeCardDraftV2>, input: KnowledgeE
 
     const tags = normalizeStringArray(parsed.tags).map(t => t.trim()).filter(Boolean).slice(0, 24);
     let content = typeof parsed.content === 'string' ? parsed.content.trim() : '';
-    content = ensureGroundedSections(content, evidenceCitations, unknowns, input.evidence);
+    content = ensureGroundedSections(content, unknowns);
 
     const mustMention = readMustMention(input.projectHints);
     if (mustMention.length) {
@@ -203,30 +204,11 @@ function isAcceptableDraft(d: KnowledgeCardDraftV2, input: KnowledgeExtractionIn
 
 function ensureGroundedSections(
     content: string,
-    evidenceCitations: string[],
-    unknowns: string[],
-    evidence: Record<string, unknown>
+    unknowns: string[]
 ): string {
     const lines: string[] = [];
     if (content) {
         lines.push(content);
-    }
-
-    const hasEvidenceHeader = /\n##\s+Evidence\b/i.test('\n' + content);
-    if (!hasEvidenceHeader) {
-        lines.push('');
-        lines.push('## Evidence');
-        if (evidenceCitations.length) {
-            for (const c of evidenceCitations.slice(0, 12)) {
-                lines.push(`- ${c}`);
-            }
-        } else {
-            lines.push('- (no citations provided)');
-        }
-        lines.push('');
-        lines.push('```json');
-        lines.push(stringifyJsonWithinLimit(evidence ?? {}, 4000));
-        lines.push('```');
     }
 
     const hasUnknownsHeader = /\n##\s+Unknowns\b/i.test('\n' + content);
@@ -238,7 +220,7 @@ function ensureGroundedSections(
         }
     }
 
-    return lines.join('\n').trim();
+    return removeKnowledgeEvidenceBlocks(lines.join('\n'));
 }
 
 function normalizeType(value: unknown, fallback?: KnowledgeCardType): KnowledgeCardType {
@@ -598,16 +580,16 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
         case 'chat.dense':
         default: {
             const msgs = Array.isArray(evidence.chatMessages) ? evidence.chatMessages : [];
-            addCitationIf('evidence.chatMessages[0].text', msgs?.[0]?.text);
-            summary = summary || 'Summarize the recent discussion into durable knowledge (decisions, constraints, risks, pitfalls).';
+            for (let index = 0; index < msgs.length; index++) {
+                addCitationIf(`evidence.chatMessages[${index}].text`, msgs[index]?.text);
+                addCitationIf(`evidence.chatMessages[${index}].authorId`, msgs[index]?.authorId);
+            }
+            summary = summary || '请核对原始讨论，填写可复用的结论。';
             contentLines = [
-                '## Discussion evidence (examples)',
-                ...msgs.slice(0, 20).map((m: any, idx: number) => `- ${idx + 1}. ${String(m?.userName ?? m?.authorId ?? 'User')}: ${String(m?.text ?? '')}`),
-                '',
-                '## Unknowns',
-                '- Exact decisions/outcomes (requires human confirmation if not explicit in messages).'
+                '## 待确认内容',
+                '请根据原始讨论填写已经确认的决策、约束或操作方法。原始讨论可以在编辑器的“原始证据”中查看。'
             ];
-            unknowns.push('Whether a final decision was made and what the accepted trade-offs were.');
+            unknowns.push('讨论中的最终决定及其依据需要人工确认。');
             break;
         }
     }
@@ -621,9 +603,6 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
     const content = [
         ...contentLines,
         '',
-        '## Evidence',
-        ...citations.slice(0, 12).map(c => `- ${c}`),
-        '',
         unknowns.length ? ['## Unknowns', ...unknowns.slice(0, 12).map(u => `- ${u}`)].join('\n') : ''
     ].filter(Boolean).join('\n').trim();
 
@@ -632,7 +611,7 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
         type,
         title,
         summary: summary || `[${input.triggerType}]`,
-        content,
+        content: removeKnowledgeEvidenceBlocks(content),
         tags: [...new Set(tags)].slice(0, 24),
         confidence: 0.45,
         evidenceCitations: normalizedCitations.length ? normalizedCitations : ['evidence'],
@@ -668,9 +647,7 @@ function normalizeConfidence(value: unknown): number {
 function stringifyJsonWithinLimit(value: unknown, maxChars: number): string {
     const serialized = JSON.stringify(value, undefined, 2);
     const text = typeof serialized === 'string' ? serialized : '';
-    if (text.length <= maxChars) {
-        return text;
-    }
+    if (text.length <= maxChars) return text;
     return text.slice(0, maxChars) + '\n...';
 }
 

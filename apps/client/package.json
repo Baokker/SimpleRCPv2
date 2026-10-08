@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 5173"
   },
   "dependencies": {
+    "@simplercp/knowledge": "workspace:*",
     "@monaco-editor/react": "^4.6.0",
     "@simplercp/shared": "workspace:*",
     "@vitejs/plugin-react": "^4.2.0",

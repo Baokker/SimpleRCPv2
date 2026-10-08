@@ -520,7 +520,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
     },
     async merge(actor: KnowledgeActor, id: string, cardId: string) {
       return withSuggestion(id, async suggestion => {
-        const card = await options.knowledge.recordRecurrence(actor, cardId, id);
+        const source = suggestion.triggerType === "chat.dense" ? "聊天" : suggestion.origin === "human-agent" || suggestion.origin === "agent-self" ? "Agent 协作" : suggestion.origin === "preset" ? "规范文档" : "代码编辑";
+        const card = await options.knowledge.recordRecurrence(actor, cardId, id, `${source} ${new Date(suggestion.createdAt).toLocaleString("zh-CN")}`);
         await resolve(actor, suggestion, "merged");
         return { card, suggestion };
       });

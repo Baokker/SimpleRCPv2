@@ -17,6 +17,8 @@
 
 所有写操作把卡片保存到项目元数据目录的 `knowledge/cards/<id>.json`，每次保存使用临时文件后原子替换。捕获建议使用 `knowledge/inbox/<id>.json`。
 
+演化记录保留 `action`、`by`、`at`、`note`，可选 `summary` 用于直接说明关系与复现的内容；`note` 继续保留来源标识。字段修改记录包含正文增加与删除的字符数，重新关联锚点记录文件与行号。客户端按日期分组和时间倒序展示，并支持选择单张卡片。
+
 ## Inbox 与聊天选择
 
 | 方法 | 路径 | 输入与结果 |
@@ -45,7 +47,7 @@
 | 方法 | 路径 | 输入与结果 |
 | --- | --- | --- |
 | `POST` | `/import` | `{ files?: string[] }`，最多 50 个工作区文档。默认读取 AGENTS.md、CLAUDE.md、CONTRIBUTING.md、README.md 与 .cursor/rules 的直接文件。返回 `{ drafts: [{ suggestionId, file, startLine, endLine, suggestion }] }`。 |
-| `GET` | `/export?format=agents-md` | Markdown，只包含 reviewed/team 卡片。 |
+| `GET` | `/export?format=agents-md` | Markdown，只包含 reviewed/team 卡片；按中文类型分组，包含标题、摘要、正文与适用范围，清理证据章节。 |
 | `POST` | `/export/workspace` | `{}`，返回 `{ path, markdown }`，创建 AGENTS.md；已存在时写 AGENTS.knowledge.md。记录 knowledge_exported。 |
 
 导入使用项目知识模型（默认 MiniMax），验证原文行号，产生 preset.imported 建议。模型不可用时使用 Markdown 标题与列表条目生成确定性草稿。原文与行号保存在建议证据中；接受时生成原文锚点，确认仍遵守团队二次确认配置。导入和导出拒绝符号链接与工作区外路径，导入禁止读取 .env 文件。

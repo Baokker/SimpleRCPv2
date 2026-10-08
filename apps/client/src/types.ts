@@ -2,6 +2,7 @@ import type {
   CursorPosition,
   EditorSelection
 } from "@simplercp/shared";
+import type { KnowledgeEvolutionEntry, KnowledgeProvenance } from "@simplercp/knowledge/schema";
 
 export type {
   AgentFileChange,
@@ -71,13 +72,14 @@ export interface KnowledgeCard {
   updatedAt: number;
   scope?: KnowledgeScope;
   ownerMemberId?: string;
-  provenance?: { origin: string; author: { kind: string; memberId?: string; displayName?: string }; trigger?: { type: string; suggestionId?: string } };
+  metadata?: { createdBy?: { peerId: string; name?: string } };
+  provenance?: KnowledgeProvenance;
   review?: { confirmedBy: string[]; confirmedAt?: number };
   relations?: Array<{ kind: "supersedes" | "contradicts" | "duplicates" | "refines"; cardId: string }>;
   appliesTo?: { kind: "project" } | { kind: "glob"; patterns: string[] };
   check?: { kind: "regex-absent" | "regex-present"; pattern: string; flags?: string; fileGlob: string };
   anchors: KnowledgeAnchor[];
-  evolution: Array<{ at: number; action: string; note?: string }>;
+  evolution: KnowledgeEvolutionEntry[];
 }
 
 export interface KnowledgeAnchorResolution {
@@ -99,7 +101,7 @@ export interface KnowledgeTimelineItem {
   kind: "created" | "updated" | "evolution";
   at: number;
   label: string;
-  evolution?: { at: number; action: string; note?: string };
+  evolution?: KnowledgeEvolutionEntry;
 }
 
 export interface SuggestedKnowledgeAnchor { file: string; startLine: number; endLine: number; score: number; reasons: string[]; }

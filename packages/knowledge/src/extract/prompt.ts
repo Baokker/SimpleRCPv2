@@ -39,6 +39,7 @@ Output rules (strict):
 Minimum quality bar:
 - Do not reuse the suggested summary/title verbatim; generate a specific summary from evidence.
 - "content" must answer the trigger’s key questions (see below), not just paste a diff.
+- Keep raw evidence JSON, evidence blocks, and citation lists out of "content". Store citations only in "evidenceCitations"; the interface shows the original evidence separately.
 - Include at least 3 evidence citations when possible.
 
 Type selection guide:

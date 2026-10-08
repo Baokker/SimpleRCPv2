@@ -22,6 +22,7 @@ export interface KnowledgeEvolutionEntry {
     action: KnowledgeEvolutionAction;
     by?: { peerId: string; name?: string };
     note?: string;
+    summary?: string;
 }
 
 export interface KnowledgeAnchor {
@@ -144,7 +145,8 @@ function isKnowledgeEvolutionEntry(value: unknown): value is KnowledgeEvolutionE
     return isFiniteNumber(entry.at)
         && ['created', 'updated', 'reviewed', 'archived', 'orphaned', 'confirmed', 'scopeChanged', 'superseded', 'recurrence'].includes(entry.action)
         && (entry.by === undefined || (!!entry.by && typeof entry.by.peerId === 'string' && (entry.by.name === undefined || typeof entry.by.name === 'string')))
-        && (entry.note === undefined || typeof entry.note === 'string');
+        && (entry.note === undefined || typeof entry.note === 'string')
+        && (entry.summary === undefined || typeof entry.summary === 'string');
 }
 function isKnowledgeRelation(value: unknown): value is KnowledgeRelation { return !!value && typeof value === 'object' && ['supersedes', 'contradicts', 'duplicates', 'refines'].includes((value as KnowledgeRelation).kind) && typeof (value as KnowledgeRelation).cardId === 'string' && !!(value as KnowledgeRelation).cardId; }
 function isKnowledgeCheck(value: unknown): value is KnowledgeCheck { return !!value && typeof value === 'object' && ['regex-absent', 'regex-present'].includes((value as KnowledgeCheck).kind) && typeof (value as KnowledgeCheck).pattern === 'string' && typeof (value as KnowledgeCheck).fileGlob === 'string' && ((value as KnowledgeCheck).flags === undefined || typeof (value as KnowledgeCheck).flags === 'string'); }

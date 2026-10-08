@@ -539,7 +539,22 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       card.provenance = { ...card.provenance!, author: { kind: "human", memberId: patch.authorMemberId, displayName: typeof patch.authorName === "string" ? patch.authorName : patch.authorMemberId } };
     }
     const now = Date.now();
-    const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: typeof patch.note === "string" ? patch.note : undefined };
+    const changes: string[] = [];
+    if (card.title !== cardBeforeUpdate.title) changes.push("修改标题");
+    if (card.summary !== cardBeforeUpdate.summary) changes.push("修改摘要");
+    if (card.content !== cardBeforeUpdate.content) {
+      const edits = diff(cardBeforeUpdate.content, card.content);
+      const added = edits.filter(([operation]) => operation === diff.INSERT).reduce((total, [, text]) => total + text.length, 0);
+      const removed = edits.filter(([operation]) => operation === diff.DELETE).reduce((total, [, text]) => total + text.length, 0);
+      changes.push(`修改正文，增加 ${added} 个字符，删除 ${removed} 个字符`);
+    }
+    if (card.provenance?.author.memberId !== cardBeforeUpdate.provenance?.author.memberId) changes.push(`作者改为 ${card.provenance?.author.displayName ?? card.provenance?.author.memberId}`);
+    for (const [key, label] of [["tags", "标签"], ["scope", "作用域"], ["type", "类型"], ["appliesTo", "适用范围"], ["check", "自动检查"]] as const) {
+      if (JSON.stringify(card[key]) !== JSON.stringify(cardBeforeUpdate[key])) changes.push(`修改${label}`);
+    }
+    if (patch.anchors !== undefined) changes.push(`锚点关联到 ${card.anchors.map(anchor => `${anchor.file.workspaceRelativePath}:${(anchor.rangeAtCapture?.start.line ?? 0) + 1}–${(anchor.rangeAtCapture?.end.line ?? 0) + 1}`).join("、")}`);
+    if (typeof patch.note === "string" && patch.note) changes.push(patch.note);
+    const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: changes.join("；") || "保存卡片" };
     return { ...card, updatedAt: now, evolution: [...card.evolution, evolution] };
   }
 
@@ -651,7 +666,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (!current) throw new Error("Knowledge anchor not found");
       const anchor = await anchorFromInput({ file: current.file.workspaceRelativePath, selection });
       const now = Date.now();
-      const updated: KnowledgeCard = { ...stored.card, status: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : stored.card.status, updatedAt: now, anchors: stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate), evolution: [...stored.card.evolution, { at: now, action: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "reanchor" }] };
+      const updated: KnowledgeCard = { ...stored.card, status: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : stored.card.status, updatedAt: now, anchors: stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate), evolution: [...stored.card.evolution, { at: now, action: stored.card.status === "needsReview" || stored.card.status === "orphaned" ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `锚点重新关联到 ${anchor.file.workspaceRelativePath}:${selection.startLineNumber}–${selection.endLineNumber}` }] };
       await saveCard(updated);
       event(updated.id, "knowledge_card_updated", actor);
       return updated;
@@ -722,8 +737,9 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (stored.card.scope !== "team" || target.card.scope !== "team" || stored.card.status !== "reviewed" || target.card.status !== "reviewed") throw new Error("Relations require reviewed team cards");
       const now = Date.now();
       const relations = [...(stored.card.relations ?? []).filter((item) => item.cardId !== relation.cardId), relation];
-      const updated: KnowledgeCard = { ...stored.card, relations, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: relation.kind === "supersedes" ? "superseded" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `${relation.kind}:${relation.cardId}` }] };
-      const targetUpdated: KnowledgeCard = relation.kind === "supersedes" ? { ...target.card, status: "superseded", updatedAt: now, evolution: [...target.card.evolution, { at: now, action: "superseded", by: { peerId: actor.memberId, name: actor.displayName }, note: id }] } : target.card;
+      const relationLabels = { contradicts: "存在矛盾", supersedes: "替代", duplicates: "内容重复", refines: "补充说明" };
+      const updated: KnowledgeCard = { ...stored.card, relations, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: relation.kind === "supersedes" ? "superseded" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `${relation.kind}:${relation.cardId}`, summary: `与「${target.card.title}」建立${relationLabels[relation.kind]}关系` }] };
+      const targetUpdated: KnowledgeCard = relation.kind === "supersedes" ? { ...target.card, status: "superseded", updatedAt: now, evolution: [...target.card.evolution, { at: now, action: "superseded", by: { peerId: actor.memberId, name: actor.displayName }, note: id, summary: `被「${stored.card.title}」替代，标记为已取代` }] } : target.card;
       await saveCard(updated); if (targetUpdated !== target.card) await saveCard(targetUpdated); event(updated.id, "knowledge_card_updated", actor); if (targetUpdated !== target.card) event(targetUpdated.id, "knowledge_card_updated", actor); return updated;
     });
   }
@@ -760,7 +776,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       negative: { title: "保持状态计算与文本格式的职责", summary: "formatProjectStatus 接收状态对象，重复计算任务状态会增加维护成本。", content: "formatProjectStatus 已经通过 status.taskCount、status.completedCount 和 status.nextTask 格式化输出。维护这个接口可以让任务计算规则集中在 createProjectStatus 中，减少规则重复。" },
       tutorial: { title: "阅读任务状态代码", summary: "从 createProjectStatus 的返回字段开始，继续阅读 formatProjectStatus。", content: "阅读 tasks.length、filter 和 find 如何生成三个状态字段，再查看 formatProjectStatus 如何把它们写入数组并通过 join 生成四行文本。可以运行 Demo 工作区的测试核对任务完成和未完成时的结果。" }
     };
-    return cards.map(card => ({ ...card, ...templates[card.type], tags: ["demo", card.type, "project-status"], evolution: card.evolution.map(entry => ({ ...entry, note: "Demo 工作区任务状态导览。" })) }));
+    return cards.map(card => ({ ...card, ...templates[card.type], tags: ["demo", card.type, "project-status"], evolution: card.evolution.map(entry => ({ ...entry, note: "示例知识：任务状态导览。" })) }));
   }
 
   return {
@@ -787,13 +803,14 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         return card;
       });
     },
-    recordRecurrence(actor: KnowledgeActor, id: string, suggestionId: string) {
+    recordRecurrence(actor: KnowledgeActor, id: string, suggestionId: string, sourceDescription = "知识建议") {
       return enqueue(async () => {
         const card = await get(actor, id);
         if (!card || card.status !== "reviewed") throw new KnowledgeCardNotFoundError("Reviewed knowledge card not found");
         if (card.evolution.some(entry => entry.action === "recurrence" && entry.note === suggestionId)) return card;
         const now = Date.now();
-        const updated: KnowledgeCard = { ...card, updatedAt: now, usage: { injectedCount: 0, toolHitCount: 0, ...card.usage, recurrenceCount: (card.usage?.recurrenceCount ?? 0) + 1 }, evolution: [...card.evolution, { at: now, action: "recurrence", by: { peerId: actor.memberId, name: actor.displayName }, note: suggestionId }] };
+        const count = (card.usage?.recurrenceCount ?? 0) + 1;
+        const updated: KnowledgeCard = { ...card, updatedAt: now, usage: { injectedCount: 0, toolHitCount: 0, ...card.usage, recurrenceCount: count }, evolution: [...card.evolution, { at: now, action: "recurrence", by: { peerId: actor.memberId, name: actor.displayName }, note: suggestionId, summary: `作为复现记录第 ${count} 次（来源：${sourceDescription}）` }] };
         await saveCard(updated);
         event(id, "knowledge_card_updated", actor);
         return updated;

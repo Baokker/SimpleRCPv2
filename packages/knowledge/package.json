@@ -5,6 +5,10 @@
   "type": "module",
   "types": "./dist/src/index.d.ts",
   "exports": {
+    "./util/content": {
+      "types": "./dist/src/util/content.d.ts",
+      "default": "./dist/src/util/content.js"
+    },
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
@@ -92,6 +96,8 @@
     "bench:capture-quality:llm": "node --env-file=../../.env --import tsx bench/run-capture-quality-llm.ts"
   },
   "dependencies": {
+    "mdast-util-from-markdown": "^2.0.2",
+    "mdast-util-to-string": "^4.0.0",
     "diff": "^7.0.0",
     "lodash": "^4.17.21",
     "minimatch": "^10.0.1",

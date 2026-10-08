@@ -1,5 +1,6 @@
 import {
   Activity,
+  BookOpen,
   Bot,
   Download,
   FilePenLine,
@@ -155,8 +156,11 @@ export function CollaborationPanel({
   const [teamAgentDescription, setTeamAgentDescription] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
   const [selectedChatMessages, setSelectedChatMessages] = useState<string[]>([]);
+  const [chatSelectionMode, setChatSelectionMode] = useState(false);
+  const [chatKnowledgeSaving, setChatKnowledgeSaving] = useState(false);
   const [chatKnowledgeVersion, setChatKnowledgeVersion] = useState(0);
-  const [focusedKnowledgeCardId, setFocusedKnowledgeCardId] = useState<string>();
+  const [focusedKnowledgeCardId, setFocusedKnowledgeCardId] = useState<string>(() => new URLSearchParams(window.location.search).get("knowledge") ?? "");
+  useEffect(() => { if (focusedKnowledgeCardId && knowledgeEnabled) setActiveTab("knowledge"); }, [focusedKnowledgeCardId, knowledgeEnabled]);
   useEffect(() => {
     if (knowledgePinSelection) setActiveTab("knowledge");
   }, [knowledgePinSelection]);
@@ -231,6 +235,7 @@ export function CollaborationPanel({
         >
           <MessageSquareText size={14} />
           Chat
+          {unseenMessages ? <span className="collab-unread-badge" aria-label={`${unseenMessages} 条未读消息`}>{unseenMessages}</span> : null}
         </button>
         <button
           className={activeTab === "agent" ? "active" : ""}
@@ -255,7 +260,7 @@ export function CollaborationPanel({
             onClick={() => setActiveTab("knowledge")}
             data-testid="collab-tab-knowledge"
           >
-            Knowledge {knowledgeUnread ? <span data-testid="knowledge-unread">{knowledgeUnread}</span> : null}
+            <BookOpen size={14} />知识 {knowledgeUnread ? <span className="collab-unread-badge" data-testid="knowledge-unread" aria-label={`${knowledgeUnread} 条未读知识`}>{knowledgeUnread}</span> : null}
           </button>
         ) : null}
         <button
@@ -274,6 +279,7 @@ export function CollaborationPanel({
             projectId={projectId}
             members={members}
             refreshVersion={knowledgeRefreshVersion + chatKnowledgeVersion}
+            inboxRequestVersion={chatKnowledgeVersion}
             focusCardId={focusedKnowledgeCardId}
             onRefresh={onRefreshKnowledge}
             cards={knowledgeCards}
@@ -296,7 +302,9 @@ export function CollaborationPanel({
         ) : null}
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
-            {knowledgeEnabled ? <button type="button" disabled={!selectedChatMessages.length} onClick={() => void captureKnowledgeFromChat(projectId, selectedChatMessages).then(() => { setSelectedChatMessages([]); setChatKnowledgeVersion(version => version + 1); setActiveTab("knowledge"); }).catch(onError)}>从这些消息创建知识</button> : null}
+            {knowledgeEnabled ? <div className="chat-knowledge-toolbar workspace-dialog-actions">
+              {chatSelectionMode ? <><span>已选 {selectedChatMessages.length} 条</span><button className="primary" disabled={!selectedChatMessages.length || chatKnowledgeSaving} onClick={async () => { setChatKnowledgeSaving(true); try { await captureKnowledgeFromChat(projectId, selectedChatMessages); setSelectedChatMessages([]); setChatSelectionMode(false); setChatKnowledgeVersion(version => version + 1); setActiveTab("knowledge"); } catch (error) { onError(error); } finally { setChatKnowledgeSaving(false); } }}>{chatKnowledgeSaving ? "创建中" : "从这些消息创建"}</button><button disabled={chatKnowledgeSaving} onClick={() => { setChatSelectionMode(false); setSelectedChatMessages([]); }}>取消</button></> : <button onClick={() => setChatSelectionMode(true)}><BookOpen size={14} />从中创建知识</button>}
+            </div> : null}
             <div className="team-agent-bar" data-testid="team-agent-bar">
               <strong>Team Agents</strong>
               {teamAgents.map((agent) => {
@@ -361,8 +369,8 @@ export function CollaborationPanel({
                 <li className="empty-panel-state">Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.</li>
               ) : (
                 chatMessages.map((message) => (
-                  <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}`}>
-                    {knowledgeEnabled && (message.kind ?? "member") === "member" ? <input type="checkbox" aria-label={`选择消息 ${message.authorName} ${message.text}`} checked={selectedChatMessages.includes(message.id)} onChange={event => setSelectedChatMessages(ids => event.target.checked ? [...ids, message.id] : ids.filter(id => id !== message.id))} /> : null}
+                  <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}${knowledgeEnabled && (message.kind ?? "member") === "member" ? " chat-knowledge-message" : ""}`}>
+                    {knowledgeEnabled && chatSelectionMode && (message.kind ?? "member") === "member" ? <input className="chat-knowledge-checkbox" type="checkbox" aria-label={`选择消息 ${message.authorName} ${message.text}`} checked={selectedChatMessages.includes(message.id)} onChange={event => setSelectedChatMessages(ids => event.target.checked ? [...ids, message.id] : ids.filter(id => id !== message.id))} /> : null}
                     <span>
                       <strong>
                         {message.kind === "agent" ? <Bot size={13} /> : null}

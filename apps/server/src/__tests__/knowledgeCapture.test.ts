@@ -251,6 +251,7 @@ describe("knowledge capture with real collaboration", () => {
     const merge = await s.request(ada, `knowledge/inbox/${suggestion.id}/merge`, { cardId: card.id });
     expect(merge.response.status).toBe(200);
     expect(merge.body.card).toMatchObject({ usage: { recurrenceCount: 1 }, evolution: expect.arrayContaining([expect.objectContaining({ action: "recurrence", note: suggestion.id })]) });
+    expect(merge.body.card).toMatchObject({ evolution: expect.arrayContaining([expect.objectContaining({ summary: expect.stringContaining("作为复现记录第 1 次（来源：聊天") })]) });
     expect(await s.runtime.knowledge!.list({ memberId: ada, displayName: "Ada" })).toHaveLength(1);
   });
 

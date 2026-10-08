@@ -378,7 +378,11 @@ describe("deterministic drafts from capture evidence", () => {
     expect(rollback.content).toContain(restored);
     const messages = Array.from({ length: 11 }, (_, index) => ({ authorId: "Ada", text: index === 10 ? "确认 timeout 上限为 2000 毫秒" : `讨论 timeout ${index}` }));
     const discussion = await extractKnowledgeCardDraft({ triggerType: "chat.dense", evidence: { chatMessages: messages } }, { model: "deterministic" });
-    expect(discussion.content).toContain(messages[10]!.text);
-    expect(discussion.content).toContain("Ada");
+    expect(discussion.evidenceCitations).toContain("evidence.chatMessages[10].text");
+    expect(discussion.evidenceCitations).toContain("evidence.chatMessages[10].authorId");
+    expect(discussion.evidenceCitations.filter(citation => citation.endsWith(".text"))).toHaveLength(messages.length);
+    expect(discussion.content).not.toContain(messages[10]!.text);
+    expect(discussion.content).not.toContain("Ada");
+    expect(discussion.content).toContain("原始证据");
   });
 });

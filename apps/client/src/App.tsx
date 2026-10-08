@@ -29,8 +29,10 @@ import {
   archiveKnowledgeCard,
   reanchorKnowledgeCard,
   getKnowledgeInbox,
+  getPendingKnowledgeTeamCards,
   markKnowledgeWarningsRead
 } from "./api";
+import { pendingKnowledgeSeen } from "./knowledgePresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
 import {
@@ -218,6 +220,7 @@ function WorkspacePage({
   const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>([]);
   const [knowledgeRefreshVersion, setKnowledgeRefreshVersion] = useState(0);
   const [knowledgeUnread, setKnowledgeUnread] = useState(0);
+  const activeKnowledgeMemberIdRef = useRef<string>();
   const [knowledgeWarning, setKnowledgeWarning] = useState<{ cardId: string; file: string; warningId?: string }>();
   const [knowledgeResolutions, setKnowledgeResolutions] = useState<KnowledgeAnchorResolution[]>([]);
   const [knowledgeGuide, setKnowledgeGuide] = useState<KnowledgeGuideItem[]>([]);
@@ -309,6 +312,7 @@ function WorkspacePage({
       if (!mounted) return;
       membersRef.current = room.members;
       setMember(joined.member);
+      activeKnowledgeMemberIdRef.current = joined.member.id;
       setMembers(room.members);
       setTree(workspaceTree);
       setEvents(eventRecords);
@@ -416,12 +420,12 @@ function WorkspacePage({
           }
           if (message.type === "knowledge_suggestion") {
             setKnowledgeRefreshVersion(version => version + 1);
-            void getKnowledgeInbox(projectId).then(result => setKnowledgeUnread(result.suggestions.filter(item => !item.seenBy?.includes(joined.member.id)).length + result.warnings.filter(item => !item.seen).length)).catch(showWorkspaceError);
-            if (message.popup) showWorkspaceNotice("有新的知识捕获建议，请查看 Inbox。");
+            scheduleKnowledgeRefresh();
+            if (message.popup) showWorkspaceNotice("有新的知识建议，请查看待处理。");
           }
           if (message.type === "knowledge_risk_warning") {
             setKnowledgeRefreshVersion(version => version + 1);
-            void getKnowledgeInbox(projectId).then(result => setKnowledgeUnread(result.suggestions.filter(item => !item.seenBy?.includes(joined.member.id)).length + result.warnings.filter(item => !item.seen).length)).catch(showWorkspaceError);
+            scheduleKnowledgeRefresh();
             if (message.popup) setKnowledgeWarning({ cardId: message.cardId, file: message.file, warningId: message.warningId });
           }
           if (message.type === "knowledge_anchor_needs_review") {
@@ -670,23 +674,32 @@ function WorkspacePage({
     }, 180);
   }
 
+  useEffect(() => {
+    if (!knowledgeEnabled) return;
+    const refresh = () => scheduleKnowledgeRefresh();
+    window.addEventListener("knowledge-pending-read", refresh);
+    return () => window.removeEventListener("knowledge-pending-read", refresh);
+  }, [knowledgeEnabled, projectId]);
+
   async function refreshKnowledgeState() {
     if (!knowledgeEnabled) return;
+    const viewerMemberId = activeKnowledgeMemberIdRef.current;
     const path = activeKnowledgePathRef.current;
     const requestVersion = ++knowledgeRequestVersionRef.current;
-    const [cards, fileCards, guide, timeline, inbox] = await Promise.all([
+    const [cards, fileCards, guide, timeline, inbox, pending] = await Promise.all([
       getKnowledgeCards(projectId),
       path ? getKnowledgeCards(projectId, path) : Promise.resolve({ cards: [], resolutions: [] }),
       getKnowledgeGuide(projectId, path),
       getKnowledgeTimeline(projectId, path),
-      getKnowledgeInbox(projectId)
+      getKnowledgeInbox(projectId),
+      getPendingKnowledgeTeamCards(projectId)
     ]);
     if (requestVersion !== knowledgeRequestVersionRef.current || path !== activeKnowledgePathRef.current) return;
     setKnowledgeCards(cards.cards);
     setKnowledgeResolutions(fileCards.resolutions);
     setKnowledgeGuide(guide.items);
     setKnowledgeTimeline(timeline.items);
-    setKnowledgeUnread(inbox.suggestions.filter(item => !member?.id || !item.seenBy?.includes(member.id)).length + inbox.warnings.filter(item => !item.seen).length);
+    setKnowledgeUnread(inbox.suggestions.filter(item => !viewerMemberId || !item.seenBy?.includes(viewerMemberId)).length + inbox.warnings.filter(item => !item.seen).length + pending.cards.filter(card => !viewerMemberId || !pendingKnowledgeSeen(projectId, viewerMemberId, card)).length);
   }
 
   async function openFile(path: string) {

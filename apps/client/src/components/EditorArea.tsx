@@ -7,6 +7,7 @@ import type { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { summarizeTextChange } from "../editActivity";
+import { knowledgeScopes, knowledgeStatuses, knowledgeTypes } from "../knowledgePresentation";
 import type {
   CursorPosition,
   EditorSelection,
@@ -114,7 +115,7 @@ export function EditorArea({
         const openLink = `command:${openCommand}?${encodeURIComponent(JSON.stringify([card.id]))}`;
         const reanchorLink = `command:${reanchorCommand}?${encodeURIComponent(JSON.stringify([{ cardId: card.id, anchorIndex: resolution.anchorIndex }]))}`;
         const hoverMessage = {
-          value: `**${card.type} · ${escapeKnowledgeMarkdown(card.title)}**\n\n${escapeKnowledgeMarkdown(card.summary)}\n\n${escapeKnowledgeMarkdown(card.provenance?.author.displayName ?? "")}\n\n[打开卡片](${openLink})${resolution.status === "needsReview" && canManage ? `\n\n[用当前选区重新锚定](${reanchorLink})` : ""}`,
+          value: `**${escapeKnowledgeMarkdown(card.title)}**\n\n${escapeKnowledgeMarkdown(card.summary)}\n\n类型：${knowledgeTypes[card.type].label}\n\n作用域：${knowledgeScopes[card.scope ?? "team"]}\n\n状态：${knowledgeStatuses[card.status]}\n\n作者：${escapeKnowledgeMarkdown(card.provenance?.author.displayName ?? "未知成员")}\n\n[打开卡片](${openLink})${resolution.status === "needsReview" && canManage ? `\n\n[用当前选区重新锚定](${reanchorLink})` : ""}`,
           isTrusted: { enabledCommands: [openCommand, reanchorCommand] }
         };
         return {

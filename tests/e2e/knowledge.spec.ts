@@ -38,7 +38,7 @@ async function memberHeaders(page: Parameters<typeof openAs>[0], projectId = "de
 
 test.describe("knowledge stage 2", () => {
   test.skip((process.env.KNOWLEDGE ?? "off") === "off", "Knowledge scenarios use test:e2e:knowledge");
-  test("生成 Demo 卡片并在当前文件视图显示", async ({ page }) => {
+  test("生成示例卡片并在本文件相关视图显示", async ({ page }) => {
     await openAs(page, "Ada");
     await page.getByTestId("dir-src").click();
     await page.getByTestId("file-src/projectStatus.js").click();
@@ -82,6 +82,9 @@ test.describe("knowledge stage 2", () => {
     const hover = page.locator(".monaco-hover").filter({ hasText: "Anchor summary" });
     await expect(hover).toContainText("Hello anchor");
     await expect(hover).toContainText("Anchor summary");
+    await expect(hover).toContainText("类型：决策");
+    await expect(hover).toContainText("作用域：团队");
+    await expect(hover).toContainText("状态：已确认");
     await page.screenshot({ path: `${screenshotDirectory}/FV-7-gutter-hover.png` });
     await hover.getByRole("link", { name: "打开卡片", exact: true }).click();
     await expect(page.locator(".collab-pane")).toBeVisible();
@@ -135,35 +138,43 @@ test.describe("knowledge stage 2", () => {
 
   test("导览优先显示当前文件六类卡片，时间线显示当前文件事件", async ({ page }) => {
     await openAs(page, "Ada");
+    const headers = await memberHeaders(page);
+    const existingResponse = await page.request.get("/api/projects/demo/knowledge/cards", { headers });
+    const existing = (await existingResponse.json()).cards as Array<{ title: string }>;
+    for (const title of ["Hello anchor", "Concurrent moving anchor"]) {
+      if (existing.some(card => card.title === title)) continue;
+      const created = await page.request.post("/api/projects/demo/knowledge/cards", { headers, data: { type: "decision", title, summary: "Anchor summary", content: "Anchor content", scope: "team", tags: [], anchors: [{ file: "src/hello.ts", selection: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 8 } }] } });
+      expect(created.status()).toBe(201);
+    }
     await page.getByTestId("dir-src").click();
     await page.getByTestId("file-src/projectStatus.js").click();
     await page.getByTestId("collab-tab-knowledge").click();
-    await page.getByRole("button", { name: "生成 Demo" }).click();
+    await page.getByRole("button", { name: "生成示例卡片" }).click();
     await page.getByRole("button", { name: "导览" }).click();
     const panel = page.getByTestId("knowledge-panel");
     const titles = ["阅读任务状态代码", "集中计算任务状态", "保持任务字段含义", "注意下一项任务的顺序", "保持状态计算与文本格式的职责", "任务状态模块的用途"];
-    await expect(panel.locator(".knowledge-list > .knowledge-card:nth-child(-n+6) .knowledge-card-summary strong")).toHaveText([
-      "tutorial · 阅读任务状态代码",
-      "decision · 集中计算任务状态",
-      "constraint · 保持任务字段含义",
-      "risk · 注意下一项任务的顺序",
-      "negative · 保持状态计算与文本格式的职责",
-      "context · 任务状态模块的用途"
-    ]);
-    for (const title of ["Hello anchor", "Concurrent moving anchor"]) await expect(panel.locator(".knowledge-list > .knowledge-card:nth-child(n+7) .knowledge-card-summary").filter({ hasText: title })).toHaveCount(1);
+    await expect(panel.locator(".knowledge-guide-entry:nth-child(-n+6) .knowledge-card-summary strong")).toHaveText(titles);
+    await expect(panel.locator(".knowledge-guide-entry.first .knowledge-guide-reason")).toContainText("教程类优先");
+    for (const title of ["Hello anchor", "Concurrent moving anchor"]) await expect(panel.locator(".knowledge-guide-entry:nth-child(n+7) .knowledge-card-summary").filter({ hasText: title })).toHaveCount(1);
     await panel.locator(".knowledge-card-tutorial .knowledge-card-summary").click();
     await expect(panel.locator(".knowledge-card-tutorial .knowledge-card-content")).toContainText("tasks.length");
     await expect(panel.locator(".knowledge-card-tutorial .knowledge-card-content")).toContainText("formatProjectStatus");
     await page.screenshot({ path: `${screenshotDirectory}/FV-8-guide.png` });
     await page.getByRole("button", { name: "时间线" }).click();
     for (const title of titles) {
-      for (const action of ["Created", "Updated", "reviewed"]) await expect(panel.getByText(`${action}: ${title}`, { exact: true })).toBeVisible();
+      for (const action of ["创建了这张卡片", "修改了这张卡片", "完成了复核"]) await expect(panel.locator(".knowledge-timeline-item").filter({ hasText: title }).filter({ hasText: action })).toHaveCount(title === "任务状态模块的用途" && action === "修改了这张卡片" ? 0 : 1);
     }
     for (const title of ["Hello anchor", "Concurrent moving anchor"]) await expect(panel).not.toContainText(title);
     const timestamps = await panel.locator(".knowledge-timeline-item time").evaluateAll(times => times.map(time => Date.parse((time as HTMLTimeElement).dateTime)));
     expect(timestamps.every(Number.isFinite)).toBe(true);
     expect(timestamps).toEqual([...timestamps].sort((left, right) => right - left));
     await page.screenshot({ path: `${screenshotDirectory}/FV-9-timeline.png` });
+    await panel.getByLabel("时间线卡片").selectOption({ label: titles[0]! });
+    await expect(panel.locator(".knowledge-timeline-item button")).toHaveText([titles[0]!, titles[0]!, titles[0]!]);
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-5-timeline-${theme}.png` });
+    }
   });
 
   test("hover 使用当前选区重选失效锚点", async ({ page }) => {
@@ -232,9 +243,11 @@ test.describe("knowledge stage 2", () => {
       await fetch("/api/projects/demo/knowledge/cards", { method: "POST", headers: { ...headers, "content-type": "application/json" }, body: JSON.stringify({ type: "context", title: "Private rule", summary: "Private", content: "Private content", scope: "personal", tags: [] }) });
     }, firstHeaders);
     await first.getByTestId("collab-tab-knowledge").click();
+    await first.getByRole("button", { name: "全部知识", exact: true }).click();
     await expect(first.getByTestId("knowledge-panel")).toContainText("Team rule");
     await expect(first.getByTestId("knowledge-panel")).toContainText("Private rule");
     await second.getByTestId("collab-tab-knowledge").click();
+    await second.getByRole("button", { name: "全部知识", exact: true }).click();
     await expect(second.getByTestId("knowledge-panel")).toContainText("Team rule");
     await expect(second.getByTestId("knowledge-panel")).not.toContainText("Private rule");
     await first.screenshot({ path: `${screenshotDirectory}/FV-10-team-card.png` });
@@ -256,14 +269,242 @@ test.describe("knowledge stage 2", () => {
     });
     await page.keyboard.press(process.platform === "darwin" ? "Meta+Shift+K" : "Control+Shift+K");
     await expect(page.getByRole("dialog", { name: "知识卡片编辑器" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "知识卡片编辑器" }).getByPlaceholder("标题", { exact: true })).toBeFocused();
+    const editorBox = await page.getByRole("dialog", { name: "知识卡片编辑器" }).boundingBox();
+    const paneBox = await page.locator(".collab-tab-body").boundingBox();
+    expect(editorBox).not.toBeNull();
+    expect(paneBox).not.toBeNull();
+    expect(editorBox!.y).toBeGreaterThanOrEqual(paneBox!.y);
+    expect(editorBox!.y + editorBox!.height).toBeLessThanOrEqual(paneBox!.y + paneBox!.height);
     await expect(page.getByTestId("collab-tab-knowledge")).toHaveClass("active");
     await page.screenshot({ path: `${screenshotDirectory}/FV-11-pin-editor.png` });
+    const body = page.locator(".knowledge-editor-body");
+    expect(await body.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+    await expect(page.getByRole("dialog").getByText("这段知识关联到你刚才选中的代码")).toBeVisible();
+    await expect(page.getByRole("dialog").getByRole("button", { name: "src/hello.ts:1–1", exact: true })).toBeVisible();
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-2-pin-editor-${theme}.png` });
+    }
+  });
+});
+
+test.describe("knowledge UI review", () => {
+  test.skip((process.env.KNOWLEDGE ?? "off") === "off", "Knowledge UI uses enabled mode");
+  test("搜索筛选、编辑清理、复制链接与归档保留完整信息", async ({ page, context }) => {
+    await openAs(page, "知识验收成员");
+    const headers = await memberHeaders(page);
+    const inputs = [
+      { type: "constraint", title: "验收保留 helper", summary: "摘要查找词", content: "## 规则\n保留 sharedHelper。\n\n## Evidence\n```json\n{\"chatMessages\":[\"旧证据\"]}\n```", scope: "team", tags: ["验收标签"] },
+      { type: "tutorial", title: "验收运行测试", summary: "使用项目命令", content: "正文查找词", scope: "personal", tags: ["验收标签"] },
+      { type: "context", title: "验收模块用途", summary: "背景介绍", content: "模块背景", scope: "team", tags: ["验收标签"] }
+    ];
+    const created: Array<{ id: string }> = [];
+    for (const input of inputs) {
+      const response = await page.request.post("/api/projects/demo/knowledge/cards", { headers, data: input });
+      expect(response.status()).toBe(201);
+      created.push((await response.json()).card);
+    }
+    await page.getByTestId("collab-tab-knowledge").click();
+    await page.getByRole("button", { name: "全部知识", exact: true }).click();
+    const panel = page.getByTestId("knowledge-panel");
+    const search = panel.getByRole("searchbox", { name: "搜索知识" });
+    await search.fill("验收标签");
+    await expect(panel.locator(".knowledge-card")).toHaveCount(3);
+    await expect(panel.getByRole("status").filter({ hasText: "符合筛选" })).toContainText("符合筛选 3 条");
+    for (const term of ["验收保留 helper", "摘要查找词", "sharedHelper", "正文查找词"]) {
+      await search.fill(term);
+      await expect(panel.locator(".knowledge-card")).toHaveCount(1);
+    }
+    await search.fill("验收标签");
+    await panel.getByText("筛选与排序", { exact: true }).click();
+    await panel.getByRole("checkbox", { name: "约束", exact: true }).check();
+    await panel.getByRole("checkbox", { name: "教程", exact: true }).check();
+    await expect(panel.locator(".knowledge-card")).toHaveCount(2);
+    await panel.getByLabel("筛选作用域").selectOption("personal");
+    await expect(panel.locator(".knowledge-card")).toHaveCount(1);
+    await expect(panel.locator(".knowledge-card-title")).toHaveText("验收运行测试");
+    await panel.getByLabel("筛选作用域").selectOption("team");
+    await panel.getByLabel("筛选状态").selectOption("reviewed");
+    await panel.getByLabel("筛选作者").selectOption(headers["X-SimpleRCP-Member"]);
+    await expect(panel.locator(".knowledge-card")).toHaveCount(1);
+    await panel.getByRole("checkbox", { name: "约束", exact: true }).uncheck();
+    await panel.getByRole("checkbox", { name: "教程", exact: true }).uncheck();
+    await panel.getByLabel("知识排序").selectOption("type");
+    await expect(panel.locator(".knowledge-card-title strong")).toHaveText(["验收保留 helper", "验收模块用途"]);
+    await panel.getByLabel("筛选作用域").selectOption("");
+    await panel.getByLabel("知识排序").selectOption("createdAt");
+    await expect(panel.locator(".knowledge-card-title strong")).toHaveText(["验收模块用途", "验收运行测试", "验收保留 helper"]);
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-1-all-knowledge-${theme}.png` });
+    }
+    const target = panel.locator(`[data-card-id="${created[0]!.id}"]`);
+    await target.getByRole("button", { name: "编辑", exact: true }).click();
+    const editor = page.getByRole("dialog", { name: "知识卡片编辑器" });
+    await expect(editor.getByPlaceholder("标题", { exact: true })).toBeFocused();
+    await editor.getByRole("button", { name: "清理正文中的证据块" }).click();
+    await expect(editor.getByPlaceholder("正文 Markdown")).toHaveValue("## 规则\n保留 sharedHelper。");
+    await editor.getByRole("button", { name: "保存", exact: true }).click();
+    await expect(editor).toHaveCount(0);
+    const stored = await page.request.get(`/api/projects/demo/knowledge/cards/${created[0]!.id}`, { headers });
+    expect((await stored.json()).card.content).toBe("## 规则\n保留 sharedHelper。");
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await target.getByRole("button", { name: "复制链接", exact: true }).click();
+    await expect(panel).toContainText("知识链接已复制");
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toContain(`?knowledge=${created[0]!.id}`);
+    await target.getByRole("button", { name: "查看锚点", exact: true }).click();
+    await expect(target).toContainText("确认人：知识验收成员");
+    await target.getByRole("button", { name: "归档", exact: true }).click();
+    await panel.getByLabel("筛选状态").selectOption("archived");
+    await expect(target).toContainText("已归档");
+    await expect(target.getByRole("button", { name: "归档", exact: true })).toHaveCount(0);
+    await panel.getByRole("button", { name: "清除筛选", exact: true }).click();
+    await expect(panel.getByRole("searchbox")).toHaveValue("");
+    await page.goto(copied);
+    await expect(page.getByTestId("status-bar").or(page.getByTestId("join-project"))).toBeVisible();
+    if (await page.getByTestId("join-project").isVisible()) await page.getByTestId("join-project").click();
+    await expect(page.getByTestId("collab-tab-knowledge")).toHaveClass("active");
+    await expect(page.locator(`[data-card-id="${created[0]!.id}"] .knowledge-card-content`)).toContainText("保留 sharedHelper。");
+  });
+
+  test("聊天选择模式没有改变消息位置，取消与创建后清除选择", async ({ page }) => {
+    await openAs(page, "聊天验收成员");
+    const headers = await memberHeaders(page);
+    const response = await page.request.post("/api/projects/demo/chat", { headers, data: { text: "验收聊天 保留 sharedHelper，并运行测试。" } });
+    expect(response.status()).toBe(200);
+    const message = page.locator(".chat-message-member").filter({ hasText: "验收聊天 保留 sharedHelper" });
+    await expect(message).toBeVisible();
+    await expect(page.locator(".chat-knowledge-checkbox")).toHaveCount(0);
+    const before = await message.locator("p").first().boundingBox();
+    await page.getByRole("button", { name: "从中创建知识", exact: true }).click();
+    await message.getByRole("checkbox").check();
+    await expect(page.locator(".chat-knowledge-toolbar")).toContainText("已选 1 条");
+    const after = await message.locator("p").first().boundingBox();
+    expect(after?.x).toBe(before?.x);
+    expect(after?.y).toBe(before?.y);
+    expect(after?.width).toBe(before?.width);
+    await page.locator(".chat-knowledge-toolbar").getByRole("button", { name: "取消", exact: true }).click();
+    await expect(page.locator(".chat-knowledge-checkbox")).toHaveCount(0);
+    await page.getByRole("button", { name: "从中创建知识", exact: true }).click();
+    await message.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "从这些消息创建", exact: true }).click();
+    await expect(page.getByTestId("knowledge-inbox")).toContainText("验收聊天 保留 sharedHelper");
+    await page.getByTestId("collab-tab-chat").click();
+    await expect(page.locator(".chat-knowledge-checkbox")).toHaveCount(0);
+    await page.getByRole("button", { name: "从中创建知识", exact: true }).click();
+    await expect(page.locator(".chat-knowledge-toolbar")).toContainText("已选 0 条");
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-4-chat-selection-${theme}.png` });
+    }
+  });
+
+  test("待处理合计建议和升级未读，暂不确认后可重新查看并确认", async ({ browser }) => {
+    const owner = await browser.newPage(); const reviewer = await browser.newPage();
+    await openAs(owner, "升级申请成员"); await openAs(reviewer, "升级审核成员");
+    const ownerHeaders = await memberHeaders(owner); const reviewerHeaders = await memberHeaders(reviewer);
+    const response = await owner.request.post("/api/projects/demo/knowledge/cards", { headers: ownerHeaders, data: { type: "constraint", title: "验收团队升级", summary: "保留共享 helper", content: "保留 sharedHelper。", scope: "personal", tags: [] } });
+    expect(response.status()).toBe(201);
+    const id = (await response.json()).card.id as string;
+    const requested = await owner.request.post(`/api/projects/demo/knowledge/cards/${id}/scope/request-team`, { headers: ownerHeaders, data: {} });
+    expect(requested.status()).toBe(200);
+    const message = await reviewer.request.post("/api/projects/demo/chat", { headers: reviewerHeaders, data: { text: "验收未读建议 请保留 sharedHelper。" } });
+    const captured = await reviewer.request.post("/api/projects/demo/knowledge/from-chat", { headers: reviewerHeaders, data: { messageIds: [(await message.json()).message.id] } });
+    expect(captured.status()).toBe(201);
+    await expect(reviewer.getByTestId("knowledge-unread")).toHaveText("2");
+    await reviewer.getByTestId("collab-tab-knowledge").click();
+    await reviewer.getByRole("button", { name: "待处理", exact: true }).click();
+    await expect(reviewer.getByTestId("knowledge-inbox")).toContainText("知识建议");
+    await expect(reviewer.getByTestId("knowledge-inbox")).toContainText("待确认升级");
+    await expect(reviewer.getByTestId("knowledge-unread")).toHaveCount(0);
+    const card = reviewer.locator(`[data-card-id="${id}"]`);
+    await card.getByRole("button", { name: "查看锚点", exact: true }).click();
+    await card.getByRole("button", { name: "暂不确认", exact: true }).click();
+    await expect(card).toHaveCount(0);
+    await reviewer.getByTestId("collab-tab-chat").click();
+    await reviewer.getByTestId("collab-tab-knowledge").click();
+    await reviewer.getByRole("button", { name: "待处理", exact: true }).click();
+    await expect(card).toHaveCount(0);
+    await reviewer.getByRole("checkbox", { name: "显示暂不确认的申请", exact: true }).check();
+    await card.getByRole("button", { name: "查看锚点", exact: true }).click();
+    await card.getByRole("button", { name: "确认升级为团队卡片", exact: true }).click();
+    await expect(card).toHaveCount(0);
+    await reviewer.getByRole("button", { name: "全部知识", exact: true }).click();
+    await expect(card).toContainText("团队");
+    await expect(card).toContainText("升级审核成员");
+    await owner.close(); await reviewer.close();
+  });
+
+  test("AI 草稿实际请求期间显示加载状态并禁用同条建议操作", async ({ page }) => {
+    test.setTimeout(180_000);
+    await openAs(page, "草稿验收成员");
+    const headers = await memberHeaders(page);
+    const messageResponse = await page.request.post("/api/projects/demo/chat", { headers, data: { text: "验收草稿 src/hello.ts 应保留 sharedHelper，完成修改后运行测试。" } });
+    expect(messageResponse.status()).toBe(200);
+    const captured = await page.request.post("/api/projects/demo/knowledge/from-chat", { headers, data: { messageIds: [(await messageResponse.json()).message.id] } });
+    expect(captured.status()).toBe(201);
+    const id = (await captured.json()).suggestion.id as string;
+    await page.getByTestId("collab-tab-knowledge").click();
+    await page.getByRole("button", { name: "待处理", exact: true }).click();
+    const suggestion = page.getByTestId("suggestion-chat.dense").filter({ hasText: "验收草稿 src/hello.ts" });
+    await expect(suggestion).toBeVisible();
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-6-pending-${theme}.png` });
+    }
+    const observed = page.evaluate(suggestionId => new Promise<{ loading: boolean; disabled: boolean; progress: string }>(resolve => {
+      const element = [...document.querySelectorAll<HTMLElement>('[data-testid="suggestion-chat.dense"]')].find(item => item.querySelector("pre")?.textContent?.includes("验收草稿 src/hello.ts"));
+      if (!element) throw new Error(`Suggestion ${suggestionId} is missing`);
+      const observer = new MutationObserver(() => {
+        if (element.getAttribute("aria-busy") !== "true") return;
+        observer.disconnect();
+        const controls = [...element.querySelectorAll<HTMLButtonElement>(".knowledge-actions button")];
+        resolve({ loading: controls.some(button => button.textContent?.includes("生成中")), disabled: controls.every(button => button.disabled), progress: element.querySelector('[role="status"]')?.textContent ?? "" });
+      });
+      observer.observe(element, { attributes: true, childList: true, subtree: true });
+    }), id);
+    await suggestion.getByRole("button", { name: "AI 草稿", exact: true }).click();
+    expect(await observed).toEqual({ loading: true, disabled: true, progress: "正在根据证据生成草稿…" });
+    const editor = page.getByRole("dialog", { name: "知识卡片编辑器" });
+    await expect(editor).toBeVisible({ timeout: 160_000 });
+    await expect(editor).toContainText("草案已生成，请核对后确认");
+    await expect(editor.getByPlaceholder("标题", { exact: true })).toBeFocused();
+    await expect(editor.getByPlaceholder("正文 Markdown")).not.toHaveValue(/## Evidence|"chatMessages"/);
+    await editor.getByRole("button", { name: "取消", exact: true }).click();
+  });
+
+  test("导览内容区独立滚动且外层保持位置", async ({ page }) => {
+    await openAs(page, "Guide reviewer");
+    const headers = await memberHeaders(page);
+    for (let index = 0; index < 18; index++) {
+      const response = await page.request.post("/api/projects/demo/knowledge/cards", { headers, data: {
+        type: "tutorial", title: `阅读示例 ${index}`, summary: "了解当前模块的处理过程", content: "阅读代码并核对测试。", scope: "team", tags: ["阅读"]
+      } });
+      expect(response.status()).toBe(201);
+    }
+    await page.getByTestId("collab-tab-knowledge").click();
+    await page.getByRole("button", { name: "导览", exact: true }).click();
+    const list = page.getByTestId("knowledge-content-guide");
+    await expect(list.locator(".knowledge-card").filter({ hasText: "阅读示例" })).toHaveCount(18);
+    const geometry = await list.evaluate(element => ({ height: element.clientHeight, content: element.scrollHeight }));
+    expect(geometry.content).toBeGreaterThan(geometry.height);
+    await list.hover();
+    await page.mouse.wheel(0, 600);
+    await expect.poll(() => list.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+    expect(await page.locator(".collab-tab-body").evaluate(element => element.scrollTop)).toBe(0);
+    await list.evaluate(element => { element.scrollTop = 0; });
+    for (const theme of ["dark", "light"]) {
+      if (await page.locator("html").getAttribute("data-theme") !== theme) await page.getByTestId("theme-toggle").click();
+      await page.screenshot({ path: `${screenshotDirectory}/S6-UI-3-guide-${theme}.png` });
+    }
   });
 });
 
 test.describe("knowledge stage 3", () => {
   test.skip((process.env.KNOWLEDGE ?? "off") === "off", "Knowledge scenarios use test:e2e:knowledge");
-  test("双方改写建议进入 Inbox，接受与确认生成团队知识", async ({ browser }) => {
+  test("双方改写建议进入待处理，接受与确认生成团队知识", async ({ browser }) => {
     const first = await browser.newPage(); const second = await browser.newPage();
     await openAs(first, "Capture Ada"); await openAs(second, "Capture Bob");
     for (const page of [first, second]) {
@@ -285,7 +526,7 @@ test.describe("knowledge stage 3", () => {
     }, text);
     for (const page of [first, second]) {
       await expect(page.getByTestId("knowledge-unread")).toBeVisible();
-      await page.getByRole("button", { name: "Inbox", exact: true }).click();
+      await page.getByRole("button", { name: "待处理", exact: true }).click();
       await expect(page.getByTestId("suggestion-edit.overwritten").first()).toBeVisible();
       await expect(page.getByTestId("knowledge-unread")).toHaveCount(0);
     }
@@ -295,7 +536,7 @@ test.describe("knowledge stage 3", () => {
     const editor = second.getByRole("dialog", { name: "知识卡片编辑器" });
     await expect(editor).toBeVisible(); await expect(editor).toContainText("原始证据");
     await editor.getByRole("button", { name: "取消", exact: true }).click();
-    await first.getByRole("button", { name: "全部卡片", exact: true }).click();
+    await first.getByRole("button", { name: "全部知识", exact: true }).click();
     await first.locator(".knowledge-card-summary").filter({ hasText: "成员改写了协作者的内容" }).first().click();
     await first.getByRole("button", { name: "确认", exact: true }).click();
     const reviewer = first.getByRole("dialog", { name: "知识卡片编辑器" });
@@ -305,7 +546,7 @@ test.describe("knowledge stage 3", () => {
     await reviewer.getByRole("button", { name: "确认并保存" }).click();
     await expect(reviewer).not.toBeVisible();
     await expect(first.getByTestId("knowledge-panel")).toContainText("S3 confirmed collaboration decision");
-    await second.getByRole("button", { name: "全部卡片", exact: true }).click();
+    await second.getByRole("button", { name: "全部知识", exact: true }).click();
     await expect(second.getByTestId("knowledge-panel")).toContainText("S3 confirmed collaboration decision");
     await second.screenshot({ path: `${screenshotDirectory}/S3-2-confirmed-team-card.png` });
     await first.close(); await second.close();
@@ -342,9 +583,11 @@ test.describe("knowledge stage 3", () => {
     const headers = await memberHeaders(page);
     await page.evaluate(async requestHeaders => { await fetch("/api/projects/demo/chat", { method: "POST", headers: { ...requestHeaders, "content-type": "application/json" }, body: JSON.stringify({ text: "S3 chat choose the shared timeout in src/hello.ts" }) }); }, headers);
     await expect(page.getByTestId("chat-transcript")).toContainText("S3 chat choose the shared timeout");
+    await expect(page.getByRole("checkbox", { name: /选择消息/ })).toHaveCount(0);
+    await page.getByRole("button", { name: "从中创建知识", exact: true }).click();
     await page.getByRole("checkbox", { name: /选择消息 Chat author S3 chat/ }).check();
-    await page.getByRole("button", { name: "从这些消息创建知识" }).click();
-    await page.getByRole("button", { name: "Inbox", exact: true }).click();
+    await page.getByRole("button", { name: "从这些消息创建", exact: true }).click();
+    await page.getByRole("button", { name: "待处理", exact: true }).click();
     await expect(page.getByTestId("knowledge-inbox")).toContainText("S3 chat choose the shared timeout");
     await expect(page.getByTestId("suggestion-chat.dense").filter({ hasText: "S3 chat choose the shared timeout" }).getByRole("button", { name: /src\/hello.ts:/ })).toBeVisible();
     await page.screenshot({ path: `${screenshotDirectory}/S3-4-selected-chat.png` });
@@ -407,8 +650,8 @@ test.describe("knowledge stage 5", () => {
     });
     await expect.poll(() => first.getByTestId("knowledge-unread").isVisible(), { timeout: 30_000 }).toBe(true);
     await expect.poll(() => second.getByTestId("knowledge-unread").isVisible(), { timeout: 30_000 }).toBe(true);
-    await first.getByRole("button", { name: "Inbox", exact: true }).click();
-    await second.getByRole("button", { name: "Inbox", exact: true }).click();
+    await first.getByRole("button", { name: "待处理", exact: true }).click();
+    await second.getByRole("button", { name: "待处理", exact: true }).click();
     await expect(first.getByTestId("knowledge-inbox")).toContainText("成员在 src/hello.ts 上改写了 Agent 的内容");
     await expect(second.getByTestId("knowledge-inbox")).toContainText("成员在 src/hello.ts 上改写了 Agent 的内容");
     await first.screenshot({ path: `${screenshotDirectory}/S5-1-agent-revised-inbox-ada.png` });

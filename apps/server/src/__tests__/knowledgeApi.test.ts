@@ -187,10 +187,13 @@ describe("knowledge API", () => {
     const updated = await fetch(`${origin}/api/projects/demo/knowledge/cards/${teamCard.id}`, {
       method: "PATCH",
       headers: headers(first),
-      body: JSON.stringify({ title: "Keep the line updated", note: "reviewed in the panel" })
+      body: JSON.stringify({ title: "Keep the line updated", content: "Updated rule content", note: "reviewed in the panel" })
     });
     expect(updated.status).toBe(200);
-    expect((await updated.json() as { card: { title: string; evolution: Array<{ action: string; note?: string }> } }).card).toMatchObject({ title: "Keep the line updated" });
+    const updatedCard = (await updated.json() as { card: { title: string; evolution: Array<{ action: string; note?: string }> } }).card;
+    expect(updatedCard).toMatchObject({ title: "Keep the line updated" });
+    expect(updatedCard.evolution.at(-1)?.note).toContain("修改标题");
+    expect(updatedCard.evolution.at(-1)?.note).toMatch(/修改正文，增加 \d+ 个字符，删除 \d+ 个字符/);
     const archived = await fetch(`${origin}/api/projects/demo/knowledge/cards/${teamCard.id}/archive`, {
       method: "POST",
       headers: headers(first),
