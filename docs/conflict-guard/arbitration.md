@@ -17,6 +17,8 @@ END_PLAN
 
 服务端接收助手消息，完整格式通过检查后更新计划。缺少计划时继续执行。审批通过与写入归属更新实际范围。任务改写、实际范围新增计划之外的符号、相关他人符号 revision 更新，各自推进 taskRevision；相同更新保持数值。
 
+计划输入使用当前任务会话的助手正文，通过消息角色、part ID 与 session ID 确认来源。文本增量只处理 `field: text`。用户提示、推理文本、工具增量及子会话正文分别处理。完整正文更新替换对应片段，增量追加到该片段；`createAgentProgress.assistantText` 提供经过来源检查的计划文本。
+
 状态包括 planning、running、waiting、blocked、done、reverted。queued run 取消也会关闭意图。客户端显示活动记录、超出计划的范围与任务修订次数。
 
 审批和卡片使用相同的活动状态计算：参与者仍有任一等待卡片时保持 blocked；全部相关卡片处理后恢复 running。done 与 reverted 保持结束状态。

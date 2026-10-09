@@ -727,8 +727,6 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await appendTrace(projectId, runId, { type: "arbitration_continuation", summary: continued.text, data: { messageId: continued.messageId } });
         await projectRuntime.documents.awaitIdle();
       } });
-      const assistantTexts = new Map<string, string>();
-
       const stopEvents = await options.runtime.subscribe(
         {
           workspacePath: projectRuntime.project.workspacePath,
@@ -736,16 +734,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         },
         async (event) => {
           progress?.event(event, new Date().toISOString());
-          phase = progress?.snapshot().phase ?? phase;
+          phase = progress?.phase() ?? phase;
           if (progressTimer === undefined) progressTimer = setTimeout(() => { progressTimer = undefined; saveProgress(); }, 500);
           const part = event.data.part as { callID?: string; tool?: string; state?: { input?: Record<string, unknown> } } | undefined;
           const textPart = event.data.part as { id?: string; type?: string; text?: string } | undefined;
-          if (textPart?.type === "text" && textPart.id && typeof textPart.text === "string") { assistantTexts.set(textPart.id, textPart.text); guard?.arbitration.plan(runId, textPart.text); }
-          if (event.type === "message.part.delta" && typeof event.data.partID === "string" && typeof event.data.delta === "string") {
-            const text = (assistantTexts.get(event.data.partID) ?? "") + event.data.delta;
-            assistantTexts.set(event.data.partID, text);
-            if (text.includes("END_PLAN")) guard?.arbitration.plan(runId, text);
-          }
+          const textId = textPart?.type === "text" ? textPart.id : event.type === "message.part.delta" && event.data.field === "text" && typeof event.data.partID === "string" ? event.data.partID : undefined;
+          const text = textId ? progress?.assistantText(textId, runtimeSessionId!) : undefined;
+          if (text !== undefined && (textPart?.type === "text" || text.includes("END_PLAN"))) guard?.arbitration.plan(runId, text);
           if (part?.callID && part.tool && part.state?.input) toolInputs.set(part.callID, { tool: part.tool, input: part.state.input });
           if (event.type === "permission.asked") {
             void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
