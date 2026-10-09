@@ -18,6 +18,7 @@ import {
   cancelAgentRun,
   createAgentSession,
   createAgentSessionRun,
+  deleteAgentSession,
   downloadAgentTrace,
   getAgentRuns,
   getAgentSessions,
@@ -39,6 +40,7 @@ import type {
 import { formatTime, titleCase } from "../format";
 import { GuardBadge, GuardMetrics, ReadableText } from "./ConflictGuardText";
 import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
+import { AgentQuestions } from "./AgentQuestions";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 
@@ -91,7 +93,7 @@ export function AgentPanel({
     const visible = runs.filter((run) => run.sessionId === selectedSessionId);
     return visible.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
   }, [runs, selectedSessionId]);
-  const runningRuns = runs.filter((run) => run.status === "running");
+  const runningRuns = runs.filter((run) => run.status === "running" && run.memberId === member?.id && sessions.some((session) => session.id === run.sessionId));
   const queuedRuns = useMemo(
     () => runs
       .filter((run) => run.status === "queued")
@@ -121,7 +123,7 @@ export function AgentPanel({
       if (!active) return;
       setRuntime(nextRuntime);
       setSessions(nextSessions);
-      setRuns(nextRuns);
+      setRuns(nextRuns.filter((run) => run.memberId === member.id && nextSessions.some((session) => session.id === run.sessionId)));
       setSelectedSessionId((current) =>
         current && nextSessions.some((session) => session.id === current)
           ? current
@@ -140,7 +142,7 @@ export function AgentPanel({
         getAgentSessions(projectId)
       ]);
       if (!active) return;
-      setRuns(nextRuns);
+      setRuns(nextRuns.filter((run) => run.memberId === member!.id && nextSessions.some((session) => session.id === run.sessionId)));
       setSessions(nextSessions);
     }
     void refresh().catch((error) => onErrorRef.current(error));
@@ -262,6 +264,17 @@ export function AgentPanel({
     } catch (error) { onErrorRef.current(error); }
   }
 
+  async function deleteSession(session: AgentSession) {
+    if (!window.confirm(`删除会话“${session.title}”？运行中的任务将取消，已经写入的文件继续保留。`)) return;
+    try {
+      await deleteAgentSession(projectId, session.id);
+      const remaining = sessions.filter((entry) => entry.id !== session.id);
+      setSessions(remaining);
+      setRuns((current) => current.filter((run) => run.sessionId !== session.id));
+      if (selectedSessionId === session.id) setSelectedSessionId(remaining[0]?.id);
+    } catch (error) { onErrorRef.current(error); }
+  }
+
   const runtimeLabel = runtime ? `OpenCode ${titleCase(runtime.state)}` : "Checking OpenCode";
 
   return (
@@ -276,7 +289,7 @@ export function AgentPanel({
         </div>
       </header>
 
-      {runningRuns.map((run) => <AgentRunProgress key={run.id} run={run} config={runtime?.activityConfig} onCancel={run.memberId === member?.id ? () => void cancelRun(run) : undefined} />)}
+      {runningRuns.filter((run) => run.sessionId === selectedSessionId).map((run) => <div key={run.id}><AgentQuestions projectId={projectId} run={run} memberId={member?.id} onError={onError} /><AgentRunProgress run={run} config={runtime?.activityConfig} onCancel={() => void cancelRun(run)} /></div>)}
 
       {runningRuns.length > 0 ? (
         <div className="agent-active-runs" data-testid="agent-active-runs">
@@ -294,8 +307,8 @@ export function AgentPanel({
 
       <div className="agent-session-tabs" role="tablist" aria-label="Agent sessions">
         {sessions.map((session) => (
+          <div key={session.id} className="agent-session-tab">
           <button
-            key={session.id}
             type="button"
             role="tab"
             aria-selected={session.id === selectedSessionId}
@@ -305,6 +318,8 @@ export function AgentPanel({
           >
             {session.title}
           </button>
+          <button type="button" className="agent-session-close" aria-label={`删除会话 ${session.title}`} title="删除会话" onClick={() => void deleteSession(session)}><X size={12} /></button>
+          </div>
         ))}
         <button
           type="button"
@@ -405,6 +420,7 @@ export function AgentPanel({
           placeholder="Ask OpenCode about this project (only you can see this session)"
           data-testid="agent-prompt"
         />
+        {runningRuns.some((run) => run.sessionId === selectedSessionId) ? <small className="agent-interrupt-hint">发送新要求将立即中断当前任务，并按新要求继续。</small> : null}
         <div className="agent-composer-toolbar">
           <div className="agent-context-picker">
             <button

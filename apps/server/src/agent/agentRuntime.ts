@@ -29,8 +29,11 @@ export interface AgentRuntime {
   cancel(input: {
     workspacePath: string;
     sessionId: string;
+    signal?: AbortSignal;
   }): Promise<void>;
   replyPermission?(input: { workspacePath: string; sessionId: string; requestId: string; reply: "once" | "reject"; message?: string }): Promise<void>;
+  replyQuestion?(input: { workspacePath: string; requestId: string; answers: string[][]; signal?: AbortSignal }): Promise<void>;
+  rejectQuestion?(input: { workspacePath: string; requestId: string; signal?: AbortSignal }): Promise<void>;
   getToolInput?(input: { workspacePath: string; sessionId: string; messageId: string; callId: string }): Promise<{ tool: string; input: Record<string, unknown> } | undefined>;
   subscribe(
     input: { workspacePath: string; sessionId: string },

@@ -5,6 +5,7 @@ export function createAgentProgress(startedAt: string, config?: AgentRunActivity
   const activity: AgentRunActivity = { phase: "first-request", updatedAt: startedAt, tools: [], reasoning: [], ...(config ? { config: { ...config } } : {}) };
   const partTypes = new Map<string, string>();
   const usage = new Map<string, NonNullable<AgentRunActivity["tokens"]>>();
+  const questions = new Set<string>();
   const compact = (value: unknown) => typeof value === "string" ? value.replace(/\s+/g, " ").slice(0, 180) : "";
   return {
     snapshot: () => structuredClone(activity),
@@ -36,6 +37,9 @@ export function createAgentProgress(startedAt: string, config?: AgentRunActivity
         }
       }
       if (event.type === "permission.asked") activity.phase = "approval";
+      if (event.type === "question.asked") questions.add(String(event.data.id));
+      if (["question.replied", "question.rejected"].includes(event.type)) questions.delete(String(event.data.requestID));
+      if (questions.size) activity.phase = "question";
       const info = event.data.info as { id?: string; role?: string; tokens?: { input?: number; output?: number; reasoning?: number; cache?: { read?: number; write?: number } } } | undefined;
       if (info?.id && info.role === "assistant" && info.tokens) {
         const tokens = info.tokens;
@@ -45,6 +49,11 @@ export function createAgentProgress(startedAt: string, config?: AgentRunActivity
         activity.tokens = [...usage.values()].reduce((sum, entry) => Object.fromEntries(Object.entries(sum).map(([key, value]) => [key, value + entry[key as keyof typeof entry]])) as typeof values, { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 });
       }
     },
-    resumed() { activity.phase = activity.tools.length ? "tool" : "streaming"; }
+    syncQuestions(ids: string[]) {
+      questions.clear();
+      for (const id of ids) questions.add(id);
+      activity.phase = questions.size ? "question" : activity.tools.length ? "tool" : "streaming";
+    },
+    resumed() { activity.phase = questions.size ? "question" : activity.tools.length ? "tool" : "streaming"; }
   };
 }

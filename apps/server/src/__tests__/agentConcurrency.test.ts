@@ -155,7 +155,7 @@ describe("Agent concurrency with fake runtime", () => {
     await waitFor(async () => (await getRuns()).some((item) => item.id === next.id && item.status === "completed"));
   });
 
-  it("serializes the same session and records tool attribution", async () => {
+  it("interrupts the same session immediately while independent sessions continue", async () => {
     const sessionResponse = await fetch(`${origin}/api/projects/demo/agent/sessions`, {
       method: "POST",
       headers: { "content-type": "application/json", "X-SimpleRCP-Member": memberId },
@@ -163,16 +163,19 @@ describe("Agent concurrency with fake runtime", () => {
     });
     const session = (await sessionResponse.json() as { session: { id: string } }).session;
     const first = await createRun("fake-delay=250 fake-write=one.ts", session.id);
+    await waitFor(async () => (await getRuns()).find((run) => run.id === first.id)?.status === "running");
     const second = await createRun("fake-delay=250 fake-write=two.ts", session.id);
     const independent = await createRun("fake-delay=250 fake-write=independent.ts");
     await waitFor(async () => {
       const items = await getRuns();
-      return items.find((run) => run.id === first.id)?.status === "running" &&
-        items.find((run) => run.id === second.id)?.status === "queued" &&
+      return items.find((run) => run.id === first.id)?.status === "cancelled" &&
+        items.find((run) => run.id === second.id)?.status === "running" &&
         items.find((run) => run.id === independent.id)?.status === "running";
     });
-    await waitFor(async () => (await getRuns()).every((run) => run.status === "completed"));
+    await waitFor(async () => (await getRuns()).filter((run) => run.id !== first.id).every((run) => run.status === "completed"));
     const completed = await getRuns();
+    expect(completed.find((run) => run.id === first.id)?.interruptedByRunId).toBe(second.id);
+    expect(completed.find((run) => run.id === second.id)?.interruptsRunId).toBe(first.id);
     expect(completed.filter((run) => run.id === second.id && run.startedAt && run.finishedAt).every((run) =>
       new Date(run.startedAt!).getTime() >= new Date(completed.find((item) => item.id === first.id)!.finishedAt!).getTime()
     )).toBe(true);
@@ -391,8 +394,13 @@ describe("Agent concurrency with fake runtime", () => {
       return runs.filter((run) => run.sessionId && run.source === "chat").some((run) => run.status === "cancelled") && runs.filter((run) => run.sessionId && run.source === "chat").some((run) => run.status === "completed");
     });
     const teamRuns = (await getRuns()).filter((run) => run.source === "chat");
-    expect(teamRuns.some((run) => run.status === "cancelled" && run.interruptedByRunId)).toBe(true);
-    expect(teamRuns.some((run) => run.status === "completed")).toBe(true);
+    const interrupted = teamRuns.find((run) => run.status === "cancelled")!;
+    const completed = teamRuns.find((run) => run.status === "completed")!;
+    expect(interrupted.interruptedByRunId).toBe(completed.id);
+    expect(completed.interruptsRunId).toBe(interrupted.id);
+    const chatResponse = await fetch(`${origin}/api/projects/demo/chat`, { headers: { "X-SimpleRCP-Member": memberId } });
+    const chat = await chatResponse.json() as { messages: Array<{ kind?: string; agentSessionId?: string; runId?: string; text: string }> };
+    expect(chat.messages).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "system", agentSessionId: completed.sessionId, runId: interrupted.id, text: expect.stringContaining("interrupted @agent") })]));
   });
 
   async function createRun(prompt: string, sessionId?: string) {

@@ -7,6 +7,9 @@ import type {
   AgentPromptContext,
   EventRecord
 } from "@simplercp/shared";
+import type { AgentQuestion } from "@simplercp/shared";
+import { createAgentQuestions } from "./agentQuestions.js";
+import { canReadAgentRun } from "./agentVisibility.js";
 import type { AgentRuntime } from "./agentRuntime.js";
 import { createAgentRunStore, type AgentRunStore } from "./agentRunStore.js";
 import {
@@ -67,6 +70,7 @@ interface ActiveRun {
   workspacePath: string;
   runtimeSessionId: string;
   cancelPermissions?: () => void;
+  questions?: ReturnType<typeof createAgentQuestions>;
 }
 
 export type AgentRunManagerEvent =
@@ -77,6 +81,8 @@ export type AgentRunManagerEvent =
       projectId: string;
       runId: string;
       event: AgentTraceEvent;
+      memberId: string;
+      shared: boolean;
     }
   | { type: "team_agents_changed"; projectId: string; agents: AgentSession[] };
 
@@ -109,6 +115,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   const cancelRequested = new Set<string>();
   const recordedOverlaps = new Set<string>();
   const teamAgentOperations = new Map<string, Promise<unknown>>();
+  const sessionOperations = new Map<string, Promise<unknown>>();
   const listeners = new Set<(event: AgentRunManagerEvent) => void>();
   const failures = { trace: 0, attribution: 0, listener: 0 };
   let lastInternalError: { projectId: string; runId: string; phase: keyof typeof failures; reason: string } | undefined;
@@ -221,7 +228,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
   ) {
     try {
       const event = await getTrace(projectId, runId).append(input);
-      emit({ type: "trace_appended", projectId, runId, event });
+      const run = await getStore(projectId).get(runId);
+      if (run) emit({ type: "trace_appended", projectId, runId, event, memberId: run.memberId, shared: run.sessionScope === "team" || run.sessionScope === undefined && run.source === "chat" });
       return event;
     } catch (error) {
       recordInternalError(projectId, runId, "trace", error);
@@ -242,6 +250,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const previous = teamAgentOperations.get(projectId) ?? Promise.resolve();
     const current = previous.then(operation);
     teamAgentOperations.set(projectId, current.then(() => undefined, () => undefined));
+    return current;
+  }
+
+  async function withSessionLock<T>(key: string, operation: () => Promise<T>) {
+    const previous = sessionOperations.get(key) ?? Promise.resolve();
+    const current = previous.then(operation);
+    const settled = current.then(() => undefined, () => undefined);
+    sessionOperations.set(key, settled);
+    void settled.then(() => { if (sessionOperations.get(key) === settled) sessionOperations.delete(key); });
     return current;
   }
 
@@ -643,6 +660,22 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       });
 
       const approval = createApprovalBudget();
+      const questions = createAgentQuestions({
+        pause: approval.pause,
+        async reply(requestId, answers, signal) {
+          if (!options.runtime.replyQuestion) throw new Error("Runtime does not support question replies");
+          await options.runtime.replyQuestion({ workspacePath: projectRuntime.project.workspacePath, requestId, answers, signal });
+          await appendTrace(projectId, runId, { type: "question_answered", data: { requestId } });
+        },
+        async reject(requestId, signal) {
+          if (!options.runtime.rejectQuestion) throw new Error("Runtime does not support question rejection");
+          await options.runtime.rejectQuestion({ workspacePath: projectRuntime.project.workspacePath, requestId, signal });
+        },
+        async abort(signal) { await options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId!, signal }); },
+        async changed(pending) { progress?.syncQuestions(pending.map((question) => question.id)); saveProgress(); await updateRun(projectId, runId, { questions: pending }); },
+        report(error) { recordInternalError(projectId, runId, "listener", error); }
+      });
+      activeRuns.get(runId)!.questions = questions;
       const guard = projectRuntime.conflictGuard;
       const toolInputs = new Map<string, { tool: string; input: Record<string, unknown> }>();
       const handlers = guard && ["rules", "full"].includes(guard.mode) ? [{ handle: conflictGuardEditHandler({
@@ -715,6 +748,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           if (event.type === "permission.asked") {
             void dispatcher.dispatch(event.data as unknown as AgentPermissionRequest).catch((error) => recordInternalError(projectId, runId, "listener", error));
           }
+          if (event.type === "question.asked") { await questions.asked(event.data as unknown as AgentQuestion); saveProgress(); }
+          if (["question.replied", "question.rejected"].includes(event.type)) { await questions.closed(String(event.data.requestID)); progress?.resumed(); saveProgress(); }
           const recorded = await appendTrace(projectId, runId, {
             type: `opencode.${event.type}`,
             data: event.data
@@ -853,7 +888,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const failure = diagnoseAgentFailure(error, phase, lastSuccessfulSequence, options.sensitiveValues);
       activeRuns.get(runId)?.cancelPermissions?.();
       if (workspacePathForRun && runtimeSessionIdForRun) {
-        try { await options.runtime.cancel({ workspacePath: workspacePathForRun, sessionId: runtimeSessionIdForRun }); }
+        try { await Promise.all([options.runtime.cancel({ workspacePath: workspacePathForRun, sessionId: runtimeSessionIdForRun }), activeRuns.get(runId)?.questions?.dispose()]); }
         catch (cancelError) { await appendTrace(projectId, runId, { type: "runtime_cancel_error", summary: cancelError instanceof Error ? cancelError.message : String(cancelError) }); }
       }
       if (workspacePathForRun && runtimeSessionIdForRun && revisionsBeforeForRun) await recordFinishedFileChanges(projectId, runId, workspacePathForRun, runtimeSessionIdForRun, workspaceBeforeForRun, revisionsBeforeForRun);
@@ -910,6 +945,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       }
       activeRuns.get(runId)?.cancelPermissions?.();
+      await activeRuns.get(runId)?.questions?.dispose();
       await drainPermissions?.();
       try { await stopRuntimeEvents?.(); }
       catch (error) { recordInternalError(projectId, runId, "listener", error); await appendTrace(projectId, runId, { type: "listener_error", data: { phase: "stop", error: error instanceof Error ? error.message : String(error) } }); }
@@ -1008,6 +1044,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       extraPrompt?: string;
       interruptsRunId?: string;
       runId?: string;
+      interrupt?: boolean;
     }) {
       if (disposing) throw new Error("Agent run manager is closing");
       const prompt = input.prompt.trim();
@@ -1023,12 +1060,14 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (!member) {
         throw new Error("Project membership is required");
       }
+      return withSessionLock(`${input.projectId}:${input.sessionId ?? input.runId ?? input.memberId}`, async () => {
       const store = getStore(input.projectId);
       const sessionStore = getSessionStore(input.projectId);
       let session = input.sessionId
         ? await sessionStore.get(input.sessionId)
         : undefined;
       if (session) {
+        if (session.deletedAt) throw new Error("Agent session has been deleted");
         if ((session.scope ?? "personal") !== "team" && session.memberId !== input.memberId) {
           throw new Error("Agent session belongs to another participant");
         }
@@ -1045,6 +1084,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         });
       }
       const contexts = normalizeAgentContexts(input.contexts);
+      const nextRunId = input.runId ?? crypto.randomUUID();
+      let interruptsRunId = input.interruptsRunId;
+      if (input.interrupt) {
+        const previous = (await store.list()).filter((candidate) => candidate.sessionId === session!.id && ["queued", "running"].includes(candidate.status));
+        for (const candidate of previous) {
+          await this.cancelRun(input.projectId, candidate.id, input.memberId, { runId: nextRunId, memberId: input.memberId });
+          interruptsRunId = candidate.id;
+        }
+      }
       const run = await store.create({
         projectId: input.projectId,
         memberId: input.memberId,
@@ -1056,6 +1104,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         contexts,
         sessionId: session.id,
         runtimeSessionId: session.runtimeSessionId,
+        sessionScope: session.scope ?? "personal",
         status: "queued",
         runtime: "opencode",
         provider: "deepseek",
@@ -1063,8 +1112,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         source: input.source ?? "agent-panel",
         chatMessageId: input.chatMessageId,
         extraPrompt: input.extraPrompt?.trim() || undefined,
-        interruptsRunId: input.interruptsRunId
-      }, input.runId);
+        interruptsRunId
+      }, nextRunId);
       projectRuntime.conflictGuard?.arbitration.board.create({ kind: "agent", runId: run.id, ownerId: run.memberId, ...(session.scope === "team" ? { teamAgent: session.handle ?? session.title } : {}) }, prompt, Object.fromEntries(projectRuntime.documents.getRevisions()));
       emit({ type: "run_updated", projectId: input.projectId, run });
       await appendTrace(input.projectId, run.id, {
@@ -1074,6 +1123,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       getQueue(input.projectId).runIds.push(run.id);
       setImmediate(() => void processQueue(input.projectId));
       return run;
+      });
     },
     async createSession(input: {
       projectId: string;
@@ -1153,6 +1203,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const sessionStore = getSessionStore(projectId);
       const stored = await sessionStore.get(sessionId);
       if (!stored) throw new Error("Agent session not found");
+      if (stored.deletedAt) throw new Error("Agent session has been deleted");
       if ((stored.scope ?? "personal") !== "team" && stored.memberId !== memberId) {
         throw new Error("Agent session belongs to another participant");
       }
@@ -1175,6 +1226,25 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     async listRuns(projectId: string) {
       return getStore(projectId).list();
     },
+    async listVisibleRuns(projectId: string, memberId: string) {
+      const sessions = await getSessionStore(projectId).list();
+      return (await getStore(projectId).list()).filter((run) => sessions.some((session) => session.id === run.sessionId) && canReadAgentRun(run, memberId));
+    },
+    async deleteSession(projectId: string, sessionId: string, memberId: string) {
+      return withSessionLock(`${projectId}:${sessionId}`, async () => {
+        const session = await this.getSessionForMember(projectId, sessionId, memberId);
+        if (session.scope === "team") throw new Error("Only personal sessions can be deleted here");
+        for (const run of await getStore(projectId).list()) if (run.sessionId === sessionId && ["queued", "running"].includes(run.status)) await this.cancelRun(projectId, run.id, memberId);
+        await getSessionStore(projectId).update(sessionId, { deletedAt: new Date().toISOString() });
+      });
+    },
+    async answerQuestion(projectId: string, runId: string, memberId: string, requestId: string, answers?: string[][]) {
+      const run = await this.getRun(projectId, runId);
+      if (run.memberId !== memberId) throw new Error("Only the requesting member can answer this question");
+      const active = activeRuns.get(runId);
+      if (!active?.questions || run.status !== "running") throw new Error("This task is no longer waiting for an answer");
+      await active.questions.answer(requestId, answers);
+    },
     async listTrace(projectId: string, runId: string) {
       const run = await getStore(projectId).get(runId);
       if (!run) throw new Error("Agent run not found");
@@ -1194,6 +1264,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const store = getStore(projectId);
       const run = await store.get(runId);
       if (!run) throw new Error("Agent run not found");
+      if (!canReadAgentRun(run, memberId)) throw new Error("Agent run belongs to another participant");
       if (["completed", "failed", "cancelled"].includes(run.status)) return run;
 
       const queue = getQueue(projectId);
@@ -1228,10 +1299,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (active) {
         projectRuntime.conflictGuard?.arbitration.cancel(runId);
         active.cancelPermissions?.();
-        await options.runtime.cancel({
+        await Promise.all([options.runtime.cancel({
           workspacePath: active.workspacePath,
           sessionId: active.runtimeSessionId
-        });
+        }), active.questions?.dispose()]);
       } else {
         await recordCancellationCompletion(projectId, runId);
         projectRuntime.conflictGuard?.arbitration.finish(runId, false);
@@ -1294,7 +1365,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
                 options.runtime.cancel({
                   workspacePath: running.workspacePath,
                   sessionId: running.runtimeSessionId
-                })
+                }),
+                running.questions?.dispose()
               ]
             : [];
         })
@@ -1326,12 +1398,12 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       for (const active of activeRuns.values()) active.cancelPermissions?.();
       for (const [runId] of activeRuns) for (const projectId of queues.keys()) options.runtimeManager.get(projectId).conflictGuard?.arbitration.cancel(runId);
       await Promise.all(
-        [...activeRuns.values()].map((active) =>
+        [...activeRuns.values()].flatMap((active) => [
           options.runtime.cancel({
             workspacePath: active.workspacePath,
             sessionId: active.runtimeSessionId
-          })
-        )
+          }), active.questions?.dispose()
+        ])
       );
       await Promise.all(
         [...queues.values()]

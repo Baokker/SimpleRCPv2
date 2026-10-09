@@ -18,6 +18,7 @@ import type {
 import type { MemberStore, Identity } from "./auth/identity.js";
 import { can } from "./auth/permissions.js";
 import { connectIntentBoard } from "./conflictGuard/intentConnection.js";
+import { canReadAgentRun } from "./agent/agentVisibility.js";
 
 const yWebsocketDocs = (yWebsocketUtils as unknown as { docs: Map<string, unknown> }).docs;
 
@@ -181,10 +182,10 @@ export function attachRealtimeServer(
       return;
     }
     if (event.type === "run_updated") {
-      broadcastToProject(projectSockets, event.projectId, {
-        type: "agent_run_updated",
-        run: event.run
-      });
+      for (const socket of projectSockets.get(event.projectId) ?? []) {
+        const identity = identities.get(socket);
+        if (identity && canReadAgentRun(event.run, identity.memberId) && socket.readyState === 1) socket.send(JSON.stringify({ type: "agent_run_updated", run: event.run }));
+      }
       return;
     }
     if (event.type === "team_agents_changed") {
@@ -200,12 +201,10 @@ export function attachRealtimeServer(
       const part = event.event.data?.part as { type?: string; state?: { status?: string } } | undefined;
       if (part?.type !== "tool" || !["completed", "error"].includes(part.state?.status ?? "")) return;
     }
-    broadcastToProject(projectSockets, event.projectId, {
-      type: "agent_trace_appended",
-      runId: event.runId,
-      sequence: event.event.sequence,
-      event: event.event
-    });
+    for (const socket of projectSockets.get(event.projectId) ?? []) {
+      const identity = identities.get(socket);
+      if (identity && (event.shared || event.memberId === identity.memberId) && socket.readyState === 1) socket.send(JSON.stringify({ type: "agent_trace_appended", runId: event.runId, sequence: event.event.sequence, event: event.event }));
+    }
   });
   const removeProjectDisposingListener = runtimeManager.onProjectDisposing(
     (projectId) => {
@@ -281,7 +280,9 @@ export function attachRealtimeServer(
     async writeState(name, document) {
       const { projectId } = parseDocumentName(name);
       if (!projectId) throw new Error("Project document is missing projectId");
-      const documents = runtimeManager.get(projectId).documents;
+      const runtime = runtimeManager.find(projectId);
+      if (!runtime) return;
+      const documents = runtime.documents;
       if (documents.shouldDeferRelease(name)) queueMicrotask(() => yWebsocketDocs.set(name, document));
       await documents.flushDocument(name, document);
       if (documents.shouldDeferRelease(name)) {

@@ -4,7 +4,7 @@ import type { AgentRun, AgentRuntimeStatus } from "../types";
 import { GuardBadge, GuardMetrics, ReadableText } from "./ConflictGuardText";
 import { guardCheckLabels } from "../conflictGuardLabels";
 
-const phases = { "creating-session": "创建会话", "first-request": "等待首次响应", streaming: "接收模型输出", tool: "执行工具", approval: "等待审批" };
+const phases = { "creating-session": "创建会话", "first-request": "等待首次响应", streaming: "接收模型输出", tool: "执行工具", approval: "等待审批", question: "等待你的回答" };
 
 export function AgentRunProgress({ run, config, onCancel, onRetry }: { run: AgentRun; config?: AgentRuntimeStatus["activityConfig"]; onCancel?: () => void; onRetry?: () => void }) {
   const [now, setNow] = useState(Date.now());
@@ -18,7 +18,7 @@ export function AgentRunProgress({ run, config, onCancel, onRetry }: { run: Agen
   const elapsed = Math.max(0, Math.floor((end - Date.parse(run.startedAt ?? run.createdAt)) / 1000));
   const silenceMs = Math.max(0, now - Date.parse(run.activity?.lastPartAt ?? run.startedAt ?? run.createdAt));
   const activityConfig = run.activity?.config ?? config;
-  const waiting = active && run.activity?.phase !== "approval" && silenceMs >= (activityConfig?.waitingMs ?? 20_000);
+  const waiting = active && !run.questions?.length && run.activity?.phase !== "approval" && silenceMs >= (activityConfig?.waitingMs ?? 20_000);
   const stalled = waiting && silenceMs >= (activityConfig?.stalledMs ?? 60_000);
   const reasoning = run.activity?.reasoning.filter((part) => part.text.trim()).map((part) => part.text).join("\n\n") ?? "";
   return <section className="agent-run-progress" data-testid="agent-run-progress">

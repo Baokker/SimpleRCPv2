@@ -19,7 +19,11 @@ export async function migrateLegacyAgentSessions(
   >();
 
   for (const run of runs) {
-    if (run.sessionId && await sessionStore.get(run.sessionId)) continue;
+    const storedSession = run.sessionId ? await sessionStore.get(run.sessionId) : undefined;
+    if (storedSession) {
+      if (!run.sessionScope) await runStore.update(run.id, { sessionScope: storedSession.scope ?? "personal" });
+      continue;
+    }
     const legacyRuntimeSessionId = run.runtimeSessionId ?? run.sessionId;
     const migrationKey = `${run.memberId}:${legacyRuntimeSessionId ?? run.id}`;
     let session = migrated.get(migrationKey);

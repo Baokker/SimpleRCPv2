@@ -94,6 +94,14 @@ export async function getAgentSessions(projectId: string) {
   return response.sessions;
 }
 
+export function deleteAgentSession(projectId: string, sessionId: string) {
+  return request(`${projectPath(projectId)}/agent/sessions/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
+}
+
+export function answerAgentQuestion(projectId: string, runId: string, requestId: string, answers?: string[][]) {
+  return request(`${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/questions/${encodeURIComponent(requestId)}/${answers ? "reply" : "reject"}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }) });
+}
+
 export async function getTeamAgents(projectId: string) {
   const response = await request<{ agents: AgentSession[] }>(
     `${projectPath(projectId)}/team-agents`

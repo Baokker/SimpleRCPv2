@@ -246,7 +246,7 @@ export function createOpenCodeRuntime(
           directory: input.workspacePath,
           sessionID: input.sessionId
         },
-        { throwOnError: true }
+        { throwOnError: true, signal: input.signal ?? AbortSignal.timeout(10_000) }
       );
     },
     async getToolInput(input) {
@@ -258,6 +258,14 @@ export function createOpenCodeRuntime(
     async replyPermission(input) {
       const client = await getClient(input.workspacePath);
       await client.permission.reply({ directory: input.workspacePath, requestID: input.requestId, reply: input.reply, message: input.message }, { throwOnError: true });
+    },
+    async replyQuestion(input) {
+      const client = await getClient(input.workspacePath);
+      await client.question.reply({ directory: input.workspacePath, requestID: input.requestId, answers: input.answers }, { throwOnError: true, signal: input.signal ?? AbortSignal.timeout(10_000) });
+    },
+    async rejectQuestion(input) {
+      const client = await getClient(input.workspacePath);
+      await client.question.reject({ directory: input.workspacePath, requestID: input.requestId }, { throwOnError: true, signal: input.signal ?? AbortSignal.timeout(10_000) });
     },
     async subscribe(input, listener, onListenerError) {
       const client = await getClient(input.workspacePath);

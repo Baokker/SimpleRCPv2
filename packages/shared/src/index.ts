@@ -112,7 +112,13 @@ export interface AgentRuntimeStatus {
   activityConfig?: { waitingMs: number; stalledMs: number };
 }
 
-export type AgentRunPhase = "creating-session" | "first-request" | "streaming" | "tool" | "approval";
+export type AgentRunPhase = "creating-session" | "first-request" | "streaming" | "tool" | "approval" | "question";
+
+export interface AgentQuestion {
+  id: string;
+  sessionID: string;
+  questions: Array<{ header: string; question: string; options: Array<{ label: string; description: string }>; multiple?: boolean; custom?: boolean }>;
+}
 
 export interface AgentRunFailure {
   phase: AgentRunPhase;
@@ -180,6 +186,8 @@ export interface AgentRun {
   interruptedByMemberId?: string;
   sessionId?: string;
   runtimeSessionId?: string;
+  sessionScope?: "personal" | "team";
+  questions?: AgentQuestion[];
   output?: string;
   error?: string;
   failure?: AgentRunFailure;
@@ -212,6 +220,7 @@ export interface AgentSession {
   participantId?: string;
   memberName?: string;
   historical?: boolean;
+  deletedAt?: string;
   title: string;
   runtime: "opencode";
   runtimeSessionId?: string;

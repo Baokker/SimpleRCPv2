@@ -26,6 +26,7 @@ import { conflictActionCount } from "../conflictGuardPresentation";
 import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
 import { AgentRunProgress } from "./AgentRunProgress";
+import { AgentQuestions } from "./AgentQuestions";
 import type {
   AgentRun,
   AgentSession,
@@ -325,6 +326,7 @@ export function CollaborationPanel({
                         trace={message.runId ? agentTraces[message.runId] ?? [] : []}
                         projectId={projectId}
                         showCard={false}
+                        memberId={member?.id}
                         onOpenFile={onOpenFile}
                         onError={onError}
                         onLoadAgentTrace={onLoadAgentTrace}
@@ -341,6 +343,7 @@ export function CollaborationPanel({
                             trace={agentTraces[message.runId] ?? []}
                             projectId={projectId}
                             showText={false}
+                            memberId={member?.id}
                             onOpenFile={onOpenFile}
                             onError={onError}
                             onLoadAgentTrace={onLoadAgentTrace}
@@ -544,7 +547,8 @@ function ChatAgentMessage({
   onError,
   onLoadAgentTrace,
   interruptedByName,
-  onCancelAgentRun
+  onCancelAgentRun,
+  memberId
 }: {
   message: ChatMessage;
   run?: AgentRun;
@@ -556,6 +560,7 @@ function ChatAgentMessage({
   onError(error: unknown): void;
   onLoadAgentTrace(runId: string): void;
   interruptedByName?: string;
+  memberId?: string;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -574,6 +579,7 @@ function ChatAgentMessage({
       ) : null}
       {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
+          <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
           <AgentRunProgress run={run} onCancel={active ? () => void onCancelAgentRun(run.id).catch(onError) : undefined} />
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
           {run.fileChanges?.length ? (
