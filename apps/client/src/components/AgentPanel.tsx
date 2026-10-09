@@ -1,11 +1,6 @@
 import {
-  Activity,
-  AlertCircle,
   Bot,
-  CheckCircle2,
-  ChevronDown,
   CircleStop,
-  Download,
   FileCode2,
   LoaderCircle,
   Paperclip,
@@ -25,7 +20,6 @@ import {
   getWorkspaceDirectory,
   readWorkspaceFile
 } from "../api";
-import { presentTrace } from "../agentTracePresentation";
 import { guardCheckLabels, readableGuardText } from "../conflictGuardLabels";
 import type {
   AgentPromptContext,
@@ -41,6 +35,7 @@ import { GuardBadge, GuardMetrics, ReadableText } from "./ConflictGuardText";
 import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
+import { AgentWorkDetails } from "./AgentWorkDetails";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 
@@ -541,10 +536,6 @@ function AgentMessage({
   activityConfig?: AgentRuntimeStatus["activityConfig"];
   onRetry(): void;
 }) {
-  const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
-  useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
-  const presentation = useMemo(() => presentTrace(trace), [trace]);
-
   return (
     <article className="agent-assistant-message" data-testid="agent-selected-run">
       <header>
@@ -563,44 +554,7 @@ function AgentMessage({
       {run.status !== "running" ? <AgentRunProgress run={run} config={activityConfig} onRetry={onRetry} /> : null}
       <AgentResponse run={run} />
 
-      <details
-        className={`agent-trace-block ${run.status}`}
-        open={expanded}
-        onToggle={(event) => {
-          setExpanded(event.currentTarget.open);
-          if (event.currentTarget.open) onLoadTrace();
-        }}
-        data-testid="agent-trace-disclosure"
-      >
-        <summary data-testid="agent-trace-summary">
-          <span className="agent-trace-summary-main">
-            <TraceStatusIcon status={run.status} />
-            <span>
-              <strong>{ACTIVE_STATUSES.has(run.status) ? "OpenCode is working" : "Work details"}</strong>
-              <small>{presentation.visible.length} actions</small>
-            </span>
-          </span>
-          <ChevronDown className="agent-trace-chevron" size={14} />
-        </summary>
-        <div className="agent-trace-content">
-          <ol className="agent-trace" data-testid="agent-trace">
-            {presentation.visible.map((item) => (
-              <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
-                <span className="agent-trace-entry-marker" aria-hidden="true" />
-                <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}{item.metrics ? <GuardMetrics items={item.metrics} /> : null}</div>
-              </li>
-            ))}
-          </ol>
-          <button
-            type="button"
-            className="agent-trace-download"
-            onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
-            data-testid="agent-trace-download"
-          >
-            <Download size={13} /> Download trace
-          </button>
-        </div>
-      </details>
+      <AgentWorkDetails run={run} trace={trace} onLoadTrace={onLoadTrace} onDownload={() => void downloadAgentTrace(projectId, run.id).catch(onError)} />
 
       {run.conflictGuard ? <section className="agent-guard-result" data-testid="agent-guard-result">
         <h4>冲突检查</h4>
@@ -654,12 +608,4 @@ function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds:
   }
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
   return position > 0 ? `Waiting for a concurrent slot (#${position})` : "Waiting for a concurrent slot";
-}
-
-function TraceStatusIcon({ status }: { status: AgentRun["status"] }) {
-  if (status === "completed") return <CheckCircle2 size={16} />;
-  if (status === "failed") return <AlertCircle size={16} />;
-  if (status === "cancelled") return <CircleStop size={16} />;
-  if (status === "running") return <LoaderCircle className="agent-trace-spinner" size={16} />;
-  return <Activity size={16} />;
 }

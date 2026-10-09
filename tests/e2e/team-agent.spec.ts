@@ -73,7 +73,7 @@ test("Chat and My Agent share a live team trace and download", async ({ page }) 
 
   const card = page.getByTestId("chat-agent-card").last();
   await expect(card).toBeVisible({ timeout: 90_000 });
-  await expect(card).toContainText("Agent is working");
+  await expect(card.getByTestId("agent-trace-summary")).toContainText("工作详情");
   await expect(page.getByTestId("chat-agent-trace").last()).toContainText("Started working in the project", { timeout: 30_000 });
   await expect(card).toContainText("Run completed", { timeout: 90_000 });
 

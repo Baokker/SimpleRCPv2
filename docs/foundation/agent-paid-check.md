@@ -47,7 +47,7 @@ pnpm test:e2e tests/e2e/agent-progress-recording.spec.ts \
 pnpm -r build
 ```
 
-浏览器检查共 6 项通过。问题状态使用实际等待回答时的任务记录；工具状态使用真实轨迹中 `sleep 30` 执行到第 25 秒时的活动记录。检查直接渲染产品组件，不替换 HTTP 接口或 Agent runtime。
+浏览器检查共 8 项通过。问题状态使用实际等待回答时的任务记录；工具状态使用真实轨迹中 `sleep 30` 执行到第 25 秒时的活动记录。My Agent 与 Chat 的工作详情检查覆盖推理与操作合并、收起预览以及任务完成后的阅读。检查直接渲染产品组件，不替换 HTTP 接口或 Agent runtime。
 
 构建通过，`pnpm test:demo` 的 2 项检查通过。`pnpm test:collab` 在 off、observe、rules、full 四种模式下各有 2 项通过，检查使用真实协作服务，只执行成员操作。
 

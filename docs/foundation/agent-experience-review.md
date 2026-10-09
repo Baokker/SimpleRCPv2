@@ -3,6 +3,7 @@
 ## 交互行为
 
 - My Agent 与 Chat 的 Agent 卡片使用 `AgentResponse` 展示实时助手正文。文本按照 OpenCode 的 part ID 保存，完整消息更新替换对应片段，文本增量追加到该片段。用户提示和推理文本分别处理。取消、失败和完成后保留已接收的内容。
+- My Agent 与 Chat 共用 `AgentWorkDetails`。流式推理文字、工具操作和任务节点显示在同一个“工作详情”中。运行中默认展开，收起后显示最近三行推理预览；结束后可以重新展开阅读。
 - My Agent 直接接收 WebSocket 的任务状态，工具和问题状态随服务端更新显示。会话列表每五秒刷新。
 - 个人会话分别保存尚未发送的提示与文件选择，切换会话或 Chat 后保持。发送请求只清理提交时的草稿，新输入继续保留。中文输入法的确认操作不会发送任务。
 - 消息列表在阅读较早内容时保持当前位置，在列表末尾时跟随新输出。
@@ -15,6 +16,7 @@
 |---|---|
 | 正文保存与增量处理 | `apps/server/src/agent/agentProgress.ts`：`createAgentProgress` |
 | 正文展示 | `apps/client/src/components/AgentResponse.tsx`：`AgentResponse` |
+| 工作详情与实时推理 | `apps/client/src/components/AgentWorkDetails.tsx`：`AgentWorkDetails` |
 | 草稿、实时任务与阅读位置 | `apps/client/src/components/AgentPanel.tsx`：`AgentPanel`；`CollaborationPanel.tsx`：`CollaborationPanel` |
 | 任务更新 | `apps/client/src/App.tsx`：`agent_run_updated` 处理 |
 | 发送前取消 | `apps/server/src/agent/openCodeRuntime.ts`：`run`、`cancel` |

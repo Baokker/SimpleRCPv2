@@ -21,13 +21,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel, type AgentDraft } from "./AgentPanel";
 import { downloadAgentTrace, getServerInfo, getConflictGuardState, sendConflictPairChat } from "../api";
 import { ConflictGuardPanel } from "./ConflictGuardPanel";
-import { GuardMetrics } from "./ConflictGuardText";
 import { conflictActionCount } from "../conflictGuardPresentation";
 import type { ConflictGuardState } from "../conflictGuardTypes";
-import { presentTrace } from "../agentTracePresentation";
 import { AgentRunProgress } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
+import { AgentWorkDetails } from "./AgentWorkDetails";
 import type {
   AgentRun,
   AgentSession,
@@ -572,7 +571,6 @@ function ChatAgentMessage({
   const lines = message.text.split("\n");
   const canExpand = lines.length > 20;
   const visibleText = canExpand && !expanded ? lines.slice(0, 20).join("\n") : message.text;
-  const presentation = useMemo(() => presentTrace(trace), [trace]);
   const active = run?.status === "queued" || run?.status === "running";
   return (
     <>
@@ -597,27 +595,7 @@ function ChatAgentMessage({
               ))}
             </ul>
           ) : <small>No file changes recorded.</small>}
-          <details className={`chat-agent-trace ${run.status}`} open={active} onToggle={(event) => {
-            if (event.currentTarget.open) onLoadAgentTrace(run.id);
-          }}>
-            <summary>
-              <span><strong>{active ? "Agent is working" : "Work trace"}</strong><small>{presentation.visible.length} actions</small></span>
-              <span>{active ? "Live" : "Open"}</span>
-            </summary>
-            <div className="chat-agent-trace-content">
-              {active ? <div className="agent-trace-live-status"><span className="agent-trace-live-dot" />Receiving live updates from OpenCode</div> : null}
-              {presentation.visible.length > 0 ? (
-                <ol className="agent-trace" data-testid="chat-agent-trace">
-                  {presentation.visible.map((item) => (
-                    <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
-                      <span className="agent-trace-entry-marker" aria-hidden="true" />
-                      <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}{item.metrics ? <GuardMetrics items={item.metrics} /> : null}</div>
-                    </li>
-                  ))}
-                </ol>
-              ) : <p className="chat-trace-empty">Waiting for the Agent to report its first action.</p>}
-            </div>
-          </details>
+          <AgentWorkDetails run={run} trace={trace} variant="team" onLoadTrace={() => onLoadAgentTrace(run.id)} />
           <div className="chat-agent-card-actions">
             <button
               type="button"
