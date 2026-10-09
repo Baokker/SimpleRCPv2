@@ -586,7 +586,7 @@ function ChatAgentMessage({
         <article className="chat-agent-card" data-testid="chat-agent-card">
           {!showText && run.status !== "completed" ? <AgentResponse run={run} /> : null}
           <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
-          <AgentRunProgress run={run} onCancel={active ? () => void onCancelAgentRun(run.id).catch(onError) : undefined} />
+          <AgentRunProgress run={run} memberId={memberId} onCancel={active ? () => void onCancelAgentRun(run.id).catch(onError) : undefined} />
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
           {run.fileChanges?.length ? (
             <ul>

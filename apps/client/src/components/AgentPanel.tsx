@@ -326,7 +326,7 @@ export function AgentPanel({
         </div>
       </header>
 
-      {runningRuns.filter((run) => run.sessionId === selectedSessionId).map((run) => <div key={run.id}><AgentQuestions projectId={projectId} run={run} memberId={member?.id} onError={onError} /><AgentRunProgress run={run} config={runtime?.activityConfig} onCancel={() => void cancelRun(run)} /></div>)}
+      {runningRuns.filter((run) => run.sessionId === selectedSessionId).map((run) => <div key={run.id}><AgentQuestions projectId={projectId} run={run} memberId={member?.id} onError={onError} /><AgentRunProgress run={run} memberId={member?.id} config={runtime?.activityConfig} onCancel={() => void cancelRun(run)} /></div>)}
 
       {runningRuns.length > 0 ? (
         <div className="agent-active-runs" data-testid="agent-active-runs">
@@ -334,7 +334,7 @@ export function AgentPanel({
           <ul>
             {runningRuns.map((run) => (
               <li key={run.id}>
-                <span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span><AgentRunStatus run={run} /></span>
+                <span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span><AgentRunStatus run={run} memberId={member?.id} /></span>
                 <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
               </li>
             ))}

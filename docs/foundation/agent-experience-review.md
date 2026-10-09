@@ -44,4 +44,4 @@ OpenCode 集成检查启动本机安装的 1.18.31，通过 SDK 创建会话并�
 
 原始输出保存在本机忽略目录 `.test-workspaces/`：`agent-review-server.log`、`agent-review-coordination.log`、`agent-review-browser-verified.log`、`agent-review-build-verified.log`、`agent-review-demo.log` 与 `agent-review-collab-<模式>.log`。
 
-本轮没有真实模型任务。模型生成问题后的完整回答流程和运行中工具的中断行为，仍以人工检查材料规定的步骤验证。
+付费模型交互检查使用 `deepseek-flash` 完成 6 次真实任务，验证个人内容隔离、三个问题的浏览器回答、工具执行中的中断、Chat 团队提问和实时正文。问题状态按照查看者身份显示回答者；工具执行与模型等待使用各自的提示。实际结果、轨迹与复核命令见 [Agent 付费模型交互检查](agent-paid-check.md)。
