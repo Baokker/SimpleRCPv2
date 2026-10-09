@@ -92,8 +92,8 @@ export function createAgentQuestions(options: {
       const waiting = [...pending.entries()];
       for (const [id] of waiting) remove(id);
       disposal = (async () => {
-        await publish();
         const results = await Promise.allSettled([
+          Promise.resolve().then(publish),
           ...operations,
           ...waiting.filter(([, entry]) => !entry.responding).map(([id]) => request((signal) => options.reject(id, signal)))
         ]);

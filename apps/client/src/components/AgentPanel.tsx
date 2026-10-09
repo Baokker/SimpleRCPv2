@@ -13,14 +13,13 @@ import {
   Send,
   X
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   cancelAgentRun,
   createAgentSession,
   createAgentSessionRun,
   deleteAgentSession,
   downloadAgentTrace,
-  getAgentRuns,
   getAgentSessions,
   getAgentStatus,
   getWorkspaceDirectory,
@@ -41,15 +40,25 @@ import { formatTime, titleCase } from "../format";
 import { GuardBadge, GuardMetrics, ReadableText } from "./ConflictGuardText";
 import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
+import { AgentResponse } from "./AgentResponse";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
+
+export interface AgentDraft {
+  prompt: string;
+  contexts: AgentPromptContext[];
+}
 
 export function AgentPanel({
   projectId,
   member,
   members,
   workspaceTree,
-  refreshVersion,
+  liveRuns,
+  drafts,
+  setDrafts,
+  selectedSessionId,
+  setSelectedSessionId,
   traces,
   onLoadTrace,
   onOpenFile,
@@ -59,7 +68,11 @@ export function AgentPanel({
   member: RoomMember | null;
   members: RoomMember[];
   workspaceTree: WorkspaceNode[];
-  refreshVersion: number;
+  liveRuns: AgentRun[];
+  drafts: Record<string, AgentDraft>;
+  setDrafts: Dispatch<SetStateAction<Record<string, AgentDraft>>>;
+  selectedSessionId?: string;
+  setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
   traces: Record<string, AgentTraceEvent[]>;
   onLoadTrace(runId: string): void;
   onOpenFile(path: string): void;
@@ -68,9 +81,14 @@ export function AgentPanel({
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [sessions, setSessions] = useState<AgentSession[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<string>();
-  const [prompt, setPrompt] = useState("");
-  const [contexts, setContexts] = useState<AgentPromptContext[]>([]);
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
+  const draftKey = `${projectId}:${member?.id ?? ""}:${selectedSessionId ?? "new"}`;
+  const draft = drafts[draftKey];
+  const prompt = draft?.prompt ?? "";
+  const contexts = draft?.contexts ?? [];
+  const selectedSessionRef = useRef(selectedSessionId);
+  selectedSessionRef.current = selectedSessionId;
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextFiles, setContextFiles] = useState<string[]>([]);
   const [contextLoading, setContextLoading] = useState(false);
@@ -79,6 +97,7 @@ export function AgentPanel({
   const [sessionCreating, setSessionCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const transcriptRef = useRef<HTMLOListElement>(null);
+  const followTranscriptRef = useRef(true);
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
 
@@ -89,10 +108,6 @@ export function AgentPanel({
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
     [runs, selectedSessionId]
   );
-  const displayRuns = useMemo(() => {
-    const visible = runs.filter((run) => run.sessionId === selectedSessionId);
-    return visible.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
-  }, [runs, selectedSessionId]);
   const runningRuns = runs.filter((run) => run.status === "running" && run.memberId === member?.id && sessions.some((session) => session.id === run.sessionId));
   const queuedRuns = useMemo(
     () => runs
@@ -108,6 +123,16 @@ export function AgentPanel({
   const sessionRunIds = sessionRuns.map((run) => run.id).join(",");
 
   useEffect(() => {
+    if (!member) return;
+    setRuns((current) => {
+      const visible = (run: AgentRun) => run.memberId === member.id && sessions.some((session) => session.id === run.sessionId);
+      const byId = new Map(current.filter(visible).map((run) => [run.id, run]));
+      for (const run of liveRuns.filter(visible)) byId.set(run.id, run);
+      return [...byId.values()];
+    });
+  }, [liveRuns, sessions, member?.id]);
+
+  useEffect(() => {
     let active = true;
     if (!member) {
       setSessions([]);
@@ -117,13 +142,11 @@ export function AgentPanel({
     }
     void Promise.all([
       getAgentStatus(),
-      getAgentSessions(projectId),
-      getAgentRuns(projectId),
-    ]).then(([nextRuntime, nextSessions, nextRuns]) => {
+      getAgentSessions(projectId)
+    ]).then(([nextRuntime, nextSessions]) => {
       if (!active) return;
       setRuntime(nextRuntime);
       setSessions(nextSessions);
-      setRuns(nextRuns.filter((run) => run.memberId === member.id && nextSessions.some((session) => session.id === run.sessionId)));
       setSelectedSessionId((current) =>
         current && nextSessions.some((session) => session.id === current)
           ? current
@@ -137,13 +160,10 @@ export function AgentPanel({
     if (!member) return;
     let active = true;
     async function refresh() {
-      const [nextRuns, nextSessions] = await Promise.all([
-        getAgentRuns(projectId),
-        getAgentSessions(projectId)
-      ]);
+      const nextSessions = await getAgentSessions(projectId);
       if (!active) return;
-      setRuns(nextRuns.filter((run) => run.memberId === member!.id && nextSessions.some((session) => session.id === run.sessionId)));
       setSessions(nextSessions);
+      setSelectedSessionId((current) => current && nextSessions.some((session) => session.id === current) ? current : nextSessions[0]?.id);
     }
     void refresh().catch((error) => onErrorRef.current(error));
     const timer = window.setInterval(
@@ -154,12 +174,17 @@ export function AgentPanel({
       active = false;
       window.clearInterval(timer);
     };
-  }, [member?.id, projectId, refreshVersion]);
+  }, [member?.id, projectId]);
+
+  useEffect(() => {
+    followTranscriptRef.current = true;
+    setContextMenuOpen(false);
+  }, [selectedSessionId]);
 
   useEffect(() => {
     const transcript = transcriptRef.current;
-    if (transcript) transcript.scrollTop = transcript.scrollHeight;
-  }, [sessionRuns.length, sessionRuns.at(-1)?.status]);
+    if (transcript && followTranscriptRef.current) transcript.scrollTop = transcript.scrollHeight;
+  }, [sessionRuns, traces, selectedSessionId]);
 
   useEffect(() => {
     if (!selectedSessionId) return;
@@ -188,6 +213,8 @@ export function AgentPanel({
     const text = prompt.trim();
     if (!text || !member || submitting) return;
     setSubmitting(true);
+    let submittedKey = draftKey;
+    const submittedDraft = draft;
     try {
       let session = selectedSession;
       if (!session) {
@@ -196,16 +223,21 @@ export function AgentPanel({
         });
         session = response.session;
         setSessions((current) => [response.session, ...current]);
-        setSelectedSessionId(response.session.id);
+        submittedKey = `${projectId}:${member.id}:${response.session.id}`;
+        setDrafts((current) => {
+          const next = { ...current, [submittedKey]: current[draftKey] ?? { prompt: text, contexts } };
+          delete next[draftKey];
+          return next;
+        });
+        if (selectedSessionRef.current === selectedSessionId) setSelectedSessionId(response.session.id);
       }
       const response = await createAgentSessionRun(projectId, session.id, {
         prompt: text,
         contexts
       });
-      setRuns((current) => [response.run, ...current]);
-      setPrompt("");
-      setContexts([]);
-      setContextMenuOpen(false);
+      setRuns((current) => [response.run, ...current.filter((run) => run.id !== response.run.id)]);
+      setDrafts((current) => current[submittedKey] === submittedDraft ? { ...current, [submittedKey]: { prompt: "", contexts: [] } } : current);
+      if (selectedSessionRef.current === session.id) setContextMenuOpen(false);
     } catch (error) {
       onErrorRef.current(error);
     } finally {
@@ -214,9 +246,10 @@ export function AgentPanel({
   }
 
   function toggleContext(path: string) {
-    setContexts((current) => current.some((context) => context.path === path)
-      ? current.filter((context) => context.path !== path)
-      : [...current, { type: "file", path }]);
+    setDrafts((current) => {
+      const context = current[draftKey]?.contexts ?? [];
+      return { ...current, [draftKey]: { prompt: current[draftKey]?.prompt ?? "", contexts: context.some((entry) => entry.path === path) ? context.filter((entry) => entry.path !== path) : [...context, { type: "file", path }] } };
+    });
   }
 
   async function toggleContextMenu() {
@@ -268,10 +301,14 @@ export function AgentPanel({
     if (!window.confirm(`删除会话“${session.title}”？运行中的任务将取消，已经写入的文件继续保留。`)) return;
     try {
       await deleteAgentSession(projectId, session.id);
-      const remaining = sessions.filter((entry) => entry.id !== session.id);
-      setSessions(remaining);
+      setSessions((current) => current.filter((entry) => entry.id !== session.id));
       setRuns((current) => current.filter((run) => run.sessionId !== session.id));
-      if (selectedSessionId === session.id) setSelectedSessionId(remaining[0]?.id);
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[`${projectId}:${member?.id ?? ""}:${session.id}`];
+        return next;
+      });
+      setSelectedSessionId((current) => current === session.id ? sessionsRef.current.find((entry) => entry.id !== session.id)?.id : current);
     } catch (error) { onErrorRef.current(error); }
   }
 
@@ -339,7 +376,7 @@ export function AgentPanel({
             value={sessionTitle}
             onChange={(event) => setSessionTitle(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") void createSession();
+              if (event.key === "Enter" && !event.nativeEvent.isComposing) void createSession();
             }}
             placeholder="Session title"
             data-testid="agent-session-title"
@@ -351,10 +388,13 @@ export function AgentPanel({
         </div>
       ) : null}
 
-      <ol className="agent-message-list" ref={transcriptRef} data-testid="agent-message-list">
-        {displayRuns.length === 0 ? (
+      <ol className="agent-message-list" ref={transcriptRef} onScroll={(event) => {
+        const list = event.currentTarget;
+        followTranscriptRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+      }} data-testid="agent-message-list">
+        {sessionRuns.length === 0 ? (
           <li className="empty-panel-state">Ask OpenCode to work on this project.</li>
-        ) : displayRuns.map((run) => (
+        ) : sessionRuns.map((run) => (
           <li key={run.id} className="agent-turn">
             <article className="agent-user-message">
               <header>
@@ -410,9 +450,12 @@ export function AgentPanel({
         ) : null}
         <textarea
           value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
+          onChange={(event) => {
+            const value = event.target.value;
+            setDrafts((current) => ({ ...current, [draftKey]: { prompt: value, contexts: current[draftKey]?.contexts ?? [] } }));
+          }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               void submitRun();
             }
@@ -518,6 +561,7 @@ function AgentMessage({
       </header>
 
       {run.status !== "running" ? <AgentRunProgress run={run} config={activityConfig} onRetry={onRetry} /> : null}
+      <AgentResponse run={run} />
 
       <details
         className={`agent-trace-block ${run.status}`}
@@ -567,7 +611,6 @@ function AgentMessage({
         {run.conflictGuard.lastRejection ? <div className="agent-guard-explanation"><span className="conflict-field-label">最近一次拒绝</span><ReadableText text={readableGuardText(run.conflictGuard.lastRejection)} testId="agent-last-rejection" /></div> : null}
         {run.conflictGuard.t3 ? <div className="agent-guard-check"><span className="conflict-field-label">{guardCheckLabels.T3}</span><GuardBadge tone={run.conflictGuard.t3 === "passed" ? "success" : "warning"}>{({ passed: "检查通过", warned: "请检查关联修改", reverted: "已撤回修改", "partially-reverted": "部分修改已撤回，其余需要人工处理" })[run.conflictGuard.t3]}</GuardBadge></div> : null}
       </section> : null}
-      {run.output ? <div className="agent-run-output">{run.output}</div> : null}
       {run.fileChanges?.length ? (
         <ul className="agent-file-changes">
           {run.fileChanges.map((change) => (

@@ -171,12 +171,9 @@ export function createOpenCodeRuntime(
     },
     async run(input) {
       requireAvailableSettings();
-      const client = await getClient(input.workspacePath);
       if (pending.has(input.sessionId)) throw new Error("同一 OpenCode 会话已有活动任务");
-      const stopOwnSubscription = subscriptions.has(input.sessionId) ? undefined : await runtime.subscribe(input, () => {});
-      const subscription = subscriptions.get(input.sessionId);
-      if (!subscription) throw new Error("OpenCode 任务缺少活动事件连接");
-      if (subscription.error) throw subscription.error;
+      let client: Awaited<ReturnType<typeof getClient>>;
+      let stopOwnSubscription: (() => Promise<void>) | undefined;
       const userMessageId = `msg_${nanoid(26)}`;
       const controller = new AbortController();
       let resolve!: (result: { text: string; messageId: string }) => void;
@@ -200,6 +197,13 @@ export function createOpenCodeRuntime(
       };
       pending.set(input.sessionId, operation);
       try {
+        client = await getClient(input.workspacePath);
+        controller.signal.throwIfAborted();
+        if (!subscriptions.has(input.sessionId)) stopOwnSubscription = await runtime.subscribe(input, () => {});
+        controller.signal.throwIfAborted();
+        const subscription = subscriptions.get(input.sessionId);
+        if (!subscription) throw new Error("OpenCode 任务缺少活动事件连接");
+        if (subscription.error) throw subscription.error;
         await client.session.promptAsync({
           directory: input.workspacePath,
           sessionID: input.sessionId,

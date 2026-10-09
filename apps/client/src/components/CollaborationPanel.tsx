@@ -18,7 +18,7 @@ import {
   Users
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AgentPanel } from "./AgentPanel";
+import { AgentPanel, type AgentDraft } from "./AgentPanel";
 import { downloadAgentTrace, getServerInfo, getConflictGuardState, sendConflictPairChat } from "../api";
 import { ConflictGuardPanel } from "./ConflictGuardPanel";
 import { GuardMetrics } from "./ConflictGuardText";
@@ -27,6 +27,7 @@ import type { ConflictGuardState } from "../conflictGuardTypes";
 import { presentTrace } from "../agentTracePresentation";
 import { AgentRunProgress } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
+import { AgentResponse } from "./AgentResponse";
 import type {
   AgentRun,
   AgentSession,
@@ -77,7 +78,6 @@ export function CollaborationPanel({
   workspaceRoot,
   workspaceTree,
   roomId,
-  agentRefreshVersion,
   followingMemberId,
   onFollowMember,
   onOpenFile,
@@ -103,7 +103,6 @@ export function CollaborationPanel({
   workspaceRoot: string;
   workspaceTree: WorkspaceNode[];
   roomId: string;
-  agentRefreshVersion: number;
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
@@ -114,6 +113,8 @@ export function CollaborationPanel({
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
+  const [agentDrafts, setAgentDrafts] = useState<Record<string, AgentDraft>>({});
+  const [selectedAgentSessionId, setSelectedAgentSessionId] = useState<string>();
   const [conflictState, setConflictState] = useState<ConflictGuardState>();
   const errorHandler = useRef(onError);
   errorHandler.current = onError;
@@ -512,7 +513,11 @@ export function CollaborationPanel({
             projectId={projectId}
             member={member}
             members={members}
-            refreshVersion={agentRefreshVersion}
+            liveRuns={agentRuns}
+            drafts={agentDrafts}
+            setDrafts={setAgentDrafts}
+            selectedSessionId={selectedAgentSessionId}
+            setSelectedSessionId={setSelectedAgentSessionId}
             traces={agentTraces}
             onOpenFile={onOpenFile}
             workspaceTree={workspaceTree}
@@ -579,6 +584,7 @@ function ChatAgentMessage({
       ) : null}
       {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
+          {!showText && run.status !== "completed" ? <AgentResponse run={run} /> : null}
           <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
           <AgentRunProgress run={run} onCancel={active ? () => void onCancelAgentRun(run.id).catch(onError) : undefined} />
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>

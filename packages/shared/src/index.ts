@@ -140,6 +140,7 @@ export interface AgentRunActivity {
   lastPartAt?: string;
   tools: Array<{ id: string; name: string; summary: string; startedAt: string; status: "pending" | "running" }>;
   reasoning: Array<{ id: string; text: string }>;
+  messages?: Array<{ id: string; messageId: string; sessionId?: string; text: string }>;
   tokens?: { input: number; output: number; reasoning: number; cacheRead: number; cacheWrite: number; total: number };
 }
 

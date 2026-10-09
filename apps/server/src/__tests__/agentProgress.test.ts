@@ -1,8 +1,53 @@
 import { describe, expect, it } from "vitest";
 import { createAgentProgress } from "../agent/agentProgress.js";
 import { AgentRuntimeRequestError, diagnoseAgentFailure, safeRequestTarget } from "../agent/agentRunFailure.js";
+import { fileURLToPath } from "node:url";
+import { createTraceStore } from "../agent/traceStore.js";
+import type { AgentTraceEvent } from "@simplercp/shared";
 
 describe("Agent 活动记录", () => {
+  it("真实 OpenCode 轨迹的助手正文在增量期间可读，完整更新保持原文且排除用户提示", async () => {
+    const tracePath = fileURLToPath(new URL("../../../../docs/conflict-guard/evidence/round2-dual-agent/run-UlCzhJhKE5Dl.jsonl", import.meta.url));
+    const events = await createTraceStore(tracePath).list();
+    expect(events.length).toBeGreaterThan(100);
+    const progress = createAgentProgress(events[0]!.timestamp);
+    const roles = new Map<string, string>();
+    const expected = new Map<string, { messageId: string; text: string }>();
+    let checkedDelta = false;
+    let sawUserText = false;
+    for (const event of events) {
+      if (!event.type.startsWith("opencode.") || !event.data) continue;
+      const info = event.data.info as { id?: string; role?: string } | undefined;
+      const part = event.data.part as { id?: string; type?: string; messageID?: string; sessionID?: string; text?: string } | undefined;
+      if (info?.id && info.role) roles.set(info.id, info.role);
+      const before = progress.snapshot();
+      progress.event({ type: event.type.slice("opencode.".length), data: event.data }, event.timestamp);
+      if (part?.type === "text" && part.id && part.messageID && typeof part.text === "string") {
+        if (roles.get(part.messageID) === "assistant") expected.set(part.id, { messageId: part.messageID, text: part.text });
+        if (roles.get(part.messageID) === "user") {
+          sawUserText = true;
+          expect(progress.snapshot().messages?.some((message) => message.id === part.id)).toBe(false);
+          expect(progress.assistantText(part.id, part.sessionID!)).toBeUndefined();
+        }
+      }
+      if (event.type === "opencode.message.part.delta" && event.data.field === "text") {
+        const previous = before.messages?.find((message) => message.id === event.data!.partID);
+        if (previous) {
+          const updated = progress.snapshot().messages?.find((message) => message.id === previous.id);
+          expect(updated?.text).toBe(previous.text + event.data.delta);
+          const text = expected.get(previous.id);
+          if (text) text.text += String(event.data.delta);
+          checkedDelta = true;
+        }
+      }
+    }
+    expect(checkedDelta).toBe(true);
+    expect(sawUserText).toBe(true);
+    expect(progress.snapshot().messages?.map(({ id, messageId, text }) => ({ id, messageId, text }))).toEqual([...expected].map(([id, part]) => ({ id, ...part })));
+    const final = events.find((event: AgentTraceEvent) => event.type === "assistant_message")?.data?.text;
+    expect(progress.snapshot().messages?.at(-1)?.text).toBe(final);
+  });
+
   it("工具从开始到结束保持独立计时，推理增量进入通用活动记录", () => {
     const config = { waitingMs: 3000, stalledMs: 8000 };
     const progress = createAgentProgress("2026-10-08T00:00:00Z", config);
