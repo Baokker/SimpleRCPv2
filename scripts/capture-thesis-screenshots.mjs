@@ -183,15 +183,14 @@ async function humans(pair, kind) {
   await openFile(bob, kind === "black" ? "src/cart.ts" : "src/checkout.ts");
   const edits = kind === "black" ? ["rate: number)", "rate: number, currency: string)"]
     : kind === "white" ? ["return price * (1 - rate);", "console.log('discount calculation');\n  return price * (1 - rate);"]
-    : ["return price * (1 - rate);", "return price - rate;"];
+    : ["return price * (1 - rate);", "return Math.round(price * (1 - rate) * 100) / 100;"];
   await edit(alice, "src/pricing.ts", ...edits);
   await waitUntil(() => request(alice, id, "/conflict-guard/state"), (state) => state.activeSymbols.some((entry) => entry.symbols.length));
   if (kind === "black") await edit(bob, "src/cart.ts", "applyDiscount(amount, 0.1)", "applyDiscount(amount + 1, 0.1)");
-  else await edit(bob, "src/checkout.ts", "formatMoney(cart.total())", "formatMoney(cart.total() + 1)");
-  await waitUntil(() => request(alice, id, "/conflict-guard/state"), (state) => state.pairDecisions.some((record) => record.status === "judged" && record.verdict?.zone === (kind === "grey" ? "grey" : kind)), 45_000);
+  else await edit(bob, "src/checkout.ts", "formatMoney(cart.total())", kind === "grey" ? "formatMoney(cart.total()).trim()" : "formatMoney(cart.total() + 1)");
+  await waitUntil(() => request(alice, id, "/conflict-guard/state"), (state) => state.pairDecisions.some((record) => record.status === "judged" && record.verdict?.zone === (kind === "grey" ? "grey" : kind) && (kind !== "grey" || record.verdict.adjudication?.status === "success")), 45_000);
   for (const page of [alice, bob]) {
     if (kind === "grey") {
-      await page.getByTestId("adjudication-result").first().waitFor();
       await page.getByTestId("conflict-guide").locator(":scope > summary").click();
     }
     await disclosure(page, "conflict-progress", false);
@@ -200,11 +199,25 @@ async function humans(pair, kind) {
       const row = page.getByTestId("human-conflict-record").first();
       await row.locator(":scope > summary").click();
     }
+    if (kind === "grey") await page.getByTestId("human-conflict-record").first().getByTestId("adjudication-result").waitFor();
     if (kind === "black") await page.getByTestId("conflict-card").first().waitFor();
   }
   const state = await request(alice, id, "/conflict-guard/state");
   const record = state.pairDecisions.find((record) => record.verdict?.zone === (kind === "grey" ? "grey" : kind));
-  if (kind === "grey") assert.equal(record.verdict.adjudication?.status, "success", "模型研判没有完成");
+  if (kind === "grey") {
+    assert.equal(record.verdict.adjudication?.status, "success", "模型研判没有完成");
+    assert.notEqual(record.pair.left.symbol, record.pair.right.symbol, "灰区示例需要展示不同符号");
+    assert.notEqual(record.verdict.decision, "lock", "灰区示例需要展示模型放行或提醒");
+    assert.equal(state.frozenFiles.length, 0, "灰区示例不包含冻结区域");
+    for (const page of [alice, bob]) {
+      assert.equal(await page.getByTestId("conflict-card").count(), 0);
+      assert.equal(await page.getByTestId("editor-conflict-banner").count(), 0);
+      const result = page.getByTestId("human-conflict-record").first().getByTestId("adjudication-result");
+      await result.scrollIntoViewIfNeeded();
+      await result.getByTestId("model-explanation").waitFor();
+      await result.getByTestId("model-suggestion").waitFor();
+    }
+  }
   if (kind === "black") {
     const before = await alice.evaluate(() => window.__simplercpEditors["src/pricing.ts"].getValue());
     await edit(alice, "src/pricing.ts", "return price * (1 - rate);", "return 999;");

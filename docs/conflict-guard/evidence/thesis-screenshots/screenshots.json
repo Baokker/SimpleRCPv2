@@ -31,18 +31,18 @@
   },
   {
     "file": "03-grey-alice-dark.png",
-    "bytes": 209958,
-    "sha256": "402d3170b2ee3d6aa3ad397df66faedbac35545f7a9b82ca54e054ba4fe1b4da"
+    "bytes": 201260,
+    "sha256": "e8cfd6e300ef3d796cc902f52640a1cb13ad47c697f20e1a04049c6b4f910cdb"
   },
   {
     "file": "03-grey-bob-light.png",
-    "bytes": 166051,
-    "sha256": "3fb7e1ba8e19be01ea03d5d92486c70a71f4460d0196ff9aef40fee2e0f8457e"
+    "bytes": 155415,
+    "sha256": "c30c3cfacd6a70d2f07d7b80f13df29e2c4f183f001a5f53a6e0e689a5738347"
   },
   {
     "file": "03-grey-dual.png",
-    "bytes": 380259,
-    "sha256": "e7061494cf12f1eec998a5634514345b968ce2cf308a5ca25474a2336f7d98a7"
+    "bytes": 360543,
+    "sha256": "3b320dfbc748885a20725bcfa3b479951c154d888bab22a93681a47c15664e5b"
   },
   {
     "file": "04-human-agent-alice-dark.png",
