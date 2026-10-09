@@ -8,6 +8,10 @@
 - Node.js `v24.7.0`、pnpm `9.0.0`、OpenCode `1.18.31`
 - provider `minimax`、model `MiniMax-M2`
 
+## 凭据
+
+在平台根目录创建本地 `.env`，填写 `MINIMAX_API_KEY`；需要比较 DeepSeek 时再填写 `DEEPSEEK_API_KEY`。服务端启动时读取这些变量，结果目录只记录 provider、model 和 token，不记录密钥。不要把 `.env` 加入 Git，也不要把密钥传给实验命令的参数或工作区任务。
+
 ## 从零检查
 
 ```sh
