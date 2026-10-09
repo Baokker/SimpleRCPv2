@@ -1,0 +1,102 @@
+[
+  {
+    "file": "01-black-alice-dark.png",
+    "bytes": 202624,
+    "sha256": "403353041a57ae268ae16a9409dce8a770a8e0e6b733ce492bd7da34e21007d3"
+  },
+  {
+    "file": "01-black-bob-light.png",
+    "bytes": 180071,
+    "sha256": "efbbeef7c3d1c72b4b1517a6868ced1d54c4ce75eb67da8028840e3628c111eb"
+  },
+  {
+    "file": "01-black-dual.png",
+    "bytes": 386436,
+    "sha256": "59cedf2b48a13884f4af3d9932e38ff17866edac04232cf09be669c504cd2f31"
+  },
+  {
+    "file": "02-white-alice-dark.png",
+    "bytes": 204192,
+    "sha256": "69873583e1d05af905ddcbe6c10ee36a951b39efa51a8cb80daf3cee7f997c31"
+  },
+  {
+    "file": "02-white-bob-light.png",
+    "bytes": 156219,
+    "sha256": "09627ed565624d546bfd55802e1d622523198b426aa2de3909f2d4312f623667"
+  },
+  {
+    "file": "02-white-dual.png",
+    "bytes": 364116,
+    "sha256": "50768d92b7367ea967a323c734f0969198f126df796674340fa2fc90fed22db9"
+  },
+  {
+    "file": "03-grey-alice-dark.png",
+    "bytes": 209958,
+    "sha256": "402d3170b2ee3d6aa3ad397df66faedbac35545f7a9b82ca54e054ba4fe1b4da"
+  },
+  {
+    "file": "03-grey-bob-light.png",
+    "bytes": 166051,
+    "sha256": "3fb7e1ba8e19be01ea03d5d92486c70a71f4460d0196ff9aef40fee2e0f8457e"
+  },
+  {
+    "file": "03-grey-dual.png",
+    "bytes": 380259,
+    "sha256": "e7061494cf12f1eec998a5634514345b968ce2cf308a5ca25474a2336f7d98a7"
+  },
+  {
+    "file": "04-human-agent-alice-dark.png",
+    "bytes": 233236,
+    "sha256": "1bd53f4a30e1c6eac2689c23ba209f187c38de5cfa4e6c51daea936ab466fbfb"
+  },
+  {
+    "file": "04-human-agent-bob-light.png",
+    "bytes": 202893,
+    "sha256": "bb6030fe66124ff7c119950dd0d3bd24c940699f33fac46a4314cb28ffc28e06"
+  },
+  {
+    "file": "04-human-agent-dual.png",
+    "bytes": 447070,
+    "sha256": "541d5746a578ae580950e4a769890246abdfc1d84cd99964fbbd5dface5f43f2"
+  },
+  {
+    "file": "05-agent-agent-card-alice-dark.png",
+    "bytes": 87793,
+    "sha256": "54a8fef03606cb2a26dc28c16c87532024c2bf3dfd3888415b223bd07de0d9fd"
+  },
+  {
+    "file": "05-agent-agent-card-bob-light.png",
+    "bytes": 87799,
+    "sha256": "e71f7be5e0f698fea7f4942010263d49b266c9d9baf0150e1b2dd0fafad6bebe"
+  },
+  {
+    "file": "05-agent-agent-completed-alice-dark.png",
+    "bytes": 223951,
+    "sha256": "de1215c583b513c7b3e48a4116a4f570ebdc17d83e7076e5c9a1d3df4d401af4"
+  },
+  {
+    "file": "05-agent-agent-completed-bob-light.png",
+    "bytes": 274200,
+    "sha256": "76133d22309655f266eceb5ca4f68ead1c58ca98bfb11333e1f487c96c03a375"
+  },
+  {
+    "file": "05-agent-agent-completed-dual.png",
+    "bytes": 504142,
+    "sha256": "e7c84c8848040d1a9be27f470f39f2e4c1d44b8d94293f97957d49d56cbd09df"
+  },
+  {
+    "file": "05-agent-agent-paused-alice-dark.png",
+    "bytes": 230879,
+    "sha256": "e19028c65c8ecbaf5189866be911fda179fb133d5a002af81c37f86d13cbe8f8"
+  },
+  {
+    "file": "05-agent-agent-paused-bob-light.png",
+    "bytes": 212535,
+    "sha256": "3a0b82ca680f7142fa5ee3540a50baf7d5f540bca9a61b5d0c32c06bb997c040"
+  },
+  {
+    "file": "05-agent-agent-paused-dual.png",
+    "bytes": 451320,
+    "sha256": "be1d84232ca76a03011573fa35e2554d4125c848fe72d2c2307a5f89f1e6c0e0"
+  }
+]

@@ -1,0 +1,99 @@
+论文截图：white
+package.json
+README.md
+src
+cart.ts
+checkout.ts
+index.ts
+pricing.ts
+report.ts
+types.ts
+test
+src/checkout.ts
+Saved
+1
+2
+3
+4
+5
+6
+7
+import { Cart } from "./cart.ts";
+import { formatMoney } from "./pricing.ts";
+export function checkout(cart: Cart): string {
+  return formatMoney(cart.total() + 1);
+}
+Collaboration
+Chat
+My Agent
+Project
+Team
+冲突预防
+面板功能
+
+将协作者之间的冲突分为三种等级。
+
+白区
+修改不会影响别人，系统直接放行。
+黑区
+修改会破坏别人正在使用的函数或导出，系统拦住。
+灰区
+影响难以判断，交给大模型研判，决定放行、提醒或拦住。
+人之间的冲突，由双方处理。
+Agent 给人让路，同一属主的 Agent 自动排队。
+跨属主的 Agent 冲突，需要属主决定。
+白区
+1
+黑区
+0
+灰区
+0
+判定
+1
+打扰
+0
+需要你处理
+0 项
+
+当前没有需要你处理的冲突。
+
+正在进行的修改与关联关系
+当前 2 人 / 0 个 Agent 在修改 2 个符号，其中有 1 组关联
+检查记录与统计
+共 1 条检查记录
+检查记录
+1 条
+全部
+1
+人之间
+1
+人与 Agent
+0
+Agent 之间
+0
+只看与我相关
+13:13:51
+人的修改检查
+放行
+src/pricing.ts#applyDiscount，src/checkout.ts#checkout
+白区
+只改了日志
+
+一侧仅修改无副作用的日志语句。
+
+Alice
+applyDiscount()
+Bob
+checkout()
+关联路径
+Cart.total 调用 applyDiscount
+checkout 调用 Cart.total
+技术细节（调试信息）
+显示 1 / 1 条
+导出轨迹
+查看详细统计
+文件写入状态（0 个）
+Connected
+Room GvFkCD1JZE
+Bob
+论文截图：white

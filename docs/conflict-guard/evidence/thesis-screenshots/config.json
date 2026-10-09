@@ -1,0 +1,29 @@
+{
+  "PORT": "4027",
+  "SIMPLERCP_HOST": "127.0.0.1",
+  "SIMPLERCP_PUBLIC_URL": "http://127.0.0.1:5187",
+  "SIMPLERCP_DATA_DIR": "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/thesis-screenshots/data",
+  "SIMPLERCP_OPENCODE_PORT": "4107",
+  "SIMPLERCP_FAKE_AGENT_RUNTIME": "false",
+  "SIMPLERCP_SKIP_MODEL_REQUESTS": "false",
+  "SIMPLERCP_TERMINAL_ENABLED": "false",
+  "CONFLICT_GUARD": "full",
+  "CONFLICT_GUARD_STRATEGY": "G3",
+  "CONFLICT_GUARD_T2_STRATEGY": "G3",
+  "CONFLICT_GUARD_T3_STRATEGY": "G3",
+  "CONFLICT_GUARD_PROVIDER_MODE": "live",
+  "CONFLICT_GUARD_ARBITRATION": "owner",
+  "CONFLICT_GUARD_INTENT_INJECTION": "on",
+  "DEEPSEEK_MODEL": "deepseek-flash",
+  "VITE_SIMPLERCP_API_ORIGIN": "http://127.0.0.1:4027",
+  "VITE_SIMPLERCP_CLIENT_PORT": "5187",
+  "VITE_SIMPLERCP_CLIENT_HOST": "127.0.0.1",
+  "TMPDIR": "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/thesis-screenshots/runtime",
+  "codeCommit": "7ac0d350eeb6e1ff238dfd0eed8b6f4fc7eca2ab",
+  "modelEndpoint": "https://api.deepseek.com/v1",
+  "startedAt": "2026-10-09T05:12:29.662Z",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  }
+}

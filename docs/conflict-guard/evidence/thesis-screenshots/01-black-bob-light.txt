@@ -1,0 +1,109 @@
+正在修改你依赖的 applyDiscount：外部接口已改变。
+×
+论文截图：black
+package.json
+README.md
+src
+cart.ts
+checkout.ts
+index.ts
+pricing.ts
+report.ts
+types.ts
+test
+src/cart.ts
+Saving
+当前有 1 个冲突
+在“冲突预防”页签处理
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+import type { CartItem } from "./types.ts";
+import { applyDiscount } from "./pricing.ts";
+export class Cart {
+  items: CartItem[] = [];
+  add(item: CartItem): void {
+    this.items = [...this.items, item];
+  }
+  total(): number {
+    let amount = 0;
+    for (const item of this.items) amount += item.price * item.quantity;
+    return applyDiscount(amount + 1, 0.1);
+  }
+}
+Collaboration
+Chat
+My Agent
+Project
+Team
+冲突预防
+1
+面板功能
+
+将协作者之间的冲突分为三种等级。
+
+白区
+修改不会影响别人，系统直接放行。
+黑区
+修改会破坏别人正在使用的函数或导出，系统拦住。
+灰区
+影响难以判断，交给大模型研判，决定放行、提醒或拦住。
+人之间的冲突，由双方处理。
+Agent 给人让路，同一属主的 Agent 自动排队。
+跨属主的 Agent 冲突，需要属主决定。
+白区
+0
+黑区
+1
+灰区
+0
+判定
+1
+打扰
+2
+需要你处理
+1 项
+与 Alice 的修改冲突
+黑区
+冻结
+改了函数签名
+
+一侧调用无法满足另一侧修改后的函数签名。
+
+Bob
+Cart.total()
+Alice
+applyDiscount()
+关联路径
+Cart.total 调用 applyDiscount
+查看双方修改前后代码
+
+双方尚未确认
+
+我来改
+双方确认后继续
+去聊天里商量
+技术细节（调试信息）
+显示 1 / 1 条
+正在进行的修改与关联关系
+当前 2 人 / 0 个 Agent 在修改 2 个符号，其中有 1 组关联
+检查记录与统计
+共 1 条检查记录
+Connected
+Room SrEmY-Aw7D
+Bob
+论文截图：black

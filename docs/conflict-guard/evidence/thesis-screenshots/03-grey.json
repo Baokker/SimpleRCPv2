@@ -1,0 +1,534 @@
+{
+  "capturedAt": "2026-10-09T05:16:30.571Z",
+  "projectId": "jeqAQ3918jWt",
+  "state": {
+    "mode": "full",
+    "version": 23,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 2,
+        "durationMs": 4.0176659999997355,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 155,
+                "end": 155
+              },
+              {
+                "start": 161,
+                "end": 161
+              }
+            ],
+            "firstTouchedAt": 1791522984111,
+            "lastTouchedAt": 1791522984111
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 159,
+                "end": 163
+              }
+            ],
+            "firstTouchedAt": 1791522984375,
+            "lastTouchedAt": 1791522984375
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "editedLineRanges": [
+              {
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "lastTouchedAt": 1791522984111
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "editedLineRanges": [
+              {
+                "start": 5,
+                "end": 5
+              }
+            ],
+            "lastTouchedAt": 1791522984375
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "symbols": [
+            "src/pricing.ts#applyDiscount"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "symbols": [
+            "src/checkout.ts#checkout"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "src/pricing.ts#applyDiscount",
+            "right": "src/checkout.ts#checkout",
+            "path": {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/checkout.ts#checkout",
+              "hops": [
+                {
+                  "from": "src/pricing.ts#applyDiscount",
+                  "to": "src/cart.ts#Cart.total",
+                  "kind": "call",
+                  "direction": "backward"
+                },
+                {
+                  "from": "src/cart.ts#Cart.total",
+                  "to": "src/checkout.ts#checkout",
+                  "kind": "call",
+                  "direction": "backward"
+                }
+              ],
+              "typeOnly": false
+            }
+          }
+        ],
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791522984419,
+        "updatedAt": 1791522984419,
+        "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "symbols": [
+              "src/pricing.ts#applyDiscount"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "symbols": [
+              "src/checkout.ts#checkout"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "src/pricing.ts#applyDiscount",
+              "right": "src/checkout.ts#checkout",
+              "path": {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/checkout.ts#checkout",
+                "hops": [
+                  {
+                    "from": "src/pricing.ts#applyDiscount",
+                    "to": "src/cart.ts#Cart.total",
+                    "kind": "call",
+                    "direction": "backward"
+                  },
+                  {
+                    "from": "src/cart.ts#Cart.total",
+                    "to": "src/checkout.ts#checkout",
+                    "kind": "call",
+                    "direction": "backward"
+                  }
+                ],
+                "typeOnly": false
+              }
+            }
+          ],
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791522984419,
+          "updatedAt": 1791522984419,
+          "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791522989261,
+        "revisionKey": "f2c4f17d4c8529bd9bdd748aeadd8cef52be36d4666e001fd0bdff3c03499e42",
+        "verdict": {
+          "zone": "grey",
+          "decision": "lock",
+          "ruleId": "model-deep",
+          "summary": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "applyDiscount",
+              "detail": "Body changed from price*(1-rate) to price-rate, breaking the multiplicative discount contract asserted by test/shop.test.mjs:8 (applyDiscount(100,0.1)===90) and test/shop.test.mjs:15 (SeasonalRule().apply(100)===80)."
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "checkout",
+              "detail": "Body changed to formatMoney(cart.total()+1), adding an extra unit to the total and breaking test/shop.test.mjs:9 (checkout(cart)==='USD 18.00')."
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "Cart.total",
+              "detail": "Caller returns applyDiscount(amount,0.1); with the new subtraction semantics cart.total() no longer equals the discounted sum asserted by test/shop.test.mjs:9 (cart.total()===18)."
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "PriceRule.apply",
+              "detail": "Caller returns applyDiscount(price,0.1); inherits the broken discount semantics, affecting SeasonalRule and defaultDiscount re-export."
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "SeasonalRule.apply",
+              "detail": "Caller returns applyDiscount(price,0.2); test/shop.test.mjs:15 expects 80 but merged behavior yields 99.8."
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 92.78745899998466,
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "strategy": "G3",
+            "source": "deep",
+            "adapter": "deepseek",
+            "model": "deepseek-flash",
+            "confidence": 0.95,
+            "latencyMs": 3037,
+            "status": "success",
+            "escalated": true,
+            "userExplanation": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。",
+            "suggestedAction": "请将 src/pricing.ts 中 applyDiscount 的函数体恢复为 price * (1 - rate)，并将 src/checkout.ts 中 checkout 的返回值恢复为 formatMoney(cart.total())，不要添加 +1。",
+            "inputHash": "1fcd1a56547b93b5b88ab57740757da8bcc4d19e4eefaa2c9ca6be98772d9e6f",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "analysisStartedAt": 1791522986211,
+        "analysisVisible": false,
+        "firstLockedAt": 1791522989261,
+        "conflict": {
+          "pairId": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "src/pricing.ts#applyDiscount",
+            "other": "src/checkout.ts#checkout"
+          },
+          "beforeSignature": "export function checkout(cart: Cart): string",
+          "afterSignature": "export function checkout(cart: Cart): string",
+          "ruleId": "model-deep",
+          "zone": "grey",
+          "decision": "lock",
+          "summaryZh": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。",
+          "explanationZh": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。",
+          "suggestionZh": "请将 src/pricing.ts 中 applyDiscount 的函数体恢复为 price * (1 - rate)，并将 src/checkout.ts 中 checkout 的返回值恢复为 formatMoney(cart.total())，不要添加 +1。"
+        },
+        "warningKey": "870cacf71ce55b5e1a083cc45a5e9e7c0a865d8aa81a1e507a4565cc1814bdf3",
+        "acknowledged": false
+      }
+    ],
+    "agentNotices": [],
+    "intents": [],
+    "ownerCards": [],
+    "arbitration": {
+      "mode": "owner",
+      "members": [
+        {
+          "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22",
+          "interruptions": 1,
+          "perHour": 1,
+          "light": 0,
+          "byKind": {
+            "human-human": 1,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        },
+        {
+          "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0",
+          "interruptions": 1,
+          "perHour": 1,
+          "light": 0,
+          "byKind": {
+            "human-human": 1,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "frozenFiles": [
+      {
+        "file": "src/pricing.ts",
+        "regions": [
+          {
+            "pairId": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+            "actor": {
+              "kind": "human",
+              "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+            },
+            "startLine": 3,
+            "endLine": 5,
+            "summary": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。"
+          }
+        ]
+      },
+      {
+        "file": "src/checkout.ts",
+        "regions": [
+          {
+            "pairId": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+            "actor": {
+              "kind": "human",
+              "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+            },
+            "startLine": 4,
+            "endLine": 6,
+            "summary": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。"
+          }
+        ]
+      }
+    ],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 2,
+      "cacheHits": 0,
+      "judgements": 1,
+      "escalations": 1,
+      "escalationRatio": 1,
+      "p50Ms": 3038,
+      "p95Ms": 3038,
+      "failures": 1,
+      "infrastructureFailures": 0,
+      "costUsd": 0.0009293999999999998
+    },
+    "blockedPersists": [
+      {
+        "file": "src/checkout.ts",
+        "reason": "lock"
+      },
+      {
+        "file": "src/pricing.ts",
+        "reason": "lock"
+      }
+    ],
+    "persistConflicts": 0,
+    "persistBlockedCount": 2,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 1,
+      "frozenDurationMs": 1305,
+      "persistBlockedCount": 2,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "verification": {
+    "zone": "grey",
+    "decision": "lock",
+    "model": {
+      "strategy": "G3",
+      "source": "deep",
+      "adapter": "deepseek",
+      "model": "deepseek-flash",
+      "confidence": 0.95,
+      "latencyMs": 3037,
+      "status": "success",
+      "escalated": true,
+      "userExplanation": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。",
+      "suggestedAction": "请将 src/pricing.ts 中 applyDiscount 的函数体恢复为 price * (1 - rate)，并将 src/checkout.ts 中 checkout 的返回值恢复为 formatMoney(cart.total())，不要添加 +1。",
+      "inputHash": "1fcd1a56547b93b5b88ab57740757da8bcc4d19e4eefaa2c9ca6be98772d9e6f",
+      "promptVersion": "pair-v1"
+    },
+    "frozenFiles": [
+      {
+        "file": "src/pricing.ts",
+        "regions": [
+          {
+            "pairId": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+            "actor": {
+              "kind": "human",
+              "memberId": "948ae55e-aece-4556-81d3-9b62ce1adf22"
+            },
+            "startLine": 3,
+            "endLine": 5,
+            "summary": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。"
+          }
+        ]
+      },
+      {
+        "file": "src/checkout.ts",
+        "regions": [
+          {
+            "pairId": "aaaf57f9c232bcc79314b05851ab37cfaa9fe3fda236ac7d0f141a372f38f302",
+            "actor": {
+              "kind": "human",
+              "memberId": "d9946bf3-d921-4b7b-bb37-839713cfc2d0"
+            },
+            "startLine": 4,
+            "endLine": 6,
+            "summary": "这两处改动共同破坏了折扣与结账金额的既有约定，导致调用方和测试所依赖的返回值全部错误。"
+          }
+        ]
+      }
+    ]
+  }
+}

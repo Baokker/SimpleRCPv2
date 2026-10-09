@@ -1,0 +1,380 @@
+{
+  "capturedAt": "2026-10-09T05:13:51.688Z",
+  "projectId": "47XQ7gJZdrWB",
+  "state": {
+    "mode": "full",
+    "version": 14,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 2,
+        "durationMs": 4.58475000000908,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "8ff3d4ff-3713-46f8-9eff-8c999e703ce1"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 142,
+                "end": 181
+              }
+            ],
+            "firstTouchedAt": 1791522829514,
+            "lastTouchedAt": 1791522829514
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "a654c3b7-3a87-475a-9463-370c13b102d9"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 159,
+                "end": 163
+              }
+            ],
+            "firstTouchedAt": 1791522829683,
+            "lastTouchedAt": 1791522829683
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "8ff3d4ff-3713-46f8-9eff-8c999e703ce1"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 6,
+            "editedLineRanges": [
+              {
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "lastTouchedAt": 1791522829514
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "a654c3b7-3a87-475a-9463-370c13b102d9"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "editedLineRanges": [
+              {
+                "start": 5,
+                "end": 5
+              }
+            ],
+            "lastTouchedAt": 1791522829683
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "b99d7c322dbf584ab94992dbd21ee877e7aba3edf95b4b898d7d42dff33d27bd",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "8ff3d4ff-3713-46f8-9eff-8c999e703ce1"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "symbols": [
+            "src/pricing.ts#applyDiscount"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "a654c3b7-3a87-475a-9463-370c13b102d9"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "symbols": [
+            "src/checkout.ts#checkout"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "src/pricing.ts#applyDiscount",
+            "right": "src/checkout.ts#checkout",
+            "path": {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/checkout.ts#checkout",
+              "hops": [
+                {
+                  "from": "src/pricing.ts#applyDiscount",
+                  "to": "src/cart.ts#Cart.total",
+                  "kind": "call",
+                  "direction": "backward"
+                },
+                {
+                  "from": "src/cart.ts#Cart.total",
+                  "to": "src/checkout.ts#checkout",
+                  "kind": "call",
+                  "direction": "backward"
+                }
+              ],
+              "typeOnly": false
+            }
+          }
+        ],
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1791522829726,
+        "updatedAt": 1791522829726,
+        "revisionKey": "40b5db26a1e12dd40602dcb36e2a078ff991fed4e580219d44997caa4c268e0a"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "b99d7c322dbf584ab94992dbd21ee877e7aba3edf95b4b898d7d42dff33d27bd",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "8ff3d4ff-3713-46f8-9eff-8c999e703ce1"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "symbols": [
+              "src/pricing.ts#applyDiscount"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "a654c3b7-3a87-475a-9463-370c13b102d9"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "symbols": [
+              "src/checkout.ts#checkout"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "src/pricing.ts#applyDiscount",
+              "right": "src/checkout.ts#checkout",
+              "path": {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/checkout.ts#checkout",
+                "hops": [
+                  {
+                    "from": "src/pricing.ts#applyDiscount",
+                    "to": "src/cart.ts#Cart.total",
+                    "kind": "call",
+                    "direction": "backward"
+                  },
+                  {
+                    "from": "src/cart.ts#Cart.total",
+                    "to": "src/checkout.ts#checkout",
+                    "kind": "call",
+                    "direction": "backward"
+                  }
+                ],
+                "typeOnly": false
+              }
+            }
+          ],
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1791522829726,
+          "updatedAt": 1791522829726,
+          "revisionKey": "40b5db26a1e12dd40602dcb36e2a078ff991fed4e580219d44997caa4c268e0a"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1791522831432,
+        "revisionKey": "40b5db26a1e12dd40602dcb36e2a078ff991fed4e580219d44997caa4c268e0a",
+        "analysisVisible": false,
+        "verdict": {
+          "zone": "white",
+          "decision": "allow",
+          "ruleId": "observability-only",
+          "summary": "一侧仅修改无副作用的日志语句。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "对外接口未发生变化"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "对外接口未发生变化"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          }
+        },
+        "conflict": {
+          "pairId": "b99d7c322dbf584ab94992dbd21ee877e7aba3edf95b4b898d7d42dff33d27bd",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "8ff3d4ff-3713-46f8-9eff-8c999e703ce1"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "a654c3b7-3a87-475a-9463-370c13b102d9"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "src/pricing.ts#applyDiscount",
+            "other": "src/checkout.ts#checkout"
+          },
+          "beforeSignature": "export function checkout(cart: Cart): string",
+          "afterSignature": "export function checkout(cart: Cart): string",
+          "ruleId": "observability-only",
+          "zone": "white",
+          "decision": "allow",
+          "summaryZh": "一侧仅修改无副作用的日志语句。"
+        },
+        "warningKey": "bb922f09f362dc73e756683cfb7fbd2296a818848cfe7802dd83267ef33ad3f2",
+        "acknowledged": false
+      }
+    ],
+    "agentNotices": [],
+    "intents": [],
+    "ownerCards": [],
+    "arbitration": {
+      "mode": "owner",
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 0,
+      "cacheHits": 0,
+      "judgements": 0,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0
+    },
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 2,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 1,
+      "white": 1,
+      "black": 0,
+      "grey": 0,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 2,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "verification": {
+    "zone": "white",
+    "decision": "allow",
+    "frozenFiles": []
+  }
+}
