@@ -18,7 +18,7 @@
 
 - E3 的 R3 Recall@5 为 0.30、MRR 为 0.1947，错误活动文件时 Recall@5 为 0，出处：`experiments/E3/report.md`。
 - E3 的线上前五名和离线重放全部一致，出处：`runs/E3-k5-final-v2/results.jsonl`。
-- E4 C2 试跑目标卡片送达 2/4；R1 的任务因活动文件为空而漏送达，项目级团队约束兜底已加入注入器，出处：`docs/knowledge/agent-injection.md`、`runs/E4-C2-pilot/results.jsonl`。
+- E4 C2 当前提交试跑目标卡片送达 2/4；R1 的任务因活动文件为空而漏送达，项目级团队约束兜底已加入注入器，出处：`docs/knowledge/agent-injection.md`、`runs/E4-k3-c2-current/results.jsonl`。
 
 ## Agent 复犯和纠正迁移
 
