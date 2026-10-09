@@ -65,7 +65,9 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
         await writeJson(taJudged, await judge(pair.ta, before.snapshot, path.join(raw, "ta")));
       } else ta = await readJson(path.join(raw, "ta/run.json"));
       if (pair.correction.mode === "revise") {
-        const patchFile = path.join(pair.directory, pair.correction.patch ?? "correction.patch");
+        const correctionPatch = pair.correction.patch ?? pair.correction.revision?.referencePatch;
+        if (typeof correctionPatch !== "string" || !correctionPatch) throw new Error(`Correction patch is missing: ${pair.id}`);
+        const patchFile = path.join(pair.directory, correctionPatch);
         const patches = parsePatch(await fs.readFile(patchFile, "utf8"));
         const collaboration = new CollaborationClient(api, project); await collaboration.join(correcting);
         try {

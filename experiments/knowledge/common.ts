@@ -59,7 +59,12 @@ export async function dataset() {
     tasks.push({...await readJson(path.join(directory, "task.json")), directory, prompt: await fs.readFile(path.join(directory, "prompt.md"), "utf8")});
   }
   const transfers = [];
-  for (const id of ["P01", "P02", "P03", "P04"]) {
+  const transferRoot = path.join(benchRoot, "transfer/pairs");
+  const transferEntries = (await fs.readdir(transferRoot, {withFileTypes: true}))
+    .filter(entry => entry.isDirectory() && /^P\d+$/.test(entry.name))
+    .sort((left, right) => left.name.localeCompare(right.name, undefined, {numeric: true}));
+  for (const entry of transferEntries) {
+    const id = entry.name;
     const directory = path.join(benchRoot, "transfer/pairs", id);
     const pair = await readJson(path.join(directory, "pair.json"));
     const sides: Task[] = [];

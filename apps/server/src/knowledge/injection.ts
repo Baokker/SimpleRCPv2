@@ -39,7 +39,7 @@ export async function selectKnowledgeInjection(input: {
     const rankedIds = new Set(ranked.map(result => result.cardId));
     const lexicalScores = new Map(ranked.map(result => [result.cardId, result.score]));
     const fallbackCards = reusable
-      .filter(card => (card.type === "constraint" || card.type === "negative") && card.appliesTo?.kind === "project")
+      .filter(card => card.scope === "team" && (card.type === "constraint" || card.type === "negative") && card.appliesTo?.kind === "project")
       .filter(card => !rankedIds.has(card.id))
       .sort((left, right) => {
         const typeOrder = (card: KnowledgeCard) => card.type === "constraint" ? 0 : 1;

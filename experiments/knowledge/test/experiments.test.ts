@@ -13,14 +13,14 @@ import {conditionCards, fixedCardVariableChars} from "../k3.js";
 
 test("冻结数据的全部文件哈希与卡片 schema", async () => {
   const data = await dataset();
-  assert.equal(data.manifestHash, "62c2f65e7e28b83b23398e9dc8340e6ad4da7012fa1b9c831c3933a0e177f454");
+  assert.equal(data.manifestHash, "4d7961ef30d07afecd1878fe409528299e3707eef4faf362067e3c3450a32133");
   assert.equal(data.tasks.filter(task => task.kind === "trap").length, 10);
-  assert.equal(data.transfers.length, 4);
+  assert.equal(data.transfers.length, 6);
 });
 test("两段完整脚本可转换，编辑内容与冻结基线一致", async () => {
   for (const id of ["S01", "S02"]) {
     const input = await normalizeScript(id);
-    assert.equal(input.actions.length, 398);
+    assert.equal(input.actions.length, 448);
     assert.ok(input.events.some(event => event.type === "agentRun"));
     assert.ok(input.events.every((event, index) => event.seq === index + 1 && (index === 0 || event.at >= input.events[index - 1].at)));
     const empty = triggerMetrics([], input.labels);
