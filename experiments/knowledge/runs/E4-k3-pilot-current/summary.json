@@ -1,0 +1,38 @@
+[
+  {
+    "condition": "C0",
+    "combinations": 5,
+    "functional": 0.8,
+    "trapAvoided": 0.2,
+    "jointSuccess": 0.2,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "C5",
+    "combinations": 5,
+    "functional": 0.6,
+    "trapAvoided": 0.8,
+    "jointSuccess": 0.6,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "C7",
+    "combinations": 5,
+    "functional": 1,
+    "trapAvoided": 0.2,
+    "jointSuccess": 0.2,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  }
+]

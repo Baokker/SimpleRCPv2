@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "fakeAgentRuntime": false,
+  "provider": "minimax",
+  "model": "MiniMax-M2",
+  "speed": 10,
+  "captureConfig": {
+    "checkpointIdleMs": 3000,
+    "chatWindowMs": 30000,
+    "chatCooldownMs": 30000,
+    "chatAfterMs": 6000,
+    "chatBeforeMs": 12000,
+    "todoCooldownMs": 30000,
+    "magicCooldownMs": 12000,
+    "rollbackWindowMs": 30000,
+    "rollbackCooldownMs": 30000,
+    "overwrittenWindowMs": 60000,
+    "overwrittenCooldownMs": 30000,
+    "historyMs": 180000,
+    "agentInterruptWindowMs": 18000,
+    "agentRevisionWindowMs": 90000,
+    "agentRevisionCooldownMs": 30000,
+    "agentCorrectionWindowMs": 60000,
+    "agentRetryWindowMs": 180000
+  }
+}
