@@ -12,6 +12,7 @@ export interface ServerConfig {
   demoProjectRoot: string;
   terminalEnabled?: boolean;
   fakeAgentRuntime?: boolean;
+  sensitiveValues?: string[];
   importRoots?: string[];
   agent?: {
     apiKey?: string;
@@ -19,6 +20,8 @@ export interface ServerConfig {
     model: string;
     openCodePort?: number;
     runTimeoutMs?: number;
+    maxConcurrentRuns?: number;
+    activityConfig?: { waitingMs: number; stalledMs: number };
   };
 }
 
@@ -48,7 +51,7 @@ export function loadConfig(
   if (!["http:", "https:"].includes(agentBaseUrl.protocol)) {
     throw new Error("DEEPSEEK_BASE_URL must use http or https");
   }
-  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
+  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
     throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");
@@ -56,6 +59,10 @@ export function loadConfig(
   const runTimeoutMs = Number(env.SIMPLERCP_AGENT_RUN_TIMEOUT_MS ?? 600_000);
   if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 1) {
     throw new Error("SIMPLERCP_AGENT_RUN_TIMEOUT_MS must be a positive integer");
+  }
+  const maxConcurrentRuns = Number(env.SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS ?? 3);
+  if (!Number.isInteger(maxConcurrentRuns) || maxConcurrentRuns < 1) {
+    throw new Error("SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS must be a positive integer");
   }
   const terminalEnabled = readBoolean(
     env.SIMPLERCP_TERMINAL_ENABLED,
@@ -85,15 +92,28 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
+    sensitiveValues: Object.entries(env).filter(([name, value]) => /(?:KEY|TOKEN|SECRET)(?:_|$)/i.test(name) && value).map(([, value]) => value!),
     agent: {
       apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,
-      runTimeoutMs
+      runTimeoutMs,
+      maxConcurrentRuns,
+      activityConfig: {
+        waitingMs: positiveInteger(env.SIMPLERCP_AGENT_WAITING_MS, "SIMPLERCP_AGENT_WAITING_MS", 20_000),
+        stalledMs: positiveInteger(env.SIMPLERCP_AGENT_STALLED_MS, "SIMPLERCP_AGENT_STALLED_MS", 60_000)
+      }
     }
   };
+  if (config.agent!.activityConfig!.stalledMs <= config.agent!.activityConfig!.waitingMs) throw new Error("SIMPLERCP_AGENT_STALLED_MS 必须大于 SIMPLERCP_AGENT_WAITING_MS");
   return config;
+}
+
+function positiveInteger(value: string | undefined, name: string, fallback: number) {
+  const number = Number(value ?? fallback);
+  if (!Number.isInteger(number) || number < 1) throw new Error(`${name} 必须为正整数`);
+  return number;
 }
 
 function readBoolean(

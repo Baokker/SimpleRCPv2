@@ -7,11 +7,13 @@ import { createRoomStore } from "./rooms.js";
 import { createSharedTerminal } from "./sharedTerminal.js";
 import type { ChatMessage, WorkspaceChange } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
+import { canonicalWorkspaceRoot } from "./workspacePath.js";
 
 export function createProjectRuntime(
   project: ProjectRecord,
   options: { terminalEnabled?: boolean } = {}
 ) {
+  project = { ...project, workspacePath: canonicalWorkspaceRoot(project.workspacePath) };
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
   const rooms = createRoomStore(events);
@@ -163,6 +165,7 @@ export function createProjectRuntime(
       await events.awaitIdle();
       terminal.dispose();
       await watcher.close();
+      await documents.dispose();
     }
   };
 }

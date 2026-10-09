@@ -1,13 +1,17 @@
-import { getYDoc } from "y-websocket/bin/utils";
+import { createRequire } from "node:module";
+import { getYDoc, docs } from "y-websocket/bin/utils";
 import type * as Y from "yjs";
 import { applyTextDelta, FILESYSTEM_ORIGIN } from "./textDelta.js";
 import { readWorkspaceFile, writeWorkspaceFile } from "./workspace.js";
+
+const require = createRequire(import.meta.url);
+const YRuntime = require("yjs") as typeof import("yjs");
 
 export interface CollaborativeDocumentStoreOptions {
   workspaceRoot: string;
   projectId?: string;
   persistDelayMs?: number;
-  onPersisted?(filePath: string): void;
+  onPersisted?(filePath: string, content: string): void;
 }
 
 export function createCollaborativeDocumentStore({
@@ -18,9 +22,15 @@ export function createCollaborativeDocumentStore({
 }: CollaborativeDocumentStoreOptions) {
   const initialized = new Map<string, Promise<Y.Doc>>();
   const persistedContents = new Map<string, string>();
+  const persistedSnapshots = new Map<string, Uint8Array>();
   const persistTimers = new Map<string, NodeJS.Timeout>();
+  const dirtyNames = new Set<string>();
+  const deferredReleases = new Map<string, Y.Doc>();
   const retired = new Set<string>();
   const revisions = new Map<string, number>();
+  const destroyDocuments = new Map<string, () => void>();
+  const persistenceOperations = new Map<string, Promise<void>>();
+  let disposed = false;
 
   async function getDocument(roomId: string, filePath: string) {
     return prepareDocument(documentName(roomId, filePath, projectId));
@@ -51,14 +61,33 @@ export function createCollaborativeDocumentStore({
     }
 
     const document = getYDoc(name);
+    const destroy = document.destroy.bind(document);
+    destroyDocuments.set(name, destroy);
+    document.destroy = () => {
+      if (disposed) { destroy(); return; }
+      if (hasConnections(document) || shouldDeferRelease(name)) {
+        docs.set(name, document);
+        deferredReleases.set(name, document);
+        return;
+      }
+      release(name);
+      if (docs.get(name) === document) docs.delete(name);
+      destroy();
+    };
     const text = document.getText("content");
     if (text.length === 0 && result.content) {
       text.insert(0, result.content);
     }
     persistedContents.set(name, result.content);
+    persistedSnapshots.set(name, YRuntime.encodeStateAsUpdate(document));
+    text.observe((event) => {
+      if (event.transaction.origin !== FILESYSTEM_ORIGIN) {
+        revisions.set(filePath, (revisions.get(filePath) ?? 0) + 1);
+      }
+    });
     document.on("update", (_update, origin) => {
       if (origin !== FILESYSTEM_ORIGIN) {
-        revisions.set(filePath, (revisions.get(filePath) ?? 0) + 1);
+        dirtyNames.add(name);
         schedulePersist(name, document);
       }
     });
@@ -66,7 +95,7 @@ export function createCollaborativeDocumentStore({
   }
 
   function schedulePersist(name: string, document: Y.Doc) {
-    if (retired.has(name)) return;
+    if (disposed || retired.has(name)) return;
     const existing = persistTimers.get(name);
     if (existing) clearTimeout(existing);
     persistTimers.set(
@@ -79,11 +108,30 @@ export function createCollaborativeDocumentStore({
   }
 
   async function persistDocument(name: string, document: Y.Doc) {
+    if (disposed) return;
+    const previous = persistenceOperations.get(name) ?? Promise.resolve();
+    const operation = previous.then(() => writeDocument(name, document));
+    persistenceOperations.set(name, operation);
+    await operation;
+    if (persistenceOperations.get(name) === operation) persistenceOperations.delete(name);
+  }
+
+  async function writeDocument(name: string, document: Y.Doc) {
+    if (disposed) return;
+    if (!dirtyNames.has(name)) return;
     const { filePath } = parseDocumentName(name);
+    const current = await readWorkspaceFile(workspaceRoot, filePath, true);
+    if (disposed) return;
+    if (current.status === "text" && current.content !== persistedContents.get(name)) await reloadPath(filePath);
     const content = document.getText("content").toString();
+    const snapshot = YRuntime.encodeStateAsUpdate(document);
     await writeWorkspaceFile(workspaceRoot, filePath, content);
     persistedContents.set(name, content);
-    onPersisted?.(filePath);
+    persistedSnapshots.set(name, snapshot);
+    if (document.getText("content").toString() === content) dirtyNames.delete(name);
+    else schedulePersist(name, document);
+    onPersisted?.(filePath, content);
+    releaseUnpinned();
   }
 
   async function flush(roomId: string, filePath: string) {
@@ -136,27 +184,46 @@ export function createCollaborativeDocumentStore({
   }
 
   async function reloadPath(filePath: string) {
+    if (disposed) return;
     const matches = [...initialized.entries()].filter(
       ([name]) => parseDocumentName(name).filePath === filePath
     );
     if (matches.length === 0) return;
 
     const result = await readWorkspaceFile(workspaceRoot, filePath, true);
+    if (disposed) return;
     if (result.status !== "text") {
       dropPath(filePath);
       return;
     }
+    const origin = FILESYSTEM_ORIGIN;
 
     await Promise.all(
       matches.map(async ([name, loading]) => {
         const document = await loading;
+        if (disposed) return;
         const text = document.getText("content");
         const previousContent = persistedContents.get(name) ?? text.toString();
         if (previousContent === result.content) return;
-        document.transact(() => {
-          applyTextDelta(text, previousContent, result.content);
-        }, FILESYSTEM_ORIGIN);
+        if (!dirtyNames.has(name) && text.toString() === previousContent) {
+          document.transact(() => {
+            applyTextDelta(text, previousContent, result.content);
+          }, origin);
+          persistedContents.set(name, result.content);
+          persistedSnapshots.set(name, YRuntime.encodeStateAsUpdate(document));
+          return;
+        }
+        const snapshot = persistedSnapshots.get(name);
+        if (!snapshot) throw new Error(`Missing persistence snapshot for ${name}`);
+        const external = new YRuntime.Doc();
+        YRuntime.applyUpdate(external, snapshot);
+        const vector = YRuntime.encodeStateVector(external);
+        applyTextDelta(external.getText("content"), previousContent, result.content);
+        const externalUpdate = YRuntime.encodeStateAsUpdate(external, vector);
+        YRuntime.applyUpdate(document, externalUpdate, origin);
         persistedContents.set(name, result.content);
+        persistedSnapshots.set(name, YRuntime.encodeStateAsUpdate(external));
+        external.destroy();
       })
     );
   }
@@ -175,11 +242,45 @@ export function createCollaborativeDocumentStore({
   }
 
   function release(name: string) {
+    if (dirtyNames.has(name)) return false;
+    deferredReleases.delete(name);
     const timer = persistTimers.get(name);
     if (timer) clearTimeout(timer);
     persistTimers.delete(name);
     initialized.delete(name);
     persistedContents.delete(name);
+    persistedSnapshots.delete(name);
+    dirtyNames.delete(name);
+    return true;
+  }
+
+  function shouldDeferRelease(name: string) {
+    return dirtyNames.has(name);
+  }
+
+  function releaseUnpinned() {
+    for (const [name, document] of [...deferredReleases]) {
+      if (hasConnections(document) || shouldDeferRelease(name)) continue;
+      const destroy = destroyDocuments.get(name);
+      if (release(name)) {
+        if (docs.get(name) === document) docs.delete(name);
+        destroy?.();
+        destroyDocuments.delete(name);
+      }
+    }
+  }
+
+  async function dispose() {
+    disposed = true;
+    for (const timer of persistTimers.values()) clearTimeout(timer);
+    persistTimers.clear();
+    await Promise.all([...persistenceOperations.values(), ...initialized.values()]);
+    for (const [name, destroy] of destroyDocuments) {
+      if (docs.has(name)) docs.delete(name);
+      destroy();
+    }
+    destroyDocuments.clear();
+    deferredReleases.clear();
   }
 
   function getRevision(filePath: string) {
@@ -200,9 +301,16 @@ export function createCollaborativeDocumentStore({
     reloadPath,
     dropPath,
     release,
+    shouldDeferRelease,
+    releaseUnpinned,
+    dispose,
     getRevision,
     getRevisions
   };
+}
+
+function hasConnections(document: Y.Doc) {
+  return ((document as Y.Doc & { conns?: Map<object, unknown> }).conns?.size ?? 0) > 0;
 }
 
 export type CollaborativeDocumentStore = ReturnType<

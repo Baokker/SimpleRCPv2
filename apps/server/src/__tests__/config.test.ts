@@ -14,12 +14,15 @@ describe("server config", () => {
       demoProjectRoot: "/srv/simplercp/demo/workspace",
       terminalEnabled: true,
       fakeAgentRuntime: false,
+      sensitiveValues: [],
       agent: {
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
-        model: "deepseek-chat",
+        model: "deepseek-flash",
         openCodePort: 4096,
-        runTimeoutMs: 600_000
+        runTimeoutMs: 600_000,
+        maxConcurrentRuns: 3,
+        activityConfig: { waitingMs: 20000, stalledMs: 60000 }
       }
     });
   });
@@ -46,12 +49,15 @@ describe("server config", () => {
       demoProjectRoot: path.resolve("/srv/simplercp/demo/workspace"),
       terminalEnabled: false,
       fakeAgentRuntime: false,
+      sensitiveValues: ["configured-key"],
       agent: {
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
         model: "DeepSeek-V4-Flash",
         openCodePort: 4096,
-        runTimeoutMs: 600_000
+        runTimeoutMs: 600_000,
+        maxConcurrentRuns: 3,
+        activityConfig: { waitingMs: 20000, stalledMs: 60000 }
       }
     });
   });
@@ -62,10 +68,23 @@ describe("server config", () => {
     ).toThrow("SIMPLERCP_DATA_DIR must be an absolute path");
   });
 
+  it("活动提示参数必须为正整数且停滞时间大于等待时间", () => {
+    expect(loadConfig({ SIMPLERCP_AGENT_WAITING_MS: "1000", SIMPLERCP_AGENT_STALLED_MS: "2000" }).agent?.activityConfig).toEqual({ waitingMs: 1000, stalledMs: 2000 });
+    for (const value of ["0", "-1", "abc", "1.5"]) {
+      expect(() => loadConfig({ SIMPLERCP_AGENT_WAITING_MS: value })).toThrow();
+    }
+    expect(() => loadConfig({ SIMPLERCP_AGENT_WAITING_MS: "2000", SIMPLERCP_AGENT_STALLED_MS: "1000" })).toThrow();
+  });
+
   it("rejects an invalid terminal setting", () => {
     expect(() =>
       loadConfig({ SIMPLERCP_TERMINAL_ENABLED: "disabled" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
+  });
+
+  it("rejects an invalid Agent concurrency limit", () => {
+    expect(() => loadConfig({ SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS: "0" }, "/srv/simplercp"))
+      .toThrow("SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS must be a positive integer");
   });
 
   it("uses defaults for blank optional paths and validates workspace and import paths", () => {
@@ -77,4 +96,5 @@ describe("server config", () => {
     expect(() => loadConfig({ SIMPLERCP_IMPORT_ROOTS: "relative" })).toThrow("absolute paths");
     expect(loadConfig({ SIMPLERCP_IMPORT_ROOTS: "/srv/imports,/srv/examples" }).importRoots).toEqual(["/srv/imports", "/srv/examples"]);
   });
+
 });

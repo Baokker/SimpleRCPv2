@@ -30,6 +30,7 @@ export function getServerInfo() {
   return request<ServerInfo>("/api/health");
 }
 
+
 export async function getAgentSettings() {
   return request<AgentSettingsResponse>("/api/agent/settings");
 }
@@ -58,6 +59,14 @@ export async function getAgentSessions(projectId: string) {
     `${projectPath(projectId)}/agent/sessions`
   );
   return response.sessions;
+}
+
+export function deleteAgentSession(projectId: string, sessionId: string) {
+  return request(`${projectPath(projectId)}/agent/sessions/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
+}
+
+export function answerAgentQuestion(projectId: string, runId: string, requestId: string, answers?: string[][]) {
+  return request(`${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/questions/${encodeURIComponent(requestId)}/${answers ? "reply" : "reject"}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }) });
 }
 
 export async function getTeamAgents(projectId: string) {
@@ -136,6 +145,10 @@ export async function cancelAgentRun(
       body: JSON.stringify({})
     }
   );
+}
+
+export function retryAgentRun(projectId: string, runId: string) {
+  return request<{ run: AgentRun }>(`${projectPath(projectId)}/agent/runs/${encodeURIComponent(runId)}/retry`, { method: "POST" });
 }
 
 export async function getProjects() {
@@ -351,11 +364,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error("Cannot reach the SimpleRCP server");
   }
   if (!response.ok) {
+    if (response.status === 500) throw new Error("服务端可能正在重启，请稍后刷新");
     const contentType = response.headers.get("content-type") ?? "";
-    const message = contentType.includes("application/json")
-      ? ((await response.json()) as { error?: string }).error
+    const body = await response.text();
+    const message = contentType.includes("application/json") && body.trim()
+      ? (JSON.parse(body) as { error?: string }).error
       : undefined;
     throw new Error(message ?? `Request failed with status ${response.status}`);
   }
-  return response.json() as Promise<T>;
+  if (response.status === 204) return undefined as T;
+  const body = await response.text();
+  return body.trim() ? JSON.parse(body) as T : undefined as T;
 }

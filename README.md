@@ -4,7 +4,7 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 
 项目把代码、编辑器、终端、协作信息和 Coding Agent 放在同一个页面中。Agent 使用同一份服务端代码，任务状态、输出、文件变化和 trace 会显示在工作区中。
 
-当前版本已经完成多项目、实时协作和 OpenCode Agent 基线。每位成员可以创建自己的任务或继续自己的 session；同一项目中的任务依次执行，不同项目可以同时执行。
+每位成员可以创建自己的 Agent 会话，阅读实时回复、推理与工具操作。项目默认同时执行三个不同会话的任务；向同一个会话发送新要求时会中断当前任务，按照新要求继续。
 
 ![](assets/2026-09-19-22-14-11.png)
 
@@ -23,8 +23,13 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 - 工作区控制：文件操作使用应用内确认窗口，Terminal 与 Collaboration 面板可以从状态栏显示或隐藏。
 - 日间模式与夜间模式：主题选择保存在当前浏览器中。
 - Agent 设置：首页可以查看 OpenCode 状态和版本，设置 DeepSeek Model，并启用或停用 Agent。
-- Agent 任务：项目侧栏可以创建任务、继续自己的 session、取消任务、查看队列位置、模型输出和文件变化。
+- My Agent：个人会话仅属主可见，支持添加、删除、草稿保存、停止与新要求中断。中文输入法确认文字不会发送任务。
+- Chat Agent：提及 `@agent` 发起团队任务，项目成员共同查看进度；可以点击停止按钮，或再次提及该 Agent 改写要求。
+- Agent 问题回答：显示 OpenCode 提供的问题与选项，任务发起者回答或跳过后继续执行。
+- Agent 工作详情：集中显示流式推理与工具操作，任务状态、工具耗时、文件变化和 token 用量持续更新。失败任务显示原因，可重试的错误提供重试按钮。
 - Agent trace：OpenCode SSE、状态、文件变化和并发修改提示按 JSONL 保存，可以在页面查看并下载。
+
+My Agent 与 Chat Agent 的操作步骤及真实验证截图见 [Agent 人工验收](docs/foundation/agent-main-acceptance.md)。
 
 ## 配置与使用
 
@@ -201,11 +206,11 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `VITE_SIMPLERCP_API_ORIGIN`：开发客户端代理连接的服务端地址，默认值为 `http://127.0.0.1:4000`。
 - `DEEPSEEK_API_KEY`：DeepSeek API Key，Agent 任务需要该变量。
 - `DEEPSEEK_BASE_URL`：OpenAI-compatible API 地址，默认值为 `https://api.deepseek.com/v1`。
-- `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-chat`。
+- `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-flash`。
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
 
-启动以后，可以在项目首页的 Agent 设置页面查看 OpenCode 状态、版本和 Model，并启用或停用 Agent。新任务创建 OpenCode session；在当前成员的 session 中继续输入时，会复用同一个 OpenCode session。存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止执行过程被配置变化中断。
+启动以后，可以在项目首页查看 OpenCode 状态、版本和 Model。活动任务存在时，模型变更会等待当前任务完成后生效；Enabled 设置在活动任务期间保持不变。
 
 ## 内网访问
 
@@ -235,7 +240,7 @@ pnpm dev
 pnpm test
 ```
 
-`.env` 同时配置 `DEEPSEEK_API_KEY` 和 `DEEPSEEK_MODEL` 时，`pnpm test` 会运行正式 OpenCode 与 DeepSeek 集成测试，并向 Provider 发出请求。缺少配置时，这些集成测试会自动跳过。
+付费集成测试需要显式设置 `SIMPLERCP_LIVE_AGENT_TESTS=1` 并配置 `.env`。普通测试不会自动调用付费模型。真实浏览器交互检查命令见 [Agent 并发运行](docs/foundation/agent-concurrency.md)。
 
 首次运行浏览器自动化测试时安装 Playwright 浏览器：
 
@@ -255,7 +260,7 @@ pnpm test:e2e
 pnpm test:e2e:terminal-disabled
 ```
 
-浏览器 Agent 用例在 `DEEPSEEK_API_KEY` 已配置时向 Provider 发出请求；缺少 API Key 时自动跳过。
+浏览器付费 Agent 用例同样需要显式启用 `SIMPLERCP_LIVE_AGENT_TESTS=1`。
 
 运行 TypeScript 检查并构建客户端与服务端：
 

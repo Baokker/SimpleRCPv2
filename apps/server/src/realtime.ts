@@ -1,6 +1,7 @@
 import type http from "node:http";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { setPersistence, setupWSConnection } from "y-websocket/bin/utils";
+import * as yWebsocketUtils from "y-websocket/bin/utils";
 import { parseDocumentName } from "./collaborativeDocuments.js";
 import type { EventLog } from "./eventLog.js";
 import type { AgentRunManager } from "./agent/agentRunManager.js";
@@ -16,6 +17,9 @@ import type {
 } from "./types.js";
 import type { MemberStore, Identity } from "./auth/identity.js";
 import { can } from "./auth/permissions.js";
+import { canReadAgentRun } from "./agent/agentVisibility.js";
+
+const yWebsocketDocs = (yWebsocketUtils as unknown as { docs: Map<string, unknown> }).docs;
 
 interface SocketIdentity {
   projectId: string;
@@ -177,10 +181,10 @@ export function attachRealtimeServer(
       return;
     }
     if (event.type === "run_updated") {
-      broadcastToProject(projectSockets, event.projectId, {
-        type: "agent_run_updated",
-        run: event.run
-      });
+      for (const socket of projectSockets.get(event.projectId) ?? []) {
+        const identity = identities.get(socket);
+        if (identity && canReadAgentRun(event.run, identity.memberId) && socket.readyState === 1) socket.send(JSON.stringify({ type: "agent_run_updated", run: event.run }));
+      }
       return;
     }
     if (event.type === "team_agents_changed") {
@@ -191,12 +195,15 @@ export function attachRealtimeServer(
       });
       return;
     }
-    broadcastToProject(projectSockets, event.projectId, {
-      type: "agent_trace_appended",
-      runId: event.runId,
-      sequence: event.event.sequence,
-      event: event.event
-    });
+    if (event.event.type === "opencode.message.part.delta") return;
+    if (event.event.type === "opencode.message.part.updated") {
+      const part = event.event.data?.part as { type?: string; state?: { status?: string } } | undefined;
+      if (part?.type !== "tool" || !["completed", "error"].includes(part.state?.status ?? "")) return;
+    }
+    for (const socket of projectSockets.get(event.projectId) ?? []) {
+      const identity = identities.get(socket);
+      if (identity && (event.shared || event.memberId === identity.memberId) && socket.readyState === 1) socket.send(JSON.stringify({ type: "agent_trace_appended", runId: event.runId, sequence: event.event.sequence, event: event.event }));
+    }
   });
   const removeProjectDisposingListener = runtimeManager.onProjectDisposing(
     (projectId) => {
@@ -264,9 +271,15 @@ export function attachRealtimeServer(
     async writeState(name, document) {
       const { projectId } = parseDocumentName(name);
       if (!projectId) throw new Error("Project document is missing projectId");
-      const documents = runtimeManager.get(projectId).documents;
+      const runtime = runtimeManager.find(projectId);
+      if (!runtime) return;
+      const documents = runtime.documents;
+      if (documents.shouldDeferRelease(name)) queueMicrotask(() => yWebsocketDocs.set(name, document));
       await documents.flushDocument(name, document);
-      documents.release(name);
+      if (documents.shouldDeferRelease(name)) {
+        yWebsocketDocs.set(name, document);
+        return;
+      }
     }
   });
 
@@ -310,7 +323,9 @@ export function attachRealtimeServer(
         void runtime.documents.prepareDocument(documentName).then(() => {
           documentWss.handleUpgrade(request, socket, head, (webSocket) => {
             documentProjects.set(webSocket, projectId);
-            webSocket.on("close", () => documentProjects.delete(webSocket));
+            webSocket.on("close", () => {
+              documentProjects.delete(webSocket);
+            });
             setupWSConnection(webSocket, request, { docName: documentName });
           });
         }).catch(() => socket.destroy());

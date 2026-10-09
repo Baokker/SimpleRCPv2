@@ -11,6 +11,21 @@ afterEach(async () => {
 });
 
 describe("AgentRunStore", () => {
+  it("取消与完成同时写入时，只接受一次最终状态更新", async () => {
+    const root = await createTestWorkspace("agent-run-transition-");
+    roots.push(root);
+    const projectRoot = path.join(root, "projects", "demo");
+    const store = createAgentRunStore("demo", projectRoot);
+    const run = await store.create({ projectId: "demo", memberId: "member-a", prompt: "Update README", status: "running", runtime: "opencode", provider: "deepseek", model: "deepseek-flash" });
+    const [cancelled, completed] = await Promise.all([
+      store.updateIfStatus(run.id, "running", { status: "cancelled" }),
+      store.updateIfStatus(run.id, "running", { status: "completed" })
+    ]);
+    expect(cancelled?.status).toBe("cancelled");
+    expect(completed).toBeUndefined();
+    await expect(createAgentRunStore("demo", projectRoot).get(run.id)).resolves.toMatchObject({ status: "cancelled" });
+  });
+
   it("preserves concurrent runs and their updates after restart", async () => {
     const root = await createTestWorkspace("agent-run-store-");
     roots.push(root);

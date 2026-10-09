@@ -16,10 +16,13 @@ import {
   Trash2,
   Users
 } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AgentPanel } from "./AgentPanel";
-import { downloadAgentTrace } from "../api";
-import { presentTrace } from "../agentTracePresentation";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { AgentPanel, type AgentDraft } from "./AgentPanel";
+import { downloadAgentTrace, retryAgentRun } from "../api";
+import { AgentRunProgress } from "./AgentRunProgress";
+import { AgentQuestions } from "./AgentQuestions";
+import { AgentResponse } from "./AgentResponse";
+import { AgentWorkDetails } from "./AgentWorkDetails";
 import type {
   AgentRun,
   AgentSession,
@@ -70,7 +73,6 @@ export function CollaborationPanel({
   workspaceRoot,
   workspaceTree,
   roomId,
-  agentRefreshVersion,
   followingMemberId,
   onFollowMember,
   onOpenFile,
@@ -95,7 +97,6 @@ export function CollaborationPanel({
   workspaceRoot: string;
   workspaceTree: WorkspaceNode[];
   roomId: string;
-  agentRefreshVersion: number;
   followingMemberId?: string;
   onFollowMember(memberId: string): void;
   onOpenFile(path: string): void;
@@ -105,6 +106,8 @@ export function CollaborationPanel({
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
+  const [agentDrafts, setAgentDrafts] = useState<Record<string, AgentDraft>>({});
+  const [selectedAgentSessionId, setSelectedAgentSessionId] = useState<string>();
   const [teamAgentFormOpen, setTeamAgentFormOpen] = useState(false);
   const [teamAgentName, setTeamAgentName] = useState("");
   const [teamAgentDescription, setTeamAgentDescription] = useState("");
@@ -287,6 +290,7 @@ export function CollaborationPanel({
                         trace={message.runId ? agentTraces[message.runId] ?? [] : []}
                         projectId={projectId}
                         showCard={false}
+                        memberId={member?.id}
                         onOpenFile={onOpenFile}
                         onError={onError}
                         onLoadAgentTrace={onLoadAgentTrace}
@@ -303,6 +307,7 @@ export function CollaborationPanel({
                             trace={agentTraces[message.runId] ?? []}
                             projectId={projectId}
                             showText={false}
+                            memberId={member?.id}
                             onOpenFile={onOpenFile}
                             onError={onError}
                             onLoadAgentTrace={onLoadAgentTrace}
@@ -471,7 +476,11 @@ export function CollaborationPanel({
             projectId={projectId}
             member={member}
             members={members}
-            refreshVersion={agentRefreshVersion}
+            liveRuns={agentRuns}
+            drafts={agentDrafts}
+            setDrafts={setAgentDrafts}
+            selectedSessionId={selectedAgentSessionId}
+            setSelectedSessionId={setSelectedAgentSessionId}
             traces={agentTraces}
             onOpenFile={onOpenFile}
             workspaceTree={workspaceTree}
@@ -506,7 +515,8 @@ function ChatAgentMessage({
   onError,
   onLoadAgentTrace,
   interruptedByName,
-  onCancelAgentRun
+  onCancelAgentRun,
+  memberId
 }: {
   message: ChatMessage;
   run?: AgentRun;
@@ -518,13 +528,29 @@ function ChatAgentMessage({
   onError(error: unknown): void;
   onLoadAgentTrace(runId: string): void;
   interruptedByName?: string;
+  memberId?: string;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [stopping, setStopping] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  async function stopRun() {
+    if (!run || stopping) return;
+    setStopping(true);
+    try { await onCancelAgentRun(run.id); }
+    catch (error) { onError(error); }
+    finally { setStopping(false); }
+  }
+  async function retryRun() {
+    if (!run || retrying) return;
+    setRetrying(true);
+    try { await retryAgentRun(projectId, run.id); }
+    catch (error) { onError(error); }
+    finally { setRetrying(false); }
+  }
   const lines = message.text.split("\n");
   const canExpand = lines.length > 20;
   const visibleText = canExpand && !expanded ? lines.slice(0, 20).join("\n") : message.text;
-  const presentation = useMemo(() => presentTrace(trace), [trace]);
   const active = run?.status === "queued" || run?.status === "running";
   return (
     <>
@@ -536,6 +562,9 @@ function ChatAgentMessage({
       ) : null}
       {run && showCard ? (
         <article className="chat-agent-card" data-testid="chat-agent-card">
+          {!showText && run.status !== "completed" ? <AgentResponse run={run} /> : null}
+          <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
+          <AgentRunProgress run={run} memberId={memberId} onCancel={active && !stopping ? () => void stopRun() : undefined} onRetry={run.memberId === memberId && !retrying ? () => void retryRun() : undefined} />
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
           {run.fileChanges?.length ? (
             <ul>
@@ -546,27 +575,7 @@ function ChatAgentMessage({
               ))}
             </ul>
           ) : <small>No file changes recorded.</small>}
-          <details className={`chat-agent-trace ${run.status}`} open={active} onToggle={(event) => {
-            if (event.currentTarget.open) onLoadAgentTrace(run.id);
-          }}>
-            <summary>
-              <span><strong>{active ? "Agent is working" : "Work trace"}</strong><small>{presentation.visible.length} actions</small></span>
-              <span>{active ? "Live" : "Open"}</span>
-            </summary>
-            <div className="chat-agent-trace-content">
-              {active ? <div className="agent-trace-live-status"><span className="agent-trace-live-dot" />Receiving live updates from OpenCode</div> : null}
-              {presentation.visible.length > 0 ? (
-                <ol className="agent-trace" data-testid="chat-agent-trace">
-                  {presentation.visible.map((item) => (
-                    <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
-                      <span className="agent-trace-entry-marker" aria-hidden="true" />
-                      <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}</div>
-                    </li>
-                  ))}
-                </ol>
-              ) : <p className="chat-trace-empty">Waiting for the Agent to report its first action.</p>}
-            </div>
-          </details>
+          <AgentWorkDetails run={run} trace={trace} variant="team" onLoadTrace={() => onLoadAgentTrace(run.id)} />
           <div className="chat-agent-card-actions">
             <button
               type="button"
@@ -578,7 +587,7 @@ function ChatAgentMessage({
               <Download size={13} />
             </button>
             {run.status === "queued" || run.status === "running" ? (
-              <button type="button" onClick={() => void onCancelAgentRun(run.id).catch(onError)}>Stop</button>
+              <button type="button" disabled={stopping} onClick={() => void stopRun()}>{stopping ? "正在停止" : "停止任务"}</button>
             ) : null}
           </div>
         </article>

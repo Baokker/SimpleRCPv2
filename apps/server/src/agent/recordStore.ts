@@ -90,6 +90,19 @@ export function createRecordStore<T extends { id: string; projectId: string }>(
         records.set(id, next);
         return { ...next };
       });
+    },
+    async updateIf(id: string, predicate: (current: T) => boolean, change: (current: T) => T) {
+      await ensureLoaded();
+      return enqueue(async () => {
+        const current = records.get(id);
+        if (!current) throw new Error(options.missingMessage);
+        if (!predicate(current)) return undefined;
+        const next = change(current);
+        if (next.id !== id || next.projectId !== options.projectId) throw new Error(options.invalidMessage);
+        await save(next);
+        records.set(id, next);
+        return { ...next };
+      });
     }
   };
 }

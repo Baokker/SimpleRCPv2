@@ -108,6 +108,40 @@ export interface AgentRuntimeStatus {
   version?: string;
   model: string;
   apiKeyConfigured: boolean;
+  modelChangePending?: boolean;
+  activityConfig?: { waitingMs: number; stalledMs: number };
+}
+
+export type AgentRunPhase = "creating-session" | "first-request" | "streaming" | "tool" | "approval" | "question";
+
+export interface AgentQuestion {
+  id: string;
+  sessionID: string;
+  questions: Array<{ header: string; question: string; options: Array<{ label: string; description: string }>; multiple?: boolean; custom?: boolean }>;
+}
+
+export interface AgentRunFailure {
+  phase: AgentRunPhase;
+  source: "local-runtime" | "model-provider" | "server";
+  errorType: string;
+  message: string;
+  target?: string;
+  statusCode?: number;
+  errno?: string;
+  lastSuccessfulSequence: number;
+  retryable: boolean;
+  guidance: string;
+}
+
+export interface AgentRunActivity {
+  phase: AgentRunPhase;
+  config?: { waitingMs: number; stalledMs: number };
+  updatedAt: string;
+  lastPartAt?: string;
+  tools: Array<{ id: string; name: string; summary: string; startedAt: string; status: "pending" | "running" }>;
+  reasoning: Array<{ id: string; text: string }>;
+  messages?: Array<{ id: string; messageId: string; sessionId?: string; text: string }>;
+  tokens?: { input: number; output: number; reasoning: number; cacheRead: number; cacheWrite: number; total: number };
 }
 
 export type AgentRunStatus =
@@ -123,6 +157,7 @@ export interface AgentFileChange {
   additions: number;
   deletions: number;
   status?: "added" | "deleted" | "modified";
+  attribution?: "tool" | "exclusive" | "ambiguous" | "session_diff";
 }
 
 export interface AgentPromptContext {
@@ -152,8 +187,13 @@ export interface AgentRun {
   interruptedByMemberId?: string;
   sessionId?: string;
   runtimeSessionId?: string;
+  sessionScope?: "personal" | "team";
+  questions?: AgentQuestion[];
   output?: string;
   error?: string;
+  failure?: AgentRunFailure;
+  activity?: AgentRunActivity;
+  overlappingRunIds?: string[];
   fileChanges?: AgentFileChange[];
   createdAt: string;
   startedAt?: string;
@@ -171,6 +211,7 @@ export interface AgentSession {
   participantId?: string;
   memberName?: string;
   historical?: boolean;
+  deletedAt?: string;
   title: string;
   runtime: "opencode";
   runtimeSessionId?: string;

@@ -17,6 +17,7 @@ import { createMemberStore, createIdentityMiddleware } from "./auth/identity.js"
 import { requireIdentity } from "./auth/permissions.js";
 
 export async function createApp(config: ServerConfig) {
+  const sensitiveValues = [...new Set([config.agent?.apiKey, ...(config.sensitiveValues ?? [])].filter((value): value is string => Boolean(value)))];
   const registry = await createProjectRegistry({
     dataDir: config.dataDir,
     workspacesDir: config.workspacesDir ?? path.join(config.dataDir, "workspaces"),
@@ -29,13 +30,14 @@ export async function createApp(config: ServerConfig) {
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
-    defaultModel: config.agent?.model ?? "deepseek-chat",
+    defaultModel: config.agent?.model ?? "deepseek-flash",
     apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
   });
   const openCodeRuntime = createOpenCodeRuntime({
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
+    activityConfig: config.agent?.activityConfig,
     getSettings: () => agentSettings.get()
   });
   const agentRuntime = config.fakeAgentRuntime
@@ -48,8 +50,10 @@ export async function createApp(config: ServerConfig) {
     runtimeManager,
     getSettings: () => agentSettings.get(),
     apiKey: config.agent?.apiKey,
-    sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value)),
+    sensitiveValues,
     runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000,
+    maxConcurrentRuns: config.agent?.maxConcurrentRuns ?? 3,
+    activityConfig: config.agent?.activityConfig,
     appendActivity(projectId, input) {
       return runtimeManager.get(projectId).events.append(input);
     }

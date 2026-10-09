@@ -26,15 +26,6 @@ function createFixture(activeRun?: Record<string, unknown>) {
   const agentRuns = {
     async listTeamAgents() { return [agent]; },
     async listRuns() { return runs; },
-    async cancelRun(projectId: string, runId: string, memberId: string, interruptedBy: { runId: string; memberId: string } | undefined) {
-      const run = runs.find((candidate) => candidate.id === runId);
-      if (run) {
-        run.status = "cancelled";
-        run.interruptedByRunId = interruptedBy?.runId;
-        run.interruptedByMemberId = interruptedBy?.memberId;
-      }
-      return run;
-    },
     async createRun(input: Record<string, unknown>) {
       const run = { id: "new-run", status: "queued", ...input };
       createdRuns.push(run);
@@ -63,7 +54,7 @@ describe("chat Agent bridge", () => {
     expect(fixture.createdRuns[0]?.extraPrompt).toContain("[Bob] Please check the README");
   });
 
-  it("cancels an active run and starts a new run in the same session", async () => {
+  it("delegates same-session interruption and task creation to the run manager", async () => {
     const fixture = createFixture({
       id: "old-run",
       sessionId: "team-session",
@@ -74,18 +65,10 @@ describe("chat Agent bridge", () => {
     });
     const message = await fixture.chat.createMessage({ roomId: "room", authorId: "member-a", authorName: "Bob", text: "@agent stop and inspect the tests" });
     await fixture.bridge.handleMessage("demo", message);
-    expect(fixture.runs[0]).toMatchObject({ status: "cancelled" });
-    expect(fixture.runs[0]).toMatchObject({
-      interruptedByRunId: expect.any(String),
-      interruptedByMemberId: "member-a"
-    });
-    expect(fixture.createdRuns[0]).toMatchObject({ sessionId: "team-session", runId: expect.any(String) });
-    expect(fixture.createdRuns[0]).toMatchObject({ interruptsRunId: "old-run" });
+    expect(fixture.createdRuns).toHaveLength(1);
+    expect(fixture.createdRuns[0]).toMatchObject({ sessionId: "team-session", runId: expect.any(String), interrupt: true, memberId: "member-a", prompt: "@agent stop and inspect the tests", source: "chat", chatMessageId: message.id });
     const extraPrompt = String(fixture.createdRuns[0]?.extraPrompt);
     expect(extraPrompt).toContain("Requested by Bob (Role: Developer)");
-    await expect(fixture.chat.listMessages("room")).resolves.toEqual(expect.arrayContaining([
-      expect.objectContaining({ kind: "system", agentSessionId: "team-session", runId: "old-run" }),
-      expect.objectContaining({ kind: "system", text: expect.stringContaining("interrupted @agent") })
-    ]));
+    await expect(fixture.chat.listMessages("room")).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: message.id, agentSessionId: "team-session", runId: "new-run", mentions: ["agent"] })]));
   });
 });
