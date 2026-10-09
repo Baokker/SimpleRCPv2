@@ -5,32 +5,49 @@ import type { AgentTraceEvent } from "@simplercp/shared";
 export function createTraceStore(storagePath: string, sensitiveValues: string[] = collectSensitiveEnvironment()) {
   const collectedValues = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])];
   let operations = Promise.resolve();
+  let writeFailures = 0;
+  let readFailures = 0;
+  let sequence: number | undefined;
 
   return {
     async append(input: Omit<AgentTraceEvent, "sequence" | "timestamp">) {
       let result: AgentTraceEvent | undefined;
-      operations = operations.then(async () => {
-        const events = await readTrace(storagePath);
+      operations = operations.catch(() => undefined).then(async () => {
+        if (sequence === undefined) sequence = (await readTrace(storagePath)).at(-1)?.sequence ?? 0;
         const event = redactSensitive(
           {
             ...input,
-            sequence: (events.at(-1)?.sequence ?? 0) + 1,
+            sequence: sequence + 1,
             timestamp: new Date().toISOString()
           },
           collectedValues
         ) as AgentTraceEvent;
         await fs.mkdir(path.dirname(storagePath), { recursive: true });
         await fs.appendFile(storagePath, `${JSON.stringify(event)}\n`, "utf8");
+        sequence = event.sequence;
         result = event;
       });
-      await operations;
+      try {
+        await operations;
+      } catch (error) {
+        writeFailures += 1;
+        console.error("Agent trace write failed", error);
+        throw error;
+      }
       if (!result) throw new Error("Agent trace event was not created");
       return result;
     },
     async list() {
-      await operations;
-      return readTrace(storagePath);
-    }
+      await operations.catch(() => undefined);
+      try {
+        return await readTrace(storagePath);
+      } catch (error) {
+        readFailures += 1;
+        console.error("Agent trace read failed", error);
+        throw error;
+      }
+    },
+    diagnostics() { return { writeFailures, readFailures }; }
   };
 }
 

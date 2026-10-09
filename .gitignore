@@ -17,6 +17,7 @@ packages/knowledge/bench/results/*/raw/
 .superpowers/
 .claude/logs/
 docs/.claude/
+.scratch/verify-opencode-concurrent-diff/
 experiments/knowledge/.work/
 experiments/knowledge/runs/*/raw/
 experiments/knowledge/analysis/.venv/

@@ -63,6 +63,7 @@ test("member adds and removes project files from the Agent prompt", async ({ pag
 });
 
 test("member runs an OpenCode task and reads its trace", async ({ page }) => {
+  test.skip(process.env.SIMPLERCP_LIVE_AGENT_TESTS !== "1" || process.env.SIMPLERCP_SKIP_MODEL_REQUESTS === "true", "真实模型检查需要显式启用");
   const settingsResponse = await page.request.get("/api/agent/settings");
   const settings = await settingsResponse.json() as {
     apiKeyConfigured: boolean;
@@ -112,6 +113,7 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
 test("member sees a concurrent change warning when editing an Agent file", async ({
   page
 }) => {
+  test.skip(process.env.SIMPLERCP_LIVE_AGENT_TESTS !== "1" || process.env.SIMPLERCP_SKIP_MODEL_REQUESTS === "true", "真实模型检查需要显式启用");
   const settingsResponse = await page.request.get("/api/agent/settings");
   const settings = await settingsResponse.json() as {
     apiKeyConfigured: boolean;
@@ -131,14 +133,12 @@ test("member sees a concurrent change warning when editing an Agent file", async
     "Use the bash tool to run sleep 3. Then replace src/hello.ts with exactly: agent replaced this file"
   );
   await page.getByTestId("agent-run-submit").click();
-  await page.waitForTimeout(500);
+  await expect(page.getByTestId("agent-selected-run").last()).toContainText("Running");
   await page.evaluate(() => {
     window.__simplercpEditors?.["src/hello.ts"]?.setValue(
       "member changed while agent ran"
     );
   });
-  await page.waitForTimeout(700);
-
   await expect(page.getByTestId("agent-selected-run").last()).toContainText("Completed", {
     timeout: 90_000
   });

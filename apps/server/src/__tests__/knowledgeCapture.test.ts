@@ -204,6 +204,23 @@ describe("knowledge capture with real collaboration", () => {
     expect(await restarted.capture!.get(pending.id)).toMatchObject({ state: "open", evidence: { added: ["beta"] } });
   });
 
+  it("聊天发送时记录待处理的光标，立即选择消息仍能取得代码候选", async () => {
+    const s = await start(); const ada = await s.join("Ada");
+    await s.connection(ada);
+    s.runtime.capture!.cursor({ type: "cursor", memberId: ada, file: "code.ts", position: { line: 1, character: 1 }, selection: { startLine: 1, startCharacter: 1, endLine: 1, endCharacter: 1 } });
+    const message = await s.request(ada, "chat", { text: "code.ts 中保留 baseline。" });
+    const messageId = (message.body.message as { id: string }).id;
+    const fromChat = await s.request(ada, "knowledge/from-chat", { messageIds: [messageId] });
+    const suggestion = fromChat.body.suggestion as CaptureSuggestion;
+    expect(suggestion.suggestedAnchors).toEqual(expect.arrayContaining([expect.objectContaining({ file: "code.ts" })]));
+    await s.runtime.capture!.awaitIdle();
+    const recorded = (await fs.readFile(path.join(getProjectMetadataPath(s.runtime.project), "knowledge/events.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line) as CaptureEvent);
+    const cursorIndex = recorded.findIndex(event => event.type === "cursor" && event.memberId === ada);
+    const chatIndex = recorded.findIndex(event => event.type === "chat" && event.messageId === messageId);
+    expect(cursorIndex).toBeGreaterThanOrEqual(0);
+    expect(cursorIndex).toBeLessThan(chatIndex);
+  });
+
   it("accepts a suggestion once under simultaneous HTTP requests and records deterministic AI telemetry", async () => {
     const s = await start(); const ada = await s.join("Ada");
     const message = await s.request(ada, "chat", { text: "code.ts chosen 保留单一常量" });

@@ -1,11 +1,6 @@
 import {
-  Activity,
-  AlertCircle,
   Bot,
-  CheckCircle2,
-  ChevronDown,
   CircleStop,
-  Download,
   FileCode2,
   LoaderCircle,
   Paperclip,
@@ -13,20 +8,24 @@ import {
   Send,
   X
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   cancelAgentRun,
   createAgentSession,
   createAgentSessionRun,
+  deleteAgentSession,
   downloadAgentTrace,
-  getAgentRuns,
   getAgentSessions,
   getAgentStatus,
   previewAgentKnowledge,
   getWorkspaceDirectory,
-  readWorkspaceFile
+  readWorkspaceFile,
+  retryAgentRun
 } from "../api";
-import { presentTrace } from "../agentTracePresentation";
+import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
+import { AgentQuestions } from "./AgentQuestions";
+import { AgentResponse } from "./AgentResponse";
+import { AgentWorkDetails } from "./AgentWorkDetails";
 import { AgentKnowledgeSummary } from "./AgentKnowledgeSummary";
 import type {
   AgentPromptContext,
@@ -42,6 +41,8 @@ import { formatTime, titleCase } from "../format";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 
+export interface AgentDraft { prompt: string; contexts: AgentPromptContext[] }
+
 export function AgentPanel({
   projectId,
   member,
@@ -50,7 +51,11 @@ export function AgentPanel({
   knowledgeUpdateRuns,
   members,
   workspaceTree,
-  refreshVersion,
+  liveRuns,
+  drafts,
+  setDrafts,
+  selectedSessionId,
+  setSelectedSessionId,
   traces,
   onLoadTrace,
   onOpenFile,
@@ -63,7 +68,11 @@ export function AgentPanel({
   knowledgeUpdateRuns: Record<string, string[]>;
   members: RoomMember[];
   workspaceTree: WorkspaceNode[];
-  refreshVersion: number;
+  liveRuns: AgentRun[];
+  drafts: Record<string, AgentDraft>;
+  setDrafts: Dispatch<SetStateAction<Record<string, AgentDraft>>>;
+  selectedSessionId?: string;
+  setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
   traces: Record<string, AgentTraceEvent[]>;
   onLoadTrace(runId: string): void;
   onOpenFile(path: string): void;
@@ -72,9 +81,14 @@ export function AgentPanel({
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [sessions, setSessions] = useState<AgentSession[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<string>();
-  const [prompt, setPrompt] = useState("");
-  const [contexts, setContexts] = useState<AgentPromptContext[]>([]);
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
+  const draftKey = `${projectId}:${member?.id ?? ""}:${selectedSessionId ?? "new"}`;
+  const draft = drafts[draftKey];
+  const prompt = draft?.prompt ?? "";
+  const contexts = draft?.contexts ?? [];
+  const selectedSessionRef = useRef(selectedSessionId);
+  selectedSessionRef.current = selectedSessionId;
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextFiles, setContextFiles] = useState<string[]>([]);
   const [contextLoading, setContextLoading] = useState(false);
@@ -86,6 +100,7 @@ export function AgentPanel({
   const [reviewKnowledge, setReviewKnowledge] = useState<Array<{ id: string; title: string }>>([]);
   const [excludedKnowledge, setExcludedKnowledge] = useState<Set<string>>(new Set());
   const transcriptRef = useRef<HTMLOListElement>(null);
+  const followTranscriptRef = useRef(true);
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
 
@@ -103,7 +118,19 @@ export function AgentPanel({
     [runs]
   );
   const projectFiles = contextFiles.length ? contextFiles : flattenFiles(workspaceTree);
+  const runningRuns = runs.filter((run) => run.status === "running" && run.memberId === member?.id && sessions.some((session) => session.id === run.sessionId));
+  const activeSessionIds = useMemo(() => new Set(runs.filter((run) => run.status === "running").map((run) => run.sessionId)), [runs]);
   const sessionRunIds = sessionRuns.map((run) => run.id).join(",");
+
+  useEffect(() => {
+    if (!member) return;
+    setRuns((current) => {
+      const visible = (run: AgentRun) => run.memberId === member.id && sessions.some((session) => session.id === run.sessionId);
+      const byId = new Map(current.filter(visible).map((run) => [run.id, run]));
+      for (const run of liveRuns.filter(visible)) byId.set(run.id, run);
+      return [...byId.values()];
+    });
+  }, [liveRuns, sessions, member?.id]);
 
   useEffect(() => {
     let active = true;
@@ -115,13 +142,11 @@ export function AgentPanel({
     }
     void Promise.all([
       getAgentStatus(),
-      getAgentSessions(projectId),
-      getAgentRuns(projectId),
-    ]).then(([nextRuntime, nextSessions, nextRuns]) => {
+      getAgentSessions(projectId)
+    ]).then(([nextRuntime, nextSessions]) => {
       if (!active) return;
       setRuntime(nextRuntime);
       setSessions(nextSessions);
-      setRuns(nextRuns);
       setSelectedSessionId((current) =>
         current && nextSessions.some((session) => session.id === current)
           ? current
@@ -135,13 +160,10 @@ export function AgentPanel({
     if (!member) return;
     let active = true;
     async function refresh() {
-      const [nextRuns, nextSessions] = await Promise.all([
-        getAgentRuns(projectId),
-        getAgentSessions(projectId)
-      ]);
+      const nextSessions = await getAgentSessions(projectId);
       if (!active) return;
-      setRuns(nextRuns);
       setSessions(nextSessions);
+      setSelectedSessionId((current) => current && nextSessions.some((session) => session.id === current) ? current : nextSessions[0]?.id);
     }
     void refresh().catch((error) => onErrorRef.current(error));
     const timer = window.setInterval(
@@ -152,12 +174,19 @@ export function AgentPanel({
       active = false;
       window.clearInterval(timer);
     };
-  }, [member?.id, projectId, refreshVersion]);
+  }, [member?.id, projectId]);
+
+  useEffect(() => {
+    followTranscriptRef.current = true;
+    setContextMenuOpen(false);
+    setExcludedKnowledge(new Set());
+    setKnowledgePreview([]);
+  }, [selectedSessionId]);
 
   useEffect(() => {
     const transcript = transcriptRef.current;
-    if (transcript) transcript.scrollTop = transcript.scrollHeight;
-  }, [sessionRuns.length, sessionRuns.at(-1)?.status]);
+    if (transcript && followTranscriptRef.current) transcript.scrollTop = transcript.scrollHeight;
+  }, [sessionRuns, traces, selectedSessionId]);
 
   useEffect(() => {
     if (!selectedSessionId) return;
@@ -206,6 +235,8 @@ export function AgentPanel({
     const text = prompt.trim();
     if (!text || !member || submitting) return;
     setSubmitting(true);
+    let submittedKey = draftKey;
+    const submittedDraft = draft ?? { prompt, contexts };
     try {
       let session = selectedSession;
       if (!session) {
@@ -214,17 +245,22 @@ export function AgentPanel({
         });
         session = response.session;
         setSessions((current) => [response.session, ...current]);
-        setSelectedSessionId(response.session.id);
+        submittedKey = `${projectId}:${member.id}:${response.session.id}`;
+        setDrafts((current) => {
+          const next = { ...current, [submittedKey]: current[draftKey] ?? submittedDraft };
+          delete next[draftKey];
+          return next;
+        });
+        if (selectedSessionRef.current === selectedSessionId) setSelectedSessionId(response.session.id);
       }
       const response = await createAgentSessionRun(projectId, session.id, {
         prompt: text,
         contexts,
         knowledge: { excludeCardIds: [...excludedKnowledge] }
       });
-      setRuns((current) => [response.run, ...current]);
-      setPrompt("");
-      setContexts([]);
-      setContextMenuOpen(false);
+      setRuns((current) => [response.run, ...current.filter((run) => run.id !== response.run.id)]);
+      setDrafts((current) => current[submittedKey] === submittedDraft ? { ...current, [submittedKey]: { prompt: "", contexts: [] } } : current);
+      if (selectedSessionRef.current === session.id) setContextMenuOpen(false);
       setKnowledgePreview([]);
       setExcludedKnowledge(new Set());
     } catch (error) {
@@ -235,9 +271,10 @@ export function AgentPanel({
   }
 
   function toggleContext(path: string) {
-    setContexts((current) => current.some((context) => context.path === path)
-      ? current.filter((context) => context.path !== path)
-      : [...current, { type: "file", path }]);
+    setDrafts((current) => {
+      const context = current[draftKey]?.contexts ?? [];
+      return { ...current, [draftKey]: { prompt: current[draftKey]?.prompt ?? "", contexts: context.some((entry) => entry.path === path) ? context.filter((entry) => entry.path !== path) : [...context, { type: "file", path }] } };
+    });
   }
 
   async function toggleContextMenu() {
@@ -279,6 +316,23 @@ export function AgentPanel({
 
   const runtimeLabel = runtime ? `OpenCode ${titleCase(runtime.state)}` : "Checking OpenCode";
 
+  async function retryRun(run: AgentRun) {
+    if (!run.sessionId || !run.failure?.retryable) return;
+    try { const response = await retryAgentRun(projectId, run.id); setRuns((current) => [response.run, ...current]); }
+    catch (error) { onErrorRef.current(error); }
+  }
+
+  async function deleteSession(session: AgentSession) {
+    if (!window.confirm(`删除会话“${session.title}”？运行中的任务将取消，已经写入的文件继续保留。`)) return;
+    try {
+      await deleteAgentSession(projectId, session.id);
+      setSessions((current) => current.filter((entry) => entry.id !== session.id));
+      setRuns((current) => current.filter((run) => run.sessionId !== session.id));
+      setDrafts((current) => { const next = { ...current }; delete next[`${projectId}:${member?.id ?? ""}:${session.id}`]; return next; });
+      setSelectedSessionId((current) => current === session.id ? sessionsRef.current.find((entry) => entry.id !== session.id)?.id : current);
+    } catch (error) { onErrorRef.current(error); }
+  }
+
   return (
     <section className="collab-section agent-section">
       <p className="my-agent-hint" data-testid="my-agent-hint">These are your own Agent sessions. To direct the shared agent together, mention @agent in Chat.</p>
@@ -287,13 +341,17 @@ export function AgentPanel({
         <div>
           <strong data-testid="agent-runtime-status">{runtimeLabel}</strong>
           <small>{runtime?.model ?? "Loading model"}</small>
+          {runtime?.modelChangePending ? <small>模型变更将在当前任务完成后生效</small> : null}
         </div>
       </header>
 
+      {runningRuns.filter((run) => run.sessionId === selectedSessionId).map((run) => <div key={run.id}><AgentQuestions projectId={projectId} run={run} memberId={member?.id} onError={onError} /><AgentRunProgress run={run} memberId={member?.id} config={runtime?.activityConfig} onCancel={() => void cancelRun(run)} /></div>)}
+      {runningRuns.length ? <div className="agent-active-runs" data-testid="agent-active-runs"><strong>运行中任务</strong><ul>{runningRuns.map((run) => <li key={run.id}><span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span><AgentRunStatus run={run} memberId={member?.id} /></span><time>{formatTime(run.startedAt ?? run.createdAt)}</time></li>)}</ul></div> : null}
+
       <div className="agent-session-tabs" role="tablist" aria-label="Agent sessions">
         {sessions.map((session) => (
+          <div key={session.id} className="agent-session-tab">
           <button
-            key={session.id}
             type="button"
             role="tab"
             aria-selected={session.id === selectedSessionId}
@@ -303,6 +361,8 @@ export function AgentPanel({
           >
             {session.title}
           </button>
+          <button type="button" className="agent-session-close" aria-label={`删除会话 ${session.title}`} title="删除会话" onClick={() => void deleteSession(session)}><X size={12} /></button>
+          </div>
         ))}
         <button
           type="button"
@@ -322,7 +382,7 @@ export function AgentPanel({
             value={sessionTitle}
             onChange={(event) => setSessionTitle(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") void createSession();
+              if (event.key === "Enter" && !event.nativeEvent.isComposing) void createSession();
             }}
             placeholder="Session title"
             data-testid="agent-session-title"
@@ -334,7 +394,7 @@ export function AgentPanel({
         </div>
       ) : null}
 
-      <ol className="agent-message-list" ref={transcriptRef} data-testid="agent-message-list">
+      <ol className="agent-message-list" ref={transcriptRef} onScroll={(event) => { const list = event.currentTarget; followTranscriptRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 80; }} data-testid="agent-message-list">
         {sessionRuns.length === 0 ? (
           <li className="empty-panel-state">Ask OpenCode to work on this project.</li>
         ) : sessionRuns.map((run) => (
@@ -342,8 +402,9 @@ export function AgentPanel({
             <article className="agent-user-message">
               <header>
                 <strong>{runMemberName(run, members)}</strong>
-                <time>{formatTime(run.createdAt)}</time>
+                <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
               </header>
+              <small>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</small>
               <p>{run.prompt}</p>
               {run.contexts?.length ? (
                 <ul className="agent-message-contexts">
@@ -361,6 +422,9 @@ export function AgentPanel({
               knowledgeUpdateCardIds={knowledgeUpdateRuns[run.id] ?? []}
               onLoadTrace={() => onLoadTrace(run.id)}
               queuedRuns={queuedRuns}
+              activeSessionIds={activeSessionIds}
+              activityConfig={runtime?.activityConfig}
+              onRetry={() => void retryRun(run)}
               canCancel={Boolean(member)}
               onCancel={() => void cancelRun(run)}
               onOpenFile={onOpenFile}
@@ -418,9 +482,9 @@ export function AgentPanel({
         ) : null}
         <textarea
           value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
+          onChange={(event) => { const value = event.target.value; setDrafts((current) => ({ ...current, [draftKey]: { prompt: value, contexts: current[draftKey]?.contexts ?? [] } })); }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               void submitRun();
             }
@@ -428,6 +492,7 @@ export function AgentPanel({
           placeholder="Ask OpenCode about this project (only you can see this session)"
           data-testid="agent-prompt"
         />
+        {runningRuns.some((run) => run.sessionId === selectedSessionId) ? <small className="agent-interrupt-hint">发送新要求将立即中断当前任务，并按新要求继续。</small> : null}
         <div className="agent-composer-toolbar">
           <div className="agent-context-picker">
             <button
@@ -486,10 +551,13 @@ function AgentMessage({
   knowledgeUpdateCardIds,
   onLoadTrace,
   queuedRuns,
+  activeSessionIds,
   canCancel,
   onCancel,
   onOpenFile,
-  onError
+  onError,
+  activityConfig,
+  onRetry
 }: {
   projectId: string;
   run: AgentRun;
@@ -498,14 +566,14 @@ function AgentMessage({
   knowledgeUpdateCardIds: string[];
   onLoadTrace(): void;
   queuedRuns: AgentRun[];
+  activeSessionIds: Set<string | undefined>;
   canCancel: boolean;
   onCancel(): void;
   onOpenFile(path: string): void;
   onError(error: unknown): void;
+  activityConfig?: AgentRuntimeStatus["activityConfig"];
+  onRetry(): void;
 }) {
-  const [expanded, setExpanded] = useState(ACTIVE_STATUSES.has(run.status));
-  useEffect(() => setExpanded(ACTIVE_STATUSES.has(run.status)), [run.status]);
-  const presentation = useMemo(() => presentTrace(trace), [trace]);
 
   return (
     <article className="agent-assistant-message" data-testid="agent-selected-run">
@@ -513,7 +581,7 @@ function AgentMessage({
         <span className="agent-avatar"><Bot size={14} /></span>
         <div>
           <strong>OpenCode</strong>
-          <div className="agent-run-metadata"><span className={`ui-badge run-status-${run.status}`}>{runStatusLabel(run, queuedRuns)}</span><span className="agent-run-model">模型 <strong>{run.model}</strong></span></div>
+          <div className="agent-run-metadata"><span className={`ui-badge run-status-${run.status}`}>{runStatusLabel(run, queuedRuns, activeSessionIds)}</span><span className="agent-run-model">模型 <strong>{run.model}</strong></span></div>
         </div>
         {ACTIVE_STATUSES.has(run.status) && canCancel ? (
           <button type="button" className="agent-cancel-button" onClick={onCancel} title="Cancel run">
@@ -522,48 +590,10 @@ function AgentMessage({
         ) : null}
       </header>
 
-      <details
-        className={`agent-trace-block ${run.status}`}
-        open={expanded}
-        onToggle={(event) => {
-          setExpanded(event.currentTarget.open);
-          if (event.currentTarget.open) onLoadTrace();
-        }}
-        data-testid="agent-trace-disclosure"
-      >
-        <summary data-testid="agent-trace-summary">
-          <span className="agent-trace-summary-main">
-            <TraceStatusIcon status={run.status} />
-            <span>
-              <strong>{ACTIVE_STATUSES.has(run.status) ? "OpenCode is working" : "Work details"}</strong>
-              <small>{presentation.visible.length} actions</small>
-            </span>
-          </span>
-          <ChevronDown className="agent-trace-chevron" size={14} />
-        </summary>
-        <div className="agent-trace-content">
-          <ol className="agent-trace" data-testid="agent-trace">
-            {presentation.visible.map((item) => (
-              <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
-                <span className="agent-trace-entry-marker" aria-hidden="true" />
-                <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}</div>
-              </li>
-            ))}
-          </ol>
-          <button
-            type="button"
-            className="agent-trace-download"
-            onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
-            data-testid="agent-trace-download"
-          >
-            <Download size={13} /> Download trace
-          </button>
-        </div>
-      </details>
-
-      {run.output ? <div className="agent-run-output">{run.output}</div> : null}
+      {run.status !== "running" ? <AgentRunProgress run={run} config={activityConfig} onRetry={onRetry} /> : null}
+      <AgentResponse run={run} />
+      <AgentWorkDetails run={run} trace={trace} onLoadTrace={onLoadTrace} onDownload={() => void downloadAgentTrace(projectId, run.id).catch(onError)} />
       <AgentKnowledgeSummary trace={trace} cards={knowledgeCards} updateCardIds={knowledgeUpdateCardIds} testIdPrefix="agent" onOpenFile={onOpenFile} />
-      {run.error ? <p className="agent-run-error">{run.error}</p> : null}
       {run.fileChanges?.length ? (
         <ul className="agent-file-changes">
           {run.fileChanges.map((change) => (
@@ -599,17 +629,10 @@ function runMemberName(run: AgentRun, members: RoomMember[]) {
   return run.memberName ?? members.find((member) => member.id === run.memberId)?.displayName ?? "Member";
 }
 
-function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[]) {
+function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds: Set<string | undefined>) {
   if (run.interruptedByRunId) return "Interrupted";
   if (run.status !== "queued") return titleCase(run.status);
+  if (activeSessionIds.has(run.sessionId) || queuedRuns.some((candidate) => candidate.id !== run.id && candidate.sessionId === run.sessionId && candidate.createdAt < run.createdAt)) return "等待本会话的前一个任务结束";
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
-  return position > 0 ? `Queued #${position}` : "Queued";
-}
-
-function TraceStatusIcon({ status }: { status: AgentRun["status"] }) {
-  if (status === "completed") return <CheckCircle2 size={16} />;
-  if (status === "failed") return <AlertCircle size={16} />;
-  if (status === "cancelled") return <CircleStop size={16} />;
-  if (status === "running") return <LoaderCircle className="agent-trace-spinner" size={16} />;
-  return <Activity size={16} />;
+  return position > 0 ? `等待并发名额（第 ${position} 个）` : "等待并发名额";
 }

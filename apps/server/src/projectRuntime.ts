@@ -12,6 +12,7 @@ import type { RiskWarningConfig } from "./knowledge/captureService.js";
 import type { CaptureConfigInput } from "@simplercp/knowledge";
 import type { ChatMessage, WorkspaceChange, ServerMessage } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
+import { canonicalWorkspaceRoot } from "./workspacePath.js";
 import type { KnowledgeMode } from "./config.js";
 
 export interface ProjectRuntimeOptions {
@@ -22,6 +23,7 @@ export function createProjectRuntime(
   project: ProjectRecord,
   options: ProjectRuntimeOptions = {}
 ) {
+  project = { ...project, workspacePath: canonicalWorkspaceRoot(project.workspacePath) };
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
   const rooms = createRoomStore(events);
@@ -236,6 +238,7 @@ export function createProjectRuntime(
       await documents.awaitIdle();
       await capture?.dispose();
       await knowledge?.awaitIdle();
+      await documents.dispose();
       await chat.awaitIdle();
       await events.awaitIdle();
     }

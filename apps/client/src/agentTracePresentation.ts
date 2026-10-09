@@ -4,6 +4,7 @@ export interface TraceEntry {
   sequence: number;
   title: string;
   detail?: string;
+  metrics?: Array<{ id: string; label: string; value: string }>;
   tone: "neutral" | "success" | "warning" | "error";
 }
 
@@ -12,10 +13,10 @@ export function presentTrace(events: AgentTraceEvent[]) {
     (event) => event.type === "opencode.session.error"
   );
   return {
-    visible: events.slice(-200).flatMap((event) => {
+    visible: events.flatMap((event) => {
       const item = presentTraceEvent(event, hasProviderError);
       return item ? [item] : [];
-    })
+    }).slice(-200)
   };
 }
 
@@ -43,6 +44,7 @@ function presentTraceEvent(
     case "concurrent_change": return entry(event, "Concurrent edit detected", event.summary, "warning");
     case "run_completed": return entry(event, "Run completed", undefined, "success");
     case "run_cancelled": return entry(event, "Run cancelled", event.summary, "warning");
+    case "run_interrupted": return entry(event, "新指令已中断任务", undefined, "warning");
     case "run_failed": return hasProviderError
       ? null
       : entry(event, "Run failed", event.summary, "error");

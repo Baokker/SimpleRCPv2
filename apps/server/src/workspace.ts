@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { WorkspaceFileLoadResult, WorkspaceNode } from "./types.js";
 import { isIgnoredPath } from "./workspacePolicy.js";
+import { canonicalWorkspacePath, canonicalWorkspaceRoot } from "./workspacePath.js";
 
 export const LARGE_FILE_BYTES = 1024 * 1024;
 const BINARY_SAMPLE_BYTES = 8 * 1024;
@@ -14,15 +15,7 @@ export function resolveWorkspacePath(root: string, relativePath: string) {
   if (isIgnoredPath(relativePath)) {
     throw new Error("Path is excluded from browser access");
   }
-  const absoluteRoot = path.resolve(root);
-  const candidate = path.resolve(absoluteRoot, relativePath);
-  const relative = path.relative(absoluteRoot, candidate);
-
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("Path escapes workspace root");
-  }
-
-  return candidate;
+  return canonicalWorkspacePath(root, relativePath).absolute;
 }
 
 export async function listWorkspaceDirectory(
@@ -175,5 +168,5 @@ export async function pathExists(absolutePath: string) {
 }
 
 function isWorkspaceRoot(root: string, relativePath: string) {
-  return path.resolve(root) === resolveWorkspacePath(root, relativePath);
+  return canonicalWorkspaceRoot(root) === resolveWorkspacePath(root, relativePath);
 }

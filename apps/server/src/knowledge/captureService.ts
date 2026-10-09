@@ -124,9 +124,10 @@ export function createCaptureService(options: CaptureServiceOptions) {
   function feed(input: EventInput) {
     return enqueue(async () => {
       if (disposed) return;
-      if (input.type === "memberPresence" && input.action !== "join") {
-        const cursor = cursorTimers.get(input.memberId);
-        if (cursor) { clearTimeout(cursor.timer); cursorTimers.delete(input.memberId); processNow(cursor.input); }
+      const cursorMemberId = input.type === "chat" ? input.authorId : input.type === "memberPresence" && input.action !== "join" ? input.memberId : undefined;
+      if (cursorMemberId) {
+        const cursor = cursorTimers.get(cursorMemberId);
+        if (cursor) { clearTimeout(cursor.timer); cursorTimers.delete(cursorMemberId); processNow(cursor.input); }
       }
       processNow(input);
       schedule();

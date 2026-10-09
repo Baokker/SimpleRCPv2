@@ -95,6 +95,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
               </dd>
             </div>
             {runtime.version ? <div><dt>Version</dt><dd>v{runtime.version}</dd></div> : null}
+            {runtime.modelChangePending ? <div><dt>Model</dt><dd>模型变更将在当前任务完成后生效</dd></div> : null}
             <div><dt>Provider</dt><dd>{provider === "minimax" ? "MiniMax" : "DeepSeek"}</dd></div>
             <div>
               <dt>API Key</dt>

@@ -63,6 +63,19 @@ describe("knowledge document IO", () => {
     await expect(resolveKnowledgeDocument(workspace, "../outside.md")).rejects.toThrow("escapes");
     await expect(resolveKnowledgeDocument(workspace, "AGENTS.knowledge.md", true)).resolves.toBe(path.join(workspace, "AGENTS.knowledge.md"));
   });
+  it("拒绝工作区内部的文件与目录 symbolic link，并支持工作区根目录的别名", async () => {
+    const root = await createTestWorkspace("knowledge-document-"); roots.push(root);
+    const workspace = path.join(root, "workspace"); await fs.mkdir(workspace);
+    await fs.mkdir(path.join(workspace, "rules"));
+    await fs.writeFile(path.join(workspace, "rules", "CONTRIBUTING.md"), "Use sharedHelper");
+    await fs.symlink(path.join(workspace, "rules", "CONTRIBUTING.md"), path.join(workspace, "AGENTS.md"));
+    await fs.symlink(path.join(workspace, "rules"), path.join(workspace, "linked-rules"));
+    await fs.symlink(workspace, path.join(root, "workspace-alias"));
+    await expect(resolveKnowledgeDocument(workspace, "AGENTS.md")).rejects.toThrow("symbolic links");
+    await expect(resolveKnowledgeDocument(workspace, "linked-rules/CONTRIBUTING.md")).rejects.toThrow("symbolic links");
+    await expect(resolveKnowledgeDocument(workspace, "linked-rules/new.md", true)).rejects.toThrow("symbolic links");
+    await expect(resolveKnowledgeDocument(path.join(root, "workspace-alias"), "rules/CONTRIBUTING.md")).resolves.toBe(path.join(workspace, "rules", "CONTRIBUTING.md"));
+  });
   it("preserves summaries that begin with the scope label", () => {
     const [card] = createDemoKnowledgeCards({ workspaceRelativePath: "README.md", selectedText: "Use sharedHelper", now: 1 });
     for (const content of ["保留 sharedHelper。", ""]) {

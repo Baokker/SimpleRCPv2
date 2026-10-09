@@ -12,6 +12,7 @@ export interface ServerConfig {
   demoProjectRoot: string;
   terminalEnabled?: boolean;
   fakeAgentRuntime?: boolean;
+  sensitiveValues?: string[];
   knowledge?: KnowledgeMode;
   knowledgeRecordEvents?: boolean;
   captureConfig?: import("@simplercp/knowledge").CaptureConfigInput;
@@ -29,6 +30,8 @@ export interface ServerConfig {
     model: string;
     openCodePort?: number;
     runTimeoutMs?: number;
+    maxConcurrentRuns?: number;
+    activityConfig?: { waitingMs: number; stalledMs: number };
   };
 }
 
@@ -66,7 +69,7 @@ export function loadConfig(
   }
   const agentModel = agentProvider === "minimax"
     ? (env.AGENT_MINIMAX_MODEL?.trim() || env.MINIMAX_MODEL?.trim() || "MiniMax-M2")
-    : (env.DEEPSEEK_MODEL?.trim() || "deepseek-chat");
+    : (env.DEEPSEEK_MODEL?.trim() || "deepseek-flash");
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
     throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");
@@ -105,6 +108,7 @@ export function loadConfig(
     demoProjectRoot: path.resolve(repositoryRoot, "demo/workspace"),
     terminalEnabled,
     fakeAgentRuntime,
+    sensitiveValues: Object.entries(env).filter(([name, value]) => /(?:KEY|TOKEN|SECRET)(?:_|$)/i.test(name) && value).map(([, value]) => value!),
     knowledge,
     ...(knowledge !== "off" ? { knowledgeRecordEvents: readBoolean(env.KNOWLEDGE_RECORD_EVENTS, "KNOWLEDGE_RECORD_EVENTS", true) } : {}),
     ...(knowledgeLlm ? { knowledgeLlm } : {}),
@@ -114,10 +118,22 @@ export function loadConfig(
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,
-      runTimeoutMs
+      runTimeoutMs,
+      maxConcurrentRuns: positiveInteger(env.SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS, "SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS", 3),
+      activityConfig: {
+        waitingMs: positiveInteger(env.SIMPLERCP_AGENT_WAITING_MS, "SIMPLERCP_AGENT_WAITING_MS", 20_000),
+        stalledMs: positiveInteger(env.SIMPLERCP_AGENT_STALLED_MS, "SIMPLERCP_AGENT_STALLED_MS", 60_000)
+      }
     }
   };
+  if (config.agent!.activityConfig!.stalledMs <= config.agent!.activityConfig!.waitingMs) throw new Error("SIMPLERCP_AGENT_STALLED_MS 必须大于 SIMPLERCP_AGENT_WAITING_MS");
   return config;
+}
+
+function positiveInteger(value: string | undefined, name: string, defaultValue: number) {
+  const number = Number(value ?? defaultValue);
+  if (!Number.isInteger(number) || number < 1) throw new Error(`${name} 必须为正整数`);
+  return number;
 }
 
 function readKnowledgeLlm(env: NodeJS.ProcessEnv): NonNullable<ServerConfig["knowledgeLlm"]> {

@@ -33,10 +33,16 @@ export interface AgentRuntime {
   cancel(input: {
     workspacePath: string;
     sessionId: string;
+    signal?: AbortSignal;
   }): Promise<void>;
+  replyQuestion?(input: { workspacePath: string; requestId: string; answers: string[][]; signal?: AbortSignal }): Promise<void>;
+  rejectQuestion?(input: { workspacePath: string; requestId: string; signal?: AbortSignal }): Promise<void>;
   subscribe(
     input: { workspacePath: string; sessionId: string },
-    listener: (event: AgentRuntimeEvent) => void | Promise<void>
+    listener: (event: AgentRuntimeEvent) => void | Promise<void>,
+    onListenerError?: (error: unknown) => void | Promise<void>
   ): Promise<() => Promise<void>>;
   dispose(): Promise<void>;
+  acquireRun?(): () => void;
+  getCurrentModel?(): string;
 }

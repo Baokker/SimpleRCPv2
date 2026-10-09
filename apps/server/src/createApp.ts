@@ -19,6 +19,7 @@ import { requireIdentity } from "./auth/permissions.js";
 import { createKnowledgeMcpToken, registerKnowledgeMcp } from "./knowledge/mcpServer.js";
 
 export async function createApp(config: ServerConfig) {
+  const sensitiveValues = [...new Set([config.agent?.apiKey, config.knowledgeLlm?.apiKey, ...(config.sensitiveValues ?? [])].filter((value): value is string => Boolean(value)))];
   if (config.knowledge === "full" && config.host !== "127.0.0.1") throw new Error("Knowledge MCP requires SIMPLERCP_HOST=127.0.0.1");
   const app = express();
   app.use(cors());
@@ -41,7 +42,7 @@ export async function createApp(config: ServerConfig) {
   });
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
-    defaultModel: config.agent?.model ?? "deepseek-chat",
+    defaultModel: config.agent?.model ?? "deepseek-flash",
     defaultProvider: config.agent?.provider ?? "deepseek",
     apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
   });
@@ -50,6 +51,7 @@ export async function createApp(config: ServerConfig) {
     provider: config.agent?.provider,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
+    activityConfig: config.agent?.activityConfig,
     getSettings: () => agentSettings.get(),
     ...(mcpToken ? { mcp: { url: () => app.locals.knowledgeMcpUrl as string, token: mcpToken } } : {})
   });
@@ -63,8 +65,10 @@ export async function createApp(config: ServerConfig) {
     runtimeManager,
     getSettings: () => agentSettings.get(),
     apiKey: config.agent?.apiKey,
-    sensitiveValues: [config.agent?.apiKey].filter((value): value is string => Boolean(value)),
+    sensitiveValues,
     runTimeoutMs: config.agent?.runTimeoutMs ?? 600_000,
+    maxConcurrentRuns: config.agent?.maxConcurrentRuns ?? 3,
+    activityConfig: config.agent?.activityConfig,
     appendActivity(projectId, input) {
       return runtimeManager.get(projectId).events.append(input);
     }

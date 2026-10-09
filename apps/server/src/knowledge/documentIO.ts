@@ -4,6 +4,7 @@ import { toMarkdown } from "mdast-util-to-markdown";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveWorkspacePath } from "../workspace.js";
+import { canonicalWorkspaceRoot } from "../workspacePath.js";
 import { extractFirstJsonObject, removeKnowledgeEvidenceBlocks, type KnowledgeCard, type KnowledgeCardType, type LlmClient, type LlmUsage } from "@simplercp/knowledge";
 
 export interface ImportedDraft {
@@ -12,9 +13,12 @@ export interface ImportedDraft {
 }
 
 export async function resolveKnowledgeDocument(root: string, file: string, allowMissing = false) {
-  const target = resolveWorkspacePath(root, file);
-  const parts = path.relative(path.resolve(root), target).split(path.sep);
-  let current = path.resolve(root);
+  const workspaceRoot = canonicalWorkspaceRoot(root);
+  const requestedRoot = path.resolve(root);
+  const relative = path.relative(requestedRoot, path.resolve(requestedRoot, file));
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw new Error("Knowledge document path escapes the workspace");
+  const parts = relative.split(path.sep);
+  let current = workspaceRoot;
   for (let index = 0; index < parts.length; index++) {
     current = path.join(current, parts[index]!);
     const stat = await fs.lstat(current).catch((error: NodeJS.ErrnoException) => {
@@ -23,7 +27,7 @@ export async function resolveKnowledgeDocument(root: string, file: string, allow
     });
     if (stat?.isSymbolicLink()) throw new Error("Knowledge documents must not use symbolic links");
   }
-  return target;
+  return resolveWorkspacePath(workspaceRoot, relative);
 }
 
 export function parseImportedDrafts(text: string, source: string): ImportedDraft[] {

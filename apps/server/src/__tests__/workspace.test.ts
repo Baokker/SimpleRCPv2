@@ -38,7 +38,7 @@ describe("workspace service", () => {
 
   it("rejects path traversal outside the workspace root", () => {
     expect(() => resolveWorkspacePath(root, "../secret.txt")).toThrow(
-      "Path escapes workspace root"
+      "请求路径超出工作区范围"
     );
   });
 
@@ -175,12 +175,12 @@ describe("workspace service", () => {
   it("rejects mutation path traversal", async () => {
     await expect(
       createWorkspaceFile(root, "../escape.ts", "")
-    ).rejects.toThrow("Path escapes workspace root");
+    ).rejects.toThrow("请求路径超出工作区范围");
     await expect(
       renameWorkspacePath(root, "src/hello.ts", "../escape.ts")
-    ).rejects.toThrow("Path escapes workspace root");
+    ).rejects.toThrow("请求路径超出工作区范围");
     await expect(deleteWorkspacePath(root, "../escape.ts")).rejects.toThrow(
-      "Path escapes workspace root"
+      "请求路径超出工作区范围"
     );
   });
 });

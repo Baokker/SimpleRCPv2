@@ -15,13 +15,16 @@ describe("server config", () => {
       terminalEnabled: true,
       fakeAgentRuntime: false,
       knowledge: "off",
+      sensitiveValues: ["configured-key"],
       agent: {
         provider: "minimax",
         apiKey: "configured-key",
         baseUrl: "https://api.minimaxi.com/v1",
         model: "MiniMax-M2",
         openCodePort: 4096,
-        runTimeoutMs: 600_000
+        runTimeoutMs: 600_000,
+        maxConcurrentRuns: 3,
+        activityConfig: { waitingMs: 20_000, stalledMs: 60_000 }
       }
     });
   });
@@ -50,13 +53,16 @@ describe("server config", () => {
       terminalEnabled: false,
       fakeAgentRuntime: false,
       knowledge: "off",
+      sensitiveValues: ["configured-key"],
       agent: {
         provider: "deepseek",
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
         model: "DeepSeek-V4-Flash",
         openCodePort: 4096,
-        runTimeoutMs: 600_000
+        runTimeoutMs: 600_000,
+        maxConcurrentRuns: 3,
+        activityConfig: { waitingMs: 20_000, stalledMs: 60_000 }
       }
     });
   });
@@ -71,6 +77,15 @@ describe("server config", () => {
     expect(() =>
       loadConfig({ MINIMAX_API_KEY: "configured", SIMPLERCP_TERMINAL_ENABLED: "disabled" }, "/srv/simplercp")
     ).toThrow("SIMPLERCP_TERMINAL_ENABLED must be true or false");
+  });
+
+  it("校验并发数量与活动提示时间", () => {
+    expect(loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", SIMPLERCP_AGENT_WAITING_MS: "1000", SIMPLERCP_AGENT_STALLED_MS: "2000" }).agent?.activityConfig).toEqual({ waitingMs: 1000, stalledMs: 2000 });
+    for (const value of ["0", "-1", "abc", "1.5"]) {
+      expect(() => loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", SIMPLERCP_AGENT_WAITING_MS: value })).toThrow();
+      expect(() => loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS: value })).toThrow();
+    }
+    expect(() => loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", SIMPLERCP_AGENT_WAITING_MS: "2000", SIMPLERCP_AGENT_STALLED_MS: "1000" })).toThrow("必须大于");
   });
 
   it("does not read knowledge model settings when knowledge is off", () => {

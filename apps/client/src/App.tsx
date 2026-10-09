@@ -245,7 +245,6 @@ function WorkspacePage({
     showProjectDeleted,
     projectDeleted
   } = useWorkspaceNotifications();
-  const [agentRefreshVersion, setAgentRefreshVersion] = useState(0);
   const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
     "Saved"
   );
@@ -269,7 +268,6 @@ function WorkspacePage({
   const pendingSavePathsRef = useRef(new Set<string>());
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
-  const agentRefreshTimerRef = useRef<number>();
   const knowledgeRefreshTimerRef = useRef<number>();
   const remoteCursors = useMemo(
     () => Object.values(remoteCursorMap),
@@ -443,7 +441,6 @@ function WorkspacePage({
               next[index] = message.run;
               return next;
             });
-            scheduleAgentRefresh();
           }
           if (message.type === "agent_trace_appended") {
             setAgentTraces((current) => ({
@@ -471,9 +468,6 @@ function WorkspacePage({
       socketRef.current?.close();
       if (workspaceRefreshTimerRef.current) {
         window.clearTimeout(workspaceRefreshTimerRef.current);
-      }
-      if (agentRefreshTimerRef.current) {
-        window.clearTimeout(agentRefreshTimerRef.current);
       }
       if (knowledgeRefreshTimerRef.current) {
         window.clearTimeout(knowledgeRefreshTimerRef.current);
@@ -645,17 +639,6 @@ function WorkspacePage({
     workspaceRefreshTimerRef.current = window.setTimeout(() => {
       workspaceRefreshTimerRef.current = undefined;
       void refreshWorkspaceTree().catch(showWorkspaceError);
-    }, 150);
-  }
-
-  function scheduleAgentRefresh() {
-    if (agentRefreshTimerRef.current) {
-      window.clearTimeout(agentRefreshTimerRef.current);
-    }
-    agentRefreshTimerRef.current = window.setTimeout(() => {
-      agentRefreshTimerRef.current = undefined;
-      void refreshAgentState().catch(showWorkspaceError);
-      setAgentRefreshVersion((version) => version + 1);
     }, 150);
   }
 
@@ -1077,7 +1060,6 @@ function WorkspacePage({
           workspaceRoot={project.workspacePath}
           workspaceTree={tree}
           roomId={roomId}
-          agentRefreshVersion={agentRefreshVersion}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}

@@ -4,7 +4,7 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 
 项目把代码、编辑器、终端、协作信息和 Coding Agent 放在同一个页面中。Agent 使用同一份服务端代码，任务状态、输出、文件变化和 trace 会显示在工作区中。
 
-当前版本已经完成多项目、实时协作和 OpenCode Agent 基线。每位成员可以创建自己的任务或继续自己的 session；同一项目中的任务依次执行，不同项目可以同时执行。
+每位成员可以创建自己的 Agent 会话，阅读实时回复、推理与工具操作。项目默认同时执行三个不同会话的任务；向同一个会话发送新要求时会中断当前任务，按照新要求继续。
 
 ![](assets/2026-09-19-22-14-11.png)
 
@@ -22,9 +22,14 @@ SimpleRCPv2 是一个以服务端项目目录为代码来源的实时协同编�
 - 错误恢复：协作连接与终端连接会自动重连，离线后可以手动重试；项目被删除后返回项目首页。
 - 工作区控制：文件操作使用应用内确认窗口，Terminal 与 Collaboration 面板可以从状态栏显示或隐藏。
 - 日间模式与夜间模式：主题选择保存在当前浏览器中。
-- Agent 设置：首页可以查看 OpenCode 状态和版本，设置 DeepSeek Model，并启用或停用 Agent。
-- Agent 任务：项目侧栏可以创建任务、继续自己的 session、取消任务、查看队列位置、模型输出和文件变化。
+- Agent 设置：首页可以查看 OpenCode 状态、版本与 Provider，设置 Model，并启用或停用 Agent。这个分支默认使用 MiniMax。
+- My Agent：个人会话仅属主可见，支持创建、删除、保存输入草稿、停止与新要求中断。中文输入法确认文字不会发送任务。
+- Chat Agent：提及 `@agent` 发起团队任务，项目成员共同查看进度，可以停止任务或再次提及该 Agent 修改要求。
+- Agent 问题回答：显示 OpenCode 提供的问题与选项，任务发起者回答或跳过后继续执行，等待回答期间暂停任务超时计时。
+- Agent 工作详情：显示流式推理与工具操作、任务状态、工具耗时、文件变化和 token 用量。失败任务显示原因，可重试的错误提供重试按钮。
 - Agent trace：OpenCode SSE、状态、文件变化和并发修改提示按 JSONL 保存，可以在页面查看并下载。
+
+My Agent 与 Chat Agent 的操作步骤见 [Agent 人工验收](docs/foundation/agent-main-acceptance.md)，知识功能见 [知识模块人工验收](docs/knowledge/manual-acceptance.md)。本分支的同步内容和测试记录见 [主分支功能同步验收](docs/knowledge/main-sync-20261009.md)。
 
 ## 配置与使用
 
@@ -189,7 +194,7 @@ SIMPLERCP_DATA_DIR="/srv/simplercp-data" pnpm dev
 
 服务端启动时读取仓库根目录 `.env`。该文件已被 `.gitignore` 忽略，可以从 `.env.example` 开始填写。命令行环境变量的优先级高于 `.env`。
 
-Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.31`，Provider 默认为 DeepSeek。OpenCode 由服务端启动并监听 `127.0.0.1`，浏览器无法读取 DeepSeek API Key，也无法直接访问 OpenCode 端口。
+Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.31`，本分支的 Provider 默认为 MiniMax。OpenCode 由服务端启动并监听 `127.0.0.1`，API Key 保存在服务端，浏览器无法直接访问 OpenCode 端口。
 
 - `SIMPLERCP_DATA_DIR`：项目数据目录，默认值为仓库根目录下的 `.simplercp-data/`，设置值必须为绝对路径。
 - `SIMPLERCP_WORKSPACES_DIR`：工作区根目录，默认值为数据目录下的 `workspaces/`。
@@ -205,18 +210,22 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `VITE_SIMPLERCP_CLIENT_HOST`：开发客户端监听地址，默认值为 `127.0.0.1`。
 - `VITE_SIMPLERCP_CLIENT_PORT`：开发客户端端口，默认值为 `5173`。
 - `VITE_SIMPLERCP_API_ORIGIN`：开发客户端代理连接的服务端地址，默认值为 `http://127.0.0.1:4000`。
-- `DEEPSEEK_API_KEY`：DeepSeek API Key，Agent 任务需要该变量。
+- `AGENT_LLM_PROVIDER`：Agent 模型提供方，可选 `minimax`、`deepseek`，本分支默认 `minimax`。
+- `DEEPSEEK_API_KEY`：选择 DeepSeek 时使用的 API Key。
 - `DEEPSEEK_BASE_URL`：OpenAI-compatible API 地址，默认值为 `https://api.deepseek.com/v1`。
-- `DEEPSEEK_MODEL`：Agent 使用的 Model；`.env.example` 配置为 `deepseek-flash`，环境变量缺失时服务端使用 `deepseek-chat`。
+- `DEEPSEEK_MODEL`：选择 DeepSeek 时使用的 Model，默认值为 `deepseek-flash`。
 - `KNOWLEDGE`：过程性知识功能模式，可选 `off`、`capture`、`inject`、`full`，默认值为 `off`；分别对应关闭、捕获、Agent 注入和全部知识功能。
 - `KNOWLEDGE_LLM_PROVIDER`：服务端知识模型，可选 `minimax`、`deepseek`；存在 `MINIMAX_API_KEY` 时默认使用 MiniMax。
-- `MINIMAX_API_KEY`：服务端知识模块使用的 MiniMax API Key。
+- `MINIMAX_API_KEY`：选择 MiniMax 的 Agent 和服务端知识模块使用的 API Key。
 - `MINIMAX_BASE_URL`：MiniMax OpenAI-compatible API 地址，默认值为 `https://api.minimaxi.com/v1`。
 - `MINIMAX_MODEL`：服务端知识模型名称，默认值为 `MiniMax-M2`。
+- `AGENT_MINIMAX_MODEL`：可选的 Agent 专用 MiniMax 模型名称，未设置时使用 `MINIMAX_MODEL`。
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。
+- `SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS`：同一项目同时执行的任务数量，默认值为 `3`。
+- `SIMPLERCP_AGENT_WAITING_MS` / `SIMPLERCP_AGENT_STALLED_MS`：等待与停滞提示时间，默认值分别为 `20000` 和 `60000`。
 
-启动以后，可以在项目首页的 Agent 设置页面查看 OpenCode 状态、版本和 Model，并启用或停用 Agent。新任务创建 OpenCode session；在当前成员的 session 中继续输入时，会复用同一个 OpenCode session。存在运行中或排队任务时，服务端会拒绝修改 Model 或 Enabled，防止执行过程被配置变化中断。
+启动以后，可以在项目首页查看 OpenCode 状态、版本和 Model。同一成员会话复用 OpenCode session。活动任务存在时，模型变更等待当前任务完成后生效，Enabled 设置保持不变。
 
 ## 内网访问
 
@@ -246,7 +255,7 @@ pnpm dev
 pnpm test
 ```
 
-`.env` 同时配置 `DEEPSEEK_API_KEY` 和 `DEEPSEEK_MODEL` 时，`pnpm test` 会运行正式 OpenCode 与 DeepSeek 集成测试，并向 Provider 发出请求。缺少配置时，这些集成测试会自动跳过。
+付费集成测试需要显式设置 `SIMPLERCP_LIVE_AGENT_TESTS=1` 并配置 `.env`。普通测试不会自动调用付费模型。真实浏览器交互检查命令见 [Agent 并发运行](docs/foundation/agent-concurrency.md)。
 
 首次运行浏览器自动化测试时安装 Playwright 浏览器：
 
@@ -266,7 +275,7 @@ pnpm test:e2e
 pnpm test:e2e:terminal-disabled
 ```
 
-浏览器 Agent 用例在 `DEEPSEEK_API_KEY` 已配置时向 Provider 发出请求；缺少 API Key 时自动跳过。
+浏览器付费 Agent 用例同样需要显式启用 `SIMPLERCP_LIVE_AGENT_TESTS=1`。
 
 运行 TypeScript 检查并构建客户端与服务端：
 

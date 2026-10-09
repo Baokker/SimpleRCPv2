@@ -7,6 +7,10 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
   const runtimeFor = (sessionId: string) => modes.get(sessionId) === "fake" ? fake : real;
 
   return {
+    acquireRun: real.acquireRun ? () => real.acquireRun!() : undefined,
+    getCurrentModel: real.getCurrentModel ? () => real.getCurrentModel!() : undefined,
+    replyQuestion: real.replyQuestion ? (input) => real.replyQuestion!(input) : undefined,
+    rejectQuestion: real.rejectQuestion ? (input) => real.rejectQuestion!(input) : undefined,
     async status() {
       return {
         ...(await fake.status()),
@@ -34,8 +38,8 @@ export function createTestAgentRuntime(real: AgentRuntime, fake: AgentRuntime, r
     cancel(input) {
       return runtimeFor(input.sessionId).cancel(input);
     },
-    subscribe(input, listener) {
-      return runtimeFor(input.sessionId).subscribe(input, listener);
+    subscribe(input, listener, onListenerError) {
+      return runtimeFor(input.sessionId).subscribe(input, listener, onListenerError);
     },
     async dispose() {
       await Promise.all([real.dispose(), fake.dispose()]);

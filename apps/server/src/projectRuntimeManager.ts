@@ -7,9 +7,11 @@ export function createProjectRuntimeManager(
 ) {
   const runtimes = new Map<string, ProjectRuntime>();
   const projectDisposingListeners = new Set<(projectId: string) => void>();
+  let disposing = false;
 
   return {
     get(projectId: string) {
+      if (disposing) throw new Error("Project runtime manager is closing");
       const existing = runtimes.get(projectId);
       if (existing) return existing;
       const project = registry.getProject(projectId);
@@ -36,6 +38,7 @@ export function createProjectRuntimeManager(
       runtimes.delete(projectId);
     },
     async dispose() {
+      disposing = true;
       await Promise.all([...runtimes.values()].map((runtime) => runtime.dispose()));
       runtimes.clear();
       projectDisposingListeners.clear();

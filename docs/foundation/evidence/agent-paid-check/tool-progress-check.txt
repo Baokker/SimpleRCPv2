@@ -1,0 +1,40 @@
+### Result
+{"realTraceRunId":"048d21a0-1302-4eb4-ada4-d8e47f56d03b","toolAndTextVisible":true,"toolWaitIsSeparateFromModelWait":true}
+### Ran Playwright code
+```js
+await (async (page) => {
+  const response = await page.request.get("http://127.0.0.1:5187/@fs/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/agent-paid-evidence/tool-progress.json");
+  if (!response.ok()) throw new Error(`HTTP ${response.status()}`);
+  const { run } = await response.json();
+  await page.evaluate(async (run) => {
+    const reactPath = "/node_modules/.vite/deps/react.js";
+    const rendererPath = "/node_modules/.vite/deps/react-dom_client.js";
+    const componentPath = "/src/components/AgentRunProgress.tsx";
+    const responsePath = "/src/components/AgentResponse.tsx";
+    const { default: React } = await import(reactPath);
+    const { default: { createRoot } } = await import(rendererPath);
+    const { AgentRunProgress } = await import(componentPath);
+    const { AgentResponse } = await import(responsePath);
+    window.agentPaidReplayRoot?.unmount();
+    document.querySelector('[data-testid="recorded-progress"]')?.remove();
+    const container = document.createElement("section");
+    container.dataset.testid = "recorded-progress";
+    document.body.append(container);
+    const root = createRoot(container);
+    window.agentPaidReplayRoot = root;
+    root.render(React.createElement(React.Fragment, null, React.createElement(AgentRunProgress, { run, memberId: run.memberId }), React.createElement(AgentResponse, { run })));
+  }, run);
+  const container = page.getByTestId("recorded-progress");
+  await container.getByTestId("agent-current-tools").waitFor();
+  const text = await container.innerText();
+  if (!text.includes("sleep 30")) throw new Error("工具名称与参数未显示");
+  if (!text.includes("STREAMING_20261009")) throw new Error("工具执行期间正文未显示");
+  if (text.includes("已等待模型响应")) throw new Error("工具执行被显示为模型等待");
+  return { realTraceRunId: run.id, toolAndTextVisible: true, toolWaitIsSeparateFromModelWait: true };
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:5187/projects/interaction
+- Page Title: SimpleRCPv2
+- Console: 1 errors, 0 warnings
