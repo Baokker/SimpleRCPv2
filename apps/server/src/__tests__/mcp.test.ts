@@ -47,10 +47,12 @@ describe("knowledge MCP endpoint", () => {
     expect((await client.listTools()).tools.map(item => item.name)).toEqual(["knowledge_search", "knowledge_get", "knowledge_propose"]);
     const base = { type: "constraint", title: "sharedHelper rule", summary: "Preserve sharedHelper", content: "Preserve sharedHelper in session.js", tags: [] };
     const team = (await request("knowledge/cards", { ...base, scope: "team" }, member.id)).card;
+    const projectFallback = (await request("knowledge/cards", { type: "constraint", title: "Project fallback rule", summary: "Apply the project rule", content: "This project rule applies even when the task does not name a file.", scope: "team", appliesTo: { kind: "project" } }, member.id)).card;
     const personal = (await request("knowledge/cards", { ...base, title: "private sharedHelper", scope: "personal" }, member.id)).card;
     const runtime = app.locals.runtimeManager.get("demo");
     const draft = await runtime.knowledge.createDraft({ memberId: member.id, displayName: "Importer" }, { ...base, scope: "team", source: "event", provenance: { origin: "preset", author: { kind: "human", memberId: member.id, displayName: "Importer" }, evidenceRefs: { runIds: [], chatMessageIds: [], files: [] } } });
-    expect((await tool("knowledge_search", { query: "sharedHelper" })).data.results.map((card: { id: string }) => card.id)).toEqual([team.id]);
+    expect((await tool("knowledge_search", { query: "sharedHelper" })).data.results.map((card: { id: string }) => card.id)).toEqual(expect.arrayContaining([team.id, projectFallback.id]));
+    expect((await tool("knowledge_search", { query: "zzzz-query" })).data.results).toContainEqual(expect.objectContaining({ id: projectFallback.id, reason: "project-fallback" }));
     expect((await tool("knowledge_get", { id: team.id })).data.card.content).toContain("sharedHelper");
     expect((await tool("knowledge_get", { id: personal.id })).error).toBe(true);
     expect((await tool("knowledge_get", { id: draft.id })).error).toBe(true);
@@ -58,7 +60,7 @@ describe("knowledge MCP endpoint", () => {
     await request("knowledge/config", { toolEnabled: false }, member.id, "PUT");
     expect((await tool("knowledge_search", { query: "sharedHelper" })).data).toEqual({ results: [], disabled: true });
     const log = await fs.readFile(path.join(getProjectMetadataPath(project), "knowledge/tool-calls.jsonl"), "utf8");
-    expect(log.trim().split("\n")).toHaveLength(5);
+    expect(log.trim().split("\n")).toHaveLength(6);
     expect(log).not.toContain(app.locals.knowledgeMcpToken);
   });
 

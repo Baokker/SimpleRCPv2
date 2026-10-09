@@ -67,6 +67,22 @@ describe("knowledge agent injection", () => {
     expect(immediateInjection?.candidates?.map(candidate => candidate.id)).toContain(immediateCard.id);
     expect(immediateInjection?.cards?.map(candidate => candidate.id)).toContain(immediateCard.id);
 
+    const projectFallbackResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "constraint", title: "团队边界规则", summary: "公共模块保持兼容接口", content: "公共模块保持兼容接口，避免破坏已有调用方。", scope: "team", appliesTo: { kind: "project" } }) });
+    expect(projectFallbackResponse.status).toBe(201);
+    const projectFallbackCard = (await projectFallbackResponse.json() as { card: { id: string } }).card;
+    const fallbackRunResponse = await fetch(`${origin}/api/projects/demo/agent/runs`, { method: "POST", headers, body: JSON.stringify({ prompt: "Implement a feature fake-reply=done" }) });
+    expect(fallbackRunResponse.status).toBe(202);
+    const fallbackRunId = (await fallbackRunResponse.json() as { run: { id: string } }).run.id;
+    let fallbackEvents: Array<{ type: string; data?: { candidates?: Array<{ id: string; reason?: string }>; cards?: Array<{ id: string; reason?: string }> } }> = [];
+    for (let attempt = 0; attempt < 100; attempt++) {
+      fallbackEvents = (await (await fetch(`${origin}/api/projects/demo/agent/runs/${fallbackRunId}/trace`, { headers })).json() as { events: typeof fallbackEvents }).events;
+      if (fallbackEvents.some(event => event.type === "knowledge_injected")) break;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    const fallbackInjection = fallbackEvents.find(event => event.type === "knowledge_injected")?.data;
+    expect(fallbackInjection?.candidates).toContainEqual(expect.objectContaining({ id: projectFallbackCard.id, reason: "project-fallback" }));
+    expect(fallbackInjection?.cards).toContainEqual(expect.objectContaining({ id: projectFallbackCard.id, reason: "project-fallback" }));
+
     const identifierResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "decision", title: "任务状态设计", summary: "createProjectStatus 保持字段含义", content: "createProjectStatus 统一计算项目状态。", scope: "team" }) });
     const identifierCard = (await identifierResponse.json() as { card: { id: string } }).card;
     const identifierPreview = await fetch(`${origin}/api/projects/demo/agent/knowledge/preview`, { method: "POST", headers, body: JSON.stringify({ prompt: "createProjectStatus给它新增一个内容" }) });

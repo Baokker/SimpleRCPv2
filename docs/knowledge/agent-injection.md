@@ -20,6 +20,8 @@
 
 个人 Agent 面板通过 `POST /api/projects/:projectId/agent/knowledge/preview` 防抖预览结果，下达任务时可以传递 `knowledge.excludeCardIds` 或 `knowledge.disabled`。团队 Agent 沿用同一 provider 路径，任务卡片和 trace 展示参考卡片。
 
+当任务提示没有工作区文件路径，且发起成员没有打开文件时，`activeFiles` 为空。此时注入器会从已确认的团队卡片中补充项目级 `constraint` 与 `negative` 卡片，最多补充两个；先按 `constraint`、`negative` 排序，同类型按更新时间倒序，词法分用于次级排序。已有词法命中优先占用 `topK`，项目兜底卡片只填充剩余名额。注入记录和候选记录对这类卡片写入 `reason: "project-fallback"`，其他记录使用 `lexical` 或 `fileRelated`，便于分别统计送达来源。兜底只依据项目级适用范围，不根据关键词猜测文件。
+
 任务完成、失败和取消后，provider 根据 `fileChanges` 的行段、卡片锚点及 `appliesTo` 计算命中。失败路径会保留工作区快照差异，服务重启标记的失败任务也会写入空的核对结果。多段 patch 会合并全部新增行段后再与锚点比较。`constraint` 与 `negative` 卡片可以配置 `regex-absent` 或 `regex-present` 检查，结果写入 `knowledge_post_check`，只提供提示，不改变 Agent 行为。
 
 确认卡片时 provider 检查运行中的任务。上下文文件、任务文本路径、运行中 trace 的 `concurrent_change` 与 `file_changes`、项目级卡片或 glob 命中时，向发起人发送 `knowledge_update_available`，并向团队 Agent 的聊天线程追加系统消息。确认时间、其他成员首次查看时间和首次注入时间保存在 `reuse-metrics.json` 与活动日志中，知识时刻优先取捕获建议的创建时间，通过复用指标接口读取。Agent 面板和团队任务卡片中的卡片标题可以打开知识面板中的对应卡片。

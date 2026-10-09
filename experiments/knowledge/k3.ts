@@ -49,11 +49,18 @@ export function conditionCards(data: Dataset, task: Task, condition: K3Condition
 export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
   const injections = trace.filter(event => event.type === "knowledge_injected");
   const tools = trace.filter(event => event.type === "knowledge_tool_call");
+  const delivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
+  for (const event of injections) for (const card of event.data?.cards ?? []) {
+    if (card.reason === "lexical") delivery.lexical += 1;
+    else if (card.reason === "fileRelated") delivery.fileRelated += 1;
+    else if (card.reason === "project-fallback") delivery.projectFallback += 1;
+  }
   return {
     targetInjected: injections.some(event => event.data.cards?.some((card: any) => targetCardIds.includes(card.id))),
     targetRetrieved: tools.some(event => event.data.resultIds?.some((id: string) => targetCardIds.includes(id))),
     injectionTokens: injections.reduce((count, event) => count + (event.data.estimatedInjectionTokens ?? 0), 0),
     injectionChars: injections.reduce((count, event) => count + (event.data.totalChars ?? 0), 0),
+    delivery,
     toolCalls: tools.length,
     agentToolCalls: new Set(trace.filter(event => event.type.startsWith("opencode.") && event.data?.part?.type === "tool" && ["completed", "error"].includes(event.data.part.state?.status)).map(event => event.data.part.id)).size
   };

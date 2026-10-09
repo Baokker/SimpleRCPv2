@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import {isReusable, searchRankedKnowledgeCards, rankKnowledgeResults, compareKnowledgeRanks, type KnowledgeCard, type KnowledgeSearchResult} from "@simplercp/knowledge";
+import {isReusable, resultMatchesFiles, searchRankedKnowledgeCards, rankKnowledgeResults, compareKnowledgeRanks, type KnowledgeCard, type KnowledgeSearchResult} from "@simplercp/knowledge";
 import {redactSensitive} from "../agent/traceStore.js";
 import type {KnowledgeContextResult, KnowledgeInjectionRecord, KnowledgeProviderConfig} from "./provider.js";
 
@@ -32,10 +32,25 @@ export async function selectKnowledgeInjection(input: {
     return undefined;
   }
   const reusable = visibleCards.filter(card => !filterReason(card));
-  const ranked = config.fixedCardIds.length
+  let ranked: KnowledgeSearchResult[] = config.fixedCardIds.length
     ? rankKnowledgeResults(reusable.map(fixedResult), activeFiles, config)
     : await searchRankedKnowledgeCards({cards: reusable, workspaceId: input.workspaceId, indexDir: input.indexDir, query: input.query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles});
-  const diagnostic = new Map(ranked.map(result => [result.cardId, {id: result.cardId, lexical: result.lexical, boost: result.boost, score: result.score, filtered: false, reason: "selected"}]));
+  if (!config.fixedCardIds.length && activeFiles.length === 0) {
+    const rankedIds = new Set(ranked.map(result => result.cardId));
+    const lexicalScores = new Map(ranked.map(result => [result.cardId, result.score]));
+    const fallbackCards = reusable
+      .filter(card => (card.type === "constraint" || card.type === "negative") && card.appliesTo?.kind === "project")
+      .filter(card => !rankedIds.has(card.id))
+      .sort((left, right) => {
+        const typeOrder = (card: KnowledgeCard) => card.type === "constraint" ? 0 : 1;
+        return typeOrder(left) - typeOrder(right)
+          || right.updatedAt - left.updatedAt
+          || (lexicalScores.get(right.id) ?? 0) - (lexicalScores.get(left.id) ?? 0)
+          || left.id.localeCompare(right.id);
+      });
+    ranked = [...ranked, ...fallbackCards.slice(0, 2).map(projectFallbackResult)];
+  }
+  const diagnostic = new Map(ranked.map(result => [result.cardId, {id: result.cardId, lexical: "lexical" in result && typeof result.lexical === "number" ? result.lexical : result.score, boost: "boost" in result && typeof result.boost === "number" ? result.boost : 0, score: result.score, filtered: false, reason: "selected"}]));
   const records: KnowledgeInjectionRecord[] = [];
   const seenSources = new Set<string>();
   const selected: Array<{result: KnowledgeSearchResult; card: KnowledgeCard; content: string; block: string}> = [];
@@ -58,6 +73,8 @@ export async function selectKnowledgeInjection(input: {
       ...(card.provenance?.evidenceRefs.traceRefs ?? []).map(ref => `trace:${ref.runId}:${ref.seq}`)
     ];
     const detail = diagnostic.get(card.id)!;
+    const deliveryReason = knowledgeDeliveryReason(result, activeFiles);
+    detail.reason = deliveryReason;
     if (selected.length >= config.topK) {detail.filtered = true; detail.reason = "top-k"; continue;}
     if (sourceKeys.some(key => seenSources.has(key))) {detail.filtered = true; detail.reason = "same-source"; continue;}
     const value = safeText(card.content);
@@ -74,7 +91,7 @@ export async function selectKnowledgeInjection(input: {
   for (const {result, card, content} of selected) {
     const lexical = "lexical" in result && typeof result.lexical === "number" ? result.lexical : result.score;
     const boost = "boost" in result && typeof result.boost === "number" ? result.boost : Math.max(0, result.score - lexical);
-    records.push({id: card.id, version: card.updatedAt, contentHash: crypto.createHash("sha256").update(`${card.title}\n${card.summary}\n${card.content}`).digest("hex"), score: result.score, lexical, boost, reason: `${card.type}/${card.status}`, chars: content.length, title: safeText(card.title)});
+    records.push({id: card.id, version: card.updatedAt, contentHash: crypto.createHash("sha256").update(`${card.title}\n${card.summary}\n${card.content}`).digest("hex"), score: result.score, lexical, boost, reason: knowledgeDeliveryReason(result, activeFiles), chars: content.length, title: safeText(card.title)});
   }
   const rejected = config.fixedCardIds.length ? [] : await searchRankedKnowledgeCards({cards: visibleCards.filter(card => Boolean(filterReason(card))), workspaceId: input.workspaceId, indexDir: path.join(input.indexDir, "diagnostic"), query: input.query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles});
   const candidates: KnowledgeContextResult["candidates"] = [...diagnostic.values(), ...rejected.map(result => ({id: result.cardId, lexical: result.lexical, boost: result.boost, score: result.score, filtered: true, reason: filterReason(cardById.get(result.cardId)!)!}))]
@@ -85,4 +102,14 @@ export async function selectKnowledgeInjection(input: {
 
 function fixedResult(card: KnowledgeCard): KnowledgeSearchResult {
   return {cardId: card.id, score: 1, mode: "lexical", type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags, files: card.anchors.map(anchor => anchor.file.workspaceRelativePath), excerpt: card.content};
+}
+
+function projectFallbackResult(card: KnowledgeCard): KnowledgeSearchResult {
+  return {cardId: card.id, score: 0, mode: "lexical", type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags, files: card.anchors.map(anchor => anchor.file.workspaceRelativePath), appliesTo: card.appliesTo, excerpt: card.content, fallbackReason: "project-fallback"};
+}
+
+function knowledgeDeliveryReason(result: KnowledgeSearchResult, activeFiles: string[]): "lexical" | "fileRelated" | "project-fallback" {
+  if (result.fallbackReason === "project-fallback") return "project-fallback";
+  if (activeFiles.length > 0 && resultMatchesFiles(result, activeFiles)) return "fileRelated";
+  return "lexical";
 }

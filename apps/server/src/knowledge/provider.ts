@@ -6,7 +6,8 @@ import {
   searchRankedKnowledgeCards,
   cardMatchesFile,
   type KnowledgeCard,
-  type KnowledgeCardStatus
+  type KnowledgeCardStatus,
+  type KnowledgeSearchResult
 } from "@simplercp/knowledge";
 import type { AgentRun, AgentTraceEvent, ServerMessage } from "@simplercp/shared";
 import type { EventLog } from "../eventLog.js";
@@ -346,11 +347,20 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const member = options.room.members[0] ?? { id: "mcp", displayName: "MCP" };
     const cards = (await options.knowledge.list({ memberId: member.id, displayName: member.displayName }, { scope: "team", status: "reviewed" }))
       .filter((card) => !types?.length || types.includes(card.type));
-    const results = (await searchRankedKnowledgeCards({ cards, workspaceId: options.project.id, indexDir: path.join(root, "index"), query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles, filters: { statuses: ["reviewed"] } })).slice(0, Math.min(10, Math.max(1, limit)));
+    const maxResults = Math.min(10, Math.max(1, limit));
+    let results: KnowledgeSearchResult[] = await searchRankedKnowledgeCards({ cards, workspaceId: options.project.id, indexDir: path.join(root, "index"), query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles, filters: { statuses: ["reviewed"] } });
+    if (activeFiles.length === 0 && results.length < maxResults) {
+      const resultIds = new Set(results.map(result => result.cardId));
+      const fallbackCards = cards
+        .filter(card => (card.type === "constraint" || card.type === "negative") && card.appliesTo?.kind === "project" && !resultIds.has(card.id))
+        .sort((left, right) => (left.type === "constraint" ? 0 : 1) - (right.type === "constraint" ? 0 : 1) || right.updatedAt - left.updatedAt || left.id.localeCompare(right.id));
+      results = [...results, ...fallbackCards.slice(0, 2).map((card): KnowledgeSearchResult => ({ cardId: card.id, score: 0, mode: "lexical", type: card.type, status: card.status, scope: card.scope, ownerMemberId: card.ownerMemberId, title: card.title, summary: card.summary, tags: card.tags, files: card.anchors.map(anchor => anchor.file.workspaceRelativePath), appliesTo: card.appliesTo, excerpt: card.content, fallbackReason: "project-fallback" }))];
+    }
+    results = results.slice(0, maxResults);
     const cardById = new Map(cards.map((card) => [card.id, card]));
     return Promise.all(results.map(async (result) => {
       const card = cardById.get(result.cardId)!;
-      const item = { id: card.id, type: card.type, title: card.title, summary: card.summary, anchors: await toolAnchors(card), score: result.score };
+      const item = { id: card.id, type: card.type, title: card.title, summary: card.summary, anchors: await toolAnchors(card), score: result.score, ...(result.fallbackReason ? { reason: result.fallbackReason } : {}) };
       return redactSensitive(item, options.sensitiveValues) as typeof item;
     }));
   }
