@@ -1,0 +1,14 @@
+[
+  {
+    "condition": "C2",
+    "combinations": 5,
+    "functional": 0.6,
+    "trapAvoided": 0.2,
+    "jointSuccess": 0.2,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  }
+]

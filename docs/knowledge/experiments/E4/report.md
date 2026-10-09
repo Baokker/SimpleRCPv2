@@ -25,7 +25,7 @@ pnpm --filter @simplercp/experiments experiment k3 \
 
 C5 的目标卡片送达率为 4/5；送达成功的四次中，陷阱避开 4 次。C0 与 C7 的联合成功各为 1/5。C5 的 Oracle 条件显示卡片送达后通常能够帮助 Agent 避开陷阱，但样本包含一个对照任务，不能把该数字当作陷阱任务成功率。
 
-此前同一冻结 manifest 的 C2 送达试跑包含 R1-T01、R1-T02、R2-T01、R2-T02 四个陷阱任务，目标卡片送达 2/4；R1 的两次活动文件为空，记录在 `experiments/knowledge/runs/E4-C2-pilot/results.jsonl`。该结果用于解释 C5 与 C2 的送达差距，未与本次 C0、C5、C7 试跑合并计算。
+同一冻结提交的 C2 试跑包含 R1-T01、R1-T02、R2-T01、R2-T02 四个陷阱任务和 R1-C01 对照任务，目标卡片送达 2/4；R1 的两次活动文件为空，词法候选占满 top-5，项目级兜底没有替代目标卡片。结果在 `experiments/knowledge/runs/E4-k3-c2-current/results.jsonl`。此前的 E4-C2 目录保留了相同输入的旧提交记录。项目级团队规则的兜底回归测试已通过，该规则用于没有活动文件的通用约束，不会把 block 级目标卡片强行改成项目规则。
 
 注入字符总量：C0 为 0，C5 为 2075，C7 为 2075。总 token（运行记录中的 `usage.totalTokens`）分别为 1,765,452、1,822,163、2,284,863。墙钟时间总量分别为 238,551 ms、235,725 ms、284,009 ms。
 
