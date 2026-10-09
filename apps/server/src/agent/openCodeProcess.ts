@@ -41,6 +41,7 @@ export function createOpenCodeProcess(options: OpenCodeProcessOptions) {
         env: {
           ...agentEnv(),
           DEEPSEEK_API_KEY: options.apiKey ?? "",
+          OPENCODE_ENABLE_QUESTION_TOOL: "true",
           OPENCODE_CONFIG_CONTENT: JSON.stringify(openCodeConfig(options))
         },
         stdio: ["ignore", "pipe", "pipe"]

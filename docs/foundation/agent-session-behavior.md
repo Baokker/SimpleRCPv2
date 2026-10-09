@@ -10,6 +10,8 @@ OpenCode 的 `question.asked` 会在 My Agent 或对应 Chat 任务中显示问�
 
 集成使用 OpenCode 1.18.31 的 `question.reply`、`question.reject` 和 `session.abort`。请求通过已安装 SDK 发出。
 
+OpenCode 服务进程设置 `OPENCODE_ENABLE_QUESTION_TOOL=true`。`openCodeQuestions.integration.test.ts` 启动已安装的 OpenCode，查询实际工具列表与待回答问题列表，检查 question 工具可用；该检查不创建模型任务。
+
 ## 人工检查
 
 1. Alice 与 Bob 在两个浏览器中加入同一项目，各启动一个个人任务。My Agent 仅显示自己的运行内容；在 Chat 提及团队 Agent 时，团队任务仍共同可见。
