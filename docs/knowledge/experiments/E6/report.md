@@ -23,6 +23,8 @@ pnpm --filter @simplercp/experiments experiment k2 \
 
 在重新启动冻结配置的服务端后，以 `--limit 1` 重试，仍返回相同错误；证据保存在 `experiments/knowledge/runs/E6-k2-current-pilot-v2/failure.json`。这表明当前服务端的 drafts 模型请求通道需要单独排查，不能用旧快照数字替代当前结果。
 
+随后显式设置 `MINIMAX_MODEL=MiniMax-M2`，确认本地模型代理的最小 JSON 请求能够返回 200，但同一 episode 的复盘请求仍在 30 秒复盘超时内被中止；第三次证据保存在 `experiments/knowledge/runs/E6-k2-minimax-m2/failure.json`。当前快照的复盘通道因此仍未产出合法草稿。
+
 ## 已有复盘质量参考
 
 阶段 7B 的 K2 复核记录了标识符覆盖 6/9、自动检查保留 4/8。该数字只能作为旧快照的参考，正式论文表格需要在同一 manifest、同一提交和同一模型配置下重新生成。两名标注者的评分表格式已经由 `k2.ts` 创建，字段为规则正确性、可检查性、适用范围、边界合理性和备注。
