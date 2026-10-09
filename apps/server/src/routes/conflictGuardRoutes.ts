@@ -3,6 +3,18 @@ import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import { requireIdentity } from "../auth/permissions.js";
 
 export function registerConflictGuardRoutes(app: Express, runtimeManager: ProjectRuntimeManager) {
+  app.post("/api/projects/:projectId/conflict-guard/pairs/:pairId/acknowledge", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const guard = runtimeManager.get(req.params.projectId).conflictGuard;
+      if (!guard) { res.sendStatus(404); return; }
+      const revision = req.body?.revision;
+      const contentKey = req.body?.contentKey;
+      if (!Number.isSafeInteger(revision) || typeof contentKey !== "string" || !/^[a-f0-9]{64}$/u.test(contentKey)) { res.status(400).json({ error: "必须提供检查版本和内容标识" }); return; }
+      if (!await guard.acknowledgeWarning(req.params.pairId, revision, contentKey, identity.memberId)) { res.status(409).json({ error: "当前提醒已更新，或你没有确认权限" }); return; }
+      res.status(204).end();
+    } catch (error) { next(error); }
+  });
   app.post("/api/projects/:projectId/conflict-guard/cards/:cardId/:action", async (req, res, next) => {
     try {
       const identity = requireIdentity(req, res); if (!identity) return;

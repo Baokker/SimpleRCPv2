@@ -55,6 +55,8 @@ export interface ConflictGuardState {
     pair: ConflictGuardState["candidatePairs"][number];
     status: string;
     revision: number;
+    acknowledged?: boolean;
+    warningKey?: string;
     updatedAt?: number;
     conflict?: GuardConflict;
     point?: "T2" | "T3";

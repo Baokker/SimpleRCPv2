@@ -73,6 +73,12 @@ export function createOwnerCards(options: {
       if (result?.suggestion.trim()) { card.explanation = result.explanation.trim(); card.suggestion = result.suggestion.trim(); }
       options.changed("arbitration_updated", copy(card));
     },
+    updateIntents(id: string, intents: AgentIntent[]) {
+      const card = cards.get(id);
+      if (!card || card.status !== "waiting" || JSON.stringify(card.intents) === JSON.stringify(intents)) return;
+      card.intents = intents;
+      options.changed("arbitration_updated", copy(card));
+    },
     act(id: string, memberId: string, action: "accept" | "yield" | "chat") {
       const card = cards.get(id);
       if (!card || card.status !== "waiting" || !card.owners.includes(memberId)) throw new Error("当前卡片不允许此操作");
@@ -85,7 +91,7 @@ export function createOwnerCards(options: {
       else options.changed("arbitration_chat", copy(card));
       return copy(card);
     },
-    closeRun(runId: string) { for (const card of cards.values()) if ([card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId)) finish(card, "closed"); },
+    closeRun(runId: string, ruleId?: string) { for (const card of cards.values()) if ((!ruleId || card.conflict.ruleId === ruleId) && [card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId)) finish(card, "closed"); },
     finishRun(runId: string) {
       completedRuns.add(runId);
       for (const card of cards.values()) if ([card.conflict.self, card.conflict.other].every((actor) => actor.kind === "agent" && completedRuns.has(actor.runId))) finish(card, "closed");

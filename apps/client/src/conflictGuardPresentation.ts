@@ -47,12 +47,16 @@ export function relationPathText(path: ConflictGuardState["candidatePairs"][numb
 }
 
 export function conflictWarning(record: NonNullable<ConflictGuardState["pairDecisions"]>[number], memberId?: string) {
+  if (record.acknowledged) return undefined;
   if (!humanConflict(record.pair)) return undefined;
   if (record.verdict?.decision !== "warn" || !(record.status === "judged" || record.status === "resolved" && record.resolution === "auto-cleared")) return undefined;
   if (record.pair.left.actor.memberId !== memberId && record.pair.right.actor.memberId !== memberId) return undefined;
   const model = record.verdict.adjudication;
   return {
     id: `${record.pair.id}:${record.revision}`,
+    pairId: record.pair.id,
+    revision: record.revision,
+    warningKey: record.warningKey,
     summary: readableGuardText(model ? record.conflict?.explanationZh ?? model.userExplanation : record.conflict?.summaryZh ?? record.verdict.summary),
     suggestion: model ? readableGuardText(record.conflict?.suggestionZh ?? model.suggestedAction) : undefined,
     modelLabel: model ? model.status === "degraded" ? "研判失败，已改为提醒" : `由${model.source === "fast" ? "快判" : "深判"}模型判定，耗时 ${Math.round(model.latencyMs)} ms` : undefined,

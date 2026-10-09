@@ -115,6 +115,14 @@ describe("rules 模式冲突干预", () => {
     replace(second, "amount += 5", "amount += 50");
     await waitFor(() => currentState().pairDecisions?.some((record) => record.verdict?.ruleId === "declaration-body-unrelated") === true);
     expect(currentState().pairDecisions?.every((record) => record.verdict?.decision === "warn")).toBe(true);
+    const warning = currentState().pairDecisions!.find((record) => record.verdict?.ruleId === "declaration-body-unrelated")!;
+    const endpoint = `/conflict-guard/pairs/${encodeURIComponent(warning.pair.id)}/acknowledge`;
+    expect((await alice.request(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision: warning.revision + 1, contentKey: warning.warningKey }) })).status).toBe(409);
+    expect((await alice.request(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision: warning.revision, contentKey: warning.warningKey }) })).status).toBe(204);
+    const aliceState = await (await alice.request("/conflict-guard/state")).json() as { pairDecisions: Array<{ acknowledged: boolean }> };
+    const bobState = await (await bob.request("/conflict-guard/state")).json() as { pairDecisions: Array<{ acknowledged: boolean }> };
+    expect(aliceState.pairDecisions[0]?.acknowledged).toBe(true);
+    expect(bobState.pairDecisions[0]?.acknowledged).toBe(false);
     expect(currentState().frozenFiles).toEqual([]);
     await waitFor(async () => (await fs.readFile(file, "utf8")).includes("amount += 50"));
     expect(await fs.readFile(file, "utf8")).toContain("let amount = 1");
@@ -431,7 +439,7 @@ describe("rules 模式冲突干预", () => {
   });
 
   function currentGuard() { return app.locals.runtimeManager.get(projectId).conflictGuard as ProjectConflictGuard; }
-  function currentState() { return app.locals.runtimeManager.get(projectId).conflictGuard!.state() as { pairDecisions?: Array<{ pair: { id: string }; verdict?: { decision?: string; ruleId?: string }; status: string; resolution?: string }>; frozenFiles?: Array<{ file: string }>; blockedPersists?: Array<{ file: string }> }; }
+  function currentState() { return currentGuard().state(); }
   async function connect(file: string, memberId: string) {
     const document = new Y.Doc();
     documents.push(document);

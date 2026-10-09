@@ -64,6 +64,10 @@ full 轨迹包含 `provider_subscription` 时，核验按输入哈希、请求�
 - `agent_review`：Agent ActorRef、结束提案、实际 writes 与 forceRevert。
 - `intent_created`、`intent_updated`、`intent_closed`：完整意图记录与更新原因。
 - `intent_injected`：runId、条数与内容 SHA-256，不保存注入原文。
+- `intent_judged`：双方 Agent、输入哈希、任务目标与中文研判结果。
+- `intent_check_error`：任务检查的输入哈希与错误原因。
+- 意图模型的 `provider_call` 使用 `purpose: intent-review`，记录模型、输入与提示哈希、耗时及 token 数量。
+- 提醒确认使用 `ui_action.action: acknowledge_warning`，包含成员、变更对与修订号。
 - `arbitration_action`：时点、结构化 conflict 与纯函数仲裁结果。
 - `arbitration_opened`、`arbitration_updated`、`arbitration_resolved`、`arbitration_chat`：卡片状态与建议。
 - `arbitration_retry`：同属主 run、关联 run 与自动检查次数。

@@ -54,6 +54,7 @@ export function createAgentProgress(startedAt: string, config?: AgentRunActivity
       for (const id of ids) questions.add(id);
       activity.phase = questions.size ? "question" : activity.tools.length ? "tool" : "streaming";
     },
+    waitingForApproval() { activity.phase = "approval"; },
     resumed() { activity.phase = questions.size ? "question" : activity.tools.length ? "tool" : "streaming"; }
   };
 }

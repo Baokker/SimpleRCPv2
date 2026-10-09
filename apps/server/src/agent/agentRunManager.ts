@@ -647,7 +647,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const interruptionPrompt = previousRun
         ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
         : undefined;
-      const runtimePrompt = await buildRuntimePrompt(
+      let runtimePrompt = await buildRuntimePrompt(
         projectRuntime.project.workspacePath,
         [interruptionPrompt, run.extraPrompt, projectRuntime.conflictGuard ? agentPlanInstruction : undefined, projectRuntime.conflictGuard?.arbitration.injection(runId, run.contexts?.flatMap((context) => projectRuntime.conflictGuard?.semanticIndex.symbolsInFile(context.path).map((symbol) => symbol.key) ?? [])), run.prompt].filter(Boolean).join("\n\n"),
         run.contexts,
@@ -702,7 +702,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       } });
       const active = activeRuns.get(runId);
-      if (active) active.cancelPermissions = dispatcher.dispose;
+      const intentController = new AbortController();
+      if (active) active.cancelPermissions = () => { intentController.abort(); dispatcher.dispose(); };
       drainPermissions = dispatcher.drain;
       guard?.arbitration.attach(runId, { resolve: dispatcher.resolve, cancel: async () => {
         const latest = await store.get(runId);
@@ -716,6 +717,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           return;
         }
         await updateRun(projectId, runId, { status: "cancelled", finishedAt: new Date().toISOString() });
+        intentController.abort();
         dispatcher.dispose();
         await options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId! });
       }, continue: async (instruction) => {
@@ -738,11 +740,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           if (progressTimer === undefined) progressTimer = setTimeout(() => { progressTimer = undefined; saveProgress(); }, 500);
           const part = event.data.part as { callID?: string; tool?: string; state?: { input?: Record<string, unknown> } } | undefined;
           const textPart = event.data.part as { id?: string; type?: string; text?: string } | undefined;
-          if (textPart?.type === "text" && textPart.id && typeof textPart.text === "string") { assistantTexts.set(textPart.id, textPart.text); guard?.arbitration.board.plan(runId, textPart.text); }
+          if (textPart?.type === "text" && textPart.id && typeof textPart.text === "string") { assistantTexts.set(textPart.id, textPart.text); guard?.arbitration.plan(runId, textPart.text); }
           if (event.type === "message.part.delta" && typeof event.data.partID === "string" && typeof event.data.delta === "string") {
             const text = (assistantTexts.get(event.data.partID) ?? "") + event.data.delta;
             assistantTexts.set(event.data.partID, text);
-            if (text.includes("END_PLAN")) guard?.arbitration.board.plan(runId, text);
+            if (text.includes("END_PLAN")) guard?.arbitration.plan(runId, text);
           }
           if (part?.callID && part.tool && part.state?.input) toolInputs.set(part.callID, { tool: part.tool, input: part.state.input });
           if (event.type === "permission.asked") {
@@ -807,6 +809,19 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       );
       stopRuntimeEvents = stopEvents;
 
+      if ((await store.get(runId))?.status === "cancelled") { await options.runtime.cancel({ workspacePath: projectRuntime.project.workspacePath, sessionId: runtimeSessionId }); return; }
+
+      if (guard) {
+        const resume = approval.pause();
+        progress?.waitingForApproval();
+        saveProgress();
+        try {
+          const instruction = await guard.arbitration.beforeRun(runId, intentController.signal);
+          if (instruction) runtimePrompt += `\n\n${instruction}`;
+        } finally { resume(); progress?.resumed(); saveProgress(); }
+        if ((await store.get(runId))?.status === "cancelled" || intentController.signal.aborted) return;
+      }
+
       const processModel = options.runtime.getCurrentModel?.();
       if (processModel && processModel !== run.model) run = await updateRun(projectId, runId, { model: processModel });
 
@@ -830,7 +845,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         throw error;
       }
       const latest = await store.get(runId);
-      guard?.arbitration.board.plan(runId, result.text);
+      guard?.arbitration.plan(runId, result.text);
       if (latest?.status === "cancelled") {
         await recordFinishedFileChanges(projectId, runId, projectRuntime.project.workspacePath, runtimeSessionId, workspaceBefore, revisionsBefore, result.messageId);
         await recordCancellationCompletion(projectId, runId);
@@ -1115,6 +1130,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         interruptsRunId
       }, nextRunId);
       projectRuntime.conflictGuard?.arbitration.board.create({ kind: "agent", runId: run.id, ownerId: run.memberId, ...(session.scope === "team" ? { teamAgent: session.handle ?? session.title } : {}) }, prompt, Object.fromEntries(projectRuntime.documents.getRevisions()));
+      projectRuntime.conflictGuard?.arbitration.attach(run.id, { resolve: () => false, cancel: async () => { await this.cancelRun(input.projectId, run.id, input.memberId); } });
       emit({ type: "run_updated", projectId: input.projectId, run });
       await appendTrace(input.projectId, run.id, {
         type: "run_queued",

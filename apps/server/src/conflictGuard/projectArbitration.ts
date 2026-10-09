@@ -2,6 +2,7 @@ import { getYDoc, docs } from "y-websocket/bin/utils";
 import { arbitrate, buildIntentInjection, conflictKind, createIntentBoard, createOwnerCards, interruptionStats, participantKey, proposalSymbolKeys, sanitize, type ActiveChangeSet, type ActorRef, type AgentIntent, type AgentTextProposal, type ArbitrationMode, type ConflictGuardClock, type GuardConflict, type Interruption, type OwnerCard, type Participant, type SemanticIndex } from "@simplercp/conflict-guard";
 import type { AgentPermissionRequest } from "../agent/permissionDispatcher.js";
 import type { createProjectAgentGuard } from "./projectAgentGuard.js";
+import { intentReviewKey, reviewExplicitDiscounts, type IntentReview } from "./intentReview.js";
 
 type AgentGuard = ReturnType<typeof createProjectAgentGuard>;
 type Judgement = Awaited<ReturnType<AgentGuard["judge"]>>;
@@ -24,6 +25,8 @@ export function createProjectArbitration(options: {
   sensitiveValues: string[];
   resolveHuman?(conflict: GuardConflict, yielding?: string): void;
   suggest?(conflict: GuardConflict, intents: AgentIntent[], input: Judgement["input"], signal: AbortSignal): Promise<{ explanation: string; suggestion: string } | undefined>;
+  reviewIntents?(left: AgentIntent, right: AgentIntent, signal: AbortSignal): Promise<IntentReview>;
+  enforceIntents?: boolean;
 }) {
   const documentName = `${options.projectId}|conflict-guard-intents`;
   const document = getYDoc(documentName);
@@ -39,6 +42,19 @@ export function createProjectArbitration(options: {
   const retryCounts = new Map<string, number>();
   let automaticRetries = 0;
   const reviewWaiters = new Map<string, Map<string, (action: "revert" | "continue" | "retry" | "warn") => void>>();
+  const intentWaiters = new Map<string, Set<(instruction: string) => void>>();
+  const intentChecks = new Map<string, Promise<void>>();
+  const sameOwnerWaits = new Map<string, Set<string>>();
+  const stoppedIntents = new Set<string>();
+  const cancelledIntents = new Set<string>();
+  const intentControllers = new Map<string, AbortController>();
+  const intentController = (runId: string) => {
+    let controller = intentControllers.get(runId);
+    if (!controller) { controller = new AbortController(); intentControllers.set(runId, controller); }
+    return controller;
+  };
+  const agreedIntentTasks = new Set<string>();
+  const taskKey = (left: AgentIntent, right: AgentIntent) => intentReviewKey({ ...left, plannedScope: [], actualScope: [] }, { ...right, plannedScope: [], actualScope: [] });
   const continuationCounts = new Map<string, number>();
   const interruptions: Interruption[] = [];
   const adviceController = new AbortController();
@@ -46,7 +62,7 @@ export function createProjectArbitration(options: {
   const removeNoticeListener = options.guard.onEvent((event) => {
     if (["agent_write_attributed", "t2_shadow"].includes(String(event.type))) {
       const actor = event.actor as Extract<ActorRef, { kind: "agent" }>;
-      if (board.get(actor.runId)) board.actual(actor.runId, options.guard.actualScope(actor.runId));
+      if (board.get(actor.runId)) { board.actual(actor.runId, options.guard.actualScope(actor.runId)); void checkIntents(actor.runId); }
     }
     if (event.type !== "agent_notice" || event.level !== "light") return;
     const notice = event.notice as { id: string; memberId: string; at: number; conflict?: GuardConflict };
@@ -76,6 +92,10 @@ export function createProjectArbitration(options: {
       if (card.status === "accepted" && card.suggestion && card.conflict.self.kind === "agent") {
         const intent = board.get(card.conflict.self.runId);
         if (intent) board.task(intent.actor.runId, `${intent.task}\n追加指令：${card.suggestion}`);
+        if (card.conflict.ruleId === "intent-target-conflict" && card.conflict.other.kind === "agent") {
+          const earlier = board.get(card.conflict.other.runId), later = board.get(card.conflict.self.runId);
+          if (earlier && later) agreedIntentTasks.add(taskKey(earlier, later));
+        }
       }
       for (const request of pending.values()) if (request.cardId === card.id) {
         const message = card.status === "accepted" ? request.runId === (card.conflict.self.kind === "agent" ? card.conflict.self.runId : undefined) ? `双方属主已采纳建议。追加指令：${card.suggestion}。请重新读取文件后按建议修改。` : "双方已完成仲裁，请重新读取相关文件并继续你的原任务。" : card.status === "closed" ? `与 ${card.conflict.otherDisplayName} 的冲突处理已经结束，请重新读取文件后继续。` : request.runId === (yielding?.kind === "agent" ? yielding.runId : undefined) ? "属主仲裁要求本 Agent 让路，请停止相关修改。" : "另一方已让路，请重新读取文件后继续。";
@@ -102,9 +122,69 @@ export function createProjectArbitration(options: {
         complete(card.status === "closed" || card.status === "accepted" && !continued ? "warn" : card.status === "accepted" || owner !== yieldingOwner ? "retry" : "revert");
       }
       reviewWaiters.delete(card.id);
+      for (const complete of intentWaiters.get(card.id) ?? []) complete(card.status === "accepted" ? `双方属主已经同意以下方案：${card.suggestion}。请按此方案执行任务。` : "相关任务的协商已经结束，请重新读取共享文件后执行任务。");
+      intentWaiters.delete(card.id);
     }
   }, error(error) { emit({ type: "arbitration_error", reason: error instanceof Error ? error.message : String(error) }); } });
   function related(left: string[], right: string[]) { return left.some((key) => right.includes(key)) || options.index.findPaths(left, right, 2).length > 0; }
+  function inferredScope(intent: AgentIntent) {
+    const explicit = [...intent.plannedScope, ...intent.actualScope];
+    if (explicit.length) return explicit;
+    return (options.index.listFiles?.() ?? []).flatMap((file) => options.index.symbolsInFile(file).filter((symbol) => intent.task.includes(symbol.name) || intent.task.includes(file)).map((symbol) => symbol.key));
+  }
+  async function checkIntents(runId: string, signal = adviceController.signal) {
+    if (!options.enforceIntents) return;
+    const intents = board.list().filter((intent) => !cancelledIntents.has(intent.actor.runId) && !["done", "reverted"].includes(intent.status));
+    const current = intents.find((intent) => intent.actor.runId === runId);
+    if (!current) return;
+    const others = intents.filter((intent) => intent.actor.runId !== runId);
+    for (let offset = 0; offset < others.length && !signal.aborted; offset += 5) await Promise.all(others.slice(offset, offset + 5).map(async (other) => {
+      const [earlier, later] = intents.indexOf(current) < intents.indexOf(other) ? [current, other] : [other, current];
+      if (agreedIntentTasks.has(taskKey(earlier, later))) return;
+      const waiting = cards.list().find((card) => card.status === "waiting" && card.conflict.ruleId === "intent-target-conflict" && [card.conflict.self, card.conflict.other].every((actor) => actor.kind === "agent" && [earlier.actor.runId, later.actor.runId].includes(actor.runId)));
+      if (waiting) { cards.updateIntents(waiting.id, [later, earlier]); return; }
+      const key = intentReviewKey(earlier, later);
+      let operation = intentChecks.get(key);
+      if (!operation) {
+        operation = (async () => {
+          const leftScope = inferredScope(earlier), rightScope = inferredScope(later);
+          const explicit = reviewExplicitDiscounts(earlier, later);
+          if (!explicit && leftScope.length && rightScope.length && !related(leftScope, rightScope)) return;
+          const reviewSignal = AbortSignal.any([signal, adviceController.signal, intentController(earlier.actor.runId).signal, intentController(later.actor.runId).signal]);
+          const result = explicit ?? await options.reviewIntents?.(earlier, later, reviewSignal);
+          if (!result) return;
+          if (reviewSignal.aborted || [earlier, later].some((intent) => cancelledIntents.has(intent.actor.runId) || ["done", "reverted"].includes(board.get(intent.actor.runId)?.status ?? "done")) || intentReviewKey(board.get(earlier.actor.runId)!, board.get(later.actor.runId)!) !== key) return;
+          emit({ type: "intent_judged", actors: [later.actor, earlier.actor], inputHash: key, result });
+          if (result.decision !== "lock") return;
+          const conflict: GuardConflict = { pairId: `intent:${later.actor.runId}:${earlier.actor.runId}:${key.slice(0, 12)}`, revision: Math.max(later.taskRevision, earlier.taskRevision), self: later.actor, other: earlier.actor, otherDisplayName: options.display(earlier.actor), symbols: { self: rightScope[0] ?? `任务#${result.target || "目标"}`, other: leftScope[0] ?? `任务#${result.target || "目标"}` }, beforeSignature: earlier.task, afterSignature: later.task, ruleId: "intent-target-conflict", zone: "grey", decision: "lock", summaryZh: result.explanation, explanationZh: result.explanation, suggestionZh: result.suggestion };
+          const action = arbitrate({ left: later.actor, right: earlier.actor, later: later.actor }, conflict, options.mode);
+          emit({ type: "arbitration_action", point: "intent", conflict, action });
+          if (action.type === "owner-card") {
+            const card = cards.open(conflict, [later, earlier], "双方任务要求同一目标具有不同的行为，等待属主协商。", action.recipients);
+            cards.suggestion(card.id, result.suggestion ? { explanation: result.explanation, suggestion: result.suggestion } : undefined);
+          } else if (action.type === "retry-agent") {
+            automaticRetries += 1;
+            const blockers = sameOwnerWaits.get(later.actor.runId) ?? new Set<string>();
+            blockers.add(earlier.actor.runId);
+            sameOwnerWaits.set(later.actor.runId, blockers);
+            setRunStatus(later.actor.runId, "waiting");
+          } else {
+            stoppedIntents.add(later.actor.runId);
+            await hooks.get(later.actor.runId)?.cancel();
+          }
+        })().catch((error) => {
+          intentChecks.delete(key);
+          emit({ type: "intent_check_error", inputHash: key, reason: error instanceof Error ? error.message : String(error) });
+          if (!adviceController.signal.aborted && !signal.aborted && !cancelledIntents.has(runId)) options.guard.notifyOwner(runId, "任务意图检查未能完成，请留意其他成员的任务与计划。");
+        });
+        intentChecks.set(key, operation);
+      }
+      await operation;
+    }));
+  }
+  function waitingIntentCard(runId: string) {
+    return cards.list().find((card) => card.status === "waiting" && card.conflict.ruleId === "intent-target-conflict" && [card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId));
+  }
   function setRunStatus(runId: string, status: "running" | "waiting" | "blocked") {
     const intent = board.get(runId);
     if (intent) board.statusForActors([intent.actor], status, cards.waitingActors());
@@ -134,13 +214,22 @@ export function createProjectArbitration(options: {
     emit({ type: "agent_proposal", actor: options.guard.actor(runId), requestId: request.id, proposals });
     setRunStatus(runId, "waiting");
     const scope = [...new Set(proposals.flatMap((proposal) => [...proposalSymbolKeys(proposal)]))];
-    const existing = cards.list().find((card) => card.status === "waiting" && [card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId) && related(scope, [card.conflict.symbols.self, card.conflict.symbols.other]));
+    await checkIntents(runId, signal);
+    if (signal.aborted) return { decision: "lock", message: "检查已经取消，请重新读取文件后修改。" };
+    const blockers = sameOwnerWaits.get(runId);
+    if (blockers?.size) {
+      for (const earlier of blockers) if (!await waitForPriorTask(runId, earlier, signal)) return { decision: "lock", message: "同属主任务仍在执行，请停止相关修改并查看任务状态。" };
+      sameOwnerWaits.delete(runId);
+      setRunStatus(runId, "running");
+      return { decision: "lock", message: "同属主的前一项任务已经结束，请重新读取文件，按你的新要求生成修改。" };
+    }
+    const existing = cards.list().find((card) => card.status === "waiting" && [card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId) && (card.conflict.ruleId === "intent-target-conflict" || related(scope, [card.conflict.symbols.self, card.conflict.symbols.other])));
     if (existing) return pause(runId, request, existing);
     let result = await options.guard.judge(runId, proposals, signal);
     if (!result.conflict || result.decision !== "lock") {
       setRunStatus(runId, "running");
       const approve = result.onApproved;
-      return { ...result, ...(result.decision === "lock" ? { message: [result.message, injection(runId, scope)].filter(Boolean).join("\n\n") } : {}), onApproved: () => { approve?.(); board.actual(runId, scope); } };
+      return { ...result, ...(result.decision === "lock" ? { message: [result.message, injection(runId, scope)].filter(Boolean).join("\n\n") } : {}), onApproved: () => { approve?.(); board.actual(runId, scope); void checkIntents(runId); } };
     }
     const conflict = result.conflict;
     const action = arbitrate({ left: conflict.self as Participant, right: conflict.other as Participant, later: conflict.self as Participant }, conflict, options.mode);
@@ -176,15 +265,52 @@ export function createProjectArbitration(options: {
     return { ...result, message: [result.message, context].filter(Boolean).join("\n\n") };
   }
   function waitForRun(runId: string, signal: AbortSignal) {
-    return new Promise<void>((resolve) => {
+    return new Promise<"finished" | "timeout" | "cancelled">((resolve) => {
       const waiters = finished.get(runId) ?? new Set();
-      const timer = options.clock.setTimeout(done, 300_000);
-      function done() { options.clock.clearTimeout(timer); signal.removeEventListener("abort", done); waiters.delete(done); resolve(); }
-      waiters.add(done); finished.set(runId, waiters); signal.addEventListener("abort", done, { once: true }); if (signal.aborted) done();
+      const timer = options.clock.setTimeout(() => finish("timeout"), 300_000);
+      function finish(reason: "finished" | "timeout" | "cancelled") { options.clock.clearTimeout(timer); signal.removeEventListener("abort", aborted); waiters.delete(done); resolve(reason); }
+      const done = () => finish("finished");
+      const aborted = () => finish("cancelled");
+      waiters.add(done); finished.set(runId, waiters); signal.addEventListener("abort", aborted, { once: true }); if (signal.aborted) aborted();
     });
   }
+  async function waitForPriorTask(runId: string, earlier: string, signal: AbortSignal) {
+    for (let attempt = 0; attempt < 2 && !["done", "reverted"].includes(board.get(earlier)?.status ?? "done"); attempt += 1) {
+      if (await waitForRun(earlier, signal) === "cancelled") return false;
+    }
+    if (["done", "reverted"].includes(board.get(earlier)?.status ?? "done")) return true;
+    options.guard.notifyOwner(runId, "同属主任务等待超时，后到的任务已经取消，请确认前一项任务的状态。", undefined, "action");
+    await hooks.get(runId)?.cancel();
+    return false;
+  }
   return {
-    document, board, cards, judge, injection,
+    document, board, cards, judge, injection, checkIntents,
+    async beforeRun(runId: string, signal: AbortSignal) {
+      await checkIntents(runId, signal);
+      if (stoppedIntents.has(runId)) { await hooks.get(runId)?.cancel(); return ""; }
+      for (const earlier of sameOwnerWaits.get(runId) ?? []) if (!await waitForPriorTask(runId, earlier, signal)) return "";
+      sameOwnerWaits.delete(runId);
+      if (signal.aborted) return "";
+      setRunStatus(runId, "running");
+      const instructions: string[] = [];
+      for (let card = waitingIntentCard(runId); card && !signal.aborted; card = waitingIntentCard(runId)) {
+        instructions.push(await new Promise<string>((resolve) => {
+          const waiters = intentWaiters.get(card.id) ?? new Set();
+          const done = (instruction: string) => { signal.removeEventListener("abort", aborted); waiters.delete(done); resolve(instruction); };
+          const aborted = () => done("");
+          waiters.add(done); intentWaiters.set(card.id, waiters);
+          signal.addEventListener("abort", aborted, { once: true });
+          if (signal.aborted) aborted();
+        }));
+      }
+      for (const accepted of cards.list().filter((card) => card.status === "accepted" && card.conflict.ruleId === "intent-target-conflict" && card.suggestion && [card.conflict.self, card.conflict.other].some((actor) => actor.kind === "agent" && actor.runId === runId))) instructions.push(`双方属主已经同意以下方案：${accepted.suggestion}。请按此方案执行任务。`);
+      return [...new Set(instructions.filter(Boolean))].join("\n");
+    },
+    plan(runId: string, message: string) {
+      const before = board.get(runId)?.plannedScope.join("\n");
+      board.plan(runId, message);
+      if (board.get(runId)?.plannedScope.join("\n") !== before) void checkIntents(runId);
+    },
     observe(conflict: GuardConflict, input: Judgement["input"]) {
       const action = arbitrate({ left: conflict.self as Participant, right: conflict.other as Participant, later: conflict.self as Participant }, conflict, options.mode);
       emit({ type: "arbitration_action", point: "T1", conflict, action });
@@ -225,9 +351,11 @@ export function createProjectArbitration(options: {
       if (card.status !== "waiting") return Promise.resolve(card.status === "accepted" ? "warn" : card.yieldingOwner === board.get(runId)?.owner ? "revert" : "retry");
       return new Promise((resolve) => { const waiters = reviewWaiters.get(card.id) ?? new Map(); waiters.set(runId, resolve); reviewWaiters.set(card.id, waiters); });
     },
-    cancel(runId: string) { cards.closeRun(runId); },
+    cancel(runId: string) { cancelledIntents.add(runId); intentController(runId).abort(); cards.closeRun(runId); },
     attach(runId: string, runHooks: RunHooks) { hooks.set(runId, runHooks); if (!runOrder.has(runId)) runOrder.set(runId, ++runSequence); },
     finish(runId: string, reverted: boolean) {
+      intentController(runId).abort();
+      cards.closeRun(runId, "intent-target-conflict");
       if (reverted) cards.closeRun(runId); else cards.finishRun(runId);
       if (board.get(runId)) board.status(runId, reverted ? "reverted" : "done");
       const hook = hooks.get(runId); if (hook) completedHooks.set(runId, hook);
@@ -235,6 +363,6 @@ export function createProjectArbitration(options: {
     },
     basis(actor: ActorRef, symbols: string[], revision: number) { for (const intent of board.list()) if (!["done", "reverted"].includes(intent.status) && participantKey(intent.actor) !== participantKey(actor) && related([...intent.plannedScope, ...intent.actualScope], symbols)) for (const symbol of symbols) board.basis(intent.actor.runId, symbol, revision); },
     stats() { return { members: interruptionStats(interruptions, options.clock.now()), automaticRetries, ...cards.stats() }; },
-    async dispose() { adviceController.abort(); await cards.dispose(); removeNoticeListener(); hooks.clear(); completedHooks.clear(); for (const waiters of finished.values()) for (const done of waiters) done(); if (docs.get(documentName) === document) docs.delete(documentName); document.destroy = destroy; destroy(); }
+    async dispose() { adviceController.abort(); await cards.dispose(); await Promise.all(intentChecks.values()); removeNoticeListener(); hooks.clear(); completedHooks.clear(); for (const waiters of finished.values()) for (const done of waiters) done(); if (docs.get(documentName) === document) docs.delete(documentName); document.destroy = destroy; destroy(); }
   };
 }

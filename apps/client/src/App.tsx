@@ -20,7 +20,7 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
-import { getConflictGuardState, getServerInfo } from "./api";
+import { acknowledgeConflictWarning, getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
 import { conflictWarning, humanConflict } from "./conflictGuardPresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
@@ -534,7 +534,11 @@ function WorkspacePage({
       seenConflictWarningsRef.current.add(warning.id);
       return [warning];
     });
-    if (warnings.length > 0) setConflictWarnings((previous) => [...previous, ...warnings]);
+    const acknowledged = new Set((state.pairDecisions ?? []).filter((record) => record.acknowledged).map((record) => `${record.pair.id}:${record.revision}`));
+    setConflictWarnings((previous) => {
+      const remaining = previous.filter((warning) => !acknowledged.has(warning.id));
+      return warnings.length || remaining.length !== previous.length ? [...remaining, ...warnings] : previous;
+    });
   }, [conflictGuardState, projectId, identity.memberId, showWorkspaceNotice]);
 
   useEffect(() => {
@@ -903,6 +907,7 @@ function WorkspacePage({
       <div className="conflict-warning-list">{conflictWarnings.map((warning) => (
         <div className="workspace-notice conflict-warning" role="status" data-testid="conflict-warning" key={warning.id}>
           <div className="conflict-warning-content"><div className="conflict-item-header"><strong className="conflict-warning-title"><ShieldAlert size={14} aria-hidden="true" />冲突预防提醒</strong><GuardBadge tone="warning">提醒</GuardBadge></div><ReadableText text={warning.summary} />{warning.suggestion ? <ReadableText text={`建议：${warning.suggestion}`} /> : null}{warning.modelLabel ? <small>{warning.modelLabel}</small> : null}<div className="conflict-relation"><span className="conflict-field-label">关联路径</span><ul className="conflict-relation-lines">{warning.path.split(" → ").map((line, index) => <li key={index}>{line}</li>)}</ul></div></div>
+          <button type="button" onClick={() => void acknowledgeConflictWarning(projectId, warning.pairId, warning.revision, warning.warningKey).then(() => setConflictWarnings((previous) => previous.filter((entry) => entry.id !== warning.id))).catch(showWorkspaceError)}>我已了解</button>
           <button type="button" aria-label="关闭通知" onClick={() => setConflictWarnings((previous) => previous.filter((entry) => entry.id !== warning.id))}>×</button>
         </div>
       ))}</div>

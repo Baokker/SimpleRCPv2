@@ -35,6 +35,9 @@ export function getServerInfo() {
 export function getConflictGuardState(projectId: string) {
   return request<ConflictGuardState>(`${projectPath(projectId)}/conflict-guard/state`);
 }
+export function acknowledgeConflictWarning(projectId: string, pairId: string, revision: number, contentKey?: string) {
+  return request<void>(`${projectPath(projectId)}/conflict-guard/pairs/${encodeURIComponent(pairId)}/acknowledge`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, contentKey }) });
+}
 
 export async function downloadConflictGuardTrace(projectId: string) {
   const response = await fetch(`${projectPath(projectId)}/conflict-guard/trace`, {

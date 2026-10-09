@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import { createWarningAcknowledgements } from "./warningAcknowledgements.js";
 import path from "node:path";
 import { createRequire } from "node:module";
 import type * as Y from "yjs";
@@ -26,13 +27,15 @@ import {
   createSessionCoordinator,
   createJudgementQueue,
   createGuardConflict,
-  type PairCoordinator
+  type PairCoordinator,
+  type PairRecord
 } from "@simplercp/conflict-guard";
 import { FILESYSTEM_ORIGIN } from "../textDelta.js";
 import { createWorkspaceSemanticFiles } from "./semanticFiles.js";
 import { createServerAdjudication, type ServerAdjudicationConfig } from "./adjudicationRuntime.js";
 import { createProjectAgentGuard } from "./projectAgentGuard.js";
 import { createProjectArbitration } from "./projectArbitration.js";
+import { createIntentReviewer } from "./intentReview.js";
 import type { ArbitrationMode } from "@simplercp/conflict-guard";
 import { resolveWorkspacePath } from "../workspace.js";
 
@@ -109,6 +112,7 @@ export function createProjectConflictGuard(options: {
   let unknownOriginWarned = false;
   const pendingCursors = new Map<string, { event: ConflictGuardEvent; timer: NodeJS.Timeout }>();
   const tracePath = path.join(options.metadataPath, "conflict-guard", "trace.jsonl");
+  const acknowledgedWarnings = createWarningAcknowledgements(path.join(options.metadataPath, "conflict-guard", "acknowledgements.json"));
   let traceSequence = 0;
   let traceWriteFailures = 0;
   let traceOperations: Promise<void> = Promise.resolve();
@@ -234,6 +238,8 @@ export function createProjectConflictGuard(options: {
   });
   const advice = options.config.mode === "full" && options.config.adjudication ? createServerAdjudication({ ...options.config.adjudication, settings: { ...adjudicationSettings, strategy: "G1", point: "T2", hardDeadlineMs: 30_000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call, purpose: "compromise" }); }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription, purpose: "compromise" }); }) : undefined;
   const arbitration = createProjectArbitration({ projectId: options.projectId, clock, mode: options.config.arbitration ?? "owner", injection: options.config.intentInjection ?? true, guard: agentGuard, index: semanticIndex, active: () => semantic.getActiveChangeSets(), display: options.displayActor ?? (() => "协作成员"), sensitiveValues: options.sensitiveValues ?? [], emit: (event) => { void appendTrace(event); }, changed: () => { stateVersion += 1; options.onStateChanged?.(stateVersion); },
+    enforceIntents: ["rules", "full"].includes(options.config.mode),
+    ...(options.config.mode === "full" && options.config.adjudication && options.config.adjudication.mode !== "replay" && !options.config.adjudication.judges && process.env.SIMPLERCP_SKIP_MODEL_REQUESTS !== "true" ? { reviewIntents: createIntentReviewer({ ...options.config.adjudication.deepseek, sensitiveValues: options.sensitiveValues ?? [], report: (event) => { void appendTrace(event); } }) } : {}),
     resolveHuman(conflict, yielding) {
       const human = [conflict.self, conflict.other].find((actor) => actor.kind === "human" && actor.memberId === yielding);
       if (human) { if (!revertPair(conflict.pairId, human, true)) throw new Error(revertFailure); }
@@ -607,6 +613,7 @@ export function createProjectConflictGuard(options: {
     }
   }
 
+  const warningKey = (record: PairRecord) => hashText(record.revisionKey ?? JSON.stringify({ pair: record.pair, verdict: record.verdict }));
   function state(memberId?: string) {
     const sets = semantic.getActiveChangeSets();
     const decisions = pairCoordinator.records().filter((record) => record.status !== "closed" && record.verdict);
@@ -626,7 +633,7 @@ export function createProjectConflictGuard(options: {
         const other = actorKey(self.actor) === actorKey(record.pair.left.actor) ? record.pair.right : record.pair.left;
         const otherChange = sets.find((set) => actorKey(set.actor) === actorKey(other.actor))?.files.get(other.symbol.split("#")[0]!)?.symbols?.find((symbol) => symbol.key === other.symbol);
         const conflict = createGuardConflict({ record, self: self.actor, otherDisplayName: options.displayActor?.(other.actor) ?? "协作成员", otherChange });
-        return { ...record, conflict };
+        return { ...record, conflict, warningKey: warningKey(record), acknowledged: Boolean(memberId && acknowledgedWarnings.has(memberId, record.pair.id, record.revision, warningKey(record))) };
       }),
       agentNotices: agentGuard.notices(memberId),
       intents: arbitration.board.list(),
@@ -856,6 +863,15 @@ export function createProjectConflictGuard(options: {
     semanticIndex,
     agentGuard,
     arbitration,
+    async acknowledgeWarning(pairId: string, revision: number, contentKey: string, memberId: string) {
+      const record = pairCoordinator.get(pairId) ?? agentGuard.records().find((entry) => entry.pair.id === pairId);
+      if (!record || record.revision !== revision || warningKey(record) !== contentKey || record.verdict?.decision !== "warn" || ![record.pair.left.actor, record.pair.right.actor].some((actor) => actor.kind === "human" ? actor.memberId === memberId : actor.kind === "agent" && actor.ownerId === memberId)) return false;
+      await acknowledgedWarnings.add(memberId, pairId, revision, contentKey);
+      stateVersion += 1;
+      options.onStateChanged?.(stateVersion);
+      await appendTrace({ type: "ui_action", action: "acknowledge_warning", pairId, revision, memberId });
+      return true;
+    },
     beginAgentRun(actor: Extract<ActorRef, { kind: "agent" }>, baseline: Map<string, string>) {
       try {
         for (const [file, mirror] of mirrors) baseline.set(file, mirror.text);
@@ -942,6 +958,7 @@ export function createProjectConflictGuard(options: {
         markDegraded(error);
       }
       await agentGuard.flushNotices();
+      await waitForTrace();
     }
   };
 }

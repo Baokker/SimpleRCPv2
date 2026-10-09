@@ -2,7 +2,7 @@ import { ArrowRight, BarChart3, Bot, Check, CheckCheck, ChevronDown, Download, G
 import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
-import { actOnOwnerCard, confirmConflictPair, downloadConflictGuardTrace, getConflictGuardSymbol, revertConflictPair } from "../api";
+import { acknowledgeConflictWarning, actOnOwnerCard, confirmConflictPair, downloadConflictGuardTrace, getConflictGuardSymbol, revertConflictPair } from "../api";
 import type { ActiveSymbol, AgentIntent, ConflictGuardState, ConflictGuardSymbol, GuardActorRef, GuardConflict } from "../conflictGuardTypes";
 import type { RoomMember } from "../types";
 import { relationPathLines, guardActorName, guardActorKey, humanConflict, conflictActionCount, guardDecisionCounts } from "../conflictGuardPresentation";
@@ -16,12 +16,12 @@ interface PanelPreferences {
   progressOpen: boolean;
   historyOpen: boolean;
   filters: Record<ListKey, GuardListFilter>;
-  limits: Record<ListKey | "intents" | "actions" | "persists", number>;
+  limits: Record<ListKey | "intents" | "actions" | "persists" | "warnings", number>;
 }
 const defaultPreferences: PanelPreferences = {
   progressOpen: false, historyOpen: false,
   filters: { active: { kinds: [], mine: false }, candidates: { kinds: [], mine: false }, checks: { kinds: [], mine: false } },
-  limits: { active: 10, candidates: 10, checks: 20, intents: 10, actions: 10, persists: 10 }
+  limits: { active: 10, candidates: 10, checks: 20, intents: 10, actions: 10, persists: 10, warnings: 10 }
 };
 
 export function ConflictGuardPanel({ state, projectId, members, memberId, onOpenSymbol, onError, onChat }: {
@@ -65,6 +65,7 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
   const candidates = [...state.candidatePairs].sort((left, right) => Number(Boolean(left.path?.typeOnly)) - Number(Boolean(right.path?.typeOnly)) || right.updatedAt - left.updatedAt);
   const visibleCandidates = candidates.filter((pair) => pairMatches(pair, preferences.filters.candidates, memberId));
   const checks = records.filter((record) => pairMatches(record.pair, preferences.filters.checks, memberId));
+  const warnings = records.filter((record) => record.verdict?.decision === "warn" && !record.acknowledged && pairMatches(record.pair, { kinds: [], mine: true }, memberId));
   const humanCount = new Set(state.activeSymbols.filter((group) => group.actor.kind === "human" && group.symbols.length).map((group) => guardActorKey(group.actor))).size;
   const agentCount = new Set([...state.activeSymbols.filter((group) => group.actor.kind === "agent" && group.symbols.length).map((group) => guardActorKey(group.actor)), ...activeIntents.map((intent) => guardActorKey(intent.actor))]).size;
   const symbolCount = new Set(state.activeSymbols.flatMap((group) => group.symbols.map((symbol) => symbol.key))).size;
@@ -81,8 +82,8 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
   };
   return <section className="collab-section conflict-guard-panel" data-testid="conflict-guard-panel">
     <details className="conflict-guide" open={guideOpen} data-testid="conflict-guide" onToggle={(event) => { const open = event.currentTarget.open; setGuideOpen(open); localStorage.setItem("simplercp.conflictGuard.guide", open ? "open" : "closed"); }}>
-      <summary>这个面板在做什么</summary>
-      <p>展示本项目的语义冲突预防结果。</p>
+      <summary>面板功能</summary>
+      <p>将协作者之间的冲突分为三种等级。</p>
       <ul className="conflict-guide-zones">
         <li><GuardBadge>白区</GuardBadge><span>修改不会影响别人，系统直接放行。</span></li>
         <li><GuardBadge tone="danger">黑区</GuardBadge><span>修改会破坏别人正在使用的函数或导出，系统拦住。</span></li>
@@ -133,6 +134,16 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
         </article>];
       })}</div>
       <ListLimit total={actions.length} limit={preferences.limits.actions} initial={10} onChange={(count) => setLimit("actions", count)} />
+      {warnings.length ? <section data-testid="conflict-warnings">
+        <h3>待了解的提醒<GuardBadge tone="warning">{warnings.length} 项</GuardBadge></h3>
+        {warnings.slice(0, preferences.limits.warnings ?? 10).map((record) => <article className="conflict-candidate" key={`${record.pair.id}:${record.revision}`}>
+          <div className="conflict-tags"><GuardBadge tone="warning">提醒</GuardBadge><GuardBadge>{ruleName(record.verdict?.ruleId)}</GuardBadge></div>
+          <ReadableText text={readableGuardText(record.conflict?.summaryZh ?? record.verdict?.summary ?? "")} />
+          <button type="button" onClick={() => performAction(record.pair.id, () => acknowledgeConflictWarning(projectId, record.pair.id, record.revision, record.warningKey))}><Check size={14} aria-hidden="true" />我已了解</button>
+          {actionErrors[record.pair.id] ? <p role="alert">{actionErrors[record.pair.id]}</p> : null}
+        </article>)}
+        <ListLimit total={warnings.length} limit={preferences.limits.warnings ?? 10} initial={10} onChange={(count) => setLimit("warnings", count)} />
+      </section> : null}
     </section>
     <details className="conflict-layer" open={preferences.progressOpen} data-testid="conflict-progress" onToggle={(event) => { const open = event.currentTarget.open; setPreferences((current) => current.progressOpen === open ? current : { ...current, progressOpen: open }); }}>
       <summary><Users size={14} aria-hidden="true" /><span>正在进行的修改与关联关系<small data-testid="conflict-progress-summary">当前 {humanCount} 人 / {agentCount} 个 Agent 在修改 {symbolCount} 个符号，其中有 {candidates.length} 组关联</small></span></summary>
@@ -180,6 +191,7 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
           <PairParticipants sides={[record.pair.left, record.pair.right]} actorName={actorName} symbolKinds={symbolKinds} />
           <RelationPath lines={relationPathLines(record.pair.path)} />
           <ModelDetail metadata={record.verdict?.adjudication} conflict={record.conflict} />
+          {record.verdict?.decision === "warn" && pairMatches(record.pair, { kinds: [], mine: true }, memberId) ? <button type="button" disabled={record.acknowledged} onClick={() => performAction(record.pair.id, () => acknowledgeConflictWarning(projectId, record.pair.id, record.revision, record.warningKey))}>{record.acknowledged ? "已经了解" : "我已了解"}</button> : null}
           <TechnicalDetail ruleId={record.verdict?.ruleId} point={record.point} pairId={record.pair.id} revision={record.revision} />
         </div>
       </details>)}</div>

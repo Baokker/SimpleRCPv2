@@ -1,5 +1,6 @@
 export const guardRuleLabels: Record<string, string> = {
   "same-symbol-concurrent-write": "同时修改同一处代码",
+  "intent-target-conflict": "双方要求同一目标采用不同方案",
   "comment-only-edit": "只改了注释",
   "comment-format-only": "只改了注释或空白",
   "declaration-body-unrelated": "改的是同一个函数的不同位置",
