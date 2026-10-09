@@ -15,7 +15,7 @@ const environment = fs.existsSync(environmentPath)
 const apiKey = environment.DEEPSEEK_API_KEY?.trim();
 const baseUrl = environment.DEEPSEEK_BASE_URL?.trim();
 const model = environment.DEEPSEEK_MODEL?.trim();
-const configured = Boolean(apiKey && baseUrl && model);
+const configured = process.env.SIMPLERCP_LIVE_AGENT_TESTS === "1" && Boolean(apiKey && baseUrl && model);
 let root: string;
 
 beforeEach(async () => {

@@ -205,6 +205,7 @@ function WorkspacePage({
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
   const loadedAgentTraceIdsRef = useRef(new Set<string>());
+  const [agentRefreshVersion, setAgentRefreshVersion] = useState(0);
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
@@ -225,7 +226,6 @@ function WorkspacePage({
     showProjectDeleted,
     projectDeleted
   } = useWorkspaceNotifications();
-  const [agentRefreshVersion, setAgentRefreshVersion] = useState(0);
   const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
     "Saved"
   );
@@ -248,7 +248,6 @@ function WorkspacePage({
   const pendingSavePathsRef = useRef(new Set<string>());
   const loadedDirectoriesRef = useRef(new Set<string>());
   const workspaceRefreshTimerRef = useRef<number>();
-  const agentRefreshTimerRef = useRef<number>();
   const remoteCursors = useMemo(
     () => Object.values(remoteCursorMap),
     [remoteCursorMap]
@@ -458,7 +457,6 @@ function WorkspacePage({
               next[index] = message.run;
               return next;
             });
-            scheduleAgentRefresh();
           }
           if (message.type === "agent_trace_appended") {
             setAgentTraces((current) => ({
@@ -484,9 +482,6 @@ function WorkspacePage({
       socketRef.current?.close();
       if (workspaceRefreshTimerRef.current) {
         window.clearTimeout(workspaceRefreshTimerRef.current);
-      }
-      if (agentRefreshTimerRef.current) {
-        window.clearTimeout(agentRefreshTimerRef.current);
       }
     };
   }, [displayName, identity.role, projectId, roomId]);
@@ -600,6 +595,7 @@ function WorkspacePage({
   async function refreshAgentState() {
     const runs = await getAgentRuns(projectId);
     setAgentRuns(runs);
+    setAgentRefreshVersion((version) => version + 1);
   }
 
   async function loadAgentTrace(runId: string) {
@@ -657,17 +653,6 @@ function WorkspacePage({
     workspaceRefreshTimerRef.current = window.setTimeout(() => {
       workspaceRefreshTimerRef.current = undefined;
       void refreshWorkspaceTree().catch(showWorkspaceError);
-    }, 150);
-  }
-
-  function scheduleAgentRefresh() {
-    if (agentRefreshTimerRef.current) {
-      window.clearTimeout(agentRefreshTimerRef.current);
-    }
-    agentRefreshTimerRef.current = window.setTimeout(() => {
-      agentRefreshTimerRef.current = undefined;
-      void refreshAgentState().catch(showWorkspaceError);
-      setAgentRefreshVersion((version) => version + 1);
     }, 150);
   }
 

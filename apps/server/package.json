@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:once": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"

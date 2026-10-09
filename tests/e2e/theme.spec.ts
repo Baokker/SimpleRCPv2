@@ -5,6 +5,9 @@ test("member can switch theme and keep the choice after refresh", async ({
   page
 }) => {
   await openAs(page, "Theme User");
+  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  const memberId = await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"));
+  expect(memberId).toBeTruthy();
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   const toggle = page.getByTestId("theme-toggle");
@@ -22,7 +25,9 @@ test("member can switch theme and keep the choice after refresh", async ({
   await expect(page.getByTestId("join-project-form")).toBeVisible();
   await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();
+  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"))).toBe(memberId);
 });
 
 test("editor and terminal follow the selected theme", async ({ page }) => {

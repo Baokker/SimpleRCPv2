@@ -4,6 +4,7 @@ declare module "y-websocket/bin/utils" {
   import type * as Y from "yjs";
 
   export function getYDoc(docName: string, gc?: boolean): Y.Doc;
+  export const docs: Map<string, Y.Doc>;
   export function setupWSConnection(
     connection: WebSocket,
     request: IncomingMessage,

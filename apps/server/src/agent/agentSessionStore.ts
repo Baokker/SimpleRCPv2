@@ -31,6 +31,7 @@ export function createAgentSessionStore(projectId: string, projectRoot: string) 
       return (await records.list())
         .filter(
           (session) => {
+            if (session.deletedAt) return false;
             const sessionScope = session.scope ?? "personal";
             if (scope && sessionScope !== scope) return false;
             if (!memberId) return true;

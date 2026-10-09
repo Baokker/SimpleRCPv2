@@ -1,0 +1,66 @@
+{
+  "recordedAt": "2026-10-09T04:42:00.641Z",
+  "run": {
+    "projectId": "interaction",
+    "memberId": "64420094-4453-4ca2-bf9e-53bfb8429b41",
+    "initiatorMemberId": "64420094-4453-4ca2-bf9e-53bfb8429b41",
+    "initiatorRole": "",
+    "participantId": "64420094-4453-4ca2-bf9e-53bfb8429b41",
+    "memberName": "Alice",
+    "prompt": "这是实时正文和工具状态检查。请在调用工具之前输出一句「开始检查实时正文 STREAMING_20261009」。然后使用 bash 执行 sleep 30，结束后使用 write 写入 streaming-check.md，内容包含 STREAMING_DONE_20261009。最后输出一句中文完成说明。只访问当前项目，不读取环境、配置或上级目录，不创建 git 提交。必须执行指定等待命令。",
+    "sessionId": "nMEXcL1Btj10",
+    "runtimeSessionId": "ses_ee110646fffeMZcxmiv372PFYy",
+    "sessionScope": "personal",
+    "status": "running",
+    "runtime": "opencode",
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "source": "agent-panel",
+    "id": "048d21a0-1302-4eb4-ada4-d8e47f56d03b",
+    "createdAt": "2026-10-09T04:41:34.007Z",
+    "startedAt": "2026-10-09T04:41:34.014Z",
+    "activity": {
+      "phase": "tool",
+      "updatedAt": "2026-10-09T04:41:35.661Z",
+      "tools": [
+        {
+          "id": "call_00_nh1y9lVzy14JIyQRWjIR0184",
+          "name": "bash",
+          "summary": "sleep 30",
+          "startedAt": "2026-10-09T04:41:35.632Z",
+          "status": "running"
+        }
+      ],
+      "reasoning": [
+        {
+          "id": "prt_11ef76edb001PBGSvxonamCs7Z",
+          "text": "The user wants me to output a sentence first, then sleep 30, then write the file. Let me output the sentence and run the tool. I need to output the text before the tool call. Let me do the text then the bash call.\n\nThe instruction: output one sentence \"开始检查实时正文 STREAMING_20261009\" before calling the tool. Then use bash sleep 30. Then write. Then final Chinese summary."
+        }
+      ],
+      "config": {
+        "waitingMs": 20000,
+        "stalledMs": 60000
+      },
+      "lastPartAt": "2026-10-09T04:41:35.661Z",
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0
+      },
+      "messages": [
+        {
+          "id": "prt_11ef77052001lZ6zuVCNdq3xv9",
+          "messageId": "msg_11ef76c60001NTO1afAB9gWA2B",
+          "sessionId": "ses_ee110646fffeMZcxmiv372PFYy",
+          "text": "开始检查实时正文 STREAMING_20261009"
+        }
+      ]
+    },
+    "overlappingRunIds": [],
+    "fileChanges": [],
+    "questions": []
+  }
+}
