@@ -1,5 +1,6 @@
 import { choiceInstructions, choiceCriteria, deepInstructions, fastInstructions, sanitize } from "./prompts.js";
 import { ProviderError, type AdjudicationConfig, type AdjudicationInput, type FastJudge, type DeepJudge, type JudgeResult } from "./types.js";
+import { createMiniMaxJudge, type MiniMaxOptions } from "./minimax.js";
 
 interface HttpOptions { apiKey?: string; baseUrl?: string; fetch: typeof fetch; now(): number; config: AdjudicationConfig }
 const object = (value: unknown): Record<string, unknown> => { if (!value || typeof value !== "object" || Array.isArray(value)) throw new ProviderError("invalid-format"); return value as Record<string, unknown>; };
@@ -123,9 +124,10 @@ export function createCompatibleFastJudge(options: HttpOptions & { model: string
   } };
 }
 
-export function createJudgeRegistry(options: { fetch: typeof fetch; now(): number; config: AdjudicationConfig; jev: { apiKey?: string; baseUrl?: string }; deepseek: { apiKey?: string; baseUrl?: string; model: string }; compatible?: { apiKey?: string; baseUrl: string; model: string }; fastJudges?: FastJudge[]; deepJudges?: DeepJudge[] }) {
+export function createJudgeRegistry(options: { fetch: typeof fetch; now(): number; config: AdjudicationConfig; jev: { apiKey?: string; baseUrl?: string }; deepseek: { apiKey?: string; baseUrl?: string; model: string }; minimax?: Omit<MiniMaxOptions, "fetch" | "now">; compatible?: { apiKey?: string; baseUrl: string; model: string }; fastJudges?: FastJudge[]; deepJudges?: DeepJudge[] }) {
   const fast = new Map<string, FastJudge>([["jev", createJevJudge({ ...options, ...options.jev })]]);
   const deep = new Map<string, DeepJudge>([["deepseek", createDeepJudge({ ...options, ...options.deepseek, name: "deepseek" })]]);
+  deep.set("minimax", createMiniMaxJudge({ ...options, model: "MiniMax-M3", ...options.minimax }));
   if (options.compatible) {
     deep.set("openai-compatible", createDeepJudge({ ...options, ...options.compatible, name: "openai-compatible" }));
     fast.set("openai-compatible", createCompatibleFastJudge({ ...options, ...options.compatible }));

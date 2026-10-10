@@ -1,0 +1,43 @@
+{
+  "compared": "judgements, outcomes, intervals, metrics, input hashes, completion, recorded latency, T03",
+  "execution": "verify-existing-replays",
+  "rounds": [
+    {
+      "round": 1,
+      "recordMatches": true,
+      "sha256": "87ed230b272455c4ead5b7f03132bfabd1af1db460bceb3d4b537043841df90b",
+      "networkCalls": 0,
+      "cacheMisses": {
+        "G1": 0,
+        "G2": 0
+      }
+    },
+    {
+      "round": 2,
+      "recordMatches": true,
+      "sha256": "87ed230b272455c4ead5b7f03132bfabd1af1db460bceb3d4b537043841df90b",
+      "networkCalls": 0,
+      "cacheMisses": {
+        "G1": 0,
+        "G2": 0
+      }
+    },
+    {
+      "round": 3,
+      "recordMatches": true,
+      "sha256": "87ed230b272455c4ead5b7f03132bfabd1af1db460bceb3d4b537043841df90b",
+      "networkCalls": 0,
+      "cacheMisses": {
+        "G1": 0,
+        "G2": 0
+      }
+    }
+  ],
+  "sourceCacheMisses": {
+    "G1": 0,
+    "G2": 0
+  },
+  "cacheComplete": true,
+  "byteIdentical": true,
+  "valid": true
+}

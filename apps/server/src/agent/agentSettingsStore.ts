@@ -13,12 +13,13 @@ interface AgentSettingsStoreOptions {
   storagePath: string;
   defaultModel: string;
   apiKeyConfigured: boolean;
+  provider?: AgentSettings["provider"];
 }
 
 export async function createAgentSettingsStore(
   options: AgentSettingsStoreOptions
 ) {
-  let settings = await loadSettings(options.storagePath, options.defaultModel);
+  let settings = await loadSettings(options.storagePath, options.defaultModel, options.provider ?? "deepseek");
   let operations = Promise.resolve();
 
   function get(): AgentSettingsResponse {
@@ -29,6 +30,7 @@ export async function createAgentSettingsStore(
     get,
     async update(input: unknown): Promise<AgentSettingsResponse> {
       const nextSettings = validateSettings(input);
+      if (nextSettings.provider !== (options.provider ?? "deepseek")) throw new Error("provider 必须与服务端 SIMPLERCP_AGENT_PROVIDER 一致");
       operations = operations.then(async () => {
         await saveSettings(options.storagePath, nextSettings);
         settings = nextSettings;
@@ -41,13 +43,15 @@ export async function createAgentSettingsStore(
 
 async function loadSettings(
   storagePath: string,
-  defaultModel: string
+  defaultModel: string,
+  provider: AgentSettings["provider"]
 ): Promise<AgentSettings> {
   const parsed = await readJsonFile<AgentSettingsFile>(storagePath);
   if (parsed === undefined) {
-    return { provider: "deepseek", model: defaultModel, enabled: true };
+    return { provider, model: defaultModel, enabled: true };
   }
   validateSettingsFile(parsed);
+  if (parsed.settings.provider !== provider) return { provider, model: defaultModel, enabled: parsed.settings.enabled };
   return parsed.settings;
 }
 
@@ -55,7 +59,7 @@ function validateSettingsFile(value: AgentSettingsFile) {
   if (
     !value ||
     value.version !== 1 ||
-    value.settings?.provider !== "deepseek" ||
+    !["deepseek", "minimax"].includes(value.settings?.provider) ||
     typeof value.settings.model !== "string" ||
     !value.settings.model.trim() ||
     typeof value.settings.enabled !== "boolean"
@@ -72,8 +76,8 @@ function validateSettings(value: unknown): AgentSettings {
   if ("apiKey" in input) {
     throw new Error("API Key must be configured through the server environment");
   }
-  if (input.provider !== "deepseek") {
-    throw new Error("provider must be deepseek");
+  if (input.provider !== "deepseek" && input.provider !== "minimax") {
+    throw new Error("provider 必须为 deepseek 或 minimax");
   }
   if (typeof input.model !== "string" || !input.model.trim()) {
     throw new Error("model is required");
@@ -82,7 +86,7 @@ function validateSettings(value: unknown): AgentSettings {
     throw new Error("enabled must be a boolean");
   }
   return {
-    provider: "deepseek",
+    provider: input.provider,
     model: input.model.trim(),
     enabled: input.enabled
   };

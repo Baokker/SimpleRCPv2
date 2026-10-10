@@ -6,9 +6,11 @@ import { agentEnv } from "../processEnv.js";
 import { AgentRuntimeRequestError, safeRequestTarget } from "./agentRunFailure.js";
 
 export const OPEN_CODE_PROVIDER_ID = "simplercp-deepseek";
+export const openCodeProviderId = (provider: "minimax" | "deepseek" = "deepseek") => `simplercp-${provider}`;
 const OPEN_CODE_VERSION = "1.18.31";
 
 interface OpenCodeProcessOptions {
+  provider?: "minimax" | "deepseek";
   port: number;
   apiKey?: string;
   baseUrl: string;
@@ -39,8 +41,8 @@ export function createOpenCodeProcess(options: OpenCodeProcessOptions) {
       ["serve", "--hostname=127.0.0.1", `--port=${options.port}`],
       {
         env: {
-          ...agentEnv(),
-          DEEPSEEK_API_KEY: options.apiKey ?? "",
+          ...agentEnv(process.env, options.provider),
+          [options.provider === "minimax" ? "MINIMAX_API_KEY" : "DEEPSEEK_API_KEY"]: options.apiKey ?? "",
           OPENCODE_ENABLE_QUESTION_TOOL: "true",
           OPENCODE_CONFIG_CONTENT: JSON.stringify(openCodeConfig(options))
         },
@@ -105,25 +107,28 @@ function resolveOpenCodeExecutable() {
   return path.join(path.dirname(packagePath), "bin", "opencode.exe");
 }
 
-function openCodeConfig(options: OpenCodeProcessOptions): Config {
+export function openCodeConfig(options: OpenCodeProcessOptions): Config {
+  const providerId = openCodeProviderId(options.provider);
+  const minimax = options.provider === "minimax";
   return {
     autoupdate: false,
     share: "disabled",
-    enabled_providers: [OPEN_CODE_PROVIDER_ID],
-    model: `${OPEN_CODE_PROVIDER_ID}/${options.model}`,
-    small_model: `${OPEN_CODE_PROVIDER_ID}/${options.model}`,
+    enabled_providers: [providerId],
+    model: `${providerId}/${options.model}`,
+    small_model: `${providerId}/${options.model}`,
     provider: {
-      [OPEN_CODE_PROVIDER_ID]: {
+      [providerId]: {
         npm: "@ai-sdk/openai-compatible",
-        name: "DeepSeek",
+        name: minimax ? "MiniMax" : "DeepSeek",
         options: {
-          apiKey: "{env:DEEPSEEK_API_KEY}",
+          apiKey: minimax ? "{env:MINIMAX_API_KEY}" : "{env:DEEPSEEK_API_KEY}",
           baseURL: options.baseUrl
         },
         models: {
           [options.model]: {
             name: options.model,
-            tool_call: true
+            tool_call: true,
+            ...(minimax ? { options: { thinking: { type: "disabled" }, reasoning_split: true } } : {})
           }
         }
       }

@@ -94,7 +94,7 @@ export interface AdjudicationConfig {
   invariants: boolean;
   softDeadlineMs: number;
   hardDeadlineMs: number;
-  prices: { date: string; fastInputPerMillion: number; fastOutputPerMillion: number; deepInputPerMillion: number; deepOutputPerMillion: number };
+  prices: { date: string; site?: string; currency?: string; fastCurrency?: string; usdPerCurrencyUnit?: number; deepCacheReadPerMillion?: number; fastInputPerMillion: number; fastOutputPerMillion: number; deepInputPerMillion: number; deepOutputPerMillion: number };
 }
 export interface AdjudicationDependencies {
   clock: ConflictGuardClock;

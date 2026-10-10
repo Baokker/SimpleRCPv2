@@ -80,6 +80,7 @@ export function classify(input: ZoneInput): ZoneVerdict {
     incompatibilities: []
   };
   context.incompatibilities = [referencedSymbolRemoved, runtimeExportRemoved, callSignatureIncompatible, consumedReturnPropertyRemoved, interfaceRequiredMemberIncompatible].map((rule) => rule(context));
+  context.typecheck = input.project.checkFourStates?.({ left: input.left, right: input.right, path: input.path });
   for (const rule of [commentOnly, commentFormatOnly, observabilityOnly, declarationBodyUnrelated, sameSymbolConcurrentWrite, typeOnlyUnchanged, equivalentRefactor] satisfies ZoneRule[]) {
     const result = rule(context);
     if (result) return result;

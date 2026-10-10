@@ -102,6 +102,18 @@ describe("注释与声明内部编辑", () => {
     expect(decision(left, right)).toMatchObject({ zone: "grey", decision: "warn", ruleId: "declaration-body-unrelated", localOnly: true });
     expect(decision(left, right, 4)).toMatchObject({ zone: "black", decision: "lock" });
   });
+  it("有序规则复用一次真实四状态检查，签名修改保持黑区", () => {
+    const first = base.replace("total += 1", "total += 10");
+    const second = base.replace("total += 5", "total += 50");
+    const project = indexFor(first.replace("total += 5", "total += 50"));
+    const check = project.checkFourStates!;
+    let calls = 0;
+    project.checkFourStates = (input) => { calls += 1; return check(input); };
+    const input = { left: side("Alice", base, first), right: side("Bob", base, second), path: null, nested: false, typeOnly: false, project };
+    expect(classify(input)).toMatchObject({ zone: "grey", decision: "warn", ruleId: "declaration-body-unrelated", typecheck: { ran: true, mergeOnlyDiagnostics: [] } });
+    expect(calls).toBe(1);
+    expect(decision(side("Alice", base, base.replace("value: number", "value: number, rate: number")), input.right)).toMatchObject({ zone: "black", decision: "lock" });
+  });
   it.each(["independent", "shared"])("%s 文本的远距离修改保留合并独有类型错误检查", (mode) => {
     const first = base.replace("let total = value;", "const shared = 1;\n  let total = value;");
     const second = base.replace("return total;", "const shared = 2;\n  return total;");

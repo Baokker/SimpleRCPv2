@@ -55,9 +55,9 @@ function eligible(site: Site, id: string) {
 
 export function nativeOperatorIds(project: SeedProject, ids: string[]) { return ids.filter((id) => sites(project).some((site) => eligible(site, id))); }
 
-export function nativeOperatorTemplate(id: string, safe: boolean, salt: number, project: SeedProject, unrelated: boolean): OperatorTemplate {
+export function nativeOperatorTemplate(id: string, safe: boolean, salt: number, project: SeedProject, unrelated: boolean, options: { inputFloor?: number; siteIndex?: number } = {}): OperatorTemplate {
   const available = sites(project).filter((site) => eligible(site, id));
-  const selected = available[salt % available.length];
+  const selected = available[(options.siteIndex ?? salt) % available.length];
   const site = selected && { ...selected };
   if (!site) throw new Error(`项目没有满足 ${id} 前提的符号与调用点：${project.name}`);
   const left = new Map<string, Edit[]>(); const right = new Map<string, Edit[]>();
@@ -109,9 +109,11 @@ export function nativeOperatorTemplate(id: string, safe: boolean, salt: number, 
     expectedLeft = invoke("b", [args[0], "0.25", ...args.slice(2)].join(", "));
     if (!safe && site.call.arguments[1]) edit(right, site.consumerFile, site.call.arguments[1], "undefined");
   } else if (id === "CP-3") {
-    insert(left, site.file, site.producer.body!.getStart() + 1, `\n  if (${site.producer.parameters[0]!.name.getText(site.source)} === 0) throw new RangeError("zero input");`);
-    leftExpression = `(() => { try { ${invoke("p", ["0", ...args.slice(1)].join(", "))}; return false; } catch { return true; } })()`; expectedLeft = "true";
-    edit(right, site.consumerFile, site.call.arguments[0]!, safe ? `Math.max(1, ${site.call.arguments[0]!.getText(site.consumerSource)})` : "0");
+    const floor = options.inputFloor;
+    if (floor !== undefined && !Number.isInteger(floor)) throw new Error("inputFloor 必须为整数");
+    insert(left, site.file, site.producer.body!.getStart() + 1, `\n  if (${site.producer.parameters[0]!.name.getText(site.source)} ${floor === undefined ? "=== 0" : `< ${floor}`}) throw new RangeError("${floor === undefined ? "zero input" : "input range"}");`);
+    leftExpression = `(() => { try { ${invoke("p", [String(floor === undefined ? 0 : floor - 1), ...args.slice(1)].join(", "))}; return false; } catch { return true; } })()`; expectedLeft = "true";
+    edit(right, site.consumerFile, site.call.arguments[0]!, safe ? `Math.max(${floor ?? 1}, ${site.call.arguments[0]!.getText(site.consumerSource)})` : "0");
   } else if (id === "IC-1") {
     const position = site.producer.parameters.findIndex((parameter) => parameter.questionToken);
     const parameter = site.producer.parameters[position]!;

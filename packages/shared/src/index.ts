@@ -93,7 +93,7 @@ export interface ChatMessage {
 }
 
 export interface AgentSettings {
-  provider: "deepseek";
+  provider: "deepseek" | "minimax";
   model: string;
   enabled: boolean;
 }
@@ -177,7 +177,7 @@ export interface AgentRun {
   contexts?: AgentPromptContext[];
   status: AgentRunStatus;
   runtime: "opencode";
-  provider: "deepseek";
+  provider: "deepseek" | "minimax";
   model: string;
   source?: "agent-panel" | "chat";
   chatMessageId?: string;

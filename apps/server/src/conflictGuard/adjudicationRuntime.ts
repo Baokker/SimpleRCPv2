@@ -3,18 +3,20 @@ import path from "node:path";
 import { createAdjudicationService, createJudgeRegistry, defaultAdjudicationConfig, type AdjudicationConfig, type CachedCall, type ConflictGuardClock, type DeepJudge, type FastJudge, type ProviderCall, type ProviderMode, type ProviderSubscription } from "@simplercp/conflict-guard";
 
 export interface ServerAdjudicationConfig {
+  fetch?: typeof fetch;
   settings?: AdjudicationConfig;
   mode?: ProviderMode;
   cacheDirectory?: string;
   jev: { apiKey?: string; baseUrl?: string };
   deepseek: { apiKey?: string; baseUrl?: string; model: string };
+  minimax?: { apiKey?: string; baseUrl?: string; model: string; jsonMode?: boolean; temperature?: number };
   compatible?: { apiKey?: string; baseUrl: string; model: string };
   judges?: { fast: FastJudge; deep: DeepJudge };
 }
 
 export function createServerAdjudication(options: ServerAdjudicationConfig, clock: ConflictGuardClock, sensitiveValues: string[], onCall: (call: ProviderCall) => void, onSubscription: (subscription: ProviderSubscription) => void) {
   const config = options.settings ?? defaultAdjudicationConfig;
-  const registry = createJudgeRegistry({ ...options, config, fetch: globalThis.fetch, now: clock.now });
+  const registry = createJudgeRegistry({ ...options, config, fetch: options.fetch ?? globalThis.fetch, now: clock.now });
   const directory = options.cacheDirectory;
   return createAdjudicationService({ config, clock, mode: options.mode ?? "live", sensitiveValues, fast: options.judges?.fast ?? registry.fast(config.fast), deep: options.judges?.deep ?? registry.deep(config.deep), onCall, onSubscription, onError: (stage) => console.error("Model adjudication infrastructure error", { stage }), cache: directory ? {
     async get(key) {

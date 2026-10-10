@@ -21,6 +21,10 @@ export interface ReplayOptions {
   cursorLeaveLines?: number;
   maxBatchDurationMs?: number;
   activeIdleMs?: number;
+  retainHistory?: boolean;
+  enableT0?: boolean;
+  disableFourState?: boolean;
+  k?: number;
   bodyUnrelatedMaxAdjacentLines?: number;
   judgementFrameMs?: number;
   maxJudgementsPerFrame?: number;
@@ -67,9 +71,9 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   const config = (events.find((event) => event.type === "session_start")?.config ?? {}) as ReplayOptions;
   const trackerClock: ConflictGuardClock = { now: () => clock.now(), setTimeout: (callback, delay) => clock.setTimeout(callback, delay), clearTimeout: (handle) => clock.clearTimeout(handle) };
   let batchCount = 0;
-  const tracker = new ConflictGuardTracker({ clock: trackerClock, idleMs: options.idleMs ?? config.idleMs ?? 1500, cursorLeaveLines: options.cursorLeaveLines ?? config.cursorLeaveLines ?? 3, maxBatchDurationMs: options.maxBatchDurationMs ?? config.maxBatchDurationMs ?? 5000, activeIdleMs: options.activeIdleMs ?? config.activeIdleMs ?? 600000, createId: () => `replay-batch-${++batchCount}` });
+  const tracker = new ConflictGuardTracker({ clock: trackerClock, retainHistory: options.retainHistory, idleMs: options.idleMs ?? config.idleMs ?? 1500, cursorLeaveLines: options.cursorLeaveLines ?? config.cursorLeaveLines ?? 3, maxBatchDurationMs: options.maxBatchDurationMs ?? config.maxBatchDurationMs ?? 5000, activeIdleMs: options.activeIdleMs ?? config.activeIdleMs ?? 600000, createId: () => `replay-batch-${++batchCount}` });
   const index = createSemanticIndex({ files, now: () => clock.now() });
-  const semantic = new SemanticChangeTracker({ index, readFile: (file) => files.readFile(file), now: () => clock.now() });
+  const semantic = new SemanticChangeTracker({ index, readFile: (file) => files.readFile(file), now: () => clock.now(), maxHops: options.k });
   const policy = typeof options.policy === "string" ? policyFor(options.policy, { oracleTruth: options.oracleTruth }) : options.policy;
   policy.beginReplay?.();
   const intervene = policy.id !== "P0" && !(policy.id === "P3" && events.find((event) => event.type === "session_start")?.mode === "observe");
@@ -97,11 +101,11 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
   let candidatePairs: CandidatePair[] = [];
   const closedBatches: Array<{ batch: EditBatch; change?: FileChange }> = [];
   const recordedChecks = events.filter((event) => event.type === "pair_judged" && (event.verdict as ZoneVerdict | undefined)?.typecheck);
-  const session = createSessionCoordinator({ tracker, semantic, index, now: () => clock.now(), clock: trackerClock, revisionMode: events.find((event) => event.type === "session_start")?.pairRevisionMode === "judged-input" ? "judged-input" : "legacy", ...(policy.adjudicate ? { adjudicate(pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict) => void) { policy.adjudicate!({ pair, activeFiles: activeFiles(), project: index, symbols: (side) => session.symbolFor(side.actor, side.symbol) }, local, trackerClock, signal, complete); } } : {}), intervene, enableT0: policy.id === "P3" || policy.id.startsWith("G"), enableSemanticPending: policy.id !== "P1", onError(error, pairId) { errors.push({ at: clock.now(), pairId, message: error instanceof Error ? error.message : String(error) }); }, classify(pair) {
+  const session = createSessionCoordinator({ tracker, semantic, index, now: () => clock.now(), clock: trackerClock, revisionMode: events.find((event) => event.type === "session_start")?.pairRevisionMode === "judged-input" ? "judged-input" : "legacy", ...(policy.adjudicate ? { adjudicate(pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict) => void) { policy.adjudicate!({ pair, activeFiles: activeFiles(), project: index, symbols: (side) => session.symbolFor(side.actor, side.symbol) }, local, trackerClock, signal, complete); } } : {}), intervene, enableT0: options.enableT0 ?? (policy.id === "P3" || policy.id.startsWith("G")), enableSemanticPending: policy.id !== "P1", onError(error, pairId) { errors.push({ at: clock.now(), pairId, message: error instanceof Error ? error.message : String(error) }); }, classify(pair) {
     const revision = session.coordinator.get(pair.id)?.revision ?? 0;
     const recorded = recordedChecks.find((event) => event.pairId === pair.id && event.revision === revision);
     const recordedCheck = (recorded?.verdict as ZoneVerdict | undefined)?.typecheck;
-    const project = recordedCheck && !recordedCheck.ran && recordedCheck.skipped ? { ...index, checkFourStates: () => ({ ...recordedCheck }) } : index;
+    const project = options.disableFourState ? { ...index, checkFourStates: undefined } : recordedCheck && !recordedCheck.ran && recordedCheck.skipped ? { ...index, checkFourStates: () => ({ ...recordedCheck }) } : index;
     return policy.decide({ pair, activeFiles: activeFiles(), project, bodyUnrelatedMaxAdjacentLines: options.bodyUnrelatedMaxAdjacentLines ?? config.bodyUnrelatedMaxAdjacentLines, symbols: (side) => session.symbolFor(side.actor, side.symbol) });
   }, onEvent(event) {
     coordinationEvents.push(event as ReplayResult["coordinationEvents"][number]);
@@ -185,7 +189,9 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       }
       const prelocked = ["P1", "P2"].includes(policy.id);
       const shouldBlock = prelocked ? isPrelocked(file, origin, ops) : isFrozen(file, origin, ops);
+      // 标记描述本次编辑的策略决定，允许的后续编辑不能继承先前的阻止状态。
       if (shouldBlock) counterfactualFiles.add(file);
+      else counterfactualFiles.delete(file);
       blockedEdits.push({ seq: event.seq, at: clock.now(), file, actor: origin, shouldHaveBeenBlocked: shouldBlock });
       const after = applyOps(before, ops);
       currentText.set(file, after); files.set(file, after); changedFiles.add(file);

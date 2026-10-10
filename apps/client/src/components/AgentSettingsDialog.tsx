@@ -41,11 +41,12 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (!settings) return;
     setSaving(true);
     setError("");
     try {
       await updateAgentSettings({
-        provider: "deepseek",
+        provider: settings.provider,
         model,
         enabled
       });
@@ -96,7 +97,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
             {runtime.modelChangePending ? (
               <div><dt>Model</dt><dd>Change will apply after current tasks finish</dd></div>
             ) : null}
-            <div><dt>Provider</dt><dd>DeepSeek</dd></div>
+            <div><dt>Provider</dt><dd>{settings ? settings.provider === "minimax" ? "MiniMax" : "DeepSeek" : "Loading"}</dd></div>
             <div>
               <dt>API Key</dt>
               <dd>{settings?.apiKeyConfigured ? "Configured" : "Missing"}</dd>

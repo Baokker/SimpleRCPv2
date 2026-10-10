@@ -10,7 +10,7 @@ export interface CandidatePair {
   left: { actor: ActorRef; symbol: string; symbols?: string[]; status: SymbolChange["status"] };
   right: { actor: ActorRef; symbol: string; symbols?: string[]; status: SymbolChange["status"] };
   relations?: Array<{ left: string; right: string; path: RelationPath | null }>;
-  distance: 0 | 1 | 2;
+  distance: 0 | 1 | 2 | 3;
   path: RelationPath | null;
   firstSeenAt: number;
   updatedAt: number;
@@ -34,7 +34,9 @@ export class SemanticChangeTracker {
   private readonly listeners = new Set<(event: SemanticChangeEvent) => void>();
   private readonly staleEdges = new Map<string, RelationEdge>();
 
-  constructor(private readonly options: { index: SemanticIndex; readFile(file: string): string; now(): number }) {}
+  constructor(private readonly options: { index: SemanticIndex; readFile(file: string): string; now(): number; maxHops?: number }) {
+    if (options.maxHops !== undefined && ![1, 2, 3].includes(options.maxHops)) throw new Error("maxHops 必须为 1、2 或 3");
+  }
 
   update(changeSets: ActiveChangeSet[], batches: Array<{ batch: EditBatch; change?: FileChange }> = []) {
     this.changeSets = changeSets;
@@ -77,7 +79,7 @@ export class SemanticChangeTracker {
       const leftClusters = this.clusters(leftSet, leftSymbols);
       const rightClusters = this.clusters(rightSet, rightSymbols);
       const modifiedTypes = new Set([...leftSymbols.values(), ...rightSymbols.values()].filter((symbol) => ["interface", "type", "enum"].includes(symbol.kind)).map((symbol) => symbol.key));
-      const paths = this.findPaths([...leftSymbols.keys()], [...rightSymbols.keys()], 2).filter((path) => !path.typeOnly || [path.from, path.to, ...path.hops.flatMap((hop) => [hop.from, hop.to])].some((key) => modifiedTypes.has(key)));
+      const paths = this.findPaths([...leftSymbols.keys()], [...rightSymbols.keys()], this.options.maxHops ?? 2).filter((path) => !path.typeOnly || [path.from, path.to, ...path.hops.flatMap((hop) => [hop.from, hop.to])].some((key) => modifiedTypes.has(key)));
       for (const leftSymbol of leftSymbols.values()) for (const rightSymbol of rightSymbols.values()) {
         if (leftSymbol.key === rightSymbol.key || isNestedPair(leftSymbol.key, rightSymbol.key)) paths.push({ from: leftSymbol.key, to: rightSymbol.key, hops: [], typeOnly: true });
       }
@@ -114,7 +116,7 @@ export class SemanticChangeTracker {
         ]));
         const changed = this.fingerprints.get(id) !== fingerprint;
         const at = this.options.now();
-        const pair: CandidatePair = { id, left: { actor: leftSet.actor, symbol: path.from, symbols: leftKeys, status: leftSymbol.status }, right: { actor: rightSet.actor, symbol: path.to, symbols: rightKeys, status: rightSymbol.status }, relations: group.map((relation) => ({ left: relation.from, right: relation.to, path: relation.hops.length ? relation : null })), distance: path.hops.length as 0 | 1 | 2, path: path.hops.length === 0 ? null : path, firstSeenAt: previous?.firstSeenAt ?? at, updatedAt: changed ? at : previous!.updatedAt, revisionKey: fingerprint };
+        const pair: CandidatePair = { id, left: { actor: leftSet.actor, symbol: path.from, symbols: leftKeys, status: leftSymbol.status }, right: { actor: rightSet.actor, symbol: path.to, symbols: rightKeys, status: rightSymbol.status }, relations: group.map((relation) => ({ left: relation.from, right: relation.to, path: relation.hops.length ? relation : null })), distance: path.hops.length as 0 | 1 | 2 | 3, path: path.hops.length === 0 ? null : path, firstSeenAt: previous?.firstSeenAt ?? at, updatedAt: changed ? at : previous!.updatedAt, revisionKey: fingerprint };
         nextPairs.set(id, pair);
         for (const [set, keys] of [[leftSet, leftKeys], [rightSet, rightKeys]] as const) for (const key of keys) {
           const file = key.slice(0, key.indexOf("#"));

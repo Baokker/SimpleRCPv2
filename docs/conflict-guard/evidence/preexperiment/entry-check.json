@@ -1,0 +1,243 @@
+{
+  "commands": [
+    {
+      "experiment": "X1",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment X1 --dataset bench/datasets/d1-v3 --split holdout --policy P3 --repeat 1 --out ../../docs/conflict-guard/experiment/X1/d1",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "holdout",
+        "policies": [
+          "P3"
+        ],
+        "repetitions": 1,
+        "k": 2,
+        "relationGroups": 125,
+        "executed": false
+      }
+    },
+    {
+      "experiment": "X1",
+      "command": "pnpm --filter @simplercp/conflict-guard d2:run --out ../../docs/conflict-guard/experiment/X1/d2",
+      "result": {
+        "dataset": "d2-greylock-v1",
+        "cases": 51,
+        "scenarios": 6,
+        "executed": false,
+        "calls": 0
+      }
+    },
+    {
+      "experiment": "X1",
+      "command": "pnpm --filter @simplercp/conflict-guard rules:summary --record ../../docs/conflict-guard/experiment/X1/d1/results.json --out ../../docs/conflict-guard/experiment/X1/rules",
+      "result": {
+        "record": "../../docs/conflict-guard/experiment/X1/d1/results.json",
+        "policy": "P3",
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X2",
+      "command": "pnpm --filter @simplercp/conflict-guard index:run --experiment X2 --dataset bench/datasets/d1-v3 --split all --k 1,2,3 --out ../../docs/conflict-guard/experiment/X2",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "all",
+        "k": [
+          1,
+          2,
+          3
+        ],
+        "relationGroups": 240,
+        "calls": 0,
+        "executed": false
+      }
+    },
+    {
+      "experiment": "X2",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:counts --trace ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz --run ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/run.json.gz --out ../../docs/conflict-guard/experiment/X2/candidate-counts",
+      "result": {
+        "trace": "../../docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz",
+        "run": "../../docs/conflict-guard/evidence/round2-dual-agent/original-source/run.json.gz",
+        "simulation": "local-rules",
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X3",
+      "command": "MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/conflict-guard replay:run --experiment X3 --dataset bench/datasets/d1-v3 --split holdout --policy P3,G1,G2,G3,G4 --provider-mode record --repeat 1 --config ../../docs/conflict-guard/experiment/adjudication-config.json --models ../../docs/conflict-guard/experiment/models.json --cache bench/model-cache/stage8-x3-record --out ../../docs/conflict-guard/experiment/X3/record",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "holdout",
+        "samples": 130,
+        "policies": [
+          "P3",
+          "G1",
+          "G2",
+          "G3",
+          "G4"
+        ],
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X3",
+      "command": "pnpm --filter @simplercp/conflict-guard adjudication:verify --record ../../docs/conflict-guard/experiment/X3/record/results.json.gz --dataset bench/datasets/d1-v3 --cache bench/model-cache/stage8-x3-record --out ../../docs/conflict-guard/experiment/X3/replay",
+      "result": {
+        "record": "../../docs/conflict-guard/experiment/X3/record/results.json.gz",
+        "cache": "bench/model-cache/stage8-x3-record",
+        "dataset": "bench/datasets/d1-v3",
+        "repetitions": 3,
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X3",
+      "command": "MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/conflict-guard replay:run --experiment X3 --dataset bench/datasets/d1-v3 --split holdout --policy G1,G2,G3,G4 --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/adjudication-config.json --models ../../docs/conflict-guard/experiment/models.json --cache bench/model-cache/stage8-x3-live-1 --out ../../docs/conflict-guard/experiment/X3/live-1",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "holdout",
+        "samples": 130,
+        "policies": [
+          "G1",
+          "G2",
+          "G3",
+          "G4"
+        ],
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X3b",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment X3b --dataset bench/datasets/d1-v3 --split holdout --policy P3,G1,G3 --deep deepseek --provider-mode record --repeat 1 --config ../../docs/conflict-guard/experiment/adjudication-deepseek-config.json --models ../../docs/conflict-guard/experiment/models.json --cache bench/model-cache/stage8-x3b-record --out ../../docs/conflict-guard/experiment/X3b/record",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "holdout",
+        "samples": 130,
+        "policies": [
+          "P3",
+          "G1",
+          "G3"
+        ],
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X3b",
+      "command": "pnpm --filter @simplercp/conflict-guard adjudication:verify --record ../../docs/conflict-guard/experiment/X3b/record/results.json.gz --dataset bench/datasets/d1-v3 --cache bench/model-cache/stage8-x3b-record --out ../../docs/conflict-guard/experiment/X3b/replay",
+      "result": {
+        "record": "../../docs/conflict-guard/experiment/X3b/record/results.json.gz",
+        "cache": "bench/model-cache/stage8-x3b-record",
+        "dataset": "bench/datasets/d1-v3",
+        "repetitions": 3,
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X3b",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment X3b --dataset bench/datasets/d1-v3 --split holdout --policy G1,G3 --deep deepseek --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/adjudication-deepseek-config.json --models ../../docs/conflict-guard/experiment/models.json --cache bench/model-cache/stage8-x3b-live-1 --out ../../docs/conflict-guard/experiment/X3b/live-1",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "holdout",
+        "samples": 130,
+        "policies": [
+          "G1",
+          "G3"
+        ],
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X4",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment X4 --dataset bench/datasets/d1-v3 --split holdout --policy 'P0,P1,P2,P3,P*,G2' --provider-mode replay --repeat 1 --config ../../docs/conflict-guard/experiment/adjudication-config.json --models ../../docs/conflict-guard/experiment/models.json --providers ../../docs/conflict-guard/experiment/providers.json --cache bench/model-cache/stage8-x3-record --out ../../docs/conflict-guard/experiment/X4/holdout",
+      "result": {
+        "dataset": "d1-v3",
+        "split": "holdout",
+        "samples": 130,
+        "policies": [
+          "P0",
+          "P1",
+          "P2",
+          "P3",
+          "P*",
+          "G2"
+        ],
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X5",
+      "command": "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/conflict-guard bench:agents --experiment X5 --policy P5 --dataset d3 --injection on --arbitration owner --repeat 3 --out ../../docs/conflict-guard/experiment/X5/P5/on",
+      "result": {
+        "experiment": "X5",
+        "policy": "P5",
+        "injection": "on",
+        "arbitration": "owner",
+        "tasks": 13,
+        "repeat": 3,
+        "agentBaseRuns": 78,
+        "executed": false
+      }
+    },
+    {
+      "experiment": "X6",
+      "command": "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/conflict-guard bench:agents --experiment X6 --policy P5 --dataset d3 --tasks d3-01,d3-02,d3-03,d3-04,d3-05,d3-06,d3-07,d3-08,d3-09,d3-10 --injection on --arbitration all-human --repeat 3 --out ../../docs/conflict-guard/experiment/X6/all-human",
+      "result": {
+        "experiment": "X6",
+        "policy": "P5",
+        "injection": "on",
+        "arbitration": "all-human",
+        "tasks": 10,
+        "repeat": 3,
+        "agentBaseRuns": 60,
+        "executed": false
+      }
+    },
+    {
+      "experiment": "X6",
+      "command": "pnpm --filter @simplercp/conflict-guard replay:agents --dataset ../../docs/conflict-guard/experiment/X5/P5/on --tasks d3-01,d3-02,d3-03,d3-04,d3-05,d3-06,d3-07,d3-08,d3-09,d3-10 --arbitration owner,all-human,all-auto --repeat 3 --out ../../docs/conflict-guard/experiment/X6/replay",
+      "result": {
+        "source": "../../docs/conflict-guard/experiment/X5/P5/on",
+        "modes": "owner,all-human,all-auto",
+        "repetitions": 3,
+        "enableT3": true,
+        "executed": false,
+        "modelCalls": 0
+      }
+    },
+    {
+      "experiment": "X7",
+      "command": "pnpm --filter @simplercp/conflict-guard ablation:run --dataset bench/datasets/d1-v3 --split dev,holdout --out ../../docs/conflict-guard/experiment/X7",
+      "result": {
+        "splits": [
+          "dev",
+          "holdout"
+        ],
+        "conditions": [
+          "baseline",
+          "no-four-state-typecheck",
+          "no-invariants",
+          "no-T0",
+          "no-T3",
+          "all-history"
+        ],
+        "policy": "G2",
+        "repetitions": 1,
+        "newRecordings": "no-invariants 每个 split 一次",
+        "enableT3Dataset": "../../docs/conflict-guard/experiment/X5/P5/on",
+        "executed": false
+      }
+    }
+  ],
+  "pendingFreezeRejected": true,
+  "modelCalls": 0,
+  "agentRuns": 0,
+  "holdoutPolicyEvaluations": 0
+}

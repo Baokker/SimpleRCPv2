@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-10T05:29:45.390Z",
+  "target": "https://api.typesafe.ai/v1/systemone",
+  "model": "jev-1.13.0",
+  "source": "005e3b786bca4cb80f527f43edc2bc2d95b59d40f550c138821b9be45e63fba2.json",
+  "status": 451,
+  "latencyMs": 412.248,
+  "response": {
+    "title": "Typesafe is not available in your region.",
+    "status": 451
+  },
+  "budget": {
+    "fast": 186,
+    "deep": 184
+  }
+}

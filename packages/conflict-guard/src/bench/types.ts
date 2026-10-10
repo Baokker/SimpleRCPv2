@@ -56,7 +56,7 @@ export interface BenchRelationGroup {
 }
 
 export interface BenchManifest {
-  version: "d1-v1" | "d1-v2" | "stage5-dev-smoke-v2";
+  version: "d1-v1" | "d1-v2" | "d1-v3" | "stage5-dev-smoke-v2";
   seed: number;
   generatedBy: string;
   generationCommand: string;

@@ -1,0 +1,80 @@
+{
+  "model": "MiniMax-M3",
+  "baseUrl": "https://api.minimaxi.com/v1",
+  "provider": "minimax",
+  "thinking": "disabled",
+  "passed": true,
+  "tasks": [
+    {
+      "task": "edit-reject-adjust",
+      "runId": "970c2cfa-b669-439f-b3fe-9606e6fef1fb",
+      "status": "completed",
+      "files": [
+        {
+          "file": "src/pricing.ts",
+          "additions": 4,
+          "deletions": 0,
+          "status": "modified",
+          "attribution": "tool"
+        }
+      ],
+      "tools": [
+        "read",
+        "edit",
+        "glob",
+        "bash"
+      ],
+      "rejected": 1
+    },
+    {
+      "task": "write-new-file",
+      "runId": "e2b882e0-e6af-4c79-8997-4abfe9bb78aa",
+      "status": "completed",
+      "files": [
+        {
+          "file": "src/roundMoney.ts",
+          "additions": 3,
+          "deletions": 0,
+          "status": "added",
+          "attribution": "tool"
+        }
+      ],
+      "tools": [
+        "read",
+        "write",
+        "glob",
+        "bash"
+      ],
+      "rejected": 0
+    },
+    {
+      "task": "read-two-edit",
+      "runId": "5428e740-a6a6-4779-a933-69caaea36b15",
+      "status": "completed",
+      "files": [
+        {
+          "file": "src/pricing.ts",
+          "additions": 4,
+          "deletions": 0,
+          "status": "modified",
+          "attribution": "tool"
+        }
+      ],
+      "tools": [
+        "read",
+        "edit",
+        "glob",
+        "bash"
+      ],
+      "rejected": 0
+    }
+  ],
+  "budget": {
+    "requests": 46,
+    "agentRuns": 4,
+    "limits": {
+      "requests": 100,
+      "agentRuns": 6
+    }
+  }
+}

@@ -1,0 +1,423 @@
+{
+  "source": "../../docs/conflict-guard/evidence/preexperiment/repaired-d1-v2/results.json",
+  "split": "dev",
+  "rows": [
+    {
+      "id": "d1-0002-conflict",
+      "relationGroupId": "d1-0002",
+      "pairId": "46f6ec9294e706434949e1be8915078ea42e9f02936a11c5365804a15e840942",
+      "revision": 1,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0002-conflict",
+      "relationGroupId": "d1-0002",
+      "pairId": "ac079cf3aa654f8e142585698a9b838c758219f26f9859c17eceb0543c1127f9",
+      "revision": 1,
+      "ruleId": "runtime-export-removed",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0005-conflict",
+      "relationGroupId": "d1-0005",
+      "pairId": "b7ef32dbc9c72491213546af2ce92f5cd7ed1e1ed131175b71a2452abd45119d",
+      "revision": 5,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0005-safe",
+      "relationGroupId": "d1-0005",
+      "pairId": "b7ef32dbc9c72491213546af2ce92f5cd7ed1e1ed131175b71a2452abd45119d",
+      "revision": 0,
+      "ruleId": "unparsable-side",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "allow",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0013-conflict",
+      "relationGroupId": "d1-0013",
+      "pairId": "7c033bf08ef6491cd36467b0e8d47df74e20560e88827fe53ea46fc38aafafb6",
+      "revision": 9,
+      "ruleId": "consumed-return-property-removed",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0021-conflict",
+      "relationGroupId": "d1-0021",
+      "pairId": "ed4535c8cc4487d5150693ec001de81802d11b52389e456630e484d60acd16e5",
+      "revision": 2,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0027-safe",
+      "relationGroupId": "d1-0027",
+      "pairId": "43807b0155d4aacae1961d2b09087064a89c4ddec3c41f16f7c4adf35d1ab383",
+      "revision": 1,
+      "ruleId": "comment-format-only",
+      "zone": "white",
+      "decision": "allow",
+      "truth": "allow",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0037-conflict",
+      "relationGroupId": "d1-0037",
+      "pairId": "843113db10179470502fba647d8420f034cf7a9bd0fdb7086d698719b44ad5d8",
+      "revision": 1,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0045-conflict",
+      "relationGroupId": "d1-0045",
+      "pairId": "3b982d5a1e41f4c8dd02e55e952a5e7f29594e99046621e919499aad93f8dbac",
+      "revision": 0,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0045-safe",
+      "relationGroupId": "d1-0045",
+      "pairId": "3b982d5a1e41f4c8dd02e55e952a5e7f29594e99046621e919499aad93f8dbac",
+      "revision": 1,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "allow",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0051-conflict",
+      "relationGroupId": "d1-0051",
+      "pairId": "43807b0155d4aacae1961d2b09087064a89c4ddec3c41f16f7c4adf35d1ab383",
+      "revision": 4,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0051-safe",
+      "relationGroupId": "d1-0051",
+      "pairId": "43807b0155d4aacae1961d2b09087064a89c4ddec3c41f16f7c4adf35d1ab383",
+      "revision": 4,
+      "ruleId": "comment-format-only",
+      "zone": "white",
+      "decision": "allow",
+      "truth": "allow",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0066-safe",
+      "relationGroupId": "d1-0066",
+      "pairId": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+      "revision": 0,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "allow",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0075-conflict",
+      "relationGroupId": "d1-0075",
+      "pairId": "43807b0155d4aacae1961d2b09087064a89c4ddec3c41f16f7c4adf35d1ab383",
+      "revision": 1,
+      "ruleId": "runtime-export-removed",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0075-conflict",
+      "relationGroupId": "d1-0075",
+      "pairId": "caa2f102be79306fa571b8a9cd540b0363eb6ff589f56c1fb8f407985f6a6a90",
+      "revision": 1,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0083-conflict",
+      "relationGroupId": "d1-0083",
+      "pairId": "43807b0155d4aacae1961d2b09087064a89c4ddec3c41f16f7c4adf35d1ab383",
+      "revision": 1,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0091-conflict",
+      "relationGroupId": "d1-0091",
+      "pairId": "b2f9c095ac0c15558ff185fdbf1ba2ff6117026b188c29d0cb183ddceb442cfe",
+      "revision": 0,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0091-safe",
+      "relationGroupId": "d1-0091",
+      "pairId": "b2f9c095ac0c15558ff185fdbf1ba2ff6117026b188c29d0cb183ddceb442cfe",
+      "revision": 1,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "allow",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0101-conflict",
+      "relationGroupId": "d1-0101",
+      "pairId": "87ec4c82b9cae1f13996fd81e0ee1b59f9e043531410f89548c42668cefbd91a",
+      "revision": 6,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0101-safe",
+      "relationGroupId": "d1-0101",
+      "pairId": "87ec4c82b9cae1f13996fd81e0ee1b59f9e043531410f89548c42668cefbd91a",
+      "revision": 6,
+      "ruleId": "comment-format-only",
+      "zone": "white",
+      "decision": "allow",
+      "truth": "allow",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0117-conflict",
+      "relationGroupId": "d1-0117",
+      "pairId": "3e308e1fc95a5908c8742a628ebb5fc4454e83ad4a67f449b4ce1323c906cc56",
+      "revision": 1,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0125-conflict",
+      "relationGroupId": "d1-0125",
+      "pairId": "b7ef32dbc9c72491213546af2ce92f5cd7ed1e1ed131175b71a2452abd45119d",
+      "revision": 0,
+      "ruleId": "runtime-export-removed",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0125-conflict",
+      "relationGroupId": "d1-0125",
+      "pairId": "f5b8614c0c6776d2ae917567bca3b1013a2e338345a4232ea9357f9b7135e857",
+      "revision": 0,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0130-safe",
+      "relationGroupId": "d1-0130",
+      "pairId": "22007c34869a591b64c2ac6d5ce2d59b32bc038f4223b7fd3d2745188fa2ec8b",
+      "revision": 0,
+      "ruleId": "unparsable-side",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "allow",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0141-conflict",
+      "relationGroupId": "d1-0141",
+      "pairId": "87ec4c82b9cae1f13996fd81e0ee1b59f9e043531410f89548c42668cefbd91a",
+      "revision": 0,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "lock",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0141-safe",
+      "relationGroupId": "d1-0141",
+      "pairId": "87ec4c82b9cae1f13996fd81e0ee1b59f9e043531410f89548c42668cefbd91a",
+      "revision": 1,
+      "ruleId": "semantic-interaction-uncertain",
+      "zone": "grey",
+      "decision": "warn",
+      "truth": "allow",
+      "correct": false,
+      "local": false
+    },
+    {
+      "id": "d1-0171-conflict",
+      "relationGroupId": "d1-0171",
+      "pairId": "b2f9c095ac0c15558ff185fdbf1ba2ff6117026b188c29d0cb183ddceb442cfe",
+      "revision": 1,
+      "ruleId": "runtime-export-removed",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0171-conflict",
+      "relationGroupId": "d1-0171",
+      "pairId": "ccb0d2e29fad71363a02b12af8ae3cfe137b68436ecc8b6848fe07223e31bcf0",
+      "revision": 1,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    },
+    {
+      "id": "d1-0197-conflict",
+      "relationGroupId": "d1-0197",
+      "pairId": "da36bb81076ebb060a6bb7c05eb5b19cdf32304b61f797e5bf7b9e156867e616",
+      "revision": 0,
+      "ruleId": "merge-only-type-error",
+      "zone": "black",
+      "decision": "lock",
+      "truth": "lock",
+      "correct": true,
+      "local": true
+    }
+  ],
+  "rules": [
+    {
+      "ruleId": "comment-format-only",
+      "finalPairs": 3,
+      "correct": 3,
+      "precision": {
+        "value": 1,
+        "low": 0.43849391955098227,
+        "high": 1
+      },
+      "revisionHits": 33
+    },
+    {
+      "ruleId": "consumed-return-property-removed",
+      "finalPairs": 1,
+      "correct": 1,
+      "precision": {
+        "value": 1,
+        "low": 0.20654329147389294,
+        "high": 1
+      },
+      "revisionHits": 1
+    },
+    {
+      "ruleId": "merge-only-type-error",
+      "finalPairs": 8,
+      "correct": 8,
+      "precision": {
+        "value": 1,
+        "low": 0.6755843804891231,
+        "high": 1
+      },
+      "revisionHits": 30
+    },
+    {
+      "ruleId": "runtime-export-removed",
+      "finalPairs": 4,
+      "correct": 4,
+      "precision": {
+        "value": 1,
+        "low": 0.5100999795960008,
+        "high": 1
+      },
+      "revisionHits": 10
+    },
+    {
+      "ruleId": "semantic-interaction-uncertain",
+      "finalPairs": 11,
+      "correct": 0,
+      "precision": {
+        "value": 0,
+        "low": 2.7755575615628914e-17,
+        "high": 0.2588400172488141
+      },
+      "revisionHits": 22
+    },
+    {
+      "ruleId": "unparsable-side",
+      "finalPairs": 2,
+      "correct": 0,
+      "precision": {
+        "value": 0,
+        "low": 0,
+        "high": 0.6576280471103807
+      },
+      "revisionHits": 31
+    }
+  ],
+  "precisionUnit": "final-pair-verdict-compared-with-program-truth"
+}

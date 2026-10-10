@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-10",
+  "model": "MiniMax-M3",
+  "baseUrl": "https://api.minimaxi.com/v1",
+  "temperature": 0,
+  "responseFormat": true,
+  "reasoningSplit": true,
+  "prices": {
+    "currency": "CNY",
+    "site": "https://api.minimaxi.com/v1",
+    "inputPerMillion": 2.1,
+    "outputPerMillion": 8.4,
+    "cacheReadPerMillion": 0.42,
+    "source": "https://platform.minimaxi.com/docs/pricing/overview",
+    "date": "2026-10-10",
+    "tier": "standard",
+    "inputTokenLimit": 512000
+  },
+  "budget": {
+    "requests": 21,
+    "agentRuns": 0,
+    "limits": {
+      "requests": 100,
+      "agentRuns": 6
+    }
+  }
+}

@@ -10,12 +10,15 @@ import { replayTrace } from "../dist/replay/engine.js";
 import { policyFor, type ZoningPolicy } from "../dist/replay/policies.js";
 import type { BenchLabel, BenchManifest } from "../dist/bench/types.js";
 import { replayLibraries } from "./replay-libs.ts";
+import { compareEvaluations, type EvaluationRow } from "../dist/replay/evaluation.js";
+import { escapeDifference, paretoPoints } from "../dist/replay/reporting.js";
+import { createExperimentBudget } from "./experiment-budget.ts";
 
 if (process.argv.some((argument) => /^G[0-4](?:,|$)|(?:^|,)G[0-4](?:,|$)/.test(argument))) {
   await new Promise<void>((resolve, reject) => { const child = execFile(process.execPath, ["--experimental-strip-types", fileURLToPath(new URL("adjudication-run.ts", import.meta.url)), ...process.argv.slice(2)], (error) => error ? reject(error) : resolve()); child.stdout?.pipe(process.stdout); child.stderr?.pipe(process.stderr); });
   process.exit(0);
 }
-const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "P0,P1,P2,P3,P*" }, repeat: { type: "string", default: "1" } } });
+const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "P0,P1,P2,P3,P*" }, repeat: { type: "string", default: "1" }, k: { type: "string", default: "2" }, experiment: { type: "string" }, plan: { type: "boolean", default: false } } });
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 const ids = values.policy!.split(",");
 if (ids.some((id) => !["P0", "P1", "P2", "P3", "P*"].includes(id))) throw new Error("policy 必须为 P0、P1、P2、P3、P*");
@@ -26,13 +29,19 @@ const output = path.resolve(values.out ?? path.join(dataset, "results"));
 const manifest = JSON.parse(await fs.readFile(path.join(dataset, "manifest.json"), "utf8")) as BenchManifest;
 const labels = JSON.parse(await fs.readFile(path.join(dataset, "labels.json"), "utf8")) as BenchLabel[];
 const selected = new Set(values.split === "dev" ? manifest.split.development : manifest.split.holdout);
+if (![1, 2, 3].includes(Number(values.k))) throw new Error("k 必须为 1、2 或 3");
+if (values.plan) { console.log(JSON.stringify({ dataset: manifest.version, split: values.split, policies: ids, repetitions: repeat, k: Number(values.k), relationGroups: selected.size, executed: false })); process.exit(0); }
+if (values.split === "holdout" && !values.experiment) throw new Error("保留集评价必须指定实验编号并获得冻结确认");
+if (values.experiment) await createExperimentBudget(values.experiment);
 const libs = await replayLibraries();
 const reports: Record<string, { metrics: ReplayMetrics; groups: unknown[]; duplicates: Array<{ id: string; countedAs: string }>; excluded: string[] }> = {};
+const evaluationRows: Record<string, EvaluationRow[]> = {};
 const startedAt = performance.now();
 const timing: { totalMs: number; policies: Record<string, number> } = { totalMs: 0, policies: {} };
 for (const id of ids) {
   const policyStartedAt = performance.now();
   const outcomes: ReplayGroupOutcome[] = [];
+  evaluationRows[id] = [];
   const rows: unknown[] = [];
   const programs = new Map<string, { id: string; truth: string }>();
   const duplicates: Array<{ id: string; countedAs: string }> = [];
@@ -57,10 +66,11 @@ for (const id of ids) {
       const text = variant.traceFile ? await fs.readFile(path.join(dataset, variant.traceFile), "utf8") : undefined;
       if (text !== undefined && variant.traceHash && createHash("sha256").update(text).digest("hex") !== variant.traceHash) throw new Error(`轨迹哈希不一致：${variant.id}`);
       const trace = text === undefined ? variant.trace : readTrace(text);
-      const result = replayTrace(trace, { policy, seed: group.seed, initialFiles: variant.baseline, libs });
-      for (let repetition = 1; repetition < repeat; repetition += 1) if (JSON.stringify(replayTrace(trace, { policy, seed: group.seed, initialFiles: variant.baseline, libs })) !== JSON.stringify(result)) throw new Error(`重复回放结果不一致：${label.id}`);
+      const result = replayTrace(trace, { policy, k: Number(values.k), seed: group.seed, initialFiles: variant.baseline, libs });
+      for (let repetition = 1; repetition < repeat; repetition += 1) if (JSON.stringify(replayTrace(trace, { policy, k: Number(values.k), seed: group.seed, initialFiles: variant.baseline, libs })) !== JSON.stringify(result)) throw new Error(`重复回放结果不一致：${label.id}`);
       const outcome = replayOutcome({ truth: label.label, variantKind: variant.kind, operatorFamily: group.operator.family, detectability: label.detectability, baseline: variant.baseline, merged: variant.merged, trace, result });
       outcomes.push(outcome);
+      evaluationRows[id]!.push({ id: label.id, relationGroupId: group.id, outcome });
       rows.push({ id: label.id, relationGroupId: group.id, project: group.project, operator: group.operator.id, programHash, outcome, result: { ...result, events: undefined } });
     }
   }
@@ -68,22 +78,30 @@ for (const id of ids) {
   timing.policies[id] = performance.now() - policyStartedAt;
 }
 timing.totalMs = performance.now() - startedAt;
+const statistics = compareEvaluations(evaluationRows, 20261007);
 await fs.mkdir(output, { recursive: true });
-await fs.writeFile(path.join(output, "results.json"), JSON.stringify({ dataset: manifest.version, seed: manifest.seed, split: values.split, repeat, policies: reports, timing }, null, 2) + "\n");
+await fs.writeFile(path.join(output, "results.json"), JSON.stringify({ dataset: manifest.version, seed: manifest.seed, split: values.split, repeat, policies: reports, timing, statistics }, null, 2) + "\n");
 await fs.writeFile(path.join(output, "verification.json"), JSON.stringify({ schema: 3, dataset: manifest.version, seed: manifest.seed, split: values.split, repetitions: repeat, selectedRelationGroups: selected.size, programIdentity: "baseline-leftOnly-rightOnly-merged-sha256", oracleConfiguration: { allow: "allow", warn: "lock", lock: "lock", noRelation: "allow" }, policies: Object.fromEntries(Object.entries(reports).map(([id, report]) => [id, { samples: report.metrics.groups, variants: report.metrics.variantCounts, denominators: report.metrics.denominators, duplicates: report.duplicates.length, excluded: report.excluded.length, missingLatencyTriggers: report.metrics.decisionLatencyMs.missingTriggers }])) }, null, 2) + "\n");
 const lines = [`# ${values.split === "dev" ? "开发集" : "保留集"}回放`, "", "安全孪生与冲突变体分别计数，相同四状态程序只计一次。漏阻断率以 lock 真值为分母，误阻断率以 allow 真值为分母，逃逸率以 lock 或 warn 真值为分母，区间为 Wilson 95%。本地决定比例按变更对计算，P0、P1、P2、P* 显示 N/A。", "", "| 策略 | 逃逸率 | 相对 P* 的逃逸率差值 | 漏阻断率 | 误阻断率 | 本地决定比例 | 冻结人秒 |", "|---|---:|---:|---:|---:|---:|---:|"];
-const oracle = reports["P*"]?.metrics.escapeRatio.value;
-for (const [id, { metrics }] of Object.entries(reports)) lines.push(`| ${id} | ${format(metrics.escapeRatio, metrics.denominators.escapeRatio)} | ${oracle === undefined ? "N/A" : ((metrics.escapeRatio.value - oracle) * 100).toFixed(1) + " pp"} | ${format(metrics.missBlockRatio, metrics.denominators.missBlockRatio)} | ${format(metrics.falseBlockRatio, metrics.denominators.falseBlockRatio)} | ${format(metrics.localDecisionRatio)} | ${metrics.frozenPersonSeconds.toFixed(2)} |`);
+for (const [id, { metrics }] of Object.entries(reports)) lines.push(`| ${id} | ${format(metrics.escapeRatio, metrics.denominators.escapeRatio)} | ${escapeDifference(metrics, reports["P*"]?.metrics)} | ${format(metrics.missBlockRatio, metrics.denominators.missBlockRatio)} | ${format(metrics.falseBlockRatio, metrics.denominators.falseBlockRatio)} | ${format(metrics.localDecisionRatio)} | ${metrics.frozenPersonSeconds.toFixed(2)} |`);
 lines.push("", "逃逸要求冲突合并文本已写入磁盘，且写入之前没有通知或阻止。通知包括 warn、lock 与 T0；晚于写入的通知保留判定前暴露窗口。卡片按 pairId:revision 去重，频率使用第一次到最后一次编辑的时间。算子族、detectability、变体类别与各指标分母见 results.json。", "", "| 策略 | 冲突变体数 | 安全样本数 | 冻结次数 | 被冻结编辑数 | 每小时卡片数 | 冲突延迟 p50/p95 (ms) | 安全延迟 p50/p95 (ms) | 暴露窗口 p50/p95 (ms) | 全程未提示的逃逸数 |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
 for (const [id, { metrics }] of Object.entries(reports)) {
   const { conflict, safe } = metrics.decisionLatencyMs.byVariant;
   const exposure = metrics.exposureWindowMs;
   lines.push(`| ${id} | ${metrics.variantCounts.conflict} | ${metrics.variantCounts.safe} | ${metrics.freezeCount} | ${metrics.frozenEdits} | ${metrics.cardsPerHour.toFixed(2)} | ${latency(conflict)} | ${latency(safe)} | ${latency(exposure)} | ${metrics.unnotifiedEscapes} |`);
 }
+lines.push("", "## 配对显著性", "", "以关系组为配对单位，一组内全部有效变体都正确时记为正确；同一实验的全部策略两两比较构成 Holm 检验族。bootstrap 重复 2000 次，种子 20261007。", "", "| 策略比较 | 关系组 | 仅左方正确 | 仅右方正确 | exact McNemar p | Holm p |", "|---|---:|---:|---:|---:|---:|");
+for (const row of statistics.comparisons) lines.push(`| ${row.left} / ${row.right} | ${row.groups} | ${row.leftOnlyCorrect} | ${row.rightOnlyCorrect} | ${row.p.toPrecision(6)} | ${row.adjustedP.toPrecision(6)} |`);
+const plot = paretoPoints(reports);
+if (plot.excluded.length) lines.push("", `${plot.excluded.join("、")} 没有冲突真值，逃逸率及与 P* 的差值为 N/A，帕累托图不绘制这些策略。`);
 lines.push("");
+const verificationPath = path.join(output, "verification.json");
+const verification = JSON.parse(await fs.readFile(verificationPath, "utf8"));
+await fs.writeFile(verificationPath, JSON.stringify({ ...verification, statistics }, null, 2) + "\n");
+await fs.writeFile(path.join(output, "statistics.json"), JSON.stringify(statistics, null, 2) + "\n");
 await fs.writeFile(path.join(output, "summary.md"), lines.join("\n"));
-const maxCards = Math.max(1, ...Object.values(reports).map((report) => report.metrics.cardsPerHour));
-const points = Object.entries(reports).map(([id, { metrics }]) => { const x = 65 + metrics.cardsPerHour / maxCards * 340; const y = 245 - metrics.escapeRatio.value * 200; return `<circle cx="${x}" cy="${y}" r="5" fill="#225588"/><text x="${x + 8}" y="${y - 6}" font-size="12">${id}</text>`; }).join("");
+const maxCards = plot.maxCards;
+const points = plot.points.map(({ id, x, y }) => `<circle cx="${x}" cy="${y}" r="5" fill="#225588"/><text x="${x + 8}" y="${y - 6}" font-size="12">${id}</text>`).join("");
 await fs.writeFile(path.join(output, "interruptions.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300"><rect width="480" height="300" fill="white"/><path d="M60 35 V250 H435" fill="none" stroke="black"/><text x="150" y="287">Cards per hour (0 to ${maxCards.toFixed(1)})</text><text x="10" y="20">Escape ratio (0 to 1)</text>${points}</svg>\n`);
 console.log(JSON.stringify({ output, split: values.split, groups: Object.fromEntries(Object.entries(reports).map(([id, report]) => [id, report.metrics.groups])) }));
 function format(interval: { value: number; low: number; high: number } | null, denominator?: number) { return interval && denominator !== 0 ? `${(interval.value * 100).toFixed(1)}% [${(interval.low * 100).toFixed(1)}, ${(interval.high * 100).toFixed(1)}]` : "N/A"; }

@@ -1,25 +1,25 @@
 import type { AdjudicationConfig } from "./types.js";
 
 export const defaultAdjudicationConfig: AdjudicationConfig = {
-  version: "adjudication-v1",
+  version: "adjudication-v2",
   promptVersion: "pair-v1",
   strategy: "G3",
   fast: "jev",
-  deep: "deepseek",
+  deep: "minimax",
   fastModel: "jev-1.13.0",
   fastSamplingCount: 7,
   threshold: 0,
   t1Strategy: "G3",
   t2Strategy: "G1",
   t3Strategy: "G1",
-  t2Reasoning: false,
-  t3Reasoning: false,
+  t2Reasoning: true,
+  t3Reasoning: true,
   contextLimit: 3000,
   topK: 3,
   invariants: true,
   softDeadlineMs: 2000,
   hardDeadlineMs: 8000,
-  prices: { date: "2026-10-06", fastInputPerMillion: 0.042, fastOutputPerMillion: 0, deepInputPerMillion: 0.3, deepOutputPerMillion: 1.2 }
+  prices: { date: "2026-10-10", site: "https://api.minimax.io/v1", currency: "USD", deepCacheReadPerMillion: 0.06, fastInputPerMillion: 0.042, fastOutputPerMillion: 0, deepInputPerMillion: 0.3, deepOutputPerMillion: 1.2 }
 };
 
 export function validateAdjudicationConfig(config: AdjudicationConfig) {
@@ -33,6 +33,8 @@ export function validateAdjudicationConfig(config: AdjudicationConfig) {
   for (const strategy of [config.t2Strategy, config.t3Strategy]) if (strategy !== undefined && !["G1", "G2", "G3"].includes(strategy)) throw new Error("Agent 研判策略无效");
   if (![config.softDeadlineMs, config.hardDeadlineMs].every(Number.isFinite) || config.softDeadlineMs < 0 || config.hardDeadlineMs <= config.softDeadlineMs || config.hardDeadlineMs > deadline) throw new Error("研判时间预算无效");
   if (!Number.isInteger(config.topK) || config.topK < 1 || config.topK > 3) throw new Error("调用点数量必须介于 1 与 3");
-  for (const [key, value] of Object.entries(config.prices)) if (key !== "date" && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("价格配置无效");
+  for (const [key, value] of Object.entries(config.prices)) if (!["date", "site", "currency", "fastCurrency"].includes(key) && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("价格配置无效");
+  if (config.prices.currency && config.prices.currency !== "USD" && !(config.prices.usdPerCurrencyUnit! > 0)) throw new Error("非 USD 价格需要声明费用估算换算系数");
+  if (config.prices.fastCurrency && config.prices.fastCurrency !== "USD") throw new Error("快判价格使用 USD");
   return config;
 }

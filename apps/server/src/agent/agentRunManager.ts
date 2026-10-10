@@ -1117,7 +1117,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         sessionScope: session.scope ?? "personal",
         status: "queued",
         runtime: "opencode",
-        provider: "deepseek",
+        provider: settings.provider,
         model: settings.model,
         source: input.source ?? "agent-panel",
         chatMessageId: input.chatMessageId,

@@ -1,0 +1,2 @@
+pnpm --filter @simplercp/conflict-guard adjudication:verify --record ../../docs/conflict-guard/evidence/preexperiment/record/results.json.gz --dataset bench/datasets/d1-v3 --cache bench/model-cache/preexperiment --out ../../docs/conflict-guard/evidence/preexperiment/replay
+pnpm --filter @simplercp/conflict-guard adjudication:verify --record ../../docs/conflict-guard/evidence/preexperiment/record/results.json.gz --dataset bench/datasets/d1-v3 --cache bench/model-cache/preexperiment --out ../../docs/conflict-guard/evidence/preexperiment/replay --use-existing

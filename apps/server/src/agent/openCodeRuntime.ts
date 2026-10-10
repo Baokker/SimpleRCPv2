@@ -9,12 +9,13 @@ import { AgentRuntimeRequestError, safeRequestTarget } from "./agentRunFailure.j
 import type { AgentRuntime } from "./agentRuntime.js";
 import {
   createOpenCodeProcess,
-  OPEN_CODE_PROVIDER_ID
+  openCodeProviderId
 } from "./openCodeProcess.js";
 
 const execFileAsync = promisify(execFile);
 
 interface OpenCodeRuntimeOptions {
+  provider?: "minimax" | "deepseek";
   port: number;
   apiKey?: string;
   baseUrl: string;
@@ -22,6 +23,7 @@ interface OpenCodeRuntimeOptions {
   activityConfig?: { waitingMs: number; stalledMs: number };
   getSettings(): AgentSettingsResponse;
   createProcess?: (options: {
+    provider?: "minimax" | "deepseek";
     port: number;
     apiKey?: string;
     baseUrl: string;
@@ -46,6 +48,7 @@ export function createOpenCodeRuntime(
 
   function createProcess(model = options.getSettings().model) {
     return processFactory({
+      provider: options.provider,
       port: options.port,
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
@@ -162,7 +165,7 @@ export function createOpenCodeRuntime(
           agent: "build",
           model: {
             id: processModel,
-            providerID: OPEN_CODE_PROVIDER_ID
+            providerID: openCodeProviderId(options.provider)
           }
         },
         { throwOnError: true }
@@ -210,7 +213,7 @@ export function createOpenCodeRuntime(
           messageID: userMessageId,
           agent: "build",
           model: {
-            providerID: OPEN_CODE_PROVIDER_ID,
+            providerID: openCodeProviderId(options.provider),
             modelID: processModel
           },
           parts: [{ type: "text", text: input.prompt }]

@@ -1,0 +1,177 @@
+{
+  "split": "dev",
+  "before": {
+    "samples": 79,
+    "zonesByRevision": {
+      "white": 33,
+      "grey": 53,
+      "black": 41
+    },
+    "finalDecisions": {
+      "allow": 57,
+      "warn": 13,
+      "lock": 9
+    },
+    "counterfactualEdits": {
+      "P0": 0,
+      "P1": 703,
+      "P2": 915,
+      "P3": 160,
+      "P*": 370
+    }
+  },
+  "after": {
+    "samples": 79,
+    "zonesByRevision": {
+      "white": 33,
+      "grey": 53,
+      "black": 41
+    },
+    "finalDecisions": {
+      "allow": 57,
+      "warn": 13,
+      "lock": 9
+    },
+    "counterfactualEdits": {
+      "P0": 0,
+      "P1": 703,
+      "P2": 915,
+      "P3": 160,
+      "P*": 370
+    }
+  },
+  "expanded": {
+    "samples": 119,
+    "zonesByRevision": {
+      "white": 33,
+      "grey": 187,
+      "black": 41
+    },
+    "finalDecisions": {
+      "allow": 57,
+      "warn": 53,
+      "lock": 9
+    },
+    "counterfactualEdits": {
+      "P3": 160,
+      "G1": 373,
+      "G2": 160
+    }
+  },
+  "models": {
+    "G1": {
+      "tasks": 75,
+      "successful": 62,
+      "completionRatio": 0.8266666666666667,
+      "httpCalls": 184,
+      "usage": {
+        "inputTokens": 162373,
+        "outputTokens": 68335,
+        "totalTokens": 230708
+      },
+      "costUsd": 0.1307139,
+      "missingUsageCalls": 45,
+      "callStatuses": {
+        "success": 139,
+        "timeout": 36,
+        "failed": 0,
+        "invalid-format": 9,
+        "cancelled": 0,
+        "cache-hit": 0
+      },
+      "agreement": {
+        "value": 0.5798319327731093,
+        "low": 0.490013401018628,
+        "high": 0.6646573294179668
+      },
+      "missedBlocking": {
+        "value": 0.3181818181818182,
+        "low": 0.1636038735469248,
+        "high": 0.5268177721716065
+      },
+      "falseBlocking": {
+        "value": 0.07216494845360824,
+        "low": 0.0353937079719825,
+        "high": 0.14153327454316997
+      },
+      "latencyMs": {
+        "p50": 5263.257250000024,
+        "p95": 8000
+      },
+      "t03": {
+        "completion": false,
+        "missed": false,
+        "falseBlocking": true,
+        "agreement": false,
+        "median": false,
+        "p95": true
+      }
+    },
+    "G2": {
+      "tasks": 184,
+      "successful": 0,
+      "completionRatio": 0,
+      "httpCalls": 184,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "costUsd": 0,
+      "missingUsageCalls": 184,
+      "callStatuses": {
+        "success": 0,
+        "timeout": 0,
+        "failed": 184,
+        "invalid-format": 0,
+        "cancelled": 0,
+        "cache-hit": 0
+      },
+      "agreement": {
+        "value": 0.5042016806722689,
+        "low": 0.41565273000948033,
+        "high": 0.5924878347503404
+      },
+      "missedBlocking": {
+        "value": 0.5909090909090909,
+        "low": 0.38734477382893806,
+        "high": 0.7674444033117963
+      },
+      "falseBlocking": {
+        "value": 0,
+        "low": 0,
+        "high": 0.03809538920445529
+      },
+      "latencyMs": {
+        "p50": 72.34458300005645,
+        "p95": 86.05729199992493
+      },
+      "t03": {
+        "completion": false,
+        "missed": false,
+        "falseBlocking": true,
+        "agreement": false,
+        "median": true,
+        "p95": true
+      }
+    }
+  },
+  "sources": [
+    "baseline/results.json.gz",
+    "repaired-d1-v2/results.json.gz",
+    "record/results.json.gz"
+  ],
+  "noRelation": {
+    "before": {
+      "numerator": 21,
+      "denominator": 79,
+      "unit": "sample"
+    },
+    "after": {
+      "numerator": 61,
+      "denominator": 320,
+      "unit": "change-unit"
+    }
+  },
+  "interpretation": "同一份 D1-v2 开发集的分区和被冻结编辑数量保持相同。反事实标记在后续放行时清除；反事实编辑指标统计被冻结的 edit，两者分别验证。D1-v3 增加四十个安全灰区关系组。无关系比例按关闭批次产生的语义变更单元计算。"
+}

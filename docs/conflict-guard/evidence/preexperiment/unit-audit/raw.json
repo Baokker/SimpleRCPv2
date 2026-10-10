@@ -1,0 +1,151 @@
+{
+  "dataset": "d1-v2",
+  "split": "dev",
+  "rows": [
+    {
+      "id": "d1-0011-safe",
+      "relationGroupId": "d1-0011",
+      "project": "cache",
+      "sourceLines": 311,
+      "stratum": "300-319",
+      "k": 2,
+      "fullMs": 113.12483300000002,
+      "incrementalMs": [
+        22.536749999999984,
+        32.856542000000104,
+        18.110709000000043,
+        18.230166999999938,
+        13.73700000000008,
+        13.964792000000216
+      ],
+      "candidatePairs": 0,
+      "total": 5,
+      "related": 0,
+      "unrelated": 5,
+      "unrelatedRatio": 1,
+      "typeOnly": 0,
+      "audit": [
+        {
+          "type": "change_unit",
+          "actor": {
+            "kind": "human",
+            "memberId": "origin"
+          },
+          "batchId": "guard-1",
+          "commentOnly": false,
+          "symbols": [
+            {
+              "key": "src/weights.ts#memoryBudget",
+              "file": "src/weights.ts",
+              "status": "modified",
+              "beforeHash": "1764d3a226a18a7d71f9e324b81828446909b70a4c3e5f48efbbdd270ff03510",
+              "afterHash": "f84d496863b79665c5678b290edbb138afc11210cc46ce43777a1f31ac2ecc28"
+            }
+          ],
+          "at": 3439
+        },
+        {
+          "type": "change_unit",
+          "actor": {
+            "kind": "human",
+            "memberId": "candidate"
+          },
+          "batchId": "guard-2",
+          "commentOnly": false,
+          "symbols": [
+            {
+              "key": "src/lru.ts#cacheHeadroom",
+              "file": "src/lru.ts",
+              "status": "modified",
+              "beforeHash": "c7fca0fbad2ce332d0a8b78a1d64d100fd3d584d918e0f5e8cab19f59c064b72",
+              "afterHash": "1ae3a5f754bff422d35493005a2ef5c0d06143ee5351f025b0cd350765f9748d"
+            }
+          ],
+          "at": 7473
+        },
+        {
+          "type": "change_unit",
+          "actor": {
+            "kind": "human",
+            "memberId": "origin"
+          },
+          "batchId": "guard-3",
+          "commentOnly": false,
+          "symbols": [
+            {
+              "key": "src/weights.ts#memoryBudget",
+              "file": "src/weights.ts",
+              "status": "modified",
+              "beforeHash": "1764d3a226a18a7d71f9e324b81828446909b70a4c3e5f48efbbdd270ff03510",
+              "afterHash": "7ea3ae66e29ce2f8167f6b55485cb029bcc130735c43e73e7a03e33eef8b1997"
+            }
+          ],
+          "at": 8441
+        },
+        {
+          "type": "change_unit",
+          "actor": {
+            "kind": "human",
+            "memberId": "origin"
+          },
+          "batchId": "guard-5",
+          "commentOnly": false,
+          "symbols": [
+            {
+              "key": "src/weights.ts#memoryBudget",
+              "file": "src/weights.ts",
+              "status": "modified",
+              "beforeHash": "1764d3a226a18a7d71f9e324b81828446909b70a4c3e5f48efbbdd270ff03510",
+              "afterHash": "af2fb6df4a7b3eb7b1b2bce85776450559c8a31771ac7558cdbe2df53a34cf4a"
+            }
+          ],
+          "at": 20977
+        },
+        {
+          "type": "change_unit",
+          "actor": {
+            "kind": "human",
+            "memberId": "origin"
+          },
+          "batchId": "guard-6",
+          "commentOnly": false,
+          "symbols": [
+            {
+              "key": "src/weights.ts#memoryBudget",
+              "file": "src/weights.ts",
+              "status": "modified",
+              "beforeHash": "1764d3a226a18a7d71f9e324b81828446909b70a4c3e5f48efbbdd270ff03510",
+              "afterHash": "412059c10e7fd1723502c60419f16832d85338c5b0b261393cd0a0465262bc1b"
+            }
+          ],
+          "at": 25874
+        }
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "k": 2,
+      "stratum": "300-319",
+      "samples": 1,
+      "total": 5,
+      "unrelated": 5,
+      "noRelationRatio": {
+        "value": 1,
+        "low": 0.5655085052479191,
+        "high": 1
+      },
+      "candidatePairs": 0,
+      "full": {
+        "samples": 1,
+        "p50": 113.12483300000002,
+        "p95": 113.12483300000002
+      },
+      "incremental": {
+        "samples": 6,
+        "p50": 18.110709000000043,
+        "p95": 32.856542000000104
+      }
+    }
+  ]
+}

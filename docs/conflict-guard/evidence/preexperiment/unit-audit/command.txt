@@ -1,0 +1,1 @@
+pnpm --filter @simplercp/conflict-guard index:run --dataset bench/datasets/d1-v2 --split dev --samples d1-0011-safe --k 2 --out ../../docs/conflict-guard/evidence/preexperiment/unit-audit

@@ -18,6 +18,7 @@ export interface ServerConfig {
   conflictGuard?: ProjectConflictGuardConfig;
   importRoots?: string[];
   agent?: {
+    provider?: "minimax" | "deepseek";
     apiKey?: string;
     baseUrl: string;
     model: string;
@@ -48,13 +49,20 @@ export function loadConfig(
     throw new Error("SIMPLERCP_PUBLIC_URL must use http or https");
   }
 
-  const agentBaseUrl = new URL(
-    env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1"
-  );
+  const provider = env.SIMPLERCP_AGENT_PROVIDER ?? "deepseek";
+  if (!["minimax", "deepseek"].includes(provider)) throw new Error("SIMPLERCP_AGENT_PROVIDER 必须为 minimax 或 deepseek");
+  const deepJudge = env.CONFLICT_GUARD_DEEP_JUDGE ?? env.CONFLICT_GUARD_DEEP ?? "minimax";
+  if (!["minimax", "deepseek", "openai-compatible"].includes(deepJudge)) throw new Error("CONFLICT_GUARD_DEEP_JUDGE 必须为 minimax 或 deepseek");
+  const deepseekBaseUrl = new URL(env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1");
+  const minimaxBaseUrl = new URL(env.MINIMAX_BASE_URL ?? "https://api.minimax.io/v1");
+  for (const url of [deepseekBaseUrl, minimaxBaseUrl]) if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search) throw new Error("模型地址必须使用 http 或 https，不能包含认证信息与查询参数");
+  const agentBaseUrl = provider === "minimax" ? minimaxBaseUrl : deepseekBaseUrl;
   if (!["http:", "https:"].includes(agentBaseUrl.protocol)) {
     throw new Error("DEEPSEEK_BASE_URL must use http or https");
   }
-  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
+  const deepseekModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
+  const minimaxModel = env.MINIMAX_MODEL?.trim() || "MiniMax-M3";
+  const agentModel = provider === "minimax" ? minimaxModel : deepseekModel;
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
     throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");
@@ -113,16 +121,18 @@ export function loadConfig(
       arbitration: (() => { const mode = env.CONFLICT_GUARD_ARBITRATION ?? "owner"; if (!["owner", "all-human", "all-auto"].includes(mode)) throw new Error("CONFLICT_GUARD_ARBITRATION must be owner, all-human, or all-auto"); return mode as "owner" | "all-human" | "all-auto"; })(),
       intentInjection: (() => { const value = env.CONFLICT_GUARD_INTENT_INJECTION ?? "on"; if (!["on", "off"].includes(value)) throw new Error("CONFLICT_GUARD_INTENT_INJECTION must be on or off"); return value === "on"; })(),
       ...(conflictGuardMode === "full" ? { adjudication: {
-        settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: env.CONFLICT_GUARD_DEEP ?? "deepseek", t2Strategy: (env.CONFLICT_GUARD_T2_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t3Strategy: (env.CONFLICT_GUARD_T3_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t2Reasoning: readBoolean(env.CONFLICT_GUARD_T2_REASONING, "CONFLICT_GUARD_T2_REASONING", false), t3Reasoning: readBoolean(env.CONFLICT_GUARD_T3_REASONING, "CONFLICT_GUARD_T3_REASONING", false) }),
+        settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: deepJudge, t2Strategy: (env.CONFLICT_GUARD_T2_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t3Strategy: (env.CONFLICT_GUARD_T3_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t2Reasoning: readBoolean(env.CONFLICT_GUARD_T2_REASONING, "CONFLICT_GUARD_T2_REASONING", true), t3Reasoning: readBoolean(env.CONFLICT_GUARD_T3_REASONING, "CONFLICT_GUARD_T3_REASONING", true) }),
         mode: (env.CONFLICT_GUARD_PROVIDER_MODE ?? "live") as "live" | "record" | "replay",
         cacheDirectory: path.resolve(repositoryRoot, "packages/conflict-guard/bench/model-cache"),
         jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: env.TYPESAFE_BASE_URL },
-        deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: agentBaseUrl.toString().replace(/\/$/, ""), model: agentModel },
+        deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: deepseekBaseUrl.toString().replace(/\/$/, ""), model: deepseekModel },
+        minimax: { apiKey: env.MINIMAX_API_KEY, baseUrl: minimaxBaseUrl.toString().replace(/\/$/, ""), model: minimaxModel, jsonMode: readBoolean(env.MINIMAX_JSON_MODE, "MINIMAX_JSON_MODE", true), temperature: Number(env.MINIMAX_TEMPERATURE ?? 0) },
         ...(env.ADJUDICATION_COMPATIBLE_BASE_URL && env.ADJUDICATION_COMPATIBLE_MODEL ? { compatible: { apiKey: env.ADJUDICATION_COMPATIBLE_API_KEY, baseUrl: env.ADJUDICATION_COMPATIBLE_BASE_URL, model: env.ADJUDICATION_COMPATIBLE_MODEL } } : {})
       } } : {})
     },
     agent: {
-      apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
+      provider: provider as "minimax" | "deepseek",
+      apiKey: (provider === "minimax" ? env.MINIMAX_API_KEY : env.DEEPSEEK_API_KEY)?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,

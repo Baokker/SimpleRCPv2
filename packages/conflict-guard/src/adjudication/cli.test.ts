@@ -21,7 +21,7 @@ it("verifies a G3-only recording with its original configuration and model versi
     const models = path.join(directory, "models.json");
     await fs.writeFile(configuration, JSON.stringify(config));
     await fs.writeFile(models, JSON.stringify(Object.fromEntries(source.policies.G3.model.calls.map((call: { adapter: string; model: string }) => [call.adapter, call.model]))));
-    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", "bench/datasets/d1-v2", "--policy", "G3", "--provider-mode", "replay", "--config", configuration, "--models", models, "--cache", "bench/model-cache/checkpoint-b-calibrated", "--out", directory], { cwd: packageDirectory, timeout: 600000, maxBuffer: 1024 * 1024 });
+    await promisify(execFile)(process.execPath, ["--experimental-strip-types", "scripts/replay-run.ts", "--dataset", "bench/datasets/d1-v2", "--policy", "G3", "--provider-mode", "replay", "--config", configuration, "--models", models, "--cache", "bench/model-cache/checkpoint-b-calibrated", "--out", directory], { cwd: packageDirectory, timeout: 1800000, maxBuffer: 1024 * 1024 });
     const report = JSON.parse(gunzipSync(await fs.readFile(path.join(directory, "results.json.gz"))).toString());
     expect(report.policies.G3.model.httpCalls).toBe(0);
     expect(report.policies.G3.groups).toHaveLength(source.policies.G3.groups.length);

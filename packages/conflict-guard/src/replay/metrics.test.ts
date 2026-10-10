@@ -5,6 +5,21 @@ import { replayTrace } from "./engine.js";
 import type { TraceEvent } from "../trace/trace.js";
 
 describe("检查点 A 回放指标", () => {
+  it("无关系比例使用实际批次数量，同一轨迹的多个批次分别计数", () => {
+    const text = "export function total() { return 1; }\n";
+    const trace: TraceEvent[] = [
+      { schema: 3, seq: 1, at: 0, type: "doc_open", file: "a.ts", text },
+      { schema: 3, seq: 2, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "1", inserted: "2" }] },
+      { schema: 3, seq: 3, at: 2200, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "2", inserted: "3" }] }
+    ];
+    const result = replayTrace(trace, { policy: "P3" });
+    expect(result.changeUnits).toMatchObject({ total: 2, unrelated: 2 });
+    const value = replayOutcome({ truth: "allow", variantKind: "safe", operatorFamily: "SF", detectability: "none", trace, result, baseline: { "a.ts": text }, merged: result.finalTexts });
+    expect(value.changeUnits).toEqual({ total: 2, unrelated: 2 });
+    expect(calculateReplayMetrics([value]).noRelationRatio.value).toBe(1);
+    expect(calculateReplayMetrics([value]).noRelationRatio.low).toBeCloseTo(0.34237195288961925);
+    expect(() => calculateReplayMetrics([value, outcome()])).toThrow("统计不完整");
+  });
   it("总体与分组分别使用 lock、allow、lock 或 warn 真值作为分母", () => {
     const metrics = calculateReplayMetrics([
       outcome({ truth: "lock", decision: "allow", missed: true, escaped: true }),

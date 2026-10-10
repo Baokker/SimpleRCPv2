@@ -138,6 +138,23 @@ describe("阶段 4 回放基础设施", () => {
     expect(result.finalTexts["b.ts"]).toContain("alpha() + 2");
   });
 
+  it("同一文件解除阻止后下一次允许的编辑不继承反事实标记", () => {
+    const text = "export function alpha() { return 1; }\n";
+    const trace: TraceEvent[] = [
+      { schema: 3, seq: 1, at: 0, type: "doc_open", file: "a.ts", text },
+      { schema: 3, seq: 2, at: 100, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "alice" }, ops: [{ from: text.indexOf("1"), deleted: "1", inserted: "2" }] },
+      { schema: 3, seq: 3, at: 500, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("1"), deleted: "2", inserted: "3" }] },
+      { schema: 3, seq: 4, at: 2500, type: "ui_action", action: "change_set_done", memberId: "alice" },
+      { schema: 3, seq: 5, at: 2600, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "bob" }, ops: [{ from: text.indexOf("1"), deleted: "3", inserted: "4" }] }
+    ];
+    const result = replayTrace(trace, { policy: "P1", endAt: 5000 });
+    expect(result.errors).toEqual([]);
+    expect(result.blockedEdits.map((edit) => edit.shouldHaveBeenBlocked)).toEqual([false, true, false]);
+    expect(result.persisted.filter((write) => write.text.includes("return 3")).every((write) => write.counterfactual)).toBe(true);
+    expect(result.persisted.at(-1)).toEqual({ at: 2900, file: "a.ts", text: text.replace("return 1", "return 4"), counterfactual: false });
+    expect(replayTrace(trace, { policy: "P0", endAt: 5000 }).persisted.every((write) => !write.counterfactual)).toBe(true);
+  });
+
   it("P3 执行同符号规则，冻结区域外编辑继续执行并记录写盘闸门", () => {
     const text = "export function alpha() { return 1; }\nexport function beta() { return 2; }\n";
     const trace: TraceEvent[] = [

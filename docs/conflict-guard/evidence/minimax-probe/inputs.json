@@ -1,0 +1,202 @@
+[
+  {
+    "promptVersion": "pair-v1",
+    "left": {
+      "actorKind": "human",
+      "file": "src/cart.ts",
+      "symbol": "src/cart.ts#checkoutEstimate",
+      "before": "export function checkoutEstimate(price: number): number {\n  const discount = pricing.discountedPrice(price, 0.1, \"CNY\");\n  return discount / pricing.minorUnit + pricing.serviceFee(price, 0.025, \"CN\") / pricing.minorUnit;\n}",
+      "after": "export function checkoutEstimate(price: number): number {\n  // 检查当前业务输入。const discount = pricing.discountedPrice(price, 0.1, \"CNY\");\n  return discount / pricing.minorUnit + pricing.serviceFee(price, 0.025, \"CN\") / pricing.minorUnit;\n}"
+    },
+    "right": {
+      "actorKind": "human",
+      "file": "src/pricing.ts",
+      "symbol": "src/pricing.ts#applyDiscount",
+      "before": "export function applyDiscount(price: number, rate: number = 0.1, currency?: string): number {\n  if (price < 0) throw new RangeError(\"price\");\n  const normalized = supportedCurrencies.has(currency ?? \"CNY\") ? currency! : \"CNY\";\n  const maximum = normalized === \"EUR\" ? 0.75 : 0.8;\n  const bounded = Math.min(maximum, Math.max(0, rate));\n  const discounted = Math.round(price * (1 - bounded) * 100) / 100;\n  return discounted * minorUnit;\n}",
+      "after": "export function applyDiscount(price: number, rate: number = 0.1, currency: string): number {\n  if (currency === und\n  if (price < 0) throw new RangeError(\"price\");\n  const normalized = supportedCurrencies.has(currency ?? \"CNY\") ? currency! : \"CNY\";\n  const maximum = normalized === \"EUR\" ? 0.75 : 0.8;\n  const bounded = Math.min(maximum, Math.max(0, rate));\n  const discounted = Math.round(price * (1 - bounded) * 100) / 100;\n  return discounted * minorUnit;\n}"
+    },
+    "relationship": "src/cart.ts#checkoutEstimate value-reference src/pricing.ts#minorUnit (forward); src/pricing.ts#minorUnit value-reference src/pricing.ts#applyDiscount (backward)",
+    "invariants": "callers:\nsrc/cart.ts:38 total() \n\n  total() {\n    let amount = this.subtotal();\n    for (const rate of this.coupons) amount = pricing.discountedPrice(amount, rate, \"CNY\");\n    return pricing.roundMoney(amount / pricing.minorUnit);\n  }\n\nsrc/pricing.ts:40 export function discountedBasket(price: number): number \n}\n\nexport function discountedBasket(price: number): number {\n  const net = discountedPrice(price, 0.1, \"CNY\");\n  return net / minorUnit;\n}\n\nsrc/pricing.ts:19 export function quote(price: number, rate: number = 0.1, currency?: string) \nexport const discountedPrice = applyDiscount;\n\nexport function quote(price: number, rate: number = 0.1, currency?: string) {\n  const amount = discountedPrice(price, rate, currency);\n  const tax = amount\ntests:\ntest/orders.test.mjs:9 \"订单从库存预约经过付款进入配送\"\nassert.equal(orders.pay(\"order-1\", cart.total(), 30, 5), true)\ntest/orders.test.mjs:34 \"账单与配送金额可用于汇总，分付款保持整数分总额\"\nassert.equal(discountedBasket(100) <= 100, true)\ncomments:\nsrc/pricing.ts#applyDiscount: /** 折扣使用比例，价格使用当前货币的主单位。 */\nusage:\nsrc/cart.ts:38 comparison or arithmetic: amount = pricing.discountedPrice(amount, rate, \"CNY\")\nsrc/pricing.ts:40 assigned to net; used as: net / minorUnit\nsrc/pricing.ts:19 assigned to amount; used as: amount * (taxRates.get(currency ?? \"CNY\") ?? 0.13)",
+    "invariantCoverage": {
+      "callers": true,
+      "tests": true,
+      "comments": true,
+      "usage": true
+    },
+    "local": {
+      "excludedRules": [
+        "same-symbol-concurrent-write",
+        "referenced-symbol-removed",
+        "runtime-export-removed",
+        "call-signature-incompatible",
+        "consumed-return-property-removed",
+        "interface-required-member-incompatible",
+        "merge-only-type-error"
+      ],
+      "typecheck": {
+        "ran": true,
+        "mergeOnlyDiagnostics": []
+      }
+    }
+  },
+  {
+    "promptVersion": "pair-v1",
+    "left": {
+      "actorKind": "human",
+      "file": "src/cart.ts",
+      "symbol": "src/cart.ts#invoiceNet",
+      "before": "export function invoiceNet(price: number): number {\n  return pricing.quote(price, 0.1, \"CNY\").amount / pricing.minorUnit;\n}",
+      "after": "export function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}"
+    },
+    "right": {
+      "actorKind": "human",
+      "file": "src/pricing.ts",
+      "symbol": "src/pricing.ts#quote",
+      "before": "export function quote(price: number, };\n}\n\nexport",
+      "after": "export function quote(price: num };\n}\n\nexport"
+    },
+    "relationship": "src/cart.ts#invoiceNet call src/pricing.ts#quote (forward)",
+    "invariants": "callers:\nsrc/cart.ts:64 export function invoiceNet(price: number): number \nexport function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}\n\nexport function paymentFee(price: number): number {\ntests:\ntest/orders.test.mjs:34 \"账单与配送金额可用于汇总，分付款保持整数分总额\"\nassert.equal(Number.isFinite(invoiceNet(100)), true)\ncomments:\n\nusage:\nsrc/cart.ts:64 property access: pricing.quote(price, 0.1, \"CNY\").tax",
+    "invariantCoverage": {
+      "callers": true,
+      "tests": true,
+      "comments": false,
+      "usage": true
+    },
+    "local": {
+      "excludedRules": [
+        "same-symbol-concurrent-write",
+        "referenced-symbol-removed",
+        "runtime-export-removed",
+        "call-signature-incompatible",
+        "consumed-return-property-removed",
+        "interface-required-member-incompatible",
+        "merge-only-type-error"
+      ],
+      "typecheck": {
+        "ran": true,
+        "mergeOnlyDiagnostics": []
+      }
+    }
+  },
+  {
+    "promptVersion": "pair-v1",
+    "left": {
+      "actorKind": "human",
+      "file": "src/cart.ts",
+      "symbol": "src/cart.ts#invoiceNet",
+      "before": "export function invoiceNet(price: number): number {\n  return pricing.quote(price, 0.1, \"CNY\").amount / pricing.minorUnit;\n}",
+      "after": "export function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}"
+    },
+    "right": {
+      "actorKind": "human",
+      "file": "src/pricing.ts",
+      "symbol": "src/pricing.ts#quote",
+      "before": "export function quote(price: number, rate: number = 0.1, currency?: };\n}\n\nexport",
+      "after": "export function quote(price: number, rate: number = 0.1, currenc };\n}\n\nexport"
+    },
+    "relationship": "src/cart.ts#invoiceNet call src/pricing.ts#quote (forward)",
+    "invariants": "callers:\nsrc/cart.ts:64 export function invoiceNet(price: number): number \nexport function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}\n\nexport function paymentFee(price: number): number {\ntests:\ntest/orders.test.mjs:34 \"账单与配送金额可用于汇总，分付款保持整数分总额\"\nassert.equal(Number.isFinite(invoiceNet(100)), true)\ncomments:\n\nusage:\nsrc/cart.ts:64 property access: pricing.quote(price, 0.1, \"CNY\").tax",
+    "invariantCoverage": {
+      "callers": true,
+      "tests": true,
+      "comments": false,
+      "usage": true
+    },
+    "local": {
+      "excludedRules": [
+        "same-symbol-concurrent-write",
+        "referenced-symbol-removed",
+        "runtime-export-removed",
+        "call-signature-incompatible",
+        "consumed-return-property-removed",
+        "interface-required-member-incompatible",
+        "merge-only-type-error"
+      ],
+      "typecheck": {
+        "ran": true,
+        "mergeOnlyDiagnostics": []
+      }
+    }
+  },
+  {
+    "promptVersion": "pair-v1",
+    "left": {
+      "actorKind": "human",
+      "file": "src/cart.ts",
+      "symbol": "src/cart.ts#invoiceNet",
+      "before": "export function invoiceNet(price: number): number {\n  return pricing.quote(price, 0.1, \"CNY\").amount / pricing.minorUnit;\n}",
+      "after": "export function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}"
+    },
+    "right": {
+      "actorKind": "human",
+      "file": "src/pricing.ts",
+      "symbol": "src/pricing.ts#quote",
+      "before": "export function quote(price: number, rate: number = 0.1, currency?: string) {\n  const }",
+      "after": "export function quote(price: number, rate: number = 0.1, currency?: string) {\n   }"
+    },
+    "relationship": "src/cart.ts#invoiceNet call src/pricing.ts#quote (forward)",
+    "invariants": "callers:\nsrc/cart.ts:64 export function invoiceNet(price: number): number \nexport function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}\n\nexport function paymentFee(price: number): number {\ntests:\ntest/orders.test.mjs:34 \"账单与配送金额可用于汇总，分付款保持整数分总额\"\nassert.equal(Number.isFinite(invoiceNet(100)), true)\ncomments:\n\nusage:\nsrc/cart.ts:64 property access: pricing.quote(price, 0.1, \"CNY\").tax",
+    "invariantCoverage": {
+      "callers": true,
+      "tests": true,
+      "comments": false,
+      "usage": true
+    },
+    "local": {
+      "excludedRules": [
+        "same-symbol-concurrent-write",
+        "referenced-symbol-removed",
+        "runtime-export-removed",
+        "call-signature-incompatible",
+        "consumed-return-property-removed",
+        "interface-required-member-incompatible",
+        "merge-only-type-error"
+      ],
+      "typecheck": {
+        "ran": true,
+        "mergeOnlyDiagnostics": []
+      }
+    }
+  },
+  {
+    "promptVersion": "pair-v1",
+    "left": {
+      "actorKind": "human",
+      "file": "src/cart.ts",
+      "symbol": "src/cart.ts#invoiceNet",
+      "before": "export function invoiceNet(price: number): number {\n  return pricing.quote(price, 0.1, \"CNY\").amount / pricing.minorUnit;\n}",
+      "after": "export function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}"
+    },
+    "right": {
+      "actorKind": "human",
+      "file": "src/pricing.ts",
+      "symbol": "src/pricing.ts#quote",
+      "before": "export function quote(price: number, rate: number = 0.1, currency?: string) {\n  const amount = discountedPrice(price, }",
+      "after": "export function quote(price: number, rate: number = 0.1, currency?: string) {\n  const amount = discountedPrice(pr }"
+    },
+    "relationship": "src/cart.ts#invoiceNet call src/pricing.ts#quote (forward)",
+    "invariants": "callers:\nsrc/cart.ts:64 export function invoiceNet(price: number): number \nexport function invoiceNet(price: number): number {\n  // 检查当前业务输入。\n\n  return pricing.quote(price, 0.1, \"CNY\").tax / pricing.minorUnit;\n}\n\nexport function paymentFee(price: number): number {\ntests:\ntest/orders.test.mjs:34 \"账单与配送金额可用于汇总，分付款保持整数分总额\"\nassert.equal(Number.isFinite(invoiceNet(100)), true)\ncomments:\n\nusage:\nsrc/cart.ts:64 property access: pricing.quote(price, 0.1, \"CNY\").tax",
+    "invariantCoverage": {
+      "callers": true,
+      "tests": true,
+      "comments": false,
+      "usage": true
+    },
+    "local": {
+      "excludedRules": [
+        "same-symbol-concurrent-write",
+        "referenced-symbol-removed",
+        "runtime-export-removed",
+        "call-signature-incompatible",
+        "consumed-return-property-removed",
+        "interface-required-member-incompatible",
+        "merge-only-type-error"
+      ],
+      "typecheck": {
+        "ran": true,
+        "mergeOnlyDiagnostics": []
+      }
+    }
+  }
+]

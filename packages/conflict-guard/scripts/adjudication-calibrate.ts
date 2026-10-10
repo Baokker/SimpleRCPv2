@@ -20,13 +20,20 @@ for (const row of fast.groups) {
     const metadata = judgement.verdict.adjudication;
   if (!metadata) continue;
     const final = row.result.pairs.find((pair: { id: string }) => pair.id === judgement.pairId)?.final;
-    if (!final?.verdict.adjudication || final.revision !== judgement.revision) continue;
+    if (!final?.verdict?.adjudication || final.revision !== judgement.revision) continue;
     const deepResult = deepCalls.get(metadata.inputHash);
     samples.push({ truth: row.outcome.truth, ...(metadata.status === "success" ? { fast: { decision: judgement.verdict.decision, confidence: metadata.confidence } } : {}), ...(deepResult ? { deep: deepResult } : {}) });
   }
 }
 const result = calibrateThreshold(samples); const output = path.resolve(values.out!); await fs.mkdir(output, { recursive: true });
+if (!samples.some((sample) => sample.fast)) {
+  await fs.writeFile(path.join(output, "calibration.json"), JSON.stringify({ split: "dev", dataset: report.dataset, source: values.record, ...result, recommended: null, status: "blocked", reason: "没有有效快判结果，无法校准置信度阈值", fastSuccessful: 0 }, null, 2) + "\n");
+  await fs.rm(path.join(output, "adjudication-config.json"), { force: true });
+  await fs.rm(path.join(output, "threshold.svg"), { force: true });
+  throw new Error("没有有效快判结果，无法校准置信度阈值");
+}
 await fs.writeFile(path.join(output, "calibration.json"), JSON.stringify({ split: "dev", dataset: report.dataset, source: directory ? values.record : values.dataset, ...result }, null, 2) + "\n");
-const points = (field: "coverage" | "escalationRatio" | "missBlockRatio") => result.curves.filter((item) => item[field] !== null).map((item) => `${50 + item.threshold * 500},${250 - item[field]! * 200}`).join(" ");
-await fs.writeFile(path.join(output, "threshold.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="650" height="310"><rect width="650" height="310" fill="white"/><path d="M50 40V250H570" stroke="black" fill="none"/><polyline points="${points("coverage")}" fill="none" stroke="#16834b"/><polyline points="${points("escalationRatio")}" fill="none" stroke="#2058b1"/><polyline points="${points("missBlockRatio")}" fill="none" stroke="#c03232"/><text x="50" y="280">Threshold 0–1; green: coverage; blue: escalation; red: missed blocking</text></svg>\n`);
+await fs.writeFile(path.join(output, "adjudication-config.json"), JSON.stringify({ ...report.config, threshold: result.recommended }, null, 2) + "\n");
+const points = (field: "coverage" | "escalationRatio" | "missBlockRatio" | "falseBlockRatio") => result.curves.filter((item) => item[field] !== null).map((item) => `${50 + item.threshold * 500},${250 - item[field]! * 200}`).join(" ");
+await fs.writeFile(path.join(output, "threshold.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="650" height="330"><rect width="650" height="330" fill="white"/><path d="M50 40V250H570" stroke="black" fill="none"/><polyline points="${points("coverage")}" fill="none" stroke="#16834b"/><polyline points="${points("escalationRatio")}" fill="none" stroke="#2058b1"/><polyline points="${points("missBlockRatio")}" fill="none" stroke="#c03232"/><polyline points="${points("falseBlockRatio")}" fill="none" stroke="#8c36aa"/><text x="50" y="280">Threshold 0–1; green: coverage; blue: escalation</text><text x="50" y="305">red: missed blocking; purple: false blocking</text></svg>\n`);
 console.log(JSON.stringify({ samples: result.samples, recommended: result.recommended }));

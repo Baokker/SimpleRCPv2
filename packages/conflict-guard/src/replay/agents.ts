@@ -20,6 +20,7 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
   libs?: Record<string, string>;
   judgementFrameMs?: number;
   maxJudgementsPerFrame?: number;
+  enableT3?: boolean;
   onSemanticEvent?(event: SemanticChangeEvent, at: number): void;
   adjudicate?(input: ZoneInput, local: ZoneVerdict, signal: AbortSignal, point: "T1" | "T2" | "T3"): Promise<ZoneVerdict>;
 }) {
@@ -211,7 +212,7 @@ export async function replayAgentTrace(events: TraceEvent[], options: {
         }, () => reservations.set(String(event.requestId), { actor, changes }));
         proposals.set(String(event.requestId), changes); requests.set(String(event.requestId), actor.runId);
       }
-      if (event.type === "agent_review" && !event.forceRevert) {
+      if (event.type === "agent_review" && !event.forceRevert && options.enableT3 !== false) {
         const actor = event.actor as Extract<ActorRef, { kind: "agent" }>; const run = runs.get(actor.runId);
         if (!run) throw new Error("Agent review has no run baseline");
         refresh();

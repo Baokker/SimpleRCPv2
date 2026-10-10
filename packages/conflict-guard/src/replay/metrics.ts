@@ -22,6 +22,7 @@ export interface ReplayGroupOutcome {
   missingLatencyTriggers?: number;
   virtualDurationMs?: number;
   hasRelation?: boolean;
+  changeUnits?: { total: number; unrelated: number };
   operatorFamily?: string;
   detectability?: string;
   agreed?: boolean;
@@ -76,6 +77,11 @@ export interface PersistExposure {
 
 export function calculateReplayMetrics(outcomes: ReplayGroupOutcome[], noRelation = 0): ReplayMetrics {
   const count = outcomes.length;
+  const measuredUnits = outcomes.filter((outcome) => outcome.changeUnits !== undefined);
+  if (measuredUnits.length && measuredUnits.length !== count) throw new Error("变更单元统计不完整");
+  if (measuredUnits.length && noRelation !== 0) throw new Error("变更单元统计不能混用样本数量");
+  const totalUnits = measuredUnits.reduce((sum, outcome) => sum + outcome.changeUnits!.total, 0);
+  const unrelatedUnits = measuredUnits.reduce((sum, outcome) => sum + outcome.changeUnits!.unrelated, 0);
   const proportion = (value: number, denominator = count) => wilson(value, denominator);
   const localOutcomes = outcomes.filter((outcome) => outcome.localDecisionCount !== undefined && (outcome.totalPairCount ?? 0) > 0);
   const local = localOutcomes.reduce((sum, outcome) => sum + outcome.localDecisionCount!, 0);
@@ -93,7 +99,7 @@ export function calculateReplayMetrics(outcomes: ReplayGroupOutcome[], noRelatio
   const durationHours = outcomes.reduce((sum, outcome) => sum + (outcome.virtualDurationMs ?? 0), 0) / 3_600_000;
   return {
     groups: count,
-    noRelationRatio: wilson(noRelation + outcomes.filter((outcome) => outcome.hasRelation === false).length, count + noRelation),
+    noRelationRatio: measuredUnits.length ? wilson(unrelatedUnits, totalUnits) : wilson(noRelation + outcomes.filter((outcome) => outcome.hasRelation === false).length, count + noRelation),
     localDecisionRatio: localPairs === 0 ? null : wilson(local, localPairs),
     agreement: proportion(agreement),
     missBlockRatio: wilson(missed, lockTruth.length),
@@ -168,7 +174,7 @@ function outcomeLatencies(outcomes: ReplayGroupOutcome[]) {
   return outcomes.flatMap((outcome) => outcome.latenciesMs ?? (outcome.latencyMs === undefined ? [] : [outcome.latencyMs]));
 }
 
-function latencySummary(values: number[]): LatencySummary {
+export function latencySummary(values: number[]): LatencySummary {
   const ordered = [...values].sort((left, right) => left - right);
   return { samples: ordered.length, p50: percentile(ordered, 0.5), p95: percentile(ordered, 0.95) };
 }
@@ -243,6 +249,7 @@ export function replayOutcome(input: {
     missingLatencyTriggers: result.judgements.length - latencies.length,
     virtualDurationMs: edits.length > 1 ? Math.max(...edits.map((event) => event.at)) - Math.min(...edits.map((event) => event.at)) : 0,
     hasRelation: result.semanticRelations > 0,
+    changeUnits: { total: result.changeUnits.total, unrelated: result.changeUnits.unrelated },
     operatorFamily: input.operatorFamily,
     detectability: input.detectability,
     totalPairCount,

@@ -1,0 +1,27 @@
+{
+  "d6fd7b1d5a4ad75cfc0a1f4b6981d9ff30409d140982f53a894d073417046229": {
+    "sample": "d1-0005-conflict",
+    "relationGroup": "d1-0005",
+    "split": "dev"
+  },
+  "00f28a9a9dcb64ef7e55638ae963aa75c0abb5bb67b631e45f7a23366cca13b7": {
+    "sample": "d1-0013-conflict",
+    "relationGroup": "d1-0013",
+    "split": "dev"
+  },
+  "427ba4c3a81ad2242f75d87f40557ff02f1f838442eb2001bab0d4769cc8dc68": {
+    "sample": "d1-0013-conflict",
+    "relationGroup": "d1-0013",
+    "split": "dev"
+  },
+  "c135c7ee60ff04a53f62e1fd343bb2f2d1a26aaf33357961ffcfbd20c01fa73f": {
+    "sample": "d1-0013-conflict",
+    "relationGroup": "d1-0013",
+    "split": "dev"
+  },
+  "8fcc60a4e018f4b2eb6da75fb1bd1ad91d11785d156252be81e3e7bfe1504d9e": {
+    "sample": "d1-0013-conflict",
+    "relationGroup": "d1-0013",
+    "split": "dev"
+  }
+}

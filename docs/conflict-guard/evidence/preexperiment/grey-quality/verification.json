@@ -1,0 +1,5095 @@
+{
+  "source": "../../docs/conflict-guard/evidence/preexperiment/record/results.json.gz",
+  "split": "dev",
+  "selection": "P3-grey-without-localOnly",
+  "sampleIds": [
+    "d1-0005-conflict",
+    "d1-0005-safe",
+    "d1-0013-conflict",
+    "d1-0021-conflict",
+    "d1-0037-conflict",
+    "d1-0045-conflict",
+    "d1-0045-safe",
+    "d1-0059-conflict",
+    "d1-0059-safe",
+    "d1-0066-safe",
+    "d1-0082-conflict",
+    "d1-0082-safe",
+    "d1-0083-conflict",
+    "d1-0091-conflict",
+    "d1-0091-safe",
+    "d1-0101-conflict",
+    "d1-0101-safe",
+    "d1-0117-conflict",
+    "d1-0130-safe",
+    "d1-0141-conflict",
+    "d1-0141-safe",
+    "d1-dev-safe-0001-safe",
+    "d1-dev-safe-0002-safe",
+    "d1-dev-safe-0003-safe",
+    "d1-dev-safe-0004-safe",
+    "d1-dev-safe-0005-safe",
+    "d1-dev-safe-0006-safe",
+    "d1-dev-safe-0007-safe",
+    "d1-dev-safe-0008-safe",
+    "d1-dev-safe-0009-safe",
+    "d1-dev-safe-0010-safe",
+    "d1-dev-safe-0011-safe",
+    "d1-dev-safe-0012-safe",
+    "d1-dev-safe-0013-safe",
+    "d1-dev-safe-0014-safe",
+    "d1-dev-safe-0015-safe",
+    "d1-dev-safe-0016-safe",
+    "d1-dev-safe-0017-safe",
+    "d1-dev-safe-0018-safe",
+    "d1-dev-safe-0019-safe",
+    "d1-dev-safe-0020-safe",
+    "d1-dev-safe-0021-safe",
+    "d1-dev-safe-0022-safe",
+    "d1-dev-safe-0023-safe",
+    "d1-dev-safe-0024-safe",
+    "d1-dev-safe-0025-safe",
+    "d1-dev-safe-0026-safe",
+    "d1-dev-safe-0027-safe",
+    "d1-dev-safe-0028-safe",
+    "d1-dev-safe-0029-safe",
+    "d1-dev-safe-0030-safe",
+    "d1-dev-safe-0031-safe",
+    "d1-dev-safe-0032-safe",
+    "d1-dev-safe-0033-safe",
+    "d1-dev-safe-0034-safe",
+    "d1-dev-safe-0035-safe",
+    "d1-dev-safe-0036-safe",
+    "d1-dev-safe-0037-safe",
+    "d1-dev-safe-0038-safe",
+    "d1-dev-safe-0039-safe",
+    "d1-dev-safe-0040-safe"
+  ],
+  "policies": {
+    "G1": {
+      "rows": [
+        {
+          "id": "d1-0005-conflict",
+          "relationGroupId": "d1-0005",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 52.48,
+            "unattendedFrozenPersonSeconds": 1199.818,
+            "cardCount": 5,
+            "freezeCount": 1,
+            "frozenEdits": 44,
+            "counterfactualEdits": 44,
+            "latenciesMs": [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 39202,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0005-safe",
+          "relationGroupId": "d1-0005",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 39202,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 7,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0013-conflict",
+          "relationGroupId": "d1-0013",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 3.24,
+            "unattendedFrozenPersonSeconds": 1106.55,
+            "cardCount": 2,
+            "freezeCount": 3,
+            "frozenEdits": 6,
+            "counterfactualEdits": 6,
+            "latenciesMs": [
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 51954,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 11,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 603916
+          }
+        },
+        {
+          "id": "d1-0021-conflict",
+          "relationGroupId": "d1-0021",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1147.947107166,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8024.446417000028
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 18032,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 600302
+          }
+        },
+        {
+          "id": "d1-0037-conflict",
+          "relationGroupId": "d1-0037",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 1.6395194159999955,
+            "unattendedFrozenPersonSeconds": 1153.020408916,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 1,
+            "counterfactualEdits": 1,
+            "latenciesMs": [
+              6174.240292000002,
+              4959.555250000034
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 19541,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0045-conflict",
+          "relationGroupId": "d1-0045",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1150.2931354999998,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              3342.4322500000126
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36279,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 615135
+          }
+        },
+        {
+          "id": "d1-0045-safe",
+          "relationGroupId": "d1-0045",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              2577.893250000023
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 44081,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0059-conflict",
+          "relationGroupId": "d1-0059",
+          "outcome": {
+            "truth": "lock",
+            "decision": "allow",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 63.79263850200025,
+            "unattendedFrozenPersonSeconds": 63.79263850200025,
+            "cardCount": 9,
+            "freezeCount": 6,
+            "frozenEdits": 38,
+            "counterfactualEdits": 38,
+            "latenciesMs": [
+              2677.0975000000326,
+              25,
+              25,
+              4206.120832999935,
+              6257.972999999998,
+              2181.0381659999257,
+              8025,
+              2702.9009169999044,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 169430,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 18,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 169696
+          }
+        },
+        {
+          "id": "d1-0059-safe",
+          "relationGroupId": "d1-0059",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 29.718902499999967,
+            "unattendedFrozenPersonSeconds": 29.718902499999967,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 9,
+            "counterfactualEdits": 9,
+            "latenciesMs": [
+              2677.0975000000326,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 169430,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 17,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0066-safe",
+          "relationGroupId": "d1-0066",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 0,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 11234,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 2,
+              "unrelated": 0
+            },
+            "operatorFamily": "SF",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0082-conflict",
+          "relationGroupId": "d1-0082",
+          "outcome": {
+            "truth": "lock",
+            "decision": "allow",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 72.9076533319999,
+            "unattendedFrozenPersonSeconds": 72.9076533319999,
+            "cardCount": 8,
+            "freezeCount": 6,
+            "frozenEdits": 15,
+            "counterfactualEdits": 15,
+            "latenciesMs": [
+              25,
+              2773.3823340000818,
+              5288.257250000024,
+              4964.290999999968,
+              2580.59145800001,
+              2465.0360830000136,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 147839,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 16,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 148130
+          }
+        },
+        {
+          "id": "d1-0082-safe",
+          "relationGroupId": "d1-0082",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 23.918,
+            "unattendedFrozenPersonSeconds": 23.918,
+            "cardCount": 1,
+            "freezeCount": 2,
+            "frozenEdits": 6,
+            "counterfactualEdits": 6,
+            "latenciesMs": [
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 147839,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 16,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0083-conflict",
+          "relationGroupId": "d1-0083",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              5529.577750000055
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 23546,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 3,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 29397.577750000055
+          }
+        },
+        {
+          "id": "d1-0091-conflict",
+          "relationGroupId": "d1-0091",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1143.583893166,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              5979.053416999988
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36817,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 614787
+          }
+        },
+        {
+          "id": "d1-0091-safe",
+          "relationGroupId": "d1-0091",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 1.5634719999998343,
+            "unattendedFrozenPersonSeconds": 1134.1643294159999,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 5,
+            "counterfactualEdits": 5,
+            "latenciesMs": [
+              6132.264000000083,
+              4107.571292000008
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 44304,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0101-conflict",
+          "relationGroupId": "d1-0101",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 38.822,
+            "unattendedFrozenPersonSeconds": 1203.98,
+            "cardCount": 6,
+            "freezeCount": 1,
+            "frozenEdits": 34,
+            "counterfactualEdits": 34,
+            "latenciesMs": [
+              25,
+              25,
+              0,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35328,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 9,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0101-safe",
+          "relationGroupId": "d1-0101",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 0,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              25,
+              25,
+              0,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35328,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0117-conflict",
+          "relationGroupId": "d1-0117",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 6.724341415999923,
+            "unattendedFrozenPersonSeconds": 1083.550699082,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 9,
+            "counterfactualEdits": 9,
+            "latenciesMs": [
+              2590.8292920000385,
+              2687.8211669999873
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 59179,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 3,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0130-safe",
+          "relationGroupId": "d1-0130",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 25552,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "SF",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0141-conflict",
+          "relationGroupId": "d1-0141",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1133.3017045,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              2678.1477500000037
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 48067,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 617574
+          }
+        },
+        {
+          "id": "d1-0141-safe",
+          "relationGroupId": "d1-0141",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 0,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6144.425749999937
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 55105,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "relationGroupId": "d1-dev-safe-0001",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 8.848385500000091,
+            "unattendedFrozenPersonSeconds": 1165.4061860820002,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 10,
+            "counterfactualEdits": 10,
+            "latenciesMs": [
+              7532.807249999954,
+              7009.099708999973
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 33649,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "relationGroupId": "d1-dev-safe-0002",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 10.619020665999967,
+            "unattendedFrozenPersonSeconds": 10.619020665999967,
+            "cardCount": 2,
+            "freezeCount": 1,
+            "frozenEdits": 33,
+            "counterfactualEdits": 33,
+            "latenciesMs": [
+              3070.489667000016,
+              4136.804542000056
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 15840,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "relationGroupId": "d1-dev-safe-0003",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 0,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              7580.136540999985
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 64211,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "relationGroupId": "d1-dev-safe-0004",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 4.699962499999907,
+            "unattendedFrozenPersonSeconds": 5.025962499999907,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 10,
+            "counterfactualEdits": 10,
+            "latenciesMs": [
+              6752.018750000047
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34230,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "relationGroupId": "d1-dev-safe-0005",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1171.74374025,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6782.129874999984
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 12207,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "relationGroupId": "d1-dev-safe-0006",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1064.7776749999998,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              5522.162500000093
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 78915,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "relationGroupId": "d1-dev-safe-0007",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 12.762367499999701,
+            "unattendedFrozenPersonSeconds": 12.958367499999701,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 31,
+            "counterfactualEdits": 31,
+            "latenciesMs": [
+              7144.439250000054,
+              5511.377000000095
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35415,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "relationGroupId": "d1-dev-safe-0008",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6661.440874999855
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 19533,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "relationGroupId": "d1-dev-safe-0009",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8025
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 25258,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "relationGroupId": "d1-dev-safe-0010",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              4171.916708000004
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 31661,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "relationGroupId": "d1-dev-safe-0011",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              2491.918082999997
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 19403,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "relationGroupId": "d1-dev-safe-0012",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 6.430471917999908,
+            "unattendedFrozenPersonSeconds": 6.700471917999908,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 10,
+            "counterfactualEdits": 10,
+            "latenciesMs": [
+              4091.764041000046
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 62512,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "relationGroupId": "d1-dev-safe-0013",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8025,
+              3299.703208999941
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 31660,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "relationGroupId": "d1-dev-safe-0014",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              2608.5157500000205,
+              3889.0665410000365
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 18326,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "relationGroupId": "d1-dev-safe-0015",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              3141.439250000054
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 55463,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "relationGroupId": "d1-dev-safe-0016",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              7981.796791000059
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34137,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "relationGroupId": "d1-dev-safe-0017",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1177.6271476660004,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              3099.4261669998523
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 13568,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "relationGroupId": "d1-dev-safe-0018",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6476.799499999965
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36455,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "relationGroupId": "d1-dev-safe-0019",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1178.975665418,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              3535.1672910000198
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 32388,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "relationGroupId": "d1-dev-safe-0020",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6718.728750000009
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 15659,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "relationGroupId": "d1-dev-safe-0021",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              7620.71399999992
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 74416,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "relationGroupId": "d1-dev-safe-0022",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 11.741286833999679,
+            "unattendedFrozenPersonSeconds": 11.741286833999679,
+            "cardCount": 2,
+            "freezeCount": 1,
+            "frozenEdits": 12,
+            "counterfactualEdits": 12,
+            "latenciesMs": [
+              3558.3565830001608,
+              7565.043541999999
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36572,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "relationGroupId": "d1-dev-safe-0023",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8025
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 20341,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "relationGroupId": "d1-dev-safe-0024",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              5619.006708000088
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 80409,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "relationGroupId": "d1-dev-safe-0025",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 9.726514000000432,
+            "unattendedFrozenPersonSeconds": 9.938514000000431,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 11,
+            "counterfactualEdits": 11,
+            "latenciesMs": [
+              7906.742999999784
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34423,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "relationGroupId": "d1-dev-safe-0026",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              3490.8489169999957
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 20372,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "relationGroupId": "d1-dev-safe-0027",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 0,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              2497.71491599991
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 51953,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "relationGroupId": "d1-dev-safe-0028",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 11.524595083999913,
+            "unattendedFrozenPersonSeconds": 11.524595083999913,
+            "cardCount": 3,
+            "freezeCount": 1,
+            "frozenEdits": 22,
+            "counterfactualEdits": 22,
+            "latenciesMs": [
+              3342.7024580000434,
+              4018.8609170001,
+              3506.70404099999
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34716,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "relationGroupId": "d1-dev-safe-0029",
+          "outcome": {
+            "truth": "allow",
+            "decision": "lock",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": true,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 1167.2092838320002,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6525.358083999949
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 15547,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "relationGroupId": "d1-dev-safe-0030",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              3184.8285840000026
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 63567,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "relationGroupId": "d1-dev-safe-0031",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8025,
+              4710.950124999974
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 33236,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "relationGroupId": "d1-dev-safe-0032",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              5539.758249999955
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 21406,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "relationGroupId": "d1-dev-safe-0033",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8025
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 29171,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "relationGroupId": "d1-dev-safe-0034",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              6591.444875000045
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 33291,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "relationGroupId": "d1-dev-safe-0035",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              7612.444374999963
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 17880,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "relationGroupId": "d1-dev-safe-0036",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 8.135853166000452,
+            "unattendedFrozenPersonSeconds": 8.539853166000452,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 10,
+            "counterfactualEdits": 10,
+            "latenciesMs": [
+              2984.073416999774
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 42793,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "relationGroupId": "d1-dev-safe-0037",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              7240.922292000148
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 30213,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "relationGroupId": "d1-dev-safe-0038",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              7357.951750000007
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 21352,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "relationGroupId": "d1-dev-safe-0039",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 4.363625749999657,
+            "unattendedFrozenPersonSeconds": 4.821625749999657,
+            "cardCount": 1,
+            "freezeCount": 1,
+            "frozenEdits": 10,
+            "counterfactualEdits": 10,
+            "latenciesMs": [
+              3809.1871250001714
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 46033,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "relationGroupId": "d1-dev-safe-0040",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              8025,
+              8025
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35632,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        }
+      ],
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.06557377049180328,
+          "low": 0.02579328695767287,
+          "high": 0.15683021400467229
+        },
+        "agreement": {
+          "value": 0.2459016393442623,
+          "low": 0.15506522999562844,
+          "high": 0.36684662905781873
+        },
+        "missBlockRatio": {
+          "value": 0.25,
+          "low": 0.08894003962896138,
+          "high": 0.53231033912066
+        },
+        "falseBlockRatio": {
+          "value": 0.14285714285714285,
+          "low": 0.07096333720544584,
+          "high": 0.2666797318916292
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 383.6586100839996,
+        "unattendedFrozenPersonSeconds": 18654.155867745994,
+        "cardsPerHour": 128.03704238924607,
+        "counterfactualEdits": 326,
+        "freezeCount": 48,
+        "frozenEdits": 326,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 122,
+          "p50": 2773.3823340000818,
+          "p95": 8025,
+          "byVariant": {
+            "conflict": {
+              "samples": 39,
+              "p50": 2181.0381659999257,
+              "p95": 8024.446417000028
+            },
+            "safe": {
+              "samples": 83,
+              "p50": 3506.70404099999,
+              "p95": 8025
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.7272727272727273,
+              "low": 0.4343497069897537,
+              "high": 0.9025411942607853
+            },
+            "missBlockRatio": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.14583333333333334,
+              "low": 0.07248157413793963,
+              "high": 0.27167447042858606
+            },
+            "missBlockRatio": {
+              "value": 0.2,
+              "low": 0.03622316096978745,
+              "high": 0.6244717358814613
+            },
+            "falseBlockRatio": {
+              "value": 0.16279069767441862,
+              "low": 0.08116524502857546,
+              "high": 0.2997269533591824
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.8571428571428571,
+              "low": 0.48686549668097007,
+              "high": 0.9743210440510253
+            },
+            "missBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.02567895594897479,
+              "high": 0.51313450331903
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.75,
+              "low": 0.46768966087934005,
+              "high": 0.9110599603710386
+            },
+            "missBlockRatio": {
+              "value": 0.25,
+              "low": 0.08894003962896138,
+              "high": 0.53231033912066
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      }
+    },
+    "G2": {
+      "rows": [
+        {
+          "id": "d1-0005-conflict",
+          "relationGroupId": "d1-0005",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 52.48,
+            "unattendedFrozenPersonSeconds": 1199.818,
+            "cardCount": 6,
+            "freezeCount": 1,
+            "frozenEdits": 44,
+            "counterfactualEdits": 44,
+            "latenciesMs": [
+              428.031500000041,
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 39202,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0005-safe",
+          "relationGroupId": "d1-0005",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              428.031500000041
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 39202,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 7,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0013-conflict",
+          "relationGroupId": "d1-0013",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 3.24,
+            "unattendedFrozenPersonSeconds": 1106.55,
+            "cardCount": 9,
+            "freezeCount": 3,
+            "frozenEdits": 6,
+            "counterfactualEdits": 6,
+            "latenciesMs": [
+              25,
+              105.16608399990946,
+              103.29791600001045,
+              103.12229100009426,
+              103.73895799997263,
+              100.60729200020432,
+              101.90870900009759,
+              100.52249999996275,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 51954,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 11,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 603916
+          }
+        },
+        {
+          "id": "d1-0021-conflict",
+          "relationGroupId": "d1-0021",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              102.095542000141,
+              94.99133299989626,
+              95.65925000002608
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 18032,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 18399.659250000026
+          }
+        },
+        {
+          "id": "d1-0037-conflict",
+          "relationGroupId": "d1-0037",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              102.65462499996647,
+              98.30758300004527
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 19541,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 19964.307583000045
+          }
+        },
+        {
+          "id": "d1-0045-conflict",
+          "relationGroupId": "d1-0045",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              99.04283400019631
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36279,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 36745.042834000196
+          }
+        },
+        {
+          "id": "d1-0045-safe",
+          "relationGroupId": "d1-0045",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.8782919999212,
+              96.58724999986589
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 44081,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0059-conflict",
+          "relationGroupId": "d1-0059",
+          "outcome": {
+            "truth": "lock",
+            "decision": "allow",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 33.804,
+            "unattendedFrozenPersonSeconds": 33.804,
+            "cardCount": 13,
+            "freezeCount": 3,
+            "frozenEdits": 9,
+            "counterfactualEdits": 9,
+            "latenciesMs": [
+              97.6851250003092,
+              25,
+              25,
+              98.21862499974668,
+              96.67629200033844,
+              96.1157920002006,
+              96.21966599998996,
+              95.27166600013152,
+              95.78925000037998,
+              96.14087500004098,
+              95.75808299984783,
+              96.56220800010487,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 169430,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 18,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 169696
+          }
+        },
+        {
+          "id": "d1-0059-safe",
+          "relationGroupId": "d1-0059",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 28.521,
+            "unattendedFrozenPersonSeconds": 28.521,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 5,
+            "counterfactualEdits": 5,
+            "latenciesMs": [
+              97.6851250003092,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 169430,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 17,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0066-safe",
+          "relationGroupId": "d1-0066",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.94274999992922
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 11234,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 2,
+              "unrelated": 0
+            },
+            "operatorFamily": "SF",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0082-conflict",
+          "relationGroupId": "d1-0082",
+          "outcome": {
+            "truth": "lock",
+            "decision": "allow",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 47.115,
+            "unattendedFrozenPersonSeconds": 47.115,
+            "cardCount": 12,
+            "freezeCount": 4,
+            "frozenEdits": 9,
+            "counterfactualEdits": 9,
+            "latenciesMs": [
+              97.78483399981633,
+              25,
+              96.49333300022408,
+              97.13549999985844,
+              94.17212500004098,
+              95.85725000035018,
+              96.51283299969509,
+              97.51754199992865,
+              96.2316250000149,
+              101.54666600003839,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 147839,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 16,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 148130
+          }
+        },
+        {
+          "id": "d1-0082-safe",
+          "relationGroupId": "d1-0082",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 23.918,
+            "unattendedFrozenPersonSeconds": 23.918,
+            "cardCount": 2,
+            "freezeCount": 2,
+            "frozenEdits": 6,
+            "counterfactualEdits": 6,
+            "latenciesMs": [
+              97.78483399981633,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 147839,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 16,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0083-conflict",
+          "relationGroupId": "d1-0083",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.20800000010058,
+              95.86987499985844
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 23546,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 3,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 23963.86987499986
+          }
+        },
+        {
+          "id": "d1-0091-conflict",
+          "relationGroupId": "d1-0091",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              99.64679199969396
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36817,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 37115.646791999694
+          }
+        },
+        {
+          "id": "d1-0091-safe",
+          "relationGroupId": "d1-0091",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.1865420001559,
+              95.7683749999851
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 44304,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0101-conflict",
+          "relationGroupId": "d1-0101",
+          "outcome": {
+            "truth": "lock",
+            "decision": "lock",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 38.822,
+            "unattendedFrozenPersonSeconds": 1203.98,
+            "cardCount": 7,
+            "freezeCount": 1,
+            "frozenEdits": 34,
+            "counterfactualEdits": 34,
+            "latenciesMs": [
+              100.2898750002496,
+              25,
+              25,
+              0,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35328,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 9,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "typecheck",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0101-safe",
+          "relationGroupId": "d1-0101",
+          "outcome": {
+            "truth": "allow",
+            "decision": "allow",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              100.2898750002496,
+              25,
+              25,
+              0,
+              25,
+              25,
+              25
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35328,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 1,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0117-conflict",
+          "relationGroupId": "d1-0117",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.3993330001831,
+              96.47158400015905
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 59179,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 3,
+              "unrelated": 0
+            },
+            "operatorFamily": "IC",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 59443.47158400016
+          }
+        },
+        {
+          "id": "d1-0130-safe",
+          "relationGroupId": "d1-0130",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              99.89333300013095
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 25552,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "SF",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-0141-conflict",
+          "relationGroupId": "d1-0141",
+          "outcome": {
+            "truth": "lock",
+            "decision": "warn",
+            "variantKind": "conflict",
+            "escaped": false,
+            "missed": true,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.73641599994153
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 48067,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "runtime-only",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false,
+            "conflictPersistAt": 48341.73641599994
+          }
+        },
+        {
+          "id": "d1-0141-safe",
+          "relationGroupId": "d1-0141",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.31770800007507,
+              96.4044170002453
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 55105,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "relationGroupId": "d1-dev-safe-0001",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              103.4939580000937,
+              100.7255830001086,
+              97.34270799998194,
+              112.10516700008884,
+              100.75370900006965
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 33649,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "relationGroupId": "d1-dev-safe-0002",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.64550000010058,
+              95.94320799969137,
+              94.70279200002551
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 15840,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "relationGroupId": "d1-dev-safe-0003",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.14699999988079,
+              95.1524160001427
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 64211,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "relationGroupId": "d1-dev-safe-0004",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.34458300005645,
+              97.16383299976587,
+              99.7076670001261,
+              96.21304199984297
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34230,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "relationGroupId": "d1-dev-safe-0005",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              95.75316700013354,
+              96.10729199973866
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 12207,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "relationGroupId": "d1-dev-safe-0006",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              95.60629099979997,
+              96.20316600007936
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 78915,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "relationGroupId": "d1-dev-safe-0007",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.22300000023097,
+              96.59662499977276,
+              95.63125000009313,
+              95.6447919998318,
+              95.33541599987075
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35415,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "relationGroupId": "d1-dev-safe-0008",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.82524999976158,
+              95.17050000000745,
+              95.05020800000057,
+              95.25962499994785
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 19533,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "relationGroupId": "d1-dev-safe-0009",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.09258399996907
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 25258,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 4,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "relationGroupId": "d1-dev-safe-0010",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.08058300008997,
+              94.31991699989885,
+              98.7518750000745,
+              94.94795800000429,
+              235.60816599987447
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 31661,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "relationGroupId": "d1-dev-safe-0011",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              101.75245800008997,
+              100.70766600035131,
+              95.48754200013354,
+              96.17854200024158
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 19403,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "relationGroupId": "d1-dev-safe-0012",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              95.71225000033155,
+              94.97854100028053
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 62512,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "relationGroupId": "d1-dev-safe-0013",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.07312500011176,
+              95.64254100015387,
+              94.55299999983981,
+              96.84595899982378,
+              95.38800000026822
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 31660,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "relationGroupId": "d1-dev-safe-0014",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              95.44591599982232,
+              96.51154100010172,
+              96.20004200004041
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 18326,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "relationGroupId": "d1-dev-safe-0015",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.94262500014156,
+              96.54087499994785
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 55463,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "relationGroupId": "d1-dev-safe-0016",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.59337500017136,
+              94.75308299995959,
+              97.1378750000149,
+              95.59741599997506
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34137,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "relationGroupId": "d1-dev-safe-0017",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              85.26150000002235,
+              98.26304200012237,
+              95.54254100006074
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 13568,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "relationGroupId": "d1-dev-safe-0018",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              99.66904200008139,
+              95.84683299995959
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36455,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "relationGroupId": "d1-dev-safe-0019",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              96.27762499963865,
+              97.48666699975729,
+              101.02433299971744,
+              100.31100000021979,
+              99.43420899985358
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 32388,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "relationGroupId": "d1-dev-safe-0020",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.16929200012237,
+              98.5887499996461,
+              95.68474999954924
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 15659,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "relationGroupId": "d1-dev-safe-0021",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 1,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.67629200033844
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 74416,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "relationGroupId": "d1-dev-safe-0022",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.47304200008512,
+              96.08670900017023,
+              98.24099999992177,
+              94.9798329998739,
+              95.3231669999659
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 36572,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "relationGroupId": "d1-dev-safe-0023",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.51933400006965,
+              95.23912499984726,
+              96.59999999962747,
+              97.4071670002304
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 20341,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "relationGroupId": "d1-dev-safe-0024",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              117.90770899970084,
+              113.7154580000788
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 80409,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "relationGroupId": "d1-dev-safe-0025",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              101.14316700026393,
+              97.372791999951,
+              95.02970799989998,
+              99.64083299972117,
+              95.36891700001433
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34423,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "relationGroupId": "d1-dev-safe-0026",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.11812500003725,
+              96.30762500036508,
+              95.65737499995157,
+              95.7706250003539
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 20372,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "relationGroupId": "d1-dev-safe-0027",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              98.24058399954811,
+              96.89695900026709
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 51953,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "relationGroupId": "d1-dev-safe-0028",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              101.08712500007823,
+              101.43929099990055,
+              99.44608299992979,
+              101.57729199994355
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 34716,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "relationGroupId": "d1-dev-safe-0029",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              111.05729199992493,
+              110.87275000009686
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 15547,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "relationGroupId": "d1-dev-safe-0030",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              101.93508399976417,
+              101.79212500015274
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 63567,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "relationGroupId": "d1-dev-safe-0031",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              106.79691700031981,
+              107.20237499987707,
+              105.72666699998081,
+              102.12970799999312,
+              99.6834169998765
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 33236,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "relationGroupId": "d1-dev-safe-0032",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              95.67400000011548,
+              95.23695799987763,
+              94.37474999995902,
+              94.55808400036767
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 21406,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "relationGroupId": "d1-dev-safe-0033",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.81625000014901,
+              104.62566700018942
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 29171,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "relationGroupId": "d1-dev-safe-0034",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              103.810291999951,
+              101.47016700031236,
+              100.7472909996286,
+              98.14641600009054,
+              97.4595420002006
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 33291,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "relationGroupId": "d1-dev-safe-0035",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              107.33241700008512,
+              104.54037500033155,
+              106.29762500012293
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 17880,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "relationGroupId": "d1-dev-safe-0036",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              105.41183300036937,
+              105.09312499966472
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 42793,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "relationGroupId": "d1-dev-safe-0037",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 4,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              122.67362500028685,
+              111.69458399992436,
+              112.80079200025648,
+              110.87162499967963
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 30213,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "relationGroupId": "d1-dev-safe-0038",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 3,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              105.59300000034273,
+              101.08929200004786,
+              101.58966600010172
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 21352,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "relationGroupId": "d1-dev-safe-0039",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 2,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              94.63245900021866,
+              94.75612499983981
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 46033,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 5,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "relationGroupId": "d1-dev-safe-0040",
+          "outcome": {
+            "truth": "allow",
+            "decision": "warn",
+            "variantKind": "safe",
+            "escaped": false,
+            "missed": false,
+            "overblocked": false,
+            "frozenPersonSeconds": 0,
+            "unattendedFrozenPersonSeconds": 0,
+            "cardCount": 5,
+            "freezeCount": 0,
+            "frozenEdits": 0,
+            "counterfactualEdits": 0,
+            "latenciesMs": [
+              97.55737499985844,
+              98.1603330001235,
+              95.39424999989569,
+              96.97487500030547,
+              94.89770799968392
+            ],
+            "missingLatencyTriggers": 0,
+            "virtualDurationMs": 35632,
+            "hasRelation": true,
+            "changeUnits": {
+              "total": 8,
+              "unrelated": 0
+            },
+            "operatorFamily": "CP",
+            "detectability": "none",
+            "totalPairCount": 1,
+            "localDecisionCount": 0,
+            "unnotifiedEscape": false
+          }
+        }
+      ],
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.06557377049180328,
+          "low": 0.02579328695767287,
+          "high": 0.15683021400467229
+        },
+        "agreement": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "missBlockRatio": {
+          "value": 0.75,
+          "low": 0.46768966087934005,
+          "high": 0.9110599603710386
+        },
+        "falseBlockRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.07270029673590504
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 227.9,
+        "unattendedFrozenPersonSeconds": 3643.706,
+        "cardsPerHour": 276.29045989258367,
+        "counterfactualEdits": 113,
+        "freezeCount": 16,
+        "frozenEdits": 113,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 231,
+          "p50": 96.51154100010172,
+          "p95": 110.87162499967963,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 96.21966599998996,
+              "p95": 103.73895799997263
+            },
+            "safe": {
+              "samples": 172,
+              "p50": 96.59662499977276,
+              "p95": 111.05729199992493
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.5454545454545454,
+              "low": 0.28008775568998817,
+              "high": 0.7872904245601196
+            },
+            "missBlockRatio": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.0741026511527422
+            },
+            "missBlockRatio": {
+              "value": 1,
+              "low": 0.5655085052479191,
+              "high": 1
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.08201257002322722
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.061224489795918366,
+              "low": 0.021039764955529186,
+              "high": 0.16520743422087725
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.07270029673590504
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "missBlockRatio": {
+              "value": 1,
+              "low": 0.6456611570247934,
+              "high": 1
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.25,
+              "low": 0.08894003962896138,
+              "high": 0.53231033912066
+            },
+            "missBlockRatio": {
+              "value": 0.75,
+              "low": 0.46768966087934005,
+              "high": 0.9110599603710386
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.061224489795918366,
+              "low": 0.021039764955529186,
+              "high": 0.16520743422087725
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.07270029673590504
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      }
+    }
+  },
+  "statistics": {
+    "seed": 20261007,
+    "samplingUnit": "relationGroupId",
+    "pairedCorrectness": "all-variants-correct",
+    "multiplicity": "Holm-all-policy-pairs-within-experiment",
+    "mcnemar": "exact-two-sided",
+    "bootstrapRepetitions": 2000,
+    "intervals": {
+      "G1": {
+        "agreement": {
+          "estimate": 0.2459016393442623,
+          "low": 0.13793103448275862,
+          "high": 0.36065573770491804,
+          "groups": 54,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "missed": {
+          "estimate": 0.25,
+          "low": 0,
+          "high": 0.5,
+          "groups": 12,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "falseBlocking": {
+          "estimate": 0.14285714285714285,
+          "low": 0.061224489795918366,
+          "high": 0.24489795918367346,
+          "groups": 49,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "escape": {
+          "estimate": 0,
+          "low": 0,
+          "high": 0,
+          "groups": 12,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p50Ms": {
+          "estimate": 2773.3823340000818,
+          "low": 25,
+          "high": 4959.555250000034,
+          "groups": 52,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p95Ms": {
+          "estimate": 8025,
+          "low": 7612.444374999963,
+          "high": 8025,
+          "groups": 52,
+          "repetitions": 2000,
+          "seed": 20261007
+        }
+      },
+      "G2": {
+        "agreement": {
+          "estimate": 0.09836065573770492,
+          "low": 0.031746031746031744,
+          "high": 0.1875,
+          "groups": 54,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "missed": {
+          "estimate": 0.75,
+          "low": 0.5833333333333334,
+          "high": 0.9166666666666666,
+          "groups": 12,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "falseBlocking": {
+          "estimate": 0,
+          "low": 0,
+          "high": 0,
+          "groups": 49,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "escape": {
+          "estimate": 0,
+          "low": 0,
+          "high": 0,
+          "groups": 12,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p50Ms": {
+          "estimate": 96.51154100010172,
+          "low": 95.78925000037998,
+          "high": 97.51933400006965,
+          "groups": 54,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p95Ms": {
+          "estimate": 110.87162499967963,
+          "low": 103.73895799997263,
+          "high": 113.7154580000788,
+          "groups": 54,
+          "repetitions": 2000,
+          "seed": 20261007
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "id": "G1:G2",
+        "left": "G1",
+        "right": "G2",
+        "groups": 54,
+        "leftOnlyCorrect": 6,
+        "rightOnlyCorrect": 0,
+        "discordant": 6,
+        "p": 0.03125,
+        "adjustedP": 0.03125
+      }
+    ]
+  }
+}

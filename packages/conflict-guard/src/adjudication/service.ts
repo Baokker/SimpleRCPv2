@@ -16,7 +16,8 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   function emit(call: ProviderCall) { calls.push(call); try { options.onCall?.(call); } catch { reportError("trace"); } }
   function emitSubscription(subscription: ProviderSubscription) { subscriptions.push(subscription); try { options.onSubscription?.(subscription); } catch { reportError("trace"); } }
   function cost(result: JudgeResult | undefined, fast: boolean) {
-    return result?.usage ? (result.usage.inputTokens * (fast ? config.prices.fastInputPerMillion : config.prices.deepInputPerMillion) + result.usage.outputTokens * (fast ? config.prices.fastOutputPerMillion : config.prices.deepOutputPerMillion)) / 1_000_000 : 0;
+    const conversion = fast ? 1 : config.prices.usdPerCurrencyUnit ?? 1;
+    return result?.usage ? conversion * (result.usage.inputTokens * (fast ? config.prices.fastInputPerMillion : config.prices.deepInputPerMillion) + result.usage.outputTokens * (fast ? config.prices.fastOutputPerMillion : config.prices.deepOutputPerMillion)) / 1_000_000 : 0;
   }
   async function provider(input: AdjudicationInput, fast: boolean, signal: AbortSignal, budget: number, occurrence: number): Promise<CachedCall & { waitedMs?: number }> {
     if (signal.aborted) throw new ProviderError("cancelled");

@@ -34,7 +34,7 @@
 
 `routing/classifier.ts` 提供纯逻辑 `classify(ZoneInput)`。规则按固定顺序返回 `white/allow`、`black/lock` 或 `grey/warn`，结果同时返回双方 `contractChanged`。`routing/typecheck.ts` 使用同一个 TypeScript LanguageService 检查 baseline、leftOnly、rightOnly、merged 四个状态，只记录合并状态新增的诊断，单次检查超过 500 毫秒返回跳过原因。`coordination/pairState.ts` 管理 `pending → judged → stale → judged` 和 `resolved/closed` 状态，保存修订号、判定、双方确认状态与冻结时间。
 
-规则编号依次为 `same-symbol-concurrent-write`、`type-only-unchanged`、`comment-format-only`、`observability-only`、`equivalent-refactor`、`referenced-symbol-removed`、`runtime-export-removed`、`call-signature-incompatible`、`consumed-return-property-removed`、`interface-required-member-incompatible`、`merge-only-type-error`、`unparsable-side` 和 `semantic-interaction-uncertain`。每条规则保存在 `routing/rules/` 的独立文件。白区返回 `allow`，黑区返回 `lock`，灰区返回 `warn`。服务端在 `rules/full` 模式暂停黑区文件写入，在 `observe` 模式只记录结果，撤回与确认接口返回 409。
+规则编号依次为 `comment-only-edit`、`comment-format-only`、`observability-only`、`declaration-body-unrelated`、`same-symbol-concurrent-write`、`type-only-unchanged`、`equivalent-refactor`、`referenced-symbol-removed`、`runtime-export-removed`、`call-signature-incompatible`、`consumed-return-property-removed`、`interface-required-member-incompatible`、`merge-only-type-error`、`unparsable-side` 和 `semantic-interaction-uncertain`。四状态类型检查在循环前计算一次，全部规则复用。注释白区放行；同一函数远距离修改且公开接口相同时为本地灰区；相邻修改和签名不兼容继续检查黑区。每条规则保存在 `routing/rules/` 的独立文件。白区返回 `allow`，黑区返回 `lock`，灰区返回 `warn`。服务端在 `rules/full` 模式暂停黑区文件写入，在 `observe` 模式只记录结果，撤回与确认接口返回 409。
 
 `coordination/session.ts` 的 `createSessionCoordinator` 由服务端与回放共同使用。它处理批次判定、当前文件的 `pending-judgement`、冻结范围、判定异常与 T0。进行中的批次一旦触及其他成员活跃修改的相关符号，文件写入立即暂停；删除声明时，批次开始的符号与路径保留到判定完成。单方接口变化在批次结束时登记，依赖方开始相关批次即可收到 T0。
 
@@ -76,7 +76,7 @@ pnpm --filter @simplercp/conflict-guard bench:import-greylock --source ../../../
 
 ## 阶段 5 灰区研判
 
-`adjudication/` 定义 `FastJudge` 与 `DeepJudge` 两个角色。适配器通过名字注册，HTTP 使用注入的 fetch；Jev 固定 `jev-1.13.0`，DeepSeek 使用配置中的模型并在 T1 关闭 thinking。`openai-compatible` 使用相同深判输出格式。白区与黑区由本地规则决定，只有灰区进入角色接口。
+`adjudication/` 定义 `FastJudge` 与 `DeepJudge` 两个角色。适配器通过名字注册，HTTP 使用注入的 fetch；Jev 固定 `jev-1.13.0`，默认深判适配器为 `minimax`，使用 `MiniMax-M3`。MiniMax 在 T1 使用 `thinking.type=disabled`，写入前和完成后深判使用 adaptive；`reasoning_split=true`，截断或输出字段无效时记录格式失败。DeepSeek 与 `openai-compatible` 仍可配置为替代适配器。白区与黑区由本地规则决定，只有灰区进入角色接口。适配器、型号与完整请求参数参与缓存身份计算。
 
 | 策略 | 灰区处理 |
 |---|---|
@@ -105,7 +105,9 @@ pnpm --filter @simplercp/conflict-guard replay:run --dataset bench/datasets/d1-v
 
 阈值、价格、完整提示词和配置见 `docs/conflict-guard/adjudication.md`。阶段五命令只读取开发集；保留集留至正式评价。模型录制用于离线确定性回放，实际服务端取消与截止时间另由集成及浏览器测试验证。
 
-快判与深判适配器均可按配置注册。`openai-compatible` 快判从三个单词的 logprobs 计算条件概率；端点不提供概率时，以 temperature=1 执行配置次数的独立单词采样。temperature=0 的能力检查响应不参与采样概率，其 token 仍计入使用量。当前 D1-v2 使用八个独立业务项目与 200 个关系组，开发集 75 组；相似度、站点检查和来源见 benchmark.md。模型报告包含 P*、逃逸、token、真实三轮重复、McNemar/Holm 和关系组 bootstrap。合成轨迹的冻结人秒按编辑结束截断，另报无人处理上界。
+快判与深判适配器均可按配置注册。`openai-compatible` 快判从三个单词的 logprobs 计算条件概率；端点不提供概率时，以 temperature=1 执行配置次数的独立单词采样。temperature=0 的能力检查响应不参与采样概率，其 token 仍计入使用量。当前 D1-v3 使用八个独立业务项目与 240 个关系组，开发集 115 组；相似度、站点检查和来源见 benchmark.md。模型报告包含 P*、逃逸、token、真实三轮重复、McNemar/Holm 和关系组 bootstrap。合成轨迹的冻结人秒按编辑结束截断，另报无人处理上界。
+
+阶段八的参数和预算见 `docs/conflict-guard/experiment/`。`index:run`、`d2:run`、`ablation:run`、`bench:agents` 支持 `--plan`；保留集评价要求人工确认。`rules:summary` 从最终变更对聚合规则精确率，`grey:summary` 以 P3 实际研判触发选取模型质量子集。`agents:summary` 统计真实任务完成、拒绝、撤回、审批等待与打扰，X6 owner 可直接引用 X5 条件的十个跨属主任务。D3 逃逸率缺少逐写入真值，明确报告 N/A。
 
 ## Agent T2 与 T3
 

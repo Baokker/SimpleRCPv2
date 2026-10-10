@@ -32,10 +32,11 @@ for (const [file, expected] of Object.entries(snapshot.generated) as Array<[stri
   assert.deepEqual(await fs.readFile(path.join(repeated, file)), bytes);
 }
 assert.deepEqual(await fs.readFile(path.join(repeated, "freeze.json")), await fs.readFile(path.join(original, "freeze.json")));
-assert.equal(snapshot.audit.groups, 40);
+assert.equal(snapshot.audit.groups, snapshot.datasets.D1.groups * 0.2);
 assert.equal(snapshot.audit.fraction, 0.2);
-assert.equal(snapshot.audit.perSplit.dev, 15);
-assert.equal(snapshot.audit.perSplit.holdout, 25);
+assert.equal(snapshot.audit.perSplit.dev + snapshot.audit.perSplit.holdout, snapshot.audit.groups);
+assert.equal(snapshot.audit.perSplit.dev, snapshot.audit.samples.filter((sample: { split: string }) => sample.split === "dev").length);
+assert.equal(snapshot.audit.perSplit.holdout, snapshot.audit.samples.filter((sample: { split: string }) => sample.split === "holdout").length);
 for (const sample of snapshot.audit.samples) {
   const programs = JSON.parse(await fs.readFile(path.join(original, "label-audit", sample.id, "programs.json"), "utf8"));
   const probes = JSON.parse(await fs.readFile(path.join(original, "label-audit", sample.id, "probe-results.json"), "utf8"));
@@ -91,14 +92,18 @@ try {
 }
 
 const recordings = JSON.parse(await fs.readFile(path.join(original, "model-recordings.json"), "utf8"));
-assert.equal(Object.keys(recordings.entries).length, 197);
+assert.equal(Object.keys(recordings.entries).length, recordings.archives.reduce((sum: number, archive: { entries: number }) => sum + archive.entries, 0));
+assert.equal(new Set(recordings.archives.map((archive: { file: string }) => archive.file)).size, recordings.archives.length);
 for (const policy of ["G1", "G2"]) {
-  const recording = recordings.recordings.find((entry: { report: string; policy: string }) => entry.report.endsWith("real-round1/results.json.gz") && entry.policy === policy);
-  assert.equal(recording.cacheFiles.length, 52);
-  assert.equal(recording.subscriptions, null);
+  const recording = recordings.recordings.find((entry: { report: string; policy: string }) => entry.report.endsWith("preexperiment/record/results.json.gz") && entry.policy === policy);
+  assert(recording);
+  const source = JSON.parse(gunzipSync(await fs.readFile(path.join(repository, recording.report))).toString());
+  assert.equal(recording.cacheFiles.length, source.policies[policy].model.calls.length);
+  assert.deepEqual(recording.subscriptions, source.policies[policy].model.subscriptions);
+  assert(recording.subscriptions.length > 0);
   for (const file of recording.cacheFiles) assert.deepEqual(recordings.entries[file], snapshot.artifacts[file]);
 }
-assert.equal(recordings.subscriptionCoverage, "missing-in-source");
+assert.equal(recordings.subscriptionCoverage, "complete");
 const cacheFile = path.join(repository, recordings.recordings.find((entry: { policy: string }) => entry.policy === "G2").cacheFiles[1]);
 const cacheWasPresent = Boolean(lstatSync(cacheFile, { throwIfNoEntry: false }));
 const cacheArchive = path.join(repository, recordings.archives[0].file);
@@ -114,7 +119,7 @@ try {
   if (cacheWasPresent) await fs.writeFile(cacheFile, cached);
   else await fs.rm(cacheFile, { force: true });
 }
-const manifestFile = path.join(repository, "packages/conflict-guard/bench/datasets/d1-v2/manifest.json");
+const manifestFile = path.join(repository, `packages/conflict-guard/bench/datasets/${snapshot.datasets.D1.version}/manifest.json`);
 const manifestWasPresent = Boolean(lstatSync(manifestFile, { throwIfNoEntry: false }));
 const manifest = manifestWasPresent ? await fs.readFile(manifestFile) : undefined;
 try {
@@ -144,6 +149,6 @@ try {
   await fs.rm(pathTests, { recursive: true });
 }
 run(true);
-const verification = { codeCommit: snapshot.codeCommit, checks: { deterministicExport: true, byteHashes: true, auditFraction: true, independentReviewerTemplates: true, reviewerDecisionsPreserved: true, filledReviewerAccepted: true, unknownReviewerSampleRejected: true, fourStatesThreeRuns: true, modifiedPromptRejected: true, archiveLabelsTracesChecked: true, completeModelCache: true, modifiedNonfirstCacheRejected: true, archiveOnlyInputsAccepted: true, outputSymlinksRejectedBeforeWrites: true, danglingSymlinkRejected: true, buildBeforeProductImport: true }, auditGroups: 40, cacheEntries: 197, generatedFiles: Object.keys(snapshot.generated).length + 1, modelCalls: 0, agentRuns: 0, holdoutPolicyEvaluations: 0 };
+const verification = { codeCommit: snapshot.codeCommit, checks: { deterministicExport: true, byteHashes: true, auditFraction: true, independentReviewerTemplates: true, reviewerDecisionsPreserved: true, filledReviewerAccepted: true, unknownReviewerSampleRejected: true, fourStatesThreeRuns: true, modifiedPromptRejected: true, archiveLabelsTracesChecked: true, completeModelCache: true, modifiedNonfirstCacheRejected: true, archiveOnlyInputsAccepted: true, outputSymlinksRejectedBeforeWrites: true, danglingSymlinkRejected: true, buildBeforeProductImport: true }, auditGroups: snapshot.audit.groups, cacheEntries: Object.keys(recordings.entries).length, generatedFiles: Object.keys(snapshot.generated).length + 1, modelCalls: 0, agentRuns: 0, holdoutPolicyEvaluations: 0 };
 await fs.writeFile(path.join(repository, ".test-workspaces/checkpoint-c-verification.json"), JSON.stringify(verification, null, 2) + "\n");
 console.log(JSON.stringify(verification));

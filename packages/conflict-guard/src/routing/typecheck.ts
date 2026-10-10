@@ -55,10 +55,13 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
   return (input: FourStateInput): FourStateResult => {
     const started = options.now();
     fileNames = options.files.listFiles().filter((file) => /\.(?:ts|tsx|js|jsx|mts|cts|mjs|cjs)$/i.test(file));
+    const presentFiles = new Set(fileNames);
     knownFiles = new Set(fileNames);
     const timeout = options.timeoutMs ?? 500;
     const affected = new Set([input.left.symbol.file, input.right.symbol.file]);
     for (const hop of input.path?.hops ?? []) { affected.add(hop.from.slice(0, hop.from.indexOf("#"))); affected.add(hop.to.slice(0, hop.to.indexOf("#"))); }
+    // 已删除文件仍需重建四种程序状态，其文件版本仅由本次检查的覆盖文本提供。
+    for (const file of affected) if (!knownFiles.has(file)) { fileNames.push(file); knownFiles.add(file); }
     const original = new Map<string, string>();
     for (const file of affected) original.set(file, options.files.readFile(file));
     const locations = new Map<PairSide, { start: number; end: number }>();
@@ -124,7 +127,13 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
         if (options.now() - started > timeout) return { ran: false, skipped: `超过 ${timeout} ms`, durationMs: options.now() - started };
       }
     } finally {
-      for (const file of affected) { overrides.delete(file); snapshots.delete(file); versions.set(file, String(options.files.version?.(file) ?? 0)); }
+      for (const file of affected) {
+        overrides.delete(file); snapshots.delete(file);
+        if (presentFiles.has(file)) versions.set(file, String(options.files.version?.(file) ?? 0));
+        else versions.delete(file);
+      }
+      fileNames = fileNames.filter((file) => presentFiles.has(file));
+      knownFiles = presentFiles;
       projectVersion += 1;
     }
     const merged = diagnostics.get("merged") ?? new Set<string>();

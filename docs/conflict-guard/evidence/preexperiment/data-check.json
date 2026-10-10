@@ -1,0 +1,411 @@
+{
+  "dataset": "d1-v3",
+  "groups": 240,
+  "developmentGroups": 115,
+  "holdoutGroups": 125,
+  "safeGreyGroups": 40,
+  "labels": {
+    "allow": 237,
+    "warn": 0,
+    "lock": 79,
+    "exclude": 7
+  },
+  "developmentUniqueSamples": 119,
+  "developmentTruth": {
+    "allow": 97,
+    "warn": 0,
+    "lock": 22
+  },
+  "holdoutUnchanged": true,
+  "rows": [
+    {
+      "id": "d1-dev-safe-0001-safe",
+      "relationGroupId": "d1-dev-safe-0001",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0002-safe",
+      "relationGroupId": "d1-dev-safe-0002",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "relationGroupId": "d1-dev-safe-0003",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0004-safe",
+      "relationGroupId": "d1-dev-safe-0004",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0005-safe",
+      "relationGroupId": "d1-dev-safe-0005",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0006-safe",
+      "relationGroupId": "d1-dev-safe-0006",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0007-safe",
+      "relationGroupId": "d1-dev-safe-0007",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0008-safe",
+      "relationGroupId": "d1-dev-safe-0008",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0009-safe",
+      "relationGroupId": "d1-dev-safe-0009",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0010-safe",
+      "relationGroupId": "d1-dev-safe-0010",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0011-safe",
+      "relationGroupId": "d1-dev-safe-0011",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0012-safe",
+      "relationGroupId": "d1-dev-safe-0012",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0013-safe",
+      "relationGroupId": "d1-dev-safe-0013",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0014-safe",
+      "relationGroupId": "d1-dev-safe-0014",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0015-safe",
+      "relationGroupId": "d1-dev-safe-0015",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0016-safe",
+      "relationGroupId": "d1-dev-safe-0016",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0017-safe",
+      "relationGroupId": "d1-dev-safe-0017",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0018-safe",
+      "relationGroupId": "d1-dev-safe-0018",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0019-safe",
+      "relationGroupId": "d1-dev-safe-0019",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0020-safe",
+      "relationGroupId": "d1-dev-safe-0020",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0021-safe",
+      "relationGroupId": "d1-dev-safe-0021",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0022-safe",
+      "relationGroupId": "d1-dev-safe-0022",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0023-safe",
+      "relationGroupId": "d1-dev-safe-0023",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "relationGroupId": "d1-dev-safe-0024",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0025-safe",
+      "relationGroupId": "d1-dev-safe-0025",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0026-safe",
+      "relationGroupId": "d1-dev-safe-0026",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0027-safe",
+      "relationGroupId": "d1-dev-safe-0027",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0028-safe",
+      "relationGroupId": "d1-dev-safe-0028",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0029-safe",
+      "relationGroupId": "d1-dev-safe-0029",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0030-safe",
+      "relationGroupId": "d1-dev-safe-0030",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0031-safe",
+      "relationGroupId": "d1-dev-safe-0031",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0032-safe",
+      "relationGroupId": "d1-dev-safe-0032",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0033-safe",
+      "relationGroupId": "d1-dev-safe-0033",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0034-safe",
+      "relationGroupId": "d1-dev-safe-0034",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0035-safe",
+      "relationGroupId": "d1-dev-safe-0035",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0036-safe",
+      "relationGroupId": "d1-dev-safe-0036",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0037-safe",
+      "relationGroupId": "d1-dev-safe-0037",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0038-safe",
+      "relationGroupId": "d1-dev-safe-0038",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0039-safe",
+      "relationGroupId": "d1-dev-safe-0039",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0040-safe",
+      "relationGroupId": "d1-dev-safe-0040",
+      "truth": "allow",
+      "grey": true,
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    }
+  ]
+}

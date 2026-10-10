@@ -26,6 +26,7 @@ export interface TrackerOptions {
   cursorLeaveLines?: number;
   maxBatchDurationMs?: number;
   activeIdleMs?: number;
+  retainHistory?: boolean;
   createId?: () => string;
 }
 
@@ -192,10 +193,14 @@ export class ConflictGuardTracker {
   markDone(actor: Extract<ActorRef, { kind: "human" | "agent" }>) {
     const key = actorKeyOf(actor);
     for (const [file, state] of this.files) if (state.batches.has(key)) this.closeBatch(file, key, "flush");
-    this.closeActive(key);
+    if (this.options.retainHistory) {
+      const state = this.active.get(key);
+      if (state) state.changeSet.status = "settled";
+    } else this.closeActive(key);
   }
 
   closeMemberFile(actor: Extract<ActorRef, { kind: "human" }>, file: string) {
+    if (this.options.retainHistory) return;
     const key = actorKeyOf(actor);
     if (!this.active.get(key)?.changeSet.files.has(file)) return;
     this.removeActiveFile(key, file, "idle");
@@ -248,6 +253,7 @@ export class ConflictGuardTracker {
   }
 
   private resetActiveTimer(key: string, file: string) {
+    if (this.options.retainHistory) return;
     const activeState = this.active.get(key);
     if (!activeState) return;
     if (activeState.changeSet.actor.kind === "agent") return;

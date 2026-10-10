@@ -4,11 +4,11 @@ const baseNames = new Set([
 const identityNames = /TOKEN|SECRET|PASSWORD|COOKIE/i;
 const sensitiveNames = /KEY|TOKEN|SECRET|PASSWORD|COOKIE/i;
 
-function buildEnvironment(env: NodeJS.ProcessEnv, additional: string[], agent: boolean) {
+function buildEnvironment(env: NodeJS.ProcessEnv, additional: string[], credential?: string) {
   const allowed = new Set([...baseNames, ...additional]);
   const entries = Object.entries(env).filter(([name, value]) => {
     if (typeof value !== "string" || identityNames.test(name)) return false;
-    if (sensitiveNames.test(name) && !(agent && name === "DEEPSEEK_API_KEY")) return false;
+    if (sensitiveNames.test(name) && name !== credential) return false;
     return allowed.has(name) || name.startsWith("LC_");
   });
   const result = Object.fromEntries(entries) as Record<string, string>;
@@ -17,9 +17,10 @@ function buildEnvironment(env: NodeJS.ProcessEnv, additional: string[], agent: b
 }
 
 export function terminalEnv(env: NodeJS.ProcessEnv = process.env) {
-  return buildEnvironment(env, (env.SIMPLERCP_TERMINAL_ENV_ALLOW ?? "").split(",").map((name) => name.trim()), false);
+  return buildEnvironment(env, (env.SIMPLERCP_TERMINAL_ENV_ALLOW ?? "").split(",").map((name) => name.trim()));
 }
 
-export function agentEnv(env: NodeJS.ProcessEnv = process.env) {
-  return buildEnvironment(env, ["DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL", ...(env.SIMPLERCP_AGENT_ENV_ALLOW ?? "").split(",").map((name) => name.trim())], true);
+export function agentEnv(env: NodeJS.ProcessEnv = process.env, provider: "minimax" | "deepseek" = "deepseek") {
+  const prefix = provider === "minimax" ? "MINIMAX" : "DEEPSEEK";
+  return buildEnvironment(env, [`${prefix}_API_KEY`, `${prefix}_BASE_URL`, `${prefix}_MODEL`, ...(env.SIMPLERCP_AGENT_ENV_ALLOW ?? "").split(",").map((name) => name.trim())], `${prefix}_API_KEY`);
 }

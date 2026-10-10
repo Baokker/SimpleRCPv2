@@ -37,9 +37,11 @@ export async function createApp(config: ServerConfig) {
   const agentSettings = await createAgentSettingsStore({
     storagePath: path.join(config.dataDir, "agent", "settings.json"),
     defaultModel: config.agent?.model ?? "deepseek-flash",
-    apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime)
+    apiKeyConfigured: Boolean(config.agent?.apiKey || config.fakeAgentRuntime),
+    provider: config.agent?.provider
   });
   const openCodeRuntime = createOpenCodeRuntime({
+    provider: config.agent?.provider,
     port: config.agent?.openCodePort ?? 4096,
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",

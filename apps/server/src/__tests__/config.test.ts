@@ -3,6 +3,14 @@ import { describe, expect, it } from "vitest";
 import { loadConfig } from "../config.js";
 
 describe("server config", () => {
+  it("MiniMax 深判和 Agent 配置读取独立环境变量", () => {
+    const config = loadConfig({ CONFLICT_GUARD: "full", SIMPLERCP_AGENT_PROVIDER: "minimax", MINIMAX_API_KEY: "minimax-credential", MINIMAX_BASE_URL: "https://api.minimax.io/v1", MINIMAX_MODEL: "MiniMax-M3", DEEPSEEK_API_KEY: "deepseek-credential" });
+    expect(config.agent).toEqual({ provider: "minimax", apiKey: "minimax-credential", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3", openCodePort: 4096, runTimeoutMs: 600000, maxConcurrentRuns: 3, activityConfig: { waitingMs: 20000, stalledMs: 60000 } });
+    expect(config.conflictGuard?.adjudication?.settings).toMatchObject({ deep: "minimax", version: "adjudication-v2", t2Reasoning: true, t3Reasoning: true });
+    expect(config.conflictGuard?.adjudication?.minimax).toEqual({ apiKey: "minimax-credential", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3", jsonMode: true, temperature: 0 });
+    expect(loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_DEEP_JUDGE: "deepseek" }).conflictGuard?.adjudication?.settings?.deep).toBe("deepseek");
+    expect(() => loadConfig({ SIMPLERCP_AGENT_PROVIDER: "unknown" })).toThrow("SIMPLERCP_AGENT_PROVIDER");
+  });
   it("uses stable local defaults when no environment variables are set", () => {
     expect(loadConfig({}, "/srv/simplercp")).toEqual({
       port: 4000,
@@ -29,6 +37,7 @@ describe("server config", () => {
         maxJudgementsPerFrame: 20
       },
       agent: {
+        provider: "deepseek",
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
         model: "deepseek-flash",
@@ -77,6 +86,7 @@ describe("server config", () => {
         maxJudgementsPerFrame: 20
       },
       agent: {
+        provider: "deepseek",
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
         model: "DeepSeek-V4-Flash",

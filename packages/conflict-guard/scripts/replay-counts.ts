@@ -6,8 +6,9 @@ import { gunzipSync } from "node:zlib";
 import { readTrace, replayAgentTrace, participantKey, type ActorRef, type CandidatePair, type SemanticChangeEvent } from "../dist/index.js";
 import { replayLibraries } from "./replay-libs.ts";
 
-const { values } = parseArgs({ options: { trace: { type: "string" }, run: { type: "string" }, out: { type: "string" } } });
+const { values } = parseArgs({ options: { trace: { type: "string" }, run: { type: "string" }, out: { type: "string" }, plan: { type: "boolean", default: false } } });
 if (!values.trace || !values.run || !values.out) throw new Error("必须提供 trace、run 记录文件与 out");
+if (values.plan) { console.log(JSON.stringify({ trace: values.trace, run: values.run, simulation: "local-rules", executed: false, modelCalls: 0 })); process.exit(0); }
 async function readText(file: string) {
   const bytes = await fs.readFile(file);
   return (file.endsWith(".gz") ? gunzipSync(bytes) : bytes).toString("utf8");
