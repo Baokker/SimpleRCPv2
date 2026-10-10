@@ -1,0 +1,10 @@
+{
+  "R4": {
+    "queries": 0,
+    "reason": "K3 记录中没有实际工具查询"
+  },
+  "R5": {
+    "configured": false,
+    "reason": "没有配置 embedding 服务"
+  }
+}

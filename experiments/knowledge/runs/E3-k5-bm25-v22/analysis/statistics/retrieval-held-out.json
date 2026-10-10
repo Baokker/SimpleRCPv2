@@ -1,0 +1,108 @@
+{
+  "summary": [
+    {
+      "condition": "R1",
+      "trapTasks": 12,
+      "recall1": 0.0,
+      "recall3": 0.0,
+      "recall5": 0.0,
+      "mrr": 0.03605056419006592,
+      "ndcg5": 0.0,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R2",
+      "trapTasks": 12,
+      "recall1": 0.0,
+      "recall3": 0.0,
+      "recall5": 0.0,
+      "mrr": 0.03605056419006592,
+      "ndcg5": 0.0,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R2-wrong-file",
+      "trapTasks": 12,
+      "recall1": 0.0,
+      "recall3": 0.0,
+      "recall5": 0.0,
+      "mrr": 0.03605056419006592,
+      "ndcg5": 0.0,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R3",
+      "trapTasks": 12,
+      "recall1": 0.0,
+      "recall3": 0.0,
+      "recall5": 0.3333333333333333,
+      "mrr": 0.12858071258806525,
+      "ndcg5": 0.14355885269113103,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R3-wrong-file",
+      "trapTasks": 12,
+      "recall1": 0.0,
+      "recall3": 0.0,
+      "recall5": 0.0,
+      "mrr": 0.06566160555131091,
+      "ndcg5": 0.0,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R6",
+      "trapTasks": 12,
+      "recall1": 0.5,
+      "recall3": 0.6666666666666666,
+      "recall5": 0.75,
+      "mrr": 0.6196759259259258,
+      "ndcg5": 0.6264818800671664,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R6-lexical",
+      "trapTasks": 12,
+      "recall1": 0.5,
+      "recall3": 0.6666666666666666,
+      "recall5": 0.75,
+      "mrr": 0.6196759259259258,
+      "ndcg5": 0.6264818800671664,
+      "falseInjections": 20,
+      "controlTasks": 4
+    },
+    {
+      "condition": "R6-wrong-file",
+      "trapTasks": 12,
+      "recall1": 0.5,
+      "recall3": 0.6666666666666666,
+      "recall5": 0.75,
+      "mrr": 0.6196759259259258,
+      "ndcg5": 0.6264818800671664,
+      "falseInjections": 20,
+      "controlTasks": 4
+    }
+  ],
+  "comparison": {
+    "condition_a": "R3",
+    "condition_b": "R6",
+    "tasks": 12,
+    "left_only": 0,
+    "right_only": 5,
+    "mcnemar_p": 0.0625,
+    "difference": 0.4166666666666667,
+    "difference_ci": [
+      0.16666666666666666,
+      0.6666666666666666
+    ],
+    "tost_bound": 0.05,
+    "tost_p": 0.98434764381527,
+    "tost_reason": null
+  }
+}

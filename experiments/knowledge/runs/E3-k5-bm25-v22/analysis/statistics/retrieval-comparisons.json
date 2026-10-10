@@ -1,0 +1,47 @@
+[
+  {
+    "condition_a": "R3",
+    "condition_b": "R6",
+    "metric": "recall5",
+    "tasks": 16,
+    "left_only": 1,
+    "right_only": 7,
+    "difference": 0.375,
+    "difference_ci": [
+      0.0625,
+      0.625
+    ],
+    "mcnemar_p": 0.0703125,
+    "holm_p": 0.0703125
+  },
+  {
+    "condition_a": "R1",
+    "condition_b": "R6",
+    "metric": "recall5",
+    "tasks": 16,
+    "left_only": 0,
+    "right_only": 11,
+    "difference": 0.6875,
+    "difference_ci": [
+      0.4375,
+      0.875
+    ],
+    "mcnemar_p": 0.0009765625,
+    "holm_p": 0.0029296875
+  },
+  {
+    "condition_a": "R2",
+    "condition_b": "R6",
+    "metric": "recall5",
+    "tasks": 16,
+    "left_only": 0,
+    "right_only": 11,
+    "difference": 0.6875,
+    "difference_ci": [
+      0.4375,
+      0.875
+    ],
+    "mcnemar_p": 0.0009765625,
+    "holm_p": 0.0029296875
+  }
+]

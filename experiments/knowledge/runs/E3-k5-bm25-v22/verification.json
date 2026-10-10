@@ -1,0 +1,198 @@
+{
+  "queries": 176,
+  "baselineQueriesVerified": 110,
+  "baselineRankingDifferences": [],
+  "pilotQueriesVerified": 30,
+  "sourceGroups": [
+    {
+      "source": "empty",
+      "tasks": 8,
+      "boundedHits": 0,
+      "bm25Hits": 4
+    },
+    {
+      "source": "prompt-existing-path",
+      "tasks": 8,
+      "boundedHits": 5,
+      "bm25Hits": 7
+    }
+  ],
+  "detail": [
+    {
+      "task": "R1-T01",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 15,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R1-T02",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 15,
+      "bm25Rank": 8,
+      "missed": true
+    },
+    {
+      "task": "R1-T03",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 14,
+      "bm25Rank": 2,
+      "missed": false
+    },
+    {
+      "task": "R1-T04",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 14,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R1-T05",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 15,
+      "bm25Rank": 6,
+      "missed": true
+    },
+    {
+      "task": "R1-T06",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 10,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R1-T07",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 16,
+      "bm25Rank": 9,
+      "missed": true
+    },
+    {
+      "task": "R1-T08",
+      "repository": "R1",
+      "activitySource": "empty",
+      "activeFiles": [],
+      "boundedRank": 12,
+      "bm25Rank": 6,
+      "missed": true
+    },
+    {
+      "task": "R2-T01",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "boundedRank": 1,
+      "bm25Rank": 8,
+      "missed": true
+    },
+    {
+      "task": "R2-T02",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "boundedRank": 4,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R2-T03",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "boundedRank": 17,
+      "bm25Rank": 5,
+      "missed": false
+    },
+    {
+      "task": "R2-T04",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "boundedRank": 4,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R2-T05",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "boundedRank": 22,
+      "bm25Rank": 3,
+      "missed": false
+    },
+    {
+      "task": "R2-T06",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "boundedRank": 4,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R2-T07",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "boundedRank": 4,
+      "bm25Rank": 1,
+      "missed": false
+    },
+    {
+      "task": "R2-T08",
+      "repository": "R2",
+      "activitySource": "prompt-existing-path",
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "boundedRank": 16,
+      "bm25Rank": 5,
+      "missed": false
+    }
+  ],
+  "perturbationTargetRankChanges": [],
+  "hashes": {
+    "experiments/knowledge/formal-v21.json": "a5b41fa275d6380c964038cb3c1e2337f225aa61e304f9aa8c91f78077659d0a",
+    "experiments/knowledge/bm25-protocol.json": "ba68ee9cdec9943a035b42e87e1775330084a56e7f70f04ca52aec9528cb657b",
+    "experiments/knowledge/bm25-full-protocol.json": "809013ea2f6a920827b7f4ef535e2ae7a91c02ba581ea122367db96d0c50c814",
+    "packages/knowledge/src/retrieval/bm25.ts": "cb1ea17be147b187684d2627bcb88dc0bb3dcfb217a600277d80de4208c2f9d0",
+    "packages/knowledge/src/retrieval/ranking.ts": "085a1f3a0a117cd9d62ff65e4e8935041c4c91f0b3c98e339a5d465668e054ce",
+    "experiments/knowledge/k5.ts": "7201c60b3d16ce32f7a38703cbf99439b6270fabc1454c947d25ebf0a5f81135",
+    "pnpm-lock.yaml": "815fe31b8708f5df8fc2fd09f8631d5d28e3946b53997c8054d8925140d3413e",
+    "manifest": "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137"
+  },
+  "protocolHash": "289e9e47ce5b4de215680a7098930a36099d5bde3927cff54ab149a9d065fb92",
+  "modelCalls": 0,
+  "fullRepeatQueriesVerified": 176,
+  "fullRepeatRankingDifferences": 0
+}
