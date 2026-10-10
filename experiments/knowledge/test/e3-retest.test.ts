@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {fromMarkdown} from "mdast-util-from-markdown";
 import {searchRankedKnowledgeCards} from "@simplercp/knowledge";
-import {buildRerankRequest, estimateRerankCost} from "../../../apps/server/src/knowledge/rerank.js";
+import {buildRerankRequest, estimateRerankCost, parseRerankSelection} from "../../../apps/server/src/knowledge/rerank.js";
 import {knowledgeActiveFiles} from "../../../apps/server/src/knowledge/provider.js";
 import {selectKnowledgeInjection} from "../../../apps/server/src/knowledge/injection.js";
 import {startRetrievalServer} from "../e3-server.js";
@@ -39,6 +39,8 @@ test("M3 请求使用临时编号，并按记录的 OpenAI 用量估算费用", 
     assert.equal(request.mapping.length, 20);
     for (const {cardId} of request.mapping) assert.ok(!JSON.stringify(request.messages).includes(cardId));
     assert.notDeepEqual(buildRerankRequest(input, "20261011").mapping, request.mapping);
+    const fenced = parseRerankSelection("```json\n{\"selected\":[]}\n```", request.mapping, 5);
+    assert.deepEqual(fenced, []);
     const records = await readJsonl(path.join(root, "runs/E6-recap-acceptance-v21-m3-final/results.jsonl"));
     for (const row of records) for (const call of row.calls) {
       const usage = call.usage;
