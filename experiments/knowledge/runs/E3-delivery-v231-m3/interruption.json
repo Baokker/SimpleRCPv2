@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-10T09:50:22Z",
+  "status": "stopped-awaiting-refreeze-review",
+  "completedLocal": 88,
+  "completedModel": 4,
+  "modelFormatFailures": 4,
+  "knownEstimatedCostCny": 0.05739384,
+  "inFlightKey": "R1-C01-paraphrase-C-2",
+  "inFlightCost": null,
+  "reason": "M3 responses contain Markdown JSON fences; proposed use of existing extractFirstJsonObject requires a new frozen version.",
+  "remainingModelRequestsIncludingInterrupted": 128
+}

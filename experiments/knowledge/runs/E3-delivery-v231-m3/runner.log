@@ -1,0 +1,7 @@
+{"key":"R1-C01-original-C-1","failed":true,"delivered":null,"irrelevant":null,"latencyMs":20098.223375,"spentCny":0.014367360000000001}
+{"key":"R1-C01-original-C-2","failed":true,"delivered":null,"irrelevant":null,"latencyMs":13541.623750000002,"spentCny":0.02791992}
+{"key":"R1-C01-original-C-3","failed":true,"delivered":null,"irrelevant":null,"latencyMs":26526.291917000002,"spentCny":0.04251408}
+{"key":"R1-C01-paraphrase-C-1","failed":true,"delivered":null,"irrelevant":null,"latencyMs":15869.647999999994,"spentCny":0.05739384}
+undefined
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command was killed with SIGTERM (Termination): node --import tsx e3-retest.ts --phase model --out experiments/knowledge/runs/E3-delivery-v231-m3

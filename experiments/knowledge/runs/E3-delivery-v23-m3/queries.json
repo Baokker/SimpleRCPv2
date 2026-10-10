@@ -1,0 +1,222 @@
+[
+  {
+    "task": "R1-C01",
+    "variant": "original",
+    "query": "增加库存查询接口，按 warehouseId 和 minimumAvailable 筛选，按照 sku 升序返回，并返回匹配库存数量。minimumAvailable 默认为 0，结果只包含 available 大于或等于该数值的库存。\n\n接口要求：`src/services/stock-query.ts` 导出 `queryStock(service,query = {})`，service 为 `InventoryService`，query 字段为可选字符串 `warehouseId`、可选数字 `minimumAvailable`。返回 `{items,count}`，items 每项 `{warehouseId,sku,available,reserved}`。`src/http/stock-query-routes.ts` 导出 `registerStockQueryRoutes(registry,service)`，注册 `GET /inventory/query`。保留 `InventoryStore`、`InventoryService.initialize`、`list`、`RouteRegistry`。\n"
+  },
+  {
+    "task": "R1-C01",
+    "variant": "paraphrase",
+    "query": "请提供库存筛选功能及相应接口。调用者可以指定 warehouseId 和 minimumAvailable，后者缺省为 0；仅返回 available 达到要求的库存，结果按 sku 递增排列，并给出符合条件的记录数。\n\n接口要求：`src/services/stock-query.ts` 导出 `queryStock(service,query = {})`，service 为 `InventoryService`，query 字段为可选字符串 `warehouseId`、可选数字 `minimumAvailable`。返回 `{items,count}`，items 每项 `{warehouseId,sku,available,reserved}`。`src/http/stock-query-routes.ts` 导出 `registerStockQueryRoutes(registry,service)`，注册 `GET /inventory/query`。保留 `InventoryStore`、`InventoryService.initialize`、`list`、`RouteRegistry`。\n"
+  },
+  {
+    "task": "R1-C02",
+    "variant": "original",
+    "query": "增加订单内部备注搜索，可按 memberId 筛选；q 在任意一条备注中按大小写不敏感的子串匹配，空 q 返回全部匹配成员的订单。返回订单 id 与完整备注数组，保持订单原始数据不变。\n\n接口要求：`src/services/order-search.ts` 导出 `searchOrderNotes(service,query)`，service 为 `OrderService`，query 包含必填字符串 `q`、可选 `memberId`。返回数组，每项 `{id,internalNotes}`。`src/http/order-search-routes.ts` 导出 `registerOrderSearchRoutes(registry,service)`，注册 `GET /orders/search`。保留 `OrderStore`、`createOrder`、`addInternalNote`、`OrderService.create`、`list`、`RouteRegistry`。\n"
+  },
+  {
+    "task": "R1-C02",
+    "variant": "paraphrase",
+    "query": "请为订单内部备注提供搜索功能。q 按不区分大小写的子串方式匹配任意备注，还可以限定 memberId。q 为空时返回该成员条件下的全部订单；结果包含订单 id 和完整备注数组，查询不能改变订单记录。\n\n接口要求：`src/services/order-search.ts` 导出 `searchOrderNotes(service,query)`，service 为 `OrderService`，query 包含必填字符串 `q`、可选 `memberId`。返回数组，每项 `{id,internalNotes}`。`src/http/order-search-routes.ts` 导出 `registerOrderSearchRoutes(registry,service)`，注册 `GET /orders/search`。保留 `OrderStore`、`createOrder`、`addInternalNote`、`OrderService.create`、`list`、`RouteRegistry`。\n"
+  },
+  {
+    "task": "R1-C03",
+    "variant": "original",
+    "query": "增加订单商品数量汇总和 HTTP 入口，按 sku 汇总所有订单中商品的 quantity，按 sku 升序返回，保持订单内容不变。\n\n接口要求：`src/services/order-quantities.ts` 导出 `summarizeOrderQuantities(service)`，service 为 OrderService，返回 `{sku,quantity}[]`。`src/http/order-quantity-routes.ts` 导出 `registerOrderQuantityRoutes(registry,service)`，注册 `GET /orders/quantities`。保留 OrderStore、OrderService.create、list、createOrder、addLine 和 RouteRegistry。商品行包含 sku、name、quantity、unitPrice。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-C03",
+    "variant": "paraphrase",
+    "query": "请提供订单商品数量汇总及 HTTP 接口。遍历所有订单，按 sku 累加商品的 quantity，按照 sku 递增返回汇总结果，订单原始内容保持不变。\n\n接口要求：`src/services/order-quantities.ts` 导出 `summarizeOrderQuantities(service)`，service 为 OrderService，返回 `{sku,quantity}[]`。`src/http/order-quantity-routes.ts` 导出 `registerOrderQuantityRoutes(registry,service)`，注册 `GET /orders/quantities`。保留 OrderStore、OrderService.create、list、createOrder、addLine 和 RouteRegistry。商品行包含 sku、name、quantity、unitPrice。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-T01",
+    "variant": "original",
+    "query": "支持给一个订单批量预留多个商品的库存。增加批量服务与 HTTP 路由，复用现有预留记录结构，成功时返回输入顺序的预留记录，错误继续向调用者抛出。\n\n接口要求：`src/services/reservation-batch.ts` 导出 `reserveBatch(service, rows)`，service 是 `InventoryService`，rows 是 `ReserveInput[]`。`src/http/reservation-batch-routes.ts` 导出 `registerReservationBatchRoutes(registry, service)`，注册 `POST /inventory/reservations/batch`，请求 `{rows}`，响应为 `Reservation[]`。每项输入包含 `reservationId`、`orderId`、`warehouseId`、`sku`、`quantity`，每项输出包含 `id`、`state`。已有 `InventoryStore`、`InventoryService.initialize`、`stock`、`listReservations`、`RouteRegistry` 保持可用。\n"
+  },
+  {
+    "task": "R1-T01",
+    "variant": "paraphrase",
+    "query": "请增加订单批量预留库存的能力，并提供服务函数和 HTTP 入口。沿用现有预留记录格式，一次接收多个商品；成功后的记录顺序与输入一致，出现错误时向调用方传播。\n\n接口要求：`src/services/reservation-batch.ts` 导出 `reserveBatch(service, rows)`，service 是 `InventoryService`，rows 是 `ReserveInput[]`。`src/http/reservation-batch-routes.ts` 导出 `registerReservationBatchRoutes(registry, service)`，注册 `POST /inventory/reservations/batch`，请求 `{rows}`，响应为 `Reservation[]`。每项输入包含 `reservationId`、`orderId`、`warehouseId`、`sku`、`quantity`，每项输出包含 `id`、`state`。已有 `InventoryStore`、`InventoryService.initialize`、`stock`、`listReservations`、`RouteRegistry` 保持可用。\n"
+  },
+  {
+    "task": "R1-T02",
+    "variant": "original",
+    "query": "支持把审计记录导出为 JSON 数组，方便客服查询支付和通知问题。增加 HTTP 接口与导出服务，可按 action 筛选，limit 指定最多返回多少条；按照写入顺序返回最近的记录。保留 payload 的层级和普通业务字段，读取过程保持存储内容不变。\n\n接口要求：`src/http/audit-routes.ts` 导出 `registerAuditRoutes(registry, store)` 和 `exportAuditRows(store, query = {})`，registry 为 `RouteRegistry`，store 为 `AuditStore`。注册 `GET /audit/export`。query 包含可选字符串 `action`、`limit`（正整数）。返回 `AuditEntry[]`，每行包含 `id`、`action`、`actorId`、`payload`、`createdAt`，payload 是任意嵌套 JSON。过滤后取最后 limit 条，并按写入顺序返回。已有 `AuditStore.append`、`AuditStore.all` 与 `RouteRegistry.get` 保持可用。\n"
+  },
+  {
+    "task": "R1-T02",
+    "variant": "paraphrase",
+    "query": "客服需要把审计记录下载为 JSON 数组来查看支付和通知问题。请提供导出服务及 HTTP 入口，支持 action 条件与 limit 条数限制，取得最近的记录并按写入顺序输出。保留 payload 的嵌套结构和普通业务字段，读取不改变存储。\n\n接口要求：`src/http/audit-routes.ts` 导出 `registerAuditRoutes(registry, store)` 和 `exportAuditRows(store, query = {})`，registry 为 `RouteRegistry`，store 为 `AuditStore`。注册 `GET /audit/export`。query 包含可选字符串 `action`、`limit`（正整数）。返回 `AuditEntry[]`，每行包含 `id`、`action`、`actorId`、`payload`、`createdAt`，payload 是任意嵌套 JSON。过滤后取最后 limit 条，并按写入顺序返回。已有 `AuditStore.append`、`AuditStore.all` 与 `RouteRegistry.get` 保持可用。\n"
+  },
+  {
+    "task": "R1-T03",
+    "variant": "original",
+    "query": "增加支付成功通知的排队接口，调用方提供一次请求的 requestId、订单标识与收件人，通知使用 orderPaid 模板。提供 HTTP 入口与服务函数，返回排队记录，不立即发送。\n\n接口要求：`src/services/payment-notices.ts` 导出 `schedulePaymentNotice(outbox,input)`，outbox 为 `NotificationOutbox`，input 包含字符串 `requestId`、`orderId`、`recipient` 与数字 `createdAt`。返回 `OutboxMessage`，保留 `id`、`logicalId`、`recipient`、`template`、`data`、`state` 字段，template 为 `orderPaid`，data 包含 `orderId`。`src/http/payment-notice-routes.ts` 导出 `registerPaymentNoticeRoutes(registry,outbox)`，注册 `POST /notifications/payment`。已有 `RouteRegistry`、`NotificationOutbox.list`、`get` 保持可用。\n"
+  },
+  {
+    "task": "R1-T03",
+    "variant": "paraphrase",
+    "query": "请提供支付成功通知的排队服务和 HTTP 接口。输入包含本次请求的 requestId、订单标识和收件人，采用 orderPaid 模板；将通知加入队列后返回记录，暂不发送。\n\n接口要求：`src/services/payment-notices.ts` 导出 `schedulePaymentNotice(outbox,input)`，outbox 为 `NotificationOutbox`，input 包含字符串 `requestId`、`orderId`、`recipient` 与数字 `createdAt`。返回 `OutboxMessage`，保留 `id`、`logicalId`、`recipient`、`template`、`data`、`state` 字段，template 为 `orderPaid`，data 包含 `orderId`。`src/http/payment-notice-routes.ts` 导出 `registerPaymentNoticeRoutes(registry,outbox)`，注册 `POST /notifications/payment`。已有 `RouteRegistry`、`NotificationOutbox.list`、`get` 保持可用。\n"
+  },
+  {
+    "task": "R1-T04",
+    "variant": "original",
+    "query": "增加订单备注接口，把备注保存到订单，并记录一次订单备注事件。调用方同时提供请求正文和当前操作上下文，返回保存的文本与操作成员标识。订单不存在时继续抛出错误。\n\n接口要求：`src/services/order-notes.ts` 导出 `appendOrderNote(orders, events, input, context)`，orders 为 `OrderService`，events 为 `EventStore`。input 包含 `orderId`、`text`、`actorId` 字符串，context 包含 `serverMember`（Member 对象）、`eventId` 字符串与 `now` 数字。返回 `{orderId,text,actorId}`。`src/http/order-note-routes.ts` 导出 `registerOrderNoteRoutes(registry,orders,events)`，注册 `POST /orders/notes`，handler 接受 `(input,context)`。订单的 `internalNotes` 增加文本，事件字段为 `id`、`topic`（`order.note`）、`payload`（`orderId`、`text`）、`actorId`、`createdAt`。已有 `OrderStore`、`createOrder`、`RouteRegistry`、`EventStore.actor` 保持可用。\n"
+  },
+  {
+    "task": "R1-T04",
+    "variant": "paraphrase",
+    "query": "请让调用方能够给订单追加备注，并同时记录一条备注事件。服务与 HTTP 入口接收请求正文和当前操作上下文，返回已保存的备注文字与操作成员标识；订单不存在时继续抛出错误。\n\n接口要求：`src/services/order-notes.ts` 导出 `appendOrderNote(orders, events, input, context)`，orders 为 `OrderService`，events 为 `EventStore`。input 包含 `orderId`、`text`、`actorId` 字符串，context 包含 `serverMember`（Member 对象）、`eventId` 字符串与 `now` 数字。返回 `{orderId,text,actorId}`。`src/http/order-note-routes.ts` 导出 `registerOrderNoteRoutes(registry,orders,events)`，注册 `POST /orders/notes`，handler 接受 `(input,context)`。订单的 `internalNotes` 增加文本，事件字段为 `id`、`topic`（`order.note`）、`payload`（`orderId`、`text`）、`actorId`、`createdAt`。已有 `OrderStore`、`createOrder`、`RouteRegistry`、`EventStore.actor` 保持可用。\n"
+  },
+  {
+    "task": "R1-T05",
+    "variant": "original",
+    "query": "增加订单月份统计服务与 HTTP 接口，用于月度归档查看。按创建月份统计订单数量与 totalCents，可以查询全部月份，也可以用 month 筛选单个月份。返回按月份升序的数组，保持订单不变。\n\n接口要求：`src/services/monthly-orders.ts` 导出 `summarizeOrderMonths(service, query = {})`，service 是 `OrderService`，query 包含可选 `month`（YYYY-MM 字符串）。返回数组，每行 `{month,count,totalCents}`。`src/http/monthly-order-routes.ts` 导出 `registerMonthlyOrderRoutes(registry,service)`，注册 `GET /orders/months`。已有 `OrderStore`、`createOrder`、`addLine`、`RouteRegistry` 保持可用。Order.createdAt 是 Unix 时间，单位为秒，商品行包含 `sku`、`name`、`quantity`、`unitPrice`。\n"
+  },
+  {
+    "task": "R1-T05",
+    "variant": "paraphrase",
+    "query": "请实现月度归档用的订单统计服务及 HTTP 入口。按订单创建月份汇总数量和 totalCents，支持返回所有月份或用 month 指定月份。输出按月份递增排列，统计过程中保留订单原始内容。\n\n接口要求：`src/services/monthly-orders.ts` 导出 `summarizeOrderMonths(service, query = {})`，service 是 `OrderService`，query 包含可选 `month`（YYYY-MM 字符串）。返回数组，每行 `{month,count,totalCents}`。`src/http/monthly-order-routes.ts` 导出 `registerMonthlyOrderRoutes(registry,service)`，注册 `GET /orders/months`。已有 `OrderStore`、`createOrder`、`addLine`、`RouteRegistry` 保持可用。Order.createdAt 是 Unix 时间，单位为秒，商品行包含 `sku`、`name`、`quantity`、`unitPrice`。\n"
+  },
+  {
+    "task": "R1-T06",
+    "variant": "original",
+    "query": "增加批量释放库存预留的服务与 HTTP 入口。输入多个 reservationId，按照输入顺序返回释放后的 Reservation 数组；错误继续向调用者抛出。\n\n接口要求：`src/services/reservation-release.ts` 导出 `releaseReservations(service,reservationIds)`，service 为 `InventoryService`，reservationIds 为字符串数组。`src/http/reservation-release-routes.ts` 导出 `registerReservationReleaseRoutes(registry,service)`，注册 `POST /inventory/reservations/release`，handler 接收 `{reservationIds}`，返回相同数组。Reservation 包含 `id`、`state`，成功后的 state 为 released。保留 `InventoryStore`、`InventoryService.initialize`、`reserve`、`release`、`stock`、`listReservations` 与 `RouteRegistry`。ReserveInput 包含 reservationId、orderId、warehouseId、sku、quantity。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-T06",
+    "variant": "paraphrase",
+    "query": "请增加批量释放库存预留的服务和 HTTP 接口。调用方给出多个 reservationId，返回顺序与输入一致的已释放 Reservation 数组，处理中的错误继续向调用方传播。\n\n接口要求：`src/services/reservation-release.ts` 导出 `releaseReservations(service,reservationIds)`，service 为 `InventoryService`，reservationIds 为字符串数组。`src/http/reservation-release-routes.ts` 导出 `registerReservationReleaseRoutes(registry,service)`，注册 `POST /inventory/reservations/release`，handler 接收 `{reservationIds}`，返回相同数组。Reservation 包含 `id`、`state`，成功后的 state 为 released。保留 `InventoryStore`、`InventoryService.initialize`、`reserve`、`release`、`stock`、`listReservations` 与 `RouteRegistry`。ReserveInput 包含 reservationId、orderId、warehouseId、sku、quantity。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-T07",
+    "variant": "original",
+    "query": "增加按事件 topic 下载业务事件的服务和 HTTP 入口，供客服查看订单事件。返回写入顺序的事件数组，保持 payload 层级和普通字段，保持原始存储内容。\n\n接口要求：`src/services/topic-download.ts` 导出 `downloadTopicEvents(store,topic)`，store 为 `EventStore`，topic 为字符串。`src/http/topic-download-routes.ts` 导出 `registerTopicDownloadRoutes(registry,store)`，注册 `GET /events/topic`，handler 接收 `{topic}`，返回相同数组。每条事件包含 id、topic、actorId、createdAt、payload，payload 是嵌套 JSON。保留 `EventStore.append`、`all`、`topic`、`RouteRegistry`。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-T07",
+    "variant": "paraphrase",
+    "query": "客服需要下载指定 topic 的订单业务事件。请提供服务函数和 HTTP 接口，按写入顺序返回事件数组；payload 的嵌套层级与普通字段保持完整，查询不改变原始存储。\n\n接口要求：`src/services/topic-download.ts` 导出 `downloadTopicEvents(store,topic)`，store 为 `EventStore`，topic 为字符串。`src/http/topic-download-routes.ts` 导出 `registerTopicDownloadRoutes(registry,store)`，注册 `GET /events/topic`，handler 接收 `{topic}`，返回相同数组。每条事件包含 id、topic、actorId、createdAt、payload，payload 是嵌套 JSON。保留 `EventStore.append`、`all`、`topic`、`RouteRegistry`。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-T08",
+    "variant": "original",
+    "query": "增加取消订单通知的排队服务和 HTTP 入口。调用方提供 requestId、orderId、recipient、createdAt，使用 orderCancelled 模板，返回排队记录，不立即发送。\n\n接口要求：`src/services/cancellation-notices.ts` 导出 `scheduleCancellationNotice(outbox,input)`，outbox 为 `NotificationOutbox`，input 包含字符串 requestId、orderId、recipient 和数字 createdAt。返回 OutboxMessage，包含 id、logicalId、recipient、template、data、state，template 为 orderCancelled，data 包含 orderId。`src/http/cancellation-notice-routes.ts` 导出 `registerCancellationNoticeRoutes(registry,outbox)`，注册 `POST /notifications/cancelled`，handler 接收 input。保留 `NotificationOutbox.list`、`enqueue` 和 `RouteRegistry`。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R1-T08",
+    "variant": "paraphrase",
+    "query": "请实现取消订单通知的排队功能，包括服务函数和 HTTP 入口。输入为 requestId、orderId、recipient、createdAt，采用 orderCancelled 模板；返回已经排队的记录，暂不发送。\n\n接口要求：`src/services/cancellation-notices.ts` 导出 `scheduleCancellationNotice(outbox,input)`，outbox 为 `NotificationOutbox`，input 包含字符串 requestId、orderId、recipient 和数字 createdAt。返回 OutboxMessage，包含 id、logicalId、recipient、template、data、state，template 为 orderCancelled，data 包含 orderId。`src/http/cancellation-notice-routes.ts` 导出 `registerCancellationNoticeRoutes(registry,outbox)`，注册 `POST /notifications/cancelled`，handler 接收 input。保留 `NotificationOutbox.list`、`enqueue` 和 `RouteRegistry`。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-C01",
+    "variant": "original",
+    "query": "增加聊天作者统计，统计 afterSequence 之后每个作者发送的消息数量，返回按 authorId 升序的列表。增加把统计写入 JSON 数组文件的函数，保持聊天文件不变。\n\n接口要求：在 `src/extracted/chat.ts` 导出 `countChatAuthors(storagePath,afterSequence = 0)`，返回每行 `{authorId,count}`。在 `src/extracted/chatAuthorReport.ts` 导出 `writeChatAuthorReport(storagePath,destination,afterSequence = 0)`，写入相同 JSON 数组并返回 `{count}`。输入历史文件采用 `{version:1,messages}`，消息字段包括 `id`、`authorId`、`sequence`、`text`。\n"
+  },
+  {
+    "task": "R2-C01",
+    "variant": "paraphrase",
+    "query": "请按作者汇总聊天消息数量，仅统计 sequence 超过 afterSequence 的记录，结果按 authorId 递增排列。另提供函数将统计结果保存为 JSON 数组文件，聊天历史文件保持不变。\n\n接口要求：在 `src/extracted/chat.ts` 导出 `countChatAuthors(storagePath,afterSequence = 0)`，返回每行 `{authorId,count}`。在 `src/extracted/chatAuthorReport.ts` 导出 `writeChatAuthorReport(storagePath,destination,afterSequence = 0)`，写入相同 JSON 数组并返回 `{count}`。输入历史文件采用 `{version:1,messages}`，消息字段包括 `id`、`authorId`、`sequence`、`text`。\n"
+  },
+  {
+    "task": "R2-C02",
+    "variant": "original",
+    "query": "增加项目 Agent run 状态统计，每个 status 统计运行数量，并按 status 升序返回。增加把统计写入 JSON 文件的函数，保留运行记录。\n\n接口要求：在 `src/extracted/agent/agentRunStore.ts` 导出 `countRunStatuses(store)`，store 是 `AgentRunStore`，返回每行 `{status,count}`。在 `src/extracted/agent/runStatusReport.ts` 导出 `writeRunStatusReport(destination,store)`，写入相同 JSON 数组并返回 `{count}`。保留 `createAgentRunStore`、`create`、`list`；运行字段包括 `id`、`projectId`、`memberId`、`memberName`、`prompt`、`status`、`runtime`。\n"
+  },
+  {
+    "task": "R2-C02",
+    "variant": "paraphrase",
+    "query": "请按 status 汇总项目中的 Agent run 数量，并按 status 递增返回。另提供函数把该统计结果保存为 JSON 文件，原有运行记录保持不变。\n\n接口要求：在 `src/extracted/agent/agentRunStore.ts` 导出 `countRunStatuses(store)`，store 是 `AgentRunStore`，返回每行 `{status,count}`。在 `src/extracted/agent/runStatusReport.ts` 导出 `writeRunStatusReport(destination,store)`，写入相同 JSON 数组并返回 `{count}`。保留 `createAgentRunStore`、`create`、`list`；运行字段包括 `id`、`projectId`、`memberId`、`memberName`、`prompt`、`status`、`runtime`。\n"
+  },
+  {
+    "task": "R2-C03",
+    "variant": "original",
+    "query": "增加聊天关键词数量统计与下载。对每个输入 keyword 统计 text 包含该关键词的消息数量，大小写不敏感，重复关键词按输入顺序保留，保持历史文件不变。\n\n接口要求：`src/extracted/chatKeywordCounts.ts` 导出 `countChatKeywords(storagePath,keywords)`，keywords 为字符串数组，返回 `{keyword,count}[]`。`src/extracted/chatKeywordCountsExport.ts` 导出 `writeChatKeywordCounts(storagePath,destination,keywords)`，写入同一完整 JSON 数组并返回 `{count}`，这里 count 是结果行数。输入历史文件格式 `{version:1,messages}`，消息包含 id、sequence、authorId、text，空关键词匹配每条消息。保留 `src/extracted/chat.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-C03",
+    "variant": "paraphrase",
+    "query": "请提供聊天关键词计数及下载功能。对输入的每个 keyword，统计 text 中包含它的消息数量，比较时忽略大小写。输入中的重复关键词按原顺序保留，历史文件保持不变。\n\n接口要求：`src/extracted/chatKeywordCounts.ts` 导出 `countChatKeywords(storagePath,keywords)`，keywords 为字符串数组，返回 `{keyword,count}[]`。`src/extracted/chatKeywordCountsExport.ts` 导出 `writeChatKeywordCounts(storagePath,destination,keywords)`，写入同一完整 JSON 数组并返回 `{count}`，这里 count 是结果行数。输入历史文件格式 `{version:1,messages}`，消息包含 id、sequence、authorId、text，空关键词匹配每条消息。保留 `src/extracted/chat.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-T01",
+    "variant": "original",
+    "query": "支持按 sequence 导出一段 Agent trace，供详情页面分页下载。增加导出函数和 JSON 文件导出函数，过滤 afterSequence 之后的记录，按照 sequence 升序返回，limit 限制条数。保持原始 trace 文件不变。\n\n接口要求：在 `src/extracted/agent/traceStore.ts` 导出 `exportTraceWindow(storagePath, query = {})` 和 `writeTraceExport(storagePath, destination, query = {})`。query 的字段为可选整数 `afterSequence`、`limit`，afterSequence 默认 0，limit 默认 100。第一项返回 `AgentTraceEvent[]`，保留每项 `sequence`、`timestamp`、`type`、`data`；第二项把相同数组写入 destination 文件并返回 `{count}`。测试使用实际 JSONL 文件，字段 `data` 可以是嵌套 JSON。保留已有 `createTraceStore` 功能。\n\n下载文件格式为一个完整的 JSON 数组，例如 `[{\"sequence\":1,\"timestamp\":\"2026-10-06T00:00:00.000Z\",\"type\":\"ordinary\",\"data\":{}}]`。输入存储文件逐行保存事件；下载文件使用 `JSON.parse` 一次读取整个数组，空结果写入 `[]`。\n"
+  },
+  {
+    "task": "R2-T01",
+    "variant": "paraphrase",
+    "query": "详情页面需要按 sequence 分页下载 Agent trace。请提供查询函数和 JSON 导出函数，筛选 afterSequence 之后的事件，按 sequence 递增返回，并使用 limit 限制数量。原始 trace 文件保持不变。\n\n接口要求：在 `src/extracted/agent/traceStore.ts` 导出 `exportTraceWindow(storagePath, query = {})` 和 `writeTraceExport(storagePath, destination, query = {})`。query 的字段为可选整数 `afterSequence`、`limit`，afterSequence 默认 0，limit 默认 100。第一项返回 `AgentTraceEvent[]`，保留每项 `sequence`、`timestamp`、`type`、`data`；第二项把相同数组写入 destination 文件并返回 `{count}`。测试使用实际 JSONL 文件，字段 `data` 可以是嵌套 JSON。保留已有 `createTraceStore` 功能。\n\n下载文件格式为一个完整的 JSON 数组，例如 `[{\"sequence\":1,\"timestamp\":\"2026-10-06T00:00:00.000Z\",\"type\":\"ordinary\",\"data\":{}}]`。输入存储文件逐行保存事件；下载文件使用 `JSON.parse` 一次读取整个数组，空结果写入 `[]`。\n"
+  },
+  {
+    "task": "R2-T02",
+    "variant": "original",
+    "query": "提供历史聊天文件的分页下载功能，方便项目在重新进入协作房间后查看过往讨论。输入历史存储文件路径与当前房间标识，返回指定 sequence 之后的消息。增加下载文件写入函数，保留存储内容。\n\n接口要求：在 `src/extracted/chat.ts` 导出 `exportChatHistory(storagePath, query)`；query 包含必填 `roomId`、可选整数 `afterSequence`（默认 0）与 `limit`（默认 100）。返回 `ChatMessage[]`，保留 `id`、`sequence`、`timestamp`、`authorId`、`authorName`、`text`、`roomId`。在 `src/extracted/chatExport.ts` 导出 `writeChatHistoryExport(storagePath,destination,query)`，写入同一 JSON 数组，返回 `{count}`。历史文件沿用现有 `{version:1,messages}` 结构，按 sequence 升序输出。\n\n输入存储文件为 `{\"version\":1,\"messages\":[...]}`；下载文件直接保存消息数组 `[{\"id\":\"message-1\",\"sequence\":1,\"timestamp\":\"2026-10-06T00:00:00.000Z\",\"authorId\":\"member-a\",\"authorName\":\"Member\",\"text\":\"ordinary\",\"roomId\":\"room-1\"}]`。下载文件由 `JSON.parse` 一次读取，解析结果须为数组，空结果写入 `[]`。这些数据类型从 `src/extracted/types.ts` 使用 `import type` 引入；项目测试通过 Node.js 直接执行 TypeScript。\n"
+  },
+  {
+    "task": "R2-T02",
+    "variant": "paraphrase",
+    "query": "成员重新进入协作房间后需要查看过往讨论。请提供聊天历史分页下载，接收历史文件路径和当前房间标识，返回指定 sequence 之后的消息，并提供下载文件写入函数；原有历史存储保持不变。\n\n接口要求：在 `src/extracted/chat.ts` 导出 `exportChatHistory(storagePath, query)`；query 包含必填 `roomId`、可选整数 `afterSequence`（默认 0）与 `limit`（默认 100）。返回 `ChatMessage[]`，保留 `id`、`sequence`、`timestamp`、`authorId`、`authorName`、`text`、`roomId`。在 `src/extracted/chatExport.ts` 导出 `writeChatHistoryExport(storagePath,destination,query)`，写入同一 JSON 数组，返回 `{count}`。历史文件沿用现有 `{version:1,messages}` 结构，按 sequence 升序输出。\n\n输入存储文件为 `{\"version\":1,\"messages\":[...]}`；下载文件直接保存消息数组 `[{\"id\":\"message-1\",\"sequence\":1,\"timestamp\":\"2026-10-06T00:00:00.000Z\",\"authorId\":\"member-a\",\"authorName\":\"Member\",\"text\":\"ordinary\",\"roomId\":\"room-1\"}]`。下载文件由 `JSON.parse` 一次读取，解析结果须为数组，空结果写入 `[]`。这些数据类型从 `src/extracted/types.ts` 使用 `import type` 引入；项目测试通过 Node.js 直接执行 TypeScript。\n"
+  },
+  {
+    "task": "R2-T03",
+    "variant": "original",
+    "query": "提供项目成员名单 CSV 下载，方便参与者保存一份当前名单。增加名单转换函数和 CSV 文件写入函数，字段值包含逗号或双引号时保持正确的 CSV 格式。不要修改成员记录。\n\n接口要求：在 `src/extracted/auth/identity.ts` 导出 `collectMemberExport(store,projectId)`，store 是现有 `MemberStore`，返回每行 `{memberId,displayName,role}`。在 `src/extracted/memberCsv.ts` 导出 `writeMemberExportCsv(store,projectId,destination)`，写入 UTF-8 CSV，表头顺序 `memberId,displayName,role`，按原成员顺序输出，返回 `{count}`。可使用已有依赖 `csv-stringify/sync` 的 `stringify`。已有 `createProjectRegistry`、`createBlankProject`、`listProjectsSync`、项目 `id`、`createMemberStore`、`join`、`listMembers` 保持可用。\n"
+  },
+  {
+    "task": "R2-T03",
+    "variant": "paraphrase",
+    "query": "参与者需要保存当前项目的成员名单。请实现名单转换函数和 CSV 文件写入函数，正确处理包含逗号或双引号的字段，导出过程中保留成员原始记录。\n\n接口要求：在 `src/extracted/auth/identity.ts` 导出 `collectMemberExport(store,projectId)`，store 是现有 `MemberStore`，返回每行 `{memberId,displayName,role}`。在 `src/extracted/memberCsv.ts` 导出 `writeMemberExportCsv(store,projectId,destination)`，写入 UTF-8 CSV，表头顺序 `memberId,displayName,role`，按原成员顺序输出，返回 `{count}`。可使用已有依赖 `csv-stringify/sync` 的 `stringify`。已有 `createProjectRegistry`、`createBlankProject`、`listProjectsSync`、项目 `id`、`createMemberStore`、`join`、`listMembers` 保持可用。\n"
+  },
+  {
+    "task": "R2-T04",
+    "variant": "original",
+    "query": "提供项目活动历史的分页导出，用于保存协作中的开发过程记录。支持 afterTimestamp 字符串与 limit 整数，输出按照 timestamp 升序，保持来源文件不变。增加 JSON 数组文件写入函数。\n\n接口要求：在 `src/extracted/eventLog.ts` 导出 `exportActivityHistory(storagePath,query = {})`，query 包含可选 `afterTimestamp` 与 `limit`（默认 100）。返回 `EventRecord[]`，保留 `id`、`timestamp`、`type`、`roomId`、`memberId`、`payload`。在 `src/extracted/activityExport.ts` 导出 `writeActivityHistoryExport(storagePath,destination,query = {})`，写入相同 JSON 数组，返回 `{count}`。输入文件采用已有 `{version:1,events}` 结构，afterTimestamp 使用严格大于的比较。\n"
+  },
+  {
+    "task": "R2-T04",
+    "variant": "paraphrase",
+    "query": "请提供项目活动历史的分页导出，用于保存协作开发过程。支持 afterTimestamp 字符串和 limit 整数，结果按 timestamp 递增排列，另提供 JSON 数组文件写入函数；来源文件保持不变。\n\n接口要求：在 `src/extracted/eventLog.ts` 导出 `exportActivityHistory(storagePath,query = {})`，query 包含可选 `afterTimestamp` 与 `limit`（默认 100）。返回 `EventRecord[]`，保留 `id`、`timestamp`、`type`、`roomId`、`memberId`、`payload`。在 `src/extracted/activityExport.ts` 导出 `writeActivityHistoryExport(storagePath,destination,query = {})`，写入相同 JSON 数组，返回 `{count}`。输入文件采用已有 `{version:1,events}` 结构，afterTimestamp 使用严格大于的比较。\n"
+  },
+  {
+    "task": "R2-T05",
+    "variant": "original",
+    "query": "增加通过成员上下文查看 Agent run 详情的服务函数，供协作页面使用。输入 runStore、当前成员身份与 runId，处理访问权限并返回对应运行记录；不存在的记录抛出错误。增加调用这个函数的 JSON 展示转换函数。\n\n接口要求：在 `src/extracted/agent/agentRunStore.ts` 导出 `getRunForViewer(store,identity,runId)`，store 是 `AgentRunStore`，identity 包含 `projectId`、`memberId`、`displayName`、`role`。返回完整 `AgentRun`，保留 `id`、`projectId`、`memberId`、`memberName`、`prompt`、`status`、`runtime`、`createdAt` 以及其他已有字段。在 `src/extracted/agent/runView.ts` 导出 `buildRunView(store,identity,runId)`，返回 `{run}`，run 是前一个函数的结果。保留现有 `createAgentRunStore`、`create`、`get`、`update` 功能。\n"
+  },
+  {
+    "task": "R2-T05",
+    "variant": "paraphrase",
+    "query": "协作页面需要根据当前成员上下文查看 Agent run 详情。请提供接收 runStore、成员身份和 runId 的服务函数，完成访问权限检查并返回运行记录；记录不存在时抛出错误。另提供调用该服务的 JSON 展示转换函数。\n\n接口要求：在 `src/extracted/agent/agentRunStore.ts` 导出 `getRunForViewer(store,identity,runId)`，store 是 `AgentRunStore`，identity 包含 `projectId`、`memberId`、`displayName`、`role`。返回完整 `AgentRun`，保留 `id`、`projectId`、`memberId`、`memberName`、`prompt`、`status`、`runtime`、`createdAt` 以及其他已有字段。在 `src/extracted/agent/runView.ts` 导出 `buildRunView(store,identity,runId)`，返回 `{run}`，run 是前一个函数的结果。保留现有 `createAgentRunStore`、`create`、`get`、`update` 功能。\n"
+  },
+  {
+    "task": "R2-T06",
+    "variant": "original",
+    "query": "增加历史聊天文本搜索和搜索结果下载，用于成员在重新进入项目后查阅以前的讨论。q 是大小写不敏感的子串，空 q 返回全部消息，按 sequence 升序，保持输入文件不变。\n\n接口要求：`src/extracted/chatSearch.ts` 导出 `searchChatMessages(storagePath,query)`，query 包含必填 q、roomId，返回 ChatMessage 数组，每项保留 id、sequence、timestamp、authorId、authorName、text、roomId。`src/extracted/chatSearchExport.ts` 导出 `writeChatSearchExport(storagePath,destination,query)`，写入同一完整 JSON 数组并返回 `{count}`。输入格式 `{version:1,messages}`；空输出为 `[]`。保留 `src/extracted/chat.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-T06",
+    "variant": "paraphrase",
+    "query": "成员重新进入项目后需要搜索以前的讨论并下载结果。请实现历史聊天文本搜索，q 按不区分大小写的子串匹配，空 q 返回所有消息。结果按 sequence 递增排列，输入历史文件保持不变。\n\n接口要求：`src/extracted/chatSearch.ts` 导出 `searchChatMessages(storagePath,query)`，query 包含必填 q、roomId，返回 ChatMessage 数组，每项保留 id、sequence、timestamp、authorId、authorName、text、roomId。`src/extracted/chatSearchExport.ts` 导出 `writeChatSearchExport(storagePath,destination,query)`，写入同一完整 JSON 数组并返回 `{count}`。输入格式 `{version:1,messages}`；空输出为 `[]`。保留 `src/extracted/chat.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-T07",
+    "variant": "original",
+    "query": "增加项目开发过程活动的每日统计与下载，供成员查看每天协作记录的数量。按 timestamp 的 UTC 日期统计，按日期升序返回，保持来源文件不变。\n\n接口要求：`src/extracted/activityDays.ts` 导出 `summarizeActivityDays(storagePath)`，返回 `{date,count}[]`，date 为 YYYY-MM-DD，count 为该日活动数量。`src/extracted/activityDaysExport.ts` 导出 `writeActivityDaysExport(storagePath,destination)`，写入同一完整 JSON 数组并返回 `{count}`，这里 count 是统计行数。输入格式为 `{version:1,events}`，事件字段 id、timestamp、type、roomId、memberId、payload 沿用 EventRecord。保留 `src/extracted/eventLog.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-T07",
+    "variant": "paraphrase",
+    "query": "请提供项目开发活动的每日数量统计和下载，供成员查看每天的协作记录数。使用 timestamp 的 UTC 日期分组，按日期递增返回，来源文件保持不变。\n\n接口要求：`src/extracted/activityDays.ts` 导出 `summarizeActivityDays(storagePath)`，返回 `{date,count}[]`，date 为 YYYY-MM-DD，count 为该日活动数量。`src/extracted/activityDaysExport.ts` 导出 `writeActivityDaysExport(storagePath,destination)`，写入同一完整 JSON 数组并返回 `{count}`，这里 count 是统计行数。输入格式为 `{version:1,events}`，事件字段 id、timestamp、type、roomId、memberId、payload 沿用 EventRecord。保留 `src/extracted/eventLog.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-T08",
+    "variant": "original",
+    "query": "增加按任务发起人汇总 Agent 运行记录的 CSV 下载，供成员保存当前项目参与者的任务统计。按 memberId 升序，保持原始运行记录不变；名称包含逗号或双引号时保持正确的 CSV 格式。\n\n接口要求：`src/extracted/runMemberIndex.ts` 导出 `collectRunMembers(runs)`，runs 为 AgentRun 数组，返回 `{memberId,memberName,count}[]`，memberName 采用该成员最后一条运行记录中的名称，count 是任务数。`src/extracted/runMemberIndexExport.ts` 导出 `writeRunMemberIndex(runs,destination)`，写入 UTF-8 CSV，表头顺序为 `memberId,memberName,count`，并返回 `{count}`，这里 count 是成员行数。可使用已有依赖 `csv-stringify/sync` 的 `stringify`。AgentRun 包含 id、projectId、memberId、memberName、prompt、status、runtime、createdAt。保留 `src/extracted/agent/agentRunStore.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  },
+  {
+    "task": "R2-T08",
+    "variant": "paraphrase",
+    "query": "请为当前项目提供按任务发起人统计 Agent 运行记录的 CSV 下载。按 memberId 递增排列，成员名称包含逗号或双引号时正确输出 CSV，原始运行记录保持不变。\n\n接口要求：`src/extracted/runMemberIndex.ts` 导出 `collectRunMembers(runs)`，runs 为 AgentRun 数组，返回 `{memberId,memberName,count}[]`，memberName 采用该成员最后一条运行记录中的名称，count 是任务数。`src/extracted/runMemberIndexExport.ts` 导出 `writeRunMemberIndex(runs,destination)`，写入 UTF-8 CSV，表头顺序为 `memberId,memberName,count`，并返回 `{count}`，这里 count 是成员行数。可使用已有依赖 `csv-stringify/sync` 的 `stringify`。AgentRun 包含 id、projectId、memberId、memberName、prompt、status、runtime、createdAt。保留 `src/extracted/agent/agentRunStore.ts` 的现有接口。相对 import 使用 `.ts`，interface 使用 `import type`。\n"
+  }
+]

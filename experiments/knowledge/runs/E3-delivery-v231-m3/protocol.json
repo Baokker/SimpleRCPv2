@@ -1,0 +1,108 @@
+{
+  "id": "e3-delivery-bm25-m3-20261010",
+  "conditions": [
+    "A",
+    "B",
+    "C"
+  ],
+  "provider": "minimax",
+  "model": "MiniMax-M3",
+  "candidateLimit": 20,
+  "topK": 5,
+  "maxCharsPerCard": 800,
+  "maxTotalChars": 4000,
+  "modelRepetitions": 3,
+  "timeoutMs": 120000,
+  "temperature": 0.2,
+  "seed": 20261010,
+  "budgetCny": 30,
+  "targetP95Ms": 15000,
+  "retryCount": 0,
+  "concurrency": 1,
+  "candidatePolicy": "Existing reusable ranking and project fallback, followed by first 20; no extra candidates after model selection",
+  "paraphrasePolicy": "Replace only the first Markdown paragraph using mdast positions; preserve all subsequent interface and file requirements",
+  "controlMetric": "Any delivered card outside the predeclared relevant set; any-card delivery is auxiliary",
+  "controlAnnotation": "Single reviewer using task requirements and all card texts before model execution; no independent agreement estimate",
+  "comparison": [
+    [
+      "B",
+      "A"
+    ],
+    [
+      "C",
+      "B"
+    ]
+  ],
+  "statistics": {
+    "unit": "task",
+    "repeats": "majority",
+    "test": "exact-mcnemar",
+    "correction": "holm",
+    "bootstrap": 10000,
+    "seed": 20261010
+  },
+  "priceCnyPerMillion": {
+    "input": 2.1,
+    "outputIncludingReasoning": 8.4,
+    "cacheRead": 0.42,
+    "source": "docs/knowledge/agent-model.md; official prices checked 2026-10-10"
+  },
+  "paraphrases": {
+    "R1-C01": "请提供库存筛选功能及相应接口。调用者可以指定 warehouseId 和 minimumAvailable，后者缺省为 0；仅返回 available 达到要求的库存，结果按 sku 递增排列，并给出符合条件的记录数。",
+    "R1-C02": "请为订单内部备注提供搜索功能。q 按不区分大小写的子串方式匹配任意备注，还可以限定 memberId。q 为空时返回该成员条件下的全部订单；结果包含订单 id 和完整备注数组，查询不能改变订单记录。",
+    "R1-C03": "请提供订单商品数量汇总及 HTTP 接口。遍历所有订单，按 sku 累加商品的 quantity，按照 sku 递增返回汇总结果，订单原始内容保持不变。",
+    "R1-T01": "请增加订单批量预留库存的能力，并提供服务函数和 HTTP 入口。沿用现有预留记录格式，一次接收多个商品；成功后的记录顺序与输入一致，出现错误时向调用方传播。",
+    "R1-T02": "客服需要把审计记录下载为 JSON 数组来查看支付和通知问题。请提供导出服务及 HTTP 入口，支持 action 条件与 limit 条数限制，取得最近的记录并按写入顺序输出。保留 payload 的嵌套结构和普通业务字段，读取不改变存储。",
+    "R1-T03": "请提供支付成功通知的排队服务和 HTTP 接口。输入包含本次请求的 requestId、订单标识和收件人，采用 orderPaid 模板；将通知加入队列后返回记录，暂不发送。",
+    "R1-T04": "请让调用方能够给订单追加备注，并同时记录一条备注事件。服务与 HTTP 入口接收请求正文和当前操作上下文，返回已保存的备注文字与操作成员标识；订单不存在时继续抛出错误。",
+    "R1-T05": "请实现月度归档用的订单统计服务及 HTTP 入口。按订单创建月份汇总数量和 totalCents，支持返回所有月份或用 month 指定月份。输出按月份递增排列，统计过程中保留订单原始内容。",
+    "R1-T06": "请增加批量释放库存预留的服务和 HTTP 接口。调用方给出多个 reservationId，返回顺序与输入一致的已释放 Reservation 数组，处理中的错误继续向调用方传播。",
+    "R1-T07": "客服需要下载指定 topic 的订单业务事件。请提供服务函数和 HTTP 接口，按写入顺序返回事件数组；payload 的嵌套层级与普通字段保持完整，查询不改变原始存储。",
+    "R1-T08": "请实现取消订单通知的排队功能，包括服务函数和 HTTP 入口。输入为 requestId、orderId、recipient、createdAt，采用 orderCancelled 模板；返回已经排队的记录，暂不发送。",
+    "R2-C01": "请按作者汇总聊天消息数量，仅统计 sequence 超过 afterSequence 的记录，结果按 authorId 递增排列。另提供函数将统计结果保存为 JSON 数组文件，聊天历史文件保持不变。",
+    "R2-C02": "请按 status 汇总项目中的 Agent run 数量，并按 status 递增返回。另提供函数把该统计结果保存为 JSON 文件，原有运行记录保持不变。",
+    "R2-C03": "请提供聊天关键词计数及下载功能。对输入的每个 keyword，统计 text 中包含它的消息数量，比较时忽略大小写。输入中的重复关键词按原顺序保留，历史文件保持不变。",
+    "R2-T01": "详情页面需要按 sequence 分页下载 Agent trace。请提供查询函数和 JSON 导出函数，筛选 afterSequence 之后的事件，按 sequence 递增返回，并使用 limit 限制数量。原始 trace 文件保持不变。",
+    "R2-T02": "成员重新进入协作房间后需要查看过往讨论。请提供聊天历史分页下载，接收历史文件路径和当前房间标识，返回指定 sequence 之后的消息，并提供下载文件写入函数；原有历史存储保持不变。",
+    "R2-T03": "参与者需要保存当前项目的成员名单。请实现名单转换函数和 CSV 文件写入函数，正确处理包含逗号或双引号的字段，导出过程中保留成员原始记录。",
+    "R2-T04": "请提供项目活动历史的分页导出，用于保存协作开发过程。支持 afterTimestamp 字符串和 limit 整数，结果按 timestamp 递增排列，另提供 JSON 数组文件写入函数；来源文件保持不变。",
+    "R2-T05": "协作页面需要根据当前成员上下文查看 Agent run 详情。请提供接收 runStore、成员身份和 runId 的服务函数，完成访问权限检查并返回运行记录；记录不存在时抛出错误。另提供调用该服务的 JSON 展示转换函数。",
+    "R2-T06": "成员重新进入项目后需要搜索以前的讨论并下载结果。请实现历史聊天文本搜索，q 按不区分大小写的子串匹配，空 q 返回所有消息。结果按 sequence 递增排列，输入历史文件保持不变。",
+    "R2-T07": "请提供项目开发活动的每日数量统计和下载，供成员查看每天的协作记录数。使用 timestamp 的 UTC 日期分组，按日期递增返回，来源文件保持不变。",
+    "R2-T08": "请为当前项目提供按任务发起人统计 Agent 运行记录的 CSV 下载。按 memberId 递增排列，成员名称包含逗号或双引号时正确输出 CSV，原始运行记录保持不变。"
+  },
+  "controlRelevantCards": {
+    "R1-C01": {
+      "R1-T01-d2": "库存查询的仓库筛选、SKU 排序与返回值复制",
+      "R1-I22": "新增 HTTP 查询入口的输入校验"
+    },
+    "R1-C02": {
+      "R1-I22": "新增 HTTP 搜索入口的输入校验"
+    },
+    "R1-C03": {
+      "R1-I22": "新增 HTTP 汇总入口的输入校验"
+    },
+    "R2-C01": {
+      "R2-T01-d2": "本地 JSON 导出文件权限",
+      "R2-I01": "JSON 文件写入方式",
+      "R2-I16": "JSON 文件父目录与格式",
+      "R2-I19": "文件路径处理",
+      "R2-I23": "聊天读取时保持历史内容"
+    },
+    "R2-C02": {
+      "R2-T01-d2": "本地 JSON 导出文件权限",
+      "R2-I01": "JSON 文件写入方式",
+      "R2-I16": "JSON 文件父目录与格式",
+      "R2-I19": "文件路径处理",
+      "R2-I08": "读取运行记录时等待写入并复制对象",
+      "R2-I24": "运行记录读取时验证 JSON 结构"
+    },
+    "R2-C03": {
+      "R2-T01-d2": "本地 JSON 导出文件权限",
+      "R2-I01": "JSON 文件写入方式",
+      "R2-I16": "JSON 文件父目录与格式",
+      "R2-I19": "文件路径处理",
+      "R2-I23": "聊天读取时保持历史内容"
+    }
+  }
+}
