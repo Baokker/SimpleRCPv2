@@ -42,7 +42,7 @@ const store = await new RunStore(directory).open("e3-retest", config, data);
 store.metadata.protocolHash = digest(protocol);
 const previous = await exists(path.join(directory, "results.jsonl")) ? await readJsonl(path.join(directory, "results.jsonl")) : [];
 let spent = previous.reduce((sum, row) => sum + (row.estimatedCostCny ?? 0), 0);
-if (values.phase === "model" && previous.some(row => row.condition === "C" && row.estimatedCostCny === undefined)) throw new Error("Unknown prior model cost requires review");
+if (values.phase === "model" && previous.some(row => row.condition === "C" && !row.failed && row.estimatedCostCny === undefined)) throw new Error("Unknown prior model cost requires review");
 const variants = new Set(data.tasks.flatMap(task => task.variantCardIds ?? []));
 try {
   for (const repository of ["R1", "R2"]) {
@@ -105,7 +105,7 @@ try {
               await store.append(row);
               spent += row.estimatedCostCny ?? 0;
               console.log(JSON.stringify({key, failed: row.failed, delivered: row.targetDelivered, irrelevant: row.irrelevantDelivered, latencyMs: row.latencyMs, spentCny: spent}));
-              if (condition === "C" && row.estimatedCostCny === undefined) throw new Error("Unknown model cost requires review before continuing");
+              if (condition === "C" && !row.failed && row.estimatedCostCny === undefined) throw new Error("Unknown model cost requires review before continuing");
             }
           }
         }
