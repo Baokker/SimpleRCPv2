@@ -38,7 +38,10 @@ export function summarizeRetrieval(rows: Array<ReturnType<typeof retrievalMetric
 export function rankBounded(results: KnowledgeSearchResult[], activeFiles: string[]) {
   return rankKnowledgeResults(results, activeFiles, {ranking: "bounded", useActiveFiles: true});
 }
-export async function runK5(data: Dataset, config: ExperimentConfig, store: RunStore, k3Directory?: string) {
+export const K5_CONDITIONS = ["R1", "R2", "R3", "R2-wrong-file", "R3-wrong-file", "R6", "R6-lexical", "R6-wrong-file"] as const;
+export type K5Condition = typeof K5_CONDITIONS[number];
+
+export async function runK5(data: Dataset, config: ExperimentConfig, store: RunStore, k3Directory?: string, conditions?: K5Condition[]) {
   const toolQueries: Array<{task: string; query: string; source: string; files?: string[]}> = [];
   const activity = new Map<string, {files: string[]; source: string; fileSources: Array<{file: string; sources: string[]}>}>();
   if (k3Directory) for (const row of await readJsonl(path.join(k3Directory, "results.jsonl"))) {
@@ -78,15 +81,18 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
     const wrongFile = cards.find(card => !activeFiles.includes(card.anchors[0]?.file.workspaceRelativePath) && !targetFiles.includes(card.anchors[0]?.file.workspaceRelativePath))?.anchors[0]?.file.workspaceRelativePath;
     const queries: Array<{condition: string; query: string; active: string[]; queryIndex?: number; source?: string}> = [{condition: "R1", query: task.prompt, active: []}, {condition: "R2", query: task.prompt, active: activeFiles}, {condition: "R3", query: task.prompt, active: activeFiles},
       {condition: "R2-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []}, {condition: "R3-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []},
+      ...(conditions?.some(condition => condition.startsWith("R6")) ? [{condition: "R6", query: task.prompt, active: activeFiles}, {condition: "R6-lexical", query: task.prompt, active: []}, {condition: "R6-wrong-file", query: task.prompt, active: wrongFile ? [wrongFile] : []}] : []),
       ...toolQueries.filter(item => item.task === task.id).map((item, index) => ({condition: "R4", queryIndex: index, query: item.query, active: item.files ?? activeFiles, source: item.source})),
       ...(config.embedding ? [{condition: "R5", query: task.prompt, active: []}] : [])];
     for (const item of queries) {
+      if (conditions && !conditions.includes(item.condition as K5Condition)) continue;
       const key = `${task.id}-${item.condition}${item.queryIndex === undefined ? "" : `-${item.queryIndex}`}`;
       if (store.done(key)) continue;
       const vector = item.condition === "R5";
-      const bounded = item.condition.startsWith("R3") || item.condition.startsWith("R4");
+      const bm25 = item.condition.startsWith("R6");
+      const bounded = item.condition.startsWith("R3") || item.condition.startsWith("R4") || bm25;
       const results = await (vector ? searchKnowledgeCards : searchRankedKnowledgeCards)({cards, query: item.query, workspaceId: task.repository, indexDir: path.join(store.raw(key), "index"), topK: 25,
-        filters: {statuses: ["reviewed"]}, lexicalScoring: "legacy", activeFiles: item.active, ranking: bounded ? "bounded" : "legacy", useActiveFiles: true,
+        filters: {statuses: ["reviewed"]}, lexicalScoring: bm25 ? "bm25" : "legacy", activeFiles: item.active, ranking: bounded ? "bounded" : "legacy", useActiveFiles: true,
         ...(vector ? {strictEmbedding: true, embeddings: {model: config.embedding!.model, client: {async embed(texts: string[]) {
           const response = await fetch(config.embedding!.origin + "/embeddings", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({model: config.embedding!.model, input: texts}), signal: AbortSignal.timeout(config.timeoutMs)});
           if (!response.ok) throw new Error(`Embedding HTTP ${response.status}`);
@@ -97,11 +103,12 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
       await writeJson(path.join(store.raw(key), "ranking.json"), ranked);
       await store.append({key, completed: true, task: task.id, taskKind: task.kind, repository: task.repository, condition: item.condition,
         query: item.query, queryIndex: item.queryIndex, querySource: item.source,
-        ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, activeFileSources: item.condition.includes("wrong-file") ? item.active.map(file => ({file, sources: ["wrong-file-perturbation"]})) : item.condition === "R1" ? [] : fileSources,
-        activitySource: item.condition.includes("wrong-file") ? "wrong-file-perturbation" : item.condition === "R1" ? "disabled-for-lexical" : activitySource,
+        ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, activeFileSources: item.condition.includes("wrong-file") ? item.active.map(file => ({file, sources: ["wrong-file-perturbation"]})) : ["R1", "R6-lexical"].includes(item.condition) ? [] : fileSources,
+        activitySource: item.condition.includes("wrong-file") ? "wrong-file-perturbation" : ["R1", "R6-lexical"].includes(item.condition) ? "disabled-for-lexical" : activitySource,
         originalActivitySource: activitySource, traceSource: activity.get(task.id)?.source,
         saturatedCandidates: ranked.filter(result => (result as KnowledgeSearchResult & {lexical?: number}).lexical === 1.2).length,
         candidateCount: ranked.length, targetRank: task.targetCardId ? ranked.findIndex(result => result.cardId === task.targetCardId) + 1 : null,
+        lexicalScoring: bm25 ? "bm25" : "legacy",
         artifacts: path.relative(store.directory, store.raw(key))});
     }
   }

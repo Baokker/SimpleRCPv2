@@ -94,8 +94,12 @@ export async function selectKnowledgeInjection(input: {
     records.push({id: card.id, version: card.updatedAt, contentHash: crypto.createHash("sha256").update(`${card.title}\n${card.summary}\n${card.content}`).digest("hex"), score: result.score, lexical, boost, reason: knowledgeDeliveryReason(result, activeFiles), chars: content.length, title: safeText(card.title)});
   }
   const rejected = config.fixedCardIds.length ? [] : await searchRankedKnowledgeCards({cards: visibleCards.filter(card => Boolean(filterReason(card))), workspaceId: input.workspaceId, indexDir: path.join(input.indexDir, "diagnostic"), query: input.query, lexicalScoring: config.lexicalScoring, activeFiles, ranking: config.ranking, useActiveFiles: config.useActiveFiles});
-  const candidates: KnowledgeContextResult["candidates"] = [...diagnostic.values(), ...rejected.map(result => ({id: result.cardId, lexical: result.lexical, boost: result.boost, score: result.score, filtered: true, reason: filterReason(cardById.get(result.cardId)!)!}))]
-    .sort((a, b) => compareKnowledgeRanks({cardId: a.id, score: a.score, type: cardById.get(a.id)!.type}, {cardId: b.id, score: b.score, type: cardById.get(b.id)!.type}, config.ranking)).slice(0, 20);
+  const availableCandidates = [...diagnostic.values()];
+  const filteredCandidates = rejected.map(result => ({id: result.cardId, lexical: result.lexical, boost: result.boost, score: result.score, filtered: true, reason: filterReason(cardById.get(result.cardId)!)!}));
+  // BM25 分数随语料变化，候选记录保留可用列表顺序并注明分数来源。
+  const candidates: KnowledgeContextResult["candidates"] = (config.lexicalScoring === "bm25" && !config.fixedCardIds.length
+    ? [...availableCandidates.map(candidate => ({...candidate, scoreScope: "reusable-corpus" as const})), ...filteredCandidates.map(candidate => ({...candidate, scoreScope: "filtered-corpus" as const}))]
+    : [...availableCandidates, ...filteredCandidates].sort((a, b) => compareKnowledgeRanks({cardId: a.id, score: a.score, type: cardById.get(a.id)!.type}, {cardId: b.id, score: b.score, type: cardById.get(b.id)!.type}, config.ranking, config.lexicalScoring))).slice(0, 20);
   const section = format(selected);
   return {section, records, candidates, totalChars: section?.length ?? 0, estimatedInjectionTokens: Math.ceil((section?.length ?? 0) / 4)};
 }

@@ -7,6 +7,7 @@ import {
   cardMatchesFile,
   type KnowledgeCard,
   type KnowledgeCardStatus,
+  type KnowledgeLexicalScoring,
   type KnowledgeSearchResult
 } from "@simplercp/knowledge";
 import type { AgentRun, AgentTraceEvent, ServerMessage } from "@simplercp/shared";
@@ -43,7 +44,7 @@ export interface KnowledgeProviderConfig {
   topK: number;
   maxCharsPerCard: number;
   maxTotalChars: number;
-  lexicalScoring: "legacy" | "exact-boost";
+  lexicalScoring: KnowledgeLexicalScoring;
   ranking: "legacy" | "bounded";
   useActiveFiles: boolean;
   statuses: KnowledgeCardStatus[];
@@ -96,7 +97,7 @@ export interface KnowledgeContextResult {
   section?: string;
   toolSection?: string;
   toolSystem?: string;
-  candidates: Array<{ id: string; lexical: number; boost: number; score: number; filtered: boolean; reason: string }>;
+  candidates: Array<{ id: string; lexical: number; boost: number; score: number; filtered: boolean; reason: string; scoreScope?: "reusable-corpus" | "filtered-corpus" }>;
   records: KnowledgeInjectionRecord[];
   activeFiles: string[];
   activeFileSources?: Array<{file: string; sources: string[]}>;
@@ -452,7 +453,7 @@ function normalizeConfig(value: Partial<KnowledgeProviderConfig>): KnowledgeProv
   for (const key of ["injectEnabled", "toolEnabled", "proposeEnabled", "useActiveFiles", "postRunCheck", "inflightNotify", "requireSecondConfirmForTeam"] as const) if (value[key] !== undefined && typeof value[key] !== "boolean") throw new Error(`Knowledge ${key} must be boolean`);
   if (value.recapLanguage !== undefined && value.recapLanguage !== "zh" && value.recapLanguage !== "en") throw new Error("Knowledge recapLanguage is invalid");
   if (value.recapMode !== undefined && value.recapMode !== "server" && value.recapMode !== "agent-self") throw new Error("Knowledge recapMode is invalid");
-  if (value.lexicalScoring !== undefined && value.lexicalScoring !== "legacy" && value.lexicalScoring !== "exact-boost") throw new Error("Knowledge lexical scoring is invalid");
+  if (value.lexicalScoring !== undefined && !["legacy", "exact-boost", "bm25"].includes(value.lexicalScoring)) throw new Error("Knowledge lexical scoring is invalid");
   if (value.ranking !== undefined && value.ranking !== "legacy" && value.ranking !== "bounded") throw new Error("Knowledge ranking is invalid");
   return {
     injectEnabled: value.injectEnabled ?? defaultKnowledgeProviderConfig.injectEnabled,

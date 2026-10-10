@@ -1,0 +1,57 @@
+{
+  "summary": {
+    "R1": {
+      "traps": 4,
+      "queries": 4,
+      "recall1": 0,
+      "recall3": 0,
+      "recall5": 0,
+      "mrr": 0.03904220779220779,
+      "ndcg5": 0,
+      "falseInjections": 10
+    },
+    "R2": {
+      "traps": 4,
+      "queries": 4,
+      "recall1": 0,
+      "recall3": 0,
+      "recall5": 0,
+      "mrr": 0.03904220779220779,
+      "ndcg5": 0,
+      "falseInjections": 10
+    },
+    "R3": {
+      "traps": 4,
+      "queries": 4,
+      "recall1": 0.25,
+      "recall3": 0.25,
+      "recall5": 0.25,
+      "mrr": 0.303125,
+      "ndcg5": 0.25,
+      "falseInjections": 10
+    },
+    "R6": {
+      "traps": 4,
+      "queries": 4,
+      "recall1": 0.25,
+      "recall3": 0.25,
+      "recall5": 0.5,
+      "mrr": 0.3729166666666667,
+      "ndcg5": 0.3467132018086354,
+      "falseInjections": 10
+    },
+    "R6-lexical": {
+      "traps": 4,
+      "queries": 4,
+      "recall1": 0.25,
+      "recall3": 0.25,
+      "recall5": 0.5,
+      "mrr": 0.3729166666666667,
+      "ndcg5": 0.3467132018086354,
+      "falseInjections": 10
+    }
+  },
+  "accepted": true,
+  "protocolHash": "83c9a4f87604fb84e5830cf402e43e9d89d5bf597ad332c8a0b5a5d628b2f950",
+  "modelCalls": 0
+}

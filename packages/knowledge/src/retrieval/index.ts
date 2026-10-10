@@ -6,14 +6,16 @@ import type { KnowledgeCard, KnowledgeCardStatus, KnowledgeCardType } from '../s
 import { resolveNow } from '../clock.js';
 import { migrateKnowledgeCard } from '../schema/migrate.js';
 import { minimatch } from 'minimatch';
+import { scoreKnowledgeBm25 } from './bm25.js';
 
 export type KnowledgeSearchMode = 'vector' | 'lexical';
+export type KnowledgeLexicalScoring = 'legacy' | 'exact-boost' | 'bm25';
 export interface EmbeddingsConfig { client?: { embed(texts: string[]): Promise<number[][]> }; timeoutMs?: number; model?: string; }
 export interface KnowledgeIndexEntry { cardId: string; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; appliesTo?: KnowledgeCard['appliesTo']; embeddingTextHash: string; embeddingText: string; vector?: number[]; }
 export interface KnowledgeIndex { schemaVersion: 3; workspaceRoot: string; workspaceHash: string; embeddingModel: string; updatedAt: number; entries: KnowledgeIndexEntry[]; embeddingFallbackReason?: string; }
 export interface EnsureKnowledgeIndexOptions { workspaceRoot?: string; workspaceId?: string; cards?: unknown[]; cardsDirectory?: string; embeddings?: EmbeddingsConfig; indexDir: string; forceRebuild?: boolean; now?: () => number; strictEmbedding?: boolean; }
 export interface KnowledgeSearchFilters { types?: KnowledgeCardType[]; statuses?: KnowledgeCardStatus[]; }
-export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; activeFiles?: string[]; candidateFiles?: string[]; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; returnAll?: boolean; viewerMemberId?: string; lexicalScoring?: 'legacy' | 'exact-boost'; }
+export interface SearchKnowledgeCardsOptions extends EnsureKnowledgeIndexOptions { query: string; activeFile?: string; activeFiles?: string[]; candidateFiles?: string[]; selectionText?: string; filters?: KnowledgeSearchFilters; topK?: number; returnAll?: boolean; viewerMemberId?: string; lexicalScoring?: KnowledgeLexicalScoring; }
 export interface KnowledgeSearchResult { cardId: string; score: number; mode: KnowledgeSearchMode; type: KnowledgeCardType; status: KnowledgeCardStatus; scope?: KnowledgeCard['scope']; ownerMemberId?: string; title: string; summary: string; tags: string[]; files: string[]; appliesTo?: KnowledgeCard['appliesTo']; excerpt: string; fallbackReason?: string; }
 
 const DEFAULT_EMBEDDINGS_MODEL = 'text-embedding-v4';
@@ -101,10 +103,19 @@ export async function searchKnowledgeCards(options: SearchKnowledgeCardsOptions)
             fallbackReason = error instanceof Error ? error.message : String(error);
         }
     }
+    if (options.lexicalScoring === 'bm25') {
+        const scores = scoreKnowledgeBm25(entries, queryText);
+        return entries.map(entry => ({ entry, score: (scores.get(entry.cardId) ?? 0) + activeFileBoost(entry, activeFiles) }))
+            .filter(item => item.score > 0 || resultMatchesFiles(item.entry, options.candidateFiles ?? []))
+            .sort((left, right) => right.score - left.score || compareCardIds(left.entry.cardId, right.entry.cardId))
+            .slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'lexical'));
+    }
     const tokens = tokenize(queryText);
     const lexicalScoring = options.lexicalScoring ?? 'legacy';
     return entries.map(entry => ({ entry, score: lexicalScore(tokens, entry.embeddingText, entry.files, activeFiles, lexicalScoring) })).filter(item => item.score > 0 || resultMatchesFiles(item.entry, options.candidateFiles ?? [])).sort((a, b) => b.score - a.score).slice(0, topK).map(({ entry, score }) => toResult(entry, score, 'lexical', fallbackReason));
 }
+
+function compareCardIds(left: string, right: string): number { return left < right ? -1 : left > right ? 1 : 0; }
 
 function resolveSourceId(options: EnsureKnowledgeIndexOptions): string { return options.workspaceId?.trim() || (options.workspaceRoot ? path.resolve(options.workspaceRoot) : options.cards ? 'cards:in-memory' : process.cwd()); }
 function resolveIndexDir(explicit: string): string {

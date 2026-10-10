@@ -253,6 +253,45 @@ def main():
         (args.out / "retrieval-by-source.md").write_text(grouped.to_markdown())
         traps.groupby(["condition", "repository"])[metrics].mean().to_csv(args.out / "retrieval-by-repository.csv")
         frame[["key", "task", "taskKind", "condition", "activitySource", "activeFiles", "activeFileSources", "saturatedCandidates", "candidateCount", "targetRank"]].to_json(args.out / "retrieval-diagnostics.json", orient="records", force_ascii=False, indent=2)
+        primary_pairs = [("R3", "R6"), ("R1", "R6"), ("R2", "R6")]
+        wide = per_task.recall5.unstack("condition")
+        comparisons = []
+        for left, right in primary_pairs:
+            if left not in wide or right not in wide:
+                continue
+            pairs = wide[[left, right]].dropna()
+            if not pairs.isin([0, 1]).all().all():
+                raise ValueError("McNemar requires binary target retrieval outcomes")
+            comparison = paired_tests(pairs[left], pairs[right])
+            comparisons.append({"condition_a": left, "condition_b": right, "metric": "recall5",
+                                **{key: comparison[key] for key in ["tasks", "left_only", "right_only", "difference", "difference_ci", "mcnemar_p"]}})
+        if comparisons:
+            for comparison, adjusted in zip(comparisons, multipletests([item["mcnemar_p"] for item in comparisons], method="holm")[1]):
+                comparison["holm_p"] = float(adjusted)
+            (args.out / "retrieval-comparisons.json").write_text(json.dumps(comparisons, ensure_ascii=False, indent=2))
+        protocol_file = args.results.parent / "protocol.json"
+        if protocol_file.exists():
+            protocol = json.loads(protocol_file.read_text())
+            if "pilotTaskIds" in protocol:
+                held_out = frame[~frame.task.isin(protocol["pilotTaskIds"])]
+                held_out_traps = held_out[held_out.taskKind.eq("trap")]
+                held_out_controls = held_out[held_out.taskKind.eq("control")]
+                held_out_summary = []
+                for condition, group in held_out_traps.groupby("condition"):
+                    held_out_summary.append({"condition": condition, "trapTasks": group.task.nunique(),
+                                             **group[metrics].mean().to_dict(),
+                                             "falseInjections": int(held_out_controls[held_out_controls.condition.eq(condition)].falseInjections.sum()),
+                                             "controlTasks": held_out_controls[held_out_controls.condition.eq(condition)].task.nunique()})
+                held_out_wide = held_out_traps.pivot(index="task", columns="condition", values="recall5")
+                held_out_comparison = paired_tests(held_out_wide.R3, held_out_wide.R6)
+                (args.out / "retrieval-held-out.json").write_text(json.dumps({"summary": held_out_summary,
+                                                                            "comparison": {"condition_a": "R3", "condition_b": "R6", **held_out_comparison}}, ensure_ascii=False, indent=2))
+        main = table.loc[table.index.isin(["R1", "R2", "R3", "R6"]), ["recall1", "recall3", "recall5"]]
+        fig, axis = plt.subplots(figsize=(8, 4))
+        main.plot.bar(ax=axis, color=["#4477aa", "#228833", "#ee7733"])
+        axis.set(ylim=(0, 1), ylabel="Recall", xlabel="Retrieval condition")
+        axis.tick_params(axis="x", rotation=0)
+        fig.tight_layout(); fig.savefig(args.out / "retrieval.png", dpi=180); plt.close(fig)
     elif "qualityEligible" in frame:
         eligible = frame[frame.qualityEligible.eq(True)]
         fields = ["validStructure", "validCitations", "mustMentionCovered", "groundedPass"]

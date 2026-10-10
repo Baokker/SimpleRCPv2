@@ -118,7 +118,7 @@
 | 方法 | 路径 | 输入与返回 |
 | --- | --- | --- |
 | `GET` | `/api/projects/:projectId/knowledge/config` | 返回项目 Agent 知识注入配置。 |
-| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`lexicalScoring`、`ranking`、`statuses`、`fixedCardIds`、任务后核对、在途提醒、团队二次确认、复盘模式、锚点孤立期限和 `riskWarning`。`lexicalScoring` 与 `ranking` 独立。`riskWarning` 包含 `files`、`lexicalThreshold`、`vectorThreshold`、`cooldownMs`、`dedupeThreshold`。 |
+| `PUT` | `/api/projects/:projectId/knowledge/config` | 更新 `injectEnabled`、字符预算、`lexicalScoring`、`ranking`、`statuses`、`fixedCardIds`、任务后核对、在途提醒、团队二次确认、复盘模式、锚点孤立期限和 `riskWarning`。`lexicalScoring` 可选 `legacy`、`exact-boost`、`bm25`；`ranking` 可选 `legacy`、`bounded`。BM25 使用相关分数作为主要顺序，类型只影响同分次序；bounded 文件加分继续可用。`riskWarning` 包含 `files`、`lexicalThreshold`、`vectorThreshold`、`cooldownMs`、`dedupeThreshold`。 |
 | `POST` | `/api/projects/:projectId/knowledge/preview` | 输入 `{ prompt, contexts, knowledge? }`，返回活动文件、排除卡片、候选记录、字符数量和按 `Math.ceil(totalChars / 4)` 估算的注入 token 数。`reviewCards` 列出相关待复核卡片的 id 和标题，它们不会进入 `records` 或 Agent 知识正文。 |
 | `POST` | `/api/projects/:projectId/knowledge/cards/:id/view` | 记录当前成员首次打开卡片，用于复用延迟。 |
 | `GET` | `/api/projects/:projectId/knowledge/metrics/reuse` | 返回知识时刻、确认、首次查看和首次注入时间点。 |
@@ -127,7 +127,7 @@
 
 阶段 6 的知识配置增加 `toolEnabled`、`proposeEnabled` 与 `recapLanguage`。`POST /api/projects/:projectId/knowledge/import` 导入工作区规范文件并创建 Inbox 草稿；`GET /api/projects/:projectId/knowledge/export?format=agents-md` 返回团队卡片 Markdown，`POST /api/projects/:projectId/knowledge/export/workspace` 写入工作区。`POST /mcp/knowledge` 提供 `knowledge_search`、`knowledge_get` 和受项目配置控制的 `knowledge_propose`。
 
-Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 保存完整脱敏 `query`、`activeFiles`、`ranking`、`lexicalScoring`、`topK` 与前 20 个 `candidates`（`id`、`lexical`、`boost`、`score`、`filtered`、`reason`），并记录 `totalChars` 与 `estimatedInjectionTokens`。`totalChars` 包含标题、卡片元数据、正文、矛盾标注和分隔符，受项目 `maxTotalChars` 限制；工具说明独立于该预算，位置可配置为 `toolInstructionPlacement: "prompt" | "system"`。`usage_summary` 记录 OpenCode assistant 消息用量。`knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。自我复盘的 `llm-calls.jsonl.usage` 包含 token 用量、SDK `cost` 和可选的 `estimatedCost`、`estimatedCostCurrency`、`estimatedCostSource`。
+Agent run 创建请求可附带 `knowledge: { excludeCardIds?: string[]; disabled?: boolean }`。个人 Agent 预览使用 `/api/projects/:projectId/agent/knowledge/preview`，返回结构与知识预览接口一致。run trace 中的 `knowledge_injected` 保存完整脱敏 `query`、`activeFiles`、`ranking`、`lexicalScoring`、`topK` 与前 20 个 `candidates`（`id`、`lexical`、`boost`、`score`、`filtered`、`reason`），并记录 `totalChars` 与 `estimatedInjectionTokens`。BM25 的非固定候选先按实际可用排名记录，之后追加已过滤卡片；可选字段 `scoreScope` 标记 `reusable-corpus` 或 `filtered-corpus`，不同语料计算的分数不能共同排序。`totalChars` 包含标题、卡片元数据、正文、矛盾标注和分隔符，受项目 `maxTotalChars` 限制；工具说明独立于该预算，位置可配置为 `toolInstructionPlacement: "prompt" | "system"`。`usage_summary` 记录 OpenCode assistant 消息用量。`knowledge_post_check` 只包含卡片 id、文件、行段和检查结果。自我复盘的 `llm-calls.jsonl.usage` 包含 token 用量、SDK `cost` 和可选的 `estimatedCost`、`estimatedCostCurrency`、`estimatedCostSource`。
 
 实验实例提供 `POST /api/projects/:projectId/experiments/recap-from-episode`：body 为 `{ runId, correctionRunId?, correctionAction: "revise" | "correct" | "interrupt", correctionText, correctionFiles?: [{ file, beforeText, afterText }] }`。使用已结束 run 的真实纠正版本进入 Inbox，返回 `{ suggestion, captureBypassed: true, naturallyTriggered }`。重复提交使用相同建议 id 并保留自然识别观察值。该接口仅在实验服务启用，K4 使用它独立测量确认后的迁移。
 

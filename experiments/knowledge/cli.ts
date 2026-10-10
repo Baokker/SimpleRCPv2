@@ -5,14 +5,14 @@ import {allK3Conditions, runK3, calibration, type K3Condition} from "./k3.js";
 import {allK4Conditions, runK4, type K4Condition} from "./k4.js";
 import {runK1Offline, runK1Online, compareK1Recordings} from "./k1.js";
 import {runK2} from "./k2.js";
-import {runK5} from "./k5.js";
+import {runK5, K5_CONDITIONS, type K5Condition} from "./k5.js";
 import {runK7} from "./k7.js";
 import {judge} from "./client.js";
 
 const {values, positionals} = parseArgs({allowPositionals: true, options: {
   config: {type: "string"}, out: {type: "string"}, tasks: {type: "string"}, conditions: {type: "string"}, pairs: {type: "string"},
   pilot: {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
-  source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}
+  source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}
 }});
 const command = positionals[0];
 if (!["verify", "k1", "k1-compare", "k2", "k3", "k4", "k5", "k7", "judge-stability", "summarize"].includes(command)) throw new Error("Command: verify|k1|k1-compare|k2|k3|k4|k5|k7|judge-stability|summarize");
@@ -36,6 +36,16 @@ if (command === "verify") {
   const directory = values.out ? resolveInput(values.out) : path.join(root, "runs", `${command}-${new Date().toISOString().replace(/[:.]/gu, "-")}`);
   const store = await new RunStore(directory).open(command, config, data);
   try {
+    if (values.protocol) {
+      if (command !== "k5") throw new Error("--protocol is supported for K5");
+      const protocol = await readJson(resolveInput(values.protocol));
+      const tasks = (values.tasks ? selectIds(data.tasks, values.tasks) : data.tasks).map(task => task.id).sort();
+      if (digest(tasks) !== digest([...protocol.taskIds].sort()) || digest(values.conditions?.split(",")) !== digest(protocol.conditions)) throw new Error("K5 selection differs from the protocol");
+      const protocolFile = path.join(directory, "protocol.json");
+      if (await exists(protocolFile) && digest(await readJson(protocolFile)) !== digest(protocol)) throw new Error("K5 protocol changed during resume");
+      await writeJson(protocolFile, protocol);
+      store.metadata.protocolHash = digest(protocol);
+    } else if (await exists(path.join(directory, "protocol.json"))) throw new Error("Resume requires the original --protocol");
     if (values.source) {
       const source = resolveInput(values.source);
       const input = {source, resultsHash: digest(await readJsonl(path.join(source, "results.jsonl")))};
@@ -69,7 +79,12 @@ if (command === "verify") {
       if (new Set(variants).size !== variants.length || variants.some(variant => !["delayed", "same-session"].includes(variant))) throw new Error("Invalid K4 variants");
       await runK4(data, config, store, pairs.flatMap(pair => conditions.flatMap(condition => variants.flatMap(variant => Array.from({length: values.pilot ? 1 : config.repetitions}, (_, index) => ({pair, condition, variant: variant as "delayed" | "same-session", repetition: index + 1}))))));
     }
-    if (command === "k5") await runK5(data, config, store, values.source && resolveInput(values.source));
+    if (command === "k5") {
+      const conditions = values.conditions?.split(",") as K5Condition[] | undefined;
+      if (conditions && (new Set(conditions).size !== conditions.length || conditions.some(condition => !K5_CONDITIONS.includes(condition)))) throw new Error("Invalid K5 conditions");
+      const selected = values.tasks ? {...data, tasks: selectIds(data.tasks, values.tasks)} : data;
+      await runK5(selected, config, store, values.source && resolveInput(values.source), conditions);
+    }
     if (command === "k7") await runK7(config, store);
     if (command === "judge-stability") {
       const task = data.tasks.find(task => task.id === values.tasks);
