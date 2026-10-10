@@ -1,5 +1,34 @@
 # 可执行基准
 
+## 正式实验数据与入口
+
+当前实验使用 D1-v3：240 个关系组，开发集 115 组、保留集 125 组。323 个非 alias 标签中 allow 237、warn 0、lock 79、exclude 7；开发集去重后 119 个有效程序，allow 97、lock 22。新增的 40 个 CP-3 安全配套关系组全部属于开发项目，均由真实四状态探针标注为 allow，且本地管线产生灰区研判请求。保留集完整程序、标签与 D1-v2 相同。
+
+可提交的 `dataset.json.gz` 包含清单、标签、剔除表与全部轨迹，`archive-sha256.json` 保存归档哈希。展开文件可直接从归档恢复。数据生成种子 20261008 与统计 bootstrap 种子 20261007 分别使用。
+
+```sh
+pnpm --filter @simplercp/conflict-guard data:artifacts --dataset bench/datasets/d1-v3 --restore
+pnpm --filter @simplercp/conflict-guard data:artifacts --cache bench/model-cache/preexperiment --restore
+pnpm --filter @simplercp/conflict-guard index:run --dataset bench/datasets/d1-v3 --split all --k 1,2,3 --experiment X2 --out ../../docs/conflict-guard/experiment/X2 --plan
+pnpm --filter @simplercp/conflict-guard bench:agents --experiment X5 --policy P5 --injection on --repeat 3 --out ../../docs/conflict-guard/experiment/X5/P5/on --plan
+pnpm --filter @simplercp/conflict-guard ablation:run --plan
+```
+
+`--plan` 校验参数并输出执行条件，模型调用为零。正式实验入口要求 `protocol.json` 获得人工确认。各项实际命令、重复次数、调用预算与统计方法见 `experiment/freeze.md` 和 `experiment/README.md`。
+
+## 真实轨迹候选数量核验
+
+```sh
+pnpm --filter @simplercp/conflict-guard replay:counts \
+  --trace ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz \
+  --run ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/run.json.gz \
+  --out ../../docs/conflict-guard/evidence/preexperiment/candidate-counts
+```
+
+本地规则模拟结果：目标 run 判定 573 → 4 次，整个会话 13 次。原轨迹的 19 个变更单元全部匹配；其中两个经共享类型的关联在候选阶段过滤。匹配单元中的无关系数量从 1 增为 3；另有一个独立重建的相关单元。逐单元说明与源文件哈希见 `evidence/preexperiment/candidate-counts/candidate-counts.json`。这份比较用于验证聚合与过滤，模型语义质量另行评价。
+
+无关系比例使用产生符号变化的关闭批次作为变更单元。`index:run --samples <id>` 可以导出单个程序的批次与候选审计事件。开发样本 `d1-0011-safe` 有五个语义变更单元、零个候选对，比例为 5/5，与回放原始输出一致；说明见 `evidence/preexperiment/unit-audit/`。
+
 ## 种子项目与源码选择
 
 当前数据集使用 `bench/seeds/native/` 中八个手写 TypeScript 项目。来源为本仓库的基准代码，各项目采用独立的业务组织，没有引入外部源码。每个项目包含五份生产 TypeScript 文件和一份 `node:test` 文件。测试使用 Node.js 24.7.0 的 strip-types 支持，十六项原始业务测试通过。
