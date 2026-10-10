@@ -19,7 +19,7 @@ import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { isIgnoredPath } from "../workspacePolicy.js";
 import { readWorkspaceFile } from "../workspace.js";
 import { redactSensitive } from "../agent/traceStore.js";
-import {selectKnowledgeInjection} from "./injection.js";
+import {selectKnowledgeInjection, type KnowledgeSelectionPolicy} from "./injection.js";
 
 export {KNOWLEDGE_PROMPT_TITLE} from "./injection.js";
 
@@ -210,7 +210,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     project: ProjectRecord;
     run: AgentRun;
     initiator: RoomMember;
-  }, buildOptions?: { recordUsage?: boolean }): Promise<KnowledgeContextResult> {
+  }, buildOptions?: { recordUsage?: boolean; selectionPolicy?: KnowledgeSelectionPolicy }): Promise<KnowledgeContextResult> {
     await awaitReady();
     const recordUsage = buildOptions?.recordUsage ?? true;
     const query = [input.run.prompt, input.run.extraPrompt].filter(Boolean).join("\n\n").trim();
@@ -226,7 +226,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       { memberId: input.initiator.id, displayName: input.initiator.displayName },
       {}
     );
-    const selection = await selectKnowledgeInjection({cards: visibleCards, viewerMemberId: input.initiator.id, query, activeFiles, config, excludedByUser, workspaceId: input.project.id, indexDir: path.join(root, "index"), sensitiveValues: options.sensitiveValues});
+    const selection = await selectKnowledgeInjection({cards: visibleCards, viewerMemberId: input.initiator.id, query, activeFiles, config, excludedByUser, workspaceId: input.project.id, indexDir: path.join(root, "index"), sensitiveValues: options.sensitiveValues, selectionPolicy: buildOptions?.selectionPolicy});
     const reviewCards = visibleCards.filter(card => ["needsReview", "orphaned"].includes(card.status) && (activeFiles.some(file => cardMatchesFile(card, file)) || selection.candidates.some(candidate => candidate.id === card.id))).map(card => ({ id: card.id, title: card.title }));
     const {records} = selection;
     const cardById = new Map(visibleCards.map(card => [card.id, card]));
