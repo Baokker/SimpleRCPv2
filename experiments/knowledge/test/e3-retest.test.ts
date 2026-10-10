@@ -51,7 +51,7 @@ test("E3 真实 HTTP 入口与产品预览、预算处理返回相同知识", {t
   const data = await dataset();
   await fs.mkdir(path.join(root, ".work"), {recursive: true});
   const directory = await fs.mkdtemp(path.join(root, ".work/e3-http-"));
-  const server = await startRetrievalServer("R1", directory);
+  let server = await startRetrievalServer("R1", directory);
   try {
     const project = (await server.api.request("/api/projects/demo")).project;
     const member = (await server.api.request("/api/projects/demo/members", undefined, {name: "检索核验成员"})).member.id;
@@ -71,5 +71,12 @@ test("E3 真实 HTTP 入口与产品预览、预算处理返回相同知识", {t
       assert.equal(online.result.section, offline.section);
       assert.ok(online.result.totalChars <= 4000);
     }
+    await server.close();
+    server = await startRetrievalServer("R1", directory);
+    const joined = (await server.api.request("/api/projects/demo/members", undefined, {memberId: member, name: "检索核验成员"})).member.id;
+    assert.equal(joined, member);
+    const resumed = await server.api.request("/api/projects/demo/experiments/retrieval", member, {prompt: task.prompt, condition: "B", seed: "test"});
+    assert.equal(resumed.failed, false);
+    assert.ok(resumed.result.records.length > 0);
   } finally {await server.close(); await fs.rm(directory, {recursive: true, force: true});}
 });

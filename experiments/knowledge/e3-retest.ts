@@ -52,7 +52,11 @@ try {
       const project = (await server.api.request("/api/projects/demo")).project;
       const memberFile = path.join(serverDirectory, "member.json");
       let member: string;
-      if (await exists(memberFile)) member = (await readJson(memberFile)).id;
+      if (await exists(memberFile)) {
+        member = (await readJson(memberFile)).id;
+        const joined = (await server.api.request("/api/projects/demo/members", undefined, {memberId: member, name: "检索实验成员"})).member.id;
+        assert.equal(joined, member);
+      }
       else {member = (await server.api.request("/api/projects/demo/members", undefined, {name: "检索实验成员"})).member.id; await writeJson(memberFile, {id: member});}
       const cards = data.library.filter(item => item.repository === repository && item.card.status === "reviewed" && !variants.has(item.card.id)).map(item => item.card);
       const imported = (await server.api.request("/api/projects/demo/knowledge/cards", member)).cards;
