@@ -24,7 +24,7 @@ export function draftMetrics(raw: string, mode: string, evidence: Record<string,
 export async function episodes(data: Dataset, k4Directory?: string): Promise<Episode[]> {
   const rows: Episode[] = [];
   if (k4Directory) for (const row of await readJsonl(path.join(k4Directory, "results.jsonl"))) {
-    if (!row.completed) continue;
+    if (!row.completed || !row.ta?.actuallyTrapped) continue;
     const pair = data.transfers.find(item => item.id === row.pair);
     if (!pair) throw new Error(`Unknown correction pair: ${row.pair}`);
     const raw = path.join(k4Directory, row.artifacts);
@@ -85,8 +85,10 @@ export async function runK2(data: Dataset, config: ExperimentConfig, store: RunS
       }
       const text = response.responses.at(-1) ?? "";
       const evaluatedEvidence = response.evidence ?? episode.evidence;
-      const metrics = draftMetrics(text, mode, evaluatedEvidence, episode.mustMention, episode.expectedTypes);
-      await store.append({key, completed: true, episode: episode.id, pair: episode.pairId, condition: mode, ...metrics, fallback: response.fallback, latencyMs: response.latencyMs,
+      const failed = response.failed || response.fallback || !response.draft;
+      const metrics = failed ? {} : draftMetrics(text, mode, evaluatedEvidence, episode.mustMention, episode.expectedTypes);
+      await store.append({key, completed: true, qualityEligible: !failed, failed, failureReason: response.failureReason, episode: episode.id, pair: episode.pairId, condition: mode, ...metrics, fallback: response.fallback, latencyMs: response.latencyMs,
+        checkValidation: response.draft?.checkValidation,
         mustMention: episode.mustMention, evidenceHash: digest(evaluatedEvidence), expectedTypes: episode.expectedTypes,
         calls: response.calls, outputHash: digest(response.draft), artifacts: path.relative(store.directory, raw)});
     }
@@ -94,6 +96,7 @@ export async function runK2(data: Dataset, config: ExperimentConfig, store: RunS
   const results = await readJsonl(path.join(store.directory, "results.jsonl"));
   const table = [];
   for (const row of results) {
+    if (!row.qualityEligible) continue;
     const cached = await readJson(path.join(store.directory, row.artifacts, "response.json"));
     table.push({id: row.key, draft: JSON.stringify(cached.response.draft), ruleCorrect: "", checkable: "", scopeSuitable: "", boundariesReasonable: "", notes: ""});
   }

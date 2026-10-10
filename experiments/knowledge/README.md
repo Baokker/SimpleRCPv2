@@ -17,7 +17,11 @@ pnpm --filter @simplercp/experiments experiment verify
 SIMPLERCP_KNOWLEDGE_EXPERIMENTS=true EXPERIMENT_SPEED=1 pnpm --filter @simplercp/experiments run server
 ```
 
-HTTP 默认端口 4179，OpenCode 默认端口 4181，数据目录为 `experiments/knowledge/.work/server/data`。`PORT`、`SIMPLERCP_OPENCODE_PORT`、`SIMPLERCP_DATA_DIR` 可指定独立位置。凭据从平台 `.env` 读取，在服务端进程中保管。OpenCode 通过本机 HTTP 代理请求 MiniMax。固定 Agent 为 `minimax/MiniMax-M2`，启动后 runner 会核对模型设置。
+HTTP 默认端口 4179，OpenCode 默认端口 4181，数据目录为 `experiments/knowledge/.work/server/data`。`PORT`、`SIMPLERCP_OPENCODE_PORT`、`SIMPLERCP_DATA_DIR` 可指定独立位置。凭据从平台 `.env` 读取，在服务端进程中保管。OpenCode 通过本机 HTTP 代理请求 MiniMax。Agent 与服务端知识模型统一使用 `minimax/MiniMax-M3`，启动后 runner 会核对两者的模型设置和实验时钟。
+
+`formal-v21.json` 是本轮配置，使用 HTTP 4203、OpenCode 4205、三次重复和原始时间窗口。结果记录实际 provider 与模型，并核验 Agent、知识模块两者均为 M3。M3 使用官方标准价格逐请求估算人民币费用；运行时费用与估算字段分别保留，供应商账单单独记录。
+
+K4 的唯一正式入口为平台 `k4` 命令。数据仓库的 `tools/run-transfer.ts` 用于数据校准。
 
 仅这个入口注册 `experiments/*` 接口。修改配置、导入、确认与生成草稿写入实验活动记录。接口涵盖 schema v3 卡片导入、T2 原草稿确认、独立项目停止捕获、脚本 Agent 事件、录制读取、运行结束后的同步等待和 K2 草稿生成。卡片导入逐个检查快照与指定范围的文本相同。正常产品入口保持原有接口与行为。
 
@@ -64,7 +68,7 @@ K5 与线上 provider 共用 `searchRankedKnowledgeCards`。全部候选进入�
 
 2026-10-07 审阅验证中，四个 C3 陷阱在 prompt 与 system 两种位置各执行一次，知识工具调用均为零。阶段 8 的 K3 命令显式选择 `--conditions C0,C1,C2,C5,C6,C7`，C3、C4 不进入正式矩阵，R4 标记为没有实际查询数据。汇总证据使用 `pnpm --filter @simplercp/experiments exec tsx review-evidence.ts`，输出 `runs/review-20261007.json`。复盘验证对已有响应立即报告错误，重新验证使用独立结果目录。
 
-K5 的活动文件取自 `--source` 中知识注入 trace 的 activeFiles；缺少记录时使用任务提示明确列出的 src 文件路径。每行记录 activitySource。错误活动文件使用另一张卡片的锚点文件，排除目标卡片的文件。目标卡片 id 只用于相关性评价和错误活动文件的选择。实际工具查询统一记录为 R4，以 queryIndex 与 querySource 区分各次查询；明确属于多次运行的查询单独排除。R4 统计先求每个任务的查询均值，再求任务均值。
+K5 的活动文件取自 `--source` 中知识注入 trace 的 activeFiles；缺少记录时与产品共用 `knowledgeActiveFiles`，仅纳入工作区中实际存在的路径。每行记录 activitySource 和逐文件来源，包括显式上下文、成员当前文件、提示中的已有路径或为空。陷阱的 Recall、MRR、nDCG 与对照的误注入分别计算。错误活动文件使用另一张卡片的锚点文件，排除目标卡片的文件。目标卡片 id 只用于相关性评价和错误活动文件的选择。实际工具查询统一记录为 R4，以 queryIndex 与 querySource 区分各次查询；明确属于多次运行的查询单独排除。R4 统计先求每个任务的查询均值，再求任务均值。
 
 统计工具：
 
@@ -79,4 +83,4 @@ uv run analyze.py ../runs/k2-pilot/results.jsonl --out ../runs/k2-pilot/analysis
 
 统计包括按任务多数投票（平票记为缺失）、精确 McNemar、任务随机效应的 Bayesian logistic、5 个百分点等价界的配对 TOST、10000 次按任务 bootstrap、Holm、Cohen's κ。K4 按 delayed 与 same-session 分别计算，输出到对应子目录。对照任务的功能等价结果单独写入 controls.json；样本数量或差值方差不足时返回空值和原因。统计入口拒绝重复 key 与未完成结果；两份评分表必须包含相同 id 和草稿正文。报告同时保留原始重复结果。图输出为 PNG，分别呈现条件成功率与置信区间、额外 token 与复犯率减少、锚点策略结果。
 
-运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 生成 pilot-summary.json 与 artifact-inspection.json。默认读取 k3-pilot、k3-conditions-pilot、k1-review、k1-review-comparison、k4-review、k4-context-review-final、k2-review、k5-review、k7-review。可依次传入 K4、K5、K7、K2、K4 上下文试跑的目录名，目录均位于 runs/。原始模型响应和 K2 上下文运行记录必须保留在对应 raw/ 目录。检索汇总按任务平均，并保留查询总数；K7 汇总单独记录 rightBoundaryExpanded。正式规模按每个实际纠正组合生成 K2 episode，当前材料与三次重复对应 196 个 episode。
+运行 `pnpm --filter @simplercp/experiments exec tsx report.ts` 生成历史试跑的 pilot-summary.json 与 artifact-inspection.json。默认读取 k3-pilot、k3-conditions-pilot、k1-review、k1-review-comparison、k4-review、k4-context-review-final、k2-review、k5-review、k7-review。可依次传入 K4、K5、K7、K2、K4 上下文试跑的目录名，目录均位于 runs/。原始模型响应和 K2 上下文运行记录必须保留在对应 raw/ 目录。检索汇总按任务平均，并保留查询总数；K7 汇总单独记录 rightBoundaryExpanded。正式矩阵使用 `formal-run.ts`，每步核验冻结提交、M3 和样本量，再执行 summarize 与 analysis/analyze.py。K2 episode 来自 Ta 实际踩坑的正式 K4 组合，加上两段脚本中的全部标注知识时刻，实际数量在 E6 报告中记录。

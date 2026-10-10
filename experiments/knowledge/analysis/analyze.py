@@ -88,6 +88,21 @@ def analyze_agent_stratum(frame, directory):
     frame = frame[frame.taskKind.eq("trap")] if "taskKind" in frame else frame
     if frame.empty:
         return []
+    if "targetDelivery" in frame:
+        delivery = []
+        for condition, group in frame.groupby("condition"):
+            received = group.targetInjected | group.targetRetrieved
+            delivered = group[received]
+            delivery.append({
+                "condition": condition, "runs": len(group), "delivered": int(received.sum()),
+                "deliveryRate": float(received.mean()),
+                "lexicalRate": float(group.targetDelivery.map(lambda value: value["lexical"] > 0).mean()),
+                "fileRelatedRate": float(group.targetDelivery.map(lambda value: value["fileRelated"] > 0).mean()),
+                "projectFallbackRate": float(group.targetDelivery.map(lambda value: value["projectFallback"] > 0).mean()),
+                "recurrenceWhenDelivered": float(1 - delivered.trapAvoided.mean()) if len(delivered) else None,
+                "jointWhenDelivered": float(delivered.jointSuccess.mean()) if len(delivered) else None,
+            })
+        pd.DataFrame(delivery).to_csv(directory / "delivery.csv", index=False)
     majority = majority_table(frame)
     majority.to_csv(directory / "majority.csv", index=False)
     summary = []
@@ -211,17 +226,42 @@ def main():
         if "ta" in frame:
             eligible = frame.ta.map(lambda value: value["actuallyTrapped"])
             frame[["key", "pair", "condition"]].assign(taActuallyTrapped=eligible).to_csv(args.out / "transfer-eligibility.csv", index=False)
+            stability = frame[["key", "pair", "condition", "variant", "repetition"]].assign(taActuallyTrapped=eligible)
+            inconsistent = stability.groupby(["pair", "variant", "repetition"]).taActuallyTrapped.transform("nunique").gt(1)
+            stability[inconsistent].to_csv(args.out / "transfer-inconsistent.csv", index=False)
             if eligible.any():
                 eligible_directory = args.out / "ta-trapped"
                 eligible_directory.mkdir(exist_ok=True)
                 analyze_agent(frame[eligible], eligible_directory)
     elif "recall1" in frame:
         metrics = ["recall1", "recall3", "recall5", "mrr", "ndcg5"]
-        per_task = frame.groupby(["task", "condition"])[metrics].mean()
+        traps = frame[frame.taskKind.eq("trap")]
+        controls = frame[frame.taskKind.eq("control")]
+        if traps[metrics].isna().any().any():
+            raise ValueError("Trap retrieval metrics must have a nonempty relevant set")
+        if not controls[metrics].isna().all().all():
+            raise ValueError("Control tasks must be excluded from Recall")
+        per_task = traps.groupby(["task", "condition"])[metrics].mean()
         table = per_task.groupby("condition").mean()
-        table["falseInjections"] = frame.groupby("condition").falseInjections.sum(min_count=1)
-        table["queries"] = frame.groupby("condition").size()
+        table["falseInjections"] = controls.groupby("condition").falseInjections.sum(min_count=1)
+        table["trapTasks"] = traps.groupby("condition").task.nunique()
+        table["controlTasks"] = controls.groupby("condition").task.nunique()
+        table["queries"] = traps.groupby("condition").size()
         (args.out / "retrieval.md").write_text(table.to_markdown())
+        grouped = traps.groupby(["condition", "activitySource"])[metrics].mean()
+        grouped["queries"] = traps.groupby(["condition", "activitySource"]).size()
+        (args.out / "retrieval-by-source.md").write_text(grouped.to_markdown())
+        traps.groupby(["condition", "repository"])[metrics].mean().to_csv(args.out / "retrieval-by-repository.csv")
+        frame[["key", "task", "taskKind", "condition", "activitySource", "activeFiles", "activeFileSources", "saturatedCandidates", "candidateCount", "targetRank"]].to_json(args.out / "retrieval-diagnostics.json", orient="records", force_ascii=False, indent=2)
+    elif "qualityEligible" in frame:
+        eligible = frame[frame.qualityEligible.eq(True)]
+        fields = ["validStructure", "validCitations", "mustMentionCovered", "groundedPass"]
+        table = eligible.groupby("condition")[fields].mean() if not eligible.empty else pd.DataFrame(columns=fields)
+        table["eligible"] = eligible.groupby("condition").size()
+        table["attempted"] = frame.groupby("condition").size()
+        table["failures"] = frame.groupby("condition").failed.sum()
+        (args.out / "recap.md").write_text(table.to_markdown())
+        frame[frame.failed.eq(True)].to_json(args.out / "recap-failures.json", orient="records", force_ascii=False, indent=2)
     elif "groundedPass" in frame:
         table = frame.groupby("condition")[["validStructure", "validCitations", "mustMentionCovered", "groundedPass"]].mean()
         (args.out / "recap.md").write_text(table.to_markdown())

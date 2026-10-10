@@ -218,7 +218,7 @@ Agent 使用项目依赖中的 OpenCode `1.18.31` 和 `@opencode-ai/sdk` `1.18.3
 - `KNOWLEDGE_LLM_PROVIDER`：服务端知识模型，可选 `minimax`、`deepseek`；存在 `MINIMAX_API_KEY` 时默认使用 MiniMax。
 - `MINIMAX_API_KEY`：选择 MiniMax 的 Agent 和服务端知识模块使用的 API Key。
 - `MINIMAX_BASE_URL`：MiniMax OpenAI-compatible API 地址，默认值为 `https://api.minimaxi.com/v1`。
-- `MINIMAX_MODEL`：服务端知识模型名称，默认值为 `MiniMax-M2`。
+- `MINIMAX_MODEL`：服务端知识模型名称，默认值为 `MiniMax-M3`。
 - `AGENT_MINIMAX_MODEL`：可选的 Agent 专用 MiniMax 模型名称，未设置时使用 `MINIMAX_MODEL`。
 - `SIMPLERCP_OPENCODE_PORT`：OpenCode 回环端口，默认值为 `4096`。
 - `SIMPLERCP_AGENT_RUN_TIMEOUT_MS`：单个任务最长运行时间，默认值为 `600000`。

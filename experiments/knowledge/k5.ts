@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import {searchKnowledgeCards, searchRankedKnowledgeCards, rankKnowledgeResults, type KnowledgeSearchResult, type KnowledgeCard} from "@simplercp/knowledge";
 import type {AgentRun} from "@simplercp/shared";
 import {selectKnowledgeInjection} from "../../apps/server/src/knowledge/injection.js";
-import {type Dataset, type ExperimentConfig, RunStore, readJson, readJsonl, writeJson, exists} from "./common.js";
+import {knowledgeActiveFiles} from "../../apps/server/src/knowledge/provider.js";
+import {type Dataset, type ExperimentConfig, RunStore, benchRoot, readJson, readJsonl, writeJson, exists} from "./common.js";
 
 export function retrievalMetrics(ids: string[], relevant: string[]) {
   const relevance = new Set(relevant);
@@ -39,11 +40,11 @@ export function rankBounded(results: KnowledgeSearchResult[], activeFiles: strin
 }
 export async function runK5(data: Dataset, config: ExperimentConfig, store: RunStore, k3Directory?: string) {
   const toolQueries: Array<{task: string; query: string; source: string; files?: string[]}> = [];
-  const activity = new Map<string, {files: string[]; source: string}>();
+  const activity = new Map<string, {files: string[]; source: string; fileSources: Array<{file: string; sources: string[]}>}>();
   if (k3Directory) for (const row of await readJsonl(path.join(k3Directory, "results.jsonl"))) {
     const trace = await readJson<any[]>(path.join(k3Directory, row.artifacts, "trace.json"));
     const injection = trace.find(event => event.type === "knowledge_injected" && Array.isArray(event.data.activeFiles));
-    if (injection && !activity.has(row.task)) activity.set(row.task, {files: injection.data.activeFiles, source: row.key});
+    if (injection && !activity.has(row.task)) activity.set(row.task, {files: injection.data.activeFiles, source: row.key, fileSources: injection.data.activeFileSources ?? injection.data.activeFiles.map((file: string) => ({file, sources: ["legacy-trace-unspecified"]}))});
     if (injection && row.condition === "C2") {
       const run = await readJson<AgentRun>(path.join(k3Directory, row.artifacts, "run.json"));
       const querySource = Array.isArray(injection.data.candidates) ? "trace" : "run";
@@ -65,9 +66,14 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
   }
   await writeJson(path.join(store.directory, "tool-queries.json"), toolQueries);
   const variants = new Set(data.tasks.flatMap(task => task.variantCardIds ?? []));
+  const manifestFiles = Object.keys(await readJson<Record<string, string>>(path.join(benchRoot, "manifest.json")));
   for (const task of data.tasks) {
     const cards = data.library.filter(item => item.repository === task.repository && item.card.status === "reviewed" && !variants.has(item.card.id)).map(item => item.card);
-    const activeFiles = activity.get(task.id)?.files ?? [...new Set(task.prompt.match(/src\/[A-Za-z0-9_./-]+\.(?:[cm]?[jt]sx?)/gu) ?? [])];
+    const workspaceFiles = manifestFiles.filter(file => file.startsWith(`repos/${task.repository}/`)).map(file => file.slice(`repos/${task.repository}/`.length));
+    const inferred = knowledgeActiveFiles({prompt: task.prompt}, undefined, workspaceFiles);
+    const activeFiles = activity.get(task.id)?.files ?? inferred.activeFiles;
+    const fileSources = activity.get(task.id)?.fileSources ?? inferred.activeFileSources;
+    const activitySource = activeFiles.length ? [...new Set(fileSources.flatMap(item => item.sources))].sort().join(",") : "empty";
     const targetFiles = cards.find(card => card.id === task.targetCardId)?.anchors.map(anchor => anchor.file.workspaceRelativePath) ?? [];
     const wrongFile = cards.find(card => !activeFiles.includes(card.anchors[0]?.file.workspaceRelativePath) && !targetFiles.includes(card.anchors[0]?.file.workspaceRelativePath))?.anchors[0]?.file.workspaceRelativePath;
     const queries: Array<{condition: string; query: string; active: string[]; queryIndex?: number; source?: string}> = [{condition: "R1", query: task.prompt, active: []}, {condition: "R2", query: task.prompt, active: activeFiles}, {condition: "R3", query: task.prompt, active: activeFiles},
@@ -91,7 +97,12 @@ export async function runK5(data: Dataset, config: ExperimentConfig, store: RunS
       await writeJson(path.join(store.raw(key), "ranking.json"), ranked);
       await store.append({key, completed: true, task: task.id, taskKind: task.kind, repository: task.repository, condition: item.condition,
         query: item.query, queryIndex: item.queryIndex, querySource: item.source,
-        ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, activitySource: activity.get(task.id)?.source ?? "prompt-file-paths", artifacts: path.relative(store.directory, store.raw(key))});
+        ...retrievalMetrics(ranked.map(result => result.cardId), task.targetCardId ? [task.targetCardId] : []), activeFiles: item.active, activeFileSources: item.condition.includes("wrong-file") ? item.active.map(file => ({file, sources: ["wrong-file-perturbation"]})) : item.condition === "R1" ? [] : fileSources,
+        activitySource: item.condition.includes("wrong-file") ? "wrong-file-perturbation" : item.condition === "R1" ? "disabled-for-lexical" : activitySource,
+        originalActivitySource: activitySource, traceSource: activity.get(task.id)?.source,
+        saturatedCandidates: ranked.filter(result => (result as KnowledgeSearchResult & {lexical?: number}).lexical === 1.2).length,
+        candidateCount: ranked.length, targetRank: task.targetCardId ? ranked.findIndex(result => result.cardId === task.targetCardId) + 1 : null,
+        artifacts: path.relative(store.directory, store.raw(key))});
     }
   }
   await writeJson(path.join(store.directory, "availability.json"), {R4: {queries: toolQueries.length, reason: toolQueries.length ? null : "K3 记录中没有实际工具查询"}, R5: {configured: Boolean(config.embedding), reason: config.embedding ? null : "没有配置 embedding 服务"}});

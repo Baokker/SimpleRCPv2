@@ -20,7 +20,7 @@ describe("server config", () => {
         provider: "minimax",
         apiKey: "configured-key",
         baseUrl: "https://api.minimaxi.com/v1",
-        model: "MiniMax-M2",
+        model: "MiniMax-M3",
         openCodePort: 4096,
         runTimeoutMs: 600_000,
         maxConcurrentRuns: 3,
@@ -110,11 +110,13 @@ describe("server config", () => {
   });
 
   it("selects MiniMax for knowledge calls when its key is configured", () => {
-    expect(loadConfig({ KNOWLEDGE: "full", MINIMAX_API_KEY: "configured", MINIMAX_BASE_URL: "https://api.minimaxi.com/v1", MINIMAX_MODEL: "MiniMax-M2" }).knowledgeLlm).toEqual({
-      provider: "minimax", apiKey: "configured", baseUrl: "https://api.minimaxi.com/v1", model: "MiniMax-M2"
+    expect(loadConfig({ KNOWLEDGE: "full", MINIMAX_API_KEY: "configured", MINIMAX_BASE_URL: "https://api.minimaxi.com/v1" }).knowledgeLlm).toEqual({
+      provider: "minimax", apiKey: "configured", baseUrl: "https://api.minimaxi.com/v1", model: "MiniMax-M3", recapTimeoutMs: 120_000
     });
     expect(loadConfig({ AGENT_LLM_PROVIDER: "deepseek", KNOWLEDGE: "full", DEEPSEEK_API_KEY: "configured" }).knowledgeLlm).toMatchObject({ provider: "deepseek", apiKey: "configured" });
     expect(() => loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE: "full", KNOWLEDGE_LLM_PROVIDER: "invalid" })).toThrow("KNOWLEDGE_LLM_PROVIDER must be minimax or deepseek");
+    expect(loadConfig({SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE: "full", KNOWLEDGE_RECAP_TIMEOUT_MS: "180000"}).knowledgeLlm?.recapTimeoutMs).toBe(180000);
+    expect(() => loadConfig({SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE: "full", KNOWLEDGE_RECAP_TIMEOUT_MS: "0"})).toThrow("KNOWLEDGE_RECAP_TIMEOUT_MS");
   });
 
   it("requires the selected provider key and accepts a separate Agent model", () => {

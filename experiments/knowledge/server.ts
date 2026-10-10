@@ -13,7 +13,7 @@ if (process.env.SIMPLERCP_KNOWLEDGE_EXPERIMENTS !== "true") throw new Error("SIM
 const directory = path.join(root, ".work/server");
 await fs.mkdir(directory, {recursive: true});
 const configuration = loadConfig({
-  ...process.env, ...parse(await fs.readFile(path.join(platformRoot, ".env"))),
+  ...parse(await fs.readFile(path.join(platformRoot, ".env"))), ...process.env,
   PORT: process.env.PORT ?? "4179", SIMPLERCP_OPENCODE_PORT: process.env.SIMPLERCP_OPENCODE_PORT ?? "4181",
   SIMPLERCP_DATA_DIR: process.env.SIMPLERCP_DATA_DIR ?? path.join(directory, "data"),
   SIMPLERCP_IMPORT_ROOTS: path.resolve(platformRoot, ".."),

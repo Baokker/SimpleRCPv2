@@ -37,11 +37,19 @@ export function createAgentUsageCollector() {
     addResult(usage: AgentRunUsage | undefined, messageId?: string) {
       if (usage) messages.set(messageId ?? "result", usage);
     },
-    total(): AgentRunUsage | undefined {
+    total(provider?: string, model?: string): AgentRunUsage | undefined {
       if (!messages.size) return undefined;
       const result: AgentRunUsage = {};
       for (const usage of messages.values()) for (const key of usageFields) {
         if (usage[key] !== undefined) result[key] = (result[key] ?? 0) + usage[key]!;
+      }
+      if (provider && model) {
+        const priced = [...messages.values()].map(usage => estimateAgentUsageCost(usage, provider, model));
+        if (priced.every(usage => usage?.estimatedCost !== undefined)) {
+          result.estimatedCost = priced.reduce((sum, usage) => sum + usage!.estimatedCost!, 0);
+          result.estimatedCostCurrency = "CNY";
+          result.estimatedCostSource = priced[0]!.estimatedCostSource;
+        }
       }
       return result;
     }
@@ -70,7 +78,17 @@ export function toLlmUsage(value: AgentRunUsage | undefined): LlmUsage | undefin
 }
 
 export function estimateAgentUsageCost(usage: AgentRunUsage | undefined, provider: string, model: string): AgentRunUsage | undefined {
-  if (!usage || provider !== "minimax" || model !== "MiniMax-M2") return usage;
+  if (!usage || provider !== "minimax" || usage.estimatedCost !== undefined) return usage;
+  if (model === "MiniMax-M3") {
+    if (usage.inputTokens === undefined || usage.outputTokens === undefined || (usage.cacheWriteTokens ?? 0) !== 0) return usage;
+    const multiplier = usage.inputTokens + (usage.cacheReadTokens ?? 0) > 512_000 ? 2 : 1;
+    return {...usage,
+      estimatedCost: (usage.inputTokens * 2.1 + (usage.outputTokens + (usage.reasoningTokens ?? 0)) * 8.4 + (usage.cacheReadTokens ?? 0) * 0.42) * multiplier / 1_000_000,
+      estimatedCostCurrency: "CNY",
+      estimatedCostSource: "MiniMax-M3 official standard token prices per request (2026-10-10)"
+    };
+  }
+  if (model !== "MiniMax-M2") return usage;
   return {
     ...usage,
     estimatedCost: ((usage.inputTokens ?? 0) * 2.1 + ((usage.outputTokens ?? 0) + (usage.reasoningTokens ?? 0)) * 8.4 + (usage.cacheReadTokens ?? 0) * 0.21 + (usage.cacheWriteTokens ?? 0) * 2.625) / 1_000_000,

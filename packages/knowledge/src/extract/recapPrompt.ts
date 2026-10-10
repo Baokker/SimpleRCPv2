@@ -2,8 +2,8 @@ import type { KnowledgeCardType } from "../schema/card.js";
 import type { LlmClient } from "../llm/client.js";
 import { extractFirstJsonObject } from "./extract.js";
 import toPath from "lodash/toPath.js";
-import { correctedIdentifiers, correctedSymbolBindings, validateRecapCheck } from "./recapEvidence.js";
-export { correctedIdentifiers, correctedSymbolBindings, recapFileVersions, validateRecapCheck } from "./recapEvidence.js";
+import { compactRecapEvidence, correctedIdentifiers, correctedSymbolBindings, validateRecapCheck } from "./recapEvidence.js";
+export { compactRecapEvidence, changedFunctionExcerpts, correctedIdentifiers, correctedSymbolBindings, recapFileVersions, validateRecapCheck } from "./recapEvidence.js";
 
 export interface AgentRecapDraft {
   type: Extract<KnowledgeCardType, "negative" | "constraint" | "decision" | "risk">;
@@ -31,6 +31,9 @@ export interface AgentRecapOptions {
   maxAttempts?: number;
   onFallback?(): void;
   language?: "zh" | "en";
+  timeoutMs?: number;
+  retryDelayMs?: number;
+  onAttempt?(result: {attempt: number; completed: boolean; failureReason?: string; durationMs: number}): void;
 }
 
 export function parseAgentRecapDraft(text: string, evidence: Record<string, unknown>): AgentRecapDraft | undefined {
@@ -57,25 +60,41 @@ export function parseAgentRecapDraft(text: string, evidence: Record<string, unkn
   return { type, title: String(input.title).trim(), summary: String(input.summary).trim(), whatHappened: String(input.whatHappened).trim(), correction: String(input.correction).trim(), rule: String(input.rule).trim(), appliesTo: applies, notApplicable: String(input.notApplicable).trim(), scopeSuggestion: scope, ...(check && checkValidation?.retained ? { checkSuggestion: check } : {}), ...(checkValidation ? {checkValidation} : {}), confidence, evidenceCitations: citations, unknowns, fallback: false };
 }
 
-export async function extractAgentRecapDraft(evidence: Record<string, unknown>, options: AgentRecapOptions): Promise<{ draft: AgentRecapDraft; fallback: boolean }> {
+export async function extractAgentRecapDraft(evidence: Record<string, unknown>, options: AgentRecapOptions): Promise<{ draft: AgentRecapDraft; fallback: boolean; failureReason?: string }> {
   if (!options.client) {
     options.onFallback?.();
     return { draft: createAgentRecapFallback(evidence), fallback: true };
   }
   const maxAttempts = Math.max(1, Math.min(3, Math.floor(options.maxAttempts ?? 3)));
+  const timeoutMs = options.timeoutMs ?? 120_000;
+  const retryDelayMs = options.retryDelayMs ?? 5_000;
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || !Number.isInteger(retryDelayMs) || retryDelayMs < 0) throw new Error("Invalid recap timeout or retry delay");
+  const promptEvidence = compactRecapEvidence(evidence);
   let previous = "";
+  let failureReason: string | undefined;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const result = await options.client.complete({ model: options.model, messages: [
-      { role: "system", content: buildAgentRecapSystemPrompt(evidence, options.language ?? "zh") },
-      { role: "user", content: `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(evidence)}` },
+    if (attempt > 0) await new Promise<void>(resolve => setTimeout(resolve, retryDelayMs));
+    const started = Date.now();
+    let result: Awaited<ReturnType<LlmClient["complete"]>>;
+    try {
+      result = await options.client.complete({ model: options.model, messages: [
+      { role: "system", content: buildAgentRecapSystemPrompt(promptEvidence, options.language ?? "zh") },
+      { role: "user", content: `AGENT CORRECTION EVIDENCE (JSON):\n${JSON.stringify(promptEvidence)}` },
       ...(previous ? [{ role: "user" as const, content: `Previous output was invalid. Return strict JSON only:\n${previous.slice(0, 8_000)}` }] : [])
-    ], responseFormat: { type: "json_object" }, timeoutMs: 30_000 });
+      ], responseFormat: { type: "json_object" }, timeoutMs });
+    } catch (error) {
+      failureReason = error instanceof Error ? error.message : String(error);
+      options.onAttempt?.({attempt: attempt + 1, completed: false, failureReason, durationMs: Date.now() - started});
+      continue;
+    }
     previous = result.text;
     const draft = parseAgentRecapDraft(result.text, evidence);
+    failureReason = draft ? undefined : "invalid-structure-or-citations";
+    options.onAttempt?.({attempt: attempt + 1, completed: Boolean(draft), failureReason, durationMs: Date.now() - started});
     if (draft) return { draft, fallback: false };
   }
   options.onFallback?.();
-  return { draft: createAgentRecapFallback(evidence), fallback: true };
+  return { draft: createAgentRecapFallback(evidence), fallback: true, failureReason };
 }
 
 export function createAgentRecapFallback(evidence: Record<string, unknown>): AgentRecapDraft {
@@ -88,7 +107,7 @@ export function createAgentRecapFallback(evidence: Record<string, unknown>): Age
 }
 
 export function buildAgentRecapSystemPrompt(evidence: Record<string, unknown>, language: "zh" | "en" = "zh"): string {
-  const paths = listEvidencePaths(evidence);
+  const paths = listEvidencePaths(evidence).filter(path => !/^evidence\.(?:correctedIdentifierCandidates|correctedBindings)(?:\b|\[)/u.test(path) && !path.includes(".excerpt"));
   const examples = paths.filter((path) => path !== "evidence").slice(0, 6);
   if (!examples.length) examples.push("evidence");
   const identifiers = correctedIdentifiers(evidence);

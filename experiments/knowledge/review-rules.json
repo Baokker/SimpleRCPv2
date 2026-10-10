@@ -1,6 +1,8 @@
 {
-  "P01": {"requiredTokens": ["transaction"], "files": ["src/services/inventory-service.ts"], "scope": "team"},
-  "P02": {"requiredTokens": ["redactSensitive"], "files": ["src/security/redaction.ts"], "scope": "team"},
-  "P03": {"requiredTokens": ["logicalId"], "files": ["src/services/notification-outbox.ts"], "scope": "team"},
-  "P04": {"requiredTokens": ["serverMember", "actorId"], "files": ["src/security/identity.ts"], "scope": "team"}
+  "P01": {"requiredTokens": ["transaction", "全部", "失败"], "files": ["src/services/inventory-bulk-transfer.ts", "src/services/inventory-bulk-release.ts", "src/storage/inventory-store.ts"], "scope": "team"},
+  "P02": {"requiredTokens": ["递归", "大小写", "原始"], "files": ["src/services/event-topic-export.ts", "src/services/audit-actor-summary.ts", "src/security/redaction.ts"], "scope": "team"},
+  "P03": {"requiredTokens": ["logicalId", "requestId", "收件人"], "files": ["src/services/refund-notices.ts", "src/services/invite-notices.ts", "src/services/notification-outbox.ts"], "scope": "team"},
+  "P04": {"requiredTokens": ["serverMember", "actorId", "伪造"], "files": ["src/services/inventory-adjustment.ts", "src/services/member-rename.ts", "src/security/identity.ts"], "scope": "team"},
+  "P05": {"requiredTokens": ["durableEventTypes", "短暂", "过滤"], "files": ["src/extracted/eventLog.ts", "src/extracted/activitySummary.ts", "src/extracted/memberActivityExport.ts"], "scope": "team"},
+  "P06": {"requiredTokens": ["UTC", "秒", "月份"], "files": ["src/services/settlement-months.ts", "src/services/refund-months.ts", "src/http/settlement-month-routes.ts", "src/http/refund-month-routes.ts"], "scope": "team"}
 }

@@ -1,0 +1,12 @@
+{
+  "runtime": "opencode",
+  "state": "ready",
+  "version": "1.18.31",
+  "model": "MiniMax-M3",
+  "provider": "minimax",
+  "apiKeyConfigured": true,
+  "activityConfig": {
+    "waitingMs": 20000,
+    "stalledMs": 60000
+  }
+}

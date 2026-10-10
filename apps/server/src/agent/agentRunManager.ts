@@ -19,7 +19,7 @@ import { canReadAgentRun } from "./agentVisibility.js";
 import { createAgentScheduler, getCompletedOverlapGroup, type AgentSchedulerQueue } from "./agentScheduler.js";
 import { selectRunnableAgentRun } from "./agentRunSelection.js";
 import { createAgentWriteLedger } from "./agentWriteLedger.js";
-import { createAgentUsageCollector, estimateAgentUsageCost } from "./agentUsage.js";
+import { createAgentUsageCollector } from "./agentUsage.js";
 import { createAgentSessionOperations } from "./agentSessionOperations.js";
 import { agentInsertedRanges, createAgentKnowledgeHooks, extractAgentToolEvent, withSnapshotContents } from "./agentKnowledgeHooks.js";
 
@@ -176,7 +176,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const recordedConcurrentFiles = new Set<string>();
     async function recordUsage(run: AgentRun) {
       if (usageRecorded) return;
-      const usage = estimateAgentUsageCost(observedUsage.total(), run.provider, run.model);
+      const usage = observedUsage.total(run.provider, run.model);
       if (usage) {
         await updateRun(projectId, runId, { usage });
         await appendTrace(projectId, runId, { type: "usage_summary", data: { ...usage } });
@@ -246,7 +246,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const initiator = requireMember(projectId, current.initiatorMemberId ?? current.memberId);
       const context = await runtime.knowledgeProvider?.buildContext({ project: runtime.project, run, initiator });
       if (context && (context.mode === "inject" || context.mode === "full")) {
-        await appendTrace(projectId, runId, { type: "knowledge_injected", data: { mode: context.mode, config: context.config, query: context.query, candidates: context.candidates, ranking: context.config.ranking, lexicalScoring: context.config.lexicalScoring, topK: context.config.topK, toolSection: context.toolSection, toolInstructionPlacement: context.config.toolInstructionPlacement, activeFiles: context.activeFiles, excludedByUser: context.excludedByUser, cards: context.records, totalChars: context.totalChars, estimatedInjectionTokens: context.estimatedInjectionTokens } });
+        await appendTrace(projectId, runId, { type: "knowledge_injected", data: { mode: context.mode, config: context.config, query: context.query, candidates: context.candidates, ranking: context.config.ranking, lexicalScoring: context.config.lexicalScoring, topK: context.config.topK, toolSection: context.toolSection, toolInstructionPlacement: context.config.toolInstructionPlacement, activeFiles: context.activeFiles, activeFileSources: context.activeFileSources, activitySource: context.activeFiles.length ? "recorded-sources" : "empty", excludedByUser: context.excludedByUser, cards: context.records, totalChars: context.totalChars, estimatedInjectionTokens: context.estimatedInjectionTokens } });
         appendActivity(projectId, { type: "knowledge_injected", memberId: initiator.id, participantId: initiator.participantId, payload: { runId, cardIds: context.records.map((record) => record.id) } });
       }
       const prompt = await buildRuntimePrompt(runtime.project.workspacePath, current.prompt, current.contexts, runtime.project.name, [interruption, current.extraPrompt].filter(Boolean).join("\n\n"), context?.section, context?.toolSystem ? undefined : context?.toolSection);

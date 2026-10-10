@@ -13,8 +13,9 @@ import {conditionCards, fixedCardVariableChars} from "../k3.js";
 
 test("冻结数据的全部文件哈希与卡片 schema", async () => {
   const data = await dataset();
-  assert.equal(data.manifestHash, "4d7961ef30d07afecd1878fe409528299e3707eef4faf362067e3c3450a32133");
-  assert.equal(data.tasks.filter(task => task.kind === "trap").length, 10);
+  assert.equal(data.manifestHash, "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137");
+  assert.equal(data.tasks.filter(task => task.kind === "trap").length, 16);
+  assert.equal(data.tasks.filter(task => task.kind === "control").length, 6);
   assert.equal(data.transfers.length, 6);
 });
 test("两段完整脚本可转换，编辑内容与冻结基线一致", async () => {

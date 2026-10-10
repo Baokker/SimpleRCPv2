@@ -3,13 +3,25 @@ import path from "node:path";
 import {applyPatch, parsePatch, diffChars} from "diff";
 import type {KnowledgeCard} from "@simplercp/knowledge";
 import type {AgentRun} from "@simplercp/shared";
-import {type Dataset, type ExperimentConfig, RunStore, root, digest, exists, pause, pool, readJson, writeJson} from "./common.js";
+import {type Dataset, type ExperimentConfig, RunStore, root, benchRoot, digest, exists, pause, pool, readJson, writeJson} from "./common.js";
 import {PlatformClient, judge} from "./client.js";
 import {CollaborationClient} from "./collaboration.js";
 import {knowledgeUsage} from "./k3.js";
 
 export type K4Condition = "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
 export const allK4Conditions: K4Condition[] = ["T0", "T1", "T2", "T3", "T4", "T5"];
+export async function correctionReferenceFiles(pair: Dataset["transfers"][number]) {
+  if (pair.correction.mode !== "revise" || pair.correction.revision?.strategy !== "reference-files") throw new Error(`Unsupported correction strategy: ${pair.id}`);
+  const reference = await fs.readFile(path.join(pair.directory, pair.correction.revision.referencePatch), "utf8");
+  return Promise.all(parsePatch(reference).map(async patch => {
+    const file = (patch.newFileName ?? patch.oldFileName)!.replace(/^[ab]\//u, "");
+    if (path.isAbsolute(file) || file.split("/").includes("..")) throw new Error("Correction file must be within the workspace");
+    const baseline = patch.oldFileName === "/dev/null" ? "" : await fs.readFile(path.join(pair.ta.workspaceSource ?? path.join(benchRoot, "repos", pair.ta.repository), file), "utf8");
+    const afterText = applyPatch(baseline, patch);
+    if (afterText === false) throw new Error(`Reference correction cannot be applied: ${file}`);
+    return {file, afterText};
+  }));
+}
 export function correctionContext(text: string, diff: string, limit = 800) {
   const prefix = `${text}\n\nTa diff:\n`;
   if (prefix.length > limit) throw new Error("Correction text exceeds the configured card budget");
@@ -65,19 +77,18 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
         await writeJson(taJudged, await judge(pair.ta, before.snapshot, path.join(raw, "ta")));
       } else ta = await readJson(path.join(raw, "ta/run.json"));
       if (pair.correction.mode === "revise") {
-        const correctionPatch = pair.correction.patch ?? pair.correction.revision?.referencePatch;
-        if (typeof correctionPatch !== "string" || !correctionPatch) throw new Error(`Correction patch is missing: ${pair.id}`);
-        const patchFile = path.join(pair.directory, correctionPatch);
-        const patches = parsePatch(await fs.readFile(patchFile, "utf8"));
+        const revisions = await correctionReferenceFiles(pair);
         const collaboration = new CollaborationClient(api, project); await collaboration.join(correcting);
         try {
-          for (const patch of patches) {
-            const file = (patch.newFileName ?? patch.oldFileName)!.replace(/^[ab]\//u, "");
-            const current = await fs.readFile(path.join(project.workspacePath, file), "utf8");
-            const after = applyPatch(current, patch); if (after === false) throw new Error("Human correction patch cannot be applied");
-            await collaboration.replace(correcting, file, current, after);
-            correctionFiles.push({file, beforeText: current, afterText: after});
+          for (const {file, afterText} of revisions) {
+            const workspaceFile = path.join(project.workspacePath, file);
+            const present = await exists(workspaceFile);
+            const current = present ? await fs.readFile(workspaceFile, "utf8") : "";
+            if (!present) await api.request(route("workspace/file"), correcting, {path: file, content: ""}, "PUT");
+            if (current !== afterText) await collaboration.replace(correcting, file, current, afterText);
+            correctionFiles.push({file, beforeText: current, afterText});
           }
+          await api.request(route("chat"), correcting, {text: pair.correction.text});
         } finally {await collaboration.close();}
       }
       const correction = await api.teamRun(project, correcting, team.handle, pair.correction.text, path.join(raw, "correction-run.json"));
@@ -86,13 +97,16 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
       await writeJson(correctionFile, {at: Date.now(), memberId: correcting, correctionRunId: correction.id, text: pair.correction.text, interruptedStatus: ta.status, correctionFiles});
     } else ta = await readJson(path.join(raw, "ta/run.json"));
     const revised = await readJson<AgentRun>(path.join(raw, "correction-run.json"));
-    const correctionRun = await api.wait(project, a, revised);
+    const correctionRun = await api.wait(project, correcting, revised);
     const savedCorrection = path.join(raw, "correction/run.json");
     if (await exists(savedCorrection)) {
       const saved = await readJson<AgentRun>(savedCorrection);
       if (saved.id !== correctionRun.id || saved.status !== correctionRun.status) throw new Error("Saved correction run differs from the current run");
       for (const artifact of ["workspace", "workspace.patch", "trace.json"]) if (!await exists(path.join(raw, "correction", artifact))) throw new Error(`Saved correction artifact is absent: ${artifact}`);
-    } else await api.collect(project, a, correctionRun, path.join(raw, "correction"));
+    } else await api.collect(project, correcting, correctionRun, path.join(raw, "correction"));
+    const correctionJudgeFile = path.join(raw, "correction-judge.json");
+    if (!await exists(correctionJudgeFile)) await writeJson(correctionJudgeFile, await judge(pair.ta, path.join(raw, "correction/workspace"), path.join(raw, "correction")));
+    if (!(await readJson(correctionJudgeFile)).jointSuccess) throw new Error(`Correction did not pass the behavior checks: ${key}`);
     const cardFile = path.join(raw, "confirmed-card.json");
     let card: KnowledgeCard | null = await exists(cardFile) ? await readJson(cardFile) : null;
     if (!await exists(cardFile)) {
@@ -111,10 +125,11 @@ export async function runK4(data: Dataset, config: ExperimentConfig, store: RunS
         await writeJson(suggestionFile, suggestion);
         const draftFile = path.join(raw, "draft.json");
         let draft: KnowledgeCard;
+        const draftActor = condition === "T4" ? a : correcting;
         if (await exists(draftFile)) draft = await readJson(draftFile);
         else {
-          const currentSuggestion = (await api.request(route(`knowledge/inbox/${suggestion.id}`), correcting)).suggestion;
-          draft = currentSuggestion.draftCardId ? (await api.request(route(`knowledge/cards/${currentSuggestion.draftCardId}`), correcting)).card : (await api.request(route(`knowledge/inbox/${suggestion.id}/ai-draft`), correcting, {})).card;
+          const currentSuggestion = (await api.request(route(`knowledge/inbox/${suggestion.id}`), draftActor)).suggestion;
+          draft = currentSuggestion.draftCardId ? (await api.request(route(`knowledge/cards/${currentSuggestion.draftCardId}`), draftActor)).card : (await api.request(route(`knowledge/inbox/${suggestion.id}/ai-draft`), draftActor, {})).card;
           await writeJson(draftFile, draft);
         }
         const owner = draft.ownerMemberId;

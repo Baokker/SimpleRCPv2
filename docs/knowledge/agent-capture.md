@@ -23,11 +23,13 @@ Agent 文件归属在 run 结束后完成。服务端比较 run 前后的工作�
 
 Agent 建议默认创建为 `personal` 草稿，确认人必须是成员。个人卡片可以请求 `proposedTeam`，第二名成员确认后变为 `team`。团队卡片可以通过关系接口建立 `contradicts`、`supersedes`、`duplicates` 或 `refines` 关系；`supersedes` 会把目标卡片标记为 `superseded`。相同 run、聊天消息或建议来源的建议会合并，注入时同一来源只保留分数最高的卡片。
 
-捕获事件文件仍位于 `<metadata>/knowledge/events.jsonl`，可以直接交给 `replayEvents` 回放。回放使用相同的引擎、配置和虚拟时钟，因此 Agent 触发与线上处理共享判定代码。工具恢复证据保留成功工具的 `traceSeq` 和修改文件列表；事件与证据写入前经过平台敏感信息清理，错误摘要最多保留 2000 个字符。服务端知识模型由 `KNOWLEDGE_LLM_PROVIDER` 选择，默认在存在 `MINIMAX_API_KEY` 时使用 MiniMax，当前兼容地址为 `https://api.minimaxi.com/v1`，默认模型为 `MiniMax-M2`。模型调用记录包含 `provider`、`model`、耗时、用量、完成状态、兜底标记、尝试次数和提示词哈希。MiniMax 返回的 `<think>...</think>` 会在 JSON 解析前清理。
+捕获事件文件仍位于 `<metadata>/knowledge/events.jsonl`，可以直接交给 `replayEvents` 回放。回放使用相同的引擎、配置和虚拟时钟，因此 Agent 触发与线上处理共享判定代码。工具恢复证据保留成功工具的 `traceSeq` 和修改文件列表；事件与证据写入前经过平台敏感信息清理，错误摘要最多保留 2000 个字符。服务端知识模型由 `KNOWLEDGE_LLM_PROVIDER` 选择，默认在存在 `MINIMAX_API_KEY` 时使用 MiniMax，当前兼容地址为 `https://api.minimaxi.com/v1`，默认模型为 `MiniMax-M3`。模型调用记录包含 `provider`、`model`、耗时、用量、完成状态、兜底标记、尝试次数和提示词哈希。MiniMax 返回的 `<think>...</think>` 会在 JSON 解析前清理。
 
 `correctionClassifier: "rules+llm"` 与 `contradictionJudge: "llm"` 当前尚未实现，当前配置不提供这两个取值；后续阶段可以增加模型判定。
 
-复盘证据保留纠正文件的完整 `beforeText` 与 `afterText`，录制重启后恢复这些版本。代码经 TypeScript AST 提取标识符，相对 import 使用 TypeScript 模块解析，并结合项目源文件确定 `Type.method` 或 `Type.field`。提示词列出候选和类型归属，要求规则写明被纠正的具体代码对象。证据 JSON 完整传入模型。
+复盘记录保留纠正文件的完整 `beforeText` 与 `afterText`，录制重启后恢复这些版本，用于引用与可执行检查验证。模型请求使用 `compactRecapEvidence`：每份文件的前后代码合计不超过 800 个字符，超过预算时通过 `diffLines` 和 TypeScript AST 选取修改所在函数附近的上下文；长函数的片段围绕修改位置截取，并记录原行号。完整代码在预算内时直接附带。长 diff 使用 `diff.parsePatch` 提取每个修改区间的文件名、行号和增删内容，平均分配字符预算；长文本字段截取预算内的内容。标识符和 `Type.method`、`Type.field` 的归属从完整证据计算后附带，`symbolSources` 完整文件集合留在服务端。提示词列出候选和类型归属，要求规则写明被纠正的具体代码对象。
+
+`KNOWLEDGE_RECAP_TIMEOUT_MS` 控制服务端复盘单次请求超时，默认 120000 毫秒。首次请求失败或输出校验失败后最多重试两次，间隔 5000 毫秒。调用记录包含每次尝试的耗时、完成状态与失败原因；最终失败保存 `fallback: true` 和失败原因。E6 将失败请求单独计算失败率，并从内容质量指标和人工评分表中排除。
 
 文件名等复杂证据键使用带引号的路径，例如 `evidence.symbolSources["src/storage/inventory-store.ts"]`。路径生成和解析支持文件名中的点号、斜线和引号；解析使用 Lodash `toPath`。K2 使用服务端返回的完整证据评价原始引用，全部原始引用都需要能够读取。
 

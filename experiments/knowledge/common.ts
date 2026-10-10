@@ -25,7 +25,7 @@ export async function writeJson(file: string, value: unknown) {
 export const configSchema = z.object({
   origin: z.string().url().default("http://127.0.0.1:4179"),
   provider: z.literal("minimax").default("minimax"),
-  model: z.string().default("MiniMax-M2"),
+  model: z.string().default("MiniMax-M3"),
   concurrency: z.number().int().min(1).max(8).default(1),
   timeoutMs: z.number().int().positive().default(600000),
   delayMs: z.number().int().nonnegative().default(60000),

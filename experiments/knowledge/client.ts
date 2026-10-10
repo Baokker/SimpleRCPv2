@@ -20,6 +20,8 @@ export class PlatformClient {
     if (settings.provider !== this.config.provider || settings.model !== this.config.model) throw new Error("Experiment model differs from server settings");
     const status = await this.request("/api/experiments/status");
     if (!status.enabled || status.fakeAgentRuntime) throw new Error("A real experiment server is required");
+    if (status.provider !== this.config.provider || status.model !== this.config.model || status.knowledgeProvider !== this.config.provider || status.knowledgeModel !== this.config.model) throw new Error("Experiment Agent and knowledge model must match the configuration");
+    if (status.speed !== this.config.speed) throw new Error("Experiment capture clock differs from the configuration");
     return status;
   }
   async verifyFor(directory: string) {

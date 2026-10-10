@@ -1,7 +1,7 @@
 {
   "origin": "http://127.0.0.1:4199",
   "provider": "minimax",
-  "model": "MiniMax-M2",
+  "model": "MiniMax-M3",
   "concurrency": 1,
   "speed": 10,
   "seed": 20261007

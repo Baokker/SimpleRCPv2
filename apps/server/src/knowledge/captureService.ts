@@ -27,7 +27,7 @@ type EventInput<T = CaptureEvent> = T extends CaptureEvent ? Omit<T, "seq" | "at
 export interface CaptureServiceOptions {
   metadataRoot: string; workspaceRoot: string; knowledge: KnowledgeService; documents: CollaborativeDocumentStore;
   chat: ChatStore; events: EventLog; roomId: string; projectId: string; recordEvents?: boolean;
-  config?: CaptureConfigInput; llm?: { provider?: "minimax" | "deepseek"; apiKey?: string; baseUrl: string; model: string };
+  config?: CaptureConfigInput; llm?: { provider?: "minimax" | "deepseek"; apiKey?: string; baseUrl: string; model: string; recapTimeoutMs?: number };
   riskWarningConfig?: Partial<RiskWarningConfig>;
   onNotify(memberId: string, message: ServerMessage): void;
   memberName(memberId: string): string;
@@ -357,6 +357,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
     let fallback = !client;
   let mode = "extract";
     let checkValidation: unknown;
+    let failureReason: string | undefined;
+    const attemptResults: unknown[] = [];
     try {
       if (ai && suggestion.origin === "human-agent" && ["agent.interrupted", "agent.revised", "agent.corrected"].includes(suggestion.triggerType)) {
         mode = "recap";
@@ -394,9 +396,11 @@ export function createCaptureService(options: CaptureServiceOptions) {
             addLlmUsage(usage, result.usage);
             return result;
           } } : undefined,
-          onFallback() { fallback = true; }, language: recapLanguage
+          onFallback() { fallback = true; }, language: recapLanguage,
+          timeoutMs: options.llm?.recapTimeoutMs,
+          onAttempt(result) {attemptResults.push(result); failureReason = result.failureReason;}
         });
-        completed = true;
+        completed = !recap.fallback;
         checkValidation = recap.draft.checkValidation;
         return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable, ...recap.draft.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
       }
@@ -418,7 +422,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     } finally {
       if (ai) {
         suggestion.ai = { provider: llmProvider, model: llmModel, durationMs: Date.now() - started, totalTokens: usage.totalTokens, fallback };
-        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, provider: llmProvider, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes, checkValidation }) + "\n", { mode: 0o600 });
+        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, provider: llmProvider, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes, checkValidation, failureReason: mask(failureReason), attemptResults: mask(attemptResults) }) + "\n", { mode: 0o600 });
         await save(suggestion);
       }
     }

@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import type {Express, Request, Response} from "express";
 import {
   isCaptureEvent, isKnowledgeCard, offsetsFromRange, normalizeWorkspaceRelativePath, createOpenAICompatibleClient,
-  extractKnowledgeCardDraft, extractAgentRecapDraft, parseAgentRecapDraft, type KnowledgeCard
+  extractKnowledgeCardDraft, extractAgentRecapDraft, parseAgentRecapDraft, compactRecapEvidence, type KnowledgeCard
 } from "@simplercp/knowledge";
 import {requireIdentity} from "../../apps/server/src/auth/permissions.js";
 import type {ServerConfig} from "../../apps/server/src/config.js";
@@ -22,7 +22,7 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
   const route = (method: "get" | "post", suffix: string, operation: (request: Request, response: Response) => Promise<void>) => {
     app[method](`/api/projects/:projectId/experiments/${suffix}`, (request, response, next) => {void operation(request, response).catch(next);});
   };
-  app.get("/api/experiments/status", (_request, response) => response.json({enabled: true, fakeAgentRuntime: options.configuration.fakeAgentRuntime, provider: options.provider, model: options.model, speed: options.speed, captureConfig: options.configuration.captureConfig}));
+  app.get("/api/experiments/status", (_request, response) => response.json({enabled: true, fakeAgentRuntime: options.configuration.fakeAgentRuntime, provider: options.provider, model: options.model, knowledgeProvider: options.configuration.knowledgeLlm?.provider, knowledgeModel: options.configuration.knowledgeLlm?.model, recapTimeoutMs: options.configuration.knowledgeLlm?.recapTimeoutMs, speed: options.speed, captureConfig: options.configuration.captureConfig}));
   route("post", "cards/import", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;
     const runtime = manager.get(request.params.projectId);
@@ -129,19 +129,32 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     const started = Date.now();
     const calls: any[] = [];
     const responses: string[] = [];
+    let failureReason: string | undefined;
     const base = createOpenAICompatibleClient({...configuration, fetch: (url, input) => fetch(url, {...input, body: JSON.stringify({...JSON.parse(String(input!.body)), reasoning_split: true})})});
     const client = {...base, async complete(input: Parameters<typeof base.complete>[0]) {
-      const result = await base.complete(input);
-      responses.push(result.text);
-      calls.push({provider: configuration.provider, model: configuration.model, promptHash: crypto.createHash("sha256").update(JSON.stringify(input.messages)).digest("hex"), usage: result.usage});
-      return result;
+      const call: Record<string, unknown> = {provider: configuration.provider, model: configuration.model, promptHash: crypto.createHash("sha256").update(JSON.stringify(input.messages)).digest("hex"), timeoutMs: input.timeoutMs, at: Date.now()};
+      calls.push(call);
+      try {
+        const result = await base.complete(input);
+        responses.push(result.text);
+        call.usage = result.usage;
+        call.completed = true;
+        return result;
+      } catch (error) {
+        call.completed = false;
+        call.failureReason = redactSensitive(error instanceof Error ? error.message : String(error), options.configuration.sensitiveValues);
+        throw error;
+      } finally {call.durationMs = Date.now() - Number(call.at);}
     }};
     let draft: any;
     let fallback = false;
-    if (mode === "ordinary") draft = await extractKnowledgeCardDraft({triggerType, evidence}, {client, model: configuration.model, onFallback() {fallback = true;}});
+    try {
+    if (mode === "ordinary") draft = await extractKnowledgeCardDraft({triggerType, evidence: compactRecapEvidence(evidence)}, {client, model: configuration.model, timeoutMs: configuration.recapTimeoutMs, onFallback() {fallback = true;}});
     else if (mode === "server") {
-      const result = await extractAgentRecapDraft(evidence, {client, model: configuration.model, language: "zh"});
-      draft = result.draft; fallback = result.fallback;
+      const result = await extractAgentRecapDraft(evidence, {client, model: configuration.model, language: "zh", timeoutMs: configuration.recapTimeoutMs,
+        onAttempt(result) {Object.assign(calls.at(-1), result);}
+      });
+      draft = result.draft; fallback = result.fallback; failureReason = result.failureReason;
     } else {
       const result = await agentRuns.requestAgentSelfRecap(runtime.project.id, runId, evidence);
       responses.push(result.text);
@@ -149,9 +162,14 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
       if (!draft) throw new Error("Agent self recap could not be parsed");
       calls.push({provider: result.provider, model: result.model, usage: result.usage, promptHash: result.promptHash});
     }
-    for (const call of calls) await fs.appendFile(path.join(getProjectMetadataPath(runtime.project), "knowledge/llm-calls.jsonl"), JSON.stringify({...call, purpose: `experiment:K2:${mode}`, completed: !fallback, fallback, durationMs: Date.now() - started}) + "\n");
+    } catch (error) {
+      failureReason = String(redactSensitive(error instanceof Error ? error.message : String(error), options.configuration.sensitiveValues));
+    }
+    if (fallback && !failureReason) failureReason = "invalid-structure-or-citations";
+    if (!calls.length && failureReason) calls.push({provider: mode === "agent-self" ? options.provider : configuration.provider, model: mode === "agent-self" ? options.model : configuration.model, failureReason});
+    for (const call of calls) await fs.appendFile(path.join(getProjectMetadataPath(runtime.project), "knowledge/llm-calls.jsonl"), JSON.stringify({...call, purpose: `experiment:K2:${mode}`, mode, completed: call.completed ?? (!failureReason && !fallback), outputAccepted: !failureReason && !fallback, fallback, failureReason: call.failureReason ?? (call === calls.at(-1) ? failureReason : undefined), totalDurationMs: Date.now() - started}) + "\n");
     runtime.events.append({type: "knowledge_config_updated", roomId: runtime.room.id, memberId: identity.memberId, payload: {experiment: "drafts", mode}});
-    response.json({draft, fallback, calls, responses, evidence, latencyMs: Date.now() - started});
+    response.json({draft, fallback, failed: Boolean(failureReason), failureReason, calls, responses, evidence, latencyMs: Date.now() - started});
   });
   route("post", "recap-from-episode", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;

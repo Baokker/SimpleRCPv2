@@ -8,7 +8,7 @@ import type { AgentSessionStore } from "./agentSessionStore.js";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import type { createAgentWorkspaceSnapshot } from "./agentWorkspaceSnapshot.js";
 import { createAgentSessionOperations } from "./agentSessionOperations.js";
-import { createAgentUsageCollector, estimateAgentUsageCost, toLlmUsage } from "./agentUsage.js";
+import { createAgentUsageCollector, toLlmUsage } from "./agentUsage.js";
 import { executeRuntimePrompt } from "./agentRuntimeExecution.js";
 
 type Snapshot = Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>>;
@@ -104,11 +104,11 @@ export function createAgentKnowledgeHooks(options: KnowledgeHooksOptions) {
       try {
         const result = await executeRuntimePrompt({ runtime: options.runtime, input: { workspacePath: projectRuntime.project.workspacePath, sessionId, prompt, purpose: "knowledge-recap", model }, timeoutMs: options.runTimeoutMs, usage: observedUsage, onEvent: (event) => observedUsage.observe(event), onSubscriptionError: async (error) => { await options.appendTrace(projectId, runId, { type: "runtime_subscription_error", summary: error instanceof Error ? error.message : String(error) }); } });
         if (!parseAgentRecapDraft(result.text, evidence)) throw new Error("Agent self recap returned invalid JSON");
-        const usage = estimateAgentUsageCost(observedUsage.total(), provider, model);
+        const usage = observedUsage.total(provider, model);
         await options.appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { outputHash: crypto.createHash("sha256").update(result.text).digest("hex"), promptHash, chars: result.text.length, provider, model, usage, completed: true } });
         return { text: result.text, provider, model, promptHash, usage: toLlmUsage(usage) };
       } catch (error) {
-        const usage = estimateAgentUsageCost(observedUsage.total(), provider, model);
+        const usage = observedUsage.total(provider, model);
         const recapError = Object.assign(new Error(error instanceof Error ? error.message : String(error)), { promptHash, provider, model, usage: toLlmUsage(usage) });
         await options.appendTrace(projectId, runId, { type: "knowledge_recap_self", data: { promptHash, provider, model, error: recapError.message, usage, completed: false } });
         throw recapError;

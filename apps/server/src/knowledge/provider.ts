@@ -99,6 +99,7 @@ export interface KnowledgeContextResult {
   candidates: Array<{ id: string; lexical: number; boost: number; score: number; filtered: boolean; reason: string }>;
   records: KnowledgeInjectionRecord[];
   activeFiles: string[];
+  activeFileSources?: Array<{file: string; sources: string[]}>;
   excludedByUser: string[];
   query: string;
   totalChars: number;
@@ -213,11 +214,11 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     const recordUsage = buildOptions?.recordUsage ?? true;
     const query = [input.run.prompt, input.run.extraPrompt].filter(Boolean).join("\n\n").trim();
     const excludedByUser = input.run.knowledge?.excludeCardIds ?? [];
-    const activeFiles = await collectActiveFiles(input.run, input.initiator);
+    const {activeFiles, activeFileSources} = await collectActiveFiles(input.run, input.initiator);
     const toolSection = options.mode === "full" && config.toolEnabled
       ? `Project knowledge tools:\nknowledge_search searches confirmed team rules; knowledge_get reads a card in full. Before modifying code, query knowledge_search when project conventions or constraints are uncertain, then read relevant cards with knowledge_get. Pass workspace=${JSON.stringify(options.workspaceRoot)} to every knowledge tool call. These tools are available even when automatic knowledge injection is disabled.` : undefined;
     if (!isInjectionMode(options.mode) || !config.injectEnabled || input.run.knowledge?.disabled) {
-      return { toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, candidates: [], records: [], activeFiles, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), totalChars: 0, estimatedInjectionTokens: 0, config: await getConfig(), mode: options.mode };
+      return { toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, candidates: [], records: [], activeFiles, activeFileSources, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), totalChars: 0, estimatedInjectionTokens: 0, config: await getConfig(), mode: options.mode };
     }
 
     const visibleCards = await options.knowledge.list(
@@ -248,7 +249,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       }
       await saveMetrics();
     }
-    return { ...selection, reviewCards, toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, activeFiles, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), config: await getConfig(), mode: options.mode };
+    return { ...selection, reviewCards, toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, activeFiles, activeFileSources, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), config: await getConfig(), mode: options.mode };
   }
 
   async function postRunCheck(run: AgentRun): Promise<KnowledgePostCheckResult> {
@@ -417,13 +418,8 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
   return { mode: options.mode, initialize, awaitIdle: awaitReady, bind, getConfig, updateConfig, buildContext, postRunCheck, onCardConfirmed, markViewed, reuseMetrics, toolSearch, toolGet, recordToolCall };
 
   async function collectActiveFiles(run: AgentRun, initiator: RoomMember) {
-    const files = new Set<string>();
-    for (const context of run.contexts ?? []) files.add(context.path);
-    if (config.useActiveFiles && initiator.currentFile) files.add(initiator.currentFile);
     const workspaceFiles = await collectFiles(options.workspaceRoot);
-    const text = `${run.prompt}\n${run.extraPrompt ?? ""}`;
-    for (const file of workspaceFiles) if (text.includes(file)) files.add(file);
-    return [...files];
+    return knowledgeActiveFiles(run, initiator.currentFile, workspaceFiles, config.useActiveFiles);
   }
 
   async function saveMetrics() {
@@ -431,6 +427,16 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     metricsWrite = next.then(() => undefined, () => undefined);
     await next;
   }
+}
+
+export function knowledgeActiveFiles(run: Pick<AgentRun, "prompt" | "extraPrompt" | "contexts">, currentFile: string | undefined, workspaceFiles: string[], useActiveFiles = true) {
+  const sources = new Map<string, Set<string>>();
+  const add = (file: string, source: string) => {if (!sources.has(file)) sources.set(file, new Set()); sources.get(file)!.add(source);};
+  for (const context of run.contexts ?? []) add(context.path, "explicit-context");
+  if (useActiveFiles && currentFile) add(currentFile, "member-current-file");
+  const text = `${run.prompt}\n${run.extraPrompt ?? ""}`;
+  for (const file of workspaceFiles) if (text.includes(file)) add(file, "prompt-existing-path");
+  return {activeFiles: [...sources.keys()], activeFileSources: [...sources].map(([file, values]) => ({file, sources: [...values]}))};
 }
 
 export function knowledgeRunsAt(runs: AgentRun[], at: number) {

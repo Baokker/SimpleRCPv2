@@ -3,8 +3,8 @@ import {type KnowledgeCard} from "@simplercp/knowledge";
 import {type Dataset, type ExperimentConfig, type Task, RunStore, digest, exists, readJsonl, pool, writeJson} from "./common.js";
 import {PlatformClient, judge} from "./client.js";
 
-export type K3Condition = "C0" | "C1" | "C2" | "C3" | "C4" | "C5" | "C6-stale" | "C6-contradiction" | "C7";
-export const allK3Conditions: K3Condition[] = ["C0", "C1", "C2", "C3", "C4", "C5", "C6-stale", "C6-contradiction", "C7"];
+export type K3Condition = "C0" | "C1" | "C2" | "C3" | "C4" | "C5" | "C6a" | "C6b" | "C6-stale" | "C6-contradiction" | "C7";
+export const allK3Conditions: K3Condition[] = ["C0", "C1", "C2", "C5", "C6a", "C6b", "C7"];
 // provider.ts 的固定卡片格式；导入后的 author 与 confirmedBy 在同一项目内长度一致。
 export function fixedCardVariableChars(card: KnowledgeCard) {
   const anchors = card.anchors.map(anchor => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
@@ -17,16 +17,18 @@ export function conditionCards(data: Dataset, task: Task, condition: K3Condition
   const target = library.find(card => card.id === task.targetCardId);
   let fixedCardIds: string[] = [];
   let lengthDifference: number | null = null;
-  if (condition === "C6-stale" && target) {
+  if (["C6a", "C6-stale"].includes(condition) && target) {
     cards = cards.filter(card => card.id !== target.id);
     const stale = library.find(card => task.variantCardIds?.includes(card.id) && card.status === "superseded");
     if (!stale) throw new Error(`Stale card is absent: ${task.id}`);
     cards.push({...stale, status: "reviewed"});
+    fixedCardIds = [stale.id];
   }
-  if (condition === "C6-contradiction" && target) {
+  if (["C6b", "C6-contradiction"].includes(condition) && target) {
     const contradictory = library.find(card => task.variantCardIds?.includes(card.id) && card.status === "reviewed");
     if (!contradictory) throw new Error(`Contradictory card is absent: ${task.id}`);
     cards.push(contradictory);
+    fixedCardIds = [target.id, contradictory.id];
   }
   if (condition === "C5" && target) fixedCardIds = [target.id];
   if (condition === "C7" && target) {
@@ -39,7 +41,7 @@ export function conditionCards(data: Dataset, task: Task, condition: K3Condition
     cards = cards.map(card => card.id === irrelevant.id ? {...card, content: matchedContent} : card);
     lengthDifference = fixedCardVariableChars(irrelevant) + matchedContent.length - targetChars;
   }
-  const injectEnabled = ["C2", "C4", "C5", "C6-stale", "C6-contradiction", "C7"].includes(condition) && !(task.kind === "control" && ["C5", "C7"].includes(condition));
+  const injectEnabled = ["C2", "C4", "C5", "C6a", "C6b", "C6-stale", "C6-contradiction", "C7"].includes(condition) && !(task.kind === "control" && ["C5", "C6a", "C6b", "C7"].includes(condition));
   return {cards, configuration: {
     injectEnabled, toolEnabled: ["C3", "C4"].includes(condition), fixedCardIds,
     topK: 5, maxCharsPerCard: 800, maxTotalChars: 4000, lexicalScoring: "legacy", ranking: "bounded",
@@ -50,17 +52,20 @@ export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
   const injections = trace.filter(event => event.type === "knowledge_injected");
   const tools = trace.filter(event => event.type === "knowledge_tool_call");
   const delivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
+  const targetDelivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
   for (const event of injections) for (const card of event.data?.cards ?? []) {
-    if (card.reason === "lexical") delivery.lexical += 1;
-    else if (card.reason === "fileRelated") delivery.fileRelated += 1;
-    else if (card.reason === "project-fallback") delivery.projectFallback += 1;
+    const source = card.reason === "lexical" ? "lexical" : card.reason === "fileRelated" ? "fileRelated" : card.reason === "project-fallback" ? "projectFallback" : undefined;
+    if (source) {
+      delivery[source] += 1;
+      if (targetCardIds.includes(card.id)) targetDelivery[source] += 1;
+    }
   }
   return {
     targetInjected: injections.some(event => event.data.cards?.some((card: any) => targetCardIds.includes(card.id))),
     targetRetrieved: tools.some(event => event.data.resultIds?.some((id: string) => targetCardIds.includes(id))),
     injectionTokens: injections.reduce((count, event) => count + (event.data.estimatedInjectionTokens ?? 0), 0),
     injectionChars: injections.reduce((count, event) => count + (event.data.totalChars ?? 0), 0),
-    delivery,
+    delivery, targetDelivery,
     toolCalls: tools.length,
     agentToolCalls: new Set(trace.filter(event => event.type.startsWith("opencode.") && event.data?.part?.type === "tool" && ["completed", "error"].includes(event.data.part.state?.status)).map(event => event.data.part.id)).size
   };

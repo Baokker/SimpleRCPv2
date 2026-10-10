@@ -4,6 +4,15 @@ import { addLlmUsage } from "../knowledge/captureService.js";
 import type { LlmUsage } from "@simplercp/knowledge";
 
 describe("Agent usage collection", () => {
+  it("M3 按每次请求的输入长度计算标准费用", () => {
+    const short = {inputTokens: 1000, outputTokens: 300, reasoningTokens: 100, cacheReadTokens: 500, cacheWriteTokens: 0, cost: 0};
+    expect(estimateAgentUsageCost(short, "minimax", "MiniMax-M3")).toMatchObject({estimatedCost: expect.closeTo(0.00567), estimatedCostCurrency: "CNY", cost: 0});
+    expect(estimateAgentUsageCost({...short, inputTokens: 512001, cacheReadTokens: 0}, "minimax", "MiniMax-M3")?.estimatedCost).toBeCloseTo((512001 * 2.1 + 400 * 8.4) * 2 / 1_000_000);
+    expect(estimateAgentUsageCost({...short, cacheWriteTokens: 1}, "minimax", "MiniMax-M3")?.estimatedCost).toBeUndefined();
+    const collector = createAgentUsageCollector();
+    for (const id of ["first", "second"]) collector.addResult({...short, inputTokens: 300000, cacheReadTokens: 100000}, id);
+    expect(collector.total("minimax", "MiniMax-M3")?.estimatedCost).toBeCloseTo((300000 * 2.1 + 400 * 8.4 + 100000 * 0.42) * 2 / 1_000_000);
+  });
   it("prices uncached, cached and reasoning tokens separately for MiniMax-M2", () => {
     const usage = { inputTokens: 1_000_000, outputTokens: 500_000, reasoningTokens: 500_000, cacheReadTokens: 1_000_000, cacheWriteTokens: 1_000_000, cost: 0 };
     expect(estimateAgentUsageCost(usage, "minimax", "MiniMax-M2")).toMatchObject({ estimatedCost: 13.335, estimatedCostCurrency: "CNY", cost: 0 });

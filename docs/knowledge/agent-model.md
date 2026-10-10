@@ -6,17 +6,21 @@
 
 个人任务、团队任务与同一 session 的自我复盘均使用服务配置的 provider。OpenCode 子进程只接收所选 provider 的 Key；终端环境不接收模型 Key。知识模块使用独立的 KNOWLEDGE_LLM_PROVIDER。
 
-本次最小请求验证 `https://api.minimaxi.com/v1`、`MiniMax-M2` 返回 HTTP 200，内容 OK，`reasoning_split: true` 返回单独的 reasoning_content。记录见 `evidence/stage-6/minimax-endpoint.json`。当前国内官方文档也列出 `https://api.minimax.cn/v1`；项目使用本次通过认证的地址。
+本轮实验统一使用 `minimax / MiniMax-M3`。`MINIMAX_MODEL` 的产品默认值为 `MiniMax-M3`，实验配置同时核验 Agent 和知识模块的模型名。真实 M3 复盘连续三次均生成合法草稿，引用分别为 9、11、9 条，耗时分别为 8.633、15.162、7.774 秒；原始记录在 `experiments/knowledge/runs/E6-recap-acceptance-v21-m3-final/`。下面的十六次任务表记录阶段六使用 M2 的历史冒烟，M3 的正式结果按新冻结记录单独统计。
+
+项目使用国内接口 `https://api.minimaxi.com/v1`，M3 任务与复盘已获得成功响应。阶段六的最小请求记录保存在 `evidence/stage-6/minimax-endpoint.json`，当时模型为 M2。国内官方文档也列出 `https://api.minimax.cn/v1`。
 
 ## 思考内容与工具历史
 
-MiniMax-M2 的思考功能持续启用。配置 `reasoning_split: true` 将思考内容放入 reasoning_content，OpenCode 模型声明 `reasoning: true` 和 `interleaved: { field: "reasoning_content" }`。OpenCode 在下一轮 assistant 消息中把思考字段重新传回，保留 tool_calls 与工具结果。服务端知识请求也使用分离参数；JSON 解析器同时支持清理 `<think>...</think>`。
+MiniMax-M3 使用默认启用的思考功能。配置 `reasoning_split: true` 将思考内容放入 reasoning_content，OpenCode 模型声明 `reasoning: true` 和 `interleaved: { field: "reasoning_content" }`。OpenCode 在下一轮 assistant 消息中把思考字段重新传回，保留 tool_calls 与工具结果。服务端知识请求也使用分离参数；JSON 解析器同时支持清理 `<think>...</think>`。官方接口支持 `thinking: {type: "disabled"}` 与 `thinking: {type: "adaptive"}`，本轮配置保持默认思考模式。
 
 核查依据包括 MiniMax OpenAI 兼容文档、OpenCode v1.18.31 的 provider/transform 实现和 OpenAI-compatible provider 的消息转换实现。真实任务均完成多轮工具调用，最终文件与回复的 `<think>` 标签检查均为零。
 
 ## 用量与费用
 
 OpenCode assistant 消息的 tokens 按消息编号去重汇总。inputTokens 为非缓存输入，outputTokens 与 reasoningTokens 分别保存，缓存读写独立保存，totalTokens 优先采用运行时值。cost 保留运行时报告值。
+
+M3 的实际调用同样记录这些用量字段。2026-10-10 核验官方标准价格：每百万 tokens 的非缓存输入为人民币 2.10 元，输出为 8.40 元，缓存读取为 0.42 元。单次请求输入超过 512k 时，这三项价格乘以二。服务端按每条 assistant 请求估算费用并累加，记录 `estimatedCost`、`estimatedCostCurrency: CNY` 与价格来源；存在未公布价格的缓存写入用量时不生成估算。运行时的 `cost: 0` 保留原值，供应商账单费用单独记为未知。
 
 本次自定义 provider 的 cost 均为 0。MiniMax-M2 另外记录 `estimatedCost`、`estimatedCostCurrency: CNY` 与 `estimatedCostSource`，不把运行时的零当作实际账单。估算按每百万 tokens 的人民币价格：非缓存输入 2.1，输出与思考 8.4，缓存读取 0.21，缓存写入 2.625。其他模型名称需要对应价格才能估算。自我复盘费用与用户任务分别记录。
 

@@ -21,6 +21,7 @@ export interface ServerConfig {
     apiKey?: string;
     baseUrl: string;
     model: string;
+    recapTimeoutMs?: number;
   };
   importRoots?: string[];
   agent?: {
@@ -68,7 +69,7 @@ export function loadConfig(
     throw new Error("Agent base URL must use http or https");
   }
   const agentModel = agentProvider === "minimax"
-    ? (env.AGENT_MINIMAX_MODEL?.trim() || env.MINIMAX_MODEL?.trim() || "MiniMax-M2")
+    ? (env.AGENT_MINIMAX_MODEL?.trim() || env.MINIMAX_MODEL?.trim() || "MiniMax-M3")
     : (env.DEEPSEEK_MODEL?.trim() || "deepseek-flash");
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
@@ -148,7 +149,8 @@ function readKnowledgeLlm(env: NodeJS.ProcessEnv): NonNullable<ServerConfig["kno
     provider: knowledgeProvider,
     apiKey: knowledgeProvider === "minimax" ? minimaxApiKey : env.DEEPSEEK_API_KEY?.trim() || undefined,
     baseUrl: knowledgeBaseUrl.toString().replace(/\/$/, ""),
-    model: knowledgeProvider === "minimax" ? (env.MINIMAX_MODEL?.trim() || "MiniMax-M2") : (env.DEEPSEEK_MODEL?.trim() || "deepseek-chat")
+    model: knowledgeProvider === "minimax" ? (env.MINIMAX_MODEL?.trim() || "MiniMax-M3") : (env.DEEPSEEK_MODEL?.trim() || "deepseek-chat"),
+    recapTimeoutMs: positiveInteger(env.KNOWLEDGE_RECAP_TIMEOUT_MS, "KNOWLEDGE_RECAP_TIMEOUT_MS", 120_000)
   };
 }
 
