@@ -1,0 +1,3712 @@
+[
+  {
+    "schemaVersion": 3,
+    "id": "R2-I01",
+    "type": "risk",
+    "title": "JSON 文件原子写入",
+    "summary": "JSON 文件先写入临时文件，再替换目标路径",
+    "content": "JSON 文件先写入临时文件，再替换目标路径。写入过程设置文件权限。该规则适用于本地存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "writeJsonFileAtomically"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/jsonFile.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "76b23554-df64-43e7-a541-1e2d1080beb7",
+        "file": {
+          "workspaceRelativePath": "src/extracted/jsonFile.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {\n  await fs.mkdir(path.dirname(storagePath), { recursive: true });\n  const nextPath = `${storagePath}.${nanoid(8)}.next`;\n  await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });\n  await fs.chmod(nextPath, mode);\n  await fs.rename(nextPath, storagePath);\n}",
+          "sha256": "ac62daa59da7a8c98fd86b3a9a7fa934bbf7f05764694d8128ddde0cdd791c3e"
+        },
+        "fingerprint": {
+          "prefix": "} catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return undefined;\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {",
+            "await fs.mkdir(path.dirname(storagePath), { recursive: true });",
+            "const nextPath = `${storagePath}.${nanoid(8)}.next`;",
+            "await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });",
+            "await fs.chmod(nextPath, mode);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I02",
+    "type": "context",
+    "title": "项目目录来自配置",
+    "summary": "项目数据路径由配置中的项目根目录计算",
+    "content": "项目数据路径由配置中的项目根目录计算。路径处理使用 node:path。这个规则适用于项目存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createProjectRegistry"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/projects.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "42fec578-414c-4f75-89aa-d37c94f1fd32",
+        "file": {
+          "workspaceRelativePath": "src/extracted/projects.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 15,
+            "character": 0
+          },
+          "end": {
+            "line": 210,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function createProjectRegistry({\n  dataDir,\n  workspacesDir,\n  importRoots,\n  demoProjectRoot\n}: {\n  dataDir: string;\n  workspacesDir?: string;\n  importRoots?: string[];\n  demoProjectRoot: string;\n}) {\n  const projectsDir = path.join(dataDir, \"projects\");\n  const workspacesRoot = workspacesDir ?? path.join(dataDir, \"workspaces\");\n  const registryPath = path.join(dataDir, \"registry.json\");\n  await fs.mkdir(projectsDir, { recursive: true, mode: 0o700 });\n  await fs.mkdir(workspacesRoot, { recursive: true, mode: 0o700 });\n\n  let registry = await loadRegistry(registryPath);\n  registry = await migrateLegacyProjects(registry, { projectsDir, workspacesDir: workspacesRoot, dataDir, registryPath });\n  if (!registry.projects.some((project) => project.id === \"demo\")) {\n    const project = await createDemoProject({ projectsDir, workspacesDir: workspacesRoot, demoProjectRoot });\n    registry = { ...registry, projects: [...registry.projects, project] };\n    await saveRegistry(registryPath, registry);\n  }\n\n  return {\n    listProjectsSync() {\n      return [...registry.projects];\n    },\n    async listProjects() {\n      const missingProjectIds = new Set<string>();\n      let recreatedDemo: ProjectRecord | undefined;\n      for (const project of registry.projects) {\n        if (await pathExists(project.workspacePath)) continue;\n        if (project.id === \"demo\") {\n          recreatedDemo = await createDemoProject({ projectsDir, workspacesDir: workspacesRoot, demoProjectRoot });\n        } else {\n          missingProjectIds.add(project.id);\n        }\n      }\n      if (missingProjectIds.size > 0 || recreatedDemo) {\n        registry = {\n          ...registry,\n          projects: registry.projects.flatMap((project) => {\n            if (missingProjectIds.has(project.id)) return [];\n            if (project.id === \"demo\" && recreatedDemo) return [recreatedDemo];\n            return [project];\n          })\n        };\n        await saveRegistry(registryPath, registry);\n      }\n      return [...registry.projects].sort((left, right) =>\n        right.lastOpenedAt.localeCompare(left.lastOpenedAt)\n      );\n    },\n    getProject(projectId: string) {\n      return registry.projects.find((project) => project.id === projectId);\n    },\n    async createBlankProject(name: string) {\n      const normalizedName = validateProjectName(name, registry.projects);\n      const id = nanoid(12);\n      const projectDir = path.join(projectsDir, id);\n      const workspacePath = path.join(workspacesRoot, id);\n      await fs.mkdir(workspacePath, { recursive: true, mode: 0o700 });\n      const timestamp = new Date().toISOString();\n      const project: ProjectRecord = {\n        id,\n        name: normalizedName,\n        source: \"blank\",\n        workspacePath,\n        metadataPath: projectDir,\n        createdAt: timestamp,\n        lastOpenedAt: timestamp\n      };\n      await writeProjectMetadata(projectDir, project);\n      registry = { ...registry, projects: [...registry.projects, project] };\n      await saveRegistry(registryPath, registry);\n      return project;\n    },\n    async importDirectory(name: string, sourcePath: string) {\n      const normalizedName = validateProjectName(name, registry.projects);\n      if (!path.isAbsolute(sourcePath)) {\n        throw new Error(\"Existing project path must be absolute\");\n      }\n      const realSource = await fs.realpath(sourcePath);\n      if (importRoots) {\n        const allowed = (await Promise.all(importRoots.map((root) => fs.realpath(root)))).some((root) => realSource === root || realSource.startsWith(`${root}${path.sep}`));\n        if (!allowed) throw new Error(\"Directory import path is outside SIMPLERCP_IMPORT_ROOTS\");\n      }\n      const sourceStat = await fs.stat(realSource);\n      if (!sourceStat.isDirectory()) {\n        throw new Error(\"Existing project path must be a directory\");\n      }\n\n      const id = nanoid(12);\n      const projectDir = path.join(projectsDir, id);\n      const workspacePath = path.join(workspacesRoot, id);\n      await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });\n      try {\n        await fs.cp(realSource, workspacePath, {\n          recursive: true,\n          filter(candidatePath) {\n            const relativePath = path.relative(realSource, candidatePath);\n            return !relativePath || !isIgnoredPath(relativePath);\n          }\n        });\n        const timestamp = new Date().toISOString();\n        const project: ProjectRecord = {\n          id,\n          name: normalizedName,\n          source: \"directory\",\n          workspacePath,\n          metadataPath: projectDir,\n          createdAt: timestamp,\n          lastOpenedAt: timestamp\n        };\n        await writeProjectMetadata(projectDir, project);\n        registry = { ...registry, projects: [...registry.projects, project] };\n        await saveRegistry(registryPath, registry);\n        return project;\n      } catch (error) {\n        await fs.rm(projectDir, { recursive: true, force: true });\n        throw error;\n      }\n    },\n    async importZip(name: string, archive: Buffer) {\n      const normalizedName = validateProjectName(name, registry.projects);\n      const id = nanoid(12);\n      const projectDir = path.join(projectsDir, id);\n      const workspacePath = path.join(workspacesRoot, id);\n      await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });\n      try {\n        const { filteredEntries } = await extractZipArchive({\n          archive,\n          destination: workspacePath\n        });\n        const timestamp = new Date().toISOString();\n        const project: ProjectRecord = {\n          id,\n          name: normalizedName,\n          source: \"zip\",\n          workspacePath,\n          metadataPath: projectDir,\n          createdAt: timestamp,\n          lastOpenedAt: timestamp\n        };\n        await writeProjectMetadata(projectDir, project);\n        registry = { ...registry, projects: [...registry.projects, project] };\n        await saveRegistry(registryPath, registry);\n        return { project, filteredEntries };\n      } catch (error) {\n        await fs.rm(projectDir, { recursive: true, force: true });\n        throw error;\n      }\n    },\n    async markOpened(projectId: string) {\n      const project = registry.projects.find(\n        (candidate) => candidate.id === projectId\n      );\n      if (!project) throw new Error(\"Project not found\");\n      if (!(await pathExists(project.workspacePath))) {\n        registry = {\n          ...registry,\n          projects: registry.projects.filter(\n            (candidate) => candidate.id !== projectId\n          )\n        };\n        await saveRegistry(registryPath, registry);\n        throw new Error(\"Project not found\");\n      }\n      project.lastOpenedAt = new Date().toISOString();\n      await saveRegistry(registryPath, registry);\n      return project;\n    },\n    async deleteProject(projectId: string) {\n      if (projectId === \"demo\") {\n        throw new Error(\"Demo project cannot be deleted\");\n      }\n      const project = registry.projects.find(\n        (candidate) => candidate.id === projectId\n      );\n      if (!project) throw new Error(\"Project not found\");\n      const projectDir = resolveProjectDir(projectsDir, project.id);\n      await fs.rm(projectDir, { recursive: true, force: true });\n      await fs.rm(project.workspacePath, { recursive: true, force: true });\n      registry = {\n        ...registry,\n        projects: registry.projects.filter(\n          (candidate) => candidate.id !== projectId\n        )\n      };\n      await saveRegistry(registryPath, registry);\n      return project;\n    }\n  };\n}",
+          "sha256": "d8e8c810df4fe67542ad5421fbdcbba70dd3803822545a82a4cb4557f2f78cd3"
+        },
+        "fingerprint": {
+          "prefix": "cord, ProjectSource } from \"@simplercp/shared\";\n\ninterface RegistryFile {\n  version: 1;\n  projects: ProjectRecord[];\n}\n\n",
+          "suffix": "\n\nexport type ProjectRegistry = Awaited<ReturnType<typeof createProjectRegistry>>;\n\nasync function loadRegistry(registry",
+          "landmarkLines": [
+            "export async function createProjectRegistry({",
+            "dataDir,",
+            "workspacesDir,",
+            "importRoots,",
+            "demoProjectRoot"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I03",
+    "type": "negative",
+    "title": "事件日志等待写入完成",
+    "summary": "事件日志提供 awaitIdle 用于等待异步写入",
+    "content": "事件日志提供 awaitIdle 用于等待异步写入。关闭前需要等待所有操作完成。该规则适用于事件模块。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createEventLog"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/eventLog.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "fbb299f2-de48-4d7b-8c78-32db2d87b65f",
+        "file": {
+          "workspaceRelativePath": "src/extracted/eventLog.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 33,
+            "character": 0
+          },
+          "end": {
+            "line": 70,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createEventLog(storagePath?: string) {\n  const events: EventRecord[] = [];\n  let operations = Promise.resolve();\n  const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();\n\n  function enqueue(operation: () => Promise<void>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n  }\n\n  return {\n    append(input: EventInput) {\n      const event: EventRecord = redactSensitive({\n        id: nanoid(),\n        timestamp: new Date().toISOString(),\n        ...input\n      }) as EventRecord;\n      events.push(event);\n      if (storagePath && durableEventTypes.has(event.type)) {\n        enqueue(async () => {\n          await loading;\n          await writeJsonFileAtomically(storagePath, {\n            version: 1,\n            events: events.filter((candidate) => durableEventTypes.has(candidate.type))\n          } satisfies EventFile);\n        });\n      }\n      return event;\n    },\n    list() {\n      return [...events];\n    },\n    async awaitIdle() {\n      await loading;\n      await operations;\n    }\n  };\n}",
+          "sha256": "53d93199203e57841543c5977a5616954e6e0e73a3c58f4477ea8d487b89782d"
+        },
+        "fingerprint": {
+          "prefix": "nt_task_queued\",\n  \"agent_task_started\",\n  \"agent_task_completed\",\n  \"agent_task_failed\",\n  \"agent_task_cancelled\"\n]);\n\n",
+          "suffix": "\n\nexport type EventLog = ReturnType<typeof createEventLog>;\n\nasync function loadEvents(storagePath: string, events: Even",
+          "landmarkLines": [
+            "export function createEventLog(storagePath?: string) {",
+            "const events: EventRecord[] = [];",
+            "let operations = Promise.resolve();",
+            "const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();",
+            "function enqueue(operation: () => Promise<void>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I04",
+    "type": "tutorial",
+    "title": "身份中间件读取认证成员",
+    "summary": "认证中间件从请求上下文读取成员标识",
+    "content": "认证中间件从请求上下文读取成员标识。缺少身份时返回未授权。这个规则适用于身份模块。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createIdentityMiddleware"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/identity.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "2acd638b-06a9-459f-8c49-cd6f31197fda",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/identity.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 129,
+            "character": 0
+          },
+          "end": {
+            "line": 157,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createIdentityMiddleware(options: {\n  members: MemberStore;\n  projectId?: (request: Request) => string | undefined;\n  required?: boolean;\n}) {\n  return async function identityMiddleware(request: Request, response: Response, next: NextFunction) {\n    try {\n    const projectId = options.projectId?.(request)\n      ?? request.params.projectId\n      ?? request.path.match(/\\/api\\/projects\\/([^/]+)/)?.[1];\n    const memberId = request.header(\"x-simplercp-member\")?.trim();\n    if (memberId) {\n      const member = projectId && ![\"import\", \"import-zip\"].includes(projectId)\n        ? await options.members.resolveIdentity(decodeURIComponent(projectId), memberId)\n        : await options.members.findIdentity(memberId);\n      if (member) {\n        request.identity = { projectId: member.projectId, memberId: member.memberId, displayName: member.displayName, role: member.role };\n        next();\n        return;\n      }\n    }\n    if (options.required) {\n      response.status(401).json({ error: \"Member identity is required\" });\n      return;\n    }\n    next();\n    } catch (error) { next(error); }\n  };\n}",
+          "sha256": "0470265d809b9c74feb43c18b9f23568d641695958625bd298e3f01ab708574c"
+        },
+        "fingerprint": {
+          "prefix": "      if (member) return member;\n      }\n    }\n  };\n}\n\nexport type MemberStore = ReturnType<typeof createMemberStore>;\n\n",
+          "suffix": "\n\ndeclare global {\n  namespace Express {\n    interface Request {\n      identity?: Identity;\n    }\n  }\n}\n",
+          "landmarkLines": [
+            "export function createIdentityMiddleware(options: {",
+            "members: MemberStore;",
+            "projectId?: (request: Request) => string | undefined;",
+            "required?: boolean;",
+            "}) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I05",
+    "type": "risk",
+    "title": "工作区路径保持规范化",
+    "summary": "工作区路径使用 resolve 计算并拒绝越过项目根目录",
+    "content": "工作区路径使用 resolve 计算并拒绝越过项目根目录。错误路径立即抛出。该规则适用于工作区服务。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "resolveWorkspacePath"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/workspace.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "64d39250-fb65-46b2-a7f3-175d57115dde",
+        "file": {
+          "workspaceRelativePath": "src/extracted/workspace.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 12,
+            "character": 0
+          },
+          "end": {
+            "line": 25,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function resolveWorkspacePath(root: string, relativePath: string) {\n  if (isIgnoredPath(relativePath)) {\n    throw new Error(\"Path is excluded from browser access\");\n  }\n  const absoluteRoot = path.resolve(root);\n  const candidate = path.resolve(absoluteRoot, relativePath);\n  const relative = path.relative(absoluteRoot, candidate);\n\n  if (relative.startsWith(\"..\") || path.isAbsolute(relative)) {\n    throw new Error(\"Path escapes workspace root\");\n  }\n\n  return candidate;\n}",
+          "sha256": "8c944e7c1892e7b2a5052d8d8c4769017b3a039c1586c692b78e2bc6d93f0333"
+        },
+        "fingerprint": {
+          "prefix": " \".dylib\", \".exe\", \".gif\", \".ico\", \".jar\", \".jpeg\",\n  \".jpg\", \".o\", \".pdf\", \".png\", \".pyc\", \".so\", \".webp\", \".zip\"\n]);\n\n",
+          "suffix": "\n\nexport async function listWorkspaceDirectory(\n  root: string,\n  relativeDir: string\n): Promise<WorkspaceNode[]> {\n  co",
+          "landmarkLines": [
+            "export function resolveWorkspacePath(root: string, relativePath: string) {",
+            "if (isIgnoredPath(relativePath)) {",
+            "throw new Error(\"Path is excluded from browser access\");",
+            "}",
+            "const absoluteRoot = path.resolve(root);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I06",
+    "type": "context",
+    "title": "房间加入事件包含成员标识",
+    "summary": "成员加入房间时写入成员标识和房间标识",
+    "content": "成员加入房间时写入成员标识和房间标识。重复加入保持幂等。这个规则适用于房间模块。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createRoomStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/rooms.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "6e13a50b-9541-4ffe-83d2-f0d565629cb6",
+        "file": {
+          "workspaceRelativePath": "src/extracted/rooms.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 256,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createRoomStore(events: EventLog) {\n  const rooms = new Map<string, RoomState>();\n\n  return {\n    createRoom(workspaceRoot: string, workspaceName = path.basename(workspaceRoot)) {\n      const room: RoomState = {\n        id: nanoid(10),\n        workspaceName,\n        members: [],\n        connections: []\n      };\n      rooms.set(room.id, room);\n      events.append({\n        type: \"room_created\",\n        roomId: room.id,\n        payload: { workspaceName: room.workspaceName }\n      });\n      return room;\n    },\n    getRoom(roomId: string) {\n      return rooms.get(roomId);\n    },\n    joinRoom(roomId: string, input: JoinRoomInput) {\n      const room = rooms.get(roomId);\n      if (!room) {\n        throw new Error(\"Room not found\");\n      }\n\n      const normalized = normalizeJoinInput(input);\n      const now = new Date().toISOString();\n      const existing = findExistingMember(room.members, normalized);\n      if (existing) {\n        existing.name = normalized.name;\n        existing.participantId = normalized.participantId;\n        existing.profileRole = normalized.profileRole;\n        upsertConnection(room, {\n          id: normalized.connectionId,\n          participantId: existing.participantId,\n          roomId,\n          online: true,\n          lastSeenAt: now\n        });\n        syncMemberFromConnections(room, existing, now);\n        refreshDisplayNames(room);\n        events.append({\n          type: \"member_rejoined\",\n          roomId,\n          memberId: existing.id,\n          payload: {\n            name: existing.name,\n            participantId: existing.participantId,\n            connectionId: normalized.connectionId,\n            connectionCount: existing.connectionCount\n          }\n        });\n        return existing;\n      }\n\n      const member: RoomMember = {\n        id: input.memberId ?? nanoid(10),\n        participantId: normalized.participantId,\n        name: normalized.name,\n        displayName: normalized.name,\n        online: true,\n        lastSeenAt: now,\n        connectionCount: 1,\n        profileRole: normalized.profileRole\n      };\n      room.members.push(member);\n      upsertConnection(room, {\n        id: normalized.connectionId,\n        participantId: member.participantId,\n        roomId,\n        online: true,\n        lastSeenAt: now\n      });\n      refreshDisplayNames(room);\n      events.append({\n        type: \"member_joined\",\n        roomId,\n        memberId: member.id,\n        payload: {\n          name: member.name,\n          participantId: member.participantId,\n          connectionId: normalized.connectionId\n        }\n      });\n      return member;\n    },\n    markOnline(roomId: string, memberId: string, now = new Date()) {\n      const member = findMember(rooms, roomId, memberId);\n      const wasOnline = member.online;\n      member.online = true;\n      member.lastSeenAt = now.toISOString();\n      if (!wasOnline) {\n        events.append({\n          type: \"member_online\",\n          roomId,\n          memberId,\n          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }\n        });\n      }\n      return member;\n    },\n    markConnectionOnline(roomId: string, connectionId: string, now = new Date()) {\n      const room = findRoom(rooms, roomId);\n      const connection = room.connections.find(\n        (candidate) => candidate.id === connectionId\n      );\n      if (!connection) {\n        throw new Error(\"Connection not found\");\n      }\n      const member = room.members.find(\n        (candidate) => candidate.participantId === connection.participantId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n      const wasOnline = member.online;\n      connection.online = true;\n      connection.lastSeenAt = now.toISOString();\n      syncMemberFromConnections(room, member, now.toISOString());\n      if (!wasOnline && member.online) {\n        events.append({\n          type: \"member_online\",\n          roomId,\n          memberId: member.id,\n          payload: {\n            name: member.displayName,\n            connectionId,\n            lastSeenAt: member.lastSeenAt\n          }\n        });\n      }\n      return member;\n    },\n    markOffline(roomId: string, memberId: string, now = new Date()) {\n      const member = findMember(rooms, roomId, memberId);\n      const wasOnline = member.online;\n      member.online = false;\n      member.lastSeenAt = now.toISOString();\n      if (wasOnline) {\n        events.append({\n          type: \"member_offline\",\n          roomId,\n          memberId,\n          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }\n        });\n      }\n      return member;\n    },\n    markConnectionOffline(roomId: string, connectionId: string, now = new Date()) {\n      const room = findRoom(rooms, roomId);\n      const connection = room.connections.find(\n        (candidate) => candidate.id === connectionId\n      );\n      if (!connection) {\n        throw new Error(\"Connection not found\");\n      }\n      const member = room.members.find(\n        (candidate) => candidate.participantId === connection.participantId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n      const wasOnline = member.online;\n      connection.online = false;\n      connection.lastSeenAt = now.toISOString();\n      syncMemberFromConnections(room, member, now.toISOString());\n      if (wasOnline && !member.online) {\n        events.append({\n          type: \"member_offline\",\n          roomId,\n          memberId: member.id,\n          payload: {\n            name: member.displayName,\n            connectionId,\n            lastSeenAt: member.lastSeenAt\n          }\n        });\n      }\n      return member;\n    },\n    cleanupStaleMembers(roomId: string, now = new Date(), ttlMs = 120_000) {\n      const room = findRoom(rooms, roomId);\n\n      const before = room.members.length;\n      room.connections = room.connections.filter((connection) => {\n        if (connection.online) return true;\n        return now.getTime() - new Date(connection.lastSeenAt).getTime() <= ttlMs;\n      });\n      for (const member of room.members) {\n        syncMemberFromConnections(room, member, member.lastSeenAt);\n      }\n      room.members = room.members.filter((member) => {\n        if (member.online) return true;\n        return now.getTime() - new Date(member.lastSeenAt).getTime() <= ttlMs;\n      });\n\n      if (room.members.length !== before) {\n        events.append({\n          type: \"member_removed\",\n          roomId,\n          payload: { removed: before - room.members.length }\n        });\n      }\n\n      return room.members;\n    },\n    updatePresence(\n      roomId: string,\n      memberId: string,\n      patch: Pick<RoomMember, \"currentFile\"> & { connectionId?: string }\n    ) {\n      const room = findRoom(rooms, roomId);\n      const member = room.members.find(\n        (candidate) => candidate.id === memberId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n\n      if (patch.connectionId) {\n        const connection = room.connections.find(\n          (candidate) => candidate.id === patch.connectionId\n        );\n        if (connection) {\n          connection.currentFile = patch.currentFile;\n          connection.lastSeenAt = new Date().toISOString();\n        }\n      }\n      member.currentFile = patch.currentFile;\n      return member;\n    },\n    getMember(roomId: string, memberId: string) {\n      return rooms\n        .get(roomId)\n        ?.members.find((member) => member.id === memberId);\n    },\n    listRooms() {\n      return [...rooms.values()];\n    }\n  };\n}",
+          "sha256": "c3dc7c863ec21d9919e41a3f68880f31947ab67457831b3a6e186bfffd122a0f"
+        },
+        "fingerprint": {
+          "prefix": "ut {\n  memberId?: string;\n  name: string;\n  participantId?: string;\n  connectionId?: string;\n  profileRole?: string;\n}\n\n",
+          "suffix": "\n\nexport type RoomStore = ReturnType<typeof createRoomStore>;\n\ntype NormalizedJoinInput = Required<Pick<JoinRoomInput, \"",
+          "landmarkLines": [
+            "export function createRoomStore(events: EventLog) {",
+            "const rooms = new Map<string, RoomState>();",
+            "return {",
+            "createRoom(workspaceRoot: string, workspaceName = path.basename(workspaceRoot)) {",
+            "const room: RoomState = {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I07",
+    "type": "negative",
+    "title": "文本增量按差异顺序应用",
+    "summary": "applyTextDelta 使用 fast-diff 的差异顺序操作 Y.Text",
+    "content": "applyTextDelta 使用 fast-diff 的差异顺序操作 Y.Text。相同内容增加当前位置，删除内容保持当前位置，插入后继续增加位置。该规则适用于编辑器文本处理。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "applyTextDelta"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/textDelta.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "be930c21-4ba8-4b8e-ad46-8ce2928fbde8",
+        "file": {
+          "workspaceRelativePath": "src/extracted/textDelta.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 5,
+            "character": 0
+          },
+          "end": {
+            "line": 24,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function applyTextDelta(\n  text: Y.Text,\n  previousContent: string,\n  nextContent: string\n) {\n  let index = 0;\n\n  for (const [operation, value] of diff(previousContent, nextContent)) {\n    if (operation === diff.EQUAL) {\n      index += value.length;\n      continue;\n    }\n    if (operation === diff.DELETE) {\n      text.delete(index, value.length);\n      continue;\n    }\n    text.insert(index, value);\n    index += value.length;\n  }\n}",
+          "sha256": "faae26541f923978554400f84181092c2753e6fe364f35161024b284a1a08de6"
+        },
+        "fingerprint": {
+          "prefix": "import diff from \"fast-diff\";\nimport type * as Y from \"yjs\";\n\nexport const FILESYSTEM_ORIGIN = Symbol(\"filesystem\");\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export function applyTextDelta(",
+            "text: Y.Text,",
+            "previousContent: string,",
+            "nextContent: string",
+            ") {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I08",
+    "type": "tutorial",
+    "title": "运行记录保留成员名称",
+    "summary": "Agent run 保存 memberId 和 memberName",
+    "content": "Agent run 保存 memberId 和 memberName。记录存储读取时等待正在执行的写入操作，并返回对象副本。这个规则适用于运行记录。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createAgentRunStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/agent/agentRunStore.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "b80eb641-9340-4e55-95f0-81ce4e9f1fdc",
+        "file": {
+          "workspaceRelativePath": "src/extracted/agent/agentRunStore.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 5,
+            "character": 0
+          },
+          "end": {
+            "line": 40,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createAgentRunStore(projectId: string, projectRoot: string) {\n  const runsRoot = path.join(projectRoot, \"agent-runs\");\n  const records = createRecordStore<AgentRun>({\n    root: runsRoot,\n    projectId,\n    fileName: \"run.json\",\n    recordKey: \"run\",\n    invalidMessage: \"Invalid Agent run file\",\n    missingMessage: \"Agent run not found\",\n    validateRecord(value): value is AgentRun {\n      if (!value || typeof value !== \"object\") return false;\n      const run = value as Record<string, unknown>;\n      return typeof run.id === \"string\" && typeof run.projectId === \"string\";\n    }\n  });\n\n  return {\n    runsRoot,\n    create(input: Omit<AgentRun, \"id\" | \"createdAt\">, id = nanoid(12)) {\n      return records.create({\n        ...input,\n        id,\n        createdAt: new Date().toISOString()\n      });\n    },\n    get: records.get,\n    async list() {\n      return (await records.list()).sort((left, right) =>\n        right.createdAt.localeCompare(left.createdAt)\n      );\n    },\n    update(runId: string, update: Partial<AgentRun>) {\n      return records.update(runId, (current) => ({ ...current, ...update, id: current.id }));\n    }\n  };\n}",
+          "sha256": "f2a8ba3878a7694064f29eb414f9a5e218c86557a393156722aed6e1fc262eb6"
+        },
+        "fingerprint": {
+          "prefix": "Run } from \"@simplercp/shared\";\nimport { nanoid } from \"nanoid\";\nimport { createRecordStore } from \"./recordStore.js\";\n\n",
+          "suffix": "\n\nexport type AgentRunStore = ReturnType<typeof createAgentRunStore>;\n",
+          "landmarkLines": [
+            "export function createAgentRunStore(projectId: string, projectRoot: string) {",
+            "const runsRoot = path.join(projectRoot, \"agent-runs\");",
+            "const records = createRecordStore<AgentRun>({",
+            "root: runsRoot,",
+            "projectId,"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I09",
+    "type": "risk",
+    "title": "终端环境过滤密钥",
+    "summary": "终端环境创建时删除内部密钥字段",
+    "content": "终端环境创建时删除内部密钥字段。保留项目需要的环境变量。该规则适用于进程启动。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "terminalEnv"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/processEnv.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "e7dae869-d73a-42b7-b0ac-576eb564d571",
+        "file": {
+          "workspaceRelativePath": "src/extracted/processEnv.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 18,
+            "character": 0
+          },
+          "end": {
+            "line": 20,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function terminalEnv(env: NodeJS.ProcessEnv = process.env) {\n  return buildEnvironment(env, (env.SIMPLERCP_TERMINAL_ENV_ALLOW ?? \"\").split(\",\").map((name) => name.trim()), false);\n}",
+          "sha256": "1490f3abf59935ce64d5323008bb2c4f2ad3a177f75630e501b796598661d143"
+        },
+        "fingerprint": {
+          "prefix": "cord<string, string>;\n  if (env.SIMPLERCP_TERMINAL_HOME) result.HOME = env.SIMPLERCP_TERMINAL_HOME;\n  return result;\n}\n\n",
+          "suffix": "\n\nexport function agentEnv(env: NodeJS.ProcessEnv = process.env) {\n  return buildEnvironment(env, [\"DEEPSEEK_API_KEY\", \"",
+          "landmarkLines": [
+            "export function terminalEnv(env: NodeJS.ProcessEnv = process.env) {",
+            "return buildEnvironment(env, (env.SIMPLERCP_TERMINAL_ENV_ALLOW ?? \"\").split(\",\").map((name) => name.trim()), false);",
+            "}"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I10",
+    "type": "context",
+    "title": "聊天消息保存作者信息",
+    "summary": "聊天消息保存作者标识、名称和可选角色",
+    "content": "聊天消息保存作者标识、名称和可选角色。消息创建事件包含作者名称。这个规则适用于聊天存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createChatStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/chat.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "29a83736-1c01-470f-a982-c75e0a47e05e",
+        "file": {
+          "workspaceRelativePath": "src/extracted/chat.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 110,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createChatStore(\n  events: EventLog,\n  options: { storagePath?: string } = {}\n) {\n  let messages: ChatMessage[] = [];\n  let operations: Promise<void> | undefined;\n  const listeners = new Set<(message: ChatMessage) => void>();\n\n  function ensureLoaded() {\n    operations ??= loadMessages(options.storagePath).then((loaded) => {\n      messages = loaded;\n    });\n    return operations;\n  }\n\n  return {\n    async createMessage(input: CreateChatMessageInput) {\n      let created: ChatMessage | undefined;\n      const creation = ensureLoaded().then(async () => {\n        const message: ChatMessage = {\n          sequence: (messages.at(-1)?.sequence ?? 0) + 1,\n          id: nanoid(10),\n          timestamp: new Date().toISOString(),\n          roomId: input.roomId,\n          authorId: input.authorId,\n          authorName: input.authorName,\n          authorRole: input.authorRole,\n          agentSessionId: input.agentSessionId,\n          runId: input.runId,\n          mentions: input.mentions,\n          kind: input.kind ?? \"member\",\n          text: String(redactSensitive(input.text))\n        };\n        const nextMessages = [...messages, message];\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        events.append({\n          type: \"chat_message_created\",\n          roomId: message.roomId,\n          memberId: message.authorId,\n          payload: {\n            messageId: message.id,\n            authorName: message.authorName,\n            ...(message.authorRole ? { authorRole: message.authorRole } : {}),\n            text: message.text\n          }\n        });\n        created = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = creation;\n      await creation;\n      if (!created) throw new Error(\"Chat message was not created\");\n      return created;\n    },\n    async listMessages(roomId: string) {\n      await ensureLoaded();\n      return messages.map((message) => ({ ...message, roomId }));\n    },\n    async updateMessage(messageId: string, update: Partial<Pick<ChatMessage, \"mentions\" | \"agentSessionId\" | \"runId\">>) {\n      let updated: ChatMessage | undefined;\n      const operation = ensureLoaded().then(async () => {\n        const index = messages.findIndex((message) => message.id === messageId);\n        if (index < 0) throw new Error(\"Chat message not found\");\n        const current = messages[index];\n        if (!current) throw new Error(\"Chat message not found\");\n        const message: ChatMessage = { ...current, ...update };\n        const nextMessages = [...messages];\n        nextMessages[index] = message;\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        updated = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = operation;\n      await operation;\n      if (!updated) throw new Error(\"Chat message was not updated\");\n      return updated;\n    },\n    onMessage(listener: (message: ChatMessage) => void) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n    async awaitIdle() {\n      await ensureLoaded();\n    }\n  };\n}",
+          "sha256": "25faab770fcbcc14bd6752116552641eb5a3374e2eefac86b5e8cfa5b00ddc15"
+        },
+        "fingerprint": {
+          "prefix": "?: string;\n  runId?: string;\n  mentions?: string[];\n}\n\ninterface ChatFile {\n  version: 1;\n  messages: ChatMessage[];\n}\n\n",
+          "suffix": "\n\nexport type ChatStore = ReturnType<typeof createChatStore>;\n\nasync function loadMessages(storagePath?: string): Promis",
+          "landmarkLines": [
+            "export function createChatStore(",
+            "events: EventLog,",
+            "options: { storagePath?: string } = {}",
+            ") {",
+            "let messages: ChatMessage[] = [];"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I11",
+    "type": "negative",
+    "title": "配置读取环境变量",
+    "summary": "服务配置从环境变量读取默认值",
+    "content": "服务配置从环境变量读取默认值。缺少必填值时抛出配置错误。该规则适用于配置加载。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "loadConfig"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/config.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "43eefc8e-5392-44c9-b53b-15c44996bbfb",
+        "file": {
+          "workspaceRelativePath": "src/extracted/config.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 24,
+            "character": 0
+          },
+          "end": {
+            "line": 96,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function loadConfig(\n  env: NodeJS.ProcessEnv = process.env,\n  repositoryRoot = defaultRepositoryRoot\n): ServerConfig {\n  const port = Number(env.PORT ?? 4000);\n  if (!Number.isInteger(port) || port < 1 || port > 65_535) {\n    throw new Error(\"PORT must be an integer between 1 and 65535\");\n  }\n\n  const configuredDataDir = env.SIMPLERCP_DATA_DIR?.trim() || undefined;\n  if (configuredDataDir && !path.isAbsolute(configuredDataDir)) {\n    throw new Error(\"SIMPLERCP_DATA_DIR must be an absolute path\");\n  }\n\n  const publicOrigin = env.SIMPLERCP_PUBLIC_URL ?? \"http://127.0.0.1:5173\";\n  const publicUrl = new URL(publicOrigin);\n  if (![\"http:\", \"https:\"].includes(publicUrl.protocol)) {\n    throw new Error(\"SIMPLERCP_PUBLIC_URL must use http or https\");\n  }\n\n  const agentBaseUrl = new URL(\n    env.DEEPSEEK_BASE_URL ?? \"https://api.deepseek.com/v1\"\n  );\n  if (![\"http:\", \"https:\"].includes(agentBaseUrl.protocol)) {\n    throw new Error(\"DEEPSEEK_BASE_URL must use http or https\");\n  }\n  const agentModel = env.DEEPSEEK_MODEL?.trim() || \"deepseek-chat\";\n  const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);\n  if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {\n    throw new Error(\"SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535\");\n  }\n  const runTimeoutMs = Number(env.SIMPLERCP_AGENT_RUN_TIMEOUT_MS ?? 600_000);\n  if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 1) {\n    throw new Error(\"SIMPLERCP_AGENT_RUN_TIMEOUT_MS must be a positive integer\");\n  }\n  const terminalEnabled = readBoolean(\n    env.SIMPLERCP_TERMINAL_ENABLED,\n    \"SIMPLERCP_TERMINAL_ENABLED\",\n    true\n  );\n  const fakeAgentRuntime = readBoolean(\n    env.SIMPLERCP_FAKE_AGENT_RUNTIME,\n    \"SIMPLERCP_FAKE_AGENT_RUNTIME\",\n    false\n  );\n  const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()\n    ? undefined\n    : env.SIMPLERCP_IMPORT_ROOTS.split(\",\").map((value) => value.trim()).filter(Boolean);\n  if (importRoots?.some((root) => !path.isAbsolute(root))) throw new Error(\"SIMPLERCP_IMPORT_ROOTS must contain absolute paths\");\n  const dataDir = configuredDataDir ?? path.resolve(repositoryRoot, \".simplercp-data\");\n  const workspacesDir = env.SIMPLERCP_WORKSPACES_DIR?.trim() || path.join(dataDir, \"workspaces\");\n  if (!path.isAbsolute(workspacesDir)) throw new Error(\"SIMPLERCP_WORKSPACES_DIR must be an absolute path\");\n\n  const config: ServerConfig = {\n    port,\n    host: env.SIMPLERCP_HOST ?? \"127.0.0.1\",\n    publicOrigin: publicUrl.origin,\n    dataDir,\n    workspacesDir,\n    importRoots,\n    demoProjectRoot: path.resolve(repositoryRoot, \"demo/workspace\"),\n    terminalEnabled,\n    fakeAgentRuntime,\n    agent: {\n      apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,\n      baseUrl: agentBaseUrl.toString().replace(/\\/$/, \"\"),\n      model: agentModel,\n      openCodePort,\n      runTimeoutMs\n    }\n  };\n  return config;\n}",
+          "sha256": "d381b14dd441789265c2f38cca64f67c71fca83dbde4c181d363bcd1f3182b33"
+        },
+        "fingerprint": {
+          "prefix": " apiKey?: string;\n    baseUrl: string;\n    model: string;\n    openCodePort?: number;\n    runTimeoutMs?: number;\n  };\n}\n\n",
+          "suffix": "\n\nfunction readBoolean(\n  value: string | undefined,\n  name: string,\n  defaultValue: boolean\n) {\n  if (value === undefin",
+          "landmarkLines": [
+            "export function loadConfig(",
+            "env: NodeJS.ProcessEnv = process.env,",
+            "repositoryRoot = defaultRepositoryRoot",
+            "): ServerConfig {",
+            "const port = Number(env.PORT ?? 4000);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I12",
+    "type": "tutorial",
+    "title": "项目列表确认工作区是否存在",
+    "summary": "listProjects 会检查项目工作区路径是否仍然存在",
+    "content": "listProjects 会检查项目工作区路径是否仍然存在。缺失的普通项目从列表移除，演示项目重新创建。这个规则适用于项目查询。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createProjectRegistry"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/projects.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "cd8b7701-fb47-4144-8850-adc397013baf",
+        "file": {
+          "workspaceRelativePath": "src/extracted/projects.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 15,
+            "character": 0
+          },
+          "end": {
+            "line": 210,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function createProjectRegistry({\n  dataDir,\n  workspacesDir,\n  importRoots,\n  demoProjectRoot\n}: {\n  dataDir: string;\n  workspacesDir?: string;\n  importRoots?: string[];\n  demoProjectRoot: string;\n}) {\n  const projectsDir = path.join(dataDir, \"projects\");\n  const workspacesRoot = workspacesDir ?? path.join(dataDir, \"workspaces\");\n  const registryPath = path.join(dataDir, \"registry.json\");\n  await fs.mkdir(projectsDir, { recursive: true, mode: 0o700 });\n  await fs.mkdir(workspacesRoot, { recursive: true, mode: 0o700 });\n\n  let registry = await loadRegistry(registryPath);\n  registry = await migrateLegacyProjects(registry, { projectsDir, workspacesDir: workspacesRoot, dataDir, registryPath });\n  if (!registry.projects.some((project) => project.id === \"demo\")) {\n    const project = await createDemoProject({ projectsDir, workspacesDir: workspacesRoot, demoProjectRoot });\n    registry = { ...registry, projects: [...registry.projects, project] };\n    await saveRegistry(registryPath, registry);\n  }\n\n  return {\n    listProjectsSync() {\n      return [...registry.projects];\n    },\n    async listProjects() {\n      const missingProjectIds = new Set<string>();\n      let recreatedDemo: ProjectRecord | undefined;\n      for (const project of registry.projects) {\n        if (await pathExists(project.workspacePath)) continue;\n        if (project.id === \"demo\") {\n          recreatedDemo = await createDemoProject({ projectsDir, workspacesDir: workspacesRoot, demoProjectRoot });\n        } else {\n          missingProjectIds.add(project.id);\n        }\n      }\n      if (missingProjectIds.size > 0 || recreatedDemo) {\n        registry = {\n          ...registry,\n          projects: registry.projects.flatMap((project) => {\n            if (missingProjectIds.has(project.id)) return [];\n            if (project.id === \"demo\" && recreatedDemo) return [recreatedDemo];\n            return [project];\n          })\n        };\n        await saveRegistry(registryPath, registry);\n      }\n      return [...registry.projects].sort((left, right) =>\n        right.lastOpenedAt.localeCompare(left.lastOpenedAt)\n      );\n    },\n    getProject(projectId: string) {\n      return registry.projects.find((project) => project.id === projectId);\n    },\n    async createBlankProject(name: string) {\n      const normalizedName = validateProjectName(name, registry.projects);\n      const id = nanoid(12);\n      const projectDir = path.join(projectsDir, id);\n      const workspacePath = path.join(workspacesRoot, id);\n      await fs.mkdir(workspacePath, { recursive: true, mode: 0o700 });\n      const timestamp = new Date().toISOString();\n      const project: ProjectRecord = {\n        id,\n        name: normalizedName,\n        source: \"blank\",\n        workspacePath,\n        metadataPath: projectDir,\n        createdAt: timestamp,\n        lastOpenedAt: timestamp\n      };\n      await writeProjectMetadata(projectDir, project);\n      registry = { ...registry, projects: [...registry.projects, project] };\n      await saveRegistry(registryPath, registry);\n      return project;\n    },\n    async importDirectory(name: string, sourcePath: string) {\n      const normalizedName = validateProjectName(name, registry.projects);\n      if (!path.isAbsolute(sourcePath)) {\n        throw new Error(\"Existing project path must be absolute\");\n      }\n      const realSource = await fs.realpath(sourcePath);\n      if (importRoots) {\n        const allowed = (await Promise.all(importRoots.map((root) => fs.realpath(root)))).some((root) => realSource === root || realSource.startsWith(`${root}${path.sep}`));\n        if (!allowed) throw new Error(\"Directory import path is outside SIMPLERCP_IMPORT_ROOTS\");\n      }\n      const sourceStat = await fs.stat(realSource);\n      if (!sourceStat.isDirectory()) {\n        throw new Error(\"Existing project path must be a directory\");\n      }\n\n      const id = nanoid(12);\n      const projectDir = path.join(projectsDir, id);\n      const workspacePath = path.join(workspacesRoot, id);\n      await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });\n      try {\n        await fs.cp(realSource, workspacePath, {\n          recursive: true,\n          filter(candidatePath) {\n            const relativePath = path.relative(realSource, candidatePath);\n            return !relativePath || !isIgnoredPath(relativePath);\n          }\n        });\n        const timestamp = new Date().toISOString();\n        const project: ProjectRecord = {\n          id,\n          name: normalizedName,\n          source: \"directory\",\n          workspacePath,\n          metadataPath: projectDir,\n          createdAt: timestamp,\n          lastOpenedAt: timestamp\n        };\n        await writeProjectMetadata(projectDir, project);\n        registry = { ...registry, projects: [...registry.projects, project] };\n        await saveRegistry(registryPath, registry);\n        return project;\n      } catch (error) {\n        await fs.rm(projectDir, { recursive: true, force: true });\n        throw error;\n      }\n    },\n    async importZip(name: string, archive: Buffer) {\n      const normalizedName = validateProjectName(name, registry.projects);\n      const id = nanoid(12);\n      const projectDir = path.join(projectsDir, id);\n      const workspacePath = path.join(workspacesRoot, id);\n      await fs.mkdir(projectDir, { recursive: true, mode: 0o700 });\n      try {\n        const { filteredEntries } = await extractZipArchive({\n          archive,\n          destination: workspacePath\n        });\n        const timestamp = new Date().toISOString();\n        const project: ProjectRecord = {\n          id,\n          name: normalizedName,\n          source: \"zip\",\n          workspacePath,\n          metadataPath: projectDir,\n          createdAt: timestamp,\n          lastOpenedAt: timestamp\n        };\n        await writeProjectMetadata(projectDir, project);\n        registry = { ...registry, projects: [...registry.projects, project] };\n        await saveRegistry(registryPath, registry);\n        return { project, filteredEntries };\n      } catch (error) {\n        await fs.rm(projectDir, { recursive: true, force: true });\n        throw error;\n      }\n    },\n    async markOpened(projectId: string) {\n      const project = registry.projects.find(\n        (candidate) => candidate.id === projectId\n      );\n      if (!project) throw new Error(\"Project not found\");\n      if (!(await pathExists(project.workspacePath))) {\n        registry = {\n          ...registry,\n          projects: registry.projects.filter(\n            (candidate) => candidate.id !== projectId\n          )\n        };\n        await saveRegistry(registryPath, registry);\n        throw new Error(\"Project not found\");\n      }\n      project.lastOpenedAt = new Date().toISOString();\n      await saveRegistry(registryPath, registry);\n      return project;\n    },\n    async deleteProject(projectId: string) {\n      if (projectId === \"demo\") {\n        throw new Error(\"Demo project cannot be deleted\");\n      }\n      const project = registry.projects.find(\n        (candidate) => candidate.id === projectId\n      );\n      if (!project) throw new Error(\"Project not found\");\n      const projectDir = resolveProjectDir(projectsDir, project.id);\n      await fs.rm(projectDir, { recursive: true, force: true });\n      await fs.rm(project.workspacePath, { recursive: true, force: true });\n      registry = {\n        ...registry,\n        projects: registry.projects.filter(\n          (candidate) => candidate.id !== projectId\n        )\n      };\n      await saveRegistry(registryPath, registry);\n      return project;\n    }\n  };\n}",
+          "sha256": "d8e8c810df4fe67542ad5421fbdcbba70dd3803822545a82a4cb4557f2f78cd3"
+        },
+        "fingerprint": {
+          "prefix": "cord, ProjectSource } from \"@simplercp/shared\";\n\ninterface RegistryFile {\n  version: 1;\n  projects: ProjectRecord[];\n}\n\n",
+          "suffix": "\n\nexport type ProjectRegistry = Awaited<ReturnType<typeof createProjectRegistry>>;\n\nasync function loadRegistry(registry",
+          "landmarkLines": [
+            "export async function createProjectRegistry({",
+            "dataDir,",
+            "workspacesDir,",
+            "importRoots,",
+            "demoProjectRoot"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I13",
+    "type": "risk",
+    "title": "活动记录分配 ISO 时间",
+    "summary": "append 为活动记录分配 id 和 ISO timestamp",
+    "content": "append 为活动记录分配 id 和 ISO timestamp。list 返回已有事件数组的副本。该规则适用于活动日志。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createEventLog"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/eventLog.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "16e8aa15-6dbe-4b03-9cdf-3ac4cbbce49c",
+        "file": {
+          "workspaceRelativePath": "src/extracted/eventLog.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 33,
+            "character": 0
+          },
+          "end": {
+            "line": 70,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createEventLog(storagePath?: string) {\n  const events: EventRecord[] = [];\n  let operations = Promise.resolve();\n  const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();\n\n  function enqueue(operation: () => Promise<void>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n  }\n\n  return {\n    append(input: EventInput) {\n      const event: EventRecord = redactSensitive({\n        id: nanoid(),\n        timestamp: new Date().toISOString(),\n        ...input\n      }) as EventRecord;\n      events.push(event);\n      if (storagePath && durableEventTypes.has(event.type)) {\n        enqueue(async () => {\n          await loading;\n          await writeJsonFileAtomically(storagePath, {\n            version: 1,\n            events: events.filter((candidate) => durableEventTypes.has(candidate.type))\n          } satisfies EventFile);\n        });\n      }\n      return event;\n    },\n    list() {\n      return [...events];\n    },\n    async awaitIdle() {\n      await loading;\n      await operations;\n    }\n  };\n}",
+          "sha256": "53d93199203e57841543c5977a5616954e6e0e73a3c58f4477ea8d487b89782d"
+        },
+        "fingerprint": {
+          "prefix": "nt_task_queued\",\n  \"agent_task_started\",\n  \"agent_task_completed\",\n  \"agent_task_failed\",\n  \"agent_task_cancelled\"\n]);\n\n",
+          "suffix": "\n\nexport type EventLog = ReturnType<typeof createEventLog>;\n\nasync function loadEvents(storagePath: string, events: Even",
+          "landmarkLines": [
+            "export function createEventLog(storagePath?: string) {",
+            "const events: EventRecord[] = [];",
+            "let operations = Promise.resolve();",
+            "const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();",
+            "function enqueue(operation: () => Promise<void>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I14",
+    "type": "context",
+    "title": "权限检查保留项目范围",
+    "summary": "权限判断接收 projectId 资源范围",
+    "content": "权限判断接收 projectId 资源范围。缺少项目成员时拒绝访问。这个规则适用于权限函数。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "requirePermission"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/permissions.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "5bd099d1-8cf9-4320-90b2-72cd6b1a508d",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/permissions.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 29,
+            "character": 0
+          },
+          "end": {
+            "line": 37,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function requirePermission(request: Request, response: Response, action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {\n  const identity = requireIdentity(request, response);\n  if (!identity) return undefined;\n  if (!can(identity, action, resource)) {\n    response.status(403).json({ error: \"Permission denied\" });\n    return undefined;\n  }\n  return identity;\n}",
+          "sha256": "e64f1c77eabdf9ed2a1d5c5414f90c0c08d962ad797dc10b8380a55b08d6f15d"
+        },
+        "fingerprint": {
+          "prefix": "nse.status(401).json({ error: \"Member identity is required\" });\n    return undefined;\n  }\n  return request.identity;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export function requirePermission(request: Request, response: Response, action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {",
+            "const identity = requireIdentity(request, response);",
+            "if (!identity) return undefined;",
+            "if (!can(identity, action, resource)) {",
+            "response.status(403).json({ error: \"Permission denied\" });"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I15",
+    "type": "negative",
+    "title": "成员记录支持更新显示信息",
+    "summary": "join 遇到已有 memberId 时更新 displayName 和 role",
+    "content": "join 遇到已有 memberId 时更新 displayName 和 role。新成员使用 randomUUID 分配标识，空白显示名称被拒绝。该规则适用于身份模块。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createMemberStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/identity.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "8a978d3e-6905-4f7b-b518-bb41db96e489",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/identity.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 22,
+            "character": 0
+          },
+          "end": {
+            "line": 125,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createMemberStore(options: { projects: () => ProjectRecord[] }) {\n  const cache = new Map<string, MemberFile>();\n  const loading = new Map<string, Promise<MemberFile>>();\n  let operations = Promise.resolve();\n\n  function enqueue<T>(operation: () => Promise<T>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n    return result;\n  }\n\n  function findProject(projectId: string) {\n    const project = options.projects().find((candidate) => candidate.id === projectId);\n    if (!project) throw new Error(\"Project not found\");\n    return project;\n  }\n\n  function projectDataPath(project: ProjectRecord) {\n    return getProjectMetadataPath(project);\n  }\n\n  async function load(projectId: string) {\n    const cached = cache.get(projectId);\n    if (cached) return cached;\n    const pending = loading.get(projectId);\n    if (pending) return pending;\n    const operation = loadFile(projectId);\n    loading.set(projectId, operation);\n    try { return await operation; }\n    finally { loading.delete(projectId); }\n  }\n\n  async function loadFile(projectId: string) {\n    const project = findProject(projectId);\n    const stored = await readJsonFile<MemberFile>(path.join(projectDataPath(project), \"members.json\"));\n    if (stored && (stored.version !== 1 || !Array.isArray(stored.members))) throw new Error(\"Invalid member file\");\n    const legacy = stored === undefined\n      ? await readJsonFile<{ version: 1; participants: Array<{ id: string; displayName: string; profileRole?: string; createdAt: string; updatedAt: string }> }>(path.join(projectDataPath(project), \"participants.json\"))\n      : undefined;\n    const records = stored?.members ?? legacy?.participants.map((member) => ({\n      memberId: member.id, projectId, displayName: member.displayName, role: member.profileRole ?? \"\", createdAt: member.createdAt, updatedAt: member.updatedAt\n    })) ?? [];\n    const file: MemberFile = { version: 1, members: records.map((member) => ({\n      memberId: member.memberId, projectId: member.projectId, displayName: member.displayName,\n      role: member.role ?? \"\", createdAt: member.createdAt, updatedAt: member.updatedAt ?? member.createdAt\n    })) };\n    if (file.members.some((member) => !member.memberId || member.projectId !== projectId || typeof member.displayName !== \"string\" || typeof member.role !== \"string\")) throw new Error(\"Invalid member record\");\n    if (legacy || (stored && JSON.stringify(stored) !== JSON.stringify(file))) await save(projectId, file);\n    cache.set(projectId, file);\n    return file;\n  }\n\n  async function save(projectId: string, file: MemberFile) {\n    const project = findProject(projectId);\n    await writeJsonFileAtomically(path.join(projectDataPath(project), \"members.json\"), file, 0o600);\n    cache.set(projectId, file);\n  }\n\n  return {\n    async join(projectId: string, input: { memberId?: string; displayName: string; role?: string }) {\n      return enqueue(async () => {\n        const displayName = input.displayName.trim();\n        if (!displayName) throw new Error(\"name is required\");\n        const file = await load(projectId);\n        const now = new Date().toISOString();\n        if (input.memberId) {\n          const index = file.members.findIndex((member) => member.memberId === input.memberId);\n          if (index >= 0) {\n            const current = file.members[index]!;\n            const member = { ...current, displayName, role: input.role?.trim() ?? current.role, updatedAt: now };\n            file.members[index] = member;\n            await save(projectId, file);\n            return member;\n          }\n        }\n        const member: MemberRecord = {\n          memberId: crypto.randomUUID(),\n          projectId,\n          displayName,\n          role: input.role?.trim() ?? \"\",\n          createdAt: now,\n          updatedAt: now\n        };\n        await save(projectId, { version: 1, members: [...file.members, member] });\n        return member;\n      });\n    },\n    async getMember(projectId: string, memberId: string) {\n      return (await load(projectId)).members.find((member) => member.memberId === memberId);\n    },\n    async listMembers(projectId: string) {\n      return (await load(projectId)).members.map((member) => ({ ...member }));\n    },\n    async resolveIdentity(projectId: string, memberId: string) {\n      return (await load(projectId)).members.find((member) => member.memberId === memberId);\n    },\n    async findIdentity(memberId: string) {\n      for (const project of options.projects()) {\n        const member = (await load(project.id)).members.find((candidate) => candidate.memberId === memberId);\n        if (member) return member;\n      }\n    }\n  };\n}",
+          "sha256": "cb9038558e290b2c0bb493db72fcd2a32354c6a7c9bb891e8f35288f66e90590"
+        },
+        "fingerprint": {
+          "prefix": "\"projectId\" | \"memberId\" | \"displayName\" | \"role\">;\n\ninterface MemberFile {\n  version: 1;\n  members: MemberRecord[];\n}\n\n",
+          "suffix": "\n\nexport type MemberStore = ReturnType<typeof createMemberStore>;\n\nexport function createIdentityMiddleware(options: {\n ",
+          "landmarkLines": [
+            "export function createMemberStore(options: { projects: () => ProjectRecord[] }) {",
+            "const cache = new Map<string, MemberFile>();",
+            "const loading = new Map<string, Promise<MemberFile>>();",
+            "let operations = Promise.resolve();",
+            "function enqueue<T>(operation: () => Promise<T>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I16",
+    "type": "tutorial",
+    "title": "存储文件写入前创建父目录",
+    "summary": "JSON 文件写入前递归创建父目录",
+    "content": "JSON 文件写入前递归创建父目录。文件内容使用两个空格缩进，并以换行结束。这个规则适用于本地存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "writeJsonFileAtomically"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/jsonFile.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "eede4bda-a9b1-43cf-9e4c-e44a8b79a029",
+        "file": {
+          "workspaceRelativePath": "src/extracted/jsonFile.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {\n  await fs.mkdir(path.dirname(storagePath), { recursive: true });\n  const nextPath = `${storagePath}.${nanoid(8)}.next`;\n  await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });\n  await fs.chmod(nextPath, mode);\n  await fs.rename(nextPath, storagePath);\n}",
+          "sha256": "ac62daa59da7a8c98fd86b3a9a7fa934bbf7f05764694d8128ddde0cdd791c3e"
+        },
+        "fingerprint": {
+          "prefix": "} catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return undefined;\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {",
+            "await fs.mkdir(path.dirname(storagePath), { recursive: true });",
+            "const nextPath = `${storagePath}.${nanoid(8)}.next`;",
+            "await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });",
+            "await fs.chmod(nextPath, mode);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I17",
+    "type": "risk",
+    "title": "聊天更新只改变关联字段",
+    "summary": "聊天更新接口只允许修改 mentions、agentSessionId 和 runId",
+    "content": "聊天更新接口只允许修改 mentions、agentSessionId 和 runId。正文和作者字段保持原样。该规则适用于消息更新。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createChatStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/chat.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "fc74cffe-0ec2-41a5-922f-4409a454f755",
+        "file": {
+          "workspaceRelativePath": "src/extracted/chat.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 110,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createChatStore(\n  events: EventLog,\n  options: { storagePath?: string } = {}\n) {\n  let messages: ChatMessage[] = [];\n  let operations: Promise<void> | undefined;\n  const listeners = new Set<(message: ChatMessage) => void>();\n\n  function ensureLoaded() {\n    operations ??= loadMessages(options.storagePath).then((loaded) => {\n      messages = loaded;\n    });\n    return operations;\n  }\n\n  return {\n    async createMessage(input: CreateChatMessageInput) {\n      let created: ChatMessage | undefined;\n      const creation = ensureLoaded().then(async () => {\n        const message: ChatMessage = {\n          sequence: (messages.at(-1)?.sequence ?? 0) + 1,\n          id: nanoid(10),\n          timestamp: new Date().toISOString(),\n          roomId: input.roomId,\n          authorId: input.authorId,\n          authorName: input.authorName,\n          authorRole: input.authorRole,\n          agentSessionId: input.agentSessionId,\n          runId: input.runId,\n          mentions: input.mentions,\n          kind: input.kind ?? \"member\",\n          text: String(redactSensitive(input.text))\n        };\n        const nextMessages = [...messages, message];\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        events.append({\n          type: \"chat_message_created\",\n          roomId: message.roomId,\n          memberId: message.authorId,\n          payload: {\n            messageId: message.id,\n            authorName: message.authorName,\n            ...(message.authorRole ? { authorRole: message.authorRole } : {}),\n            text: message.text\n          }\n        });\n        created = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = creation;\n      await creation;\n      if (!created) throw new Error(\"Chat message was not created\");\n      return created;\n    },\n    async listMessages(roomId: string) {\n      await ensureLoaded();\n      return messages.map((message) => ({ ...message, roomId }));\n    },\n    async updateMessage(messageId: string, update: Partial<Pick<ChatMessage, \"mentions\" | \"agentSessionId\" | \"runId\">>) {\n      let updated: ChatMessage | undefined;\n      const operation = ensureLoaded().then(async () => {\n        const index = messages.findIndex((message) => message.id === messageId);\n        if (index < 0) throw new Error(\"Chat message not found\");\n        const current = messages[index];\n        if (!current) throw new Error(\"Chat message not found\");\n        const message: ChatMessage = { ...current, ...update };\n        const nextMessages = [...messages];\n        nextMessages[index] = message;\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        updated = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = operation;\n      await operation;\n      if (!updated) throw new Error(\"Chat message was not updated\");\n      return updated;\n    },\n    onMessage(listener: (message: ChatMessage) => void) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n    async awaitIdle() {\n      await ensureLoaded();\n    }\n  };\n}",
+          "sha256": "25faab770fcbcc14bd6752116552641eb5a3374e2eefac86b5e8cfa5b00ddc15"
+        },
+        "fingerprint": {
+          "prefix": "?: string;\n  runId?: string;\n  mentions?: string[];\n}\n\ninterface ChatFile {\n  version: 1;\n  messages: ChatMessage[];\n}\n\n",
+          "suffix": "\n\nexport type ChatStore = ReturnType<typeof createChatStore>;\n\nasync function loadMessages(storagePath?: string): Promis",
+          "landmarkLines": [
+            "export function createChatStore(",
+            "events: EventLog,",
+            "options: { storagePath?: string } = {}",
+            ") {",
+            "let messages: ChatMessage[] = [];"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I18",
+    "type": "context",
+    "title": "run 更新保留原始 id",
+    "summary": "运行记录更新时始终保留原始 id",
+    "content": "运行记录更新时始终保留原始 id。传入更新对象不能替换标识。这个规则适用于记录存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createAgentRunStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/agent/agentRunStore.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "de4ecaa8-5710-4f48-81bc-06e7e06eddca",
+        "file": {
+          "workspaceRelativePath": "src/extracted/agent/agentRunStore.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 5,
+            "character": 0
+          },
+          "end": {
+            "line": 40,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createAgentRunStore(projectId: string, projectRoot: string) {\n  const runsRoot = path.join(projectRoot, \"agent-runs\");\n  const records = createRecordStore<AgentRun>({\n    root: runsRoot,\n    projectId,\n    fileName: \"run.json\",\n    recordKey: \"run\",\n    invalidMessage: \"Invalid Agent run file\",\n    missingMessage: \"Agent run not found\",\n    validateRecord(value): value is AgentRun {\n      if (!value || typeof value !== \"object\") return false;\n      const run = value as Record<string, unknown>;\n      return typeof run.id === \"string\" && typeof run.projectId === \"string\";\n    }\n  });\n\n  return {\n    runsRoot,\n    create(input: Omit<AgentRun, \"id\" | \"createdAt\">, id = nanoid(12)) {\n      return records.create({\n        ...input,\n        id,\n        createdAt: new Date().toISOString()\n      });\n    },\n    get: records.get,\n    async list() {\n      return (await records.list()).sort((left, right) =>\n        right.createdAt.localeCompare(left.createdAt)\n      );\n    },\n    update(runId: string, update: Partial<AgentRun>) {\n      return records.update(runId, (current) => ({ ...current, ...update, id: current.id }));\n    }\n  };\n}",
+          "sha256": "f2a8ba3878a7694064f29eb414f9a5e218c86557a393156722aed6e1fc262eb6"
+        },
+        "fingerprint": {
+          "prefix": "Run } from \"@simplercp/shared\";\nimport { nanoid } from \"nanoid\";\nimport { createRecordStore } from \"./recordStore.js\";\n\n",
+          "suffix": "\n\nexport type AgentRunStore = ReturnType<typeof createAgentRunStore>;\n",
+          "landmarkLines": [
+            "export function createAgentRunStore(projectId: string, projectRoot: string) {",
+            "const runsRoot = path.join(projectRoot, \"agent-runs\");",
+            "const records = createRecordStore<AgentRun>({",
+            "root: runsRoot,",
+            "projectId,"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I19",
+    "type": "negative",
+    "title": "路径使用平台分隔符",
+    "summary": "文件路径由 node:path 组合，避免手写分隔符",
+    "content": "文件路径由 node:path 组合，避免手写分隔符。路径输出在当前系统上保持有效。该规则适用于文件模块。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "writeJsonFileAtomically"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/jsonFile.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "94523d7b-d456-4479-8e02-dfa3aad1cdb4",
+        "file": {
+          "workspaceRelativePath": "src/extracted/jsonFile.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {\n  await fs.mkdir(path.dirname(storagePath), { recursive: true });\n  const nextPath = `${storagePath}.${nanoid(8)}.next`;\n  await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });\n  await fs.chmod(nextPath, mode);\n  await fs.rename(nextPath, storagePath);\n}",
+          "sha256": "ac62daa59da7a8c98fd86b3a9a7fa934bbf7f05764694d8128ddde0cdd791c3e"
+        },
+        "fingerprint": {
+          "prefix": "} catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return undefined;\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {",
+            "await fs.mkdir(path.dirname(storagePath), { recursive: true });",
+            "const nextPath = `${storagePath}.${nanoid(8)}.next`;",
+            "await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });",
+            "await fs.chmod(nextPath, mode);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I20",
+    "type": "tutorial",
+    "title": "房间记录事件类型固定",
+    "summary": "房间加入和离开事件使用固定 type 字段",
+    "content": "房间加入和离开事件使用固定 type 字段。事件 payload 保留房间和成员信息。这个规则适用于协作模块。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createRoomStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/rooms.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a3f07b0c-c727-49da-b868-0384b3c6d93f",
+        "file": {
+          "workspaceRelativePath": "src/extracted/rooms.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 256,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createRoomStore(events: EventLog) {\n  const rooms = new Map<string, RoomState>();\n\n  return {\n    createRoom(workspaceRoot: string, workspaceName = path.basename(workspaceRoot)) {\n      const room: RoomState = {\n        id: nanoid(10),\n        workspaceName,\n        members: [],\n        connections: []\n      };\n      rooms.set(room.id, room);\n      events.append({\n        type: \"room_created\",\n        roomId: room.id,\n        payload: { workspaceName: room.workspaceName }\n      });\n      return room;\n    },\n    getRoom(roomId: string) {\n      return rooms.get(roomId);\n    },\n    joinRoom(roomId: string, input: JoinRoomInput) {\n      const room = rooms.get(roomId);\n      if (!room) {\n        throw new Error(\"Room not found\");\n      }\n\n      const normalized = normalizeJoinInput(input);\n      const now = new Date().toISOString();\n      const existing = findExistingMember(room.members, normalized);\n      if (existing) {\n        existing.name = normalized.name;\n        existing.participantId = normalized.participantId;\n        existing.profileRole = normalized.profileRole;\n        upsertConnection(room, {\n          id: normalized.connectionId,\n          participantId: existing.participantId,\n          roomId,\n          online: true,\n          lastSeenAt: now\n        });\n        syncMemberFromConnections(room, existing, now);\n        refreshDisplayNames(room);\n        events.append({\n          type: \"member_rejoined\",\n          roomId,\n          memberId: existing.id,\n          payload: {\n            name: existing.name,\n            participantId: existing.participantId,\n            connectionId: normalized.connectionId,\n            connectionCount: existing.connectionCount\n          }\n        });\n        return existing;\n      }\n\n      const member: RoomMember = {\n        id: input.memberId ?? nanoid(10),\n        participantId: normalized.participantId,\n        name: normalized.name,\n        displayName: normalized.name,\n        online: true,\n        lastSeenAt: now,\n        connectionCount: 1,\n        profileRole: normalized.profileRole\n      };\n      room.members.push(member);\n      upsertConnection(room, {\n        id: normalized.connectionId,\n        participantId: member.participantId,\n        roomId,\n        online: true,\n        lastSeenAt: now\n      });\n      refreshDisplayNames(room);\n      events.append({\n        type: \"member_joined\",\n        roomId,\n        memberId: member.id,\n        payload: {\n          name: member.name,\n          participantId: member.participantId,\n          connectionId: normalized.connectionId\n        }\n      });\n      return member;\n    },\n    markOnline(roomId: string, memberId: string, now = new Date()) {\n      const member = findMember(rooms, roomId, memberId);\n      const wasOnline = member.online;\n      member.online = true;\n      member.lastSeenAt = now.toISOString();\n      if (!wasOnline) {\n        events.append({\n          type: \"member_online\",\n          roomId,\n          memberId,\n          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }\n        });\n      }\n      return member;\n    },\n    markConnectionOnline(roomId: string, connectionId: string, now = new Date()) {\n      const room = findRoom(rooms, roomId);\n      const connection = room.connections.find(\n        (candidate) => candidate.id === connectionId\n      );\n      if (!connection) {\n        throw new Error(\"Connection not found\");\n      }\n      const member = room.members.find(\n        (candidate) => candidate.participantId === connection.participantId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n      const wasOnline = member.online;\n      connection.online = true;\n      connection.lastSeenAt = now.toISOString();\n      syncMemberFromConnections(room, member, now.toISOString());\n      if (!wasOnline && member.online) {\n        events.append({\n          type: \"member_online\",\n          roomId,\n          memberId: member.id,\n          payload: {\n            name: member.displayName,\n            connectionId,\n            lastSeenAt: member.lastSeenAt\n          }\n        });\n      }\n      return member;\n    },\n    markOffline(roomId: string, memberId: string, now = new Date()) {\n      const member = findMember(rooms, roomId, memberId);\n      const wasOnline = member.online;\n      member.online = false;\n      member.lastSeenAt = now.toISOString();\n      if (wasOnline) {\n        events.append({\n          type: \"member_offline\",\n          roomId,\n          memberId,\n          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }\n        });\n      }\n      return member;\n    },\n    markConnectionOffline(roomId: string, connectionId: string, now = new Date()) {\n      const room = findRoom(rooms, roomId);\n      const connection = room.connections.find(\n        (candidate) => candidate.id === connectionId\n      );\n      if (!connection) {\n        throw new Error(\"Connection not found\");\n      }\n      const member = room.members.find(\n        (candidate) => candidate.participantId === connection.participantId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n      const wasOnline = member.online;\n      connection.online = false;\n      connection.lastSeenAt = now.toISOString();\n      syncMemberFromConnections(room, member, now.toISOString());\n      if (wasOnline && !member.online) {\n        events.append({\n          type: \"member_offline\",\n          roomId,\n          memberId: member.id,\n          payload: {\n            name: member.displayName,\n            connectionId,\n            lastSeenAt: member.lastSeenAt\n          }\n        });\n      }\n      return member;\n    },\n    cleanupStaleMembers(roomId: string, now = new Date(), ttlMs = 120_000) {\n      const room = findRoom(rooms, roomId);\n\n      const before = room.members.length;\n      room.connections = room.connections.filter((connection) => {\n        if (connection.online) return true;\n        return now.getTime() - new Date(connection.lastSeenAt).getTime() <= ttlMs;\n      });\n      for (const member of room.members) {\n        syncMemberFromConnections(room, member, member.lastSeenAt);\n      }\n      room.members = room.members.filter((member) => {\n        if (member.online) return true;\n        return now.getTime() - new Date(member.lastSeenAt).getTime() <= ttlMs;\n      });\n\n      if (room.members.length !== before) {\n        events.append({\n          type: \"member_removed\",\n          roomId,\n          payload: { removed: before - room.members.length }\n        });\n      }\n\n      return room.members;\n    },\n    updatePresence(\n      roomId: string,\n      memberId: string,\n      patch: Pick<RoomMember, \"currentFile\"> & { connectionId?: string }\n    ) {\n      const room = findRoom(rooms, roomId);\n      const member = room.members.find(\n        (candidate) => candidate.id === memberId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n\n      if (patch.connectionId) {\n        const connection = room.connections.find(\n          (candidate) => candidate.id === patch.connectionId\n        );\n        if (connection) {\n          connection.currentFile = patch.currentFile;\n          connection.lastSeenAt = new Date().toISOString();\n        }\n      }\n      member.currentFile = patch.currentFile;\n      return member;\n    },\n    getMember(roomId: string, memberId: string) {\n      return rooms\n        .get(roomId)\n        ?.members.find((member) => member.id === memberId);\n    },\n    listRooms() {\n      return [...rooms.values()];\n    }\n  };\n}",
+          "sha256": "c3dc7c863ec21d9919e41a3f68880f31947ab67457831b3a6e186bfffd122a0f"
+        },
+        "fingerprint": {
+          "prefix": "ut {\n  memberId?: string;\n  name: string;\n  participantId?: string;\n  connectionId?: string;\n  profileRole?: string;\n}\n\n",
+          "suffix": "\n\nexport type RoomStore = ReturnType<typeof createRoomStore>;\n\ntype NormalizedJoinInput = Required<Pick<JoinRoomInput, \"",
+          "landmarkLines": [
+            "export function createRoomStore(events: EventLog) {",
+            "const rooms = new Map<string, RoomState>();",
+            "return {",
+            "createRoom(workspaceRoot: string, workspaceName = path.basename(workspaceRoot)) {",
+            "const room: RoomState = {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I21",
+    "type": "risk",
+    "title": "Agent 环境不继承内部字段",
+    "summary": "Agent 子进程环境只保留允许的公开字段",
+    "content": "Agent 子进程环境只保留允许的公开字段。内部通信参数不会传入子进程。该规则适用于环境构造。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "agentEnv"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/processEnv.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "494e34e9-5cb5-450d-8ea9-4efafb46f7ef",
+        "file": {
+          "workspaceRelativePath": "src/extracted/processEnv.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 22,
+            "character": 0
+          },
+          "end": {
+            "line": 24,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function agentEnv(env: NodeJS.ProcessEnv = process.env) {\n  return buildEnvironment(env, [\"DEEPSEEK_API_KEY\", \"DEEPSEEK_BASE_URL\", \"DEEPSEEK_MODEL\", ...(env.SIMPLERCP_AGENT_ENV_ALLOW ?? \"\").split(\",\").map((name) => name.trim())], true);\n}",
+          "sha256": "f648fa23c62cecdf3a8d0ff4f00f20ea6e45754b3c681ce5c4cbf9dbb885bace"
+        },
+        "fingerprint": {
+          "prefix": "return buildEnvironment(env, (env.SIMPLERCP_TERMINAL_ENV_ALLOW ?? \"\").split(\",\").map((name) => name.trim()), false);\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export function agentEnv(env: NodeJS.ProcessEnv = process.env) {",
+            "return buildEnvironment(env, [\"DEEPSEEK_API_KEY\", \"DEEPSEEK_BASE_URL\", \"DEEPSEEK_MODEL\", ...(env.SIMPLERCP_AGENT_ENV_ALLOW ?? \"\").split(\",\").map((name) => name.trim())], true);",
+            "}"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I22",
+    "type": "context",
+    "title": "配置端口必须是数字",
+    "summary": "配置端口解析为正整数",
+    "content": "配置端口解析为正整数。非法端口会立即抛出错误。这个规则适用于服务器配置。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "loadConfig"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/config.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "b36f6a30-108e-4113-bbf7-5c083b66b416",
+        "file": {
+          "workspaceRelativePath": "src/extracted/config.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 24,
+            "character": 0
+          },
+          "end": {
+            "line": 96,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function loadConfig(\n  env: NodeJS.ProcessEnv = process.env,\n  repositoryRoot = defaultRepositoryRoot\n): ServerConfig {\n  const port = Number(env.PORT ?? 4000);\n  if (!Number.isInteger(port) || port < 1 || port > 65_535) {\n    throw new Error(\"PORT must be an integer between 1 and 65535\");\n  }\n\n  const configuredDataDir = env.SIMPLERCP_DATA_DIR?.trim() || undefined;\n  if (configuredDataDir && !path.isAbsolute(configuredDataDir)) {\n    throw new Error(\"SIMPLERCP_DATA_DIR must be an absolute path\");\n  }\n\n  const publicOrigin = env.SIMPLERCP_PUBLIC_URL ?? \"http://127.0.0.1:5173\";\n  const publicUrl = new URL(publicOrigin);\n  if (![\"http:\", \"https:\"].includes(publicUrl.protocol)) {\n    throw new Error(\"SIMPLERCP_PUBLIC_URL must use http or https\");\n  }\n\n  const agentBaseUrl = new URL(\n    env.DEEPSEEK_BASE_URL ?? \"https://api.deepseek.com/v1\"\n  );\n  if (![\"http:\", \"https:\"].includes(agentBaseUrl.protocol)) {\n    throw new Error(\"DEEPSEEK_BASE_URL must use http or https\");\n  }\n  const agentModel = env.DEEPSEEK_MODEL?.trim() || \"deepseek-chat\";\n  const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);\n  if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {\n    throw new Error(\"SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535\");\n  }\n  const runTimeoutMs = Number(env.SIMPLERCP_AGENT_RUN_TIMEOUT_MS ?? 600_000);\n  if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 1) {\n    throw new Error(\"SIMPLERCP_AGENT_RUN_TIMEOUT_MS must be a positive integer\");\n  }\n  const terminalEnabled = readBoolean(\n    env.SIMPLERCP_TERMINAL_ENABLED,\n    \"SIMPLERCP_TERMINAL_ENABLED\",\n    true\n  );\n  const fakeAgentRuntime = readBoolean(\n    env.SIMPLERCP_FAKE_AGENT_RUNTIME,\n    \"SIMPLERCP_FAKE_AGENT_RUNTIME\",\n    false\n  );\n  const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()\n    ? undefined\n    : env.SIMPLERCP_IMPORT_ROOTS.split(\",\").map((value) => value.trim()).filter(Boolean);\n  if (importRoots?.some((root) => !path.isAbsolute(root))) throw new Error(\"SIMPLERCP_IMPORT_ROOTS must contain absolute paths\");\n  const dataDir = configuredDataDir ?? path.resolve(repositoryRoot, \".simplercp-data\");\n  const workspacesDir = env.SIMPLERCP_WORKSPACES_DIR?.trim() || path.join(dataDir, \"workspaces\");\n  if (!path.isAbsolute(workspacesDir)) throw new Error(\"SIMPLERCP_WORKSPACES_DIR must be an absolute path\");\n\n  const config: ServerConfig = {\n    port,\n    host: env.SIMPLERCP_HOST ?? \"127.0.0.1\",\n    publicOrigin: publicUrl.origin,\n    dataDir,\n    workspacesDir,\n    importRoots,\n    demoProjectRoot: path.resolve(repositoryRoot, \"demo/workspace\"),\n    terminalEnabled,\n    fakeAgentRuntime,\n    agent: {\n      apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,\n      baseUrl: agentBaseUrl.toString().replace(/\\/$/, \"\"),\n      model: agentModel,\n      openCodePort,\n      runTimeoutMs\n    }\n  };\n  return config;\n}",
+          "sha256": "d381b14dd441789265c2f38cca64f67c71fca83dbde4c181d363bcd1f3182b33"
+        },
+        "fingerprint": {
+          "prefix": " apiKey?: string;\n    baseUrl: string;\n    model: string;\n    openCodePort?: number;\n    runTimeoutMs?: number;\n  };\n}\n\n",
+          "suffix": "\n\nfunction readBoolean(\n  value: string | undefined,\n  name: string,\n  defaultValue: boolean\n) {\n  if (value === undefin",
+          "landmarkLines": [
+            "export function loadConfig(",
+            "env: NodeJS.ProcessEnv = process.env,",
+            "repositoryRoot = defaultRepositoryRoot",
+            "): ServerConfig {",
+            "const port = Number(env.PORT ?? 4000);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I23",
+    "type": "negative",
+    "title": "历史消息复制后返回",
+    "summary": "读取聊天消息时返回新数组和新对象",
+    "content": "读取聊天消息时返回新数组和新对象。调用方修改结果不会改变存储。该规则适用于读取接口。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createChatStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/chat.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "6022fcf3-7ab7-48c5-b2a8-7791ea26f3df",
+        "file": {
+          "workspaceRelativePath": "src/extracted/chat.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 110,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createChatStore(\n  events: EventLog,\n  options: { storagePath?: string } = {}\n) {\n  let messages: ChatMessage[] = [];\n  let operations: Promise<void> | undefined;\n  const listeners = new Set<(message: ChatMessage) => void>();\n\n  function ensureLoaded() {\n    operations ??= loadMessages(options.storagePath).then((loaded) => {\n      messages = loaded;\n    });\n    return operations;\n  }\n\n  return {\n    async createMessage(input: CreateChatMessageInput) {\n      let created: ChatMessage | undefined;\n      const creation = ensureLoaded().then(async () => {\n        const message: ChatMessage = {\n          sequence: (messages.at(-1)?.sequence ?? 0) + 1,\n          id: nanoid(10),\n          timestamp: new Date().toISOString(),\n          roomId: input.roomId,\n          authorId: input.authorId,\n          authorName: input.authorName,\n          authorRole: input.authorRole,\n          agentSessionId: input.agentSessionId,\n          runId: input.runId,\n          mentions: input.mentions,\n          kind: input.kind ?? \"member\",\n          text: String(redactSensitive(input.text))\n        };\n        const nextMessages = [...messages, message];\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        events.append({\n          type: \"chat_message_created\",\n          roomId: message.roomId,\n          memberId: message.authorId,\n          payload: {\n            messageId: message.id,\n            authorName: message.authorName,\n            ...(message.authorRole ? { authorRole: message.authorRole } : {}),\n            text: message.text\n          }\n        });\n        created = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = creation;\n      await creation;\n      if (!created) throw new Error(\"Chat message was not created\");\n      return created;\n    },\n    async listMessages(roomId: string) {\n      await ensureLoaded();\n      return messages.map((message) => ({ ...message, roomId }));\n    },\n    async updateMessage(messageId: string, update: Partial<Pick<ChatMessage, \"mentions\" | \"agentSessionId\" | \"runId\">>) {\n      let updated: ChatMessage | undefined;\n      const operation = ensureLoaded().then(async () => {\n        const index = messages.findIndex((message) => message.id === messageId);\n        if (index < 0) throw new Error(\"Chat message not found\");\n        const current = messages[index];\n        if (!current) throw new Error(\"Chat message not found\");\n        const message: ChatMessage = { ...current, ...update };\n        const nextMessages = [...messages];\n        nextMessages[index] = message;\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        updated = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = operation;\n      await operation;\n      if (!updated) throw new Error(\"Chat message was not updated\");\n      return updated;\n    },\n    onMessage(listener: (message: ChatMessage) => void) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n    async awaitIdle() {\n      await ensureLoaded();\n    }\n  };\n}",
+          "sha256": "25faab770fcbcc14bd6752116552641eb5a3374e2eefac86b5e8cfa5b00ddc15"
+        },
+        "fingerprint": {
+          "prefix": "?: string;\n  runId?: string;\n  mentions?: string[];\n}\n\ninterface ChatFile {\n  version: 1;\n  messages: ChatMessage[];\n}\n\n",
+          "suffix": "\n\nexport type ChatStore = ReturnType<typeof createChatStore>;\n\nasync function loadMessages(storagePath?: string): Promis",
+          "landmarkLines": [
+            "export function createChatStore(",
+            "events: EventLog,",
+            "options: { storagePath?: string } = {}",
+            ") {",
+            "let messages: ChatMessage[] = [];"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I24",
+    "type": "tutorial",
+    "title": "记录存储拒绝无效 JSON",
+    "summary": "记录文件读取后需要检查对象结构",
+    "content": "记录文件读取后需要检查对象结构。无效内容抛出模块定义的错误信息。这个规则适用于运行记录。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createRecordStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/agent/recordStore.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "e9363e1d-b031-4f14-9953-406a02d35f88",
+        "file": {
+          "workspaceRelativePath": "src/extracted/agent/recordStore.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 14,
+            "character": 0
+          },
+          "end": {
+            "line": 94,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createRecordStore<T extends { id: string; projectId: string }>(\n  options: RecordStoreOptions<T>\n) {\n  const records = new Map<string, T>();\n  let loading: Promise<void> | undefined;\n  let operations = Promise.resolve();\n\n  async function load() {\n    for (const entry of await readDirectory(options.root)) {\n      if (!entry.isDirectory()) continue;\n      const stored = await readJsonFile<Record<string, unknown>>(\n        path.join(options.root, entry.name, options.fileName)\n      );\n      const value = stored?.[options.recordKey];\n      if (\n        stored?.version !== 1 ||\n        !options.validateRecord(value) ||\n        value.projectId !== options.projectId ||\n        value.id !== entry.name\n      ) {\n        throw new Error(options.invalidMessage);\n      }\n      records.set(value.id, value);\n    }\n  }\n\n  function ensureLoaded() {\n    loading ??= load();\n    return loading;\n  }\n\n  function enqueue<R>(operation: () => Promise<R>): Promise<R> {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n    return result;\n  }\n\n  async function save(record: T) {\n    await writeJsonFileAtomically(\n      path.join(options.root, record.id, options.fileName),\n      { version: 1, [options.recordKey]: record }\n    );\n  }\n\n  return {\n    async create(record: T) {\n      await ensureLoaded();\n      return enqueue(async () => {\n        if (records.has(record.id)) throw new Error(options.invalidMessage);\n        await save(record);\n        records.set(record.id, record);\n        return { ...record };\n      });\n    },\n    async get(id: string) {\n      await ensureLoaded();\n      await operations;\n      const record = records.get(id);\n      return record ? { ...record } : undefined;\n    },\n    async list() {\n      await ensureLoaded();\n      await operations;\n      return [...records.values()].map((record) => ({ ...record }));\n    },\n    async update(id: string, change: (current: T) => T) {\n      await ensureLoaded();\n      return enqueue(async () => {\n        const current = records.get(id);\n        if (!current) throw new Error(options.missingMessage);\n        const next = change(current);\n        if (next.id !== id || next.projectId !== options.projectId) {\n          throw new Error(options.invalidMessage);\n        }\n        await save(next);\n        records.set(id, next);\n        return { ...next };\n      });\n    }\n  };\n}",
+          "sha256": "a9e75c1c3afaa65d0439ae64245c7daa8a6b52e29cabfed0d9562db145afdc41"
+        },
+        "fingerprint": {
+          "prefix": "recordKey: string;\n  invalidMessage: string;\n  missingMessage: string;\n  validateRecord(value: unknown): value is T;\n}\n\n",
+          "suffix": "\n\nasync function readDirectory(directoryPath: string) {\n  try {\n    return await fs.readdir(directoryPath, { withFileTyp",
+          "landmarkLines": [
+            "export function createRecordStore<T extends { id: string; projectId: string }>(",
+            "options: RecordStoreOptions<T>",
+            ") {",
+            "const records = new Map<string, T>();",
+            "let loading: Promise<void> | undefined;"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-I25",
+    "type": "risk",
+    "title": "房间标识用于消息关联",
+    "summary": "房间标识用于关联聊天消息和成员事件",
+    "content": "房间标识用于关联聊天消息和成员事件。读取历史时保留关联字段。该规则适用于协作数据。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createRoomStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/rooms.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "aa774691-7067-488c-b1a1-522662f150a7",
+        "file": {
+          "workspaceRelativePath": "src/extracted/rooms.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 256,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createRoomStore(events: EventLog) {\n  const rooms = new Map<string, RoomState>();\n\n  return {\n    createRoom(workspaceRoot: string, workspaceName = path.basename(workspaceRoot)) {\n      const room: RoomState = {\n        id: nanoid(10),\n        workspaceName,\n        members: [],\n        connections: []\n      };\n      rooms.set(room.id, room);\n      events.append({\n        type: \"room_created\",\n        roomId: room.id,\n        payload: { workspaceName: room.workspaceName }\n      });\n      return room;\n    },\n    getRoom(roomId: string) {\n      return rooms.get(roomId);\n    },\n    joinRoom(roomId: string, input: JoinRoomInput) {\n      const room = rooms.get(roomId);\n      if (!room) {\n        throw new Error(\"Room not found\");\n      }\n\n      const normalized = normalizeJoinInput(input);\n      const now = new Date().toISOString();\n      const existing = findExistingMember(room.members, normalized);\n      if (existing) {\n        existing.name = normalized.name;\n        existing.participantId = normalized.participantId;\n        existing.profileRole = normalized.profileRole;\n        upsertConnection(room, {\n          id: normalized.connectionId,\n          participantId: existing.participantId,\n          roomId,\n          online: true,\n          lastSeenAt: now\n        });\n        syncMemberFromConnections(room, existing, now);\n        refreshDisplayNames(room);\n        events.append({\n          type: \"member_rejoined\",\n          roomId,\n          memberId: existing.id,\n          payload: {\n            name: existing.name,\n            participantId: existing.participantId,\n            connectionId: normalized.connectionId,\n            connectionCount: existing.connectionCount\n          }\n        });\n        return existing;\n      }\n\n      const member: RoomMember = {\n        id: input.memberId ?? nanoid(10),\n        participantId: normalized.participantId,\n        name: normalized.name,\n        displayName: normalized.name,\n        online: true,\n        lastSeenAt: now,\n        connectionCount: 1,\n        profileRole: normalized.profileRole\n      };\n      room.members.push(member);\n      upsertConnection(room, {\n        id: normalized.connectionId,\n        participantId: member.participantId,\n        roomId,\n        online: true,\n        lastSeenAt: now\n      });\n      refreshDisplayNames(room);\n      events.append({\n        type: \"member_joined\",\n        roomId,\n        memberId: member.id,\n        payload: {\n          name: member.name,\n          participantId: member.participantId,\n          connectionId: normalized.connectionId\n        }\n      });\n      return member;\n    },\n    markOnline(roomId: string, memberId: string, now = new Date()) {\n      const member = findMember(rooms, roomId, memberId);\n      const wasOnline = member.online;\n      member.online = true;\n      member.lastSeenAt = now.toISOString();\n      if (!wasOnline) {\n        events.append({\n          type: \"member_online\",\n          roomId,\n          memberId,\n          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }\n        });\n      }\n      return member;\n    },\n    markConnectionOnline(roomId: string, connectionId: string, now = new Date()) {\n      const room = findRoom(rooms, roomId);\n      const connection = room.connections.find(\n        (candidate) => candidate.id === connectionId\n      );\n      if (!connection) {\n        throw new Error(\"Connection not found\");\n      }\n      const member = room.members.find(\n        (candidate) => candidate.participantId === connection.participantId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n      const wasOnline = member.online;\n      connection.online = true;\n      connection.lastSeenAt = now.toISOString();\n      syncMemberFromConnections(room, member, now.toISOString());\n      if (!wasOnline && member.online) {\n        events.append({\n          type: \"member_online\",\n          roomId,\n          memberId: member.id,\n          payload: {\n            name: member.displayName,\n            connectionId,\n            lastSeenAt: member.lastSeenAt\n          }\n        });\n      }\n      return member;\n    },\n    markOffline(roomId: string, memberId: string, now = new Date()) {\n      const member = findMember(rooms, roomId, memberId);\n      const wasOnline = member.online;\n      member.online = false;\n      member.lastSeenAt = now.toISOString();\n      if (wasOnline) {\n        events.append({\n          type: \"member_offline\",\n          roomId,\n          memberId,\n          payload: { name: member.displayName, lastSeenAt: member.lastSeenAt }\n        });\n      }\n      return member;\n    },\n    markConnectionOffline(roomId: string, connectionId: string, now = new Date()) {\n      const room = findRoom(rooms, roomId);\n      const connection = room.connections.find(\n        (candidate) => candidate.id === connectionId\n      );\n      if (!connection) {\n        throw new Error(\"Connection not found\");\n      }\n      const member = room.members.find(\n        (candidate) => candidate.participantId === connection.participantId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n      const wasOnline = member.online;\n      connection.online = false;\n      connection.lastSeenAt = now.toISOString();\n      syncMemberFromConnections(room, member, now.toISOString());\n      if (wasOnline && !member.online) {\n        events.append({\n          type: \"member_offline\",\n          roomId,\n          memberId: member.id,\n          payload: {\n            name: member.displayName,\n            connectionId,\n            lastSeenAt: member.lastSeenAt\n          }\n        });\n      }\n      return member;\n    },\n    cleanupStaleMembers(roomId: string, now = new Date(), ttlMs = 120_000) {\n      const room = findRoom(rooms, roomId);\n\n      const before = room.members.length;\n      room.connections = room.connections.filter((connection) => {\n        if (connection.online) return true;\n        return now.getTime() - new Date(connection.lastSeenAt).getTime() <= ttlMs;\n      });\n      for (const member of room.members) {\n        syncMemberFromConnections(room, member, member.lastSeenAt);\n      }\n      room.members = room.members.filter((member) => {\n        if (member.online) return true;\n        return now.getTime() - new Date(member.lastSeenAt).getTime() <= ttlMs;\n      });\n\n      if (room.members.length !== before) {\n        events.append({\n          type: \"member_removed\",\n          roomId,\n          payload: { removed: before - room.members.length }\n        });\n      }\n\n      return room.members;\n    },\n    updatePresence(\n      roomId: string,\n      memberId: string,\n      patch: Pick<RoomMember, \"currentFile\"> & { connectionId?: string }\n    ) {\n      const room = findRoom(rooms, roomId);\n      const member = room.members.find(\n        (candidate) => candidate.id === memberId\n      );\n      if (!member) {\n        throw new Error(\"Member not found\");\n      }\n\n      if (patch.connectionId) {\n        const connection = room.connections.find(\n          (candidate) => candidate.id === patch.connectionId\n        );\n        if (connection) {\n          connection.currentFile = patch.currentFile;\n          connection.lastSeenAt = new Date().toISOString();\n        }\n      }\n      member.currentFile = patch.currentFile;\n      return member;\n    },\n    getMember(roomId: string, memberId: string) {\n      return rooms\n        .get(roomId)\n        ?.members.find((member) => member.id === memberId);\n    },\n    listRooms() {\n      return [...rooms.values()];\n    }\n  };\n}",
+          "sha256": "c3dc7c863ec21d9919e41a3f68880f31947ab67457831b3a6e186bfffd122a0f"
+        },
+        "fingerprint": {
+          "prefix": "ut {\n  memberId?: string;\n  name: string;\n  participantId?: string;\n  connectionId?: string;\n  profileRole?: string;\n}\n\n",
+          "suffix": "\n\nexport type RoomStore = ReturnType<typeof createRoomStore>;\n\ntype NormalizedJoinInput = Required<Pick<JoinRoomInput, \"",
+          "landmarkLines": [
+            "export function createRoomStore(events: EventLog) {",
+            "const rooms = new Map<string, RoomState>();",
+            "return {",
+            "createRoom(workspaceRoot: string, workspaceName = path.basename(workspaceRoot)) {",
+            "const room: RoomState = {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T01-d1",
+    "type": "decision",
+    "title": "Trace 分页按 sequence 排序",
+    "summary": "分页结果按照 sequence 递增输出",
+    "content": "分页结果按照 sequence 递增输出。游标只表示最后一条记录。它不改变 payload。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createTraceStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/agent/traceStore.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "63599193-5a11-45dc-aeed-3e1d251f6cd8",
+        "file": {
+          "workspaceRelativePath": "src/extracted/agent/traceStore.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 4,
+            "character": 0
+          },
+          "end": {
+            "line": 34,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createTraceStore(storagePath: string, sensitiveValues: string[] = collectSensitiveEnvironment()) {\n  const collectedValues = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])];\n  let operations = Promise.resolve();\n\n  return {\n    async append(input: Omit<AgentTraceEvent, \"sequence\" | \"timestamp\">) {\n      let result: AgentTraceEvent | undefined;\n      operations = operations.then(async () => {\n        const events = await readTrace(storagePath);\n        const event = redactSensitive(\n          {\n            ...input,\n            sequence: (events.at(-1)?.sequence ?? 0) + 1,\n            timestamp: new Date().toISOString()\n          },\n          collectedValues\n        ) as AgentTraceEvent;\n        await fs.mkdir(path.dirname(storagePath), { recursive: true });\n        await fs.appendFile(storagePath, `${JSON.stringify(event)}\\n`, \"utf8\");\n        result = event;\n      });\n      await operations;\n      if (!result) throw new Error(\"Agent trace event was not created\");\n      return result;\n    },\n    async list() {\n      await operations;\n      return readTrace(storagePath);\n    }\n  };\n}",
+          "sha256": "2290a9c0c3b5ffc37f2f83570b9e4e2b65a4723fb5d36c53767124c40f7aaf34"
+        },
+        "fingerprint": {
+          "prefix": "rt fs from \"node:fs/promises\";\nimport path from \"node:path\";\nimport type { AgentTraceEvent } from \"@simplercp/shared\";\n\n",
+          "suffix": "\n\nasync function readTrace(storagePath: string): Promise<AgentTraceEvent[]> {\n  try {\n    const content = await fs.readF",
+          "landmarkLines": [
+            "export function createTraceStore(storagePath: string, sensitiveValues: string[] = collectSensitiveEnvironment()) {",
+            "const collectedValues = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])];",
+            "let operations = Promise.resolve();",
+            "return {",
+            "async append(input: Omit<AgentTraceEvent, \"sequence\" | \"timestamp\">) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T01-d2",
+    "type": "constraint",
+    "title": "导出文件使用私有权限",
+    "summary": "导出 JSON 文件创建时使用 0600 权限",
+    "content": "导出 JSON 文件创建时使用 0600 权限。已有文件也需要保持相同权限。该规则适用于本地数据。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "writeJsonFileAtomically"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/jsonFile.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "7381fb6c-e88a-41ae-beb8-8a8841f23a8a",
+        "file": {
+          "workspaceRelativePath": "src/extracted/jsonFile.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {\n  await fs.mkdir(path.dirname(storagePath), { recursive: true });\n  const nextPath = `${storagePath}.${nanoid(8)}.next`;\n  await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });\n  await fs.chmod(nextPath, mode);\n  await fs.rename(nextPath, storagePath);\n}",
+          "sha256": "ac62daa59da7a8c98fd86b3a9a7fa934bbf7f05764694d8128ddde0cdd791c3e"
+        },
+        "fingerprint": {
+          "prefix": "} catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return undefined;\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {",
+            "await fs.mkdir(path.dirname(storagePath), { recursive: true });",
+            "const nextPath = `${storagePath}.${nanoid(8)}.next`;",
+            "await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });",
+            "await fs.chmod(nextPath, mode);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T01-target",
+    "type": "constraint",
+    "title": "Trace 导出重新执行递归脱敏",
+    "summary": "导出当前及历史 trace 时递归处理凭据文本，历史记录不能依赖写入时的配置",
+    "content": "导出当前及历史 trace 时递归处理凭据文本，历史记录不能依赖写入时的配置。规则适用于traceStore 的分页与 JSON 导出。历史 trace 可能在写入时未脱敏，导出边界必须再次清除嵌套凭据。修改redactSensitive相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "redactSensitive"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/agent/traceStore.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a7d31826-616a-4540-9b3e-b5afa1bd873b",
+        "file": {
+          "workspaceRelativePath": "src/extracted/agent/traceStore.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 49,
+            "character": 0
+          },
+          "end": {
+            "line": 75,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function redactSensitive(value: unknown, sensitiveValues: string[] = collectSensitiveEnvironment()): unknown {\n  if (typeof value === \"string\") {\n    let filtered = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])]\n      .filter(Boolean)\n      .sort((left, right) => right.length - left.length)\n      .reduce(\n        (filtered, sensitive) => filtered.split(sensitive).join(`[REDACTED:${sensitiveLabel(sensitive)}]`),\n        value\n      );\n    filtered = filtered.replace(/sk-[A-Za-z0-9_-]{16,}/g, \"[REDACTED:API_KEY]\");\n    filtered = filtered.replace(/Bearer\\s+[A-Za-z0-9._~+/=-]{8,}/gi, \"Bearer [REDACTED:TOKEN]\");\n    filtered = filtered.replace(/(Authorization:[ \\t]*)[^\\r\\n]+/gi, \"$1[REDACTED:TOKEN]\");\n    return filtered;\n  }\n  if (Array.isArray(value)) {\n    return value.map((entry) => redactSensitive(entry, sensitiveValues));\n  }\n  if (value && typeof value === \"object\") {\n    return Object.fromEntries(\n      Object.entries(value).map(([key, entry]) => [\n        key,\n        redactSensitive(entry, sensitiveValues)\n      ])\n    );\n  }\n  return value;\n}",
+          "sha256": "55f12c0425dcba1529257895a0e633cc9057caf3be5998779c970cdf2b36e529"
+        },
+        "fingerprint": {
+          "prefix": "nt);\n  } catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return [];\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n\nfunction sensitiveLabel(value: string) {\n  const entry = Object.entries(process.env).find(([, candidate]) => candidate",
+          "landmarkLines": [
+            "export function redactSensitive(value: unknown, sensitiveValues: string[] = collectSensitiveEnvironment()): unknown {",
+            "if (typeof value === \"string\") {",
+            "let filtered = [...new Set([...collectSensitiveEnvironment(), ...sensitiveValues])]",
+            ".filter(Boolean)",
+            ".sort((left, right) => right.length - left.length)"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T02-d1",
+    "type": "decision",
+    "title": "聊天消息 sequence 单调递增",
+    "summary": "新消息的 sequence 使用历史最后值加一",
+    "content": "新消息的 sequence 使用历史最后值加一。读取历史时保留原序号。这个规则适用于写入。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createChatStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/chat.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "3d6e8c31-fd08-4e5e-aaa9-3332333cd535",
+        "file": {
+          "workspaceRelativePath": "src/extracted/chat.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 110,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createChatStore(\n  events: EventLog,\n  options: { storagePath?: string } = {}\n) {\n  let messages: ChatMessage[] = [];\n  let operations: Promise<void> | undefined;\n  const listeners = new Set<(message: ChatMessage) => void>();\n\n  function ensureLoaded() {\n    operations ??= loadMessages(options.storagePath).then((loaded) => {\n      messages = loaded;\n    });\n    return operations;\n  }\n\n  return {\n    async createMessage(input: CreateChatMessageInput) {\n      let created: ChatMessage | undefined;\n      const creation = ensureLoaded().then(async () => {\n        const message: ChatMessage = {\n          sequence: (messages.at(-1)?.sequence ?? 0) + 1,\n          id: nanoid(10),\n          timestamp: new Date().toISOString(),\n          roomId: input.roomId,\n          authorId: input.authorId,\n          authorName: input.authorName,\n          authorRole: input.authorRole,\n          agentSessionId: input.agentSessionId,\n          runId: input.runId,\n          mentions: input.mentions,\n          kind: input.kind ?? \"member\",\n          text: String(redactSensitive(input.text))\n        };\n        const nextMessages = [...messages, message];\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        events.append({\n          type: \"chat_message_created\",\n          roomId: message.roomId,\n          memberId: message.authorId,\n          payload: {\n            messageId: message.id,\n            authorName: message.authorName,\n            ...(message.authorRole ? { authorRole: message.authorRole } : {}),\n            text: message.text\n          }\n        });\n        created = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = creation;\n      await creation;\n      if (!created) throw new Error(\"Chat message was not created\");\n      return created;\n    },\n    async listMessages(roomId: string) {\n      await ensureLoaded();\n      return messages.map((message) => ({ ...message, roomId }));\n    },\n    async updateMessage(messageId: string, update: Partial<Pick<ChatMessage, \"mentions\" | \"agentSessionId\" | \"runId\">>) {\n      let updated: ChatMessage | undefined;\n      const operation = ensureLoaded().then(async () => {\n        const index = messages.findIndex((message) => message.id === messageId);\n        if (index < 0) throw new Error(\"Chat message not found\");\n        const current = messages[index];\n        if (!current) throw new Error(\"Chat message not found\");\n        const message: ChatMessage = { ...current, ...update };\n        const nextMessages = [...messages];\n        nextMessages[index] = message;\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        updated = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = operation;\n      await operation;\n      if (!updated) throw new Error(\"Chat message was not updated\");\n      return updated;\n    },\n    onMessage(listener: (message: ChatMessage) => void) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n    async awaitIdle() {\n      await ensureLoaded();\n    }\n  };\n}",
+          "sha256": "25faab770fcbcc14bd6752116552641eb5a3374e2eefac86b5e8cfa5b00ddc15"
+        },
+        "fingerprint": {
+          "prefix": "?: string;\n  runId?: string;\n  mentions?: string[];\n}\n\ninterface ChatFile {\n  version: 1;\n  messages: ChatMessage[];\n}\n\n",
+          "suffix": "\n\nexport type ChatStore = ReturnType<typeof createChatStore>;\n\nasync function loadMessages(storagePath?: string): Promis",
+          "landmarkLines": [
+            "export function createChatStore(",
+            "events: EventLog,",
+            "options: { storagePath?: string } = {}",
+            ") {",
+            "let messages: ChatMessage[] = [];"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T02-d2",
+    "type": "constraint",
+    "title": "聊天文本先经过敏感信息处理",
+    "summary": "聊天正文写入文件前需要调用敏感信息处理函数",
+    "content": "聊天正文写入文件前需要调用敏感信息处理函数。事件记录使用处理后的文本。这个规则适用于新消息。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "redactSensitive"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/chat.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "fbb40f20-9749-41b4-81be-215c18937fc5",
+        "file": {
+          "workspaceRelativePath": "src/extracted/chat.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 4,
+            "character": 9
+          },
+          "end": {
+            "line": 4,
+            "character": 24
+          }
+        },
+        "snapshot": {
+          "text": "redactSensitive",
+          "sha256": "5cfd9bb287d9362249fceab80616dff4fc6d752f69d7188373ab098c29bfb021"
+        },
+        "fingerprint": {
+          "prefix": "{ readJsonFile, writeJsonFileAtomically } from \"./jsonFile.js\";\nimport type { ChatMessage } from \"./types.js\";\nimport { ",
+          "suffix": " } from \"./agent/traceStore.js\";\n\nexport interface CreateChatMessageInput {\n  roomId: string;\n  authorId: string;\n  auth",
+          "landmarkLines": [
+            "redactSensitive"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T02-target",
+    "type": "constraint",
+    "title": "聊天历史关联当前临时 roomId",
+    "summary": "历史聊天按项目文件保存，roomId 是临时协作房间；读取历史记录时关联当前 roomId",
+    "content": "历史聊天按项目文件保存，roomId 是临时协作房间；读取历史记录时关联当前 roomId。规则适用于下载历史聊天并返回 ChatMessage 数组。历史文件只保存内容，下载接口需要用当前项目房间标识建立上下文。修改createChatStore相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createChatStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/chat.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "0c07e022-ca65-499e-8939-87776185b637",
+        "file": {
+          "workspaceRelativePath": "src/extracted/chat.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 110,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createChatStore(\n  events: EventLog,\n  options: { storagePath?: string } = {}\n) {\n  let messages: ChatMessage[] = [];\n  let operations: Promise<void> | undefined;\n  const listeners = new Set<(message: ChatMessage) => void>();\n\n  function ensureLoaded() {\n    operations ??= loadMessages(options.storagePath).then((loaded) => {\n      messages = loaded;\n    });\n    return operations;\n  }\n\n  return {\n    async createMessage(input: CreateChatMessageInput) {\n      let created: ChatMessage | undefined;\n      const creation = ensureLoaded().then(async () => {\n        const message: ChatMessage = {\n          sequence: (messages.at(-1)?.sequence ?? 0) + 1,\n          id: nanoid(10),\n          timestamp: new Date().toISOString(),\n          roomId: input.roomId,\n          authorId: input.authorId,\n          authorName: input.authorName,\n          authorRole: input.authorRole,\n          agentSessionId: input.agentSessionId,\n          runId: input.runId,\n          mentions: input.mentions,\n          kind: input.kind ?? \"member\",\n          text: String(redactSensitive(input.text))\n        };\n        const nextMessages = [...messages, message];\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        events.append({\n          type: \"chat_message_created\",\n          roomId: message.roomId,\n          memberId: message.authorId,\n          payload: {\n            messageId: message.id,\n            authorName: message.authorName,\n            ...(message.authorRole ? { authorRole: message.authorRole } : {}),\n            text: message.text\n          }\n        });\n        created = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = creation;\n      await creation;\n      if (!created) throw new Error(\"Chat message was not created\");\n      return created;\n    },\n    async listMessages(roomId: string) {\n      await ensureLoaded();\n      return messages.map((message) => ({ ...message, roomId }));\n    },\n    async updateMessage(messageId: string, update: Partial<Pick<ChatMessage, \"mentions\" | \"agentSessionId\" | \"runId\">>) {\n      let updated: ChatMessage | undefined;\n      const operation = ensureLoaded().then(async () => {\n        const index = messages.findIndex((message) => message.id === messageId);\n        if (index < 0) throw new Error(\"Chat message not found\");\n        const current = messages[index];\n        if (!current) throw new Error(\"Chat message not found\");\n        const message: ChatMessage = { ...current, ...update };\n        const nextMessages = [...messages];\n        nextMessages[index] = message;\n        await saveMessages(options.storagePath, nextMessages);\n        messages = nextMessages;\n        updated = message;\n        for (const listener of listeners) listener(message);\n      });\n      operations = operation;\n      await operation;\n      if (!updated) throw new Error(\"Chat message was not updated\");\n      return updated;\n    },\n    onMessage(listener: (message: ChatMessage) => void) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n    async awaitIdle() {\n      await ensureLoaded();\n    }\n  };\n}",
+          "sha256": "25faab770fcbcc14bd6752116552641eb5a3374e2eefac86b5e8cfa5b00ddc15"
+        },
+        "fingerprint": {
+          "prefix": "?: string;\n  runId?: string;\n  mentions?: string[];\n}\n\ninterface ChatFile {\n  version: 1;\n  messages: ChatMessage[];\n}\n\n",
+          "suffix": "\n\nexport type ChatStore = ReturnType<typeof createChatStore>;\n\nasync function loadMessages(storagePath?: string): Promis",
+          "landmarkLines": [
+            "export function createChatStore(",
+            "events: EventLog,",
+            "options: { storagePath?: string } = {}",
+            ") {",
+            "let messages: ChatMessage[] = [];"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T03-d1",
+    "type": "decision",
+    "title": "成员导出保留名称与角色",
+    "summary": "成员记录包含 memberId、displayName 和 role",
+    "content": "成员记录包含 memberId、displayName 和 role。名单导出保留这三个字段，名称中的逗号与引号交给 CSV 格式库处理。这条记录适用于 CSV 内容。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createMemberStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/identity.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "50bc7faf-54ec-4ea2-ac5d-9776ec9df1c1",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/identity.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 22,
+            "character": 0
+          },
+          "end": {
+            "line": 125,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createMemberStore(options: { projects: () => ProjectRecord[] }) {\n  const cache = new Map<string, MemberFile>();\n  const loading = new Map<string, Promise<MemberFile>>();\n  let operations = Promise.resolve();\n\n  function enqueue<T>(operation: () => Promise<T>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n    return result;\n  }\n\n  function findProject(projectId: string) {\n    const project = options.projects().find((candidate) => candidate.id === projectId);\n    if (!project) throw new Error(\"Project not found\");\n    return project;\n  }\n\n  function projectDataPath(project: ProjectRecord) {\n    return getProjectMetadataPath(project);\n  }\n\n  async function load(projectId: string) {\n    const cached = cache.get(projectId);\n    if (cached) return cached;\n    const pending = loading.get(projectId);\n    if (pending) return pending;\n    const operation = loadFile(projectId);\n    loading.set(projectId, operation);\n    try { return await operation; }\n    finally { loading.delete(projectId); }\n  }\n\n  async function loadFile(projectId: string) {\n    const project = findProject(projectId);\n    const stored = await readJsonFile<MemberFile>(path.join(projectDataPath(project), \"members.json\"));\n    if (stored && (stored.version !== 1 || !Array.isArray(stored.members))) throw new Error(\"Invalid member file\");\n    const legacy = stored === undefined\n      ? await readJsonFile<{ version: 1; participants: Array<{ id: string; displayName: string; profileRole?: string; createdAt: string; updatedAt: string }> }>(path.join(projectDataPath(project), \"participants.json\"))\n      : undefined;\n    const records = stored?.members ?? legacy?.participants.map((member) => ({\n      memberId: member.id, projectId, displayName: member.displayName, role: member.profileRole ?? \"\", createdAt: member.createdAt, updatedAt: member.updatedAt\n    })) ?? [];\n    const file: MemberFile = { version: 1, members: records.map((member) => ({\n      memberId: member.memberId, projectId: member.projectId, displayName: member.displayName,\n      role: member.role ?? \"\", createdAt: member.createdAt, updatedAt: member.updatedAt ?? member.createdAt\n    })) };\n    if (file.members.some((member) => !member.memberId || member.projectId !== projectId || typeof member.displayName !== \"string\" || typeof member.role !== \"string\")) throw new Error(\"Invalid member record\");\n    if (legacy || (stored && JSON.stringify(stored) !== JSON.stringify(file))) await save(projectId, file);\n    cache.set(projectId, file);\n    return file;\n  }\n\n  async function save(projectId: string, file: MemberFile) {\n    const project = findProject(projectId);\n    await writeJsonFileAtomically(path.join(projectDataPath(project), \"members.json\"), file, 0o600);\n    cache.set(projectId, file);\n  }\n\n  return {\n    async join(projectId: string, input: { memberId?: string; displayName: string; role?: string }) {\n      return enqueue(async () => {\n        const displayName = input.displayName.trim();\n        if (!displayName) throw new Error(\"name is required\");\n        const file = await load(projectId);\n        const now = new Date().toISOString();\n        if (input.memberId) {\n          const index = file.members.findIndex((member) => member.memberId === input.memberId);\n          if (index >= 0) {\n            const current = file.members[index]!;\n            const member = { ...current, displayName, role: input.role?.trim() ?? current.role, updatedAt: now };\n            file.members[index] = member;\n            await save(projectId, file);\n            return member;\n          }\n        }\n        const member: MemberRecord = {\n          memberId: crypto.randomUUID(),\n          projectId,\n          displayName,\n          role: input.role?.trim() ?? \"\",\n          createdAt: now,\n          updatedAt: now\n        };\n        await save(projectId, { version: 1, members: [...file.members, member] });\n        return member;\n      });\n    },\n    async getMember(projectId: string, memberId: string) {\n      return (await load(projectId)).members.find((member) => member.memberId === memberId);\n    },\n    async listMembers(projectId: string) {\n      return (await load(projectId)).members.map((member) => ({ ...member }));\n    },\n    async resolveIdentity(projectId: string, memberId: string) {\n      return (await load(projectId)).members.find((member) => member.memberId === memberId);\n    },\n    async findIdentity(memberId: string) {\n      for (const project of options.projects()) {\n        const member = (await load(project.id)).members.find((candidate) => candidate.memberId === memberId);\n        if (member) return member;\n      }\n    }\n  };\n}",
+          "sha256": "cb9038558e290b2c0bb493db72fcd2a32354c6a7c9bb891e8f35288f66e90590"
+        },
+        "fingerprint": {
+          "prefix": "\"projectId\" | \"memberId\" | \"displayName\" | \"role\">;\n\ninterface MemberFile {\n  version: 1;\n  members: MemberRecord[];\n}\n\n",
+          "suffix": "\n\nexport type MemberStore = ReturnType<typeof createMemberStore>;\n\nexport function createIdentityMiddleware(options: {\n ",
+          "landmarkLines": [
+            "export function createMemberStore(options: { projects: () => ProjectRecord[] }) {",
+            "const cache = new Map<string, MemberFile>();",
+            "const loading = new Map<string, Promise<MemberFile>>();",
+            "let operations = Promise.resolve();",
+            "function enqueue<T>(operation: () => Promise<T>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T03-d2",
+    "type": "constraint",
+    "title": "临时导出文件使用唯一名称",
+    "summary": "导出临时文件名称包含随机后缀，避免并发覆盖",
+    "content": "导出临时文件名称包含随机后缀，避免并发覆盖。完成后再替换目标文件。该规则适用于文件写入。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "writeJsonFileAtomically"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/jsonFile.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "1ea4ef4b-8390-4b1f-8fc0-0eb7e58841c5",
+        "file": {
+          "workspaceRelativePath": "src/extracted/jsonFile.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {\n  await fs.mkdir(path.dirname(storagePath), { recursive: true });\n  const nextPath = `${storagePath}.${nanoid(8)}.next`;\n  await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });\n  await fs.chmod(nextPath, mode);\n  await fs.rename(nextPath, storagePath);\n}",
+          "sha256": "ac62daa59da7a8c98fd86b3a9a7fa934bbf7f05764694d8128ddde0cdd791c3e"
+        },
+        "fingerprint": {
+          "prefix": "} catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return undefined;\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {",
+            "await fs.mkdir(path.dirname(storagePath), { recursive: true });",
+            "const nextPath = `${storagePath}.${nanoid(8)}.next`;",
+            "await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });",
+            "await fs.chmod(nextPath, mode);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T03-target",
+    "type": "constraint",
+    "title": "成员 CSV 导出文件使用 0600",
+    "summary": "成员导出文件采用 0600，已有文件权限宽于 0600 时也必须收紧",
+    "content": "成员导出文件采用 0600，已有文件权限宽于 0600 时也必须收紧。规则适用于成员名单导出与临时文件替换。导出包含成员名称和角色，创建新文件与覆盖旧文件都必须限制为属主可读写。修改writeJsonFileAtomically相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "writeJsonFileAtomically"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/jsonFile.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "ea9bdff0-1970-4cfb-b984-29e1cff673a8",
+        "file": {
+          "workspaceRelativePath": "src/extracted/jsonFile.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {\n  await fs.mkdir(path.dirname(storagePath), { recursive: true });\n  const nextPath = `${storagePath}.${nanoid(8)}.next`;\n  await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });\n  await fs.chmod(nextPath, mode);\n  await fs.rename(nextPath, storagePath);\n}",
+          "sha256": "ac62daa59da7a8c98fd86b3a9a7fa934bbf7f05764694d8128ddde0cdd791c3e"
+        },
+        "fingerprint": {
+          "prefix": "} catch (error) {\n    if ((error as NodeJS.ErrnoException).code === \"ENOENT\") return undefined;\n    throw error;\n  }\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export async function writeJsonFileAtomically(storagePath: string, value: unknown, mode = 0o600) {",
+            "await fs.mkdir(path.dirname(storagePath), { recursive: true });",
+            "const nextPath = `${storagePath}.${nanoid(8)}.next`;",
+            "await fs.writeFile(nextPath, `${JSON.stringify(value, null, 2)}\\n`, { encoding: \"utf8\", mode });",
+            "await fs.chmod(nextPath, mode);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T04-d1",
+    "type": "decision",
+    "title": "事件日志按追加顺序保存",
+    "summary": "事件写入文件时保持追加顺序",
+    "content": "事件写入文件时保持追加顺序。读取接口返回同一顺序。它适用于持久事件。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createEventLog"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/eventLog.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "7c17d2b1-349f-4ecb-8442-af72e5fcb3c0",
+        "file": {
+          "workspaceRelativePath": "src/extracted/eventLog.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 33,
+            "character": 0
+          },
+          "end": {
+            "line": 70,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createEventLog(storagePath?: string) {\n  const events: EventRecord[] = [];\n  let operations = Promise.resolve();\n  const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();\n\n  function enqueue(operation: () => Promise<void>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n  }\n\n  return {\n    append(input: EventInput) {\n      const event: EventRecord = redactSensitive({\n        id: nanoid(),\n        timestamp: new Date().toISOString(),\n        ...input\n      }) as EventRecord;\n      events.push(event);\n      if (storagePath && durableEventTypes.has(event.type)) {\n        enqueue(async () => {\n          await loading;\n          await writeJsonFileAtomically(storagePath, {\n            version: 1,\n            events: events.filter((candidate) => durableEventTypes.has(candidate.type))\n          } satisfies EventFile);\n        });\n      }\n      return event;\n    },\n    list() {\n      return [...events];\n    },\n    async awaitIdle() {\n      await loading;\n      await operations;\n    }\n  };\n}",
+          "sha256": "53d93199203e57841543c5977a5616954e6e0e73a3c58f4477ea8d487b89782d"
+        },
+        "fingerprint": {
+          "prefix": "nt_task_queued\",\n  \"agent_task_started\",\n  \"agent_task_completed\",\n  \"agent_task_failed\",\n  \"agent_task_cancelled\"\n]);\n\n",
+          "suffix": "\n\nexport type EventLog = ReturnType<typeof createEventLog>;\n\nasync function loadEvents(storagePath: string, events: Even",
+          "landmarkLines": [
+            "export function createEventLog(storagePath?: string) {",
+            "const events: EventRecord[] = [];",
+            "let operations = Promise.resolve();",
+            "const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();",
+            "function enqueue(operation: () => Promise<void>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T04-d2",
+    "type": "constraint",
+    "title": "事件 payload 使用对象结构",
+    "summary": "事件 payload 保持对象结构，导出时不把它转换为字符串",
+    "content": "事件 payload 保持对象结构，导出时不把它转换为字符串。调用方可以继续读取字段。该规则适用于报告。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createEventLog"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/eventLog.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "9add2c5e-2575-4488-915e-fa0c3174dcda",
+        "file": {
+          "workspaceRelativePath": "src/extracted/eventLog.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 33,
+            "character": 0
+          },
+          "end": {
+            "line": 70,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createEventLog(storagePath?: string) {\n  const events: EventRecord[] = [];\n  let operations = Promise.resolve();\n  const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();\n\n  function enqueue(operation: () => Promise<void>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n  }\n\n  return {\n    append(input: EventInput) {\n      const event: EventRecord = redactSensitive({\n        id: nanoid(),\n        timestamp: new Date().toISOString(),\n        ...input\n      }) as EventRecord;\n      events.push(event);\n      if (storagePath && durableEventTypes.has(event.type)) {\n        enqueue(async () => {\n          await loading;\n          await writeJsonFileAtomically(storagePath, {\n            version: 1,\n            events: events.filter((candidate) => durableEventTypes.has(candidate.type))\n          } satisfies EventFile);\n        });\n      }\n      return event;\n    },\n    list() {\n      return [...events];\n    },\n    async awaitIdle() {\n      await loading;\n      await operations;\n    }\n  };\n}",
+          "sha256": "53d93199203e57841543c5977a5616954e6e0e73a3c58f4477ea8d487b89782d"
+        },
+        "fingerprint": {
+          "prefix": "nt_task_queued\",\n  \"agent_task_started\",\n  \"agent_task_completed\",\n  \"agent_task_failed\",\n  \"agent_task_cancelled\"\n]);\n\n",
+          "suffix": "\n\nexport type EventLog = ReturnType<typeof createEventLog>;\n\nasync function loadEvents(storagePath: string, events: Even",
+          "landmarkLines": [
+            "export function createEventLog(storagePath?: string) {",
+            "const events: EventRecord[] = [];",
+            "let operations = Promise.resolve();",
+            "const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();",
+            "function enqueue(operation: () => Promise<void>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T04-target",
+    "type": "constraint",
+    "title": "活动历史导出只包含持久事件",
+    "summary": "过程活动导出只包括 durableEventTypes，光标与连接状态不构成开发过程记录",
+    "content": "过程活动导出只包括 durableEventTypes，光标与连接状态不构成开发过程记录。规则适用于EventLog 的活动历史 JSON 导出。连接状态等短暂事件无法在重启后重现，报告只能统计 durableEventTypes。修改createEventLog相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "createEventLog"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/eventLog.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "eee9a51a-1e4a-4c0a-a604-03472fc910d2",
+        "file": {
+          "workspaceRelativePath": "src/extracted/eventLog.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 33,
+            "character": 0
+          },
+          "end": {
+            "line": 70,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function createEventLog(storagePath?: string) {\n  const events: EventRecord[] = [];\n  let operations = Promise.resolve();\n  const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();\n\n  function enqueue(operation: () => Promise<void>) {\n    const result = operations.then(operation);\n    operations = result.then(() => undefined, () => undefined);\n  }\n\n  return {\n    append(input: EventInput) {\n      const event: EventRecord = redactSensitive({\n        id: nanoid(),\n        timestamp: new Date().toISOString(),\n        ...input\n      }) as EventRecord;\n      events.push(event);\n      if (storagePath && durableEventTypes.has(event.type)) {\n        enqueue(async () => {\n          await loading;\n          await writeJsonFileAtomically(storagePath, {\n            version: 1,\n            events: events.filter((candidate) => durableEventTypes.has(candidate.type))\n          } satisfies EventFile);\n        });\n      }\n      return event;\n    },\n    list() {\n      return [...events];\n    },\n    async awaitIdle() {\n      await loading;\n      await operations;\n    }\n  };\n}",
+          "sha256": "53d93199203e57841543c5977a5616954e6e0e73a3c58f4477ea8d487b89782d"
+        },
+        "fingerprint": {
+          "prefix": "nt_task_queued\",\n  \"agent_task_started\",\n  \"agent_task_completed\",\n  \"agent_task_failed\",\n  \"agent_task_cancelled\"\n]);\n\n",
+          "suffix": "\n\nexport type EventLog = ReturnType<typeof createEventLog>;\n\nasync function loadEvents(storagePath: string, events: Even",
+          "landmarkLines": [
+            "export function createEventLog(storagePath?: string) {",
+            "const events: EventRecord[] = [];",
+            "let operations = Promise.resolve();",
+            "const loading = storagePath ? loadEvents(storagePath, events) : Promise.resolve();",
+            "function enqueue(operation: () => Promise<void>) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T05-d1",
+    "type": "decision",
+    "title": "run 路由先取得成员身份",
+    "summary": "run 读取路由取得 request.identity 后调用权限入口",
+    "content": "run 读取路由取得 request.identity 后调用权限入口。缺少身份时 requireIdentity 返回 401。这个顺序适用于 run 和项目路由。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "requireIdentity"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/permissions.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "abced505-d6c2-4ba9-9ae7-48bf7a12e00e",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/permissions.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 21,
+            "character": 0
+          },
+          "end": {
+            "line": 27,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function requireIdentity(request: Request, response: Response) {\n  if (!request.identity) {\n    response.status(401).json({ error: \"Member identity is required\" });\n    return undefined;\n  }\n  return request.identity;\n}",
+          "sha256": "581b59b2d9debfe53208c5a8c2a4c6be4e2014c6006144fcd707aee53a8d62bf"
+        },
+        "fingerprint": {
+          "prefix": ": Identity | undefined, _action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {\n  return true;\n}\n\n",
+          "suffix": "\n\nexport function requirePermission(request: Request, response: Response, action: Action, resource?: { projectId?: strin",
+          "landmarkLines": [
+            "export function requireIdentity(request: Request, response: Response) {",
+            "if (!request.identity) {",
+            "response.status(401).json({ error: \"Member identity is required\" });",
+            "return undefined;",
+            "}"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T05-d2",
+    "type": "constraint",
+    "title": "run 权限入口接收资源信息",
+    "summary": "run 权限调用提供 Action 和资源对象",
+    "content": "run 权限调用提供 Action 和资源对象。资源对象保留 projectId 与 ownerMemberId，便于权限策略统一处理。该记录说明 run 权限调用参数。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "requirePermission"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/permissions.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "fb6a3d2c-0a45-42e5-97f8-97309c190881",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/permissions.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 29,
+            "character": 0
+          },
+          "end": {
+            "line": 37,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function requirePermission(request: Request, response: Response, action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {\n  const identity = requireIdentity(request, response);\n  if (!identity) return undefined;\n  if (!can(identity, action, resource)) {\n    response.status(403).json({ error: \"Permission denied\" });\n    return undefined;\n  }\n  return identity;\n}",
+          "sha256": "e64f1c77eabdf9ed2a1d5c5414f90c0c08d962ad797dc10b8380a55b08d6f15d"
+        },
+        "fingerprint": {
+          "prefix": "nse.status(401).json({ error: \"Member identity is required\" });\n    return undefined;\n  }\n  return request.identity;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export function requirePermission(request: Request, response: Response, action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {",
+            "const identity = requireIdentity(request, response);",
+            "if (!identity) return undefined;",
+            "if (!can(identity, action, resource)) {",
+            "response.status(403).json({ error: \"Permission denied\" });"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R2-T05-target",
+    "type": "constraint",
+    "title": "同项目成员可以查看 Agent run",
+    "summary": "同一协作项目的成员可以读取项目 run；成员展示角色不决定读取权限",
+    "content": "同一协作项目的成员可以读取项目 run；成员展示角色不决定读取权限。规则适用于run 详情权限判断。项目协作成员需要复盘同项目的运行记录，展示角色不能替代项目成员关系。修改can相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R2",
+      "can"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "g4zJ3Itg8Y"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/extracted/auth/permissions.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a56f7129-94ed-4de1-82c6-79cd71e58fe5",
+        "file": {
+          "workspaceRelativePath": "src/extracted/auth/permissions.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 17,
+            "character": 0
+          },
+          "end": {
+            "line": 19,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function can(identity: Identity | undefined, _action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {\n  return true;\n}",
+          "sha256": "cd1bbf58406498962b567c7aa7819cb4f5c39aed98d9a5b5a89d311ed4db7157"
+        },
+        "fingerprint": {
+          "prefix": " | \"agent:read\"\n  | \"agent:create\"\n  | \"agent:cancel\"\n  | \"terminal:input\"\n  | \"workspace:read\"\n  | \"workspace:write\";\n\n",
+          "suffix": "\n\nexport function requireIdentity(request: Request, response: Response) {\n  if (!request.identity) {\n    response.status",
+          "landmarkLines": [
+            "export function can(identity: Identity | undefined, _action: Action, resource?: { projectId?: string; ownerMemberId?: string }) {",
+            "return true;",
+            "}"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "e911f4d3-b9ef-41fe-8a3f-61b75e09217b"
+  }
+]

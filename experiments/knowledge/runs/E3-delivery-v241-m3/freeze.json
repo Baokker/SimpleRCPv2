@@ -1,0 +1,17 @@
+{
+  "protocolHash": "3a45882f5cf702858796f79877428883babd83f4775b334271c44a15ed09d407",
+  "queryHash": "84c2e32a10f1b378f860676bc20816b3242339861f7279a1d2e88f233d1d8c06",
+  "manifestHash": "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137",
+  "files": {
+    "apps/server/src/knowledge/injection.ts": "be3c204eb11db38596ed914dfeaae5156a6b8d101845da09a5ca7be89489a5f3",
+    "apps/server/src/knowledge/provider.ts": "c61a63bfa3ea9f12a7520a385299883a029985ac9732b6ca4176b8df05e89407",
+    "apps/server/src/knowledge/rerank.ts": "d8d2229f8f5bd481916fb533b307bf3c8e8f91987842a046d842a3ee9c4f4fd5",
+    "experiments/knowledge/e3-server.ts": "1fe7a15a21e6761dafba3ac075003d8aa75a087700193f18431aa1abd453f7ae",
+    "experiments/knowledge/e3-retest.ts": "0bd6540dd5c88f76af9041c5802342168587f6bb5b602e191ccb833c6777d3fe",
+    "experiments/knowledge/e3-retest-protocol.json": "389f7b24ef3c91b07aa85b7e30398dae1aef2d27142d5811c52056f5e41cea16"
+  },
+  "commit": "f55249d369a27aaea581189bbf69be67147a0325",
+  "node": "v24.7.0",
+  "provider": "minimax",
+  "model": "MiniMax-M3"
+}

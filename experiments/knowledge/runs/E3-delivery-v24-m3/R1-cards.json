@@ -1,0 +1,3646 @@
+[
+  {
+    "schemaVersion": 3,
+    "id": "R1-I01",
+    "type": "risk",
+    "title": "Money 使用整数分",
+    "summary": "Money 内部使用整数分保存金额，构造和加减操作都返回新对象",
+    "content": "Money 内部使用整数分保存金额，构造和加减操作都返回新对象。序列化时再转换为接口字段。这个规则适用于金额领域。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "Money"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/domain/money.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a8769e59-04f7-4340-9dcd-55925e2cceff",
+        "file": {
+          "workspaceRelativePath": "src/domain/money.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 0,
+            "character": 0
+          },
+          "end": {
+            "line": 20,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class Money {\n    readonly cents: number;\n    constructor(cents: number) {\n        if (!Number.isInteger(cents)) throw new Error('Money must use integer cents');\n        if (cents < 0) throw new Error('Money cannot be negative');\n        this.cents = cents;\n    }\n    static fromMajor(value: number): Money {\n        if (!Number.isFinite(value)) throw new Error('Invalid money value');\n        return new Money(Math.round(value * 100));\n    }\n    static fromCents(value: number): Money { return new Money(value); }\n    add(other: Money): Money { return new Money(this.cents + other.cents); }\n    subtract(other: Money): Money { return new Money(this.cents - other.cents); }\n    multiply(count: number): Money { return new Money(Math.round(this.cents * count)); }\n    greaterThan(other: Money): boolean { return this.cents > other.cents; }\n    greaterThanOrEqual(other: Money): boolean { return this.cents >= other.cents; }\n    equals(other: Money): boolean { return this.cents === other.cents; }\n    toMajor(): number { return this.cents / 100; }\n    toJSON(): { cents: number } { return { cents: this.cents }; }\n}",
+          "sha256": "2aeae9c0d99beb547c9edcc6f8dc691b8ec4bcb3c755510efb3e249327e9d9d1"
+        },
+        "fingerprint": {
+          "prefix": "",
+          "suffix": "\n\nexport function parseMoney(value: unknown): Money {\n    if (value instanceof Money) return value;\n    if (typeof value",
+          "landmarkLines": [
+            "export class Money {",
+            "readonly cents: number;",
+            "constructor(cents: number) {",
+            "if (!Number.isInteger(cents)) throw new Error('Money must use integer cents');",
+            "if (cents < 0) throw new Error('Money cannot be negative');"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I02",
+    "type": "context",
+    "title": "订单状态转换检查",
+    "summary": "订单状态转换只允许领域定义的状态",
+    "content": "订单状态转换只允许领域定义的状态。非法转换需要抛出带错误码的异常。这个规则适用于订单工作流。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "cancelOrder"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/workflow/order-workflow.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "deef4b07-f458-42c0-ad7e-0d4c2538dcea",
+        "file": {
+          "workspaceRelativePath": "src/workflow/order-workflow.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 2,
+            "character": 0
+          },
+          "end": {
+            "line": 2,
+            "character": 298
+          }
+        },
+        "snapshot": {
+          "text": "export function cancelOrder(order: Order, reason: string): Order { if (order.status === 'refunded') throw new DomainError(ERROR_CODES.ORDER_CANCELLED, 'Refunded orders cannot be cancelled'); return { ...order, status: 'cancelled', internalNotes: [...order.internalNotes, `cancelled:${reason}`] }; }",
+          "sha256": "0c9801b4a2f079b47de9b62aac72c0ec7745f3947f170423c487cd69e0287410"
+        },
+        "fingerprint": {
+          "prefix": "import { DomainError, ERROR_CODES } from '../domain/errors.ts';\nimport type { Order } from '../domain/order.ts';\n",
+          "suffix": "\nexport function reopenOrder(order: Order): Order { if (order.status !== 'cancelled') throw new Error('Only cancelled or",
+          "landmarkLines": [
+            "export function cancelOrder(order: Order, reason: string): Order { if (order.status === 'refunded') throw new DomainError(ERROR_CODES.ORDER_CANCELLED, 'Refunded orders cannot be cancelled'); return { ...order, status: 'cancelled', internalNotes: [...order.internalNotes, `cancelled:${reason}`] }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I03",
+    "type": "negative",
+    "title": "分页参数使用正整数",
+    "summary": "分页参数必须是正整数并限制最大页面大小",
+    "content": "分页参数必须是正整数并限制最大页面大小。缺少参数时使用服务默认值。该规则适用于 HTTP 查询。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "pageQuery"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/http/request.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "885a0871-b8fa-4051-9df0-1fbba258efb3",
+        "file": {
+          "workspaceRelativePath": "src/http/request.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 48,
+            "character": 0
+          },
+          "end": {
+            "line": 53,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function pageQuery(input: Record<string, unknown>): PageQuery {\n    return {\n        offset: input.offset === undefined ? 0 : integerInput(input.offset, 'offset'),\n        limit: input.limit === undefined ? 20 : integerInput(input.limit, 'limit', 1, 100),\n    };\n}",
+          "sha256": "df9cdbfc841efb8bdc3e38ad4ea11b93749013dce7d6b8ea258fd87fc7f93482"
+        },
+        "fingerprint": {
+          "prefix": "mum) {\n        throw new DomainError(ERROR_CODES.INVALID_ORDER, `${name} is out of range`);\n    }\n    return number;\n}\n\n",
+          "suffix": "\n\nexport function page<T>(values: T[], query: PageQuery): Page<T> {\n    const items = values.slice(query.offset, query.o",
+          "landmarkLines": [
+            "export function pageQuery(input: Record<string, unknown>): PageQuery {",
+            "return {",
+            "offset: input.offset === undefined ? 0 : integerInput(input.offset, 'offset'),",
+            "limit: input.limit === undefined ? 20 : integerInput(input.limit, 'limit', 1, 100),",
+            "};"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I04",
+    "type": "tutorial",
+    "title": "投递失败采用指数延迟",
+    "summary": "投递服务根据尝试次数计算指数延迟，并以 maximumDelay 限制等待时间",
+    "content": "投递服务根据尝试次数计算指数延迟，并以 maximumDelay 限制等待时间。失败原因必须包含非空文字。该规则适用于通知投递。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "DeliveryService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/delivery-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "873633df-e9b9-40ae-99f4-9a853955c377",
+        "file": {
+          "workspaceRelativePath": "src/services/delivery-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 96,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class DeliveryService {\n    private readonly outbox: NotificationOutbox;\n    private readonly policy: DeliveryPolicy;\n    private readonly now: () => number;\n\n    constructor(outbox: NotificationOutbox, policy: DeliveryPolicy, now = () => Date.now()) {\n        if (!Number.isInteger(policy.maxAttempts) || policy.maxAttempts < 1) {\n            throw new Error('Delivery attempt limit must be positive');\n        }\n        if (!Number.isInteger(policy.batchSize) || policy.batchSize < 1 || policy.batchSize > 100) {\n            throw new Error('Delivery batch size is invalid');\n        }\n        if (!Number.isInteger(policy.initialDelay) || policy.initialDelay < 1) {\n            throw new Error('Delivery initial delay is invalid');\n        }\n        if (!Number.isInteger(policy.maximumDelay) || policy.maximumDelay < policy.initialDelay) {\n            throw new Error('Delivery maximum delay is invalid');\n        }\n        this.outbox = outbox;\n        this.policy = {...policy};\n        this.now = now;\n    }\n\n    ready(): OutboxMessage[] {\n        return this.outbox.due(this.now(),this.policy.batchSize);\n    }\n\n    begin(id: string): OutboxMessage {\n        return this.outbox.claim(id,this.now());\n    }\n\n    succeed(id: string): DeliveryReceipt {\n        const message = this.outbox.complete(id,this.now());\n        return {\n            messageId:message.id,\n            recipient:message.recipient,\n            deliveredAt:message.deliveredAt!,\n            attempts:message.attempts,\n        };\n    }\n\n    reject(id: string, reason: string): DeliveryFailure {\n        if (!reason.trim()) {\n            throw new Error('Delivery failure requires a reason');\n        }\n        const current = this.outbox.get(id);\n        const delay = Math.min(this.policy.maximumDelay,this.policy.initialDelay * 2 ** (current.attempts - 1));\n        const failed = this.outbox.fail(id,reason,this.now()+delay,this.policy.maxAttempts);\n        return {\n            messageId:id,\n            reason,\n            nextAttemptAt:failed.nextAttemptAt,\n            exhausted:failed.state === 'failed',\n        };\n    }\n\n    receipts(recipient?: string): DeliveryReceipt[] {\n        return this.outbox.list('delivered')\n            .filter(message=>recipient===undefined || message.recipient===recipient)\n            .map(message=>({\n                messageId:message.id,\n                recipient:message.recipient,\n                deliveredAt:message.deliveredAt!,\n                attempts:message.attempts,\n            }));\n    }\n\n    health(): {pending: number; delivering: number; delivered: number; failed: number; exhaustedIds: string[]} {\n        return {\n            ...this.outbox.counts(),\n            exhaustedIds:this.outbox.list('failed').map(message=>message.id).sort(),\n        };\n    }\n}",
+          "sha256": "7705563c401f5e14dfe1608e453340db77e5b224903f4cb1bf1683245af58b26"
+        },
+        "fingerprint": {
+          "prefix": "DeliveryPolicy {\n    maxAttempts: number;\n    initialDelay: number;\n    maximumDelay: number;\n    batchSize: number;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class DeliveryService {",
+            "private readonly outbox: NotificationOutbox;",
+            "private readonly policy: DeliveryPolicy;",
+            "private readonly now: () => number;",
+            "constructor(outbox: NotificationOutbox, policy: DeliveryPolicy, now = () => Date.now()) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I05",
+    "type": "risk",
+    "title": "发票金额通过领域函数计算",
+    "summary": "发票服务通过 invoiceTotal 计算行金额总计",
+    "content": "发票服务通过 invoiceTotal 计算行金额总计。对外导出使用 totalCents，发票标识由调用方提供。该规则适用于发票服务。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "InvoiceService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/invoice-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "5ac74c37-5ffb-4689-baae-7827c0557a0d",
+        "file": {
+          "workspaceRelativePath": "src/services/invoice-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 3,
+            "character": 0
+          },
+          "end": {
+            "line": 14,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class InvoiceService {\n    private readonly store: InvoiceStore;\n    constructor(store: InvoiceStore) { this.store = store; }\n    create(id: string, orderId: string, customerId: string): Invoice { return this.store.save(createInvoice(id, orderId, customerId)); }\n    addLine(id: string, description: string, quantity: number, amount: Money): Invoice { const invoice = this.get(id); return this.store.save(addInvoiceLine(invoice, description, quantity, amount)); }\n    issue(id: string, issuedAt: number, dueAt: number): Invoice { return this.store.save(issueInvoice(this.get(id), issuedAt, dueAt)); }\n    get(id: string): Invoice { const invoice = this.store.get(id); if (!invoice) throw new Error('Invoice not found'); return invoice; }\n    total(id: string): Money { return invoiceTotal(this.get(id)); }\n    list(status?: Invoice['status']): Invoice[] { return status ? this.store.byStatus(status) : this.store.all(); }\n    count(status?: Invoice['status']): number { return this.list(status).length; }\n    exportRows(): Array<Record<string, unknown>> { return this.list().map(invoice => ({ id: invoice.id, orderId: invoice.orderId, customerId: invoice.customerId, status: invoice.status, totalCents: invoiceTotal(invoice).cents })); }\n}",
+          "sha256": "2feac50d1f47d8e1b4cb1b2275697ad445dd7821537b24952cd58c668b52955c"
+        },
+        "fingerprint": {
+          "prefix": "in/invoice.ts';\nimport { Money } from '../domain/money.ts';\nimport { InvoiceStore } from '../storage/invoice-store.ts';\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class InvoiceService {",
+            "private readonly store: InvoiceStore;",
+            "constructor(store: InvoiceStore) { this.store = store; }",
+            "create(id: string, orderId: string, customerId: string): Invoice { return this.store.save(createInvoice(id, orderId, customerId)); }",
+            "addLine(id: string, description: string, quantity: number, amount: Money): Invoice { const invoice = this.get(id); return this.store.save(addInvoiceLine(invoice, description, quantity, amount)); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I06",
+    "type": "context",
+    "title": "结算审批记录成员标识",
+    "summary": "结算审批记录保存审批成员和时间",
+    "content": "结算审批记录保存审批成员和时间。付款操作需要已经审批。这个规则适用于结算批次。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "approveSettlement"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/domain/settlement.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "3b6f5a55-6d82-433e-b4bf-f69b83a568e0",
+        "file": {
+          "workspaceRelativePath": "src/domain/settlement.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 68,
+            "character": 0
+          },
+          "end": {
+            "line": 78,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function approveSettlement(batch: SettlementBatch, memberId: string, now: number): SettlementBatch {\n    if (batch.state !== 'draft' || !memberId) {\n        throw new Error('Settlement cannot be approved');\n    }\n    return {\n        ...batch,\n        state: 'approved',\n        approvedBy: memberId,\n        approvedAt: now,\n    };\n}",
+          "sha256": "c8074955d11480f28e7bcde2c677fc182957b157e3d18852033da0eed995f144"
+        },
+        "fingerprint": {
+          "prefix": "      accountId,\n        state: 'draft',\n        lines: lines.map(line=>({...line})),\n        createdAt: now,\n    };\n}\n\n",
+          "suffix": "\n\nexport function paySettlement(batch: SettlementBatch, reference: string, now: number): SettlementBatch {\n    if (batch",
+          "landmarkLines": [
+            "export function approveSettlement(batch: SettlementBatch, memberId: string, now: number): SettlementBatch {",
+            "if (batch.state !== 'draft' || !memberId) {",
+            "throw new Error('Settlement cannot be approved');",
+            "}",
+            "return {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I07",
+    "type": "negative",
+    "title": "重试次数由策略限制",
+    "summary": "外部调用重试次数由策略参数限制",
+    "content": "外部调用重试次数由策略参数限制。达到次数后保留最后一个错误。该规则适用于支付流程。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "retryLimited"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/utils/retry.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "32b33f1b-7814-4225-838a-68c38665db91",
+        "file": {
+          "workspaceRelativePath": "src/utils/retry.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 1,
+            "character": 0
+          },
+          "end": {
+            "line": 1,
+            "character": 275
+          }
+        },
+        "snapshot": {
+          "text": "export async function retryLimited<T>(operation: () => Promise<T>, limit: number): Promise<T> { let attempt = 0; while (attempt < limit) { try { return await operation(); } catch (error) { attempt += 1; if (attempt >= limit) throw error; } } throw new Error('unreachable'); }",
+          "sha256": "37d5da53944006e3317069f2b7f38195b649ed2d9019b054d008fe0059721fe2"
+        },
+        "fingerprint": {
+          "prefix": "T>(operation: () => Promise<T>): Promise<T> { try { return await operation(); } catch (error) { return operation(); } }\n",
+          "suffix": "\nexport function retryDelay(attempt: number, base = 100): number { return Math.min(base * (attempt + 1), 5000); }\nexport",
+          "landmarkLines": [
+            "export async function retryLimited<T>(operation: () => Promise<T>, limit: number): Promise<T> { let attempt = 0; while (attempt < limit) { try { return await operation(); } catch (error) { attempt += 1; if (attempt >= limit) throw error; } } throw new Error('unreachable'); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I08",
+    "type": "tutorial",
+    "title": "成员邮箱统一小写",
+    "summary": "成员创建时去除邮箱两端空白并转换为小写",
+    "content": "成员创建时去除邮箱两端空白并转换为小写。重复邮箱会被拒绝。这个规则适用于成员服务。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "normalizeMember"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/domain/member.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "d46b37b0-a19c-4f12-a4ce-3a24e835e132",
+        "file": {
+          "workspaceRelativePath": "src/domain/member.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 1,
+            "character": 0
+          },
+          "end": {
+            "line": 6,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function normalizeMember(input: { id?: string; displayName: string; email: string; role?: Member['role'] }, id: string, joinedAt: number): Member {\n    const displayName = input.displayName.trim();\n    const email = input.email.trim().toLowerCase();\n    if (!displayName || !email.includes('@')) throw new Error('Invalid member');\n    return { id, displayName, email, role: input.role ?? 'viewer', active: true, joinedAt };\n}",
+          "sha256": "545261993191035bb57f7845ad955b67763c73dd6cb87306362060e81cc4a18e"
+        },
+        "fingerprint": {
+          "prefix": "isplayName: string; email: string; role: 'owner' | 'manager' | 'agent' | 'viewer'; active: boolean; joinedAt: number; }\n",
+          "suffix": "\nexport function canInvite(member: Member): boolean { return member.active && (member.role === 'owner' || member.role ==",
+          "landmarkLines": [
+            "export function normalizeMember(input: { id?: string; displayName: string; email: string; role?: Member['role'] }, id: string, joinedAt: number): Member {",
+            "const displayName = input.displayName.trim();",
+            "const email = input.email.trim().toLowerCase();",
+            "if (!displayName || !email.includes('@')) throw new Error('Invalid member');",
+            "return { id, displayName, email, role: input.role ?? 'viewer', active: true, joinedAt };"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I09",
+    "type": "risk",
+    "title": "审计最新记录倒序返回",
+    "summary": "latest 从数组尾部取得记录并倒序返回",
+    "content": "latest 从数组尾部取得记录并倒序返回。all 保留原始写入顺序，两种查询需要根据界面需求选择。该规则适用于审计查询。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "latest"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/storage/audit-store.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "d97afc40-b153-4e87-b0dc-9ac4ee002510",
+        "file": {
+          "workspaceRelativePath": "src/storage/audit-store.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 6,
+            "character": 4
+          },
+          "end": {
+            "line": 6,
+            "character": 86
+          }
+        },
+        "snapshot": {
+          "text": "latest(limit: number): AuditEntry[] { return this.all().slice(-limit).reverse(); }",
+          "sha256": "69ce6a57aadc208d29cefca58b2c07e0a50e0b4aec00a07f5aa62cad96c2987b"
+        },
+        "fingerprint": {
+          "prefix": "} })); }\n    byAction(action: string): AuditEntry[] { return this.all().filter(entry => entry.action === action); }\n    ",
+          "suffix": "\n    count(): number { return this.values.length; }\n}\n",
+          "landmarkLines": [
+            "latest(limit: number): AuditEntry[] { return this.all().slice(-limit).reverse(); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I10",
+    "type": "context",
+    "title": "通知模板必须已注册",
+    "summary": "发送通知前检查模板名称是否存在",
+    "content": "发送通知前检查模板名称是否存在。未知模板会抛出错误。这个规则适用于通知模板。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "renderTemplate"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/notifications/templates.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "f81823de-a538-4974-98c2-fa6220880673",
+        "file": {
+          "workspaceRelativePath": "src/notifications/templates.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 7,
+            "character": 0
+          },
+          "end": {
+            "line": 7,
+            "character": 204
+          }
+        },
+        "snapshot": {
+          "text": "export function renderTemplate(name: string, data: Record<string, string>): string { const template = templates[name]; if (!template) throw new Error('Template not found'); return template.render(data); }",
+          "sha256": "a609871e26fdb14ad80a2fccb8807326d42fcb6dc106fa37f131ae1722b14e1a"
+        },
+        "fingerprint": {
+          "prefix": "mail} invited` },\n    orderCancelled: { name: 'orderCancelled', render: data => `Order ${data.orderId} cancelled` },\n};\n",
+          "suffix": "\nexport function templateNames(): string[] { return Object.keys(templates); }\n",
+          "landmarkLines": [
+            "export function renderTemplate(name: string, data: Record<string, string>): string { const template = templates[name]; if (!template) throw new Error('Template not found'); return template.render(data); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I11",
+    "type": "negative",
+    "title": "库存版本冲突立即报告",
+    "summary": "库存写入携带预期版本号",
+    "content": "库存写入携带预期版本号。版本变化时立即报告冲突，调用方自行重试。该规则适用于库存存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "putStock"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/storage/inventory-store.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "65b7d507-3b72-44bb-bdea-af6d2a8b55ed",
+        "file": {
+          "workspaceRelativePath": "src/storage/inventory-store.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 13,
+            "character": 4
+          },
+          "end": {
+            "line": 22,
+            "character": 5
+          }
+        },
+        "snapshot": {
+          "text": "putStock(item: StockItem, expectedVersion?: number): StockItem {\n        const key = stockKey(item.warehouseId, item.sku);\n        const current = this.stocks.get(key);\n        if (expectedVersion !== undefined && current?.version !== expectedVersion) {\n            throw new Error('Inventory version conflict');\n        }\n        this.stocks.set(key, { ...item });\n        this.revision += 1;\n        return { ...item };\n    }",
+          "sha256": "135d0ff036d65d79d76b3f49a25ec7b17704e9d846113ab98be5b7be98424893"
+        },
+        "fingerprint": {
+          "prefix": "ined {\n        const item = this.stocks.get(stockKey(warehouseId, sku));\n        return item && { ...item };\n    }\n\n    ",
+          "suffix": "\n\n    stockList(warehouseId?: string): StockItem[] {\n        return [...this.stocks.values()]\n            .filter(item =",
+          "landmarkLines": [
+            "putStock(item: StockItem, expectedVersion?: number): StockItem {",
+            "const key = stockKey(item.warehouseId, item.sku);",
+            "const current = this.stocks.get(key);",
+            "if (expectedVersion !== undefined && current?.version !== expectedVersion) {",
+            "throw new Error('Inventory version conflict');"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I12",
+    "type": "tutorial",
+    "title": "支付风险使用失败次数",
+    "summary": "支付风险等级结合支付状态和失败次数计算",
+    "content": "支付风险等级结合支付状态和失败次数计算。成功状态返回低风险。这个规则适用于支付工作流。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "paymentRisk"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/workflow/payment-workflow.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "48bdfd2f-19c4-4bc4-a625-380ae3a84889",
+        "file": {
+          "workspaceRelativePath": "src/workflow/payment-workflow.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 6,
+            "character": 0
+          },
+          "end": {
+            "line": 6,
+            "character": 211
+          }
+        },
+        "snapshot": {
+          "text": "export function paymentRisk(payment: Payment): 'low' | 'medium' | 'high' { if (payment.state === 'failed' && payment.attempts >= 3) return 'high'; if (payment.state === 'failed') return 'medium'; return 'low'; }",
+          "sha256": "1b4f2c5ee60b7d6859dfb89e230236d5299111045360e8ac80fbdce24dfd0717"
+        },
+        "fingerprint": {
+          "prefix": ": Payment): string[] { return [payment.state, `attempts:${payment.attempts}`, payment.providerRef ?? 'unreferenced']; }\n",
+          "suffix": "\nexport function providerKey(payment: Payment): string { return `${payment.provider}:${payment.id}`; }\n",
+          "landmarkLines": [
+            "export function paymentRisk(payment: Payment): 'low' | 'medium' | 'high' { if (payment.state === 'failed' && payment.attempts >= 3) return 'high'; if (payment.state === 'failed') return 'medium'; return 'low'; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I13",
+    "type": "risk",
+    "title": "订单报告使用退款后余额",
+    "summary": "订单报告同时输出总金额和退款金额",
+    "content": "订单报告同时输出总金额和退款金额。收入统计使用两者相减。该规则适用于报表。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "totalRevenue"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/reports/order-report.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "635c3b60-e12e-47a7-8d67-e7908dde81ef",
+        "file": {
+          "workspaceRelativePath": "src/reports/order-report.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 5,
+            "character": 0
+          },
+          "end": {
+            "line": 5,
+            "character": 143
+          }
+        },
+        "snapshot": {
+          "text": "export function totalRevenue(rows: OrderReportRow[]): number { return rows.reduce((sum, row) => sum + row.totalCents - row.refundedCents, 0); }",
+          "sha256": "4bbd21ae6df935bb2a6d62b0cf43b8cea1fb2efb7e58354e6697f03643bfcf19"
+        },
+        "fingerprint": {
+          "prefix": "order.createdAt }; }\nexport function buildReport(orders: Order[]): OrderReportRow[] { return orders.map(toReportRow); }\n",
+          "suffix": "\nexport function byStatus(rows: OrderReportRow[], status: string): OrderReportRow[] { return rows.filter(row => row.stat",
+          "landmarkLines": [
+            "export function totalRevenue(rows: OrderReportRow[]): number { return rows.reduce((sum, row) => sum + row.totalCents - row.refundedCents, 0); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I14",
+    "type": "context",
+    "title": "成员停用保留历史记录",
+    "summary": "停用成员只改变 active 标识，不删除历史事件",
+    "content": "停用成员只改变 active 标识，不删除历史事件。读取接口仍然可以显示成员。该规则适用于成员生命周期。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "deactivate"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/domain/member.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "0e407794-166e-4f39-bb15-39fa54adaf8b",
+        "file": {
+          "workspaceRelativePath": "src/domain/member.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 9,
+            "character": 0
+          },
+          "end": {
+            "line": 9,
+            "character": 91
+          }
+        },
+        "snapshot": {
+          "text": "export function deactivate(member: Member): Member { return { ...member, active: false }; }",
+          "sha256": "aaf6ab897e0a0f05a8da2e57bfd3510e20c86006a17807f90dde5b60458e7367"
+        },
+        "fingerprint": {
+          "prefix": "ger'); }\nexport function canManageOrders(member: Member): boolean { return member.active && member.role !== 'viewer'; }\n",
+          "suffix": "\nexport function activate(member: Member): Member { return { ...member, active: true }; }\nexport function memberLabel(me",
+          "landmarkLines": [
+            "export function deactivate(member: Member): Member { return { ...member, active: false }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I15",
+    "type": "negative",
+    "title": "投递回执来自已完成消息",
+    "summary": "receipts 只读取 delivered 状态的消息，并支持按 recipient 筛选",
+    "content": "receipts 只读取 delivered 状态的消息，并支持按 recipient 筛选。回执包含 deliveredAt 和 attempts。这个规则适用于通知投递查询。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "DeliveryService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/delivery-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "9fe065de-5d0f-4716-98e8-590f46535a24",
+        "file": {
+          "workspaceRelativePath": "src/services/delivery-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 96,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class DeliveryService {\n    private readonly outbox: NotificationOutbox;\n    private readonly policy: DeliveryPolicy;\n    private readonly now: () => number;\n\n    constructor(outbox: NotificationOutbox, policy: DeliveryPolicy, now = () => Date.now()) {\n        if (!Number.isInteger(policy.maxAttempts) || policy.maxAttempts < 1) {\n            throw new Error('Delivery attempt limit must be positive');\n        }\n        if (!Number.isInteger(policy.batchSize) || policy.batchSize < 1 || policy.batchSize > 100) {\n            throw new Error('Delivery batch size is invalid');\n        }\n        if (!Number.isInteger(policy.initialDelay) || policy.initialDelay < 1) {\n            throw new Error('Delivery initial delay is invalid');\n        }\n        if (!Number.isInteger(policy.maximumDelay) || policy.maximumDelay < policy.initialDelay) {\n            throw new Error('Delivery maximum delay is invalid');\n        }\n        this.outbox = outbox;\n        this.policy = {...policy};\n        this.now = now;\n    }\n\n    ready(): OutboxMessage[] {\n        return this.outbox.due(this.now(),this.policy.batchSize);\n    }\n\n    begin(id: string): OutboxMessage {\n        return this.outbox.claim(id,this.now());\n    }\n\n    succeed(id: string): DeliveryReceipt {\n        const message = this.outbox.complete(id,this.now());\n        return {\n            messageId:message.id,\n            recipient:message.recipient,\n            deliveredAt:message.deliveredAt!,\n            attempts:message.attempts,\n        };\n    }\n\n    reject(id: string, reason: string): DeliveryFailure {\n        if (!reason.trim()) {\n            throw new Error('Delivery failure requires a reason');\n        }\n        const current = this.outbox.get(id);\n        const delay = Math.min(this.policy.maximumDelay,this.policy.initialDelay * 2 ** (current.attempts - 1));\n        const failed = this.outbox.fail(id,reason,this.now()+delay,this.policy.maxAttempts);\n        return {\n            messageId:id,\n            reason,\n            nextAttemptAt:failed.nextAttemptAt,\n            exhausted:failed.state === 'failed',\n        };\n    }\n\n    receipts(recipient?: string): DeliveryReceipt[] {\n        return this.outbox.list('delivered')\n            .filter(message=>recipient===undefined || message.recipient===recipient)\n            .map(message=>({\n                messageId:message.id,\n                recipient:message.recipient,\n                deliveredAt:message.deliveredAt!,\n                attempts:message.attempts,\n            }));\n    }\n\n    health(): {pending: number; delivering: number; delivered: number; failed: number; exhaustedIds: string[]} {\n        return {\n            ...this.outbox.counts(),\n            exhaustedIds:this.outbox.list('failed').map(message=>message.id).sort(),\n        };\n    }\n}",
+          "sha256": "7705563c401f5e14dfe1608e453340db77e5b224903f4cb1bf1683245af58b26"
+        },
+        "fingerprint": {
+          "prefix": "DeliveryPolicy {\n    maxAttempts: number;\n    initialDelay: number;\n    maximumDelay: number;\n    batchSize: number;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class DeliveryService {",
+            "private readonly outbox: NotificationOutbox;",
+            "private readonly policy: DeliveryPolicy;",
+            "private readonly now: () => number;",
+            "constructor(outbox: NotificationOutbox, policy: DeliveryPolicy, now = () => Date.now()) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I16",
+    "type": "tutorial",
+    "title": "订单取消写入原因备注",
+    "summary": "取消订单时把原因写入内部备注",
+    "content": "取消订单时把原因写入内部备注。已经退款的订单不能取消。该规则适用于订单工作流。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "cancelOrder"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/workflow/order-workflow.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "51a31b57-148e-4ec0-a5b7-a0c3ff9eadba",
+        "file": {
+          "workspaceRelativePath": "src/workflow/order-workflow.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 2,
+            "character": 0
+          },
+          "end": {
+            "line": 2,
+            "character": 298
+          }
+        },
+        "snapshot": {
+          "text": "export function cancelOrder(order: Order, reason: string): Order { if (order.status === 'refunded') throw new DomainError(ERROR_CODES.ORDER_CANCELLED, 'Refunded orders cannot be cancelled'); return { ...order, status: 'cancelled', internalNotes: [...order.internalNotes, `cancelled:${reason}`] }; }",
+          "sha256": "0c9801b4a2f079b47de9b62aac72c0ec7745f3947f170423c487cd69e0287410"
+        },
+        "fingerprint": {
+          "prefix": "import { DomainError, ERROR_CODES } from '../domain/errors.ts';\nimport type { Order } from '../domain/order.ts';\n",
+          "suffix": "\nexport function reopenOrder(order: Order): Order { if (order.status !== 'cancelled') throw new Error('Only cancelled or",
+          "landmarkLines": [
+            "export function cancelOrder(order: Order, reason: string): Order { if (order.status === 'refunded') throw new DomainError(ERROR_CODES.ORDER_CANCELLED, 'Refunded orders cannot be cancelled'); return { ...order, status: 'cancelled', internalNotes: [...order.internalNotes, `cancelled:${reason}`] }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I17",
+    "type": "risk",
+    "title": "批次总额按结算行计算",
+    "summary": "结算批次总额由每一条结算行求和",
+    "content": "结算批次总额由每一条结算行求和。金额仍然使用整数分。这个规则适用于结算领域。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "settlementTotal"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/domain/settlement.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "c282f3bf-4709-4ba3-a888-3e3a83f465d5",
+        "file": {
+          "workspaceRelativePath": "src/domain/settlement.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 92,
+            "character": 0
+          },
+          "end": {
+            "line": 94,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function settlementTotal(batch: SettlementBatch): Money {\n    return batch.lines.reduce((sum,line)=>sum.add(Money.fromCents(line.payableCents)),Money.fromCents(0));\n}",
+          "sha256": "dad11358c5b4d1a1fc8432ba8b3abf5e6badc2133dbbd123935ef440159a8b93"
+        },
+        "fingerprint": {
+          "prefix": "\n    return {\n        ...batch,\n        state: 'paid',\n        bankReference: reference,\n        paidAt: now,\n    };\n}\n\n",
+          "suffix": "\n\nexport function discountLine(amount: Money, percent: number): Money {\n    if (!Number.isFinite(percent) || percent < 0",
+          "landmarkLines": [
+            "export function settlementTotal(batch: SettlementBatch): Money {",
+            "return batch.lines.reduce((sum,line)=>sum.add(Money.fromCents(line.payableCents)),Money.fromCents(0));",
+            "}"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I18",
+    "type": "context",
+    "title": "通知收件人保留原样",
+    "summary": "通知收件人地址在队列中保持调用方提供的字符串",
+    "content": "通知收件人地址在队列中保持调用方提供的字符串。格式校验在入口完成。该规则适用于通知队列。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "NotificationOutbox"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/notifications/outbox.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a92fd98f-5a66-465e-8a07-33f4878cb63e",
+        "file": {
+          "workspaceRelativePath": "src/notifications/outbox.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 18,
+            "character": 0
+          },
+          "end": {
+            "line": 122,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class NotificationOutbox {\n    private readonly values = new Map<string,OutboxMessage>();\n    private readonly logicalIds = new Map<string,string>();\n\n    enqueue(input: Omit<OutboxMessage,'state'|'attempts'|'nextAttemptAt'>): OutboxMessage {\n        const currentId = this.logicalIds.get(input.logicalId);\n        if (currentId !== undefined) {\n            const current = this.get(currentId);\n            if (current.recipient !== input.recipient || current.template !== input.template) {\n                throw new Error('Logical notification reused for a different recipient or template');\n            }\n            return current;\n        }\n        if (this.values.has(input.id)) {\n            throw new Error('Outbox identifier already exists');\n        }\n        const message: OutboxMessage = {\n            ...input,\n            data:{...input.data},\n            state:'pending',\n            attempts:0,\n            nextAttemptAt:input.createdAt,\n        };\n        this.values.set(message.id,message);\n        this.logicalIds.set(message.logicalId,message.id);\n        return copyMessage(message);\n    }\n\n    get(id: string): OutboxMessage {\n        const value = this.values.get(id);\n        if (!value) {\n            throw new Error('Outbox message not found');\n        }\n        return copyMessage(value);\n    }\n\n    due(now: number, limit: number): OutboxMessage[] {\n        if (!Number.isInteger(limit) || limit < 1) {\n            throw new Error('Outbox limit must be positive');\n        }\n        return [...this.values.values()]\n            .filter(value=>value.state==='pending' && value.nextAttemptAt<=now)\n            .sort((left,right)=>left.nextAttemptAt-right.nextAttemptAt || left.id.localeCompare(right.id))\n            .slice(0,limit)\n            .map(copyMessage);\n    }\n\n    claim(id: string, now: number): OutboxMessage {\n        const value = this.get(id);\n        if (value.state !== 'pending' || value.nextAttemptAt > now) {\n            throw new Error('Outbox message is not ready');\n        }\n        const claimed: OutboxMessage = {\n            ...value,\n            state:'delivering',\n            attempts:value.attempts+1,\n        };\n        this.values.set(id,claimed);\n        return copyMessage(claimed);\n    }\n\n    complete(id: string, now: number): OutboxMessage {\n        const value = this.get(id);\n        if (value.state !== 'delivering') {\n            throw new Error('Outbox message is not being delivered');\n        }\n        const completed: OutboxMessage = {\n            ...value,\n            state:'delivered',\n            deliveredAt:now,\n            lastError:undefined,\n        };\n        this.values.set(id,completed);\n        return copyMessage(completed);\n    }\n\n    fail(id: string, error: string, retryAt: number, maxAttempts: number): OutboxMessage {\n        const value = this.get(id);\n        if (value.state !== 'delivering' || !Number.isInteger(maxAttempts) || maxAttempts<1) {\n            throw new Error('Outbox failure transition is invalid');\n        }\n        const failed: OutboxMessage = {\n            ...value,\n            state:value.attempts>=maxAttempts ? 'failed' : 'pending',\n            nextAttemptAt:retryAt,\n            lastError:error,\n        };\n        this.values.set(id,failed);\n        return copyMessage(failed);\n    }\n\n    list(state?: OutboxMessage['state']): OutboxMessage[] {\n        return [...this.values.values()]\n            .filter(value=>state===undefined || value.state===state)\n            .map(copyMessage);\n    }\n\n    counts(): Record<OutboxMessage['state'],number> {\n        const result = {pending:0,delivering:0,delivered:0,failed:0};\n        for (const message of this.values.values()) {\n            result[message.state] += 1;\n        }\n        return result;\n    }\n}",
+          "sha256": "9617a31adfc918196c8fa0987d1177df404aa15d9adde5c68ae7c449685f5d7d"
+        },
+        "fingerprint": {
+          "prefix": "ng;\n}\n\nfunction copyMessage(message: OutboxMessage): OutboxMessage {\n    return {...message,data:{...message.data}};\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class NotificationOutbox {",
+            "private readonly values = new Map<string,OutboxMessage>();",
+            "private readonly logicalIds = new Map<string,string>();",
+            "enqueue(input: Omit<OutboxMessage,'state'|'attempts'|'nextAttemptAt'>): OutboxMessage {",
+            "const currentId = this.logicalIds.get(input.logicalId);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I19",
+    "type": "negative",
+    "title": "订单导出字段使用整数金额",
+    "summary": "订单导出输出 totalCents 和 refundedCents 字段",
+    "content": "订单导出输出 totalCents 和 refundedCents 字段。导出不会改变订单对象。该规则适用于报表。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "exportRows"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/order-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "d32771c2-3a21-4476-98dd-831b13ba323b",
+        "file": {
+          "workspaceRelativePath": "src/services/order-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 22,
+            "character": 4
+          },
+          "end": {
+            "line": 22,
+            "character": 292
+          }
+        },
+        "snapshot": {
+          "text": "exportRows(filters: OrderFilters = {}): Array<Record<string, unknown>> { return this.list(filters).map(order => ({ id: order.id, memberId: order.memberId, status: order.status, totalCents: orderTotal(order).cents, refundedCents: refundTotal(order).cents, createdAt: order.createdAt })); }",
+          "sha256": "3a7f06e6c619aef504bd06ec3c6d50b000b3fabf7d3cb50a376a7e84b255302e"
+        },
+        "fingerprint": {
+          "prefix": "Total(order); const refunded = refundTotal(order); return { total, refunded, balance: total.subtract(refunded) }; }\n    ",
+          "suffix": "\n    count(filters: OrderFilters = {}): number { return this.list(filters).length; }\n}\n",
+          "landmarkLines": [
+            "exportRows(filters: OrderFilters = {}): Array<Record<string, unknown>> { return this.list(filters).map(order => ({ id: order.id, memberId: order.memberId, status: order.status, totalCents: orderTotal(order).cents, refundedCents: refundTotal(order).cents, createdAt: order.createdAt })); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I20",
+    "type": "tutorial",
+    "title": "审计记录保留事件时间",
+    "summary": "审计记录保存创建时间并保持原始顺序",
+    "content": "审计记录保存创建时间并保持原始顺序。导出和查询都不能修改时间字段。这个规则适用于审计报告。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "AuditStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/storage/audit-store.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "26d2e16e-53cf-47d1-882d-16099c527575",
+        "file": {
+          "workspaceRelativePath": "src/storage/audit-store.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 1,
+            "character": 0
+          },
+          "end": {
+            "line": 8,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class AuditStore {\n    private readonly values: AuditEntry[] = [];\n    append(entry: AuditEntry): AuditEntry { this.values.push({ ...entry, payload: { ...entry.payload } }); return entry; }\n    all(): AuditEntry[] { return this.values.map(entry => ({ ...entry, payload: { ...entry.payload } })); }\n    byAction(action: string): AuditEntry[] { return this.all().filter(entry => entry.action === action); }\n    latest(limit: number): AuditEntry[] { return this.all().slice(-limit).reverse(); }\n    count(): number { return this.values.length; }\n}",
+          "sha256": "70e95414d3a4bccd417be02353b89ca7ecc3a483df3fd129fe721b24692e8008"
+        },
+        "fingerprint": {
+          "prefix": "erface AuditEntry { id: string; action: string; actorId: string; payload: Record<string, unknown>; createdAt: number; }\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class AuditStore {",
+            "private readonly values: AuditEntry[] = [];",
+            "append(entry: AuditEntry): AuditEntry { this.values.push({ ...entry, payload: { ...entry.payload } }); return entry; }",
+            "all(): AuditEntry[] { return this.values.map(entry => ({ ...entry, payload: { ...entry.payload } })); }",
+            "byAction(action: string): AuditEntry[] { return this.all().filter(entry => entry.action === action); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I21",
+    "type": "risk",
+    "title": "事件标识必须唯一",
+    "summary": "EventStore 拒绝重复事件标识",
+    "content": "EventStore 拒绝重复事件标识。读取操作返回复制后的 payload。这个规则适用于事件存储。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "EventStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/storage/event-store.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "5499807a-49fb-4385-85c3-699f30f87f51",
+        "file": {
+          "workspaceRelativePath": "src/storage/event-store.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 1,
+            "character": 0
+          },
+          "end": {
+            "line": 11,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class EventStore {\n    private readonly values: EventRecord[] = [];\n    append(event: EventRecord): EventRecord { if (this.values.some(item => item.id === event.id)) throw new Error('Duplicate event'); this.values.push({ ...event, payload: { ...event.payload } }); return event; }\n    all(): EventRecord[] { return this.values.map(event => ({ ...event, payload: { ...event.payload } })); }\n    topic(topic: string): EventRecord[] { return this.all().filter(event => event.topic === topic); }\n    actor(actorId: string): EventRecord[] { return this.all().filter(event => event.actorId === actorId); }\n    since(createdAt: number): EventRecord[] { return this.all().filter(event => event.createdAt >= createdAt); }\n    count(): number { return this.values.length; }\n    latest(): EventRecord | undefined { return this.values[this.values.length - 1]; }\n    clear(): void { this.values.length = 0; }\n}",
+          "sha256": "333bb4ed2fe5eb1bcefe453f9d98d5ab010831a04a65428b6d04b3aa333a9911"
+        },
+        "fingerprint": {
+          "prefix": "erface EventRecord { id: string; topic: string; payload: Record<string, unknown>; actorId: string; createdAt: number; }\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class EventStore {",
+            "private readonly values: EventRecord[] = [];",
+            "append(event: EventRecord): EventRecord { if (this.values.some(item => item.id === event.id)) throw new Error('Duplicate event'); this.values.push({ ...event, payload: { ...event.payload } }); return event; }",
+            "all(): EventRecord[] { return this.values.map(event => ({ ...event, payload: { ...event.payload } })); }",
+            "topic(topic: string): EventRecord[] { return this.all().filter(event => event.topic === topic); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I22",
+    "type": "context",
+    "title": "请求对象必须通过输入校验",
+    "summary": "HTTP 路由先把未知值检查为对象，再解析字段类型",
+    "content": "HTTP 路由先把未知值检查为对象，再解析字段类型。缺少必填字段立即抛出错误。该规则适用于请求处理。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "objectInput"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/http/request.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "f15b4dad-43d1-4f26-8a37-3d10dd707f77",
+        "file": {
+          "workspaceRelativePath": "src/http/request.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 15,
+            "character": 0
+          },
+          "end": {
+            "line": 20,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function objectInput(value: unknown): Record<string, unknown> {\n    if (!value || typeof value !== 'object' || Array.isArray(value)) {\n        throw new DomainError(ERROR_CODES.INVALID_ORDER, 'Request must be an object');\n    }\n    return value as Record<string, unknown>;\n}",
+          "sha256": "8c43d49c52011012598a2d90b1e0937579b4408539f714fc1c3751dd0c0e9b24"
+        },
+        "fingerprint": {
+          "prefix": "e Page<T> {\n    items: T[];\n    total: number;\n    offset: number;\n    limit: number;\n    nextOffset: number | null;\n}\n\n",
+          "suffix": "\n\nexport function stringInput(value: unknown, name: string): string {\n    if (typeof value !== 'string' || !value.trim()",
+          "landmarkLines": [
+            "export function objectInput(value: unknown): Record<string, unknown> {",
+            "if (!value || typeof value !== 'object' || Array.isArray(value)) {",
+            "throw new DomainError(ERROR_CODES.INVALID_ORDER, 'Request must be an object');",
+            "}",
+            "return value as Record<string, unknown>;"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I23",
+    "type": "negative",
+    "title": "账务月份统计使用秒值",
+    "summary": "账务记录使用整数秒保存时间",
+    "content": "账务记录使用整数秒保存时间。统计范围在进入领域服务前完成校验。这个规则适用于账务服务。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "SettlementService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/settlement-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a67c6d6d-c22d-4010-b69c-bcbe9116ba99",
+        "file": {
+          "workspaceRelativePath": "src/services/settlement-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 11,
+            "character": 0
+          },
+          "end": {
+            "line": 74,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class SettlementService {\n    private readonly store: SettlementStore;\n    private readonly makeId: () => string;\n    private readonly now: () => number;\n\n    constructor(store: SettlementStore, makeId: () => string, now=()=>Date.now()) {\n        this.store = store;\n        this.makeId = makeId;\n        this.now = now;\n    }\n\n    prepare(accountId: string, orders: Order[], feeBasisPoints: number): SettlementBatch {\n        const lines = orders.map(order=>settlementLine(order,feeBasisPoints));\n        const batch = createSettlement(this.makeId(),accountId,lines,this.now());\n        return this.store.create(batch);\n    }\n\n    approve(id: string, memberId: string): SettlementBatch {\n        const batch = approveSettlement(this.get(id),memberId,this.now());\n        return this.store.update(batch);\n    }\n\n    pay(id: string, reference: string): SettlementBatch {\n        const batch = paySettlement(this.get(id),reference,this.now());\n        return this.store.update(batch);\n    }\n\n    get(id: string): SettlementBatch {\n        const batch = this.store.get(id);\n        if (!batch) {\n            throw new Error('Settlement not found');\n        }\n        return batch;\n    }\n\n    list(accountId?: string, state?: SettlementBatch['state']): SettlementBatch[] {\n        return this.store.list(accountId).filter(batch=>state===undefined || batch.state===state);\n    }\n\n    summary(accountId: string): { draftCents: number; approvedCents: number; paidCents: number; count: number } {\n        const batches = this.list(accountId);\n        const totals = {draftCents:0,approvedCents:0,paidCents:0,count:batches.length};\n        for (const batch of batches) {\n            const amount = settlementTotal(batch).cents;\n            if (batch.state === 'draft') totals.draftCents += amount;\n            if (batch.state === 'approved') totals.approvedCents += amount;\n            if (batch.state === 'paid') totals.paidCents += amount;\n        }\n        return totals;\n    }\n\n    exportRows(accountId: string): Array<Record<string,unknown>> {\n        return this.list(accountId).map(batch=>({\n            id:batch.id,\n            accountId:batch.accountId,\n            state:batch.state,\n            orderCount:batch.lines.length,\n            payableCents:settlementTotal(batch).cents,\n            createdAt:batch.createdAt,\n            approvedBy:batch.approvedBy,\n            paidAt:batch.paidAt,\n        }));\n    }\n}",
+          "sha256": "5793520b621ec087355d572d730fcdfd09dfe11a2db767149a7ef045769513fd"
+        },
+        "fingerprint": {
+          "prefix": "e SettlementBatch,\n} from '../domain/settlement.ts';\nimport { SettlementStore } from '../storage/settlement-store.ts';\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class SettlementService {",
+            "private readonly store: SettlementStore;",
+            "private readonly makeId: () => string;",
+            "private readonly now: () => number;",
+            "constructor(store: SettlementStore, makeId: () => string, now=()=>Date.now()) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I24",
+    "type": "tutorial",
+    "title": "订单内部备注按顺序追加",
+    "summary": "新增备注追加到数组末尾，不覆盖已有内容",
+    "content": "新增备注追加到数组末尾，不覆盖已有内容。返回对象保留订单其他字段。该规则适用于订单领域。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "addInternalNote"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/domain/order.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "e3726d32-9639-4154-8198-55686c1e9782",
+        "file": {
+          "workspaceRelativePath": "src/domain/order.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 27,
+            "character": 0
+          },
+          "end": {
+            "line": 29,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function addInternalNote(order: Order, note: string): Order {\n    return { ...order, internalNotes: [...order.internalNotes, note] };\n}",
+          "sha256": "8c88caddea68f37fa8a24a7cb24e26853b2942baf18d8ad2974be25e44e78e94"
+        },
+        "fingerprint": {
+          "prefix": "als(total) ? 'refunded' : 'partially-refunded';\n    return { ...order, status, refunds: [...order.refunds, refund] };\n}\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export function addInternalNote(order: Order, note: string): Order {",
+            "return { ...order, internalNotes: [...order.internalNotes, note] };",
+            "}"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-I25",
+    "type": "risk",
+    "title": "仓库调拨要求来源和目标不同",
+    "summary": "调拨接口拒绝相同仓库标识",
+    "content": "调拨接口拒绝相同仓库标识。库存变化需要同时写入来源和目标。该规则适用于库存服务。 修改相关调用时需要保持数据结构和错误处理方式。提交前使用已有测试确认边界结果，后续成员可以根据这条记录理解适用范围。遇到跨模块调用时还要检查错误传播、返回值复制和记录顺序，避免局部修改影响其他业务流程。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "transfer"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/inventory-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "5cde161e-62c1-4543-b996-83e032a2a9c4",
+        "file": {
+          "workspaceRelativePath": "src/services/inventory-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 116,
+            "character": 4
+          },
+          "end": {
+            "line": 128,
+            "character": 5
+          }
+        },
+        "snapshot": {
+          "text": "transfer(sourceId: string, destinationId: string, sku: string, amount: number): void {\n        if (sourceId === destinationId) {\n            throw new Error('Transfer warehouses must differ');\n        }\n        this.store.transaction(isolated => {\n            const service = new InventoryService(isolated, this.now);\n            const source = service.stock(sourceId, sku);\n            const destination = service.stock(destinationId, sku);\n            const held = reserveStock(source, amount, this.now());\n            isolated.putStock(consumeStock(held, amount, this.now()), source.version);\n            isolated.putStock(receiveStock(destination, amount, this.now()), destination.version);\n        });\n    }",
+          "sha256": "f292ad88369de8775cb741c9f48bed150c7e12221c5cd56e540d649324ed4cfe"
+        },
+        "fingerprint": {
+          "prefix": "\n    listReservations(orderId?: string): Reservation[] {\n        return this.store.reservationList(orderId);\n    }\n\n    ",
+          "suffix": "\n}\n",
+          "landmarkLines": [
+            "transfer(sourceId: string, destinationId: string, sku: string, amount: number): void {",
+            "if (sourceId === destinationId) {",
+            "throw new Error('Transfer warehouses must differ');",
+            "}",
+            "this.store.transaction(isolated => {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T01-d1",
+    "type": "decision",
+    "title": "单项库存预留的版本检查",
+    "summary": "单项预留需要带版本号写入库存",
+    "content": "单项预留需要带版本号写入库存。这样可以发现并发写入并保留冲突错误。它只适用于一次预留。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "InventoryService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/inventory-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "ab6fb2c9-c6d2-4a39-ae36-2945cc708134",
+        "file": {
+          "workspaceRelativePath": "src/services/inventory-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 21,
+            "character": 0
+          },
+          "end": {
+            "line": 129,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class InventoryService {\n    readonly store: InventoryStore;\n    private readonly now: () => number;\n\n    constructor(store: InventoryStore, now = () => Date.now()) {\n        this.store = store;\n        this.now = now;\n    }\n\n    initialize(warehouseId: string, sku: string, amount: number): StockItem {\n        if (this.store.getStock(warehouseId, sku)) {\n            throw new Error('Stock already exists');\n        }\n        return this.store.putStock(createStock(sku, warehouseId, amount, this.now()));\n    }\n\n    reserve(input: ReserveInput): Reservation {\n        quantity(input.quantity);\n        if (!input.reservationId || !input.orderId) {\n            throw new Error('Reservation and order identifiers are required');\n        }\n        const existing = this.store.getReservation(input.reservationId);\n        if (existing) {\n            if (existing.orderId !== input.orderId || existing.sku !== input.sku || existing.quantity !== input.quantity || existing.warehouseId !== input.warehouseId) {\n                throw new Error('Reservation identifier reused with different input');\n            }\n            return existing;\n        }\n        const current = this.stock(input.warehouseId, input.sku);\n        const timestamp = this.now();\n        const next = reserveStock(current, input.quantity, timestamp);\n        const reservation: Reservation = {\n            id: input.reservationId,\n            orderId: input.orderId,\n            warehouseId: input.warehouseId,\n            sku: input.sku,\n            quantity: input.quantity,\n            state: 'active',\n            createdAt: timestamp,\n            updatedAt: timestamp,\n        };\n        this.store.putStock(next, current.version);\n        return this.store.putReservation(reservation);\n    }\n\n    release(id: string): Reservation {\n        const current = this.reservation(id);\n        const timestamp = this.now();\n        const nextReservation = changeReservation(current, 'released', timestamp);\n        const stock = this.stock(current.warehouseId, current.sku);\n        const nextStock = releaseStock(stock, current.quantity, timestamp);\n        this.store.putStock(nextStock, stock.version);\n        return this.store.putReservation(nextReservation);\n    }\n\n    consume(id: string): Reservation {\n        const current = this.reservation(id);\n        const timestamp = this.now();\n        const nextReservation = changeReservation(current, 'consumed', timestamp);\n        const stock = this.stock(current.warehouseId, current.sku);\n        const nextStock = consumeStock(stock, current.quantity, timestamp);\n        this.store.putStock(nextStock, stock.version);\n        return this.store.putReservation(nextReservation);\n    }\n\n    receive(warehouseId: string, sku: string, amount: number): StockItem {\n        const current = this.stock(warehouseId, sku);\n        const next = receiveStock(current, amount, this.now());\n        return this.store.putStock(next, current.version);\n    }\n\n    stock(warehouseId: string, sku: string): StockItem {\n        const item = this.store.getStock(warehouseId, sku);\n        if (!item) {\n            throw new Error('Stock not found');\n        }\n        return item;\n    }\n\n    reservation(id: string): Reservation {\n        const value = this.store.getReservation(id);\n        if (!value) {\n            throw new Error('Reservation not found');\n        }\n        return value;\n    }\n\n    list(warehouseId?: string): StockItem[] {\n        return this.store.stockList(warehouseId);\n    }\n\n    listReservations(orderId?: string): Reservation[] {\n        return this.store.reservationList(orderId);\n    }\n\n    transfer(sourceId: string, destinationId: string, sku: string, amount: number): void {\n        if (sourceId === destinationId) {\n            throw new Error('Transfer warehouses must differ');\n        }\n        this.store.transaction(isolated => {\n            const service = new InventoryService(isolated, this.now);\n            const source = service.stock(sourceId, sku);\n            const destination = service.stock(destinationId, sku);\n            const held = reserveStock(source, amount, this.now());\n            isolated.putStock(consumeStock(held, amount, this.now()), source.version);\n            isolated.putStock(receiveStock(destination, amount, this.now()), destination.version);\n        });\n    }\n}",
+          "sha256": "33e0696a7c1ae81491075f1f2cdcf5f1917ac700a25b07699c2740f4cca62573"
+        },
+        "fingerprint": {
+          "prefix": "ut {\n    reservationId: string;\n    orderId: string;\n    warehouseId: string;\n    sku: string;\n    quantity: number;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class InventoryService {",
+            "readonly store: InventoryStore;",
+            "private readonly now: () => number;",
+            "constructor(store: InventoryStore, now = () => Date.now()) {",
+            "this.store = store;"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T01-d2",
+    "type": "constraint",
+    "title": "库存列表按仓库和 SKU 排序",
+    "summary": "库存列表先按仓库标识筛选，再按 SKU 稳定排序",
+    "content": "库存列表先按仓库标识筛选，再按 SKU 稳定排序。返回值需要复制对象，避免调用方改变存储。这个规则适用于查询接口。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "InventoryService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/inventory-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "f69762de-2238-495a-8f0c-280832db6232",
+        "file": {
+          "workspaceRelativePath": "src/services/inventory-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 21,
+            "character": 0
+          },
+          "end": {
+            "line": 129,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class InventoryService {\n    readonly store: InventoryStore;\n    private readonly now: () => number;\n\n    constructor(store: InventoryStore, now = () => Date.now()) {\n        this.store = store;\n        this.now = now;\n    }\n\n    initialize(warehouseId: string, sku: string, amount: number): StockItem {\n        if (this.store.getStock(warehouseId, sku)) {\n            throw new Error('Stock already exists');\n        }\n        return this.store.putStock(createStock(sku, warehouseId, amount, this.now()));\n    }\n\n    reserve(input: ReserveInput): Reservation {\n        quantity(input.quantity);\n        if (!input.reservationId || !input.orderId) {\n            throw new Error('Reservation and order identifiers are required');\n        }\n        const existing = this.store.getReservation(input.reservationId);\n        if (existing) {\n            if (existing.orderId !== input.orderId || existing.sku !== input.sku || existing.quantity !== input.quantity || existing.warehouseId !== input.warehouseId) {\n                throw new Error('Reservation identifier reused with different input');\n            }\n            return existing;\n        }\n        const current = this.stock(input.warehouseId, input.sku);\n        const timestamp = this.now();\n        const next = reserveStock(current, input.quantity, timestamp);\n        const reservation: Reservation = {\n            id: input.reservationId,\n            orderId: input.orderId,\n            warehouseId: input.warehouseId,\n            sku: input.sku,\n            quantity: input.quantity,\n            state: 'active',\n            createdAt: timestamp,\n            updatedAt: timestamp,\n        };\n        this.store.putStock(next, current.version);\n        return this.store.putReservation(reservation);\n    }\n\n    release(id: string): Reservation {\n        const current = this.reservation(id);\n        const timestamp = this.now();\n        const nextReservation = changeReservation(current, 'released', timestamp);\n        const stock = this.stock(current.warehouseId, current.sku);\n        const nextStock = releaseStock(stock, current.quantity, timestamp);\n        this.store.putStock(nextStock, stock.version);\n        return this.store.putReservation(nextReservation);\n    }\n\n    consume(id: string): Reservation {\n        const current = this.reservation(id);\n        const timestamp = this.now();\n        const nextReservation = changeReservation(current, 'consumed', timestamp);\n        const stock = this.stock(current.warehouseId, current.sku);\n        const nextStock = consumeStock(stock, current.quantity, timestamp);\n        this.store.putStock(nextStock, stock.version);\n        return this.store.putReservation(nextReservation);\n    }\n\n    receive(warehouseId: string, sku: string, amount: number): StockItem {\n        const current = this.stock(warehouseId, sku);\n        const next = receiveStock(current, amount, this.now());\n        return this.store.putStock(next, current.version);\n    }\n\n    stock(warehouseId: string, sku: string): StockItem {\n        const item = this.store.getStock(warehouseId, sku);\n        if (!item) {\n            throw new Error('Stock not found');\n        }\n        return item;\n    }\n\n    reservation(id: string): Reservation {\n        const value = this.store.getReservation(id);\n        if (!value) {\n            throw new Error('Reservation not found');\n        }\n        return value;\n    }\n\n    list(warehouseId?: string): StockItem[] {\n        return this.store.stockList(warehouseId);\n    }\n\n    listReservations(orderId?: string): Reservation[] {\n        return this.store.reservationList(orderId);\n    }\n\n    transfer(sourceId: string, destinationId: string, sku: string, amount: number): void {\n        if (sourceId === destinationId) {\n            throw new Error('Transfer warehouses must differ');\n        }\n        this.store.transaction(isolated => {\n            const service = new InventoryService(isolated, this.now);\n            const source = service.stock(sourceId, sku);\n            const destination = service.stock(destinationId, sku);\n            const held = reserveStock(source, amount, this.now());\n            isolated.putStock(consumeStock(held, amount, this.now()), source.version);\n            isolated.putStock(receiveStock(destination, amount, this.now()), destination.version);\n        });\n    }\n}",
+          "sha256": "33e0696a7c1ae81491075f1f2cdcf5f1917ac700a25b07699c2740f4cca62573"
+        },
+        "fingerprint": {
+          "prefix": "ut {\n    reservationId: string;\n    orderId: string;\n    warehouseId: string;\n    sku: string;\n    quantity: number;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class InventoryService {",
+            "readonly store: InventoryStore;",
+            "private readonly now: () => number;",
+            "constructor(store: InventoryStore, now = () => Date.now()) {",
+            "this.store = store;"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T01-target",
+    "type": "constraint",
+    "title": "批量库存操作使用单一事务",
+    "summary": "一次批量库存操作在独立事务状态中完成，任何项失败后原始状态保持不变",
+    "content": "一次批量库存操作在独立事务状态中完成，任何项失败后原始状态保持不变。规则适用于InventoryService.reserveBatch 的库存与 reservation 写入。任意一项失败都必须保留操作前的库存和 reservation 快照。修改InventoryService相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "InventoryService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/inventory-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a70d87ee-aba9-43e2-8305-802ed8a0fa2f",
+        "file": {
+          "workspaceRelativePath": "src/services/inventory-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 21,
+            "character": 0
+          },
+          "end": {
+            "line": 129,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class InventoryService {\n    readonly store: InventoryStore;\n    private readonly now: () => number;\n\n    constructor(store: InventoryStore, now = () => Date.now()) {\n        this.store = store;\n        this.now = now;\n    }\n\n    initialize(warehouseId: string, sku: string, amount: number): StockItem {\n        if (this.store.getStock(warehouseId, sku)) {\n            throw new Error('Stock already exists');\n        }\n        return this.store.putStock(createStock(sku, warehouseId, amount, this.now()));\n    }\n\n    reserve(input: ReserveInput): Reservation {\n        quantity(input.quantity);\n        if (!input.reservationId || !input.orderId) {\n            throw new Error('Reservation and order identifiers are required');\n        }\n        const existing = this.store.getReservation(input.reservationId);\n        if (existing) {\n            if (existing.orderId !== input.orderId || existing.sku !== input.sku || existing.quantity !== input.quantity || existing.warehouseId !== input.warehouseId) {\n                throw new Error('Reservation identifier reused with different input');\n            }\n            return existing;\n        }\n        const current = this.stock(input.warehouseId, input.sku);\n        const timestamp = this.now();\n        const next = reserveStock(current, input.quantity, timestamp);\n        const reservation: Reservation = {\n            id: input.reservationId,\n            orderId: input.orderId,\n            warehouseId: input.warehouseId,\n            sku: input.sku,\n            quantity: input.quantity,\n            state: 'active',\n            createdAt: timestamp,\n            updatedAt: timestamp,\n        };\n        this.store.putStock(next, current.version);\n        return this.store.putReservation(reservation);\n    }\n\n    release(id: string): Reservation {\n        const current = this.reservation(id);\n        const timestamp = this.now();\n        const nextReservation = changeReservation(current, 'released', timestamp);\n        const stock = this.stock(current.warehouseId, current.sku);\n        const nextStock = releaseStock(stock, current.quantity, timestamp);\n        this.store.putStock(nextStock, stock.version);\n        return this.store.putReservation(nextReservation);\n    }\n\n    consume(id: string): Reservation {\n        const current = this.reservation(id);\n        const timestamp = this.now();\n        const nextReservation = changeReservation(current, 'consumed', timestamp);\n        const stock = this.stock(current.warehouseId, current.sku);\n        const nextStock = consumeStock(stock, current.quantity, timestamp);\n        this.store.putStock(nextStock, stock.version);\n        return this.store.putReservation(nextReservation);\n    }\n\n    receive(warehouseId: string, sku: string, amount: number): StockItem {\n        const current = this.stock(warehouseId, sku);\n        const next = receiveStock(current, amount, this.now());\n        return this.store.putStock(next, current.version);\n    }\n\n    stock(warehouseId: string, sku: string): StockItem {\n        const item = this.store.getStock(warehouseId, sku);\n        if (!item) {\n            throw new Error('Stock not found');\n        }\n        return item;\n    }\n\n    reservation(id: string): Reservation {\n        const value = this.store.getReservation(id);\n        if (!value) {\n            throw new Error('Reservation not found');\n        }\n        return value;\n    }\n\n    list(warehouseId?: string): StockItem[] {\n        return this.store.stockList(warehouseId);\n    }\n\n    listReservations(orderId?: string): Reservation[] {\n        return this.store.reservationList(orderId);\n    }\n\n    transfer(sourceId: string, destinationId: string, sku: string, amount: number): void {\n        if (sourceId === destinationId) {\n            throw new Error('Transfer warehouses must differ');\n        }\n        this.store.transaction(isolated => {\n            const service = new InventoryService(isolated, this.now);\n            const source = service.stock(sourceId, sku);\n            const destination = service.stock(destinationId, sku);\n            const held = reserveStock(source, amount, this.now());\n            isolated.putStock(consumeStock(held, amount, this.now()), source.version);\n            isolated.putStock(receiveStock(destination, amount, this.now()), destination.version);\n        });\n    }\n}",
+          "sha256": "33e0696a7c1ae81491075f1f2cdcf5f1917ac700a25b07699c2740f4cca62573"
+        },
+        "fingerprint": {
+          "prefix": "ut {\n    reservationId: string;\n    orderId: string;\n    warehouseId: string;\n    sku: string;\n    quantity: number;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class InventoryService {",
+            "readonly store: InventoryStore;",
+            "private readonly now: () => number;",
+            "constructor(store: InventoryStore, now = () => Date.now()) {",
+            "this.store = store;"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T02-d1",
+    "type": "decision",
+    "title": "审计查询按 action 过滤",
+    "summary": "审计查询使用 action 精确匹配并保留时间顺序",
+    "content": "审计查询使用 action 精确匹配并保留时间顺序。查询结果由 AuditStore 复制后返回。这个规则只约束筛选。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "AuditService"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/services/audit-service.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "474c5a28-1e7d-47f7-8604-b76f6c7e3411",
+        "file": {
+          "workspaceRelativePath": "src/services/audit-service.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 10,
+            "character": 0
+          },
+          "end": {
+            "line": 64,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class AuditService {\n    private readonly store: AuditStore;\n    private readonly now: () => number;\n    private readonly id: () => string;\n\n    constructor(store: AuditStore, id: () => string, now = () => Date.now()) {\n        this.store = store;\n        this.id = id;\n        this.now = now;\n    }\n\n    record(action: string, actorId: string, payload: Record<string, unknown>): AuditEntry {\n        if (!action.trim() || !actorId.trim()) {\n            throw new Error('Audit action and actor are required');\n        }\n        const entry = safeAudit({\n            id: this.id(),\n            action,\n            actorId,\n            payload,\n            createdAt: this.now(),\n        });\n        return this.store.append(entry);\n    }\n\n    list(query: AuditQuery = {}): AuditEntry[] {\n        if (query.from !== undefined && query.to !== undefined && query.from > query.to) {\n            throw new Error('Audit interval is invalid');\n        }\n        return this.store.all().filter(entry => {\n            if (query.action !== undefined && query.action !== entry.action) return false;\n            if (query.actorId !== undefined && query.actorId !== entry.actorId) return false;\n            if (query.from !== undefined && entry.createdAt < query.from) return false;\n            if (query.to !== undefined && entry.createdAt > query.to) return false;\n            return true;\n        });\n    }\n\n    topics(query: AuditQuery = {}): string[] {\n        return [...new Set(this.list(query).map(entry => auditTopic(entry.action)))].sort();\n    }\n\n    statistics(query: AuditQuery = {}): { count: number; actors: number; actions: Record<string, number> } {\n        const entries = this.list(query);\n        const actions: Record<string, number> = {};\n        for (const entry of entries) {\n            actions[entry.action] = (actions[entry.action] ?? 0) + 1;\n        }\n        return {\n            count: entries.length,\n            actors: new Set(entries.map(entry => entry.actorId)).size,\n            actions,\n        };\n    }\n}",
+          "sha256": "0b9d40a772d2bc3912f2db5a0c959f332f9a20492f3b66b20614f86350d61f09"
+        },
+        "fingerprint": {
+          "prefix": "y.ts';\n\nexport interface AuditQuery {\n    action?: string;\n    actorId?: string;\n    from?: number;\n    to?: number;\n}\n\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class AuditService {",
+            "private readonly store: AuditStore;",
+            "private readonly now: () => number;",
+            "private readonly id: () => string;",
+            "constructor(store: AuditStore, id: () => string, now = () => Date.now()) {"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T02-d2",
+    "type": "constraint",
+    "title": "文本令牌使用正则替换",
+    "summary": "自由文本中的 Bearer 和 sk- 前缀令牌需要替换",
+    "content": "自由文本中的 Bearer 和 sk- 前缀令牌需要替换。替换结果保留字段结构，避免影响普通业务文本。它适用于纯文本消息。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "redactText"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/security/redaction.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "00278068-e9f4-4442-8b69-28771acda3e1",
+        "file": {
+          "workspaceRelativePath": "src/security/redaction.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 8,
+            "character": 0
+          },
+          "end": {
+            "line": 8,
+            "character": 158
+          }
+        },
+        "snapshot": {
+          "text": "export function redactText(value: string): string { return value.replace(/Bearer\\s+\\S+/gi, 'Bearer [REDACTED]').replace(/sk-[A-Za-z0-9_-]+/g, '[REDACTED]'); }",
+          "sha256": "084f7e0e800c31ed85c8eb7b15807fe9316df49550fe874fc1f2fce359e7520e"
+        },
+        "fingerprint": {
+          "prefix": "f Object.entries(value)) result[key] = isSensitiveKey(key) ? '[REDACTED]' : redactSensitive(item);\n    return result;\n}\n",
+          "suffix": "\nexport function isSensitiveKey(key: string): boolean { return SENSITIVE_KEYS.has(key.toLowerCase()); }\nexport function ",
+          "landmarkLines": [
+            "export function redactText(value: string): string { return value.replace(/Bearer\\s+\\S+/gi, 'Bearer [REDACTED]').replace(/sk-[A-Za-z0-9_-]+/g, '[REDACTED]'); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T02-target",
+    "type": "constraint",
+    "title": "审计导出递归处理敏感键",
+    "summary": "面向客服的审计数据递归处理敏感键名，键名比较忽略大小写，保持普通字段与存储内容",
+    "content": "面向客服的审计数据递归处理敏感键名，键名比较忽略大小写，保持普通字段与存储内容。规则适用于AuditService 导出的 payload 与嵌套数组。日志可能来自不同客户端，键名大小写变化也不能暴露凭据。修改redactSensitive相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "redactSensitive"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/security/redaction.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "81cd31c1-c9d1-4e85-86d1-847d43bd5795",
+        "file": {
+          "workspaceRelativePath": "src/security/redaction.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 1,
+            "character": 0
+          },
+          "end": {
+            "line": 7,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export function redactSensitive(value: unknown): unknown {\n    if (Array.isArray(value)) return value.map(item => redactSensitive(item));\n    if (!value || typeof value !== 'object') return value;\n    const result: Record<string, unknown> = {};\n    for (const [key, item] of Object.entries(value)) result[key] = isSensitiveKey(key) ? '[REDACTED]' : redactSensitive(item);\n    return result;\n}",
+          "sha256": "8f1793b683558c493b0b48a6a067e783e4c7d1b7c74776abf71854b22149526c"
+        },
+        "fingerprint": {
+          "prefix": "const SENSITIVE_KEYS = new Set(['token', 'password', 'apikey', 'authorization', 'secret']);\n",
+          "suffix": "\nexport function redactText(value: string): string { return value.replace(/Bearer\\s+\\S+/gi, 'Bearer [REDACTED]').replace",
+          "landmarkLines": [
+            "export function redactSensitive(value: unknown): unknown {",
+            "if (Array.isArray(value)) return value.map(item => redactSensitive(item));",
+            "if (!value || typeof value !== 'object') return value;",
+            "const result: Record<string, unknown> = {};",
+            "for (const [key, item] of Object.entries(value)) result[key] = isSensitiveKey(key) ? '[REDACTED]' : redactSensitive(item);"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T03-d1",
+    "type": "decision",
+    "title": "通知发送使用模板名称",
+    "summary": "通知事件必须使用注册模板名称",
+    "content": "通知事件必须使用注册模板名称。模板数据只包含模板需要的字段。这个规则适用于发送器。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "eventForRefund"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/workflow/notification-workflow.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "378f63b9-38db-4964-947c-45f6ab3c423f",
+        "file": {
+          "workspaceRelativePath": "src/workflow/notification-workflow.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 4,
+            "character": 0
+          },
+          "end": {
+            "line": 4,
+            "character": 187
+          }
+        },
+        "snapshot": {
+          "text": "export function eventForRefund(orderId: string, recipient: string): NotificationEvent { return { eventId: `refund:${orderId}`, template: 'refundCreated', data: { orderId }, recipient }; }",
+          "sha256": "b32bc32d5587c83e77b8c13bd5033effab5f5ff1278d3388e913f946b15f9eaf"
+        },
+        "fingerprint": {
+          "prefix": "ng): NotificationEvent { return { eventId: `order:${orderId}`, template: 'orderPaid', data: { orderId }, recipient }; }\n",
+          "suffix": "\nexport function eventForMember(email: string): NotificationEvent { return { eventId: `member:${email}`, template: 'memb",
+          "landmarkLines": [
+            "export function eventForRefund(orderId: string, recipient: string): NotificationEvent { return { eventId: `refund:${orderId}`, template: 'refundCreated', data: { orderId }, recipient }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T03-d2",
+    "type": "constraint",
+    "title": "通知重试保留原始事件",
+    "summary": "发送失败时再次发送同一事件对象",
+    "content": "发送失败时再次发送同一事件对象。重试次数由 dispatcher 管理。它不改变事件标识。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "deliverWithRetry"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/workflow/notification-workflow.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "9a31f2e0-4555-4944-917e-33e2736d68d5",
+        "file": {
+          "workspaceRelativePath": "src/workflow/notification-workflow.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 2,
+            "character": 0
+          },
+          "end": {
+            "line": 2,
+            "character": 234
+          }
+        },
+        "snapshot": {
+          "text": "export async function deliverWithRetry(dispatcher: NotificationDispatcher, event: NotificationEvent, send: (event: NotificationEvent) => Promise<void>): Promise<void> { await retryOnce(() => send(event)); dispatcher.dispatch(event); }",
+          "sha256": "705771469d54ce780365a1ba823d713b1f5bb40ab6830fe4e4cb3b1a2bec4e90"
+        },
+        "fingerprint": {
+          "prefix": "patcher, type NotificationEvent } from '../notifications/dispatcher.ts';\nimport { retryOnce } from '../utils/retry.ts';\n",
+          "suffix": "\nexport function eventForOrder(orderId: string, recipient: string): NotificationEvent { return { eventId: `order:${order",
+          "landmarkLines": [
+            "export async function deliverWithRetry(dispatcher: NotificationDispatcher, event: NotificationEvent, send: (event: NotificationEvent) => Promise<void>): Promise<void> { await retryOnce(() => send(event)); dispatcher.dispatch(event); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T03-target",
+    "type": "constraint",
+    "title": "通知逻辑标识来自业务事件",
+    "summary": "通知逻辑标识由订单、通知类型与收件人决定，请求标识变化不产生第二次业务通知",
+    "content": "通知逻辑标识由订单、通知类型与收件人决定，请求标识变化不产生第二次业务通知。规则适用于支付成功通知的 NotificationOutbox 去重。请求重试会改变 requestId，但同一订单和收件人只能形成一条逻辑通知。修改eventForOrder相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "eventForOrder"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/workflow/notification-workflow.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "763102fa-b3f5-4113-a446-ed24d5d3210a",
+        "file": {
+          "workspaceRelativePath": "src/workflow/notification-workflow.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 3,
+            "character": 0
+          },
+          "end": {
+            "line": 3,
+            "character": 181
+          }
+        },
+        "snapshot": {
+          "text": "export function eventForOrder(orderId: string, recipient: string): NotificationEvent { return { eventId: `order:${orderId}`, template: 'orderPaid', data: { orderId }, recipient }; }",
+          "sha256": "c2c16376db3259fa1f7fce762dfa9c095e494a9b46b3165c661f268991287065"
+        },
+        "fingerprint": {
+          "prefix": "NotificationEvent) => Promise<void>): Promise<void> { await retryOnce(() => send(event)); dispatcher.dispatch(event); }\n",
+          "suffix": "\nexport function eventForRefund(orderId: string, recipient: string): NotificationEvent { return { eventId: `refund:${ord",
+          "landmarkLines": [
+            "export function eventForOrder(orderId: string, recipient: string): NotificationEvent { return { eventId: `order:${orderId}`, template: 'orderPaid', data: { orderId }, recipient }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T04-d1",
+    "type": "decision",
+    "title": "身份显示名称来自服务端成员",
+    "summary": "审计显示名称使用服务端成员的 displayName",
+    "content": "审计显示名称使用服务端成员的 displayName。客户端名称只用于界面提示。该规则适用于展示。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "resolveIdentity"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/security/identity.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "54bead75-4d06-478c-9cbe-2f8e686efade",
+        "file": {
+          "workspaceRelativePath": "src/security/identity.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 2,
+            "character": 0
+          },
+          "end": {
+            "line": 2,
+            "character": 177
+          }
+        },
+        "snapshot": {
+          "text": "export function resolveIdentity(input: IdentityInput): { id: string; displayName: string } { return { id: input.serverMember.id, displayName: input.serverMember.displayName }; }",
+          "sha256": "d8eacaf929e7cbd15125910dd80dae6edf5ecdf3e129bbd1e5cb16f51f86d0b3"
+        },
+        "fingerprint": {
+          "prefix": "mber.ts';\nexport interface IdentityInput { serverMember: Member; clientDisplayName?: string; clientMemberId?: string; }\n",
+          "suffix": "\nexport function canActAs(member: Member, required: Member['role']): boolean { const ranks = { viewer: 0, agent: 1, mana",
+          "landmarkLines": [
+            "export function resolveIdentity(input: IdentityInput): { id: string; displayName: string } { return { id: input.serverMember.id, displayName: input.serverMember.displayName }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T04-d2",
+    "type": "constraint",
+    "title": "事件时间由调用上下文提供",
+    "summary": "事件时间使用请求上下文提供的秒数",
+    "content": "事件时间使用请求上下文提供的秒数。这样测试和重放可以保持稳定。该规则不改变事件主题。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "EventStore"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/storage/event-store.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "a403834b-94ce-4aa4-acba-4e6b4051768e",
+        "file": {
+          "workspaceRelativePath": "src/storage/event-store.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 1,
+            "character": 0
+          },
+          "end": {
+            "line": 11,
+            "character": 1
+          }
+        },
+        "snapshot": {
+          "text": "export class EventStore {\n    private readonly values: EventRecord[] = [];\n    append(event: EventRecord): EventRecord { if (this.values.some(item => item.id === event.id)) throw new Error('Duplicate event'); this.values.push({ ...event, payload: { ...event.payload } }); return event; }\n    all(): EventRecord[] { return this.values.map(event => ({ ...event, payload: { ...event.payload } })); }\n    topic(topic: string): EventRecord[] { return this.all().filter(event => event.topic === topic); }\n    actor(actorId: string): EventRecord[] { return this.all().filter(event => event.actorId === actorId); }\n    since(createdAt: number): EventRecord[] { return this.all().filter(event => event.createdAt >= createdAt); }\n    count(): number { return this.values.length; }\n    latest(): EventRecord | undefined { return this.values[this.values.length - 1]; }\n    clear(): void { this.values.length = 0; }\n}",
+          "sha256": "333bb4ed2fe5eb1bcefe453f9d98d5ab010831a04a65428b6d04b3aa333a9911"
+        },
+        "fingerprint": {
+          "prefix": "erface EventRecord { id: string; topic: string; payload: Record<string, unknown>; actorId: string; createdAt: number; }\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export class EventStore {",
+            "private readonly values: EventRecord[] = [];",
+            "append(event: EventRecord): EventRecord { if (this.values.some(item => item.id === event.id)) throw new Error('Duplicate event'); this.values.push({ ...event, payload: { ...event.payload } }); return event; }",
+            "all(): EventRecord[] { return this.values.map(event => ({ ...event, payload: { ...event.payload } })); }",
+            "topic(topic: string): EventRecord[] { return this.all().filter(event => event.topic === topic); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T04-target",
+    "type": "constraint",
+    "title": "订单事件使用服务端成员身份",
+    "summary": "操作身份来自 serverMember，客户端提供的标识只作为不可信输入",
+    "content": "操作身份来自 serverMember，客户端提供的标识只作为不可信输入。规则适用于订单备注写入与 EventStore 记录。请求正文中的 actorId 可以被调用方伪造，审计记录必须使用认证上下文中的成员。修改resolveIdentity相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "resolveIdentity"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/security/identity.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "68c55693-62ed-4b3b-a674-7edfb9506c85",
+        "file": {
+          "workspaceRelativePath": "src/security/identity.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 2,
+            "character": 0
+          },
+          "end": {
+            "line": 2,
+            "character": 177
+          }
+        },
+        "snapshot": {
+          "text": "export function resolveIdentity(input: IdentityInput): { id: string; displayName: string } { return { id: input.serverMember.id, displayName: input.serverMember.displayName }; }",
+          "sha256": "d8eacaf929e7cbd15125910dd80dae6edf5ecdf3e129bbd1e5cb16f51f86d0b3"
+        },
+        "fingerprint": {
+          "prefix": "mber.ts';\nexport interface IdentityInput { serverMember: Member; clientDisplayName?: string; clientMemberId?: string; }\n",
+          "suffix": "\nexport function canActAs(member: Member, required: Member['role']): boolean { const ranks = { viewer: 0, agent: 1, mana",
+          "landmarkLines": [
+            "export function resolveIdentity(input: IdentityInput): { id: string; displayName: string } { return { id: input.serverMember.id, displayName: input.serverMember.displayName }; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T05-d1",
+    "type": "decision",
+    "title": "时间工具返回整数秒",
+    "summary": "时间工具统一返回整数秒，避免毫秒混入业务记录",
+    "content": "时间工具统一返回整数秒，避免毫秒混入业务记录。调用方以秒进行范围比较。它适用于订单和事件。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "nowSeconds"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/utils/time.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "707e9d27-ae07-4536-9fc6-c1f90d10e077",
+        "file": {
+          "workspaceRelativePath": "src/utils/time.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 0,
+            "character": 0
+          },
+          "end": {
+            "line": 0,
+            "character": 78
+          }
+        },
+        "snapshot": {
+          "text": "export function nowSeconds(): number { return Math.floor(Date.now() / 1000); }",
+          "sha256": "248fd95d923427af414a469d5533ed5e54e45f58bbdd925b9c2b609120a55a3c"
+        },
+        "fingerprint": {
+          "prefix": "",
+          "suffix": "\nexport function addSeconds(value: number, amount: number): number { return value + amount; }\nexport function isBefore(a",
+          "landmarkLines": [
+            "export function nowSeconds(): number { return Math.floor(Date.now() / 1000); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T05-d2",
+    "type": "constraint",
+    "title": "日期范围包含起止边界",
+    "summary": "时间范围比较包含 from 和 to 两端",
+    "content": "时间范围比较包含 from 和 to 两端。这样边界事件不会被遗漏。它适用于普通查询。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "within"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/utils/time.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "0a0653b8-50f5-4932-b066-3f8272da2e22",
+        "file": {
+          "workspaceRelativePath": "src/utils/time.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 6,
+            "character": 0
+          },
+          "end": {
+            "line": 6,
+            "character": 113
+          }
+        },
+        "snapshot": {
+          "text": "export function within(value: number, from: number, to: number): boolean { return value >= from && value <= to; }",
+          "sha256": "0f27797eb7f63fd5d6b591b9e1db87261b0553f49dfeeb479034408b20575bd6"
+        },
+        "fingerprint": {
+          "prefix": "ce(0, 10); }\nexport function ageSeconds(value: number, now = nowSeconds()): number { return Math.max(0, now - value); }\n",
+          "suffix": "\n",
+          "landmarkLines": [
+            "export function within(value: number, from: number, to: number): boolean { return value >= from && value <= to; }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  },
+  {
+    "schemaVersion": 3,
+    "id": "R1-T05-target",
+    "type": "constraint",
+    "title": "订单月份按 UTC 秒时间戳计算",
+    "summary": "订单归档月份采用 UTC，createdAt 为秒",
+    "content": "订单归档月份采用 UTC，createdAt 为秒。规则适用于SettlementService 的月份归档统计。服务进程时区可能变化，账务月份必须对同一秒时间戳产生同一结果。修改nowSeconds相关数据出口时，保持现有数据结构与业务记录含义，并用边界输入检查结果。",
+    "status": "reviewed",
+    "tags": [
+      "R1",
+      "nowSeconds"
+    ],
+    "createdAt": 1791244800000,
+    "updatedAt": 1791244800000,
+    "metadata": {
+      "createdBy": {
+        "peerId": "bench-curator",
+        "name": "实验材料编写者"
+      },
+      "roomId": "jPYiSNmXry"
+    },
+    "provenance": {
+      "origin": "preset",
+      "author": {
+        "kind": "human",
+        "memberId": "64e41495-b302-46c9-a1d2-773d819aa55b",
+        "displayName": "检索实验成员"
+      },
+      "evidenceRefs": {
+        "files": [
+          {
+            "path": "src/utils/time.ts"
+          }
+        ]
+      }
+    },
+    "review": {
+      "confirmedBy": [
+        "64e41495-b302-46c9-a1d2-773d819aa55b"
+      ],
+      "confirmedAt": 1791244800000
+    },
+    "scope": "team",
+    "anchors": [
+      {
+        "anchorId": "c0204d70-dd91-413b-a576-da2791e249e7",
+        "file": {
+          "workspaceRelativePath": "src/utils/time.ts"
+        },
+        "associationLevel": "block",
+        "rangeAtCapture": {
+          "start": {
+            "line": 0,
+            "character": 0
+          },
+          "end": {
+            "line": 0,
+            "character": 78
+          }
+        },
+        "snapshot": {
+          "text": "export function nowSeconds(): number { return Math.floor(Date.now() / 1000); }",
+          "sha256": "248fd95d923427af414a469d5533ed5e54e45f58bbdd925b9c2b609120a55a3c"
+        },
+        "fingerprint": {
+          "prefix": "",
+          "suffix": "\nexport function addSeconds(value: number, amount: number): number { return value + amount; }\nexport function isBefore(a",
+          "landmarkLines": [
+            "export function nowSeconds(): number { return Math.floor(Date.now() / 1000); }"
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "evolution": [
+      {
+        "at": 1791244800000,
+        "action": "created"
+      },
+      {
+        "at": 1791244800000,
+        "action": "reviewed",
+        "by": {
+          "peerId": "bench-curator"
+        }
+      }
+    ],
+    "ownerMemberId": "64e41495-b302-46c9-a1d2-773d819aa55b"
+  }
+]
