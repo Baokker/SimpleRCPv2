@@ -15,9 +15,10 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
     if (!["jev", "minimax", "deepseek", "openai-compatible"].includes(adapter) || !provider || typeof provider.baseUrl !== "string" || !provider.baseUrl.trim() || provider.jsonMode !== undefined && typeof provider.jsonMode !== "boolean" || provider.temperature !== undefined && (!Number.isFinite(provider.temperature) || provider.temperature < 0 || provider.temperature > 2)) throw new Error("模型请求配置无效");
   }
   const env = process.env;
+  const jevOptions = { apiKey: env.TYPESAFE_API_KEY, baseUrl: providers.jev?.baseUrl ?? env.TYPESAFE_BASE_URL, proxyUrl: env.TYPESAFE_PROXY_URL };
   const scope = env.ADJUDICATION_BUDGET_SCOPE ?? "stage5";
   if (!/^[a-z0-9-]+$/.test(scope)) throw new Error("调用预算名称无效");
-  const limits = scope === "preexperiment" ? { fast: 1000, deep: 600 } : { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
+  const limits = scope === "stage-a" ? { fast: 600, deep: 400 } : scope === "preexperiment" ? { fast: 1000, deep: 600 } : { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
   let budgetExhausted = false;
   let budgetFailure: unknown;
   let budgetWrites = Promise.resolve();
@@ -49,7 +50,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
     await budgetReservations;
     return fetch(url, init);
   };
-  const registry = createJudgeRegistry({ config, now: () => performance.now(), fetch: wrappedFetch, jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: providers.jev?.baseUrl ?? env.TYPESAFE_BASE_URL }, deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: providers.deepseek?.baseUrl ?? env.DEEPSEEK_BASE_URL, model: models.deepseek ?? env.DEEPSEEK_MODEL ?? "deepseek-flash" }, minimax: { apiKey: env.MINIMAX_API_KEY, baseUrl: providers.minimax?.baseUrl ?? env.MINIMAX_BASE_URL, model: models.minimax ?? env.MINIMAX_MODEL ?? "MiniMax-M3", jsonMode: providers.minimax?.jsonMode ?? env.MINIMAX_JSON_MODE !== "false", temperature: providers.minimax?.temperature ?? Number(env.MINIMAX_TEMPERATURE ?? 0) }, ...(env.ADJUDICATION_COMPATIBLE_BASE_URL && env.ADJUDICATION_COMPATIBLE_MODEL || mode === "replay" && models["openai-compatible"] ? { compatible: { apiKey: env.ADJUDICATION_COMPATIBLE_API_KEY, baseUrl: providers["openai-compatible"]?.baseUrl ?? env.ADJUDICATION_COMPATIBLE_BASE_URL ?? "", model: models["openai-compatible"] ?? env.ADJUDICATION_COMPATIBLE_MODEL! } } : {}) });
+  const registry = createJudgeRegistry({ config, now: () => performance.now(), fetch: wrappedFetch, jev: jevOptions, deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: providers.deepseek?.baseUrl ?? env.DEEPSEEK_BASE_URL, model: models.deepseek ?? env.DEEPSEEK_MODEL ?? "deepseek-flash" }, minimax: { apiKey: env.MINIMAX_API_KEY, baseUrl: providers.minimax?.baseUrl ?? env.MINIMAX_BASE_URL, model: models.minimax ?? env.MINIMAX_MODEL ?? "MiniMax-M3", jsonMode: providers.minimax?.jsonMode ?? env.MINIMAX_JSON_MODE !== "false", temperature: providers.minimax?.temperature ?? Number(env.MINIMAX_TEMPERATURE ?? 0) }, ...(env.ADJUDICATION_COMPATIBLE_BASE_URL && env.ADJUDICATION_COMPATIBLE_MODEL || mode === "replay" && models["openai-compatible"] ? { compatible: { apiKey: env.ADJUDICATION_COMPATIBLE_API_KEY, baseUrl: providers["openai-compatible"]?.baseUrl ?? env.ADJUDICATION_COMPATIBLE_BASE_URL ?? "", model: models["openai-compatible"] ?? env.ADJUDICATION_COMPATIBLE_MODEL! } } : {}) });
   const fastJudge = registry.fast(config.fast);
   const deepJudge = registry.deep(config.deep);
   const actualProviders = Object.fromEntries([fastJudge, deepJudge].map((judge) => [judge.name, providerConfiguration(judge.name, judge.cacheParameters!)]));

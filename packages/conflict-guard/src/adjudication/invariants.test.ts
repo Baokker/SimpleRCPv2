@@ -1,11 +1,14 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import { gunzipSync } from "node:zlib";
 import { expect, it } from "vitest";
 import { MemoryFileProvider } from "../replay/files.js";
 import { createSemanticIndex } from "../semantic/index.js";
 import { extractInvariants, buildAdjudicationInput } from "./invariants.js";
 import { defaultAdjudicationConfig } from "./config.js";
 import type { ZoneInput } from "../routing/classifier.js";
+import type { BenchManifest } from "../bench/types.js";
+import { parseSymbols } from "../semantic/symbols.js";
 
 it("conflict-shop supplies caller signatures, assertion names and return usage", () => {
   const root = fileURLToPath(new URL("../../../../demo/conflict-shop/", import.meta.url));
@@ -67,4 +70,93 @@ it("follows an exported alias and keeps only relevant assertions", () => {
   expect(result.callers.join("\n")).toContain("evaluate(10)");
   expect(result.tests.join("\n")).toContain("assert.equal(evaluate(5), 10)");
   expect(result.tests.join("\n")).not.toContain("assert.equal(2+2, 4)");
+});
+
+it("sends complete declarations and structured local evidence", () => {
+  const files = new MemoryFileProvider({ "price.ts": "export function price(value: number){ return value * 2; }", "buy.ts": 'import { price } from "./price"; export function buy(){ return price(10); }' });
+  const index = createSemanticIndex({ files, now: () => 0 }); index.update();
+  const price = index.symbolsInFile("price.ts").find((symbol) => symbol.name === "price")!;
+  const buy = index.symbolsInFile("buy.ts").find((symbol) => symbol.name === "buy")!;
+  const left = { ...price, status: "modified" as const, before: files.readFile("price.ts").slice(price.start, price.end), after: files.readFile("price.ts").slice(price.start, price.end).replace("value: number", "value: string"), lastTouchedAt: 0 };
+  const right = { ...buy, status: "modified" as const, before: files.readFile("buy.ts").slice(buy.start, buy.end), after: files.readFile("buy.ts").slice(buy.start, buy.end), lastTouchedAt: 0 };
+  const project = { ...index, readFile: (file: string) => files.readFile(file) };
+  const input: ZoneInput = { left: { actor: { kind: "human", memberId: "a" }, symbol: left }, right: { actor: { kind: "human", memberId: "b" }, symbol: right }, project, path: index.findPaths([price.key], [buy.key])[0]!, nested: false, typeOnly: false };
+  const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "关联修改", evidence: [], contractChanged: { left: true, right: false }, typecheck: project.checkFourStates!(input) };
+  const result = buildAdjudicationInput(input, local, { ...defaultAdjudicationConfig, contextLimit: 40 });
+  expect(result.left.after).toContain("return value * 2;");
+  expect(result.structuredEvidence?.left.signature.before).not.toBe(result.structuredEvidence?.left.signature.after);
+  expect(result.structuredEvidence?.left.status.beforeExported).toBe(true);
+  expect(result.structuredEvidence?.left.status.afterExported).toBe(true);
+  expect(result.structuredEvidence?.left.uses).toEqual([{ file: "buy.ts", line: 1, functionName: "buy", text: "price(10)" }]);
+  expect(result.structuredEvidence?.fourState?.mergedOnlyDiagnostics).toEqual([]);
+  expect(result.structuredEvidence?.fourState?.baseline.diagnostics).toEqual([]);
+  expect(result.structuredEvidence?.fourState?.leftOnly.diagnostics.some((diagnostic) => diagnostic.includes("arithmetic"))).toBe(true);
+  const incomplete = buildAdjudicationInput({ ...input, left: { ...input.left, symbol: { ...left, after: "export function price(value: number) {" } } }, local, defaultAdjudicationConfig);
+  expect(incomplete.syntax?.deferred).toBe(true);
+  expect(incomplete.syntax?.left.complete).toBe(false);
+  expect(incomplete.structuredEvidence?.left.status.deleted).toBe(false);
+  const clustered = buildAdjudicationInput({ ...input, cluster: { left: [left, { ...left, key: "price.ts#pending", name: "pending", after: "export function pending() {" }], right: [right], paths: [input.path] } }, local, defaultAdjudicationConfig);
+  expect(clustered.syntax?.left.complete).toBe(false);
+  expect(clustered.structuredEvidence?.symbols).toHaveLength(3);
+});
+
+it.each([
+  ["d1-0005", "applyDiscount", true],
+  ["d1-0010", "usageCharge", true],
+  ["d1-0021", "applyDiscount", false],
+  ["d1-0026", "usageCharge", false],
+  ["d1-0045", "taxableAmount", false]
+] as const)("核对开发集关系组 %s 的完整声明、签名、导出状态和四状态证据", (id, producerName, signatureChanged) => {
+  const archive = JSON.parse(gunzipSync(fs.readFileSync(new URL("../../bench/datasets/d1-v3/dataset.json.gz", import.meta.url))).toString()) as { manifest: BenchManifest };
+  const group = archive.manifest.groups.find((entry) => entry.id === id)!;
+  expect(group.split).toBe("dev");
+  const variant = group.variants.safe;
+  const files = new MemoryFileProvider(variant.merged);
+  const index = createSemanticIndex({ files, now: () => 0 }); index.update();
+  const make = (key: string) => {
+    const file = key.slice(0, key.indexOf("#"));
+    const beforeSymbol = parseSymbols(file, variant.baseline[file]!).find((symbol) => symbol.key === key)!;
+    const afterSymbol = index.symbolsInFile(file).find((symbol) => symbol.key === key)!;
+    return { ...afterSymbol, beforeExported: beforeSymbol.exported, status: "modified" as const, before: variant.baseline[file]!.slice(beforeSymbol.start, beforeSymbol.end), after: variant.merged[file]!.slice(afterSymbol.start, afterSymbol.end), lastTouchedAt: 0 };
+  };
+  const left = make(variant.site!.producerKey);
+  const right = make(variant.site!.consumerKey);
+  const input: ZoneInput = { left: { actor: { kind: "human", memberId: "a" }, symbol: left }, right: { actor: { kind: "human", memberId: "b" }, symbol: right }, project: index, path: index.findPaths([left.key], [right.key])[0] ?? null, nested: false, typeOnly: false };
+  const typecheck = index.checkFourStates!(input);
+  const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "关联修改", evidence: [], contractChanged: { left: false, right: false }, typecheck };
+  const result = buildAdjudicationInput(input, local, defaultAdjudicationConfig);
+  expect(result.left.before).toBe(left.before);
+  expect(result.left.after).toBe(left.after);
+  expect(result.right.after).toBe(right.after);
+  expect(result.structuredEvidence!.left.signature.before.startsWith(`export function ${producerName}(`)).toBe(true);
+  expect(result.structuredEvidence!.left.signature.before !== result.structuredEvidence!.left.signature.after).toBe(signatureChanged);
+  expect(result.structuredEvidence!.left.status).toEqual({ beforeExported: true, afterExported: true, deleted: false, becameNonExported: false });
+  expect(result.structuredEvidence!.fourState).toEqual({ ...typecheck.states, mergedOnlyDiagnostics: typecheck.mergeOnlyDiagnostics });
+  expect(result.syntax).toEqual({ left: { complete: true }, right: { complete: true }, deferred: false });
+  expect(result.structuredEvidence!.left.uses.length).toBeLessThanOrEqual(3);
+  if (id === "d1-0045") {
+    expect(result.structuredEvidence!.left.uses).toHaveLength(1);
+    expect(result.structuredEvidence!.left.uses[0]).toMatchObject({ functionName: "corporateTax", text: 'pricing.taxableAmount(Math.max(1, price), 0.1, "CNY")' });
+  }
+});
+
+it("删除声明与取消导出的证据分别记录真实状态", () => {
+  const files = new MemoryFileProvider({ "a.ts": "export function price() { return 10; }", "b.ts": 'import { price } from "./a"; export function buy() { return price(); }' });
+  const project = createSemanticIndex({ files, now: () => 0 });
+  project.update();
+  const side = (file: string, name: string, memberId: string) => {
+    const symbol = project.symbolsInFile(file).find((symbol) => symbol.name === name)!;
+    const before = files.readFile(file).slice(symbol.start, symbol.end);
+    return { actor: { kind: "human" as const, memberId }, symbol: { ...symbol, beforeExported: symbol.exported, status: "modified" as const, before, after: before, lastTouchedAt: 0 } };
+  };
+  const input: ZoneInput = { left: side("a.ts", "price", "a"), right: side("b.ts", "buy", "b"), project, path: project.findPaths(["a.ts#price"], ["b.ts#buy"])[0]!, nested: false, typeOnly: false };
+  const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "关联修改", evidence: [], contractChanged: { left: true, right: false } };
+  input.left.symbol.after = "function price() { return 10; }";
+  input.left.symbol.exported = false;
+  expect(buildAdjudicationInput(input, local, defaultAdjudicationConfig).structuredEvidence!.left.status).toEqual({ beforeExported: true, afterExported: false, deleted: false, becameNonExported: true });
+  const deleted = { ...input, left: { ...input.left, symbol: { ...input.left.symbol, status: "deleted" as const, after: "" } } };
+  const evidence = buildAdjudicationInput(deleted, local, defaultAdjudicationConfig);
+  expect(evidence.structuredEvidence!.left.status).toEqual({ beforeExported: true, afterExported: false, deleted: true, becameNonExported: false });
+  expect(evidence.syntax!.left.complete).toBe(true);
+  expect(evidence.structuredEvidence!.left.uses).toEqual([{ file: "b.ts", line: 1, functionName: "buy", text: "price()" }]);
 });

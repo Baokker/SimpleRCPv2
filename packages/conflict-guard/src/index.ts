@@ -35,3 +35,4 @@ export * from "./adjudication/adapters.js";
 export * from "./adjudication/service.js";
 export * from "./adjudication/calibrate.js";
 export * from "./adjudication/minimax.js";
+export * from "./adjudication/selection.js";

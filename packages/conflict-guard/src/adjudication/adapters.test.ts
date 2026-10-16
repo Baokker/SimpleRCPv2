@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createJevJudge, createDeepJudge, createCompatibleFastJudge, createJudgeRegistry } from "./adapters.js";
+import { createMiniMaxJudge } from "./minimax.js";
 import { defaultAdjudicationConfig } from "./config.js";
 import type { AdjudicationInput } from "./types.js";
 
@@ -23,6 +24,14 @@ describe("adjudication adapters", () => {
   it("Jev rejects invalid probability mass without exposing the response", async () => {
     const judge = createJevJudge({ apiKey: "test-credential", fetch: async () => Response.json({ model: "jev-1.13.0", answers: { decision: { type: "choice", choice: "allow", confidence: 1, probabilities: { allow: 1, warn: 1, lock: 0 } } } }), now: () => 0, config: defaultAdjudicationConfig });
     await expect(judge.judge(input, new AbortController().signal)).rejects.toMatchObject({ status: "invalid-format" });
+  });
+
+  it("使用真实 fetch 验证 Jev 代理故障与 MiniMax 直连相互独立", async () => {
+    const registry = createJudgeRegistry({ fetch: globalThis.fetch, now: () => performance.now(), config: defaultAdjudicationConfig, jev: { apiKey: "test-credential", baseUrl: "https://example.invalid", proxyUrl: "http://127.0.0.1:1" }, deepseek: { model: "unused" }, minimax: { apiKey: "test-credential", model: "MiniMax-M3", baseUrl: "https://example.invalid/v1" } });
+    await expect(registry.fast("jev").judge(input, AbortSignal.timeout(3000))).rejects.toMatchObject({ status: "failed", errorType: "proxy-ECONNREFUSED" });
+    await expect(registry.deep("minimax").judge(input, { reasoning: false }, AbortSignal.timeout(3000))).rejects.toMatchObject({ cause: { code: "ENOTFOUND" } });
+    const direct = createJevJudge({ apiKey: "test-credential", baseUrl: "https://example.invalid", fetch: globalThis.fetch, now: () => performance.now(), config: defaultAdjudicationConfig });
+    await expect(direct.judge(input, AbortSignal.timeout(3000))).rejects.toMatchObject({ status: "failed", errorType: "provider-request" });
   });
 
   it("DeepSeek disables thinking and validates Chinese explanation and evidence", async () => {

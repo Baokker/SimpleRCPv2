@@ -124,7 +124,7 @@ export function loadConfig(
         settings: validateAdjudicationConfig({ ...defaultAdjudicationConfig, strategy: (env.CONFLICT_GUARD_STRATEGY ?? "G3") as typeof defaultAdjudicationConfig.strategy, threshold: Number(env.CONFLICT_GUARD_THRESHOLD ?? defaultAdjudicationConfig.threshold), invariants: readBoolean(env.CONFLICT_GUARD_INVARIANTS, "CONFLICT_GUARD_INVARIANTS", true), deep: deepJudge, t2Strategy: (env.CONFLICT_GUARD_T2_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t3Strategy: (env.CONFLICT_GUARD_T3_STRATEGY ?? "G1") as "G1" | "G2" | "G3", t2Reasoning: readBoolean(env.CONFLICT_GUARD_T2_REASONING, "CONFLICT_GUARD_T2_REASONING", true), t3Reasoning: readBoolean(env.CONFLICT_GUARD_T3_REASONING, "CONFLICT_GUARD_T3_REASONING", true) }),
         mode: (env.CONFLICT_GUARD_PROVIDER_MODE ?? "live") as "live" | "record" | "replay",
         cacheDirectory: path.resolve(repositoryRoot, "packages/conflict-guard/bench/model-cache"),
-        jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: env.TYPESAFE_BASE_URL },
+        jev: { apiKey: env.TYPESAFE_API_KEY, baseUrl: env.TYPESAFE_BASE_URL, proxyUrl: env.TYPESAFE_PROXY_URL },
         deepseek: { apiKey: env.DEEPSEEK_API_KEY, baseUrl: deepseekBaseUrl.toString().replace(/\/$/, ""), model: deepseekModel },
         minimax: { apiKey: env.MINIMAX_API_KEY, baseUrl: minimaxBaseUrl.toString().replace(/\/$/, ""), model: minimaxModel, jsonMode: readBoolean(env.MINIMAX_JSON_MODE, "MINIMAX_JSON_MODE", true), temperature: Number(env.MINIMAX_TEMPERATURE ?? 0) },
         ...(env.ADJUDICATION_COMPATIBLE_BASE_URL && env.ADJUDICATION_COMPATIBLE_MODEL ? { compatible: { apiKey: env.ADJUDICATION_COMPATIBLE_API_KEY, baseUrl: env.ADJUDICATION_COMPATIBLE_BASE_URL, model: env.ADJUDICATION_COMPATIBLE_MODEL } } : {})

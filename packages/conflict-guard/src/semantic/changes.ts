@@ -13,6 +13,7 @@ export interface SymbolChange {
   kind: SymbolInfo["kind"];
   container?: string;
   exported?: boolean;
+  beforeExported?: boolean;
   status: "modified" | "added" | "deleted";
   before: string;
   after: string;
@@ -45,7 +46,7 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
     const before = previous ? reconstructOwnedBefore(change.baseText.slice(previous.start, previous.end), after, symbol.start, change.ranges) : "";
     if (before === after || previous && commentOnlyEdit(change.file, replaceSymbol(change.baseText, previous, before), replaceSymbol(change.baseText, previous, after))) continue;
     const editedLineRanges = mergeRanges(ranges.filter((range) => innermostSymbols([symbol], range.start, range.end).length > 0).map((range) => ({ start: lineAt(text, Math.max(symbol.start, range.start)), end: lineAt(text, Math.max(symbol.start, Math.min(symbol.end - 1, range.end > range.start ? range.end - 1 : range.end))) })));
-    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, editedLineRanges, lastTouchedAt: change.lastTouchedAt, beforeComments: previous ? change.baseText.slice(previous.node.getFullStart(), previous.start).trim() : undefined });
+    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, beforeExported: previous?.exported ?? false, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, editedLineRanges, lastTouchedAt: change.lastTouchedAt, beforeComments: previous ? change.baseText.slice(previous.node.getFullStart(), previous.start).trim() : undefined });
   }
   const touchedBase = baseline.filter((symbol) => ranges.some((range) => range.start < symbol.end && symbol.start <= range.end));
   const addedTouched = [...touched.values()].filter((symbol) => !baselineByKey.has(symbol.key));

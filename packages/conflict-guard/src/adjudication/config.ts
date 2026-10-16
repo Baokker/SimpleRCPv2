@@ -2,6 +2,7 @@ import type { AdjudicationConfig } from "./types.js";
 
 export const defaultAdjudicationConfig: AdjudicationConfig = {
   version: "adjudication-v2",
+  inputVersion: "declaration-evidence-v1",
   promptVersion: "pair-v1",
   strategy: "G3",
   fast: "jev",
@@ -23,6 +24,7 @@ export const defaultAdjudicationConfig: AdjudicationConfig = {
 };
 
 export function validateAdjudicationConfig(config: AdjudicationConfig) {
+  if (config.inputVersion !== undefined && config.inputVersion !== "declaration-evidence-v1") throw new Error("研判输入版本无效");
   if (!["G0", "G1", "G2", "G3", "G4"].includes(config.strategy) || !["G2", "G3"].includes(config.t1Strategy)) throw new Error("无效的研判策略");
   if (!Number.isFinite(config.threshold) || config.threshold < 0 || config.threshold > 1) throw new Error("研判阈值必须介于 0 与 1");
   if (!config.fastModel.trim() || !config.fast.trim() || !config.deep.trim()) throw new Error("研判适配器与模型名称不能为空");

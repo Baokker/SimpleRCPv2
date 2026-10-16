@@ -52,7 +52,8 @@ export interface ZoneVerdict {
   evidence: Array<{ file: string; symbol?: string; detail: string }>;
   contractChanged: { left: boolean; right: boolean };
   localOnly?: boolean;
-  typecheck?: { ran: boolean; skipped?: string; durationMs?: number; mergeOnlyDiagnostics?: string[] };
+  deferred?: { reason: string };
+  typecheck?: FourStateResult;
   adjudication?: import("../adjudication/types.js").ModelVerdictMetadata;
 }
 
@@ -66,6 +67,12 @@ export interface FourStateResult {
   ran: boolean;
   skipped?: string;
   durationMs?: number;
+  states?: {
+    baseline: { diagnostics: string[] };
+    leftOnly: { diagnostics: string[] };
+    rightOnly: { diagnostics: string[] };
+    merged: { diagnostics: string[] };
+  };
   mergeOnlyDiagnostics?: string[];
   inferredReturnTypeChanged?: { left: boolean; right: boolean };
 }

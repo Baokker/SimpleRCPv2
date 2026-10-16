@@ -11,6 +11,7 @@ import { checkReplay } from "./check.js";
 import fs from "node:fs/promises";
 import { readTrace } from "../trace/trace.js";
 import { replayLibraries } from "../../scripts/replay-libs.js";
+import { gunzipSync } from "node:zlib";
 
 describe("阶段 4 回放基础设施", () => {
   it("historical refresh coalescing is verified by identical semantic input hashes", async () => {
@@ -61,6 +62,16 @@ describe("阶段 4 回放基础设施", () => {
     const first = replayTrace(trace, { policy: "P0", seed: 17 });
     const second = replayTrace(trace, { policy: "P0", seed: 17 });
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
+  });
+
+  it("d1-0026-conflict 在半成品刷新后仍会等待批次结束并完成判定", async () => {
+    const archive = JSON.parse(gunzipSync(await fs.readFile(new URL("../../bench/datasets/d1-v3/dataset.json.gz", import.meta.url))).toString());
+    const events = readTrace(archive.traces["d1-0026-conflict.jsonl"]);
+    const result = replayTrace(events, { policy: "P3", k: 2, judgementFrameMs: 200, maxJudgementsPerFrame: 20 });
+    expect(result.errors).toEqual([]);
+    expect(result.judgements.length).toBeGreaterThan(0);
+    expect(result.pairs.some((pair) => pair.records.some((record) => record.verdict))).toBe(true);
+    expect(result.judgements.some((judgement) => judgement.verdict.zone === "grey" && judgement.verdict.decision === "warn")).toBe(true);
   });
 
   it("内存文件提供者使用全局递增版本", () => {

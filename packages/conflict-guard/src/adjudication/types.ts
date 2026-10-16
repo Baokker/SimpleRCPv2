@@ -5,6 +5,7 @@ export type GreyStrategy = "G0" | "G1" | "G2" | "G3" | "G4";
 export type ProviderMode = "live" | "record" | "replay";
 export type ProviderStatus = "success" | "timeout" | "failed" | "invalid-format" | "cancelled" | "cache-hit";
 export interface AdjudicationInput {
+  inputVersion?: "declaration-evidence-v1";
   point?: "T1" | "T2" | "T3";
   reasoning?: boolean;
   promptVersion: string;
@@ -13,7 +14,33 @@ export interface AdjudicationInput {
   relationship: string;
   invariants: string;
   invariantCoverage?: { callers: boolean; tests: boolean; comments: boolean; usage: boolean };
+  structuredEvidence?: {
+    left: SymbolEvidence;
+    right: SymbolEvidence;
+    symbols?: Array<SymbolEvidence & { symbol: string }>;
+    fourState?: FourStateEvidence;
+  };
+  syntax?: {
+    left: { complete: boolean; reason?: string };
+    right: { complete: boolean; reason?: string };
+    deferred: boolean;
+    waitMs?: number;
+    deferredCount?: number;
+    batchClosed?: boolean;
+  };
   local: { excludedRules: string[]; typecheck?: ZoneVerdict["typecheck"] };
+}
+export interface SymbolEvidence {
+  signature: { before: string; after: string };
+  status: { beforeExported: boolean; afterExported: boolean; deleted: boolean; becameNonExported: boolean };
+  uses: Array<{ file: string; line: number; functionName: string; text: string }>;
+}
+export interface FourStateEvidence {
+  baseline: { diagnostics: string[] };
+  leftOnly: { diagnostics: string[] };
+  rightOnly: { diagnostics: string[] };
+  merged: { diagnostics: string[] };
+  mergedOnlyDiagnostics: string[];
 }
 export interface JudgeResult {
   decision: Decision;
@@ -29,6 +56,7 @@ export interface JudgeResult {
 export interface FastJudge { name: string; model: string; cacheParameters?: Record<string, unknown>; judge(input: AdjudicationInput, signal: AbortSignal): Promise<JudgeResult> }
 export interface DeepJudge { name: string; model: string; cacheParameters?: Record<string, unknown>; judge(input: AdjudicationInput, options: { reasoning: boolean }, signal: AbortSignal): Promise<JudgeResult> }
 export interface ProviderCall {
+  errorType?: string;
   point?: "T1" | "T2" | "T3";
   adapter: string;
   role?: "fast" | "deep";
@@ -74,6 +102,7 @@ export interface ModelVerdictMetadata {
 export interface CachedCall { key: string; input: AdjudicationInput; call: ProviderCall; parameters?: Record<string, unknown>; result?: JudgeResult }
 export interface ModelCache { get(key: string): Promise<CachedCall | undefined>; put(value: CachedCall): Promise<void> }
 export interface AdjudicationConfig {
+  inputVersion?: "declaration-evidence-v1";
   version: string;
   promptVersion: string;
   strategy: GreyStrategy;
@@ -110,5 +139,5 @@ export interface AdjudicationDependencies {
   onError?(stage: "trace" | "cache"): void;
 }
 export class ProviderError extends Error {
-  constructor(public readonly status: Exclude<ProviderStatus, "success" | "cache-hit">, message = `provider ${status}`) { super(message); }
+  constructor(public readonly status: Exclude<ProviderStatus, "success" | "cache-hit">, message = `provider ${status}`, public readonly errorType = message) { super(message); }
 }

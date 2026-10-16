@@ -1,10 +1,84 @@
 import * as ts from "typescript";
 import type { ZoneInput, ZoneVerdict } from "../routing/classifier.js";
-import type { AdjudicationConfig, AdjudicationInput } from "./types.js";
+import type { AdjudicationConfig, AdjudicationInput, FourStateEvidence, SymbolEvidence } from "./types.js";
+import { isExported, parseChangeSource } from "../routing/contracts.js";
+import type { SymbolChange } from "../semantic/changes.js";
+import { declarationSyntax } from "./syntax.js";
 
 export interface InvariantContext { callers: string[]; tests: string[]; comments: string[]; usage: string[] }
 const fileFor = (key: string) => key.slice(0, key.indexOf("#"));
 function source(file: string, text: string) { return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, /\.[cm]?jsx?$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS); }
+
+function declarationSignature(change: SymbolChange, text: string) {
+  const parsed = parseChangeSource(change, text);
+  if (!parsed) return "";
+  let result = "";
+  const visit = (node: ts.Node) => {
+    if (result) return;
+    if ((ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isMethodSignature(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) && (node.name?.getText(parsed) === change.name || ts.isFunctionDeclaration(node) && !node.name && change.name === "default")) {
+      const body = "body" in node ? node.body : undefined;
+      const text = node.getText(parsed);
+      result = text.slice(0, body ? body.getStart(parsed) - node.getStart(parsed) : text.length).trim();
+      return;
+    }
+    if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === change.name && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
+      const initializer = node.initializer;
+      result = initializer.getText(parsed).slice(0, initializer.body.getStart(parsed) - initializer.getStart(parsed)).trim();
+      return;
+    }
+    if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === change.name) {
+      result = `${node.name.getText(parsed)}${node.type ? `: ${node.type.getText(parsed)}` : ""}`;
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  return result || parsed.statements[0]?.getText(parsed) || "";
+}
+
+function usageEvidence(input: ZoneInput, target: SymbolChange): SymbolEvidence["uses"] {
+  const uses: SymbolEvidence["uses"] = [];
+  const project = input.project;
+  const scope = new Set([input.left.symbol.key, input.right.symbol.key, ...(input.cluster?.paths ?? [input.path]).flatMap((path) => path?.hops.flatMap((hop) => [hop.from, hop.to]) ?? [])]);
+  for (const edge of project.incoming(target.key)) {
+    if (edge.kind === "contains" || !scope.has(edge.from)) continue;
+    const file = fileFor(edge.from);
+    const text = project.readFile?.(file);
+    if (text === undefined) continue;
+    const tree = source(file, text);
+    const caller = project.symbolsInFile(file).find((symbol) => symbol.key === edge.from);
+    if (!caller) continue;
+    const visit = (node: ts.Node) => {
+      if (uses.length >= 3 || node.end < caller.start || node.getStart(tree) > caller.end) return;
+      if (ts.isIdentifier(node) && node.getStart(tree) >= caller.start && node.end <= caller.end && project.referenceTargets?.(file, node.getStart(tree)).includes(target.key)) {
+        const expression = ts.isPropertyAccessExpression(node.parent) && node.parent.name === node ? node.parent : node;
+        const usage = ts.isCallExpression(expression.parent) && expression.parent.expression === expression ? expression.parent : expression;
+        uses.push({ file, line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1, functionName: caller.name, text: usage.getText(tree).slice(0, 300) });
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(tree);
+    if (uses.length >= 3) return uses;
+  }
+  return uses;
+}
+
+function symbolEvidence(input: ZoneInput, change: SymbolChange): SymbolEvidence {
+  const before = parseChangeSource(change, change.before);
+  const after = parseChangeSource(change, change.after);
+  const beforeExported = change.beforeExported ?? isExported(before);
+  const afterExported = change.status !== "deleted" && (change.exported ?? isExported(after));
+  return {
+    signature: { before: declarationSignature(change, change.before), after: declarationSignature(change, change.after) },
+    status: { beforeExported, afterExported, deleted: change.status === "deleted", becameNonExported: beforeExported && !afterExported && Boolean(after) },
+    uses: usageEvidence(input, change)
+  };
+}
+
+function fourStateEvidence(typecheck: ZoneVerdict["typecheck"]): FourStateEvidence | undefined {
+  if (!typecheck?.ran || !typecheck.states) return undefined;
+  return { ...typecheck.states, mergedOnlyDiagnostics: typecheck.mergeOnlyDiagnostics ?? [] };
+}
 function calls(node: ts.Node, keys: ReadonlySet<string>, project: ZoneInput["project"]): ts.CallExpression[] {
   const found: ts.CallExpression[] = [];
   const file = node.getSourceFile().fileName;
@@ -39,6 +113,7 @@ export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, 
   const left = (input.cluster?.left ?? [input.left.symbol]).map((symbol) => ({ actor: input.left.actor, symbol }));
   const right = (input.cluster?.right ?? [input.right.symbol]).map((symbol) => ({ actor: input.right.actor, symbol }));
   const sides = [...left, ...right];
+  const scope = new Set([...sides.map((side) => side.symbol.key), ...(input.cluster?.paths ?? [input.path]).flatMap((path) => path?.hops.flatMap((hop) => [hop.from, hop.to]) ?? [])]);
   for (let sideIndex = 0; sideIndex < sides.length; sideIndex += 1) {
     const side = sides[sideIndex]!; const other = sideIndex < left.length ? right[0]! : left[0]!;
     const aliases = new Set([side.symbol.key]);
@@ -64,7 +139,7 @@ export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, 
       if (input.project.outgoing(key).some((edge) => edge.to === other.symbol.key) || input.project.incoming(key).some((edge) => edge.from === other.symbol.key)) return 2;
       return 3;
     };
-    const callers = [...new Set(incoming.map((edge) => edge.from))].sort((left, right) => distance(left) - distance(right) || left.localeCompare(right)).slice(0, config.topK);
+    const callers = [...new Set(incoming.map((edge) => edge.from))].filter((key) => !config.inputVersion || scope.has(key)).sort((left, right) => distance(left) - distance(right) || left.localeCompare(right)).slice(0, config.topK);
     let callCount = 0;
     for (const key of callers) {
       if (callCount >= config.topK) break;
@@ -135,11 +210,17 @@ export function extractInvariants(input: ZoneInput, config: AdjudicationConfig, 
   return result;
 }
 
-export function buildAdjudicationInput(input: ZoneInput, local: ZoneVerdict, config: AdjudicationConfig, extraFiles: string[] = []): AdjudicationInput {
+export function buildAdjudicationInput(input: ZoneInput, local: ZoneVerdict, config: AdjudicationConfig, extraFiles: string[] = [], _now: () => number = Date.now): AdjudicationInput {
+  // 输入版本独立于提示词版本，旧配置可以复现原有录制。
+  const completeEvidence = config.inputVersion === "declaration-evidence-v1";
   const bound = (text: string) => text.slice(0, config.contextLimit);
   const side = (value: ZoneInput["left"], symbols = [value.symbol]) => {
     const budget = Math.max(0, Math.floor(config.contextLimit / symbols.length) - 100);
-    const text = (state: "before" | "after") => symbols.length === 1 ? bound(symbols[0]![state]) : bound(symbols.map((symbol) => `${symbol.key}\n${symbol[state].slice(0, budget)}`).join("\n\n"));
+    const text = (state: "before" | "after") => {
+      if (symbols.length === 1) return completeEvidence ? symbols[0]![state] : bound(symbols[0]![state]);
+      const declarations = symbols.map((symbol) => `${symbol.key}\n${completeEvidence ? symbol[state] : symbol[state].slice(0, budget)}`).join("\n\n");
+      return completeEvidence ? declarations : bound(declarations);
+    };
     return { actorKind: value.actor.kind, file: [...new Set(symbols.map((symbol) => symbol.file))].join(", "), symbol: symbols.map((symbol) => symbol.key).join(", "), before: text("before"), after: text("after") };
   };
   const context = extractInvariants(input, config, extraFiles);
@@ -147,5 +228,24 @@ export function buildAdjudicationInput(input: ZoneInput, local: ZoneVerdict, con
   const sections = Object.entries(context).map(([key, values]) => [key, values.join("\n").slice(0, sectionLimit)] as const);
   const invariantText = sections.map(([key, text]) => `${key}:\n${text}`).join("\n");
   const invariantCoverage = Object.fromEntries(sections.map(([key, text]) => [key, config.invariants && text.length > 0])) as NonNullable<AdjudicationInput["invariantCoverage"]>;
-  return { promptVersion: config.promptVersion, left: side(input.left, input.cluster?.left), right: side(input.right, input.cluster?.right), relationship: bound((input.cluster?.paths ?? [input.path]).map((path) => path?.hops.map((hop) => `${hop.from} ${hop.kind} ${hop.to} (${hop.direction})`).join("; ") ?? "same declaration").join("\n")), invariants: config.invariants ? bound(invariantText) : "", invariantCoverage, local: { excludedRules: ["same-symbol-concurrent-write", "referenced-symbol-removed", "runtime-export-removed", "call-signature-incompatible", "consumed-return-property-removed", "interface-required-member-incompatible", "merge-only-type-error"], typecheck: local.typecheck ? { ...local.typecheck, durationMs: undefined } : undefined } };
+  const left = input.left.symbol;
+  const right = input.right.symbol;
+  const syntaxFor = (symbols: SymbolChange[]) => symbols.map(declarationSyntax).find((status) => !status.complete) ?? { complete: true };
+  const leftSyntax = syntaxFor(input.cluster?.left ?? [left]);
+  const rightSyntax = syntaxFor(input.cluster?.right ?? [right]);
+  const { states: _states, ...legacyTypecheck } = local.typecheck ?? {};
+  return {
+    ...(completeEvidence ? { inputVersion: config.inputVersion } : {}),
+    promptVersion: config.promptVersion,
+    left: side(input.left, input.cluster?.left),
+    right: side(input.right, input.cluster?.right),
+    relationship: bound((input.cluster?.paths ?? [input.path]).map((path) => path?.hops.map((hop) => `${hop.from} ${hop.kind} ${hop.to} (${hop.direction})`).join("; ") ?? "same declaration").join("\n")),
+    invariants: config.invariants ? bound(invariantText) : "",
+    invariantCoverage,
+    ...(completeEvidence ? {
+      structuredEvidence: { left: symbolEvidence(input, left), right: symbolEvidence(input, right), symbols: [...(input.cluster?.left ?? [left]), ...(input.cluster?.right ?? [right])].map((symbol) => ({ symbol: symbol.key, ...symbolEvidence(input, symbol) })), ...(fourStateEvidence(local.typecheck) ? { fourState: fourStateEvidence(local.typecheck) } : {}) },
+      syntax: { left: leftSyntax, right: rightSyntax, deferred: !leftSyntax.complete || !rightSyntax.complete }
+    } : {}),
+    local: { excludedRules: ["same-symbol-concurrent-write", "referenced-symbol-removed", "runtime-export-removed", "call-signature-incompatible", "consumed-return-property-removed", "interface-required-member-incompatible", "merge-only-type-error"], typecheck: local.typecheck ? { ...(completeEvidence ? local.typecheck : legacyTypecheck as NonNullable<ZoneVerdict["typecheck"]>), durationMs: undefined } : undefined }
+  };
 }

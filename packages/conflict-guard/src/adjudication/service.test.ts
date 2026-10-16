@@ -3,6 +3,7 @@ import { VirtualClock } from "../replay/clock.js";
 import { createAdjudicationService } from "./service.js";
 import { defaultAdjudicationConfig } from "./config.js";
 import type { CachedCall, JudgeResult, ProviderSubscription } from "./types.js";
+import { createJudgeRegistry } from "./adapters.js";
 
 const input = { promptVersion: "pair-v1", left: { actorKind: "human", file: "a.ts", symbol: "a.ts#a", before: "a", after: "b" }, right: { actorKind: "human", file: "b.ts", symbol: "b.ts#b", before: "c", after: "d" }, relationship: "call", invariants: "", local: { excludedRules: [] } };
 const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "可能互相影响", evidence: [], contractChanged: { left: false, right: false } };
@@ -93,6 +94,30 @@ it("white and black verdicts never call providers", async () => {
   const service = createAdjudicationService({ clock: new VirtualClock(), config: defaultAdjudicationConfig, mode: "live", fast: { name: "jev", model: "jev-1.13.0", judge }, deep: { name: "deepseek", model: "test", judge } });
   for (const zone of ["white", "black"] as const) expect((await service.judge(input, { ...local, zone }, new AbortController().signal)).zone).toBe(zone);
   expect(calls).toBe(0);
+});
+
+it("defers incomplete declarations without calling either model and records the wait", async () => {
+  const registry = createJudgeRegistry({ fetch: globalThis.fetch, now: () => 0, config: defaultAdjudicationConfig, jev: {}, deepseek: { model: "unused" } });
+  const service = createAdjudicationService({
+    clock: new VirtualClock(),
+    config: { ...defaultAdjudicationConfig, strategy: "G3" },
+    mode: "live",
+    fast: registry.fast("jev"),
+    deep: registry.deep("minimax")
+  });
+  const incomplete = {
+    ...input,
+    syntax: {
+      left: { complete: false, reason: "after declaration has syntax diagnostics" },
+      right: { complete: true },
+      deferred: true,
+      waitMs: 240
+    }
+  };
+  const verdict = await service.judge(incomplete, local, new AbortController().signal);
+  expect(verdict).toMatchObject({ decision: "warn", ruleId: "syntax-incomplete-waiting", localOnly: true, deferred: { reason: "syntax-incomplete" } });
+  expect(service.calls()).toHaveLength(0);
+  expect(service.stats()).toMatchObject({ calls: 0, judgements: 0, syntaxDeferred: 1, syntaxWaitP50Ms: 240, syntaxWaitP95Ms: 240 });
 });
 
 it("rejects corrupted cached decisions and confidence", async () => {

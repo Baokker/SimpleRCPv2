@@ -7,7 +7,7 @@ export interface ServerAdjudicationConfig {
   settings?: AdjudicationConfig;
   mode?: ProviderMode;
   cacheDirectory?: string;
-  jev: { apiKey?: string; baseUrl?: string };
+  jev: { apiKey?: string; baseUrl?: string; proxyUrl?: string };
   deepseek: { apiKey?: string; baseUrl?: string; model: string };
   minimax?: { apiKey?: string; baseUrl?: string; model: string; jsonMode?: boolean; temperature?: number };
   compatible?: { apiKey?: string; baseUrl: string; model: string };

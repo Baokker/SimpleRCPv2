@@ -11,6 +11,8 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   const subscriptions: ProviderSubscription[] = [];
   const occurrences = new Map<string, number>();
   const adjudicationLatencies: number[] = [];
+  const syntaxWaits: number[] = [];
+  let syntaxDeferred = 0;
   let escalations = 0; let judgements = 0; let requests = 0; let infrastructureFailures = 0;
   function reportError(stage: "trace" | "cache") { infrastructureFailures += 1; try { options.onError?.(stage); } catch { infrastructureFailures += 1; } }
   function emit(call: ProviderCall) { calls.push(call); try { options.onCall?.(call); } catch { reportError("trace"); } }
@@ -76,7 +78,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
           }
         } catch (error) {
           const status = error instanceof ProviderError ? error.status : "failed";
-          entry = { key, input, parameters, call: { ...base, status, latencyMs: options.mode === "replay" ? 0 : Math.max(0, options.clock.now() - started), usage: completedResult?.usage, costUsd: cost(completedResult, fast) } };
+          entry = { key, input, parameters, call: { ...base, status, errorType: error instanceof ProviderError ? error.errorType : "provider-request", latencyMs: options.mode === "replay" ? 0 : Math.max(0, options.clock.now() - started), usage: completedResult?.usage, costUsd: cost(completedResult, fast) } };
         } finally {
           options.clock.clearTimeout(timer);
           if (abortListener) controller.signal.removeEventListener("abort", abortListener);
@@ -114,6 +116,12 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   async function judge(rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal): Promise<ZoneVerdict> {
     if (local.zone !== "grey" || config.strategy === "G0") return local;
     if (signal.aborted) throw new ProviderError("cancelled");
+    if (rawInput.syntax?.waitMs !== undefined) syntaxWaits.push(rawInput.syntax.waitMs);
+    syntaxDeferred += rawInput.syntax?.deferredCount ?? Number(Boolean(rawInput.syntax?.deferred));
+    if (rawInput.syntax?.deferred) {
+      if (rawInput.syntax.batchClosed) return { ...local, decision: "warn", ruleId: "syntax-incomplete-final", summary: "本轮修改结束时声明仍不完整，请双方检查代码。", localOnly: true };
+      return { ...local, decision: "warn", ruleId: "syntax-incomplete-waiting", summary: "修改仍在输入，等待下一次完整版本后再研判。", localOnly: true, deferred: { reason: "syntax-incomplete" } };
+    }
     judgements += 1;
     const started = options.clock.now();
     const input = sanitize(config.point && config.point !== "T1" ? { ...rawInput, point: config.point, reasoning: config.reasoning ?? false } : rawInput, options.sensitiveValues ?? []);
@@ -143,7 +151,8 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   return { judge, calls: () => [...calls], subscriptions: () => [...subscriptions], stats() {
     const latency = [...adjudicationLatencies].sort((left, right) => left - right);
     const percentile = (p: number) => latency.length ? latency[Math.max(0, Math.ceil(latency.length * p) - 1)]! : 0;
-    return { calls: requests, cacheHits: calls.filter((call) => call.status === "cache-hit").length, judgements, escalations, escalationRatio: judgements ? escalations / judgements : 0, p50Ms: percentile(0.5), p95Ms: percentile(0.95), failures: subscriptions.filter((call) => !["success", "cache-hit", "cancelled"].includes(call.status)).length, infrastructureFailures, costUsd: calls.reduce((total, call) => total + call.costUsd, 0) };
+    const syntaxPercentile = (p: number) => syntaxWaits.length ? [...syntaxWaits].sort((left, right) => left - right)[Math.max(0, Math.ceil(syntaxWaits.length * p) - 1)]! : null;
+    return { calls: requests, cacheHits: calls.filter((call) => call.status === "cache-hit").length, judgements, escalations, escalationRatio: judgements ? escalations / judgements : 0, p50Ms: percentile(0.5), p95Ms: percentile(0.95), syntaxDeferred, syntaxWaitP50Ms: syntaxPercentile(0.5), syntaxWaitP95Ms: syntaxPercentile(0.95), failures: subscriptions.filter((call) => !["success", "cache-hit", "cancelled"].includes(call.status)).length, infrastructureFailures, costUsd: calls.reduce((total, call) => total + call.costUsd, 0) };
   }, dispose() { for (const request of inFlight.values()) request.controller.abort(); } };
 }
 

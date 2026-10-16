@@ -26,6 +26,7 @@ export type PairEvent =
   | { type: "pair_analyzing" | "pair_analysis_progress"; record: PairRecord }
   | { type: "pair_judged" | "pair_unchanged"; record: PairRecord }
   | { type: "pair_stale"; record: PairRecord }
+  | { type: "pair_syntax_waiting"; record: PairRecord }
   | { type: "pair_resolved"; record: PairRecord }
   | { type: "pair_closed"; record: PairRecord };
 
@@ -111,8 +112,10 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     for (const pair of pairs) {
       requestedResolutions.delete(pair.id);
       const previous = records.get(pair.id);
+      const changed = previous?.revisionKey !== pair.revisionKey;
       if (previous && previous.status !== "closed" && previous.revisionKey !== pair.revisionKey) markChanged(pair.id);
       const record = ensure(pair);
+      if (record.verdict?.deferred && !changed) continue;
       if ((record.status === "pending" || record.status === "stale" || !record.verdict) && shouldJudge(pair)) {
         if (options.clock && (options.judgementFrameMs ?? 200) > 0) queued.set(pair.id, () => shouldJudge(record.pair));
         else judge(record);
@@ -156,6 +159,13 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
       const complete = (result: ZoneVerdict) => {
         if (request.signal.aborted || record.revision !== revision || record.status !== "analyzing" || analyses.get(record.pair.id) !== request) return;
         analyses.delete(record.pair.id);
+        if (result.deferred) {
+          record.status = "pending";
+          record.verdict = result;
+          record.analysisVisible = false;
+          emit({ type: "pair_syntax_waiting", record: { ...record } });
+          return;
+        }
         const minimum = classified.find((entry) => entry.verdict.localOnly && entry.verdict.decision === "warn");
         const final = result.decision === "allow" && minimum ? minimum.verdict : result;
         results.set(cacheKey, { verdict: final, pair: record.pair });
@@ -187,7 +197,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   function markChanged(id: string) {
     const record = records.get(id);
     if (!record || record.status === "closed") return;
-    if (options.revisionMode !== "legacy" && (record.status === "pending" || record.status === "stale")) return;
+    if (options.revisionMode !== "legacy" && (record.status === "pending" || record.status === "stale") && !record.verdict?.deferred) return;
     analyses.get(id)?.abort();
     analyses.delete(id);
     record.revision += 1;

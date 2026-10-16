@@ -9,6 +9,7 @@ import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
 import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode, type JudgementQueue } from "./pairState.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
+import { createSyntaxWaitTracker } from "../adjudication/syntax.js";
 
 export interface FrozenRegion {
   pairId: string;
@@ -31,6 +32,7 @@ export function createSessionCoordinator(options: {
   enableSemanticPending?: boolean;
   classify(pair: CandidatePair): ZoneVerdict;
   adjudicate?: PairAdjudicator;
+  observeSyntax?: boolean;
   clock?: ConflictGuardClock;
   softDeadlineMs?: number;
   judgementFrameMs?: number;
@@ -49,6 +51,7 @@ export function createSessionCoordinator(options: {
   const awaitingBatches = new Map<string, EditBatch>();
   const batchSymbols = new Map<string, Set<string>>();
   const batchPaths = new Map<string, Array<{ actor: string; path: RelationPath }>>();
+  const syntaxWaits = createSyntaxWaitTracker();
   let lastFrozen = "[]";
   const coordinator = createPairCoordinator({ now: options.now, clock: options.clock, judgementFrameMs: options.judgementFrameMs, maxJudgementsPerFrame: options.maxJudgementsPerFrame, judgementQueue: options.judgementQueue, adjudicate: options.adjudicate, revisionMode: options.revisionMode, classify(pair) {
     try { return options.classify(pair); }
@@ -86,7 +89,24 @@ export function createSessionCoordinator(options: {
     for (const { batch } of batches) recordContracts(batch);
     for (const [key, entry] of contracts) if (!symbolFor(entry.actor, entry.symbol)) contracts.delete(key);
     for (const batch of options.tracker.getOpenBatches()) warnBatch(batch);
-    coordinator.update(pairs ? pairs(options.semantic.getCandidatePairs()) : options.semantic.getCandidatePairs(), (pair) => !relevantBatch(pair));
+    const currentPairs = pairs ? pairs(options.semantic.getCandidatePairs()) : options.semantic.getCandidatePairs();
+    const currentIds = new Set(currentPairs.map((pair) => pair.id));
+    // 半成品代码可能暂时失去语义路径，保留候选直到批次关闭后检查当前文本。
+    const retainedPending = coordinator.records()
+      .filter((record) => options.revisionMode === "judged-input" && ["pending", "stale", "analyzing"].includes(record.status) && (relevantBatch(record.pair) || incompleteSource(record.pair)) && !currentIds.has(record.pair.id))
+      .map((record) => record.pair);
+    const candidates = [...currentPairs, ...retainedPending];
+    if (options.observeSyntax) {
+      syntaxWaits.retain(new Set(candidates.map((pair) => pair.id)));
+      for (const pair of candidates) {
+        const symbols = [pair.left, pair.right].flatMap((side) => (side.symbols ?? [side.symbol]).flatMap((key) => {
+          const symbol = symbolFor(side.actor, key);
+          return symbol ? [symbol] : [];
+        }));
+        pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now());
+      }
+    }
+    coordinator.update(candidates, (pair) => !relevantBatch(pair));
     for (const { batch } of batches) {
       awaitingBatches.delete(batch.id);
       if (!options.tracker.getOpenBatches().some((open) => open.file === batch.file && actorKey(open.actor) === actorKey(batch.actor))) {
@@ -97,6 +117,13 @@ export function createSessionCoordinator(options: {
     }
     syncFrozen(true);
     refreshGates();
+  }
+  function incompleteSource(pair: CandidatePair) {
+    return [pair.left, pair.right].some((side) => {
+      const file = side.symbol.slice(0, side.symbol.indexOf("#"));
+      const text = options.index.readFile?.(file);
+      return text !== undefined && !isSourceParsable(file, text);
+    });
   }
   function pending(file: string) {
     const sets = options.semantic.getActiveChangeSets();

@@ -142,7 +142,18 @@ export function createFourStateTypeChecker(options: { files: TypecheckFileProvid
     const rightOnly = diagnostics.get("rightOnly") ?? new Set<string>();
     const mergeOnlyDiagnostics = [...merged].filter((diagnostic) => !baseline.has(diagnostic) && !leftOnly.has(diagnostic) && !rightOnly.has(diagnostic));
     const baselineReturn = returnTypes.get("baseline");
-    return { ran: true, durationMs: options.now() - started, mergeOnlyDiagnostics, ...(baselineReturn !== undefined ? { inferredReturnTypeChanged: { left: returnTypes.get("leftOnly") !== baselineReturn, right: returnTypes.get("rightOnly") !== baselineReturn } } : {}) };
+    return {
+      ran: true,
+      durationMs: options.now() - started,
+      states: {
+        baseline: { diagnostics: [...baseline] },
+        leftOnly: { diagnostics: [...leftOnly] },
+        rightOnly: { diagnostics: [...rightOnly] },
+        merged: { diagnostics: [...merged] }
+      },
+      mergeOnlyDiagnostics,
+      ...(baselineReturn !== undefined ? { inferredReturnTypeChanged: { left: returnTypes.get("leftOnly") !== baselineReturn, right: returnTypes.get("rightOnly") !== baselineReturn } } : {})
+    };
   };
 }
 

@@ -1,6 +1,7 @@
 import { promptBundle, deepInstructionsFor, fastInstructionsFor, sanitize } from "./prompts.js";
 import { ProviderError, type AdjudicationConfig, type AdjudicationInput, type FastJudge, type DeepJudge, type JudgeResult } from "./types.js";
 import { createMiniMaxJudge, type MiniMaxOptions } from "./minimax.js";
+import { ProxyAgent, type Dispatcher } from "undici";
 
 interface HttpOptions { apiKey?: string; baseUrl?: string; fetch: typeof fetch; now(): number; config: AdjudicationConfig }
 const object = (value: unknown): Record<string, unknown> => { if (!value || typeof value !== "object" || Array.isArray(value)) throw new ProviderError("invalid-format"); return value as Record<string, unknown>; };
@@ -9,28 +10,33 @@ const probability = (value: unknown) => { if (typeof value !== "number" || !Numb
 const decision = (value: unknown): JudgeResult["decision"] => { if (value !== "allow" && value !== "warn" && value !== "lock") throw new ProviderError("invalid-format"); return value; };
 function tokens(input: unknown, output: unknown) { if (typeof input !== "number" || typeof output !== "number" || !Number.isInteger(input) || !Number.isInteger(output) || input < 0 || output < 0) return undefined; return { inputTokens: input, outputTokens: output }; }
 
-async function request(options: HttpOptions, url: string, body: unknown, signal: AbortSignal) {
+async function request(options: HttpOptions, url: string, body: unknown, signal: AbortSignal, dispatcher?: Dispatcher) {
   if (signal.aborted) throw new ProviderError("cancelled");
   if (!options.apiKey) throw new ProviderError("failed", "provider credential unavailable");
   try {
-    const response = await options.fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${options.apiKey}` }, body: JSON.stringify(sanitize(body, [options.apiKey])), signal });
-    if (!response.ok) throw new ProviderError("failed", `provider HTTP ${response.status}`);
+    const init = { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${options.apiKey}` }, body: JSON.stringify(sanitize(body, [options.apiKey])), signal, ...(dispatcher ? { dispatcher } : {}) } as unknown as RequestInit;
+    const response = await options.fetch(url, init);
+    if (!response.ok) throw new ProviderError("failed", `provider HTTP ${response.status}`, `http-${response.status}`);
     const value = object(await response.json());
     if (signal.aborted) throw new ProviderError("cancelled");
     return sanitize(value, [options.apiKey]);
   } catch (error) {
     if (signal.aborted) throw new ProviderError("cancelled");
     if (error instanceof ProviderError) throw error;
-    throw new ProviderError(error instanceof SyntaxError ? "invalid-format" : "failed");
+    const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
+    const errorType = dispatcher ? `proxy-${cause?.code ?? (error instanceof Error ? error.name : "unknown")}` : error instanceof SyntaxError ? "invalid-json" : "provider-request";
+    throw new ProviderError(error instanceof SyntaxError ? "invalid-format" : "failed", undefined, errorType);
   }
 }
 
-export function createJevJudge(options: HttpOptions): FastJudge {
+export function createJevJudge(options: HttpOptions & { proxyUrl?: string }): FastJudge {
   const model = options.config.fastModel;
+  const dispatcher = options.proxyUrl ? new ProxyAgent(options.proxyUrl) : undefined;
   return { name: "jev", model, cacheParameters: { endpoint: options.baseUrl ?? "https://api.typesafe.ai", questionType: "choice" }, async judge(input: AdjudicationInput, signal) {
+    if (model !== "jev-1.13.0") throw new Error("Jev 必须使用固定型号 jev-1.13.0");
     const started = options.now();
     const { choiceInstructions, choiceCriteria } = promptBundle(input.promptVersion);
-    const raw = await request(options, `${(options.baseUrl ?? "https://api.typesafe.ai").replace(/\/$/, "")}/v1/systemone`, { model, state: input, questions: { decision: { type: "choice", instructions: choiceInstructions, criteria: choiceCriteria } } }, signal);
+    const raw = await request(options, `${(options.baseUrl ?? "https://api.typesafe.ai").replace(/\/$/, "")}/v1/systemone`, { model, state: input, questions: { decision: { type: "choice", instructions: choiceInstructions, criteria: choiceCriteria } } }, signal, dispatcher);
     if (raw.model !== model) throw new ProviderError("invalid-format", "provider model version mismatch");
     const answer = object(object(raw.answers).decision);
     if (answer.type !== "choice") throw new ProviderError("invalid-format");
@@ -125,7 +131,7 @@ export function createCompatibleFastJudge(options: HttpOptions & { model: string
   } };
 }
 
-export function createJudgeRegistry(options: { fetch: typeof fetch; now(): number; config: AdjudicationConfig; jev: { apiKey?: string; baseUrl?: string }; deepseek: { apiKey?: string; baseUrl?: string; model: string }; minimax?: Omit<MiniMaxOptions, "fetch" | "now">; compatible?: { apiKey?: string; baseUrl: string; model: string }; fastJudges?: FastJudge[]; deepJudges?: DeepJudge[] }) {
+export function createJudgeRegistry(options: { fetch: typeof fetch; now(): number; config: AdjudicationConfig; jev: { apiKey?: string; baseUrl?: string; proxyUrl?: string }; deepseek: { apiKey?: string; baseUrl?: string; model: string }; minimax?: Omit<MiniMaxOptions, "fetch" | "now">; compatible?: { apiKey?: string; baseUrl: string; model: string }; fastJudges?: FastJudge[]; deepJudges?: DeepJudge[] }) {
   const fast = new Map<string, FastJudge>([["jev", createJevJudge({ ...options, ...options.jev })]]);
   const deep = new Map<string, DeepJudge>([["deepseek", createDeepJudge({ ...options, ...options.deepseek, name: "deepseek" })]]);
   deep.set("minimax", createMiniMaxJudge({ ...options, model: "MiniMax-M3", ...options.minimax }));

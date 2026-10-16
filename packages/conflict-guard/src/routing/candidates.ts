@@ -14,6 +14,7 @@ export interface CandidatePair {
   path: RelationPath | null;
   firstSeenAt: number;
   updatedAt: number;
+  syntaxWait?: { deferred: number; waitMs: number };
   /** 双方符号内容与关系路径的稳定指纹，用于变更对修订号。 */
   revisionKey?: string;
 }

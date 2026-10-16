@@ -19,6 +19,12 @@ const evidenceFocusedChoiceCriteria = {
   warn: "The supplied evidence leaves a plausible interaction unresolved, and it does not establish a deleted referenced symbol, an incompatible call, a syntax or type failure, or another concrete merged-behavior failure.",
   lock: "The supplied evidence establishes a concrete failure: a deleted symbol remains referenced, an exported signature is incompatible with a caller, a syntax or type error is shown, or a required returned value is removed from a used path."
 };
+const completeEvidenceInstructions = `${improvedChoiceInstructions} Evaluate only joint uses on the supplied relationship paths. Other callers require separate change pairs. The input includes structuredEvidence from local analysis. Use signature before/after, export and deletion status, four-state diagnostics, and up to three concrete caller uses as primary evidence. A deleted symbol requires status.deleted; export removal requires status.becameNonExported and an unresolved use by the other side. Only diagnostics unique to merged establish a failure introduced by the combination; baseline or single-side diagnostics alone do not. Compatible caller adaptations can preserve behavior after a signature change. A syntax.deferred input means the declaration is still incomplete; do not make a model decision for it. Keep evidence to at most 3 items, summary to one sentence, userExplanation to at most 2 Chinese sentences, and suggestedAction to one concise Chinese sentence.`;
+const completeEvidenceCriteria = {
+  allow: "The locally supplied signatures, symbol status, callers, and four-state results establish that both edits preserve the shared behavior.",
+  warn: "The locally supplied evidence leaves a plausible interaction unresolved without proving a concrete merged failure.",
+  lock: "The locally supplied evidence proves a deleted or non-exported referenced symbol, an incompatible signature, a merged type error, or another concrete shared-behavior failure."
+};
 
 export interface PromptBundle { choiceInstructions: string; choiceCriteria: Record<string, string>; deepInstructions: string; fastInstructions: string }
 
@@ -30,7 +36,8 @@ function createBundle(choiceInstructions: string, choiceCriteria: Record<string,
 export const promptBundles: Record<string, PromptBundle> = {
   "pair-v1": createBundle(baseChoiceInstructions, baseChoiceCriteria, "Give a specific suggestion even when uncertain."),
   "pair-v2": createBundle(improvedChoiceInstructions, improvedChoiceCriteria, "Give a concise, specific suggestion."),
-  "pair-v3": createBundle(evidenceFocusedChoiceInstructions, evidenceFocusedChoiceCriteria, "Give a concise suggestion that names the concrete evidence and the owner who should change the code.")
+  "pair-v3": createBundle(evidenceFocusedChoiceInstructions, evidenceFocusedChoiceCriteria, "Give a concise suggestion that names the concrete evidence and the owner who should change the code."),
+  "pair-v4": createBundle(completeEvidenceInstructions, completeEvidenceCriteria, "Give a concise suggestion that names the concrete evidence and the owner who should change the code.")
 };
 
 export function promptBundle(version: string): PromptBundle {
