@@ -1,0 +1,129 @@
+
+> simple-rcp-v2@0.1.0 test /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2
+> pnpm --filter @simplercp/server test && pnpm --filter @simplercp/knowledge test && pnpm test:demo
+
+
+> @simplercp/server@0.1.0 test /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/apps/server
+> vitest run
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/apps/server
+
+ ✓ src/__tests__/knowledgeApi.test.ts  (4 tests) 441ms
+ ✓ src/__tests__/knowledgeCapture.test.ts  (11 tests) 123451ms
+ ↓ src/__tests__/agentRunApi.integration.test.ts  (7 tests | 7 skipped)
+ ✓ src/__tests__/knowledgeInjection.test.ts  (1 test) 846ms
+ ✓ src/__tests__/mcp.test.ts  (6 tests) 12573ms
+ ✓ src/__tests__/knowledgeUiReview.test.ts  (2 tests) 384ms
+ ✓ src/__tests__/agentSessionApi.test.ts  (3 tests) 87ms
+ ✓ src/__tests__/memberIdentityApi.test.ts  (6 tests) 1151ms
+ ✓ src/__tests__/agentProgress.test.ts  (7 tests) 7ms
+ ✓ src/__tests__/documentIO.test.ts  (8 tests) 39ms
+ ✓ src/__tests__/projects.test.ts  (9 tests) 54ms
+ ✓ src/__tests__/config.test.ts  (10 tests) 2ms
+ ✓ src/__tests__/knowledgeRerank.test.ts  (4 tests) 4092ms
+ ✓ src/__tests__/teamAgentApi.test.ts  (3 tests) 79ms
+ ✓ src/__tests__/workspace.test.ts  (11 tests) 22ms
+ ✓ src/__tests__/collaborativeDocuments.test.ts  (8 tests) 17ms
+ ✓ src/__tests__/chat.test.ts  (3 tests) 53ms
+ ✓ src/__tests__/foundation.test.ts  (6 tests) 24ms
+ ✓ src/__tests__/storageMigration.test.ts  (3 tests) 32ms
+ ✓ src/__tests__/openCodeQuestions.integration.test.ts  (2 tests) 1866ms
+ ✓ src/__tests__/agentPrivacy.test.ts  (1 test) 41ms
+ ✓ src/__tests__/projectApi.test.ts  (2 tests) 40ms
+ ✓ src/__tests__/agentUsage.test.ts  (4 tests) 1ms
+ ✓ src/__tests__/agentWriteLedger.test.ts  (4 tests) 6ms
+ ✓ src/__tests__/rooms.test.ts  (6 tests) 26ms
+ ✓ src/__tests__/openCodeStatus.test.ts  (2 tests) 1388ms
+ ✓ src/__tests__/realtime.test.ts  (3 tests) 13ms
+ ✓ src/__tests__/chatAgentBridge.test.ts  (2 tests) 9ms
+ ↓ src/__tests__/openCodeRuntime.integration.test.ts  (2 tests | 2 skipped)
+ ✓ src/__tests__/agentRunSupport.test.ts  (4 tests) 97ms
+ ✓ src/__tests__/agentSettingsApi.test.ts  (2 tests) 29ms
+ ✓ src/__tests__/sharedTerminal.test.ts  (3 tests) 55ms
+ ✓ src/__tests__/agentSessionStore.test.ts  (2 tests) 6ms
+ ✓ src/__tests__/agentRunStore.test.ts  (2 tests) 7ms
+ ✓ src/__tests__/agentSettingsStore.test.ts  (2 tests) 4ms
+stderr | src/__tests__/traceStore.test.ts > Agent trace 写入隔离 > 文件路径故障恢复后继续写入并保持成功事件的连续序号
+Agent trace write failed Error: EISDIR: illegal operation on a directory, open '/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/.test-workspaces/agent-trace-recovery-Z27nMu/trace.jsonl'
+    at open (node:internal/fs/promises:642:25)
+    at writeFile (node:internal/fs/promises:1249:14)
+    at /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/apps/server/src/agent/traceStore.ts:26:9
+    at Object.append (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/apps/server/src/agent/traceStore.ts:31:9)
+    at /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/apps/server/src/__tests__/traceStore.test.ts:33:5
+    at runTest (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3) {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'open',
+  path: '/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/.test-workspaces/agent-trace-recovery-Z27nMu/trace.jsonl'
+}
+
+ ✓ src/__tests__/traceStore.test.ts  (2 tests) 1112ms
+ ✓ src/__tests__/agentRunSelection.test.ts  (3 tests) 4ms
+ ✓ src/__tests__/agentCaptureRuntime.test.ts  (1 test) 3ms
+ ✓ src/__tests__/agentKnowledgeHooks.test.ts  (1 test)
+ ✓ src/__tests__/workspaceWatcher.test.ts  (1 test) 119ms
+ ✓ src/__tests__/openCodeConfig.test.ts  (3 tests)
+ ✓ src/__tests__/agentSessionOperations.test.ts  (1 test) 1ms
+ ✓ src/__tests__/processEnv.test.ts  (2 tests) 1ms
+ ✓ src/__tests__/teamAgentSupport.test.ts  (3 tests) 1ms
+ ✓ src/__tests__/openCodeWorkspace.test.ts  (1 test) 2ms
+
+ Test Files  43 passed | 2 skipped (45)
+      Tests  164 passed | 9 skipped (173)
+   Start at  00:06:20
+   Duration  152.63s (transform 1.98s, setup 0ms, collect 4.16s, tests 148.19s, environment 0ms, prepare 84ms)
+
+
+> @simplercp/knowledge@0.1.0 test /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/packages/knowledge
+> vitest run
+
+
+ RUN  v1.6.1 /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/packages/knowledge
+
+ ✓ test/anchor-robustness-pilot.test.ts  (21 tests) 4ms
+ ✓ test/knowledge-index-demo-cards.test.ts  (11 tests) 123ms
+ ✓ test/anchor-resolver.test.ts  (4 tests) 3ms
+ ✓ test/anchor-benchmark.test.ts  (7 tests) 1098ms
+ ✓ test/knowledge-views.test.ts  (2 tests) 2ms
+ ✓ test/openai-compatible.test.ts  (3 tests) 86ms
+ ✓ test/lifecycle.test.ts  (4 tests) 8ms
+ ✓ test/knowledge-extract.test.ts  (5 tests) 9ms
+ ✓ test/agent-capture.test.ts  (18 tests) 20ms
+ ✓ test/capture-quality-benchmark.test.ts  (3 tests) 13ms
+ ✓ test/demo-cards.test.ts  (2 tests) 3ms
+ ✓ test/capture-engine.test.ts  (52 tests) 47ms
+ ✓ test/recapEvidence.test.ts  (7 tests) 108ms
+ ✓ test/capture-suggestion-guard.test.ts  (5 tests) 2ms
+ ✓ test/anchor-review.test.ts  (3 tests) 2ms
+ ✓ test/schema-guard.test.ts  (3 tests) 3ms
+ ✓ test/migrate.test.ts  (2 tests) 2ms
+ ✓ test/knowledge-status-gate-benchmark.test.ts  (2 tests) 641ms
+ ✓ test/knowledge-cache-benchmark.test.ts  (1 test) 154ms
+ ✓ test/content.test.ts  (3 tests) 13ms
+ ✓ test/knowledge-scale-benchmark.test.ts  (2 tests) 89ms
+ ✓ test/retrieval-stress-benchmark.test.ts  (2 tests) 997ms
+
+ Test Files  22 passed (22)
+      Tests  162 passed (162)
+   Start at  00:08:53
+   Duration  3.31s (transform 1.90s, setup 0ms, collect 10.80s, tests 3.43s, environment 4ms, prepare 1.88s)
+
+
+> simple-rcp-v2@0.1.0 test:demo /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2
+> node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs
+
+✔ demo command starts SimpleRCPv2 with the bundled workspace (2395.146667ms)
+✔ bundled demo workspace passes its own tests (216.200417ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2474.857291

@@ -1,0 +1,67 @@
+{
+  "tag": "knowledge-exp-freeze-v3.1",
+  "at": "2026-10-16T16:11:16.523Z",
+  "implementationCommit": "95bf21a3379487f647edb2b3ebb2f79b200f9383",
+  "dataCommit": "ea11a85ed344c522fe3b63288cd8577c94fa6498",
+  "dataChanges": "",
+  "manifestHash": "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137",
+  "configHash": "1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef",
+  "files": {
+    "experiments/knowledge/formal-v3.json": "a5b41fa275d6380c964038cb3c1e2337f225aa61e304f9aa8c91f78077659d0a",
+    "experiments/knowledge/review-rules.json": "eb411586b6b646ac13db2766ee6e054fcf3ca0781361ee8fde087358518b781b",
+    "experiments/knowledge/e3-retest-protocol.json": "389f7b24ef3c91b07aa85b7e30398dae1aef2d27142d5811c52056f5e41cea16",
+    "apps/server/src/knowledge/rerank.ts": "0e1a51ff626f2fa903cc189c9168c15c891303b651f47a4826838ff251f87bf6",
+    "packages/knowledge/src/extract/recapPrompt.ts": "00cf85cf820782d1d8db38ea52231b8a8a0325d7e7cf4e0a75ee6e9828c86b36",
+    "pnpm-lock.yaml": "e3bc8325ca4c5cb5b970db9cfefbd543bc4305212b71a8f70650c371c71a41dc"
+  },
+  "dataReviewRulesHash": "3b70f4614c03df96ce9438af611e30038efec3821763867552dc5e056a41d63f",
+  "node": "v24.7.0",
+  "pnpm": "9.0.0",
+  "runtime": {
+    "runtime": "opencode",
+    "state": "ready",
+    "version": "1.18.31",
+    "model": "MiniMax-M3",
+    "provider": "minimax",
+    "apiKeyConfigured": true,
+    "activityConfig": {
+      "waitingMs": 20000,
+      "stalledMs": 60000
+    }
+  },
+  "server": {
+    "enabled": true,
+    "fakeAgentRuntime": false,
+    "provider": "minimax",
+    "model": "MiniMax-M3",
+    "knowledgeProvider": "minimax",
+    "knowledgeModel": "MiniMax-M3",
+    "recapTimeoutMs": 120000,
+    "speed": 1,
+    "captureConfig": {
+      "checkpointIdleMs": 30000,
+      "chatWindowMs": 300000,
+      "chatCooldownMs": 300000,
+      "chatAfterMs": 60000,
+      "chatBeforeMs": 120000,
+      "todoCooldownMs": 300000,
+      "magicCooldownMs": 120000,
+      "rollbackWindowMs": 300000,
+      "rollbackCooldownMs": 300000,
+      "overwrittenWindowMs": 600000,
+      "overwrittenCooldownMs": 300000,
+      "historyMs": 1800000,
+      "agentInterruptWindowMs": 180000,
+      "agentRevisionWindowMs": 900000,
+      "agentRevisionCooldownMs": 300000,
+      "agentCorrectionWindowMs": 600000,
+      "agentRetryWindowMs": 1800000
+    }
+  },
+  "samples": {
+    "exp3": 198,
+    "exp4Ta": 18,
+    "exp4Tb": 36
+  },
+  "oldPartialResults": "experiments/knowledge/runs/exp3-freeze-v3/results.jsonl"
+}
