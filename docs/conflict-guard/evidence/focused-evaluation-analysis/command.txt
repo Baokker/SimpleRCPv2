@@ -1,0 +1,1 @@
+pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/focused-evaluation-summary.ts

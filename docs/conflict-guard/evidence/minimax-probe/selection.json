@@ -17,8 +17,8 @@
     "inputTokenLimit": 512000
   },
   "budget": {
-    "requests": 21,
-    "agentRuns": 0,
+    "requests": 51,
+    "agentRuns": 4,
     "limits": {
       "requests": 100,
       "agentRuns": 6

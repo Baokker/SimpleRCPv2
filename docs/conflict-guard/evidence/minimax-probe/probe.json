@@ -1417,11 +1417,311 @@
       "jsonValid": true,
       "reasoningEmpty": true,
       "contentEmpty": false
+    },
+    {
+      "name": "station",
+      "baseUrl": "https://api.minimax.io/v1",
+      "request": {
+        "model": "MiniMax-M3",
+        "n": 1,
+        "thinking": {
+          "type": "disabled"
+        },
+        "reasoning_split": true,
+        "temperature": 0,
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只输出 JSON：{\"ok\":true}"
+          }
+        ]
+      },
+      "httpStatus": 401,
+      "latencyMs": 610.171334,
+      "response": {
+        "type": "error",
+        "error": {
+          "type": "authorized_error",
+          "message": "invalid api key (2049)",
+          "http_code": "401"
+        },
+        "request_id": "071936b8756095c5828ca49cb4383c08"
+      },
+      "jsonValid": false,
+      "reasoningEmpty": true,
+      "contentEmpty": true
+    },
+    {
+      "name": "station",
+      "baseUrl": "https://api.minimaxi.com/v1",
+      "request": {
+        "model": "MiniMax-M3",
+        "n": 1,
+        "thinking": {
+          "type": "disabled"
+        },
+        "reasoning_split": true,
+        "temperature": 0,
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只输出 JSON：{\"ok\":true}"
+          }
+        ]
+      },
+      "httpStatus": 200,
+      "latencyMs": 34456.629541,
+      "response": {
+        "id": "071936b9343d0718823a293bb2162739",
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "{\"ok\":true}",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1791624121,
+        "model": "MiniMax-M3",
+        "object": "chat.completion",
+        "usage": {
+          "total_tokens": 178,
+          "total_characters": 0,
+          "prompt_tokens": 172,
+          "completion_tokens": 6,
+          "prompt_tokens_details": {
+            "cached_tokens": 157
+          }
+        },
+        "input_sensitive": false,
+        "output_sensitive": false,
+        "input_sensitive_type": 0,
+        "output_sensitive_type": 0,
+        "output_sensitive_int": 0,
+        "service_tier": "standard",
+        "base_resp": {
+          "status_code": 0,
+          "status_msg": ""
+        }
+      },
+      "responseModel": "MiniMax-M3",
+      "finishReason": "stop",
+      "jsonValid": true,
+      "reasoningEmpty": true,
+      "contentEmpty": false
+    },
+    {
+      "name": "adaptive",
+      "baseUrl": "https://api.minimaxi.com/v1",
+      "request": {
+        "model": "MiniMax-M3",
+        "n": 1,
+        "thinking": {
+          "type": "adaptive"
+        },
+        "reasoning_split": true,
+        "temperature": 0,
+        "max_tokens": 4096,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只输出 JSON：{\"ok\":true}"
+          }
+        ]
+      },
+      "httpStatus": 200,
+      "latencyMs": 31726.322041999993,
+      "response": {
+        "id": "071936dbb7b081519a1d23eb3fe94a22",
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "{\"ok\":true}",
+              "role": "assistant",
+              "reasoning_content": "The user is asking me to output only JSON: {\"ok\":true}",
+              "reasoning_details": [
+                {
+                  "type": "reasoning.text",
+                  "id": "reasoning-text-1",
+                  "format": "MiniMax-response-v1",
+                  "index": 0,
+                  "text": "The user is asking me to output only JSON: {\"ok\":true}"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1791624156,
+        "model": "MiniMax-M3",
+        "object": "chat.completion",
+        "usage": {
+          "total_tokens": 208,
+          "total_characters": 0,
+          "prompt_tokens": 185,
+          "completion_tokens": 23,
+          "prompt_tokens_details": {
+            "cached_tokens": 171
+          }
+        },
+        "input_sensitive": false,
+        "output_sensitive": false,
+        "input_sensitive_type": 0,
+        "output_sensitive_type": 0,
+        "output_sensitive_int": 0,
+        "service_tier": "standard",
+        "base_resp": {
+          "status_code": 0,
+          "status_msg": ""
+        }
+      },
+      "responseModel": "MiniMax-M3",
+      "finishReason": "stop",
+      "jsonValid": true,
+      "reasoningEmpty": false,
+      "contentEmpty": false
+    },
+    {
+      "name": "json-mode",
+      "baseUrl": "https://api.minimaxi.com/v1",
+      "request": {
+        "model": "MiniMax-M3",
+        "n": 1,
+        "thinking": {
+          "type": "disabled"
+        },
+        "reasoning_split": true,
+        "temperature": 0,
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只输出 JSON：{\"ok\":true}"
+          }
+        ],
+        "response_format": {
+          "type": "json_object"
+        }
+      },
+      "httpStatus": 200,
+      "latencyMs": 33282.50962499999,
+      "response": {
+        "id": "071936fbe2e10056693b89eb9a5aa51b",
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "{\"ok\":true}",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1791624187,
+        "model": "MiniMax-M3",
+        "object": "chat.completion",
+        "usage": {
+          "total_tokens": 178,
+          "total_characters": 0,
+          "prompt_tokens": 172,
+          "completion_tokens": 6,
+          "prompt_tokens_details": {
+            "cached_tokens": 171
+          }
+        },
+        "input_sensitive": false,
+        "output_sensitive": false,
+        "input_sensitive_type": 0,
+        "output_sensitive_type": 0,
+        "output_sensitive_int": 0,
+        "service_tier": "standard",
+        "base_resp": {
+          "status_code": 0,
+          "status_msg": ""
+        }
+      },
+      "responseModel": "MiniMax-M3",
+      "finishReason": "stop",
+      "jsonValid": true,
+      "reasoningEmpty": true,
+      "contentEmpty": false
+    },
+    {
+      "name": "logprobs",
+      "baseUrl": "https://api.minimaxi.com/v1",
+      "request": {
+        "model": "MiniMax-M3",
+        "n": 1,
+        "thinking": {
+          "type": "disabled"
+        },
+        "reasoning_split": true,
+        "temperature": 0,
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只输出 JSON：{\"ok\":true}"
+          }
+        ],
+        "logprobs": true,
+        "top_logprobs": 3
+      },
+      "httpStatus": 200,
+      "latencyMs": 660.8253340000083,
+      "response": {
+        "id": "0719371c6863e66669542b618109650d",
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "{\"ok\":true}",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1791624220,
+        "model": "MiniMax-M3",
+        "object": "chat.completion",
+        "usage": {
+          "total_tokens": 178,
+          "total_characters": 0,
+          "prompt_tokens": 172,
+          "completion_tokens": 6,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          }
+        },
+        "input_sensitive": false,
+        "output_sensitive": false,
+        "input_sensitive_type": 0,
+        "output_sensitive_type": 0,
+        "output_sensitive_int": 0,
+        "service_tier": "standard",
+        "base_resp": {
+          "status_code": 0,
+          "status_msg": ""
+        }
+      },
+      "responseModel": "MiniMax-M3",
+      "finishReason": "stop",
+      "jsonValid": true,
+      "reasoningEmpty": true,
+      "contentEmpty": false
     }
   ],
   "budget": {
-    "requests": 21,
-    "agentRuns": 0,
+    "requests": 51,
+    "agentRuns": 4,
     "limits": {
       "requests": 100,
       "agentRuns": 6

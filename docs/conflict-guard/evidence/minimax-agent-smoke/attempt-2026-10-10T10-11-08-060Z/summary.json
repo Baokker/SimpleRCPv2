@@ -1,0 +1,38 @@
+{
+  "model": "MiniMax-M3",
+  "baseUrl": "https://api.minimaxi.com/v1",
+  "provider": "minimax",
+  "thinking": "disabled",
+  "passed": true,
+  "tasks": [
+    {
+      "task": "read-two-edit",
+      "runId": "0a290372-4403-450c-95d5-52ca859cd61c",
+      "status": "completed",
+      "files": [
+        {
+          "file": "src/pricing.ts",
+          "additions": 4,
+          "deletions": 0,
+          "status": "modified",
+          "attribution": "tool"
+        }
+      ],
+      "tools": [
+        "read",
+        "edit",
+        "glob",
+        "bash"
+      ],
+      "rejected": 0
+    }
+  ],
+  "budget": {
+    "requests": 63,
+    "agentRuns": 6,
+    "limits": {
+      "requests": 100,
+      "agentRuns": 6
+    }
+  }
+}

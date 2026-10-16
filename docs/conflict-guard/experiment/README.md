@@ -2,6 +2,10 @@
 
 当前准备因 Jev HTTP 451 地区限制受阻，阈值校准与完整冻结尚未完成。正式 X1 至 X7 和保留集策略评价尚未执行。准备状态见 [freeze.md](freeze.md)，可机读协议见 [protocol.json](protocol.json)，实际修复与录制结果见 [实验前报告](../review-fix-preexperiment.md)。完整冻结导出完成后再核验配置、哈希与调用预算。
 
+本轮开发集比较与指标判定见 [实验问题、指标与开发集结果](focused-experiment-report.md)。报告围绕人与人协作、灰区模型质量、Agent 协作组织，包含三个 MiniMax-M3 提示词版本的真实录制，并分别统计全部样本与灰区子集。报告末尾提供收缩后的正式实验设计建议；以下协议命令仍属于等待确认的完整实验方案。
+
+探索录制 `pair-v2` 有一条缓存未通过 JSON 完整性检查，具体文件与哈希见 [统计核验](../evidence/focused-evaluation-analysis/verification.json) 的 `cacheIntegrity`。其质量数字可以从原始报告重新计算，完整缓存回放尚未验证通过。正式冻结不能采用不完整的录制。
+
 ## 环境与数据
 
 使用 Node.js 22.19.0 或更新的支持 strip-types 的版本、pnpm 9、OpenCode 1.18.31。运行 `pnpm install --frozen-lockfile` 与 `pnpm -r build`。所有命令在 SimpleRCPv2 根目录执行。
