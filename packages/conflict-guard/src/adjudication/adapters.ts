@@ -1,4 +1,4 @@
-import { choiceInstructions, choiceCriteria, deepInstructions, fastInstructions, sanitize } from "./prompts.js";
+import { promptBundle, deepInstructionsFor, fastInstructionsFor, sanitize } from "./prompts.js";
 import { ProviderError, type AdjudicationConfig, type AdjudicationInput, type FastJudge, type DeepJudge, type JudgeResult } from "./types.js";
 import { createMiniMaxJudge, type MiniMaxOptions } from "./minimax.js";
 
@@ -29,6 +29,7 @@ export function createJevJudge(options: HttpOptions): FastJudge {
   const model = options.config.fastModel;
   return { name: "jev", model, cacheParameters: { endpoint: options.baseUrl ?? "https://api.typesafe.ai", questionType: "choice" }, async judge(input: AdjudicationInput, signal) {
     const started = options.now();
+    const { choiceInstructions, choiceCriteria } = promptBundle(input.promptVersion);
     const raw = await request(options, `${(options.baseUrl ?? "https://api.typesafe.ai").replace(/\/$/, "")}/v1/systemone`, { model, state: input, questions: { decision: { type: "choice", instructions: choiceInstructions, criteria: choiceCriteria } } }, signal);
     if (raw.model !== model) throw new ProviderError("invalid-format", "provider model version mismatch");
     const answer = object(object(raw.answers).decision);
@@ -47,7 +48,7 @@ export function createJevJudge(options: HttpOptions): FastJudge {
 export function createDeepJudge(options: HttpOptions & { name: "deepseek" | "openai-compatible"; model: string }): DeepJudge {
   return { name: options.name, model: options.model, cacheParameters: { endpoint: options.baseUrl ?? "https://api.deepseek.com/v1", temperature: 0, response_format: { type: "json_object" }, thinking: options.name === "deepseek" }, async judge(input, { reasoning }, signal) {
     const started = options.now();
-    const raw = await request(options, `${(options.baseUrl ?? "https://api.deepseek.com/v1").replace(/\/$/, "")}/chat/completions`, { model: options.model, temperature: 0, response_format: { type: "json_object" }, ...(options.name === "deepseek" ? { thinking: { type: reasoning ? "enabled" : "disabled" } } : {}), messages: [{ role: "system", content: deepInstructions }, { role: "user", content: JSON.stringify(input) }] }, signal);
+    const raw = await request(options, `${(options.baseUrl ?? "https://api.deepseek.com/v1").replace(/\/$/, "")}/chat/completions`, { model: options.model, temperature: 0, response_format: { type: "json_object" }, ...(options.name === "deepseek" ? { thinking: { type: reasoning ? "enabled" : "disabled" } } : {}), messages: [{ role: "system", content: deepInstructionsFor(input.promptVersion) }, { role: "user", content: JSON.stringify(input) }] }, signal);
     if (raw.model !== options.model) throw new ProviderError("invalid-format", "provider model version mismatch");
     if (!Array.isArray(raw.choices) || raw.choices.length !== 1) throw new ProviderError("invalid-format");
     const message = object(object(raw.choices[0]).message);
@@ -71,7 +72,7 @@ export function createCompatibleFastJudge(options: HttpOptions & { model: string
   return { name: "openai-compatible", model: options.model, cacheParameters: { endpoint: options.baseUrl, ...parameters, samples, samplingTemperature: 1 }, async judge(input, signal) {
     const started = options.now();
     const url = `${options.baseUrl?.replace(/\/$/, "")}/chat/completions`;
-    const messages = [{ role: "system", content: fastInstructions }, { role: "user", content: JSON.stringify(input) }];
+    const messages = [{ role: "system", content: fastInstructionsFor(input.promptVersion) }, { role: "user", content: JSON.stringify(input) }];
     const sample = () => request(options, url, { model: options.model, temperature: 1, max_tokens: 4, messages }, signal);
     let raw: Record<string, unknown>;
     let sampledFirst = false;

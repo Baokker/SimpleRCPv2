@@ -1,4 +1,4 @@
-import { deepInstructions, sanitize } from "./prompts.js";
+import { deepInstructionsFor, sanitize } from "./prompts.js";
 import { ProviderError, type AdjudicationInput, type DeepJudge, type JudgeResult } from "./types.js";
 
 export interface MiniMaxOptions {
@@ -16,7 +16,7 @@ export const miniMaxOutputInstruction = "只输出一个完整的 JSON 对象，
 export function miniMaxRequest(input: AdjudicationInput, model: string, reasoning: boolean, jsonMode = true, temperature = 0) {
   if (!reasoning && model !== "MiniMax-M3") throw new Error("关闭推理需要使用 MiniMax-M3");
   if (!Number.isFinite(temperature) || temperature < 0 || temperature > 2) throw new Error("MiniMax temperature 必须介于 0 与 2");
-  return { model, temperature, n: 1, thinking: { type: reasoning ? "adaptive" : "disabled" }, reasoning_split: true, max_tokens: reasoning ? 4096 : 1024, ...(jsonMode ? { response_format: { type: "json_object" } } : {}), messages: [{ role: "system", content: `${deepInstructions}\n${miniMaxOutputInstruction}` }, { role: "user", content: JSON.stringify(input) }] };
+  return { model, temperature, n: 1, thinking: { type: reasoning ? "adaptive" : "disabled" }, reasoning_split: true, max_tokens: reasoning ? 4096 : 1024, ...(jsonMode ? { response_format: { type: "json_object" } } : {}), messages: [{ role: "system", content: `${deepInstructionsFor(input.promptVersion)}\n${miniMaxOutputInstruction}` }, { role: "user", content: JSON.stringify(input) }] };
 }
 
 export function parseMiniMaxResponse(raw: unknown, model: string, latencyMs: number): JudgeResult {

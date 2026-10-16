@@ -29,6 +29,8 @@ packages/conflict-guard/bench/datasets/d1-v3/traces/
 packages/conflict-guard/bench/model-cache/preexperiment-*/**/*.json
 packages/conflict-guard/bench/model-cache/preexperiment/**/*.json
 packages/conflict-guard/bench/model-cache/checkpoint-b-*/**/*.json
+packages/conflict-guard/bench/model-cache/exploratory-grey-pair-v2/G1/*.json
+packages/conflict-guard/bench/model-cache/exploratory-grey-pair-v3/G1/*.json
 docs/conflict-guard/evidence/checkpoint-b-dev-report/rules/results.json
 docs/conflict-guard/evidence/preexperiment/baseline/results.json
 docs/conflict-guard/evidence/preexperiment/repaired-d1-v2/results.json

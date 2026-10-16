@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { createAdjudicationService, createJudgeRegistry, defaultAdjudicationConfig, type AdjudicationConfig, type CachedCall, type ProviderCall, type ProviderMode, type ProviderSubscription } from "../dist/index.js";
 import type { createExperimentBudget } from "./experiment-budget.ts";
 import { providerConfiguration, type ModelProviderConfiguration } from "./model-providers.ts";
+import { createModelCacheWriter } from "./model-cache-writer.ts";
 
 export const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 export function loadModelEnvironment() { const file = path.join(repositoryRoot, ".env"); if (existsSync(file)) process.loadEnvFile(file); }
@@ -53,6 +54,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
   const deepJudge = registry.deep(config.deep);
   const actualProviders = Object.fromEntries([fastJudge, deepJudge].map((judge) => [judge.name, providerConfiguration(judge.name, judge.cacheParameters!)]));
   let cacheMisses = 0;
+  const cacheWriter = createModelCacheWriter(directory);
   const service = createAdjudicationService({ config, mode, sensitiveValues: secrets, fast: fastJudge, deep: deepJudge, clock: { now: () => performance.now(), setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (handle) => clearTimeout(handle as NodeJS.Timeout) }, onCall(call) {
     onCall?.(call);
     if (experimentBudget && call.status !== "cache-hit") budgetWrites = budgetWrites.then(() => experimentBudget.consume("usd", call.costUsd)).catch((error) => { budgetFailure = error; });
@@ -67,11 +69,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
       return undefined;
     },
     async put(value) {
-      await fs.mkdir(directory, { recursive: true });
-      const target = path.join(directory, `${value.key}.json`);
-      const temporary = `${target}.${process.pid}.part`;
-      await fs.writeFile(temporary, JSON.stringify(value) + "\n", { mode: 0o600 });
-      await fs.rename(temporary, target);
+      await cacheWriter.put(value);
     }
   } });
   return { ...service, providerConfiguration: actualProviders, cacheMisses: () => cacheMisses, async judge(...args: Parameters<typeof service.judge>) {
