@@ -9,6 +9,7 @@
     "d1-0061-safe",
     "d1-0149-conflict"
   ],
+  "allGrey": 67,
   "prompt": "pair-v1",
   "rows": [
     {
@@ -332,6 +333,41 @@
           "escapeRatio": 12
         }
       },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 15,
+          "agreement": 0.2459016393442623,
+          "missed": 3,
+          "lockTruth": 12,
+          "falseBlockCount": 7,
+          "safeWarningCount": 36,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 4,
+          "agreement": 0.6666666666666666,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 0,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 19,
+          "agreement": 0.2835820895522388,
+          "missed": 5,
+          "lockTruth": 15,
+          "falseBlockCount": 7,
+          "safeWarningCount": 36,
+          "safeTruth": 52
+        }
+      },
       "safeWarningCount": 36,
       "falseBlockCount": 7,
       "p95Ms": 7713.737416000105,
@@ -358,6 +394,38 @@
         "d1-0005-safe",
         "d1-0066-safe",
         "d1-0130-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0005-safe",
+          "pairs": [
+            {
+              "id": "b7ef32dbc9c72491213546af2ce92f5cd7ed1e1ed131175b71a2452abd45119d",
+              "finalStatus": "closed",
+              "closedAt": 11248
+            }
+          ]
+        },
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 10902
+            }
+          ]
+        },
+        {
+          "id": "d1-0130-safe",
+          "pairs": [
+            {
+              "id": "22007c34869a591b64c2ac6d5ce2d59b32bc038f4223b7fd3d2745188fa2ec8b",
+              "finalStatus": "closed",
+              "closedAt": 11212
+            }
+          ]
+        }
       ],
       "groups": [
         {
@@ -988,6 +1056,41 @@
           "escapeRatio": 12
         }
       },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 36,
+          "agreement": 0.5901639344262295,
+          "missed": 7,
+          "lockTruth": 12,
+          "falseBlockCount": 1,
+          "safeWarningCount": 17,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 38,
+          "agreement": 0.5671641791044776,
+          "missed": 9,
+          "lockTruth": 15,
+          "falseBlockCount": 1,
+          "safeWarningCount": 19,
+          "safeTruth": 52
+        }
+      },
       "safeWarningCount": 17,
       "falseBlockCount": 1,
       "p95Ms": 6770.27029200003,
@@ -1013,6 +1116,7 @@
         "d1-0061-safe"
       ],
       "noJudgement": [],
+      "noJudgementDetails": [],
       "groups": [
         {
           "id": "d1-0005-conflict",

@@ -11,7 +11,7 @@ const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2/stag
 const config: AdjudicationConfig = JSON.parse(await fs.readFile(path.join(output, "config.json"), "utf8"));
 const { samples, manifest } = await developmentSamples(path.join(repositoryRoot, "packages/conflict-guard/bench/datasets/d1-v3"));
 const libs = await replayLibraries();
-const sourceFiles = ["src/adjudication/invariants.ts", "src/adjudication/syntax.ts", "src/adjudication/prompts.ts", "src/adjudication/adapters.ts", "src/adjudication/service.ts", "src/adjudication/config.ts", "src/replay/policies.ts", "src/coordination/session.ts", "src/routing/typecheck.ts", "src/semantic/changes.ts"];
+const sourceFiles = ["src/adjudication/declarations.ts", "src/adjudication/invariants.ts", "src/adjudication/syntax.ts", "src/adjudication/prompts.ts", "src/adjudication/adapters.ts", "src/adjudication/service.ts", "src/adjudication/config.ts", "src/replay/policies.ts", "src/coordination/session.ts", "src/coordination/pairState.ts", "src/routing/typecheck.ts", "src/semantic/changes.ts"];
 const sourceHashes = Object.fromEntries(await Promise.all(sourceFiles.flatMap((file) => [file, file.replace(/^src\//, "dist/").replace(/\.ts$/, ".js")]).map(async (file) => [file, createHash("sha256").update(await fs.readFile(new URL(`../${file}`, import.meta.url))).digest("hex")])));
 const requests = new Map<string, { input: AdjudicationInput; local: ZoneVerdict; samples: string[] }>();
 const groups = [];

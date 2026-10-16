@@ -17,8 +17,12 @@ const ruleFile = "docs/conflict-guard/experiment/v2/selection-rule.md";
 const registeredRule = execFileSync("git", ["show", `d4e735f:${ruleFile}`], { cwd: repositoryRoot });
 assert.deepEqual(await fs.readFile(path.join(repositoryRoot, ruleFile)), registeredRule);
 const common = new Set(selection.rows[0].groups.map((row: any) => row.id));
+const additional = new Set(selection.additionalGrey);
+const allGrey = new Set([...common, ...additional]);
 assert.equal(prepared.groups.length, 119);
 assert.equal(common.size, 61);
+assert.equal(additional.size, 6);
+assert.equal(selection.allGrey, allGrey.size);
 const identifiers = prepared.groups.map((row: any) => row.id);
 const thresholds = [0, 0.2, 0.4, 0.6, 0.8];
 const directories = [...new Set(["pair-v4/G1", `${selection.prompt}/G1`, `${selection.prompt}/G2`, ...thresholds.map((value) => `${selection.prompt}/G3-${value}`)])];
@@ -74,15 +78,44 @@ for (const threshold of thresholds) {
     cascadeResponses += 1;
   }
 }
-for (const row of selection.rows.slice(1)) {
+const historical = JSON.parse(gunzipSync(await fs.readFile(path.join(repositoryRoot, "docs/conflict-guard/evidence/preexperiment/record/results.json.gz"))).toString()).policies.G1;
+for (const row of selection.rows) {
   const directory = row.id === "pair-v4 G1" ? "pair-v4/G1" : row.id.includes("完整声明") ? `${selection.prompt}/G1` : `${selection.prompt}/${row.id}`;
-  const report = reports.get(directory)!;
+  const report = row.id === "pair-v1 G1" ? historical : reports.get(directory)!;
   const groups = report.groups.filter((group: any) => common.has(group.id));
   assert.equal(row.missed, groups.filter((group: any) => group.outcome.truth === "lock" && group.outcome.missed).length);
   assert.equal(row.falseBlockCount, groups.filter((group: any) => group.outcome.truth === "allow" && group.outcome.overblocked).length);
   assert.equal(row.safeWarningCount, groups.filter((group: any) => group.outcome.truth === "allow" && group.outcome.decision === "warn").length);
   assert.equal(row.agreement, groups.filter((group: any) => group.outcome.truth === group.outcome.decision).length / groups.length);
+  for (const [name, identifiers] of [["common", common], ["additional", additional], ["all", allGrey]] as const) {
+    const subset = report.groups.filter((group: any) => identifiers.has(group.id));
+    const actual = row.qualitySubsets[name];
+    assert.equal(actual.samples, identifiers.size);
+    assert.equal(actual.relationGroups, new Set(subset.map((group: any) => group.relationGroupId)).size);
+    assert.equal(actual.correct, subset.filter((group: any) => group.outcome.truth === group.outcome.decision).length);
+    assert.equal(actual.agreement, actual.correct / actual.samples);
+    assert.equal(actual.missed, subset.filter((group: any) => group.outcome.truth === "lock" && group.outcome.missed).length);
+    assert.equal(actual.lockTruth, subset.filter((group: any) => group.outcome.truth === "lock").length);
+    assert.equal(actual.falseBlockCount, subset.filter((group: any) => group.outcome.truth === "allow" && group.outcome.overblocked).length);
+    assert.equal(actual.safeWarningCount, subset.filter((group: any) => group.outcome.truth === "allow" && group.outcome.decision === "warn").length);
+    assert.equal(actual.safeTruth, subset.filter((group: any) => group.outcome.truth === "allow").length);
+  }
 }
+const review = JSON.parse(await fs.readFile(path.join(root, "review-validation.json"), "utf8"));
+assert.equal(review.modelCalls, 0);
+assert.equal(review.samples, 119);
+assert.equal(review.matchingInputs + review.missingInputs.length, review.currentInputs);
+assert.equal(review.completeInputs + review.incompleteInputs, review.currentInputs);
+assert.equal(review.inputs.length, review.currentInputs);
+assert.equal(new Set(review.inputs.map((input: any) => input.hash)).size, review.currentInputs);
+const recordedInputs = new Set(deep.inputs.map((entry: any) => inputHash(entry.input)));
+for (const input of review.inputs) assert.equal(input.presentInRecording, recordedInputs.has(input.hash));
+assert.deepEqual(review.missingInputs, review.inputs.filter((input: any) => !input.presentInRecording));
+assert.equal(review.inputs.filter((input: any) => input.complete).length, review.completeInputs);
+for (const [file, expected] of Object.entries(review.sourceHashes)) assert.equal(createHash("sha256").update(await fs.readFile(path.join(repositoryRoot, "packages/conflict-guard/src", file))).digest("hex"), expected, `当前输入核查来源变化：${file}`);
+assert.ok(review.groups.find((group: any) => group.id === "d1-0026-conflict").judgements > 0);
+assert.ok(review.groups.find((group: any) => group.id === "d1-0066-safe").closures.some((event: any) => event.reason === "no-semantic-change"));
+assert.ok(review.groups.every((group: any) => group.closures.every((event: any) => typeof event.reason === "string")));
 const curves = selection.rows.filter((row: any) => row.id.startsWith("G3-"));
 assert.equal(selectDevelopmentCandidate(curves, "threshold").id, `G3-${selection.threshold}`);
 const selectedDirectory = `${selection.prompt}/${selection.policy === "G3" ? `G3-${selection.threshold}` : selection.policy}`;
@@ -99,8 +132,8 @@ const logFile = path.join(root, selection.prompt, "G3-0", "calls.jsonl");
 const originalLog = await fs.readFile(logFile);
 const duplicate = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/stage-a-evaluate.ts", "--policy", "G3", "--prompt", selection.prompt, "--mode", "replay", "--threshold", "0"], { cwd: packageRoot, encoding: "utf8" });
 assert.equal(duplicate.status, 1);
-assert.ok(duplicate.stderr.includes("EEXIST"));
+assert.ok(duplicate.stderr.includes("结果调用日志已存在"));
 assert.deepEqual(await fs.readFile(logFile), originalLog);
-const verification = { split: "dev", samples: identifiers.length, commonGrey: common.size, completeInputs: 70, incompleteInputs: 124, cacheMisses: 0, cascadeResponses, calls: { deep: realDeep, fast: realFast }, selectionRuleCommit: "d4e735f", selectionRuleSha256: createHash("sha256").update(registeredRule).digest("hex"), checks: ["input-completeness", "budget", "cascade-deadline", "quality-counts", "selection", "human-metrics", "batch-close-judgement", "output-protection"] };
+const verification = { split: "dev", samples: identifiers.length, commonGrey: common.size, additionalGrey: additional.size, allGrey: allGrey.size, completeInputs: 70, incompleteInputs: 124, cacheMisses: 0, cascadeResponses, review: { currentInputs: review.currentInputs, matchingInputs: review.matchingInputs, missingInputs: review.missingInputs.length, modelCalls: 0 }, calls: { deep: realDeep, fast: realFast }, selectionRuleCommit: "d4e735f", selectionRuleSha256: createHash("sha256").update(registeredRule).digest("hex"), checks: ["input-completeness", "budget", "cascade-deadline", "quality-counts", "quality-subsets", "selection", "human-metrics", "batch-close-judgement", "close-reasons", "current-input-compatibility", "output-protection"] };
 await fs.writeFile(path.join(root, "verification.json"), JSON.stringify(verification, null, 2) + "\n");
 console.log(JSON.stringify(verification));

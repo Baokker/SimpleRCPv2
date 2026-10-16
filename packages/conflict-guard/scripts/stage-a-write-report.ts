@@ -7,6 +7,7 @@ const selection = JSON.parse(await fs.readFile(path.join(root, "selection-final.
 const human = JSON.parse(await fs.readFile(path.join(root, "human-comparison.json"), "utf8"));
 const budget = JSON.parse(await fs.readFile(path.join(repositoryRoot, ".test-workspaces/stage-a-call-budget.json"), "utf8"));
 const config = JSON.parse(await fs.readFile(path.join(root, "config.json"), "utf8"));
+const review = JSON.parse(await fs.readFile(path.join(root, "review-validation.json"), "utf8"));
 const deepRows = selection.rows.filter((row: any) => row.id === "pair-v4 G1" || row.id === "pair-v1 G1（完整声明输入）");
 const fastRow = selection.rows.find((row: any) => row.id === "G2");
 if (deepRows.reduce((sum: number, row: any) => sum + row.requestCount, 0) !== budget.deep || fastRow.requestCount !== budget.fast) throw new Error("请求记录与阶段 A 调用预算不一致");
@@ -37,7 +38,19 @@ const lines = [
 for (const row of selection.rows) lines.push(`| ${row.id} | ${percent(row.agreement)} | ${row.missed}/12 | ${row.falseBlockCount}/49 | ${row.safeWarningCount}/49 | ${percent(row.validResponseRatio)} | ${milliseconds(row.p50Ms)} / ${milliseconds(row.p95Ms)} | ${percent(row.escalationRatio)} | ${row.syntaxDeferredRequests ?? "N/A"} | ${milliseconds(row.syntaxWaitP50Ms)} / ${milliseconds(row.syntaxWaitP95Ms)} | ${row.requestCount} | ${row.costUsd.toFixed(6)} |`);
 lines.push("", "质量指标按共同轨迹的最终决策统计，语法不完整导致的提醒和请求失败均保留。请求有效率和时延使用开发集全部请求；级联时延包含快判与深判顺序执行的耗时，快判完成后只给深判剩余时间。请求有效率以模型请求为单位，级联中升级深判会增加一次请求，深判超过剩余时间计为无效。语法不完整输入列统计去重后的输入数量，同一变更对可能含有多次输入；修改版本的推迟次数另见下表。", "",
   "旧 pair-v1 使用历史输入和历史录制。pair-v4 使用完整声明与新证据，录制时间也不同，两者差异同时包含输入整理和时段影响。选中 pair-v1 后的新输入深判结果单列，用于与同输入的快判、级联比较。", "",
-  `新增灰区轨迹：${selection.additionalGrey.join("、") || "无"}。这些轨迹由本地分区确定，未加入共同主表。`, "",
+  `新增灰区轨迹：${selection.additionalGrey.join("、") || "无"}。这些轨迹由本地分区确定，分别列出新增子集及全部灰区的质量结果；预先登记的选择规则继续使用共同主表。`, ""
+);
+for (const [subset, title] of [["additional", "新增六个灰区轨迹"], ["all", "全部灰区轨迹"]]) {
+  lines.push(`## ${title}`, "", "| 条件 | 样本数 | 一致率 | 漏阻断 | 安全误拦 | 安全提醒 |", "|---|---:|---:|---:|---:|---:|");
+  for (const row of selection.rows) {
+    const value = row.qualitySubsets[subset!];
+    const ratio = (numerator: number, denominator: number) => denominator ? `${numerator}/${denominator}` : "N/A";
+    lines.push(`| ${row.id} | ${value.samples} | ${percent(value.agreement)} | ${ratio(value.missed, value.lockTruth)} | ${ratio(value.falseBlockCount, value.safeTruth)} | ${ratio(value.safeWarningCount, value.safeTruth)} |`);
+  }
+  lines.push("");
+}
+lines.push(
+  "上述质量统计均使用原始录制的最终结果；请求有效率、时延和费用见共同灰区对照与调用表，同一批请求只计费一次。三个子集的分子、分母和关系组数量保存在 selection-final.json 的 qualitySubsets。", "",
   "## 选择结果", "",
   `已登记的选择规则选中提示词 ${selection.prompt}，级联阈值为 ${selection.threshold}，进入 P4 的灰区策略为 ${selection.policy}。选择依据见 selection-prompt.json 与 selection-final.json。规则文件的提交为 d4e735f，录制后保持不变。`, "",
   "提示词选择使用登记的历史 pair-v1 与新 pair-v4：两者的安全误拦率均低于 15%，漏阻断分别为 3 个和 7 个，因此选择 pair-v1。级联阈值 0.2 的一致率高于阈值 0，且有效响应率满足阈值候选之间的要求，因此选择 0.2。最终策略比较中，Jev 单独快判的有效响应率为 100%，选中阈值的级联为 93.5%，相差超过 5 个百分点，按规则由快判进入 P4。级联保留为对照条件，所选阈值属于该对照条件。", "",
@@ -64,11 +77,15 @@ lines.push("", "## 需要注意的结果", "",
   "- 选中的快判仍漏阻断 12 个灰区冲突中的 7 个，尚不能据此认为灰区质量达标。整个开发集上，完整方法的未及时通知比例与本地方法相同，冻结人·秒有所增加。",
   ...deepRows.filter((row: any) => row.validResponseRatio < 0.95).map((row: any) => `- ${row.id} 的请求有效率为 ${percent(row.validResponseRatio)}，成功及失败数量见调用表；需要在正式保留集报告中继续说明该限制。`),
   ...selection.rows.filter((row: any) => row.noJudgement.length).map((row: any) => `- ${row.id} 未产生判定的共同样本：${row.noJudgement.join("、")}。`),
-  "- 新输入下，d1-0066-safe 的候选变更对在模型返回前关闭，原始结果中保留 pair_closed 事件；快判在关闭前返回。未产生判定的样本仍保留在质量分母中，候选状态与结束时间见 selection-final.json 的 noJudgementDetails。",
+  "- d1-0066-safe 的最终修改仅包含注释与空白，候选在模型返回前关闭。当前代码的离线回放将关闭原因记为 no-semantic-change，见 review-validation.json；原始录制保持原样。快判在关闭前返回，未产生判定的样本仍保留在质量分母中。",
   "- 缺少 usage 的调用费用未知；语法等待采用轨迹时间，HTTP 时延采用真实测量，两者分别报告。", ""
 );
-lines.push("", "## 工程验证", "",
-  "完整构建通过；conflict-guard 包测试 34 个文件、289 项通过；服务端测试 309 项通过、9 项跳过；演示测试 2 项通过；关闭、观察、本地规则、完整方案四种模式的协作浏览器测试各 2 项通过。阶段 A 的输入准备、录制、统计和报告脚本通过独立 TypeScript 检查。模型录制使用真实接口；语法检查测试使用 TypeScript 解析器、语义索引和实际状态机。", "",
+lines.push("", "## 当前输入核查", "",
+  `使用当前代码对 ${review.samples} 个开发集轨迹进行离线回放，共取得 ${review.currentInputs} 份唯一输入，其中 ${review.matchingInputs} 份与已有录制一致，${review.missingInputs.length} 份缺少对应录制；完整输入 ${review.completeInputs} 份，语法不完整输入 ${review.incompleteInputs} 份。该核查新增模型调用为 0。源码哈希、输入哈希与逐轨迹关闭原因保存在 review-validation.json。`, "",
+  `缺少录制的输入中，${review.missingInputs.filter((row: any) => row.complete).length} 份语法完整，${review.missingInputs.filter((row: any) => !row.complete).length} 份语法不完整；语法不完整输入继续等待，编辑批次结束后按提醒处理。当前代码的模型质量需要补充对应完整输入的响应，原始质量结果继续作为录制时配置的结果保留。`, "",
+  "原始 prepared.json.gz 和模型结果保存录制时的源码身份。复现这些原始录制时使用其对应提交；当前代码核查使用 stage-a-review.ts，不覆盖原始输入和模型响应。", "",
+  "## 工程验证", "",
+  "构建、包测试、服务端测试、演示测试及四种模式协作测试的本轮结果见 review-repairs.md。声明检查使用 TypeScript 解析器和真实语义索引；服务端候选保留与关闭原因通过真实 Yjs 文档测试。", "",
   "## 适用范围", "",
   "数据来自生成项目与预定编辑轨迹，可执行探针只覆盖已定义的行为。开发集用于选择配置；这些数字不能替代保留集结果。旧提示词的历史输入与当前输入不同，比较不能单独证明提示词文本的作用。冻结、保留集与六个 Agent 场景等待阶段确认。", ""
 );

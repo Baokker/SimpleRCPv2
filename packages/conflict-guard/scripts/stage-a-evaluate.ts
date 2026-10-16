@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { gzipSync, gunzipSync } from "node:zlib";
@@ -16,6 +17,9 @@ if (values.mode === "record" && process.env.ADJUDICATION_BUDGET_SCOPE !== "stage
 if (values.mode === "record" && values.policy === "G2" && !process.env.TYPESAFE_PROXY_URL) throw new Error("Jev 真实录制需要配置代理");
 if (values.mode === "replay" && values.policy !== "G3" && !values.out) throw new Error("深判和快判回放需要通过 --out 指定独立结果目录");
 const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2/stage-A");
+const outputName = values.policy === "G3" ? `G3-${Number(values.threshold)}` : values.policy!;
+const directory = values.out ? path.resolve(values.out) : path.join(output, values.prompt!, outputName);
+if (existsSync(path.join(directory, "calls.jsonl"))) throw new Error("结果调用日志已存在，请指定独立结果目录");
 const prepared = JSON.parse(gunzipSync(await fs.readFile(path.join(output, "prepared.json.gz"))).toString());
 for (const [file, expected] of Object.entries(prepared.sourceHashes)) assert.equal(createHash("sha256").update(await fs.readFile(new URL(`../${file}`, import.meta.url))).digest("hex"), expected, `输入来源变化：${file}`);
 const config: AdjudicationConfig = { ...prepared.config, promptVersion: values.prompt, strategy: values.policy, threshold: Number(values.threshold) };
@@ -23,7 +27,6 @@ const models = JSON.parse(await fs.readFile(path.join(output, "models.json"), "u
 const providers = JSON.parse(await fs.readFile(path.join(output, "providers.json"), "utf8"));
 loadModelEnvironment();
 const name = values.policy === "G3" ? `G3-${config.threshold}` : values.policy!;
-const directory = values.out ? path.resolve(values.out) : path.join(output, values.prompt!, name);
 await fs.mkdir(directory, { recursive: true });
 await fs.writeFile(path.join(directory, "calls.jsonl"), "", { flag: "wx" });
 const cache = path.join(repositoryRoot, ".test-workspaces/stage-a-cache", values.prompt!, values.policy!);

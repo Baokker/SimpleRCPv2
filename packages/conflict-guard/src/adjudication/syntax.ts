@@ -1,9 +1,9 @@
 import type { SymbolChange } from "../semantic/changes.js";
-import { parseChangeSource } from "../routing/contracts.js";
+import { parseDeclaration } from "./declarations.js";
 
 export function declarationSyntax(change: SymbolChange) {
-  const beforeComplete = change.status === "added" || Boolean(parseChangeSource(change, change.before));
-  const afterComplete = change.status === "deleted" || Boolean(parseChangeSource(change, change.after));
+  const beforeComplete = change.status === "added" || Boolean(parseDeclaration(change, "before"));
+  const afterComplete = change.status === "deleted" || Boolean(parseDeclaration(change, "after"));
   return {
     complete: beforeComplete && afterComplete,
     ...(beforeComplete ? {} : { reason: "before declaration has syntax diagnostics" }),

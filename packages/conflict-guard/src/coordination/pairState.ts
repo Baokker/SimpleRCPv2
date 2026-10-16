@@ -5,6 +5,7 @@ import type { ConflictGuardClock } from "../tracking/tracker.js";
 export type PairStatus = "pending" | "analyzing" | "judged" | "stale" | "resolved" | "closed";
 export type Resolution = "reverted" | "overridden" | "auto-cleared";
 export type PairRevisionMode = "judged-input" | "legacy";
+export type PairCloseReason = "candidate-removed" | "candidate-filtered" | "change-set-closed" | "no-semantic-change" | "relation-removed";
 
 export interface PairRecord {
   pair: CandidatePair;
@@ -20,6 +21,7 @@ export interface PairRecord {
   revisionKey?: string;
   analysisStartedAt?: number;
   analysisVisible?: boolean;
+  closeReason?: PairCloseReason;
 }
 
 export type PairEvent =
@@ -107,7 +109,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     records.set(pair.id, record);
     return record;
   };
-  function update(pairs: CandidatePair[], shouldJudge: (pair: CandidatePair) => boolean = () => true) {
+  function update(pairs: CandidatePair[], shouldJudge: (pair: CandidatePair) => boolean = () => true, closeReason: (pair: CandidatePair) => PairCloseReason = () => "candidate-removed") {
     const active = new Set(pairs.map((pair) => pair.id));
     for (const pair of pairs) {
       requestedResolutions.delete(pair.id);
@@ -128,7 +130,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
         resolve(record, resolution);
         continue;
       }
-      close(record);
+      close(record, closeReason(record.pair));
     }
     schedule();
     return [...records.values()].filter((record) => record.status !== "closed");
@@ -231,7 +233,17 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     requestedResolutions.set(id, resolution);
     return true;
   }
-  function close(record: PairRecord) { analyses.get(record.pair.id)?.abort(); analyses.delete(record.pair.id); if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; } record.status = "closed"; record.updatedAt = options.now(); emit({ type: "pair_closed", record: { ...record } }); }
+  function close(record: PairRecord, reason: PairCloseReason) {
+    record.closeReason = reason;
+    analyses.get(record.pair.id)?.abort(reason);
+    analyses.delete(record.pair.id);
+    queued.delete(record.pair.id);
+    options.judgementQueue?.cancel(`T1:${record.pair.id}`);
+    if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; }
+    record.status = "closed";
+    record.updatedAt = options.now();
+    emit({ type: "pair_closed", record: { ...record } });
+  }
   return {
     update,
     markChanged,

@@ -7,7 +7,7 @@ import type { RelationPath } from "../semantic/types.js";
 import { innermostSymbols, parseSymbols, isSourceParsable } from "../semantic/symbols.js";
 import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
-import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode, type JudgementQueue } from "./pairState.js";
+import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode, type PairCloseReason, type JudgementQueue } from "./pairState.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
 import { createSyntaxWaitTracker } from "../adjudication/syntax.js";
 
@@ -69,7 +69,7 @@ export function createSessionCoordinator(options: {
       const symbol = symbolFor(side.actor, side.symbol);
       return { key: side.symbol, beforeHash: symbol ? hash(symbol.before) : undefined, afterHash: symbol ? hash(symbol.after) : undefined };
     });
-    if (event.type !== "pair_unchanged") emit({ type: event.type, pairId: record.pair.id, revision: record.revision, status: record.status, verdict: record.verdict, resolution: record.resolution, pair: record.pair, symbols: sides });
+    if (event.type !== "pair_unchanged") emit({ type: event.type, pairId: record.pair.id, revision: record.revision, status: record.status, verdict: record.verdict, resolution: record.resolution, closeReason: record.closeReason, pair: record.pair, symbols: sides });
     syncFrozen();
     refreshGates();
   });
@@ -89,7 +89,8 @@ export function createSessionCoordinator(options: {
     for (const { batch } of batches) recordContracts(batch);
     for (const [key, entry] of contracts) if (!symbolFor(entry.actor, entry.symbol)) contracts.delete(key);
     for (const batch of options.tracker.getOpenBatches()) warnBatch(batch);
-    const currentPairs = pairs ? pairs(options.semantic.getCandidatePairs()) : options.semantic.getCandidatePairs();
+    const semanticPairs = options.semantic.getCandidatePairs();
+    const currentPairs = pairs ? pairs(semanticPairs) : semanticPairs;
     const currentIds = new Set(currentPairs.map((pair) => pair.id));
     // 半成品代码可能暂时失去语义路径，保留候选直到批次关闭后检查当前文本。
     const retainedPending = coordinator.records()
@@ -106,7 +107,13 @@ export function createSessionCoordinator(options: {
         pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now(), !relevantBatch(pair));
       }
     }
-    coordinator.update(candidates, (pair) => !relevantBatch(pair));
+    coordinator.update(candidates, (pair) => !relevantBatch(pair), (pair): PairCloseReason => {
+      const sets = options.semantic.getActiveChangeSets();
+      const sides = [pair.left, pair.right].map((side) => ({ side, set: sets.find((set) => actorKey(set.actor) === actorKey(side.actor)) }));
+      if (sides.some(({ set }) => !set || set.status === "closed")) return "change-set-closed";
+      if (sides.some(({ side, set }) => ![...set!.files.values()].some((file) => file.symbols?.some((symbol) => (side.symbols ?? [side.symbol]).includes(symbol.key))))) return "no-semantic-change";
+      return semanticPairs.some((candidate) => candidate.id === pair.id) ? "candidate-filtered" : "relation-removed";
+    });
     for (const { batch } of batches) {
       awaitingBatches.delete(batch.id);
       if (!options.tracker.getOpenBatches().some((open) => open.file === batch.file && actorKey(open.actor) === actorKey(batch.actor))) {

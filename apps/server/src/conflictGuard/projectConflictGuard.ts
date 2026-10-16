@@ -126,13 +126,14 @@ export function createProjectConflictGuard(options: {
   const trackedFiles = new Set<string>();
   const externalOrigins = new Map<string, { actor: Extract<ActorRef, { kind: "agent" }>; text: string; before: string }>();
   const adjudicationSettings = options.config.adjudication?.settings ?? defaultAdjudicationConfig;
+  const pairRevisionMode = "judged-input" as const;
   const judgementQueue = createJudgementQueue({ clock, frameMs: options.config.judgementFrameMs ?? defaultRoutingConfig.judgementFrameMs, maximum: options.config.maxJudgementsPerFrame ?? defaultRoutingConfig.maxJudgementsPerFrame });
   const adjudication = options.config.mode === "full" && options.config.adjudication && adjudicationSettings.strategy !== "G0" ? createServerAdjudication(options.config.adjudication, clock, options.sensitiveValues ?? [], (call) => {
     void appendTrace({ type: "provider_call", ...call });
     stateVersion += 1;
     options.onStateChanged?.(stateVersion);
   }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription }); }) : undefined;
-  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, observeSyntax: Boolean(adjudication && adjudicationSettings.inputVersion), judgementQueue, judgementFrameMs: options.config.judgementFrameMs ?? defaultRoutingConfig.judgementFrameMs, maxJudgementsPerFrame: options.config.maxJudgementsPerFrame ?? defaultRoutingConfig.maxJudgementsPerFrame, arbitrationMode: options.config.arbitration, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
+  const session = createSessionCoordinator({ tracker, semantic, index: semanticIndex, now: clock.now, clock, revisionMode: pairRevisionMode, observeSyntax: Boolean(adjudication && adjudicationSettings.inputVersion), judgementQueue, judgementFrameMs: options.config.judgementFrameMs ?? defaultRoutingConfig.judgementFrameMs, maxJudgementsPerFrame: options.config.maxJudgementsPerFrame ?? defaultRoutingConfig.maxJudgementsPerFrame, arbitrationMode: options.config.arbitration, softDeadlineMs: adjudicationSettings.softDeadlineMs, ...(adjudication ? { adjudicate(pair, local, signal, complete) {
     if (pair.left.actor.kind !== "human" || pair.right.actor.kind !== "human") { complete(local); return; }
     try {
       const left = session.symbolFor(pair.left.actor, pair.left.symbol);
@@ -296,7 +297,7 @@ export function createProjectConflictGuard(options: {
     mode: options.config.mode,
     arbitration: options.config.arbitration ?? "owner",
     intentInjection: options.config.intentInjection ?? true,
-    pairRevisionMode: "judged-input",
+    pairRevisionMode,
     config: {
       idleMs: options.config.idleMs,
       cursorLeaveLines: options.config.cursorLeaveLines,
@@ -627,7 +628,7 @@ export function createProjectConflictGuard(options: {
       traceWriteFailures,
       index: { ...semanticIndex.stats(), latestUpdate },
       changeSets: tracker.getActiveChangeSets().map((changeSet) => ({ actor: changeSet.actor, status: changeSet.status, files: [...changeSet.files.values()].map((file) => ({ file: file.file, ranges: file.ranges, firstTouchedAt: file.firstTouchedAt, lastTouchedAt: file.lastTouchedAt })) })),
-      activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, beforeComments: _comments, beforeExported: _beforeExported, ...symbol }) => symbol) })),
+      activeSymbols: sets.map((set) => ({ actor: set.actor, symbols: [...set.files.values()].flatMap((file) => file.symbols ?? []).map(({ before: _before, after: _after, beforeComments: _comments, beforeExported: _beforeExported, declarationPrefix: _prefix, beforeDeclarationPrefix: _beforePrefix, ...symbol }) => symbol) })),
       candidatePairs: semantic.getCandidatePairs(),
       pairDecisions: [...pairCoordinator.records().filter((record) => record.status !== "closed" && [record.pair.left.actor, record.pair.right.actor].some((actor) => actor.kind === "human")), ...agentGuard.records()].map((record) => {
         const self = [record.pair.left, record.pair.right].find((side) => side.actor.kind === "human" && side.actor.memberId === memberId) ?? record.pair.left;

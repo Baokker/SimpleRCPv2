@@ -23,10 +23,14 @@ async function request(options: HttpOptions, url: string, body: unknown, signal:
   } catch (error) {
     if (signal.aborted) throw new ProviderError("cancelled");
     if (error instanceof ProviderError) throw error;
-    const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
-    const errorType = dispatcher ? `proxy-${cause?.code ?? (error instanceof Error ? error.name : "unknown")}` : error instanceof SyntaxError ? "invalid-json" : "provider-request";
-    throw new ProviderError(error instanceof SyntaxError ? "invalid-format" : "failed", undefined, errorType);
+    throw providerRequestFailure(error, Boolean(dispatcher));
   }
+}
+
+export function providerRequestFailure(error: unknown, proxied: boolean) {
+  if (error instanceof SyntaxError) return new ProviderError("invalid-format", undefined, "invalid-json");
+  const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
+  return new ProviderError("failed", undefined, proxied ? `proxy-${cause?.code ?? (error instanceof Error ? error.name : "unknown")}` : "provider-request");
 }
 
 export function createJevJudge(options: HttpOptions & { proxyUrl?: string }): FastJudge {

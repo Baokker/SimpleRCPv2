@@ -9,6 +9,7 @@
     "d1-0061-safe",
     "d1-0149-conflict"
   ],
+  "allGrey": 67,
   "prompt": "pair-v1",
   "threshold": 0.2,
   "policy": "G2",
@@ -332,6 +333,41 @@
           "missBlockRatio": 12,
           "falseBlockRatio": 49,
           "escapeRatio": 12
+        }
+      },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 15,
+          "agreement": 0.2459016393442623,
+          "missed": 3,
+          "lockTruth": 12,
+          "falseBlockCount": 7,
+          "safeWarningCount": 36,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 4,
+          "agreement": 0.6666666666666666,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 0,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 19,
+          "agreement": 0.2835820895522388,
+          "missed": 5,
+          "lockTruth": 15,
+          "falseBlockCount": 7,
+          "safeWarningCount": 36,
+          "safeTruth": 52
         }
       },
       "safeWarningCount": 36,
@@ -1022,6 +1058,41 @@
           "escapeRatio": 12
         }
       },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 36,
+          "agreement": 0.5901639344262295,
+          "missed": 7,
+          "lockTruth": 12,
+          "falseBlockCount": 1,
+          "safeWarningCount": 17,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 38,
+          "agreement": 0.5671641791044776,
+          "missed": 9,
+          "lockTruth": 15,
+          "falseBlockCount": 1,
+          "safeWarningCount": 19,
+          "safeTruth": 52
+        }
+      },
       "safeWarningCount": 17,
       "falseBlockCount": 1,
       "p95Ms": 6770.27029200003,
@@ -1675,6 +1746,41 @@
           "missBlockRatio": 12,
           "falseBlockRatio": 49,
           "escapeRatio": 12
+        }
+      },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 14,
+          "agreement": 0.22950819672131148,
+          "missed": 5,
+          "lockTruth": 12,
+          "falseBlockCount": 6,
+          "safeWarningCount": 36,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 16,
+          "agreement": 0.23880597014925373,
+          "missed": 7,
+          "lockTruth": 15,
+          "falseBlockCount": 6,
+          "safeWarningCount": 38,
+          "safeTruth": 52
         }
       },
       "safeWarningCount": 36,
@@ -2346,6 +2452,41 @@
           "escapeRatio": 12
         }
       },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 31,
+          "agreement": 0.5081967213114754,
+          "missed": 7,
+          "lockTruth": 12,
+          "falseBlockCount": 1,
+          "safeWarningCount": 22,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 33,
+          "agreement": 0.4925373134328358,
+          "missed": 9,
+          "lockTruth": 15,
+          "falseBlockCount": 1,
+          "safeWarningCount": 24,
+          "safeTruth": 52
+        }
+      },
       "safeWarningCount": 22,
       "falseBlockCount": 1,
       "p95Ms": 1277.932832999999,
@@ -2998,6 +3139,41 @@
           "missBlockRatio": 12,
           "falseBlockRatio": 49,
           "escapeRatio": 12
+        }
+      },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 30,
+          "agreement": 0.4918032786885246,
+          "missed": 8,
+          "lockTruth": 12,
+          "falseBlockCount": 0,
+          "safeWarningCount": 23,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 32,
+          "agreement": 0.47761194029850745,
+          "missed": 10,
+          "lockTruth": 15,
+          "falseBlockCount": 0,
+          "safeWarningCount": 25,
+          "safeTruth": 52
         }
       },
       "safeWarningCount": 23,
@@ -3668,6 +3844,41 @@
           "escapeRatio": 12
         }
       },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 31,
+          "agreement": 0.5081967213114754,
+          "missed": 7,
+          "lockTruth": 12,
+          "falseBlockCount": 0,
+          "safeWarningCount": 23,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 33,
+          "agreement": 0.4925373134328358,
+          "missed": 9,
+          "lockTruth": 15,
+          "falseBlockCount": 0,
+          "safeWarningCount": 25,
+          "safeTruth": 52
+        }
+      },
       "safeWarningCount": 23,
       "falseBlockCount": 0,
       "p95Ms": 7284.668875000001,
@@ -4334,6 +4545,41 @@
           "missBlockRatio": 12,
           "falseBlockRatio": 49,
           "escapeRatio": 12
+        }
+      },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 18,
+          "agreement": 0.29508196721311475,
+          "missed": 5,
+          "lockTruth": 12,
+          "falseBlockCount": 5,
+          "safeWarningCount": 33,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 20,
+          "agreement": 0.29850746268656714,
+          "missed": 7,
+          "lockTruth": 15,
+          "falseBlockCount": 5,
+          "safeWarningCount": 35,
+          "safeTruth": 52
         }
       },
       "safeWarningCount": 33,
@@ -5005,6 +5251,41 @@
           "escapeRatio": 12
         }
       },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 13,
+          "agreement": 0.21311475409836064,
+          "missed": 5,
+          "lockTruth": 12,
+          "falseBlockCount": 6,
+          "safeWarningCount": 37,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 15,
+          "agreement": 0.22388059701492538,
+          "missed": 7,
+          "lockTruth": 15,
+          "falseBlockCount": 6,
+          "safeWarningCount": 39,
+          "safeTruth": 52
+        }
+      },
       "safeWarningCount": 37,
       "falseBlockCount": 6,
       "p95Ms": 7672.925833999994,
@@ -5672,6 +5953,41 @@
           "missBlockRatio": 12,
           "falseBlockRatio": 49,
           "escapeRatio": 12
+        }
+      },
+      "qualitySubsets": {
+        "common": {
+          "samples": 61,
+          "relationGroups": 54,
+          "correct": 13,
+          "agreement": 0.21311475409836064,
+          "missed": 5,
+          "lockTruth": 12,
+          "falseBlockCount": 6,
+          "safeWarningCount": 37,
+          "safeTruth": 49
+        },
+        "additional": {
+          "samples": 6,
+          "relationGroups": 5,
+          "correct": 2,
+          "agreement": 0.3333333333333333,
+          "missed": 2,
+          "lockTruth": 3,
+          "falseBlockCount": 0,
+          "safeWarningCount": 2,
+          "safeTruth": 3
+        },
+        "all": {
+          "samples": 67,
+          "relationGroups": 58,
+          "correct": 15,
+          "agreement": 0.22388059701492538,
+          "missed": 7,
+          "lockTruth": 15,
+          "falseBlockCount": 6,
+          "safeWarningCount": 39,
+          "safeTruth": 52
         }
       },
       "safeWarningCount": 37,

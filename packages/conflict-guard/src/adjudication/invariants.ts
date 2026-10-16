@@ -1,16 +1,17 @@
 import * as ts from "typescript";
 import type { ZoneInput, ZoneVerdict } from "../routing/classifier.js";
 import type { AdjudicationConfig, AdjudicationInput, FourStateEvidence, SymbolEvidence } from "./types.js";
-import { isExported, parseChangeSource } from "../routing/contracts.js";
+import { isExported } from "../routing/contracts.js";
 import type { SymbolChange } from "../semantic/changes.js";
 import { declarationSyntax } from "./syntax.js";
+import { completeDeclarationText, parseDeclaration } from "./declarations.js";
 
 export interface InvariantContext { callers: string[]; tests: string[]; comments: string[]; usage: string[] }
 const fileFor = (key: string) => key.slice(0, key.indexOf("#"));
 function source(file: string, text: string) { return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, /\.[cm]?jsx?$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS); }
 
-function declarationSignature(change: SymbolChange, text: string) {
-  const parsed = parseChangeSource(change, text);
+function declarationSignature(change: SymbolChange, state: "before" | "after") {
+  const parsed = parseDeclaration(change, state);
   if (!parsed) return "";
   let result = "";
   const visit = (node: ts.Node) => {
@@ -23,7 +24,8 @@ function declarationSignature(change: SymbolChange, text: string) {
     }
     if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === change.name && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
       const initializer = node.initializer;
-      result = initializer.getText(parsed).slice(0, initializer.body.getStart(parsed) - initializer.getStart(parsed)).trim();
+      const binding = `${node.name.getText(parsed)}${node.type ? `: ${node.type.getText(parsed)}` : ""}`;
+      result = `${binding} = ${initializer.getText(parsed).slice(0, initializer.body.getStart(parsed) - initializer.getStart(parsed)).trim()}`;
       return;
     }
     if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === change.name) {
@@ -64,12 +66,12 @@ function usageEvidence(input: ZoneInput, target: SymbolChange): SymbolEvidence["
 }
 
 function symbolEvidence(input: ZoneInput, change: SymbolChange): SymbolEvidence {
-  const before = parseChangeSource(change, change.before);
-  const after = parseChangeSource(change, change.after);
+  const before = parseDeclaration(change, "before");
+  const after = parseDeclaration(change, "after");
   const beforeExported = change.beforeExported ?? isExported(before);
   const afterExported = change.status !== "deleted" && (change.exported ?? isExported(after));
   return {
-    signature: { before: declarationSignature(change, change.before), after: declarationSignature(change, change.after) },
+    signature: { before: declarationSignature(change, "before"), after: declarationSignature(change, "after") },
     status: { beforeExported, afterExported, deleted: change.status === "deleted", becameNonExported: beforeExported && !afterExported && Boolean(after) },
     uses: usageEvidence(input, change)
   };
@@ -217,8 +219,8 @@ export function buildAdjudicationInput(input: ZoneInput, local: ZoneVerdict, con
   const side = (value: ZoneInput["left"], symbols = [value.symbol]) => {
     const budget = Math.max(0, Math.floor(config.contextLimit / symbols.length) - 100);
     const text = (state: "before" | "after") => {
-      if (symbols.length === 1) return completeEvidence ? symbols[0]![state] : bound(symbols[0]![state]);
-      const declarations = symbols.map((symbol) => `${symbol.key}\n${completeEvidence ? symbol[state] : symbol[state].slice(0, budget)}`).join("\n\n");
+      if (symbols.length === 1) return completeEvidence ? completeDeclarationText(symbols[0]!, state) : bound(symbols[0]![state]);
+      const declarations = symbols.map((symbol) => `${symbol.key}\n${completeEvidence ? completeDeclarationText(symbol, state) : symbol[state].slice(0, budget)}`).join("\n\n");
       return completeEvidence ? declarations : bound(declarations);
     };
     return { actorKind: value.actor.kind, file: [...new Set(symbols.map((symbol) => symbol.file))].join(", "), symbol: symbols.map((symbol) => symbol.key).join(", "), before: text("before"), after: text("after") };
@@ -231,8 +233,8 @@ export function buildAdjudicationInput(input: ZoneInput, local: ZoneVerdict, con
   const left = input.left.symbol;
   const right = input.right.symbol;
   const syntaxFor = (symbols: SymbolChange[]) => symbols.map(declarationSyntax).find((status) => !status.complete) ?? { complete: true };
-  const leftSyntax = syntaxFor(input.cluster?.left ?? [left]);
-  const rightSyntax = syntaxFor(input.cluster?.right ?? [right]);
+  const leftSyntax = completeEvidence ? syntaxFor(input.cluster?.left ?? [left]) : { complete: true };
+  const rightSyntax = completeEvidence ? syntaxFor(input.cluster?.right ?? [right]) : { complete: true };
   const { states: _states, ...legacyTypecheck } = local.typecheck ?? {};
   return {
     ...(completeEvidence ? { inputVersion: config.inputVersion } : {}),

@@ -4,7 +4,7 @@
 
 ## 开发集选择
 
-选择规则保存在 selection-rule.md，提交为 `d4e735f`。数据为 D1-v3 开发集，119 个有效轨迹、97 个关系组。共同灰区主表使用已登记的 61 个轨迹；输入改进后新增的灰区轨迹另列。
+选择规则保存在 selection-rule.md，提交为 `d4e735f`。数据为 D1-v3 开发集，119 个有效轨迹、97 个关系组。共同灰区主表使用已登记的 61 个轨迹；新增六个灰区轨迹与全部 67 个灰区轨迹均提供独立质量表。
 
 模型配置保存在 stage-A/config.json、models.json、providers.json。MiniMax-M3 使用国内站直连；Jev 固定 `jev-1.13.0`，通过环境变量 `TYPESAFE_PROXY_URL` 指定代理。
 
@@ -41,6 +41,8 @@ pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scr
 | stage-A/human-comparison.json | 开发集上本地方法和完整方法的六项指标 |
 | stage-A/summary.md | 阶段 A 的实验说明与结果 |
 | stage-A/verification.json | 输入、预算、时限、缓存和指标的验证记录 |
+| stage-A/review-validation.json | 当前代码的离线输入核查、录制兼容性与逐轨迹关闭原因 |
+| stage-A/review-repairs.md | 本轮修复、验证结果及适用范围 |
 | stage-A/call-budget.json | 本阶段实际调用数量与已知费用 |
 | ../../evidence/jev-proxy/results.json | 三次代理连通验证的原始响应 |
 
@@ -48,7 +50,7 @@ pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scr
 
 ## 离线复现与验证
 
-缓存恢复后，全部离线命令无需模型调用。以下命令在仓库根目录执行；目录需要不存在，已有调用日志会触发终止。
+缓存恢复后，全部离线命令无需模型调用。原始录制对应提交 `4c01a6c`，以下录制复现命令需要使用该提交的源码与构建文件。源码哈希变化时命令会终止。以下命令在仓库根目录执行；目录需要不存在，已有调用日志会触发终止。
 
 ```sh
 mkdir -p .test-workspaces/stage-a-cache/pair-v1
@@ -64,8 +66,11 @@ pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scr
 
 ```sh
 pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/stage-a-summary.ts --phase final
+pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/stage-a-review.ts
 pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/stage-a-write-report.ts
 pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/stage-a-verify.ts
 ```
 
 报告生成读取本机预算文件 `.test-workspaces/stage-a-call-budget.json`；在其他机器上可依据 `stage-A/call-budget.json` 的 `fast`、`deep` 字段创建该文件。验证直接读取已提交的预算和结果，不依赖本机预算文件。原始录制、输入与模型配置的对应关系保存在各条件的 `config.json` 与 `results.json.gz` 中。
+
+`stage-a-review.ts` 使用当前代码与已有响应进行独立核查，新增模型调用为零。缺少对应录制的输入在 `review-validation.json` 中列明，相关离线运行仅用于检查调度、声明整理与关闭原因。灰区质量表使用原始录制；当前代码的模型质量需要对应输入的有效响应。

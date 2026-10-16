@@ -2,10 +2,18 @@
   "split": "dev",
   "samples": 119,
   "commonGrey": 61,
+  "additionalGrey": 6,
+  "allGrey": 67,
   "completeInputs": 70,
   "incompleteInputs": 124,
   "cacheMisses": 0,
   "cascadeResponses": 350,
+  "review": {
+    "currentInputs": 194,
+    "matchingInputs": 186,
+    "missingInputs": 8,
+    "modelCalls": 0
+  },
   "calls": {
     "deep": 140,
     "fast": 70
@@ -17,9 +25,12 @@
     "budget",
     "cascade-deadline",
     "quality-counts",
+    "quality-subsets",
     "selection",
     "human-metrics",
     "batch-close-judgement",
+    "close-reasons",
+    "current-input-compatibility",
     "output-protection"
   ]
 }

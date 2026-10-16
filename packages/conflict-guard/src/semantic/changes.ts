@@ -1,6 +1,7 @@
+import type * as ts from "typescript";
 import type { FileChange, TextEdit, TrackedRange } from "../model/types.js";
 import type { SemanticIndex, SymbolInfo } from "./types.js";
-import { innermostSymbols, isSourceParsable, parseSymbols } from "./symbols.js";
+import { innermostSymbols, isSourceParsable, parseSymbols, type IndexedSymbol } from "./symbols.js";
 import { isSemanticFile } from "./index.js";
 import { commentOnlyEdit } from "./trivia.js";
 import { textDiffOps } from "../tracking/textDiff.js";
@@ -14,6 +15,8 @@ export interface SymbolChange {
   container?: string;
   exported?: boolean;
   beforeExported?: boolean;
+  declarationPrefix?: string;
+  beforeDeclarationPrefix?: string;
   status: "modified" | "added" | "deleted";
   before: string;
   after: string;
@@ -37,6 +40,7 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
   const baseline = parseSymbols(change.file, change.baseText);
   const baselineByKey = new Map(baseline.map((symbol) => [symbol.key, symbol]));
   const current = change.proposalText === undefined ? index.symbolsInFile(change.file) : parseSymbols(change.file, text);
+  const currentPrefixes = new Map(current.some((symbol) => symbol.kind === "variable") ? parseSymbols(change.file, text).filter((symbol) => symbol.kind === "variable").map((symbol) => [symbol.key, declarationPrefix(symbol, text)]) : []);
   const currentKeys = new Set(current.map((symbol) => symbol.key));
   const touched = new Map(ranges.flatMap((range) => innermostSymbols(current, range.start, range.end)).map((symbol) => [symbol.key, symbol]));
   const changes: SymbolChange[] = [];
@@ -46,7 +50,7 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
     const before = previous ? reconstructOwnedBefore(change.baseText.slice(previous.start, previous.end), after, symbol.start, change.ranges) : "";
     if (before === after || previous && commentOnlyEdit(change.file, replaceSymbol(change.baseText, previous, before), replaceSymbol(change.baseText, previous, after))) continue;
     const editedLineRanges = mergeRanges(ranges.filter((range) => innermostSymbols([symbol], range.start, range.end).length > 0).map((range) => ({ start: lineAt(text, Math.max(symbol.start, range.start)), end: lineAt(text, Math.max(symbol.start, Math.min(symbol.end - 1, range.end > range.start ? range.end - 1 : range.end))) })));
-    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, beforeExported: previous?.exported ?? false, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, editedLineRanges, lastTouchedAt: change.lastTouchedAt, beforeComments: previous ? change.baseText.slice(previous.node.getFullStart(), previous.start).trim() : undefined });
+    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, beforeExported: previous?.exported ?? false, declarationPrefix: currentPrefixes.get(symbol.key), beforeDeclarationPrefix: previous ? declarationPrefix(previous, change.baseText) : undefined, status: previous ? "modified" : "added", before, after, startLine: symbol.startLine, endLine: symbol.endLine, editedLineRanges, lastTouchedAt: change.lastTouchedAt, beforeComments: previous ? change.baseText.slice(previous.node.getFullStart(), previous.start).trim() : undefined });
   }
   const touchedBase = baseline.filter((symbol) => ranges.some((range) => range.start < symbol.end && symbol.start <= range.end));
   const addedTouched = [...touched.values()].filter((symbol) => !baselineByKey.has(symbol.key));
@@ -59,9 +63,16 @@ export function mapSymbolChanges(change: FileChange, text: string, index: Semant
   }));
   const deletedCandidates = [...new Map([...touchedBase, ...baseline.filter((symbol) => renamedBaselineKeys.has(symbol.key) || change.deletedSymbolKeys?.includes(symbol.key))].map((symbol) => [symbol.key, symbol])).values()];
   for (const symbol of deletedCandidates) if (!currentKeys.has(symbol.key) && !current.some((remaining) => remaining.name === symbol.name && remaining.container === symbol.container && remaining.kind === symbol.kind && (!symbol.exported || remaining.exported)) && (change.deletedSymbolKeys?.includes(symbol.key) || renamedBaselineKeys.has(symbol.key) || addedTouched.some((added) => added.start <= symbol.end && symbol.start <= added.end))) {
-    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, status: "deleted", before: change.baseText.slice(symbol.start, symbol.end), after: "", startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt, beforeComments: change.baseText.slice(symbol.node.getFullStart(), symbol.start).trim() });
+    changes.push({ key: symbol.key, file: change.file, name: symbol.name, kind: symbol.kind, container: symbol.container, exported: symbol.exported, beforeDeclarationPrefix: declarationPrefix(symbol, change.baseText), status: "deleted", before: change.baseText.slice(symbol.start, symbol.end), after: "", startLine: symbol.startLine, endLine: symbol.endLine, lastTouchedAt: change.lastTouchedAt, beforeComments: change.baseText.slice(symbol.node.getFullStart(), symbol.start).trim() });
   }
   return changes;
+}
+
+function declarationPrefix(symbol: IndexedSymbol, text: string) {
+  if (symbol.kind !== "variable") return undefined;
+  const declaration = symbol.node as ts.VariableDeclaration;
+  const statement = declaration.parent.parent as ts.VariableStatement;
+  return text.slice(statement.getStart(), statement.declarationList.declarations[0]!.getStart());
 }
 
 function replaceSymbol(text: string, symbol: SymbolInfo, after: string) { return text.slice(0, symbol.start) + after + text.slice(symbol.end); }

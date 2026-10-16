@@ -15,8 +15,25 @@ const old = await read(path.join(repositoryRoot, "docs/conflict-guard/evidence/p
 const grey = new Set(old.policies.P3.groups.filter((row: any) => row.result.judgements.some((judgement: any) => judgement.verdict.zone === "grey" && !judgement.verdict.localOnly)).map((row: any) => row.id));
 const prepared = await read(path.join(root, "prepared.json.gz"));
 const additionalGrey = prepared.groups.filter((row: any) => !grey.has(row.id) && row.local.judgements.some((judgement: any) => judgement.verdict.zone === "grey" && !judgement.verdict.localOnly)).map((row: any) => row.id);
+const additional = new Set(additionalGrey);
+const allGrey = new Set([...grey, ...additional]);
 assert.equal(grey.size, 61);
 const quantile = (values: number[], p: number) => values.length ? [...values].sort((a, b) => a - b)[Math.max(0, Math.ceil(values.length * p) - 1)]! : null;
+function quality(groups: any[]) {
+  const metrics = calculateReplayMetrics(groups.map((row: any) => row.outcome));
+  const count = (predicate: (row: any) => boolean) => groups.filter(predicate).length;
+  return {
+    samples: groups.length,
+    relationGroups: new Set(groups.map((row: any) => row.relationGroupId)).size,
+    correct: count((row) => row.outcome.truth === row.outcome.decision),
+    agreement: groups.length ? metrics.agreement.value : null,
+    missed: count((row) => row.outcome.truth === "lock" && row.outcome.missed),
+    lockTruth: metrics.denominators.missBlockRatio,
+    falseBlockCount: count((row) => row.outcome.truth === "allow" && row.outcome.overblocked),
+    safeWarningCount: count((row) => row.outcome.truth === "allow" && row.outcome.decision === "warn"),
+    safeTruth: metrics.denominators.falseBlockRatio
+  };
+}
 function describe(id: string, report: any, historical = false) {
   const data = historical ? report.policies.G1 : report;
   const groups = data.groups.filter((row: any) => grey.has(row.id));
@@ -47,7 +64,10 @@ function describe(id: string, report: any, historical = false) {
   const syntaxWaits = [...syntaxPairs.values()].map((wait) => wait.waitMs);
   const candidate: DevelopmentCandidate = { id, validResponseRatio, falseBlockRatio: metrics.falseBlockRatio.value, missed: groups.filter((row: any) => row.outcome.truth === "lock" && row.outcome.missed).length, agreement: metrics.agreement.value, p50Ms: quantile(completed, 0.5), escalationRatio: data.model.escalationRatio ?? 0 };
   const noJudgement = groups.filter((row: any) => !row.result.judgements.length);
-  return { ...candidate, samples: groups.length, relationGroups: new Set(groups.map((row: any) => row.relationGroupId)).size, metrics, safeWarningCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.decision === "warn").length, falseBlockCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.overblocked).length, p95Ms: quantile(completed, 0.95), requestCount: calls.length, validRequests: calls.filter(valid).length, missingUsage: calls.filter((call: any) => !call.usage).length, callStatus: Object.fromEntries([...new Set(calls.map((call: any) => call.status))].map((status) => [status, calls.filter((call: any) => call.status === status).length])), syntaxDeferredRequests: historical ? null : report.inputs.filter((request: any) => request.input.syntax?.deferred).length, observedIncompleteRevisions: historical ? null : [...syntaxPairs.values()].reduce((sum, wait) => sum + wait.deferred, 0), syntaxWaitP50Ms: quantile(syntaxWaits, 0.5), syntaxWaitP95Ms: quantile(syntaxWaits, 0.95), costUsd, usage, cacheMisses: historical || report.mode === "replay" ? data.model.cacheMisses ?? 0 : 0, additionalGreySamples: data.groups.filter((row: any) => !grey.has(row.id) && row.result.judgements.some((judgement: any) => judgement.verdict.zone === "grey" && !judgement.verdict.localOnly)).map((row: any) => row.id), noJudgement: noJudgement.map((row: any) => row.id), noJudgementDetails: noJudgement.map((row: any) => ({ id: row.id, pairs: row.result.pairs.map((pair: any) => ({ id: pair.id, finalStatus: pair.final?.status, closedAt: pair.final?.status === "closed" ? pair.final.updatedAt : null })) })), groups: groups.map((row: any) => ({ id: row.id, truth: row.outcome.truth, decision: row.outcome.decision })) };
+  const qualitySubsets = { common: quality(groups), additional: quality(data.groups.filter((row: any) => additional.has(row.id))), all: quality(data.groups.filter((row: any) => allGrey.has(row.id))) };
+  assert.equal(qualitySubsets.additional.samples, additional.size);
+  assert.equal(qualitySubsets.all.samples, allGrey.size);
+  return { ...candidate, samples: groups.length, relationGroups: new Set(groups.map((row: any) => row.relationGroupId)).size, metrics, qualitySubsets, safeWarningCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.decision === "warn").length, falseBlockCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.overblocked).length, p95Ms: quantile(completed, 0.95), requestCount: calls.length, validRequests: calls.filter(valid).length, missingUsage: calls.filter((call: any) => !call.usage).length, callStatus: Object.fromEntries([...new Set(calls.map((call: any) => call.status))].map((status) => [status, calls.filter((call: any) => call.status === status).length])), syntaxDeferredRequests: historical ? null : report.inputs.filter((request: any) => request.input.syntax?.deferred).length, observedIncompleteRevisions: historical ? null : [...syntaxPairs.values()].reduce((sum, wait) => sum + wait.deferred, 0), syntaxWaitP50Ms: quantile(syntaxWaits, 0.5), syntaxWaitP95Ms: quantile(syntaxWaits, 0.95), costUsd, usage, cacheMisses: historical || report.mode === "replay" ? data.model.cacheMisses ?? 0 : 0, additionalGreySamples: data.groups.filter((row: any) => !grey.has(row.id) && row.result.judgements.some((judgement: any) => judgement.verdict.zone === "grey" && !judgement.verdict.localOnly)).map((row: any) => row.id), noJudgement: noJudgement.map((row: any) => row.id), noJudgementDetails: noJudgement.map((row: any) => ({ id: row.id, pairs: row.result.pairs.map((pair: any) => ({ id: pair.id, finalStatus: pair.final?.status, closedAt: pair.final?.status === "closed" ? pair.final.updatedAt : null })) })), groups: groups.map((row: any) => ({ id: row.id, truth: row.outcome.truth, decision: row.outcome.decision })) };
 }
 const fourth = await read(path.join(root, "pair-v4/G1/results.json.gz"));
 const rows = [describe("pair-v1 G1", old, true), describe("pair-v4 G1", fourth)];
@@ -80,5 +100,5 @@ if (values.phase !== "prompt") {
     await fs.writeFile(path.join(root, "human-comparison.json"), JSON.stringify({ split: "dev", samples: samples.length, P3: human(localRows), P4: human(selected.groups), selected: { prompt, threshold, policy } }, null, 2) + "\n");
   }
 }
-await fs.writeFile(path.join(root, `selection-${values.phase}.json`), JSON.stringify({ split: "dev", commonGrey: grey.size, additionalGrey, prompt, threshold, policy, rows }, null, 2) + "\n");
+await fs.writeFile(path.join(root, `selection-${values.phase}.json`), JSON.stringify({ split: "dev", commonGrey: grey.size, additionalGrey, allGrey: allGrey.size, prompt, threshold, policy, rows }, null, 2) + "\n");
 console.log(JSON.stringify({ prompt, threshold, policy, rows: rows.map(({ id, agreement, missed, falseBlockCount, validResponseRatio, p50Ms, p95Ms, requestCount, syntaxDeferredRequests, cacheMisses }) => ({ id, agreement, missed, falseBlockCount, validResponseRatio, p50Ms, p95Ms, requestCount, syntaxDeferredRequests, cacheMisses })) }));

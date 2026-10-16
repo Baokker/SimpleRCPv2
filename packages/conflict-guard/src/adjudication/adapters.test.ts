@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createJevJudge, createDeepJudge, createCompatibleFastJudge, createJudgeRegistry } from "./adapters.js";
+import { createJevJudge, createDeepJudge, createCompatibleFastJudge, createJudgeRegistry, providerRequestFailure } from "./adapters.js";
 import { createMiniMaxJudge } from "./minimax.js";
 import { defaultAdjudicationConfig } from "./config.js";
 import type { AdjudicationInput } from "./types.js";
@@ -7,6 +7,12 @@ import type { AdjudicationInput } from "./types.js";
 const input: AdjudicationInput = { promptVersion: "pair-v1", left: { actorKind: "human", file: "a.ts", symbol: "a.ts#price", before: "function price(){return 1}", after: "function price(){return 2}" }, right: { actorKind: "human", file: "b.ts", symbol: "b.ts#buy", before: "function buy(){return price()}", after: "function buy(){return price()+1}" }, relationship: "buy calls price", invariants: "price returns whole units", local: { excludedRules: [], typecheck: { ran: false } } };
 
 describe("adjudication adapters", () => {
+  it.each([false, true])("无效 JSON 的错误类型不受代理设置 %s 影响", async (proxied) => {
+    const error = await new Response("{").json().catch((error: unknown) => error);
+    expect(error).toBeInstanceOf(SyntaxError);
+    expect(providerRequestFailure(error, proxied)).toMatchObject({ status: "invalid-format", errorType: "invalid-json", message: "provider invalid-format" });
+  });
+
   it("Jev sends one pinned Choice and accepts rounded probabilities", async () => {
     let body: Record<string, unknown> = {};
     const judge = createJevJudge({ apiKey: "test-credential", fetch: async (_url, init) => {
