@@ -66,6 +66,7 @@ describe("knowledge agent injection", () => {
     const immediateInjection = immediateEvents.find(event => event.type === "knowledge_injected")?.data;
     expect(immediateInjection?.candidates?.map(candidate => candidate.id)).toContain(immediateCard.id);
     expect(immediateInjection?.cards?.map(candidate => candidate.id)).toContain(immediateCard.id);
+    expect(immediateEvents.find(event => event.type === "knowledge_injected")?.data).toMatchObject({ rankingSource: "bm25-fallback", rerankFallbackReason: "rerank-client-unavailable" });
 
     const projectFallbackResponse = await fetch(`${origin}/api/projects/demo/knowledge/cards`, { method: "POST", headers, body: JSON.stringify({ type: "constraint", title: "团队边界规则", summary: "公共模块保持兼容接口", content: "公共模块保持兼容接口，避免破坏已有调用方。", scope: "team", appliesTo: { kind: "project" } }) });
     expect(projectFallbackResponse.status).toBe(201);

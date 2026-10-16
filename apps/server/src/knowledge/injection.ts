@@ -13,7 +13,12 @@ export interface KnowledgeSelectionInput {
   maxCharsPerCard: number;
   topK: number;
 }
-export type KnowledgeSelectionPolicy = (input: KnowledgeSelectionInput) => Promise<string[]>;
+export interface KnowledgeSelectionDecision {
+  ids: string[];
+  rankingSource?: "m3" | "bm25-fallback";
+  fallbackReason?: string;
+}
+export type KnowledgeSelectionPolicy = (input: KnowledgeSelectionInput) => Promise<string[] | KnowledgeSelectionDecision>;
 
 export async function selectKnowledgeInjection(input: {
   cards: KnowledgeCard[];
@@ -61,13 +66,24 @@ export async function selectKnowledgeInjection(input: {
     ranked = [...ranked, ...fallbackCards.slice(0, 2).map(projectFallbackResult)];
   }
   const diagnostic = new Map(ranked.map(result => [result.cardId, {id: result.cardId, lexical: "lexical" in result && typeof result.lexical === "number" ? result.lexical : result.score, boost: "boost" in result && typeof result.boost === "number" ? result.boost : 0, score: result.score, filtered: false, reason: "selected"}]));
+  let rankingSource: KnowledgeSelectionDecision["rankingSource"];
+  let rerankFallbackReason: string | undefined;
   if (input.selectionPolicy) {
     const candidates = ranked.slice(0, 20);
-    const ids = await input.selectionPolicy({query: input.query, activeFiles, candidates: candidates.map(result => ({result, card: cardById.get(result.cardId)!})), maxCharsPerCard: config.maxCharsPerCard, topK: config.topK});
+    const decision = await input.selectionPolicy({query: input.query, activeFiles, candidates: candidates.map(result => ({result, card: cardById.get(result.cardId)!})), maxCharsPerCard: config.maxCharsPerCard, topK: config.topK});
+    const ids = Array.isArray(decision) ? decision : decision.ids;
+    if (!Array.isArray(decision)) {
+      rankingSource = decision.rankingSource;
+      rerankFallbackReason = decision.fallbackReason;
+    }
     if (ids.length > config.topK || new Set(ids).size !== ids.length || ids.some(id => !candidates.some(result => result.cardId === id))) throw new Error("Invalid knowledge selection");
+    const fallbackUsesDefaultOrder = !Array.isArray(decision) && decision.rankingSource === "bm25-fallback"
+      && ids.every((id, index) => id === candidates[index]?.cardId);
     for (const detail of diagnostic.values()) {
       detail.filtered = !ids.includes(detail.id);
-      detail.reason = candidates.some(result => result.cardId === detail.id) ? "selection-excluded" : "candidate-limit";
+      detail.reason = candidates.some(result => result.cardId === detail.id)
+        ? fallbackUsesDefaultOrder ? "top-k" : "selection-excluded"
+        : "candidate-limit";
     }
     ranked = ids.map(id => candidates.find(result => result.cardId === id)!);
   }
@@ -121,7 +137,7 @@ export async function selectKnowledgeInjection(input: {
     ? [...availableCandidates.map(candidate => ({...candidate, scoreScope: "reusable-corpus" as const})), ...filteredCandidates.map(candidate => ({...candidate, scoreScope: "filtered-corpus" as const}))]
     : [...availableCandidates, ...filteredCandidates].sort((a, b) => compareKnowledgeRanks({cardId: a.id, score: a.score, type: cardById.get(a.id)!.type}, {cardId: b.id, score: b.score, type: cardById.get(b.id)!.type}, config.ranking, config.lexicalScoring))).slice(0, 20);
   const section = format(selected);
-  return {section, records, candidates, totalChars: section?.length ?? 0, estimatedInjectionTokens: Math.ceil((section?.length ?? 0) / 4)};
+  return {section, records, candidates, totalChars: section?.length ?? 0, estimatedInjectionTokens: Math.ceil((section?.length ?? 0) / 4), ...(rankingSource ? {rankingSource} : {}), ...(rerankFallbackReason ? {rerankFallbackReason} : {})};
 }
 
 function fixedResult(card: KnowledgeCard): KnowledgeSearchResult {

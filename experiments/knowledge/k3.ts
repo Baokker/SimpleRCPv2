@@ -44,13 +44,15 @@ export function conditionCards(data: Dataset, task: Task, condition: K3Condition
   const injectEnabled = ["C2", "C4", "C5", "C6a", "C6b", "C6-stale", "C6-contradiction", "C7"].includes(condition) && !(task.kind === "control" && ["C5", "C6a", "C6b", "C7"].includes(condition));
   return {cards, configuration: {
     injectEnabled, toolEnabled: ["C3", "C4"].includes(condition), fixedCardIds,
-    topK: 5, maxCharsPerCard: 800, maxTotalChars: 4000, lexicalScoring: "legacy", ranking: "bounded",
+    topK: 5, maxCharsPerCard: 800, maxTotalChars: 4000, lexicalScoring: condition === "C2" ? "bm25" : "legacy", ranking: "bounded",
     postRunCheck: true, inflightNotify: false, proposeEnabled: false
   }, lengthDifference};
 }
 export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
   const injections = trace.filter(event => event.type === "knowledge_injected");
   const tools = trace.filter(event => event.type === "knowledge_tool_call");
+  const rankingSource = injections.map(event => event.data?.rankingSource).find((value: unknown): value is "m3" | "bm25-fallback" => value === "m3" || value === "bm25-fallback");
+  const rerankFallbackReason = injections.map(event => event.data?.rerankFallbackReason).find((value: unknown): value is string => typeof value === "string");
   const delivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
   const targetDelivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
   for (const event of injections) for (const card of event.data?.cards ?? []) {
@@ -65,7 +67,7 @@ export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
     targetRetrieved: tools.some(event => event.data.resultIds?.some((id: string) => targetCardIds.includes(id))),
     injectionTokens: injections.reduce((count, event) => count + (event.data.estimatedInjectionTokens ?? 0), 0),
     injectionChars: injections.reduce((count, event) => count + (event.data.totalChars ?? 0), 0),
-    delivery, targetDelivery,
+    delivery, targetDelivery, rankingSource: rankingSource ?? null, rerankFallbackReason: rerankFallbackReason ?? null,
     toolCalls: tools.length,
     agentToolCalls: new Set(trace.filter(event => event.type.startsWith("opencode.") && event.data?.part?.type === "tool" && ["completed", "error"].includes(event.data.part.state?.status)).map(event => event.data.part.id)).size
   };

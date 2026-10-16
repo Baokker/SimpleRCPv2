@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import crypto from "node:crypto";
 import path from "node:path";
 import { minimatch } from "minimatch";
 import diff from "fast-diff";
@@ -20,6 +21,8 @@ import { isIgnoredPath } from "../workspacePolicy.js";
 import { readWorkspaceFile } from "../workspace.js";
 import { redactSensitive } from "../agent/traceStore.js";
 import {selectKnowledgeInjection, type KnowledgeSelectionPolicy} from "./injection.js";
+import {rerankKnowledge} from "./rerank.js";
+import type {LlmClient} from "@simplercp/knowledge";
 
 export {KNOWLEDGE_PROMPT_TITLE} from "./injection.js";
 
@@ -74,7 +77,7 @@ export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   topK: 5,
   maxCharsPerCard: 800,
   maxTotalChars: 4000,
-  lexicalScoring: "legacy",
+  lexicalScoring: "bm25",
   ranking: "bounded",
   useActiveFiles: true,
   statuses: ["reviewed"],
@@ -108,6 +111,8 @@ export interface KnowledgeContextResult {
   config: KnowledgeProviderConfig;
   mode: string;
   reviewCards?: Array<{ id: string; title: string }>;
+  rankingSource?: "m3" | "bm25-fallback";
+  rerankFallbackReason?: string;
 }
 
 export interface KnowledgePostCheckHit {
@@ -148,8 +153,23 @@ export interface KnowledgeProviderOptions {
   metadataRoot: string;
   workspaceRoot: string;
   sensitiveValues?: string[];
+  rerank?: {client: LlmClient; model: string};
   hooks?: ProviderHooks;
   onConfigUpdated?(config: KnowledgeProviderConfig): void;
+}
+
+export function createKnowledgeRerankPolicy(options: {projectId: string; client?: LlmClient; model: string; timeoutMs?: number; sensitiveValues?: string[]}): KnowledgeSelectionPolicy {
+  return async (input) => {
+    const bm25Ids = input.candidates.slice(0, input.topK).map(({result}) => result.cardId);
+    if (!options.client) return {ids: bm25Ids, rankingSource: "bm25-fallback", fallbackReason: "rerank-client-unavailable"};
+    const seed = crypto.createHash("sha256").update(`${options.projectId}\n${input.query}\n${input.activeFiles.join("\n")}`).digest("hex");
+    try {
+      const ids = await rerankKnowledge(input, {client: options.client, model: options.model, timeoutMs: options.timeoutMs, seed, onResponse: async () => undefined});
+      return {ids, rankingSource: "m3"};
+    } catch (error) {
+      return {ids: bm25Ids, rankingSource: "bm25-fallback", fallbackReason: rerankFailureReason(error, options.sensitiveValues)};
+    }
+  };
 }
 
 export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
@@ -226,7 +246,8 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       { memberId: input.initiator.id, displayName: input.initiator.displayName },
       {}
     );
-    const selection = await selectKnowledgeInjection({cards: visibleCards, viewerMemberId: input.initiator.id, query, activeFiles, config, excludedByUser, workspaceId: input.project.id, indexDir: path.join(root, "index"), sensitiveValues: options.sensitiveValues, selectionPolicy: buildOptions?.selectionPolicy});
+    const selectionPolicy = buildOptions?.selectionPolicy ?? (config.lexicalScoring === "bm25" && !config.fixedCardIds.length ? createKnowledgeRerankPolicy({projectId: input.project.id, client: options.rerank?.client, model: options.rerank?.model ?? "MiniMax-M3", sensitiveValues: options.sensitiveValues}) : undefined);
+    const selection = await selectKnowledgeInjection({cards: visibleCards, viewerMemberId: input.initiator.id, query, activeFiles, config, excludedByUser, workspaceId: input.project.id, indexDir: path.join(root, "index"), sensitiveValues: options.sensitiveValues, selectionPolicy});
     const reviewCards = visibleCards.filter(card => ["needsReview", "orphaned"].includes(card.status) && (activeFiles.some(file => cardMatchesFile(card, file)) || selection.candidates.some(candidate => candidate.id === card.id))).map(card => ({ id: card.id, title: card.title }));
     const {records} = selection;
     const cardById = new Map(visibleCards.map(card => [card.id, card]));
@@ -252,6 +273,7 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
     }
     return { ...selection, reviewCards, toolSection, toolSystem: config.toolInstructionPlacement === "system" ? toolSection : undefined, activeFiles, activeFileSources, excludedByUser, query: redactKnowledgeText(query, options.sensitiveValues), config: await getConfig(), mode: options.mode };
   }
+
 
   async function postRunCheck(run: AgentRun): Promise<KnowledgePostCheckResult> {
     await awaitReady();
@@ -564,6 +586,11 @@ function isInjectionMode(mode: KnowledgeProviderOptions["mode"]) {
 
 function redactKnowledgeText(value: string, sensitiveValues?: string[]) {
   return redactSensitive(value, sensitiveValues) as string;
+}
+
+function rerankFailureReason(error: unknown, sensitiveValues?: string[]) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (redactSensitive(message, sensitiveValues) as string).slice(0, 240) || "rerank-failed";
 }
 
 async function collectFiles(root: string) {

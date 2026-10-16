@@ -2,7 +2,7 @@ import path from "node:path";
 import {parseArgs} from "node:util";
 import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl, digest, exists, selectIds} from "./common.js";
 import {allK3Conditions, runK3, calibration, type K3Condition} from "./k3.js";
-import {allK4Conditions, runK4, type K4Condition} from "./k4.js";
+import {allK4Conditions, runK4, runK4SharedEpisodes, type K4Condition} from "./k4.js";
 import {runK1Offline, runK1Online, compareK1Recordings} from "./k1.js";
 import {runK2} from "./k2.js";
 import {runK5, K5_CONDITIONS, type K5Condition} from "./k5.js";
@@ -11,7 +11,7 @@ import {judge} from "./client.js";
 
 const {values, positionals} = parseArgs({allowPositionals: true, options: {
   config: {type: "string"}, out: {type: "string"}, tasks: {type: "string"}, conditions: {type: "string"}, pairs: {type: "string"},
-  pilot: {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
+  pilot: {type: "boolean", default: false}, sharedEpisode: {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
   source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}
 }});
 const command = positionals[0];
@@ -73,11 +73,17 @@ if (command === "verify") {
     }
     if (command === "k4") {
       const pairs = values.pairs ? selectIds(data.transfers, values.pairs) : data.transfers.filter(pair => values.pilot ? ["P01", "P03"].includes(pair.id) : true);
+      if (values.sharedEpisode) {
+        if (values.conditions && values.conditions !== "T0,T3" && values.conditions !== "T3,T0") throw new Error("Shared K4 episodes require T0,T3");
+        const repetitions = values.pilot ? 1 : config.repetitions;
+        await runK4SharedEpisodes(data, config, store, pairs.flatMap(pair => Array.from({length: repetitions}, (_, index) => ({pair, repetition: index + 1}))));
+      } else {
       const conditions = (values.conditions?.split(",") ?? (values.pilot ? ["T0", "T3"] : allK4Conditions)) as K4Condition[];
       if (new Set(conditions).size !== conditions.length || conditions.some(condition => !allK4Conditions.includes(condition))) throw new Error("Invalid K4 conditions");
       const variants = values.variants?.split(",") ?? (values.pilot ? ["delayed"] : ["delayed", "same-session"]);
       if (new Set(variants).size !== variants.length || variants.some(variant => !["delayed", "same-session"].includes(variant))) throw new Error("Invalid K4 variants");
       await runK4(data, config, store, pairs.flatMap(pair => conditions.flatMap(condition => variants.flatMap(variant => Array.from({length: values.pilot ? 1 : config.repetitions}, (_, index) => ({pair, condition, variant: variant as "delayed" | "same-session", repetition: index + 1}))))));
+      }
     }
     if (command === "k5") {
       const conditions = values.conditions?.split(",") as K5Condition[] | undefined;

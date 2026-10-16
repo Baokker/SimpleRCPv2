@@ -46,10 +46,10 @@ export function estimateRerankCost(usage: LlmUsage | undefined) {
   return ((usage.promptTokens - cached) * 2.1 + cached * 0.42 + usage.completionTokens * 8.4) * (usage.promptTokens > 512000 ? 2 : 1) / 1000000;
 }
 
-export async function rerankKnowledge(input: KnowledgeSelectionInput, options: {client: LlmClient; seed: string; onResponse(value: {request: ReturnType<typeof buildRerankRequest>; text: string; usage?: LlmUsage; durationMs: number}): Promise<void>}) {
+export async function rerankKnowledge(input: KnowledgeSelectionInput, options: {client: LlmClient; seed: string; model?: string; timeoutMs?: number; onResponse(value: {request: ReturnType<typeof buildRerankRequest>; text: string; usage?: LlmUsage; durationMs: number}): Promise<void>}) {
   const request = buildRerankRequest(input, options.seed);
   const started = performance.now();
-  const response = await options.client.complete({model: "MiniMax-M3", messages: request.messages, temperature: 0.2, responseFormat: {type: "json_object"}, timeoutMs: 120000});
+  const response = await options.client.complete({model: options.model ?? "MiniMax-M3", messages: request.messages, temperature: 0.2, responseFormat: {type: "json_object"}, timeoutMs: options.timeoutMs ?? 120000});
   await options.onResponse({request, ...response, durationMs: performance.now() - started});
   return parseRerankSelection(response.text, request.mapping, input.topK).map(item => item.cardId);
 }

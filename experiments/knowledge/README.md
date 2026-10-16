@@ -19,7 +19,7 @@ SIMPLERCP_KNOWLEDGE_EXPERIMENTS=true EXPERIMENT_SPEED=1 pnpm --filter @simplercp
 
 HTTP 默认端口 4179，OpenCode 默认端口 4181，数据目录为 `experiments/knowledge/.work/server/data`。`PORT`、`SIMPLERCP_OPENCODE_PORT`、`SIMPLERCP_DATA_DIR` 可指定独立位置。凭据从平台 `.env` 读取，在服务端进程中保管。OpenCode 通过本机 HTTP 代理请求 MiniMax。Agent 与服务端知识模型统一使用 `minimax/MiniMax-M3`，启动后 runner 会核对两者的模型设置和实验时钟。
 
-`formal-v21.json` 是本轮配置，使用 HTTP 4203、OpenCode 4205、三次重复和原始时间窗口。结果记录实际 provider 与模型，并核验 Agent、知识模块两者均为 M3。M3 使用官方标准价格逐请求估算人民币费用；运行时费用与估算字段分别保留，供应商账单单独记录。
+`formal-v3.json` 是四组实验配置，使用 HTTP 4203、OpenCode 4205、三次重复和原始时间窗口。结果记录实际 provider 与模型，并核验 Agent、知识模块两者均为 M3。M3 使用官方标准价格逐请求估算人民币费用；运行时费用与估算字段分别保留，供应商账单单独记录。`formal-v21.json` 仅用于读取历史结果。
 
 K4 的唯一正式入口为平台 `k4` 命令。数据仓库的 `tools/run-transfer.ts` 用于数据校准。
 
@@ -30,7 +30,7 @@ K4 的唯一正式入口为平台 `k4` 命令。数据仓库的 `tools/run-trans
 | 工具 | 命令参数 | 输出 |
 |---|---|---|
 | K3 | `k3 --pilot --calibration`；完整矩阵用 `--tasks`、`--conditions` | 四项陷阱与一项对照的 C0/C2，以及全部陷阱三次 C0；实际判定、usage、注入和调用记录 |
-| K4 | `k4 --pilot`；`--pairs`、`--conditions`、`--variants delayed,same-session` | Ta、纠正运行、Tb 的工作区与判定，草稿、确认修改量、复用延迟 |
+| K4 | 历史试跑使用 `k4 --pilot`；正式迁移使用 `k4 --shared-episode --conditions T0,T3` | 每个 pair 与 repetition 只执行一次 Ta、纠正和复盘，再在独立项目中执行 T0/T3 的 Tb；保存草稿、确认修改量、送达来源与复用延迟 |
 | K1 | `k1`；在线增加 `--online` | 触发指标、共现 Top-1/3、录制回放与脚本比较 |
 | K1 录制复核 | `k1-compare --source <在线结果目录>` | 对保存的真实录制重复计算两条路径的比较，保存原始与去重后的建议 |
 | K2 | `k2 --source <K4目录>`；小规模检查用 `--limit 1` | 三种草稿的原始响应、指标、两名标注者的 CSV |
@@ -54,7 +54,7 @@ pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/r
 
 判定使用冻结 `run-judge.mjs` 的逐字副本，执行前比较 SHA-256。副本放在 `.work/judge/tools/`，判定器的临时目录因此位于实验目录内。任务和隐藏测试仍从只读数据目录读取。
 
-K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，Tb 由乙的个人 Agent 执行。T2 到 T5 使用 `POST /api/projects/:projectId/experiments/recap-from-episode`，提交 `runId`、`correctionRunId`、`correctionAction`、`correctionText` 与完整 `correctionFiles`。接口创建 `agent.revised` 或 `agent.corrected` 建议，复用 Inbox 的草稿与确认流程。结果记录 `captureBypassed: true` 与 `naturallyTriggered`。K4 测量确认后的纠正迁移，产品触发是否自然识别作为附带观察；K1 使用产品默认纠正词表，遗漏计入召回率。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。T1 使用手工创建接口返回的 reviewed 团队卡片，正文保留完整纠正原文，后接真实 diff 的增删行摘要，合计不超过 800 字符。T4 检查卡片由甲拥有且保持个人范围。草稿与确认步骤按服务端当前状态继续执行。`same-session` 表示确认后立即由乙提交 Tb，乙使用自己的 Agent session；`delayed` 等待配置的固定间隔。
+K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，服务端通过 `recap-from-episode` 生成一次草稿并确认团队卡片。正式 `--shared-episode` 入口将这一个 episode 派生为独立项目中的 T0 与 T3 两次 Tb，T0 不导入卡片，T3 通过正常检索注入卡片；Ta 没有踩坑的 episode 仍然保留。结果记录 `captureBypassed: true`、`naturallyTriggered`、复盘结构、卡片确认和 T3 的 `rankingSource`。产品触发是否自然识别作为附带观察；K1 使用产品默认纠正词表，遗漏计入召回率。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。历史 T1 到 T5 入口仍保留用于旧结果复核，数据仓库工具仅作为校准工具。
 
 C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
 

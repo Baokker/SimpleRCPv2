@@ -9,7 +9,7 @@ import { createKnowledgeService } from "./knowledge/knowledgeService.js";
 import { createCaptureService } from "./knowledge/captureService.js";
 import { createKnowledgeProvider } from "./knowledge/provider.js";
 import type { RiskWarningConfig } from "./knowledge/captureService.js";
-import type { CaptureConfigInput } from "@simplercp/knowledge";
+import { createOpenAICompatibleClient, type CaptureConfigInput } from "@simplercp/knowledge";
 import type { ChatMessage, WorkspaceChange, ServerMessage } from "./types.js";
 import { watchWorkspace } from "./workspaceWatcher.js";
 import { canonicalWorkspaceRoot } from "./workspacePath.js";
@@ -84,6 +84,7 @@ export function createProjectRuntime(
       metadataRoot: projectRoot,
       workspaceRoot: project.workspacePath,
       sensitiveValues: [options.llm?.apiKey].filter((value): value is string => Boolean(value)),
+      ...(options.llm?.apiKey ? { rerank: { client: createOpenAICompatibleClient(options.llm), model: options.llm.model } } : {}),
       onConfigUpdated(nextConfig) { capture?.setRiskWarningConfig(nextConfig.riskWarning); capture?.setRecapLanguage(nextConfig.recapLanguage); }
     });
   }

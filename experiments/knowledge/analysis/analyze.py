@@ -56,7 +56,7 @@ def majority_table(frame):
 
 def analyze_agent(frame, directory):
     if "variant" in frame:
-        if frame.variant.isna().any() or not frame.variant.isin(["delayed", "same-session"]).all():
+        if frame.variant.isna().any() or not frame.variant.isin(["delayed", "same-session", "shared-episode"]).all():
             raise ValueError("Transfer timing variants are required")
         rows = []
         for variant, group in frame.groupby("variant"):
