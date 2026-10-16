@@ -122,7 +122,7 @@ export async function evaluateAgentChanges(options: {
       combined.addEventListener("abort", abort, { once: true });
       if (combined.aborted) { abort(); return; }
       try {
-        void options.adjudicate!(input, local, combined).then((result) => complete(result.adjudication?.status === "degraded" ? { ...result, decision: "lock", summary: "Agent 研判未完成，本次修改未获批准，请停止重复提交同一修改并向用户报告。" } : result), (error) => { options.onError?.(error); complete(unavailable); }).finally(() => combined.removeEventListener("abort", abort));
+        void options.adjudicate!(input, local, combined).then((result) => complete(result.adjudication?.status === "degraded" ? { ...result, decision: "lock", ruleId: "agent-analysis-unavailable", summary: "Agent 研判未完成，本次修改未获批准，请停止重复提交同一修改并向用户报告。" } : result), (error) => { options.onError?.(error); complete(unavailable); }).finally(() => combined.removeEventListener("abort", abort));
       } catch (error) { combined.removeEventListener("abort", abort); options.onError?.(error); complete(unavailable); }
     } } : {}) });
     coordinator.onEvent((event) => {

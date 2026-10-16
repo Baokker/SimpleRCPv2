@@ -142,6 +142,8 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
       scheduleRefresh();
     }
     if (event.type === "change_set_file_closed" || event.type === "change_set_closed") scheduleRefresh();
+    if (event.type === "change_set_file_closed") session.finishSyntax(String(event.file), event.actor as ActorRef);
+    if (event.type === "change_set_closed") session.finishSyntax(undefined, event.changeSet.actor as ActorRef);
   });
   function scheduleRefresh() {
     if (updateTimer !== undefined) return;
@@ -248,6 +250,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
 
   function persist(file: string) {
     persistTimers.delete(file);
+    session.finishSyntax(file);
     if (!session.gate(file).allowed) { persistTimers.set(file, clock.setTimeout(() => persist(file), 300)); return; }
     if (!dirtyFiles.delete(file)) return;
     const text = files.readFile(file);

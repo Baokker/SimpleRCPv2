@@ -104,7 +104,7 @@ export function createSessionCoordinator(options: {
           const symbol = symbolFor(side.actor, key);
           return symbol ? [symbol] : [];
         }));
-        pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now(), !relevantBatch(pair));
+        pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now());
       }
     }
     coordinator.update(candidates, (pair) => !relevantBatch(pair), (pair): PairCloseReason => {
@@ -250,6 +250,15 @@ export function createSessionCoordinator(options: {
     awaitingBatches.set(batch.id, batch);
     refreshGates();
   }
+  function finishSyntax(file?: string, actor?: ActorRef) {
+    for (const record of coordinator.records()) {
+      if (relevantBatch(record.pair)) continue;
+      const matches = [record.pair.left, record.pair.right].some((side) =>
+        (!file || side.symbol.startsWith(`${file}#`)) && (!actor || actorKey(side.actor) === actorKey(actor))
+      );
+      if (matches) coordinator.finishSyntax(record.pair.id);
+    }
+  }
   function recordContracts(batch: EditBatch) {
     if (batch.actor.kind !== "human") return;
     const set = options.semantic.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(batch.actor));
@@ -267,7 +276,7 @@ export function createSessionCoordinator(options: {
     lastFrozen = current;
     emit({ type: "freeze", regions: regions() });
   }
-  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, regions, analyzingRegions: () => [...analyzing.values()].map((region) => ({ ...region })), symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })), dispose() { coordinator.dispose(); for (const timer of analysisTimers.values()) options.clock?.clearTimeout(timer); analysisTimers.clear(); } };
+  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, finishSyntax, regions, analyzingRegions: () => [...analyzing.values()].map((region) => ({ ...region })), symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })), dispose() { coordinator.dispose(); for (const timer of analysisTimers.values()) options.clock?.clearTimeout(timer); analysisTimers.clear(); } };
 }
 
 function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }

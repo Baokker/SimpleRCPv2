@@ -110,6 +110,11 @@ export function replayModelRequestKey(input: AdjudicationInput, occurrence: numb
   return `${inputHash(input)}:${occurrence}`;
 }
 
+function legacyInputHash(input: AdjudicationInput) {
+  if (!input.syntax || input.syntax.batchClosed === true) return undefined;
+  return inputHash({ ...input, syntax: { ...input.syntax, batchClosed: true } });
+}
+
 export function createReplayModelPolicy(config: AdjudicationConfig, responses: Map<string, ZoneVerdict>, onInput?: (input: AdjudicationInput, local: ZoneVerdict, occurrence: number) => void, contextFiles: string[] = [], cancelledInputs: ReadonlySet<string> = new Set()): ZoningPolicy {
   const occurrences = new Map<string, number>();
   return { ...createP3Policy(), id: config.strategy, observeSyntax: Boolean(config.inputVersion), beginReplay: () => occurrences.clear(), maxLatencyMs: config.strategy === "G0" ? 0 : config.hardDeadlineMs,
@@ -118,7 +123,6 @@ export function createReplayModelPolicy(config: AdjudicationConfig, responses: M
       if (!input.pair || !left || !right) { complete({ ...local, decision: "warn", ruleId: "model-unavailable" }); return; }
       const cluster = { left: (input.pair.left.symbols ?? [input.pair.left.symbol]).map((symbol) => input.symbols({ ...input.pair!.left, symbol })!), right: (input.pair.right.symbols ?? [input.pair.right.symbol]).map((symbol) => input.symbols({ ...input.pair!.right, symbol })!), paths: input.pair.relations?.map((relation) => relation.path) ?? [input.pair.path] };
       const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, cluster, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles, clock.now);
-      if (request.syntax) request.syntax.batchClosed = true;
       const hash = inputHash(request);
       const occurrence = (occurrences.get(hash) ?? 0) + 1;
       occurrences.set(hash, occurrence);
@@ -126,10 +130,10 @@ export function createReplayModelPolicy(config: AdjudicationConfig, responses: M
       onInput?.(request, local, occurrence);
       if (cancelledInputs.has(requestKey) || cancelledInputs.has(hash)) return;
       if (request.syntax?.deferred) {
-        complete({ ...local, decision: "warn", ruleId: "syntax-incomplete-final", summary: "本轮修改结束时声明仍不完整，请双方检查代码。", localOnly: true });
+        complete({ ...local, decision: "warn", ruleId: "syntax-incomplete-waiting", summary: "修改仍在输入，等待完整版本后研判。", localOnly: true, deferred: { reason: "syntax-incomplete" } });
         return;
       }
-      const response = responses.get(requestKey) ?? responses.get(hash);
+      const response = responses.get(requestKey) ?? responses.get(hash) ?? (legacyInputHash(request) ? responses.get(legacyInputHash(request)!) : undefined);
       const verdict = response ?? { ...local, decision: "warn" as const, ruleId: "model-unavailable", summary: "研判录放缓存未命中，已降级为警告。" };
       const timer = clock.setTimeout(() => { signal.removeEventListener("abort", abort); if (!signal.aborted) complete(verdict); }, verdict.adjudication?.latencyMs ?? 0);
       const abort = () => clock.clearTimeout(timer);

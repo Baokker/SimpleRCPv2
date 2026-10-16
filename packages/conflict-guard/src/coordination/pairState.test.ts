@@ -129,6 +129,63 @@ describe("变更对状态机", () => {
     coordinator.update([{ ...current, updatedAt: 50 }]);
     expect(count).toBe(1);
   });
+  test("有效拦截不会被研判失败或语法等待覆盖", () => {
+    let complete: ((value: typeof verdict) => void) | undefined;
+    let mode: "lock" | "failure" | "waiting" = "lock";
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const unavailable = { ...grey, decision: "warn" as const, ruleId: "model-unavailable", adjudication: { strategy: "G2" as const, source: "fallback" as const, latencyMs: 1, status: "degraded" as const, escalated: false, userExplanation: "研判失败", suggestedAction: "请检查", inputHash: "x", promptVersion: "pair-v1" } };
+    const waiting = { ...grey, ruleId: "syntax-incomplete-waiting", deferred: { reason: "syntax-incomplete" } };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, done) {
+      complete = done;
+      if (mode === "lock") done(verdict);
+      if (mode === "failure") done(unavailable);
+      if (mode === "waiting") done(waiting);
+    } });
+    coordinator.update([{ ...pair, revisionKey: "one" }]);
+    expect(coordinator.get(pair.id)?.verdict?.decision).toBe("lock");
+    mode = "failure";
+    coordinator.update([{ ...pair, revisionKey: "two" }]);
+    expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "lock", ruleId: "call-signature-incompatible" });
+    mode = "waiting";
+    coordinator.update([{ ...pair, revisionKey: "three" }]);
+    expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "lock", ruleId: "call-signature-incompatible" });
+    coordinator.finishSyntax(pair.id);
+    expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "lock", ruleId: "call-signature-incompatible" });
+    expect(complete).toBeDefined();
+  });
+  test("有效放行遇到研判失败时降为提醒", () => {
+    const completes: Array<(value: typeof verdict) => void> = [];
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const unavailable = { ...grey, ruleId: "model-unavailable", adjudication: { strategy: "G2" as const, source: "fallback" as const, latencyMs: 1, status: "degraded" as const, escalated: false, userExplanation: "研判失败", suggestedAction: "请检查", inputHash: "x", promptVersion: "pair-v1" } };
+    const allowed = { ...grey, zone: "white" as const, decision: "allow" as const, ruleId: "model-fast", adjudication: { strategy: "G2" as const, source: "fast" as const, latencyMs: 1, status: "success" as const, escalated: false, userExplanation: "可以继续", suggestedAction: "继续修改", inputHash: "x", promptVersion: "pair-v1" } };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, done) { completes.push(done); } });
+    coordinator.update([{ ...pair, revisionKey: "allow" }]);
+    completes[0]!(allowed);
+    expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "allow" });
+    coordinator.update([{ ...pair, revisionKey: "failed" }]);
+    completes[1]!(unavailable);
+    expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "warn", ruleId: "model-unavailable" });
+  });
+  test("语法不完整只在变更集结束时生成一次结束提醒", () => {
+    const waiting = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "syntax-incomplete-waiting", deferred: { reason: "syntax-incomplete" } };
+    const events: string[] = [];
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => ({ ...verdict, zone: "grey", decision: "warn", ruleId: "semantic-interaction-uncertain" }), adjudicate(_pair, _local, _signal, complete) { complete(waiting); } });
+    coordinator.onEvent((event) => events.push(event.type));
+    coordinator.update([{ ...pair, revisionKey: "typing" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "pending", verdict: { ruleId: "syntax-incomplete-waiting" } });
+    coordinator.update([{ ...pair, revisionKey: "typing" }]);
+    expect(events.filter((event) => event === "pair_syntax_waiting")).toHaveLength(1);
+    coordinator.finishSyntax(pair.id);
+    coordinator.finishSyntax(pair.id);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", verdict: { ruleId: "syntax-incomplete-final", decision: "warn" } });
+    expect(events.filter((event) => event === "pair_judged")).toHaveLength(1);
+  });
+  test("候选关系消失时记录关闭原因", () => {
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
+    coordinator.update([pair]);
+    coordinator.update([], () => true, () => "candidate-filtered");
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "closed", closeReason: "candidate-filtered" });
+  });
   test("双方确认的修订在变更对关闭后重新出现时继续有效", () => {
     const current = { ...pair, revisionKey: "same" };
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });

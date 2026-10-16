@@ -190,8 +190,12 @@ export function createProjectAgentGuard(options: {
       }
       const record = result.records.find((record) => record.verdict?.decision === result.decision);
       const verdict = record?.verdict;
-      if (verdict?.ruleId === "agent-analysis-unavailable") throw new Error("检查组件无法核验本次修改，请停止修改此文件并向用户报告");
       const conflict = conflictFor(run, result, "T2");
+      if (verdict?.ruleId === "agent-analysis-unavailable") {
+        const message = "Agent 研判未完成，本次修改未获批准，请停止重复提交同一修改并向用户报告。";
+        emit({ type: "t2_judged", actor: run.actor, decision: "lock", files: proposals.map((proposal) => ({ file: proposal.file, beforeHash: hash(proposal.before), afterHash: hash(proposal.after) })), message, conflict });
+        return { decision: "lock" as const, message, conflict, input: record ? result.inputs[result.records.indexOf(record)] : undefined };
+      }
       const recent = run.warnings.length ? ` 近期警告：${run.warnings.slice(-3).join("；")}` : "";
       let message = result.decision === "lock" ? conflict ? `修改被拒绝：与 ${conflict.otherDisplayName} 修改的 ${conflict.symbols.other} 存在冲突。规则 ${conflict.ruleId}。${conflict.summaryZh} 对方修改后：${conflict.afterSignature || "请重新读取关联符号"}。${conflict.suggestionZh ?? "请使用当前接口与行为调整实现，或暂停修改此处。"}${recent}` : "冲突检查未完成，请停止重复同一修改并向用户报告。" : undefined;
       if (result.decision === "lock" && conflict) {

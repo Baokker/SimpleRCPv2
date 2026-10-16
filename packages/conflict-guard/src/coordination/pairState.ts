@@ -1,6 +1,7 @@
 import type { CandidatePair } from "../routing/candidates.js";
 import type { ZoneVerdict } from "../routing/classifier.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
+import { effectiveVerdict, isEffectiveVerdict } from "./verdict.js";
 
 export type PairStatus = "pending" | "analyzing" | "judged" | "stale" | "resolved" | "closed";
 export type Resolution = "reverted" | "overridden" | "auto-cleared";
@@ -22,6 +23,7 @@ export interface PairRecord {
   analysisStartedAt?: number;
   analysisVisible?: boolean;
   closeReason?: PairCloseReason;
+  lastAttempt?: ZoneVerdict;
 }
 
 export type PairEvent =
@@ -70,6 +72,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   const invalidated = new Set<string>();
   const results = options.resultCache ?? new Map<string, { verdict: ZoneVerdict; pair: CandidatePair }>();
   const published = new Map<string, string>();
+  const effective = new Map<string, ZoneVerdict>();
   const queued = new Map<string, () => boolean>();
   let timer: unknown;
   function schedule() {
@@ -105,7 +108,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     if (advance) { invalidated.add(pair.id); finalized.delete(pair.id); }
     const final = finalized.get(pair.id);
     revisionHistory.set(pair.id, revision);
-    const record: PairRecord = { pair, status: final && final.revisionKey === pair.revisionKey ? "resolved" : "pending", revision, leftConfirmed: false, rightConfirmed: false, totalLockMs: 0, updatedAt: options.now(), revisionKey: pair.revisionKey, ...(final && final.revisionKey === pair.revisionKey ? { verdict: final.verdict, resolution: final.resolution } : {}) };
+    const record: PairRecord = { pair, status: final && final.revisionKey === pair.revisionKey ? "resolved" : "pending", revision, leftConfirmed: false, rightConfirmed: false, totalLockMs: 0, updatedAt: options.now(), revisionKey: pair.revisionKey, ...(effective.has(pair.id) ? { verdict: effective.get(pair.id) } : {}), ...(final && final.revisionKey === pair.revisionKey ? { verdict: final.verdict, resolution: final.resolution } : {}) };
     records.set(pair.id, record);
     return record;
   };
@@ -117,7 +120,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
       const changed = previous?.revisionKey !== pair.revisionKey;
       if (previous && previous.status !== "closed" && previous.revisionKey !== pair.revisionKey) markChanged(pair.id);
       const record = ensure(pair);
-      if (record.verdict?.deferred && !changed) continue;
+      if (record.lastAttempt?.deferred && !changed) continue;
       if ((record.status === "pending" || record.status === "stale" || !record.verdict) && shouldJudge(pair)) {
         if (options.clock && (options.judgementFrameMs ?? 200) > 0) queued.set(pair.id, () => shouldJudge(record.pair));
         else judge(record);
@@ -153,7 +156,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
       analyses.set(record.pair.id, request);
       const revision = record.revision;
       record.status = "analyzing";
-      record.verdict = verdict;
+      record.verdict = effective.get(record.pair.id) ?? verdict;
       record.analysisStartedAt = options.now();
       record.analysisVisible = false;
       if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; }
@@ -163,7 +166,8 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
         analyses.delete(record.pair.id);
         if (result.deferred) {
           record.status = "pending";
-          record.verdict = result;
+          record.lastAttempt = result;
+          record.verdict = effectiveVerdict(result, effective.get(record.pair.id));
           record.analysisVisible = false;
           emit({ type: "pair_syntax_waiting", record: { ...record } });
           return;
@@ -181,6 +185,9 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     applyVerdict(record, verdict, previous);
   }
   function applyVerdict(record: PairRecord, verdict: ZoneVerdict, previous = record.verdict) {
+    record.lastAttempt = verdict;
+    verdict = effectiveVerdict(verdict, effective.get(record.pair.id));
+    if (isEffectiveVerdict(verdict)) effective.set(record.pair.id, verdict);
     record.analysisVisible = false;
     const autoCleared = previous?.decision === "lock" && verdict.decision !== "lock";
     if (autoCleared) record.verdict = verdict;
@@ -199,7 +206,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   function markChanged(id: string) {
     const record = records.get(id);
     if (!record || record.status === "closed") return;
-    if (options.revisionMode !== "legacy" && (record.status === "pending" || record.status === "stale") && !record.verdict?.deferred) return;
+    if (options.revisionMode !== "legacy" && (record.status === "pending" || record.status === "stale") && !record.lastAttempt?.deferred) return;
     analyses.get(id)?.abort();
     analyses.delete(id);
     record.revision += 1;
@@ -207,6 +214,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     revisionHistory.set(id, record.revision);
     finalized.delete(id);
     record.status = "stale";
+    record.lastAttempt = undefined;
     record.leftConfirmed = false;
     record.rightConfirmed = false;
     record.updatedAt = options.now();
@@ -250,6 +258,12 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     confirm,
     resolve(id: string, resolution: Resolution) { const record = records.get(id); if (record) resolve(record, resolution); },
     requestResolution,
+    finishSyntax(id: string) {
+      const record = records.get(id);
+      if (!record || !record.lastAttempt?.deferred || record.status === "closed") return;
+      const { deferred: _deferred, ...attempt } = record.lastAttempt;
+      applyVerdict(record, { ...attempt, ruleId: "syntax-incomplete-final", summary: "修改结束时声明仍不完整，请双方检查代码。", localOnly: true });
+    },
     showAnalysis(id: string, revision: number) { const record = records.get(id); if (record?.status === "analyzing" && record.revision === revision) { record.analysisVisible = true; emit({ type: "pair_analysis_progress", record: { ...record } }); } },
     dispose() { for (const request of analyses.values()) request.abort(); analyses.clear(); options.clock?.clearTimeout(timer); for (const id of queued.keys()) options.judgementQueue?.cancel(`T1:${id}`); queued.clear(); },
     records() { return [...records.values()]; },

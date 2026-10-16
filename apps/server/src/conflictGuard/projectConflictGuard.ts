@@ -142,7 +142,6 @@ export function createProjectConflictGuard(options: {
       const cluster = { left: (pair.left.symbols ?? [pair.left.symbol]).map((key) => session.symbolFor(pair.left.actor, key)!), right: (pair.right.symbols ?? [pair.right.symbol]).map((key) => session.symbolFor(pair.right.actor, key)!), paths: pair.relations?.map((relation) => relation.path) ?? [pair.path] };
       if ([...cluster.left, ...cluster.right].some((symbol) => !symbol)) throw new Error("研判输入缺少簇内符号");
       const input = buildAdjudicationInput({ left: { actor: pair.left.actor, symbol: left }, right: { actor: pair.right.actor, symbol: right }, cluster, path: pair.path, nested: false, typeOnly: Boolean(pair.path?.typeOnly), project: { ...semanticIndex, readFile: semanticFiles.readFile } }, local, adjudicationSettings, semanticFiles.contextFiles(), clock.now);
-      if (input.syntax) input.syntax.batchClosed = true;
       void adjudication.judge(input, local, signal, pair.syntaxWait).then(complete).catch(() => { if (!signal.aborted) complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); });
     } catch { complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: "研判失败，已降级为警告。" }); }
   } } : {}), intervene: options.config.mode === "rules" || options.config.mode === "full", onError(error) { console.error("Conflict guard pair classification failed", error); }, onEvent(event) {
@@ -388,6 +387,7 @@ export function createProjectConflictGuard(options: {
     }
     if (event.type === "change_set_closed" || event.type === "change_set_file_closed") {
       const actor = event.type === "change_set_closed" ? event.changeSet.actor : event.actor;
+      session.finishSyntax(event.type === "change_set_file_closed" ? event.file : undefined, actor);
       if (actor.kind === "human") {
         const files = event.type === "change_set_closed" ? [...event.changeSet.files.keys()] : [event.file];
         for (const file of files) {
@@ -696,7 +696,7 @@ export function createProjectConflictGuard(options: {
   }
 
   function persistGate(file: string) {
-    try { if (options.config.mode !== "observe" && agentGuard.pendingFile(file)) return { allowed: false, reason: "agent-write" }; return session.gate(file); }
+    try { if (options.config.mode !== "observe" && agentGuard.pendingFile(file)) return { allowed: false, reason: "agent-write" }; session.finishSyntax(file); return session.gate(file); }
     catch (error) { markDegraded(error); return { allowed: true, reason: undefined }; }
   }
   function shouldPinDocument(file: string) {
