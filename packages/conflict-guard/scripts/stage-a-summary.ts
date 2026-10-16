@@ -46,7 +46,8 @@ function describe(id: string, report: any, historical = false) {
   }, 0);
   const syntaxWaits = [...syntaxPairs.values()].map((wait) => wait.waitMs);
   const candidate: DevelopmentCandidate = { id, validResponseRatio, falseBlockRatio: metrics.falseBlockRatio.value, missed: groups.filter((row: any) => row.outcome.truth === "lock" && row.outcome.missed).length, agreement: metrics.agreement.value, p50Ms: quantile(completed, 0.5), escalationRatio: data.model.escalationRatio ?? 0 };
-  return { ...candidate, samples: groups.length, relationGroups: new Set(groups.map((row: any) => row.relationGroupId)).size, metrics, safeWarningCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.decision === "warn").length, falseBlockCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.overblocked).length, p95Ms: quantile(completed, 0.95), requestCount: calls.length, validRequests: calls.filter(valid).length, missingUsage: calls.filter((call: any) => !call.usage).length, callStatus: Object.fromEntries([...new Set(calls.map((call: any) => call.status))].map((status) => [status, calls.filter((call: any) => call.status === status).length])), syntaxDeferredRequests: historical ? null : report.inputs.filter((request: any) => request.input.syntax?.deferred).length, observedIncompleteRevisions: historical ? null : [...syntaxPairs.values()].reduce((sum, wait) => sum + wait.deferred, 0), syntaxWaitP50Ms: quantile(syntaxWaits, 0.5), syntaxWaitP95Ms: quantile(syntaxWaits, 0.95), costUsd, usage, cacheMisses: historical || report.mode === "replay" ? data.model.cacheMisses ?? 0 : 0, additionalGreySamples: data.groups.filter((row: any) => !grey.has(row.id) && row.result.judgements.some((judgement: any) => judgement.verdict.zone === "grey" && !judgement.verdict.localOnly)).map((row: any) => row.id), noJudgement: groups.filter((row: any) => !row.result.judgements.length).map((row: any) => row.id), groups: groups.map((row: any) => ({ id: row.id, truth: row.outcome.truth, decision: row.outcome.decision })) };
+  const noJudgement = groups.filter((row: any) => !row.result.judgements.length);
+  return { ...candidate, samples: groups.length, relationGroups: new Set(groups.map((row: any) => row.relationGroupId)).size, metrics, safeWarningCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.decision === "warn").length, falseBlockCount: groups.filter((row: any) => row.outcome.truth === "allow" && row.outcome.overblocked).length, p95Ms: quantile(completed, 0.95), requestCount: calls.length, validRequests: calls.filter(valid).length, missingUsage: calls.filter((call: any) => !call.usage).length, callStatus: Object.fromEntries([...new Set(calls.map((call: any) => call.status))].map((status) => [status, calls.filter((call: any) => call.status === status).length])), syntaxDeferredRequests: historical ? null : report.inputs.filter((request: any) => request.input.syntax?.deferred).length, observedIncompleteRevisions: historical ? null : [...syntaxPairs.values()].reduce((sum, wait) => sum + wait.deferred, 0), syntaxWaitP50Ms: quantile(syntaxWaits, 0.5), syntaxWaitP95Ms: quantile(syntaxWaits, 0.95), costUsd, usage, cacheMisses: historical || report.mode === "replay" ? data.model.cacheMisses ?? 0 : 0, additionalGreySamples: data.groups.filter((row: any) => !grey.has(row.id) && row.result.judgements.some((judgement: any) => judgement.verdict.zone === "grey" && !judgement.verdict.localOnly)).map((row: any) => row.id), noJudgement: noJudgement.map((row: any) => row.id), noJudgementDetails: noJudgement.map((row: any) => ({ id: row.id, pairs: row.result.pairs.map((pair: any) => ({ id: pair.id, finalStatus: pair.final?.status, closedAt: pair.final?.status === "closed" ? pair.final.updatedAt : null })) })), groups: groups.map((row: any) => ({ id: row.id, truth: row.outcome.truth, decision: row.outcome.decision })) };
 }
 const fourth = await read(path.join(root, "pair-v4/G1/results.json.gz"));
 const rows = [describe("pair-v1 G1", old, true), describe("pair-v4 G1", fourth)];
@@ -56,6 +57,7 @@ let policy: string | undefined;
 if (values.phase !== "prompt") {
   const deep = prompt === "pair-v4" ? fourth : await read(path.join(root, "pair-v1/G1/results.json.gz"));
   const fast = await read(path.join(root, `${prompt}/G2/results.json.gz`));
+  if (prompt === "pair-v1") rows.push(describe("pair-v1 G1（完整声明输入）", deep));
   rows.push(describe("G2", fast));
   const curves = [];
   for (const value of [0, 0.2, 0.4, 0.6, 0.8]) {
@@ -65,7 +67,8 @@ if (values.phase !== "prompt") {
     curves.push(row);
   }
   threshold = Number(selectDevelopmentCandidate(curves, "threshold").id.slice(3));
-  policy = selectDevelopmentCandidate([describe("G1", deep), describe("G2", fast), curves.find((row) => row.id === `G3-${threshold}`)!], "strategy").id.startsWith("G3") ? "G3" : selectDevelopmentCandidate([describe("G1", deep), describe("G2", fast), curves.find((row) => row.id === `G3-${threshold}`)!], "strategy").id;
+  const strategy = selectDevelopmentCandidate([describe("G1", deep), describe("G2", fast), curves.find((row) => row.id === `G3-${threshold}`)!], "strategy");
+  policy = strategy.id.startsWith("G3") ? "G3" : strategy.id;
   if (values.phase === "final") {
     const selected = policy === "G1" ? deep : policy === "G2" ? fast : await read(path.join(root, `${prompt}/G3-${threshold}/results.json.gz`));
     const { samples } = await developmentSamples(path.join(repositoryRoot, "packages/conflict-guard/bench/datasets/d1-v3"));
@@ -73,7 +76,7 @@ if (values.phase !== "prompt") {
       const result = prepared.groups.find((row: any) => row.id === sample.label.id)!.local;
       return { id: sample.label.id, outcome: replayOutcome({ truth: sample.label.label as "allow" | "warn" | "lock", variantKind: sample.variant.kind, operatorFamily: sample.group.operator.family, detectability: sample.label.detectability, baseline: sample.variant.baseline, merged: sample.variant.merged, trace: sample.trace, result }) };
     });
-    const human = (groups: any[]) => ({ ...calculateReplayMetrics(groups.map((row) => row.outcome)), safeWarningRatio: groups.filter((row) => row.outcome.truth === "allow" && row.outcome.decision === "warn").length / groups.filter((row) => row.outcome.truth === "allow").length });
+    const human = (groups: any[]) => ({ ...calculateReplayMetrics(groups.map((row) => row.outcome)), unnotifiedWriteCount: groups.filter((row) => row.outcome.escaped).length, safeWarningRatio: groups.filter((row) => row.outcome.truth === "allow" && row.outcome.decision === "warn").length / groups.filter((row) => row.outcome.truth === "allow").length });
     await fs.writeFile(path.join(root, "human-comparison.json"), JSON.stringify({ split: "dev", samples: samples.length, P3: human(localRows), P4: human(selected.groups), selected: { prompt, threshold, policy } }, null, 2) + "\n");
   }
 }

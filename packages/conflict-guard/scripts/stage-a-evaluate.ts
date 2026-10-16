@@ -9,11 +9,12 @@ import { developmentSamples } from "./model-dataset.ts";
 import { replayLibraries } from "./replay-libs.ts";
 import { createModelRuntime, loadModelEnvironment, repositoryRoot } from "./model-runtime.ts";
 
-const { values } = parseArgs({ options: { policy: { type: "string", default: "G1" }, prompt: { type: "string", default: "pair-v4" }, mode: { type: "string", default: "replay" }, threshold: { type: "string", default: "0" } } });
+const { values } = parseArgs({ options: { policy: { type: "string", default: "G1" }, prompt: { type: "string", default: "pair-v4" }, mode: { type: "string", default: "replay" }, threshold: { type: "string", default: "0" }, out: { type: "string" } } });
 if (!["G1", "G2", "G3"].includes(values.policy!) || !["pair-v1", "pair-v4"].includes(values.prompt!) || !["record", "replay"].includes(values.mode!)) throw new Error("阶段 A 参数无效");
 if (values.policy === "G3" && values.mode !== "replay") throw new Error("级联阈值使用离线缓存");
 if (values.mode === "record" && process.env.ADJUDICATION_BUDGET_SCOPE !== "stage-a") throw new Error("真实录制必须使用阶段 A 预算");
 if (values.mode === "record" && values.policy === "G2" && !process.env.TYPESAFE_PROXY_URL) throw new Error("Jev 真实录制需要配置代理");
+if (values.mode === "replay" && values.policy !== "G3" && !values.out) throw new Error("深判和快判回放需要通过 --out 指定独立结果目录");
 const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2/stage-A");
 const prepared = JSON.parse(gunzipSync(await fs.readFile(path.join(output, "prepared.json.gz"))).toString());
 for (const [file, expected] of Object.entries(prepared.sourceHashes)) assert.equal(createHash("sha256").update(await fs.readFile(new URL(`../${file}`, import.meta.url))).digest("hex"), expected, `输入来源变化：${file}`);
@@ -22,8 +23,9 @@ const models = JSON.parse(await fs.readFile(path.join(output, "models.json"), "u
 const providers = JSON.parse(await fs.readFile(path.join(output, "providers.json"), "utf8"));
 loadModelEnvironment();
 const name = values.policy === "G3" ? `G3-${config.threshold}` : values.policy!;
-const directory = path.join(output, values.prompt!, name);
+const directory = values.out ? path.resolve(values.out) : path.join(output, values.prompt!, name);
 await fs.mkdir(directory, { recursive: true });
+await fs.writeFile(path.join(directory, "calls.jsonl"), "", { flag: "wx" });
 const cache = path.join(repositoryRoot, ".test-workspaces/stage-a-cache", values.prompt!, values.policy!);
 let writes = Promise.resolve();
 let proxyFailure: string | undefined;
@@ -64,7 +66,8 @@ for (const [ordinal, sample] of samples.entries()) {
 await writes;
 const report = { dataset: manifest.version, split: "dev", config, sourceHashes: prepared.sourceHashes, mode: values.mode, metrics: calculateReplayMetrics(groups.map((row) => row.outcome)), model: { ...service.stats(), cacheMisses: service.cacheMisses(), calls: service.calls(), subscriptions: service.subscriptions(), providers: service.providerConfiguration }, inputs: [...inputs.values()], responses: [...responses], groups };
 await fs.writeFile(path.join(directory, "results.json.gz"), gzipSync(JSON.stringify(report)));
-await fs.writeFile(path.join(directory, "command.txt"), `TYPESAFE_PROXY_URL=<configured> ADJUDICATION_BUDGET_SCOPE=stage-a node --experimental-strip-types scripts/stage-a-evaluate.ts --policy ${values.policy} --prompt ${values.prompt} --mode ${values.mode} --threshold ${values.threshold}\n`);
+const shellWord = (value: string) => `'${value.replace(/'/g, "'\\''")}'`;
+await fs.writeFile(path.join(directory, "command.txt"), `TYPESAFE_PROXY_URL="$TYPESAFE_PROXY_URL" ADJUDICATION_BUDGET_SCOPE=stage-a node --experimental-strip-types scripts/stage-a-evaluate.ts --policy ${values.policy} --prompt ${values.prompt} --mode ${values.mode} --threshold ${values.threshold}${values.out ? ` --out ${shellWord(directory)}` : ""}\n`);
 await fs.writeFile(path.join(directory, "config.json"), JSON.stringify({ config, models, providers }, null, 2) + "\n");
 service.dispose();
 console.log(JSON.stringify({ policy: name, samples: groups.length, inputs: inputs.size, calls: service.stats().calls, cacheMisses: service.cacheMisses(), costUsd: service.stats().costUsd }));
