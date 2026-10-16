@@ -1,0 +1,204 @@
+{
+  "dataset": "d1-v3",
+  "greySamples": 67,
+  "commonInputCount": 194,
+  "inputUnionCount": 194,
+  "normalizedInputCoverage": {
+    "pairV1": 1,
+    "pairV4": 1
+  },
+  "pairV1": {
+    "samples": 67,
+    "conflicts": 15,
+    "safe": 52,
+    "balancedAccuracy": 0.7089743589743589,
+    "missBlockRate": 0.4666666666666667,
+    "falseBlockRate": 0.11538461538461539,
+    "conflictNotificationRate": 0.9333333333333333,
+    "safeWarningRate": 0.7307692307692307,
+    "threeClassAgreement": 0.23880597014925373
+  },
+  "pairV4": {
+    "samples": 67,
+    "conflicts": 15,
+    "safe": 52,
+    "balancedAccuracy": 0.6903846153846154,
+    "missBlockRate": 0.6,
+    "falseBlockRate": 0.019230769230769232,
+    "conflictNotificationRate": 0.9333333333333333,
+    "safeWarningRate": 0.36538461538461536,
+    "threeClassAgreement": 0.5671641791044776
+  },
+  "changedFinalDecisions": [
+    {
+      "id": "d1-0021-conflict",
+      "pairV1": "lock",
+      "pairV4": "warn"
+    },
+    {
+      "id": "d1-0037-conflict",
+      "pairV1": "lock",
+      "pairV4": "warn"
+    },
+    {
+      "id": "d1-0045-conflict",
+      "pairV1": "warn",
+      "pairV4": "lock"
+    },
+    {
+      "id": "d1-0045-safe",
+      "pairV1": "allow",
+      "pairV4": "warn"
+    },
+    {
+      "id": "d1-0066-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-0091-conflict",
+      "pairV1": "lock",
+      "pairV4": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0001-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0002-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0005-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0007-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0008-safe",
+      "pairV1": "lock",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0009-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0014-safe",
+      "pairV1": "lock",
+      "pairV4": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0015-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0016-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0017-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0018-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0019-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0020-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0022-safe",
+      "pairV1": "warn",
+      "pairV4": "lock"
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0026-safe",
+      "pairV1": "lock",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0027-safe",
+      "pairV1": "allow",
+      "pairV4": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0028-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0029-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0031-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0032-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0034-safe",
+      "pairV1": "lock",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0035-safe",
+      "pairV1": "lock",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0036-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0038-safe",
+      "pairV1": "lock",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0039-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0040-safe",
+      "pairV1": "warn",
+      "pairV4": "allow"
+    }
+  ]
+}

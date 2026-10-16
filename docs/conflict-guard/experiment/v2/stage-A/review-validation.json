@@ -8,9 +8,10 @@
   "matchingInputs": 186,
   "missingInputs": [
     {
-      "hash": "7082cb06a78ee08ab1f6f24982cca5ada8ba195ad88af40ee5ba327358e97bc9",
+      "hash": "536b317f242e129ec8198b40e7923ccc24076a74d3a02c02fc42234d85d5a59f",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0021-conflict"
       ],
@@ -52,15 +53,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "04f2b91f59a5831fdb12e701f6ec3240f61526f1d536cf3b0a1e49cac70a1960",
+      "hash": "abcd3b8d3d7ce4570f10f6554f4961fb6d67118768f0549c01b0c19c1a6b5151",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0021-conflict"
       ],
@@ -102,15 +110,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "4e80417a030ab2f613dff0076704c408e923e5441b3e794bb39b44bee3db9120",
+      "hash": "dd46cf6a43057e00dd84835acd08e6c67323f870a969052bd423cb26b4668f74",
       "complete": true,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0021-conflict"
       ],
@@ -152,15 +167,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "3f55279ef487c7e355e1ed515da3e390da22617bb10a7b521faa1c47e4783044",
+      "hash": "570100dc4e94f8e46f299e7afee6005683fde865608a6bf7bbdff1152a1a8662",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0026-conflict"
       ],
@@ -202,15 +224,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"creditUnit\",\n          \"before\": \"creditUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 436
+        "size": 461
       }
     },
     {
-      "hash": "fb99d75328784158f31ade4a129a5479ae64e50b5e96bb7f0129b8721014e7cd",
+      "hash": "661faa8924de58a0165cf83e82ac48171e257605dce54015f62430c5a35e85d2",
       "complete": true,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0066-safe"
       ],
@@ -252,15 +281,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"creditUnit\",\n          \"before\": \"creditUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 436
+        "size": 461
       }
     },
     {
-      "hash": "184d07d83043f808779781f0c9dc81ba06a6ff5df0a2a26476cb48f7b1df4d41",
+      "hash": "0505ce54852b528cad95aafbf7e07162e3998a9130bb2239490ed257f22661b4",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0117-conflict"
       ],
@@ -302,15 +338,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "df25ace5b0d716379a879dde31a38cb6a04ac665b329423c6652ee1bb9fd0e18",
+      "hash": "22fd85a10c7f22c87697e66e9e1e70fab9727a3030ec551204d6cb9a250a6699",
       "complete": true,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0117-conflict"
       ],
@@ -352,15 +395,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "7d73982aa5e27a82153fea6e249b59d2392c88584a48a463ace388b768a801d8",
+      "hash": "d688d831185857f2687ecbf5b683f66ac7034ff8682cfe73f08745359a5d1a84",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0149-conflict"
       ],
@@ -402,9 +452,15 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     }
   ],
@@ -416,87 +472,97 @@
     "adjudication/syntax.ts": "de0279191214a5582ab39f26e2365e2119a993b1d43e7a6953443d65c9d9f278",
     "adjudication/adapters.ts": "cac20b13534af6195ae2af9fa5b533db4dc25ecde9dceeddc103b1421e28200e",
     "semantic/changes.ts": "e78eb4f043feeeec2d51ec972f7c279e3f11a4b8f08c0199d297d7ba6743fad0",
-    "coordination/session.ts": "89f8fa2b4a2e83797941e5d5e56bf168f9b00e96c80ad2469eba04a4244d607e",
-    "coordination/pairState.ts": "a297516ac885f71cc2aaa9bc5e12280c11ed593c8afa64a8404e74fd3915a905"
+    "coordination/session.ts": "6d38271aff96101a84be93a76d2d247884432f97649712f7d0641428203a0279",
+    "coordination/pairState.ts": "a35b62f25726739c48f73d713cd6bff80ee830059c422ad05be1ef800c1e9564"
   },
   "inputs": [
     {
-      "hash": "18bc74a9a5b69dc78f9e83e280a885c178d8ce542b658e2c018cc0c24782cb79",
+      "hash": "7feec7ef4f73a9b7d054853ec720c2507f58f55ba75b5c87abec6490c221ddf7",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0005-conflict",
         "d1-0005-safe"
       ]
     },
     {
-      "hash": "1db0d357539a5ffc9073a6a4e0f4278bde419ca2006c0e496d6a0e37a3b12eb7",
+      "hash": "e6ed618387db996bc720b5f20eacf806b53adb41707412afc4da6dae517e0472",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "d1c329a4c2dc3611b38592d548078428d0969363ca35493c267bae29f0592fc1",
+      "hash": "1a6ce826e7fcfc93c6dfc7e62263a44db3d6b0cc900d44bad4edf867e42eb7b2",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "8ad1ab3dfca57198b837b016459398e9e40920f9027635da1a2c1de6ef94d6aa",
+      "hash": "4399b1c5e39b1ed72301ca0684ba40f7a5153eee4f98d2fb25216d61a9b308cb",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "2c14fddcec36564814b48d0901230bbfcdaeb2c51414d895acb26747e04565cd",
+      "hash": "7481eeefff92248c1dfc2bde0fbfa5c6a4ca9b7aa5103f3dae55c4822722a7d2",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "52e31b61e6246d949fff08711de13d7931d114058de7ac0a6b1bcc1606efc1d2",
+      "hash": "64426a6299acf44bc3aa452e4b9283ef921eb50367d2a1e91fd7a6bc2b78fba8",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "4d204fea46176c74ef45806af16d394545da0a0b483b7373fad0aae502e89c71",
+      "hash": "9a395c8d3627664e3ee39f785a98a702e64c1c1584174957b34a14eadf646b9f",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "6839c77b0a1ff4401c5be9a96ce2be377b247abefa3ddbf174fa08e9557a6e96",
+      "hash": "b0f565d83ce901daad43fd796fdcc41b4ba196f864da4719318a12b045a87b89",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "f991d7da290ea7570a9b8534a7661a50acd537b8da9ea98eb18c25a2447409ac",
+      "hash": "c65ac4957ee0636c22325951b6d67bdd855a8620fcc3b45af558e45b21a3c709",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0013-conflict"
       ]
     },
     {
-      "hash": "7082cb06a78ee08ab1f6f24982cca5ada8ba195ad88af40ee5ba327358e97bc9",
+      "hash": "536b317f242e129ec8198b40e7923ccc24076a74d3a02c02fc42234d85d5a59f",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0021-conflict"
       ],
@@ -538,15 +604,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "04f2b91f59a5831fdb12e701f6ec3240f61526f1d536cf3b0a1e49cac70a1960",
+      "hash": "abcd3b8d3d7ce4570f10f6554f4961fb6d67118768f0549c01b0c19c1a6b5151",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0021-conflict"
       ],
@@ -588,15 +661,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "4e80417a030ab2f613dff0076704c408e923e5441b3e794bb39b44bee3db9120",
+      "hash": "dd46cf6a43057e00dd84835acd08e6c67323f870a969052bd423cb26b4668f74",
       "complete": true,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0021-conflict"
       ],
@@ -638,15 +718,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "3f55279ef487c7e355e1ed515da3e390da22617bb10a7b521faa1c47e4783044",
+      "hash": "570100dc4e94f8e46f299e7afee6005683fde865608a6bf7bbdff1152a1a8662",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0026-conflict"
       ],
@@ -688,153 +775,177 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"creditUnit\",\n          \"before\": \"creditUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 436
+        "size": 461
       }
     },
     {
-      "hash": "b525ec5074db6c81f71d335bb999baf55caa51b46fed0e684155452f18969981",
+      "hash": "837ee1b0c4048471bf576fa3e1d0dee127d4108bca8ee4c84add9fedf2acf191",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0037-conflict"
       ]
     },
     {
-      "hash": "bb8831d9125183e557a0fde967c116c142cca41f1bb1ab7fc2c32417e6ef4320",
+      "hash": "a62d22d18a807183068248577cbc580a7a4c39f90b973bb6a137f979ff05cb19",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0037-conflict"
       ]
     },
     {
-      "hash": "cd92728c081c60dcf9ae826d98ebdb36820f231aa2ab241475b2ce59731cad6c",
+      "hash": "7af87ac93b9e0cd83317b755d2c02043ee9a48fe53e3c6159e0185c517179d52",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0045-conflict"
       ]
     },
     {
-      "hash": "f5c0db60132935ac54a2c2b8caf2983fc104c3faca2dbae5458de02ba38187cd",
+      "hash": "e950e2eac23f9b196d3970a4ccde4b77ef9c3f36b81c5a7385ba2a155348229b",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0045-safe"
       ]
     },
     {
-      "hash": "198e77740b81d1062b146d8d8dece6b084530a6a10b36a9d3d60a5665d911a32",
+      "hash": "62c0cf481b80a198be689b8e067e6ae1e628933e287eee7bef99d05132de13a7",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0045-safe"
       ]
     },
     {
-      "hash": "01a9760f57ec5afd6155343a75964cddd5dbfe24f80a65581372c440177fad1f",
+      "hash": "17bae846bf594a36de0e9a82ff94dba20eed7dd6ccb4804cc53f12db20d9ae98",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0051-conflict",
         "d1-0051-safe"
       ]
     },
     {
-      "hash": "8a8a75492e98fa7fac7fcd4531a6531730a89607b661d7916c39ecb19277d9c9",
+      "hash": "fc88728749cf0476c81ec5853087023c828bdf6cf849620decdd82fc1c6c4caa",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict",
         "d1-0059-safe"
       ]
     },
     {
-      "hash": "5d1f619b502932a8962d2033139bdb568d23c8858a6ec10d680685c64e5672b6",
+      "hash": "3580d8be5f528ac51fe70374bb3d91c5ac5c50d253291dfd10d929cea08c515c",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "71a8a4e88cfe13a6998bf42646906a7ae38ca6b94d182dbf496d3ca13b20d1ed",
+      "hash": "459c00579827e171ae89dd56185d47e3aba4d5578d1db5ebf5654a856e52dd40",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "ef5bdb87ab0e99fbcfe00fe6200fd4cc9ad4af7a3824152060a596d74d7bfa18",
+      "hash": "697a93916ed0b4265ef31b78d5c5922ed1fa836041f5e12f75c1759f039c93c7",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "b4ed82db230f2d3d92b137ec04d06229f4977175146e0c9c67c792c1d2fae19d",
+      "hash": "d00712236e5f4ac5e8818d03c60de48ca27b108d63fc02dad81eb66f1d4e4239",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "55f8e0a56d20b2cbdf21fd108046ef21b97e48c2b2a5f8e47ecdc0e37ba007f4",
+      "hash": "44ed0f46dc87c76a0d0d024aa12f31fb94307ae36e6fcfab90e41a672aeb4060",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "5e4f5a5a9e7d6783d8b453a1afb630cc7f77ef74631a99ab33ee079065c487f4",
+      "hash": "5a8b19a4a2a98dcbce5c0d8a8cc729cd4de0ad76c27c37155681c2486affa878",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "d25fd91f7ac0071e73f0cacaa524096fc3cad8e4cf383915ad942a468845e35a",
+      "hash": "b81102074eabdcb382e3992e9f1596ca8a0319ce428e286f1747fb64e09bfb0d",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "6e24a55098389342b18a891a35d40e0eca3ee0e67bf39c258fb58f95a03af492",
+      "hash": "2ac7f151b26d229aedbcddfc2da408949486838c2edef90300abab79342c295d",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "352b8240f715b019110f9a9435afc5d76c721e657f6fa11236be3046f3080a77",
+      "hash": "d6ae5163c5581e185f4a125fe2bf6801570b1ff413c9f68a746f2ba98c761d8e",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "fbcef895faf10e347cfefc2e237821ca108ec7d1a9d53f4005f9b88ea89b0183",
+      "hash": "9bfa7197baedd8c1ed7fabcd4e82bd48558b30bf3cfa1bf71ddf3b64a714648e",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0059-conflict"
       ]
     },
     {
-      "hash": "fb99d75328784158f31ade4a129a5479ae64e50b5e96bb7f0129b8721014e7cd",
+      "hash": "661faa8924de58a0165cf83e82ac48171e257605dce54015f62430c5a35e85d2",
       "complete": true,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0066-safe"
       ],
@@ -876,137 +987,159 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"creditUnit\",\n          \"before\": \"creditUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 436
+        "size": 461
       }
     },
     {
-      "hash": "c8ed76a427d45b321fdf86da32f6e5b26e8d37705b177d7019ded98d37cba1ae",
+      "hash": "8f0dedb8cf0dc572e142880918c53b725aaa3dd67eab3e5222267fce76952dc8",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict",
         "d1-0082-safe"
       ]
     },
     {
-      "hash": "84fd260132a9049af5f72dd3849bf4fa7296481ca8a4a627efffdea9cb0135a1",
+      "hash": "b4c56f06bf6e1d76b6e2a1217da9238ec8f5911fb33a6f53402340d36efaa874",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "b4cd2eb8070a48cae728b32e1b297e0a74ed70168d54ba1d3ecf2e9d3c6922eb",
+      "hash": "2b66b065a0904119671f6c159040499d71af0a9712ee779a4008f8f30f03f406",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "fca714ce03fc92844bc9cf888dccd678db59010186bde713d472e8fd8cdf0604",
+      "hash": "f1acdedd9754ab710e45d5b8b8765a88ebd8abed463b1e1e584f62201b003007",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "55ff10b57b3c65239720471134e0884dc2e25bff2ce496a6994c243fdccae248",
+      "hash": "80843a132bef25d3bb2e0f1535e09d521c3473dafbde291d624c4e9f9894b5dd",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "f93661215c1c4fabf90f3d012f576103ea1015658706e51e7e28d39ebdbe9563",
+      "hash": "10f551e2ad664a63f81cb9e17275a6bf3774819317ba462c5519baf240bee3da",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "54ccd942182c492ca3c826e743bbd425fa13fc4c13f10449b1c8173e7b4d9664",
+      "hash": "a14b969faa93be2c62ec1551ba3d728423063959d26c2b5b1bdb841a5690e923",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "7b486d78035e7aeccfd859c90f06a75319d2fed67cb03c0df1580a8f844bfc15",
+      "hash": "6e1ff5662da135ae8abcdb1ca002ef21ecbc4ff9a5dec3a7c1c72074f5f88af8",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "f44bd804ec422aced1d417ec9e4739b7e0e143e2c20bf286a88ce8286400f286",
+      "hash": "079eb4b094d307ef9fcbfd31b82e9d984735f7f6af085f18c85c9c29202f1951",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0082-conflict"
       ]
     },
     {
-      "hash": "7ded6263aca8acf6e7dfef4f4e46615c1ca45c95c0956e94b19ee6e16012e0d5",
+      "hash": "a448d375d318702081a655aac1f9cb3b3c2f4275815ad89cc3fa7b14692d99a5",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0083-conflict"
       ]
     },
     {
-      "hash": "b1ba682bc9bf4b02eb824a0ac0c461fb1d0a96a93f02ed727c693944053dd86b",
+      "hash": "5a09ef7ec8376589c4f42607fdab0a51b677a064040521255435b9c2a7a226cc",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0083-conflict"
       ]
     },
     {
-      "hash": "b564da34467a51b508b9dea4e6a92ea8cd09b788f07035af4e7e92c76f7b92ed",
+      "hash": "7f96aba9c79219b755e33319ee304aa8947a7e6e4a71043823ced0066de0fd08",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0091-conflict"
       ]
     },
     {
-      "hash": "d3593d1df38df76f6be62fe7d30e20f8c347ae11d302f85c1a096836dbc04e68",
+      "hash": "250f69220fdbbcafbad46b93cd9163a38691d5bb89d868fbccbb8208c9a7e04e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0091-safe"
       ]
     },
     {
-      "hash": "a034c4eeacd523ad7d620ac1d16dc6a86a1b98796b836d74818ab2ecb8417671",
+      "hash": "8f66aeee0da4e1c16f4f84ee7178785ce7250d85f23b5451fe36c7996d27b813",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0091-safe"
       ]
     },
     {
-      "hash": "d8ae78ade9f22effd18da5973fd8c95b624a5cb45c6c7e697a8e6d626e7595b4",
+      "hash": "8379ac0e132fa977c092345e92260e7333a96f4510a904d1c1bf00e22d6823d9",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0101-conflict",
         "d1-0101-safe"
       ]
     },
     {
-      "hash": "184d07d83043f808779781f0c9dc81ba06a6ff5df0a2a26476cb48f7b1df4d41",
+      "hash": "0505ce54852b528cad95aafbf7e07162e3998a9130bb2239490ed257f22661b4",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0117-conflict"
       ],
@@ -1048,15 +1181,22 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "df25ace5b0d716379a879dde31a38cb6a04ac665b329423c6652ee1bb9fd0e18",
+      "hash": "22fd85a10c7f22c87697e66e9e1e70fab9727a3030ec551204d6cb9a250a6699",
       "complete": true,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0117-conflict"
       ],
@@ -1098,47 +1238,58 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "24559a3968484c57e4b934a79f5461d0c4250011b769bff41b426d9ed7486b4f",
+      "hash": "293c3a741db4d4c0c58cbfda1ba4fd5673bd22f6dbf35574619a4304e4db2537",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0130-safe"
       ]
     },
     {
-      "hash": "18c875e18b88118b31d82f436bd05f685c8c608d80b1f9f100b1846376258522",
+      "hash": "c54abf288a2d0452c12db54703b219560c57aec19ffeb1dfc2abd24c651bf803",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0141-conflict"
       ]
     },
     {
-      "hash": "79b16a14ecf5e2bfb4328af256693817c277cbc2ff4b3a900e256cde9f883c3a",
+      "hash": "87a5782e77f95f30bff09e3e646c65e6fc4bb38630edee56efbbaa1bbe722088",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0141-safe"
       ]
     },
     {
-      "hash": "b473f060ffd35b92479114b563378d9742ba22ba3f0449f39200999652873873",
+      "hash": "e191d4b9c819670b50b9aed639a18ec7d434f7f3323b05e71514208f5464604e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-0141-safe"
       ]
     },
     {
-      "hash": "7d73982aa5e27a82153fea6e249b59d2392c88584a48a463ace388b768a801d8",
+      "hash": "d688d831185857f2687ecbf5b683f66ac7034ff8682cfe73f08745359a5d1a84",
       "complete": false,
       "presentInRecording": false,
+      "compatibleInput": false,
       "samples": [
         "d1-0149-conflict"
       ],
@@ -1180,1135 +1331,1282 @@
             "added": true,
             "removed": false,
             "value": "          \"after\": \"minorUnit\",\n          \"before\": \"minorUnit\"\n"
+          },
+          {
+            "count": 1,
+            "added": false,
+            "removed": true,
+            "value": "    \"batchClosed\": true,\n"
           }
         ],
-        "size": 424
+        "size": 449
       }
     },
     {
-      "hash": "9a81d49c594c9ae12d54ee7ad6c846d318c3ad5c6e7afd8f1c102c50c7a3ae76",
+      "hash": "6184833ab91cafed51dbe36b3a77d0812784310463b46869397db29ce9a55173",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0001-safe"
       ]
     },
     {
-      "hash": "410e9c00e71543b7d67f75c1504ca37a2c85bbdc2c6cd6ffb04e6ea16ec5c21c",
+      "hash": "ed295a8e46bd9ae74c5b83a1f8f21bf5522d6c9d83392b2052c9a7ca4f515a40",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0001-safe"
       ]
     },
     {
-      "hash": "b70c6271a090c048d216b31aac2618059c2930faa984d7adc28951f54d23634b",
+      "hash": "e807336b7699a23b8543df8d130be47252e2064348e1cd7efda360d2ee13d1b5",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0001-safe"
       ]
     },
     {
-      "hash": "c387efea6de17a7db846860d835d615405e1014a7955888a5ea6ca28b63a0be5",
+      "hash": "2cf4a3e439261417a9b3b29e1f283c7f429f2898b22f781e0c49998840b660f1",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0001-safe"
       ]
     },
     {
-      "hash": "91502100b83be1168abb61e9df0f7381ec71370c22824b90d6cea0b7809878b4",
+      "hash": "8285bc52cf8e44ebac15f02e7cfb5536327f20a8a473cdf777393bbba6fa5c3e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0001-safe"
       ]
     },
     {
-      "hash": "af91621af800b7962cd2dbbbd3f5c20c29b4a7c8107d0fe79a2adea3540357ad",
+      "hash": "0267140cdbcc4d6e67ee8294297e878e32fef898a5b9b9f545fa62c4e513dfcb",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0002-safe"
       ]
     },
     {
-      "hash": "89314141b6c563f735badd441596364d8b241bbb0ad7d11d337d3ae84fd5f9e6",
+      "hash": "d42f22fad0e39dc5925c4a2ec4e436ae03546adcdf4b18f08a3ac6fd99d498e2",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0002-safe"
       ]
     },
     {
-      "hash": "8a4cfe48c0aa6a0841078eb7363e57b6e5ec185445c9cdf221c339494512bb6c",
+      "hash": "d5f0306676e68678ee38d87667a9878c4471cca65b8ee972adb8c18454a03020",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0002-safe"
       ]
     },
     {
-      "hash": "b82ca74d5f22f924bdb6e6716691ff8e71c9c1e5e536f5571834ae022f8ae1cc",
+      "hash": "7eed79a848bbfc24636e48fb0ea4c0ac0875058f21a05fc7ac1b7ebf251e650d",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0003-safe"
       ]
     },
     {
-      "hash": "a009e6d0dcc4c97a5bc7834a3b684bd9d8275f1679bdb93c8a78450f0a727eaa",
+      "hash": "98317087a51fcd5b5a30bad22febc7bf948349387e4d932e79fbdc85b0cf89cc",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0003-safe"
       ]
     },
     {
-      "hash": "db8215119ca69ad1e8a8c77bc0178cd4b494a303c3cdd012007078c992a1b99d",
+      "hash": "3822d82b35d1f9b6d09c27fc9f9a9b60f5fa8ed6fe51f5e90c5806c9b2d7dc86",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0004-safe"
       ]
     },
     {
-      "hash": "eedf86f8688d686374ff553921a52cd0154243735de0b80c57ca527477423dd7",
+      "hash": "e007c66c7586545bfe5393cfc96b297dff02460c842e756747f8f8871a257834",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0004-safe"
       ]
     },
     {
-      "hash": "424bdea6ad25ca2490eb500b80e4d5743db3f16aa9e27f85ff40946046584e6e",
+      "hash": "b915bb8eb1dd47f19c0559eaea850478331897f31d0ca4685eda0451d15a43b1",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0004-safe"
       ]
     },
     {
-      "hash": "2730b4548793558749816083c48c2e95faa5d183faae17339c164c9841bde25c",
+      "hash": "89874489b69360ff9da7560ed8ab1a352795ed7cfacc84dfabce54c70433197a",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0004-safe"
       ]
     },
     {
-      "hash": "8062a73a1283c7975eea64552b534f268adab79bf95acc1e05263e3dc978d63d",
+      "hash": "39ee8381cab9d4b12d370a7bd6389d010cf5beafc7b15673d4eba68bba2dacb4",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0004-safe"
       ]
     },
     {
-      "hash": "9dbdf668f52163cd7e4f85107b9a84181bc632aa920e12091db406cbe00bba93",
+      "hash": "22067a7ed492e6f716bb96f25b22d96f1ec6551daae26de97eeb6b35daa00f3e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0004-safe"
       ]
     },
     {
-      "hash": "dea628797a9db355dc4dd84453ebcba69198cbfdd921f4d6b864a3c1cb56d463",
+      "hash": "bc52b509eec3c50c66dfc4162e1e3f42a673c13be187a98248702bec429ae4cb",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0005-safe"
       ]
     },
     {
-      "hash": "7702ea281ef8177606260ba3ce1d12b09d0af7aa76db667f7ff4ea9d3e1ad6ce",
+      "hash": "e73491ce35d5ef1ae1efaaae30fbd7e40a46f91550b2d4f4a04997329fd7fc01",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0005-safe"
       ]
     },
     {
-      "hash": "213ad7edc63b707013105ee056a74a4fe394ff3bd6b6328c22158cee09bd6d6a",
+      "hash": "9f4bd66fe9ebf9c45b98e44ab670ab269bbed7e4295ab23289ec3a0067aae3dd",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0006-safe"
       ]
     },
     {
-      "hash": "c803b930a3f127bf4f3b16e06e1902f43aa492907993101890dbe1b2e7e9617e",
+      "hash": "498bcbc144eae6943e839e195ad4ed690b85ef1c484135131392e948f5427288",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0006-safe"
       ]
     },
     {
-      "hash": "d651fdeae43e9728b3962af5f06eb47ba57d732aa90fb2cd012806de8480fb14",
+      "hash": "6443f443b0336c6d9b6f30d590b28ce5af74902e3c9c67067a8c83a9b09d94cf",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0007-safe"
       ]
     },
     {
-      "hash": "c46337c69e23beedd3ec29f4a74625dc37b72a8b6baad6028ee3aff0822f5959",
+      "hash": "144ebc287a4f046ded83814d0b66ca0c724c9b395e3bfbffac04aa043c72700c",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0007-safe"
       ]
     },
     {
-      "hash": "756584268bb8a67c3ef08e1d9ffd38f2c025347c96e0cee380280af710a5308b",
+      "hash": "1741b63b314cda042b1282256254b5c89ffa67cfb3e088d38cbb0f129c593a39",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0007-safe"
       ]
     },
     {
-      "hash": "c8fea5482a66a0d36cb273a270451c3ec4b15c4672e75ac9dc5bec05facfa35f",
+      "hash": "c81feffafc59ec9105920e0216c8530feb5beafdab4f3835ab5e3240d28f2bce",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0007-safe"
       ]
     },
     {
-      "hash": "7833b7e92ea656ead063c6bc3f8335ddc69bc1468036361a3097150df437d24d",
+      "hash": "10539f8503c23a27864075684ca97d4e4d526ff763e2a66743a865fb1be66c7a",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0007-safe"
       ]
     },
     {
-      "hash": "41da55fd58efbd3039476ea616cb5a75fff76960d7159393d2d5623965569044",
+      "hash": "5b8d59a97c59385ed7cdedd13f7b1d51b1ad0609f5187075d1b0bbfee5bce6e8",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0008-safe"
       ]
     },
     {
-      "hash": "4f1e560062ef778baee3edf09ac31db70bed86e6e252d76e7836bf4c2feedf93",
+      "hash": "033017acf9930c44229bf14619c239f0e853908ace4caf51d0d3b63f5f46ea75",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0008-safe"
       ]
     },
     {
-      "hash": "347271b4f64a73365a696bc2099bf643a06d815370ff9ca639766fdbd8d3f293",
+      "hash": "b2b96da3b96d83e7fa8d8894e7a83a7900c52a8b750bb0435ceced5adc5498bf",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0008-safe"
       ]
     },
     {
-      "hash": "644a51fbf8ac9652517a55cb29daec37c96cf5c436c7965d6efbb64662fad0fa",
+      "hash": "945df18c0b1d4b05b379cf6715540b9bda91e71a89d640ba30ea5ebcecc82052",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0008-safe"
       ]
     },
     {
-      "hash": "d6d8e975c332080e9b81e42f352380113cc6a086cba94b8b4df7a19ec693bca1",
+      "hash": "5e01cd5c2704215c059849bd72c4ed694551846ca1aa49fc017fb5412e513ba2",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0009-safe"
       ]
     },
     {
-      "hash": "fa27dac4ca5a4b0e6be2ec432d6a8a7562fb2cd911bf99d49d7490d6d14030cc",
+      "hash": "35347edf3fd9598abc34c33b2fd88376f062f49f051883ed3f5c0d7a34203d58",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0010-safe"
       ]
     },
     {
-      "hash": "9e29b833c54a967c3b5429c434ff1879592c158988323dca09128573a5781b4a",
+      "hash": "40acbeefa4a8c620a5e98bd0e917a85f86992df119f31fc18d7c26e88e7bc16b",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0010-safe"
       ]
     },
     {
-      "hash": "53eb631a8f68325cab246b7d48e013f1dcb0d6334144254d7b7dcca08b9ecf28",
+      "hash": "5a1369b40406f814fa34e29de539698e49ab3429d07b1b59f4ab9d0c639a8511",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0010-safe"
       ]
     },
     {
-      "hash": "56ec5c84f3b055b6d6a3a4dcfbb8593b029b6496b9d490174b97750319f2e4d2",
+      "hash": "2ec1568eb9c52a71103af7bcc951b44193f06c16836cbb62b328a09e6d8721ef",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0010-safe"
       ]
     },
     {
-      "hash": "086a4a4f521c0fdebf90411fb3cff999198150c397ccc49ecb7cb2b7f06a2eda",
+      "hash": "8b37c37472dd4c24d41fda16d4263baec927a773dfdd59fc60237ebba3bb898b",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0010-safe"
       ]
     },
     {
-      "hash": "4ab584fe716d93458a8872869c6b5c2df0e8838f500f366145ff874a9e9eec78",
+      "hash": "561cc0384c01c25bd9e43e4fcd888908c44a44b35d34498f3c49aec0aab4f2b5",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0010-safe"
       ]
     },
     {
-      "hash": "fdb023b3a4b4b7fdaee8ab63b942d47bda4452cc0fa6cdb6d8729ad772557994",
+      "hash": "51f936dd11e4dde99501981e3cabfbf5f23c102da94164acc4b5f5b92061c785",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0011-safe"
       ]
     },
     {
-      "hash": "7cf9ac06390415d653db3e21a3c6edd59b4d4b9931ffd44f3639d3f6f0d16a11",
+      "hash": "f50034cbd210a7d9a55d6281ee386a504f1ff8083278ba64233cf84e8f58a5a3",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0011-safe"
       ]
     },
     {
-      "hash": "a5482ec9ad148f9ff85a2fa93a50e51e5b71777b14b2e73f2a3a2b7e6db67d10",
+      "hash": "0967d0149d70d6b1ca4c3363951ee67b0d8d9260be83d790b0615518d6ee023e",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0011-safe"
       ]
     },
     {
-      "hash": "9f6ee4e5b728efa2ba120a43af066227e57531cb931e2610ccddf4ba7443cde5",
+      "hash": "d62e8a068fa0fa524afd99e2f54612a98077db14269546c725e75c9defd35d17",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0011-safe"
       ]
     },
     {
-      "hash": "02b6e7c0f9d9cd515b2760cf164382d9fe093f4b7f2419acc8a1cefa4ac3b8f9",
+      "hash": "f188731c99857defeae4a717f2e1becebdf3278ff96fd6c7860d82257ca6183c",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0012-safe"
       ]
     },
     {
-      "hash": "e5272ccbcbc34a31f068ce869a05e55d58cd7489b1cedf5ac2b6f158e6557683",
+      "hash": "5c465784e5cda9f243d278a0374b0eb42aea34d7baf82dd0c9323571fb3b358c",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0012-safe"
       ]
     },
     {
-      "hash": "a18a37c7e4974e2a6c3cfd251a4df811bfd458f9b367519843a8e687c81dae79",
+      "hash": "b420a3ec8a66749857a000c2cbb4df902c2aa14d08249ffab47074adac208834",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0013-safe"
       ]
     },
     {
-      "hash": "4c7313dd645aa5ea173585d89810b127f419e80447094d8ac77faa3cc2d0514d",
+      "hash": "141ff8e40dcc5e4ea5bdf0a05f1a37186076730589cd7411cce5fc0b255e2621",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0013-safe"
       ]
     },
     {
-      "hash": "abd5bd709b99df285d63b249b8fdf0e6f3d91a573c1335636f12f1663254382e",
+      "hash": "b72dd759393dcac1f9d726005338358eb153027734c3d873ce6385e14eb9a074",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0013-safe"
       ]
     },
     {
-      "hash": "adc1ba45b14e3045ab4a3591de5491c2d0ec88819b986e8cd2694098e7146d0f",
+      "hash": "40b5dbedbbabfb3201ffb80712d36c36660203b36edfad49a6bc1646a151c6ad",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0013-safe"
       ]
     },
     {
-      "hash": "4a76a53e704d37cf6102682c4dc91d22582abe2863a822d4db77191b78700d27",
+      "hash": "fa5b7dcb9001dc15e3bfa94c66d276ed68536c0ce40005715edcbb7b9e08d34b",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0013-safe"
       ]
     },
     {
-      "hash": "ca5bc3542ceaab69e027aeb2455a5ce787a0e34724f3270205fd3368e13a4704",
+      "hash": "673c5d7d237878d498d9df6a088894875d33367f24d56d12270a14d98ec47e8e",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0014-safe"
       ]
     },
     {
-      "hash": "fad83e794609671b36059a1035a784acfdd7e2ff1c856f521e217f4456d846df",
+      "hash": "d254d1ce80bd59a4d783a6604778f24ef826c813954044c1a50e00cbdba525c6",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0014-safe"
       ]
     },
     {
-      "hash": "0eff1438b808235c4865bc929280b8779fc436573f8b57f3023c98ddab8944bc",
+      "hash": "4601b05cc683d77e241ffc68809808a59c98a0bcdf36d757007e32154ef74f5d",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0014-safe"
       ]
     },
     {
-      "hash": "65a9ab01fee42f70b881e6ed399150c444496a2680b625b95748f11ac655173c",
+      "hash": "2a26dfcd008771dfde9e848a3e579c03a74c07b20039cab62688e89a94be9ee8",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0015-safe"
       ]
     },
     {
-      "hash": "bbff893014d705622ad585dee5ba071f368a5c2bae45f3bb283ab789a297453c",
+      "hash": "bd4fd60a6013871a4e04357274a8fa013c3d9b2c8e3e78e0b7f88876d27ba76f",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0015-safe"
       ]
     },
     {
-      "hash": "54db7383ac8b0364139dc354fd2951125a1feedd05e7962bac7fe7280680e225",
+      "hash": "56a8724b6974fda81d61c3c08a1dffcc8682d6adf0ecdd2555a55692a6211635",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0016-safe"
       ]
     },
     {
-      "hash": "a20500fac064b15e5b2da982a06e6fc1d216cd17c0efb6c8d77b968f3919c9a1",
+      "hash": "4fd69a2d97c4e91a8a88ceb27f545f015142a264108a5cdc85b2d7bbddc6bb0f",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0016-safe"
       ]
     },
     {
-      "hash": "a746c2ac1459611b704e049b589a8aa1a9702b465e41c87fc085c550aa1f79a5",
+      "hash": "56cf9b64face5b9438717d31701e77351fe025482db8366ee6ed9609f9cca41c",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0016-safe"
       ]
     },
     {
-      "hash": "78af694d5e1e03c7f680da406a4d24206c7666b96249875070f80f30795367b6",
+      "hash": "0273e52e94ec10b8088ec36cc37ae2a7e0eaea8dc32e195afa210e6da6f6db25",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0016-safe"
       ]
     },
     {
-      "hash": "810eeef2df992f2fa42468aea8569420a239b5078fde597a57852f352dce389b",
+      "hash": "8d0460e24c4103b8f4c4795d2e47a3a96b5225ea63616e4982c7fcd5f8354b8a",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0016-safe"
       ]
     },
     {
-      "hash": "854378d4a66a7c19e868186bbbaaef7d10cd072fddd89467dfb3e6e1155af38a",
+      "hash": "b271d038e3e8fc7fb0a99c20a99b778d0c4ccb555f487abbe8900c7673481a0a",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0017-safe"
       ]
     },
     {
-      "hash": "1c94ea5d57b46874e3362dc3e1927359d3cf901de4bfafd1a7ed3989f3b30f4d",
+      "hash": "93962228f00e1de9a3005f7cb38d56e3f5e3631a2bd085c412dc6dd6d4c719c6",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0017-safe"
       ]
     },
     {
-      "hash": "2399d86f3917cda2215761ac1ae91b247dca49b6ba25033390f1761014e32393",
+      "hash": "1388bb0849775d78fce62f46d5a516889fa4ddd9ed70ed4b97cd42f120b3884e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0017-safe"
       ]
     },
     {
-      "hash": "1a7851e2d619d6f69c9301e8ce2fd8a235782211a12147ab8f3c628ba141ad2e",
+      "hash": "501812a088c76ce4bb340b64be5e044f43be8585ab1ec577fc2c8f27b27419b0",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0018-safe"
       ]
     },
     {
-      "hash": "d335ba6c8d7d29173673fb4c3c7f9c1df5276e8a3cb5ad8a02837051cd4a79b2",
+      "hash": "f83a7aea7d193f1fedfaf5dff4958549fc9875f98fb56fd5b4bfbe9d728e5f72",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0018-safe"
       ]
     },
     {
-      "hash": "b4cbd1ac5b89fd113212d99f1c0bec1a32330f09435a4e54804f375bf851b5a8",
+      "hash": "aca0e54735aa1f673967b637aeb963d66a056ae5c4351e8ffba99fa7d01a17d8",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0019-safe"
       ]
     },
     {
-      "hash": "3f84470185c0b30566ea96b176f09a7685230c7f96c8e6c35e4cfcf56dc45969",
+      "hash": "d1d6fecc8226434ea9961fc9d5152a54ef2510bdce156bce1f55923a8ab55959",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0019-safe"
       ]
     },
     {
-      "hash": "7f94664a25783ebc990212333345b202311faceb3b2679c06d47d88f3a5167e4",
+      "hash": "ccfc8f05cf10fbc65301749f391e46334cc3e1ea9f2fbfaa1f6e1b92942dd1b0",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0019-safe"
       ]
     },
     {
-      "hash": "66a8714bac038b9ef90a83f8f8f01feaf145708d9fb2f6c58a416039e615f14b",
+      "hash": "3862a9363127d13eeaba52c2ebe7a27d8520867b4a2daac690934d4c9a275480",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0019-safe"
       ]
     },
     {
-      "hash": "11ec57ccaf64d972491491353538482fc419069f6895e55bf47cfc04cc0e2859",
+      "hash": "c94f70773b53f5a2bddd13f4d427d7d75ccdf3fb5dc50f39c855fe7e74c32c68",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0019-safe"
       ]
     },
     {
-      "hash": "ca2814b2c09ac26653363076c463a9b8f4f303c34faed65004814bf367ea7d9c",
+      "hash": "c371a127f1f85bcb3a34be931baa897ff4bb584c9fb3085fa2c050922a25bc1d",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0020-safe"
       ]
     },
     {
-      "hash": "f7c45955c139a32ed5f17b205279af388e0d659431600873fcb0c92c628c82af",
+      "hash": "a455d8ccd49eefe10aeb824076cf2334df9eae21b1a90fe860c366d0dbc37cb4",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0020-safe"
       ]
     },
     {
-      "hash": "b32192f0d561cb7e934b6646b09eff29b4364d559f812254cd8ad971887f9367",
+      "hash": "275c9b831556cc9ca61b52a878bbe2441b23387a8ce72101940dfe988f91a873",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0020-safe"
       ]
     },
     {
-      "hash": "311204288521c1ba3f90664f40296f44297065b7fe39fad8756e8c5a8cdeb85c",
+      "hash": "46f9526ed80cc45232ccd6647158e2c7a0241e47777d234ec9e51599d20700e5",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0021-safe"
       ]
     },
     {
-      "hash": "05226ec1dc93f3c8ddd8a1acf99570e5df29a5f768a9872b8d319a6b9186eaf7",
+      "hash": "fd3e515bfec76d1924bdc4e7937c348f2d0b80dd0a59aa7d95bfe1233ae147c9",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0021-safe"
       ]
     },
     {
-      "hash": "d53399b626dd44bec4e1115522168b671a4ac5dcc94db1d76b58c9f5cea34d75",
+      "hash": "0b3af7925a7f263f6eefa735df04ee5f4ad058da76d8bedf68ec01aaa5fd183c",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0022-safe"
       ]
     },
     {
-      "hash": "6b0ca96c58d8a2ad48bc475537247ef8d3e7b0e9b5047b9868c53804e96f8234",
+      "hash": "7ad6b3cb385137ef63592dbfe9ca0d2261ff8e5e730014d18b5846d8b1f9f24e",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0022-safe"
       ]
     },
     {
-      "hash": "6199794648509003ea0b59fbdd49236c724119cbbc55c4b3eeaa39bdd0301c19",
+      "hash": "f837beeac9cab0d804d8e657efba940e7d5333725bdf54f2674c366dc9577adc",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0022-safe"
       ]
     },
     {
-      "hash": "3e3e284064997c9fb6c4f9f22bdb62c181fb6d15eaa5d165454f0ad8284410d9",
+      "hash": "2286e60e45dc83d00f68e197c77b0c1b84ebd079de83e671ee3ccf2c4705cffc",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0022-safe"
       ]
     },
     {
-      "hash": "548b4eedd9eb578cc23bbbeff8b9cfe8a2fa4c37eba5c431f1f24fc755d9bae2",
+      "hash": "745f71815b21edbf793127af23d9ff5c678592b504a5770feb289b620f02647b",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0022-safe"
       ]
     },
     {
-      "hash": "9e1481bfee1d1a5568ebebd8ac87076e7387a9b49a04381e219271cb56a43234",
+      "hash": "8b905e34dfa08543b52a57d0ab51a6ee3150007fa153c8ea1aac076772f63190",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0022-safe"
       ]
     },
     {
-      "hash": "48560cf6d2cea5546dbd6f01386aab4aa50acacf4329ec7936d56a856350abc6",
+      "hash": "83267d9701a343a284f0cbe0dc48d2734ea7628381e5ab1e8e14cf2225ef86e8",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0023-safe"
       ]
     },
     {
-      "hash": "20a7f7bb5067e3ef5a7f15e466b454fe8db0d6a1e3695fa55a9958dd56f979d9",
+      "hash": "a792e09b2d794987c57319fc0dd93f2321394e7426711d616daac533b8ba6065",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0023-safe"
       ]
     },
     {
-      "hash": "fe3a9b8588bbae441b0f1bcd0b6b9b62e03b8e74671ff978bc0e4f3afbd20a9e",
+      "hash": "5b33b445a049618dbf92cc9a35020bd9e7fbc7db931b4868e8db836dc9b517d6",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0023-safe"
       ]
     },
     {
-      "hash": "09656e4f09474e980ec83e762688f75424ee53d518b24b199570f885212b615e",
+      "hash": "bcb954e99a4f3db2b22a11d34c3ba2a86a0402a86dd6b8f2ac627999adee975d",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0023-safe"
       ]
     },
     {
-      "hash": "6561145a71d7115c8d082319d85d4d4d38b15341c7a65a4d19e3c2a3aecbce08",
+      "hash": "e0cb5a0ee5939141e80e4386a6b038c966be78fbd604d9f49661cbbffe031a7f",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0024-safe"
       ]
     },
     {
-      "hash": "abe98d1db01f301efc3d82f2760dc305dd5aef32c32c7ac5d82aff522fddd5fc",
+      "hash": "9951af049d01664f9052d1d0735c46bbb3fe09bb4b5540f4f3775827fa400eda",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0024-safe"
       ]
     },
     {
-      "hash": "27116141dbcd3c1f7157c5ffc0c019658328d8160d0cb6a6ad9b61024842fd37",
+      "hash": "3eb222646dbcf43cde5d715539779528f2fa772c803b5c8169bfa8d6f5a7d884",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0025-safe"
       ]
     },
     {
-      "hash": "2f4a8918a1d7c817094716cdc1b0cc8bae41c0c8e786a4d1b88c38782cc85549",
+      "hash": "cdeb9a083e1e510df33444efc7c4d47b437f61db566abd49b85e3f3f43760c7c",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0025-safe"
       ]
     },
     {
-      "hash": "26f584eee8adda49703669536fb219c871b8773477b8d0b3e50d0d25d4257e5e",
+      "hash": "93ef1eb3561b7293c89f6e465956d6ad70d3352067cbabdaa0f31f3e0be188a1",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0025-safe"
       ]
     },
     {
-      "hash": "673c3483e681fde32a5d0754716002a213ece4ca3f683853217cf934b208f2d6",
+      "hash": "52ed48be5a79af8a450ce143510397de0c258f97056ac29f573dfe8f6720e5d1",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0025-safe"
       ]
     },
     {
-      "hash": "d35398b581da90f92d559e22ef234fc6eb2fe074b2b6a3f031a3f21ff2aac85b",
+      "hash": "fa6bed1682386c93470ecaef574d92fe252abb6edb47c8716c7c0d067e762b85",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0025-safe"
       ]
     },
     {
-      "hash": "1c33b34a1a3cdb08ae6c8502dd24d0aa957880b086e66755d053a133d3bfdc78",
+      "hash": "61287a81a6c66faa6453636911540e85417a3f3a884c1e235162153e43f07c9a",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0026-safe"
       ]
     },
     {
-      "hash": "20b6f6b7610bbd578f804cc2d921d7685f229db460684f33198105b8399fbf42",
+      "hash": "5d04ce80b298e63a7579b7e111a28c7d594a1f0925a786736b70bd48f1c2e4d2",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0026-safe"
       ]
     },
     {
-      "hash": "e5730e81c37ef8dfcaa1e26a1f88706ba53be2374c2f14a33d409533a2566b79",
+      "hash": "a6cd7ab678421d2925453a99c7bbd854dab92590622f1f82956f22c7fd57c0d2",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0026-safe"
       ]
     },
     {
-      "hash": "0755e817abf7d4e30e29de3201222674a6cb878a658f47b7d2843bc891dce952",
+      "hash": "120b1d8573e1f42922c6447f6b879e4b8ddbdf84ab7432a1b8786984f3bda5ec",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0026-safe"
       ]
     },
     {
-      "hash": "1c2de62db66919d4643baf6dc195e8dbfa40341efe66d922262b53a7e7aea53e",
+      "hash": "34f6eef0b2d927bb947c35bbdd8b89acfe8b666d6a045c8a7b6feb23ec241f4e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0027-safe"
       ]
     },
     {
-      "hash": "50ae7202178e300ef874ca88794b93404e82bc3af07be37971f187d9947a6cf0",
+      "hash": "9edb1a43e973910bebcf70b0b72472a80eb4ed8f5da0d2e4fa1a1f5bb6260c55",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0027-safe"
       ]
     },
     {
-      "hash": "f02bc39d04e1d9e0cc2da2e27510046672c89f79bc968702556f03d0c84032e1",
+      "hash": "41349e6865186d369c3f80bafa73b7ce8cc12f96fe1674e47d4b687f3b1b6811",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0028-safe"
       ]
     },
     {
-      "hash": "b69b0d2b103dc5c873c774d72588f9301c5f2f8d9e40b617f34b38ffe1d42774",
+      "hash": "0e206c7be515edf3b2ed3d5cc3db510a834145eab705fc5ba3792a415e9eeedc",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0028-safe"
       ]
     },
     {
-      "hash": "3b3155b2f3ead2d57f34163e243d8150c6f3e8278e4b90f28c9f0449c2fc46c2",
+      "hash": "1330898c8ef736c427e11875a8bb4002ff4e05ae2d420016b0728d36aa292859",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0028-safe"
       ]
     },
     {
-      "hash": "ad8fbfd277cf4fac5508654c7237039cae4f54414ae4ae0e11861deb2b59e83d",
+      "hash": "0a0922b9e36ab58b63e9414a33cefdad9b32ff17987f81f8ce7461e8046c094b",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0028-safe"
       ]
     },
     {
-      "hash": "93ebf433359934c1cd6d83a9c40c6e4208bde5578ea6ab64f2477bed0efc4eb1",
+      "hash": "dd6bbbb5385bacd5bd2dbc221b269816460e845d24418e4dcf88a809fae6b750",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0028-safe"
       ]
     },
     {
-      "hash": "91652c116d8990456841fcf0e5069463ebd739edf1cd49b2245d5c19cbdbfdee",
+      "hash": "c3b53f59ea09b745fa91c039edd4b6da1481d026bb16ea8708244b4b58b5e599",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0029-safe"
       ]
     },
     {
-      "hash": "36180d0d23c17465c634cf25247debb6cf7d1b86737f8f1c64df9c0d0203e9e3",
+      "hash": "24758c0049639a1f85ea48fcfc2bf0eaad561726ee16ca1d54347bd7fbaa9dcd",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0029-safe"
       ]
     },
     {
-      "hash": "8ebdd8adbec06f1e14aa884fc10dcf8269e5cd49dafecdf818192fbe84d5f720",
+      "hash": "d189aefc8ab13a8dfaed87835f291197edadbbc35f91d8db0eb5b67fefaf381e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0030-safe"
       ]
     },
     {
-      "hash": "7e7793ca37908d06dc17b361b800e6abb4985d2ea4f29091ea76ceae3b853ec5",
+      "hash": "c4be6014c663ea99e9a3a8c057036c1a3df11b797a1f46222a7874a69f46fe86",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0030-safe"
       ]
     },
     {
-      "hash": "ddc0d5e4c96241b0244ebacc021bf427399daf6328e440459304c2dcfc32ed58",
+      "hash": "2cc19c69677ac4c2329f5674fbdb56076c723dd2de8e07c996bb749da3c7018e",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0031-safe"
       ]
     },
     {
-      "hash": "d9fd2f6d3b30615de9fe8f95e439bf3a32c25c20cb2e464eeec6058255fa468e",
+      "hash": "a3a442ba2b932398be027c1a868e826785320b94a4e97079e9c8d135a149d5c5",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0031-safe"
       ]
     },
     {
-      "hash": "d8e8d74f5d229d3d3e998e8f96e0ad6c16971d7796025182c570ce4fe7deeb38",
+      "hash": "e07b028bf7bfab8b4ba83fbb18101a8a7719b53a4e5b4d43e06890eca4b11c72",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0031-safe"
       ]
     },
     {
-      "hash": "af43ce7fc6ac17dc1c4383d6652aeb3df01c3ce1dee297fce3a550fb3f7e4bca",
+      "hash": "4e9567fdad3eb7f3ca9bdf1eab4a85f845eb9339049119a70e704681e3ce32a7",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0031-safe"
       ]
     },
     {
-      "hash": "a642255df627a3f8689fd770ed73bb4f3a838f6a65bc40601b81451a5dc05718",
+      "hash": "7653f58ec87b0b42ef402846d7a2fb06d84187b7e6e4e9ae66f9d2ddd44d59c3",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0031-safe"
       ]
     },
     {
-      "hash": "95f4ff66655e4119d16b1b2cae64a5b40fe4ed5f260d9da10b2bc5ff00f673e3",
+      "hash": "16018d2a91217a98924e4cb71dae0833e3b151b7ce189a7e6d33293da2a87a0b",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0032-safe"
       ]
     },
     {
-      "hash": "41da5fd4038012635bcc59caaddd54680aaab801108d5a2d76b56a5e54c58d19",
+      "hash": "9b62bb5b211d40db45221349878ff43d18d7055b1fbdec3eafea181657c1e94c",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0032-safe"
       ]
     },
     {
-      "hash": "e8c4dd9116e6761ec080a3faee43e44cfc84a943cd4c2e865b6c134eaa25264b",
+      "hash": "28813b3bfe10b0d9cad565237521018f9cef328dab239974fb885928a98a6fc2",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0032-safe"
       ]
     },
     {
-      "hash": "633673a41198fa45bd581224bd6b3ecba790442701e51a7bc03e8cc1991dc083",
+      "hash": "752d8c47026fdfc6c1d6d277d5e8861b05dedca2a6aabd91de71cb8640a434ee",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0032-safe"
       ]
     },
     {
-      "hash": "08d3cb1bbd08acf2101fb4d8ad26913ccab8838cd7d7c134229a2c6439cd00a2",
+      "hash": "976b1baf9b9e6f1c28041a7ebe01d95b60b847730b6ccec0ebb1ea215190917b",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0033-safe"
       ]
     },
     {
-      "hash": "0ed67fe62e2b0cbd400c7e679d70194d6dbaa0800b03e2a69460f782d6d90905",
+      "hash": "b8c22069b5fec232b572d7722a8ce09b5a3d4f6388b56e0b1598ca6b9e6e085c",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0033-safe"
       ]
     },
     {
-      "hash": "a129aae98746d0557d7cd6a610e409842b4f3a6a921974692f3222b08d474f72",
+      "hash": "15a7dc15b92950bb9fd66df0fc0c31817e66eb6fa49cbb07af390ccae4dbe84a",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0034-safe"
       ]
     },
     {
-      "hash": "ed3b36853fb4f4b2aa40846b09dc2f350ceae879f48cb47ed4b7732ae31fd2f5",
+      "hash": "447c0dd46f6c3c39b90ae0cc80c96e0f2c5eca833420deaf81e5d444c7286df6",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0034-safe"
       ]
     },
     {
-      "hash": "ca2304b006dd2a7c06eeb487c3e036109b0016dc8ca8d782440d592c6db4fc1d",
+      "hash": "7b981ee70e107484e907f1d8dec23629c03fadede755891608a19f22b4b87065",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0034-safe"
       ]
     },
     {
-      "hash": "839e13090d351740f542ec61ac1d8b126533cce5d6a2e19b886fd68709eb0dad",
+      "hash": "8f51d3362b4363b0ccba0fcc509148038332f159a86f52bd3b2601ef782483d1",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0034-safe"
       ]
     },
     {
-      "hash": "8e32010e99e47ced9d73aecceee6d5dc2c10976f9baaf363ad421645e56cd436",
+      "hash": "9c189de500748a225e0adf0f9c8fc834b3f3fd29f03ad7ef736e20564fc71fd9",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0034-safe"
       ]
     },
     {
-      "hash": "c0cf311467269f69a1d5768947d0edd2e55f09848817331c882e554e522d582e",
+      "hash": "906f070903364b425629c16cb93a9fb925b2849be9f0873bc816a26fa3ffbb4e",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0034-safe"
       ]
     },
     {
-      "hash": "7f1efd88ecdf90f682b731db36c8379e7b2dbc78b2ceef3f1a52871857cbf1cd",
+      "hash": "760c7724ed0dde9bd7d42def697e9e8190a491f877efe45701ace73576611e5a",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0035-safe"
       ]
     },
     {
-      "hash": "dec1c39b8455e02b14fe81ecee3aaa5b737c033ef022b5fcead6c4076d316fd7",
+      "hash": "19d53183250aa86502dbfab3f475e16277edfbd5b006afaaca557b309a4b3877",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0035-safe"
       ]
     },
     {
-      "hash": "b61dcda46c3ef66602220048ba2687c1c02d6b33559ba493bf6b3fd8c0a38f68",
+      "hash": "708f3fcfecdb7ba53c96f24ed7265058286b654280c29ac817861f6b6761473f",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0035-safe"
       ]
     },
     {
-      "hash": "f1b569fd87cbd0d861fdd177eb85d8a6ac6e10254929f2af3bc4d1d5561bec18",
+      "hash": "d6048f4ae20839a50ef199776c7891ab92811f95a2240d48a9fceb698e1337ed",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0036-safe"
       ]
     },
     {
-      "hash": "24c2f3d028b1c0901706d00408d43330fa8066dfc764b3325e126b649d7ac60f",
+      "hash": "2ed72719b244df25754d6d2d19c176c00e6213e6d94f9ed559c514b786293e8d",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0036-safe"
       ]
     },
     {
-      "hash": "4a940906a594c93cf636cc6494787e0c4a19758f6046b1703bc0e41d591a000c",
+      "hash": "a81d90db4809dfd7700fc3d89ff18aa2e6d4624206238e68f82acb32a34b334d",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0037-safe"
       ]
     },
     {
-      "hash": "cfd1ecc74c0ff04b4d659dd1f4d1e2bf78a6d23b1767815302bd2e2d6310a687",
+      "hash": "56996c1e2f0df7ebfaf5bcd410c5b368f68a7c58043878dbd7f4f5bb46e0bc2d",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0037-safe"
       ]
     },
     {
-      "hash": "910752648093ca2a51a5b96736390d9ff78498a399e9d4bb7dce5a9c738c136d",
+      "hash": "827d323bc3a93956578e8e851d4df390503b4d8e4d4433ca326f56c19cf4492f",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0037-safe"
       ]
     },
     {
-      "hash": "a937b87941ba5324162d6a91d976de65856b267047e16a1714dbd04a7ab64053",
+      "hash": "0926480674c91285eef52b0e620f21ae655bb4e94ddccbc0ddd6417db31aaf03",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0037-safe"
       ]
     },
     {
-      "hash": "9f64acdf73c7cbfc141cbf991e2ab0865696ad9087a1f9ca7207b0ba79666d68",
+      "hash": "38b8c1fd899c8b3b350816a11dd70d1f509da7c42b72566d528a9113e31096a4",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0038-safe"
       ]
     },
     {
-      "hash": "ae76e5896d89f712adfc21db3b42976858aea6cea7b60ce0ef707183a0ae3a42",
+      "hash": "6abe65cabf76707c26b9de4f6c85c6f14461c6b88897df33628f97bd7ea651fc",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0038-safe"
       ]
     },
     {
-      "hash": "ded6a74897c822b1b754cbc07ce20ce88a7ed6d73313b1409979ff39bc969eb3",
+      "hash": "12262f514143375c1b97439d9b3f3817b1dcfe9fe4eb27be5fe665293fa36ee4",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0038-safe"
       ]
     },
     {
-      "hash": "d3c94fc5f6981ca152af3fa9b6371aca11d7027e3ae8f71052dd3e9ec9db8b49",
+      "hash": "327e925ddbee0110c4a88f2f1ab209eb0aa4fdf95093971133ea382a1245a55a",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0039-safe"
       ]
     },
     {
-      "hash": "bfacc8e7a5237cda6dbdb0efc8d1847e39b588678f2a6d069f457e493e9240f7",
+      "hash": "ce27f1480c0e4d7b635477627fa3ea61a1f5f9ae51cb180a3f13b8b48eaf90f1",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0039-safe"
       ]
     },
     {
-      "hash": "832117cd46fb2d2e5be7e2a7f6f9a7df1664f8816bfb4518303d9c047f8d8dee",
+      "hash": "a1afda8e0d980f6204987558984e20d05115ed79e5b4e856752fde65bcab6018",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0040-safe"
       ]
     },
     {
-      "hash": "4be87f41dc6be85aea3f6a3527742b42d5989b878f475d79fef63cd0ae451950",
+      "hash": "c4897f77d20c6ff55f5f5d751faba3d3c87b52248f7882f10f0c76284cae7274",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0040-safe"
       ]
     },
     {
-      "hash": "47491d00fd7ff3a90a1200ac39c71d60f9ffe837a2b1fe5de3ddad9667ab0a57",
+      "hash": "c8034a3ec9da59be508892ce946d68c888e516c6a6bbf0acc4cba18b1d69dbba",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0040-safe"
       ]
     },
     {
-      "hash": "a5e64d3db268a3018c63984f67c9281f75cc59fa04e8c45e27281fb7410ae1c2",
+      "hash": "021ae60e92f834829d69f23ab6b2cec43de1716f6ee4a29e19757c50755e73af",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0040-safe"
       ]
     },
     {
-      "hash": "226ee18ff7b452b895620f0cdd90ae78d2e2352b80d0033294acdb5cedef983d",
+      "hash": "aac931d8ff6d052cb61ceb002c312f73b814584556234d6bf9a66abf26a3ca75",
       "complete": false,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0040-safe"
       ]
     },
     {
-      "hash": "c732ef7c0071cbb9dd69d702053927e48238d8065a7552cfb5687bd478dc964f",
+      "hash": "c28060ba1a78c5a55bc603e7cc6ce69d6aa1390fc1e9c80359b8eb3899cbb9a2",
       "complete": true,
       "presentInRecording": true,
+      "compatibleInput": true,
       "samples": [
         "d1-dev-safe-0040-safe"
       ]
@@ -2401,7 +2699,7 @@
     },
     {
       "id": "d1-0013-conflict",
-      "judgements": 8,
+      "judgements": 5,
       "closures": [
         {
           "at": 603916,
@@ -2617,7 +2915,7 @@
     },
     {
       "id": "d1-0059-conflict",
-      "judgements": 16,
+      "judgements": 18,
       "closures": [
         {
           "at": 41107,
@@ -2750,7 +3048,7 @@
     },
     {
       "id": "d1-0082-conflict",
-      "judgements": 12,
+      "judgements": 14,
       "closures": [
         {
           "at": 58909,
@@ -3268,7 +3566,7 @@
     },
     {
       "id": "d1-dev-safe-0004-safe",
-      "judgements": 6,
+      "judgements": 5,
       "closures": [
         {
           "at": 622980,
@@ -3421,7 +3719,7 @@
     },
     {
       "id": "d1-dev-safe-0017-safe",
-      "judgements": 3,
+      "judgements": 2,
       "closures": [
         {
           "at": 605813,
@@ -3470,7 +3768,7 @@
     },
     {
       "id": "d1-dev-safe-0021-safe",
-      "judgements": 2,
+      "judgements": 1,
       "closures": [
         {
           "at": 614507,
@@ -3612,7 +3910,7 @@
     },
     {
       "id": "d1-dev-safe-0033-safe",
-      "judgements": 2,
+      "judgements": 1,
       "closures": [
         {
           "at": 613588,

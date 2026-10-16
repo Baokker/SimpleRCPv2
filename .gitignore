@@ -26,6 +26,10 @@ packages/conflict-guard/bench/datasets/d1-v3/manifest.json
 packages/conflict-guard/bench/datasets/d1-v3/labels.json
 packages/conflict-guard/bench/datasets/d1-v3/excluded.json
 packages/conflict-guard/bench/datasets/d1-v3/traces/
+packages/conflict-guard/bench/datasets/d1-v4/manifest.json
+packages/conflict-guard/bench/datasets/d1-v4/labels.json
+packages/conflict-guard/bench/datasets/d1-v4/excluded.json
+packages/conflict-guard/bench/datasets/d1-v4/traces/
 packages/conflict-guard/bench/model-cache/preexperiment-*/**/*.json
 packages/conflict-guard/bench/model-cache/preexperiment/**/*.json
 packages/conflict-guard/bench/model-cache/checkpoint-b-*/**/*.json

@@ -1,0 +1,635 @@
+{
+  "strategy": "G3a",
+  "promptVersion": "pair-v1",
+  "dataset": "d1-v4",
+  "threshold": {
+    "lower": 0.2,
+    "upper": 0.5
+  },
+  "greySamples": 83,
+  "deepInputCount": 10,
+  "model": {
+    "calls": [
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "2f81f11c32efc02a6a2e7b57facf98e3f2d0242abada5fca5e5cd74ba03955b5",
+        "cacheKey": "7765d456abe817c249f5beafe1f20351061046e18566b70c4b781077c86aa09e",
+        "status": "success",
+        "latencyMs": 13074.300417,
+        "decision": "warn",
+        "confidence": 0.5,
+        "usage": {
+          "inputTokens": 1396,
+          "outputTokens": 1844
+        },
+        "costUsd": 0.0026316
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "f205cb2425d0a5c4455c90b1c0f233cc1883646eb94499b13868ca97cec9d90e",
+        "cacheKey": "64234ef56eaf83d7357c03a29f1bdd622291b5a079fa3739a7ced25b7f11e696",
+        "status": "success",
+        "latencyMs": 21243.005750000004,
+        "decision": "warn",
+        "confidence": 0.88,
+        "usage": {
+          "inputTokens": 1531,
+          "outputTokens": 1873
+        },
+        "costUsd": 0.0027068999999999995
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "b46567bfd7ec6ebe357c5d4e30ab07b44940b763231b236f06707e98b01b37f9",
+        "cacheKey": "06f447bce91e793cf6a303ac133ee7c032f9c6a0c34c4c27d5cda88308b6e84b",
+        "status": "success",
+        "latencyMs": 11552.675125000002,
+        "decision": "lock",
+        "confidence": 0.78,
+        "usage": {
+          "inputTokens": 1719,
+          "outputTokens": 1667
+        },
+        "costUsd": 0.0025161
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "61b856b215c7eaf917143a2a4b197cc03fbbbcdc96bfb3edc822f49023c345ca",
+        "cacheKey": "fc6b9e38e7c937f79ed8480b6234dfdc0b7368d685bc3e724cd78227ed0fde24",
+        "status": "success",
+        "latencyMs": 13874.889333,
+        "decision": "lock",
+        "confidence": 0.85,
+        "usage": {
+          "inputTokens": 1369,
+          "outputTokens": 2457
+        },
+        "costUsd": 0.0033591
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "8f6635bc5783f4af359b9a509850840fb51c5e20f93f0f20fcc533b4b35d2745",
+        "cacheKey": "42dbe2046bb82f3df84be7295c060139e6e8e0ebe3988d18352b7ab0118359f6",
+        "status": "success",
+        "latencyMs": 16578.623709,
+        "decision": "warn",
+        "confidence": 0.55,
+        "usage": {
+          "inputTokens": 1862,
+          "outputTokens": 2552
+        },
+        "costUsd": 0.003621
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "5dfb8ac0fbd24b46fe0529e289dd8d7687b3d98579fcb77f7b11104d47a1831a",
+        "cacheKey": "f1d9414475753fb65d727abc6818c4a6fe38e7f19da7454ecd6385180e21012d",
+        "status": "success",
+        "latencyMs": 19471.401499999993,
+        "decision": "warn",
+        "confidence": 0.78,
+        "usage": {
+          "inputTokens": 1592,
+          "outputTokens": 3509
+        },
+        "costUsd": 0.0046884000000000006
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "0986a2930309083d329daa7ff3d368dbf0c9313cde878d8d3a61fc805667a142",
+        "cacheKey": "0271d0db4feed8576339dc2cec1b6bdf81fb1627ea34e22b279c1f6c4c5bef17",
+        "status": "success",
+        "latencyMs": 15744.845333000005,
+        "decision": "warn",
+        "confidence": 0.6,
+        "usage": {
+          "inputTokens": 1862,
+          "outputTokens": 1936
+        },
+        "costUsd": 0.0028818000000000003
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "0b88b36efa2db49fcc129dff67d2b0873b637202401ad1b4dc9a3d98ba17a5a3",
+        "cacheKey": "4fcb5b496162607ff98c15b12420f071083a59bb83027f2c3e00a46612772f68",
+        "status": "success",
+        "latencyMs": 17360.086207999993,
+        "decision": "lock",
+        "confidence": 0.88,
+        "usage": {
+          "inputTokens": 1851,
+          "outputTokens": 2406
+        },
+        "costUsd": 0.0034425
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "72325cda2d33e949b233ac7ef66515ce1c7feaad5eab5bc9981ee03d30489c39",
+        "cacheKey": "243a2ae00320c2f9178f66c0486b4bc41c96559fac0c51947d67514d570d1a26",
+        "status": "success",
+        "latencyMs": 10131.566540999993,
+        "decision": "warn",
+        "confidence": 0.55,
+        "usage": {
+          "inputTokens": 1611,
+          "outputTokens": 1700
+        },
+        "costUsd": 0.0025232999999999996
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v1",
+        "inputHash": "749a6e6342a56fa86a9cdd37e2f3f251d8091f31a3246d40bff8edb6bc57fc74",
+        "cacheKey": "6824c201314a0075c90857ae31344ba787dd1f9157c27811156a71fde753c5bc",
+        "status": "success",
+        "latencyMs": 24450.351125000016,
+        "decision": "lock",
+        "confidence": 0.85,
+        "usage": {
+          "inputTokens": 1456,
+          "outputTokens": 2188
+        },
+        "costUsd": 0.0030624
+      }
+    ],
+    "stats": {
+      "calls": 10,
+      "cacheHits": 0,
+      "judgements": 10,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 15747.831416,
+      "p95Ms": 24453.010540999996,
+      "syntaxDeferred": 0,
+      "syntaxWaitP50Ms": null,
+      "syntaxWaitP95Ms": null,
+      "failures": 0,
+      "infrastructureFailures": 0,
+      "costUsd": 0.031433100000000005
+    }
+  },
+  "quality": {
+    "balancedAccuracy": 0.8612318840579709,
+    "missBlockRate": 0.2608695652173913,
+    "falseBlockRate": 0.016666666666666666,
+    "conflictNotificationRate": 0.9565217391304348,
+    "safeWarningRate": 0.13333333333333333,
+    "threeClassAgreement": 0.8192771084337349
+  },
+  "groups": [
+    {
+      "id": "d1-0005-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0005-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0013-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0013-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0021-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0026-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0037-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0045-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0045-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0051-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0051-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0059-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0059-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0061-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0066-safe",
+      "truth": "allow",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0082-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0082-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0083-conflict",
+      "truth": "lock",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0091-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0091-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0101-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0101-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0117-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0130-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0141-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0141-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0149-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0001-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0002-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0004-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0005-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0006-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0007-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0008-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0009-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0010-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0011-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0012-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0013-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0014-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0015-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0016-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0017-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0018-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0019-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0020-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0021-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0022-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0023-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0025-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0026-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0027-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0028-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0029-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0030-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0031-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0032-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0033-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0034-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0035-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0036-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0037-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0038-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0039-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0040-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-001-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-001-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-003-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-003-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-004-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-v4-dev-004-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-005-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-005-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-006-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-006-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-009-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-009-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-012-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-012-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-018-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-018-safe",
+      "truth": "allow",
+      "decision": "allow"
+    }
+  ]
+}

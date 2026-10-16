@@ -10,13 +10,13 @@ import { developmentSamples } from "./model-dataset.ts";
 import { replayLibraries } from "./replay-libs.ts";
 import { createModelRuntime, loadModelEnvironment, repositoryRoot } from "./model-runtime.ts";
 
-const { values } = parseArgs({ options: { policy: { type: "string", default: "G1" }, prompt: { type: "string", default: "pair-v4" }, mode: { type: "string", default: "replay" }, threshold: { type: "string", default: "0" }, out: { type: "string" } } });
-if (!["G1", "G2", "G3"].includes(values.policy!) || !["pair-v1", "pair-v4"].includes(values.prompt!) || !["record", "replay"].includes(values.mode!)) throw new Error("阶段 A 参数无效");
+const { values } = parseArgs({ options: { policy: { type: "string", default: "G1" }, prompt: { type: "string", default: "pair-v4" }, mode: { type: "string", default: "replay" }, threshold: { type: "string", default: "0" }, out: { type: "string" }, dataset: { type: "string", default: "packages/conflict-guard/bench/datasets/d1-v3" }, experiment: { type: "string", default: "stage-A" } } });
+if (!["G1", "G2", "G3"].includes(values.policy!) || !["pair-v1", "pair-v4", "pair-v5"].includes(values.prompt!) || !["record", "replay"].includes(values.mode!)) throw new Error("阶段 A 参数无效");
 if (values.policy === "G3" && values.mode !== "replay") throw new Error("级联阈值使用离线缓存");
-if (values.mode === "record" && process.env.ADJUDICATION_BUDGET_SCOPE !== "stage-a") throw new Error("真实录制必须使用阶段 A 预算");
+if (values.mode === "record" && process.env.ADJUDICATION_BUDGET_SCOPE !== values.experiment!.toLowerCase().replace("stage-", "stage-")) throw new Error("真实录制必须使用登记的阶段预算");
 if (values.mode === "record" && values.policy === "G2" && !process.env.TYPESAFE_PROXY_URL) throw new Error("Jev 真实录制需要配置代理");
 if (values.mode === "replay" && values.policy !== "G3" && !values.out) throw new Error("深判和快判回放需要通过 --out 指定独立结果目录");
-const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2/stage-A");
+const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2", values.experiment!);
 const outputName = values.policy === "G3" ? `G3-${Number(values.threshold)}` : values.policy!;
 const directory = values.out ? path.resolve(values.out) : path.join(output, values.prompt!, outputName);
 if (existsSync(path.join(directory, "calls.jsonl"))) throw new Error("结果调用日志已存在，请指定独立结果目录");
@@ -47,7 +47,7 @@ async function resolveInput(input: AdjudicationInput, local: ZoneVerdict) {
   if (proxyFailure) { await writes; throw new Error(`Jev 代理请求失败：${proxyFailure}`); }
 }
 for (const request of prepared.requests) await resolveInput({ ...request.input, promptVersion: values.prompt }, request.local);
-const { samples, manifest } = await developmentSamples(path.join(repositoryRoot, "packages/conflict-guard/bench/datasets/d1-v3"));
+const { samples, manifest } = await developmentSamples(path.resolve(repositoryRoot, values.dataset!));
 assert.equal(manifest.version, prepared.dataset);
 assert.deepEqual(samples.map((sample) => [sample.label.id, sample.programHash]), prepared.groups.map((row: any) => [row.id, row.programHash]));
 const libs = await replayLibraries();
@@ -70,7 +70,7 @@ await writes;
 const report = { dataset: manifest.version, split: "dev", config, sourceHashes: prepared.sourceHashes, mode: values.mode, metrics: calculateReplayMetrics(groups.map((row) => row.outcome)), model: { ...service.stats(), cacheMisses: service.cacheMisses(), calls: service.calls(), subscriptions: service.subscriptions(), providers: service.providerConfiguration }, inputs: [...inputs.values()], responses: [...responses], groups };
 await fs.writeFile(path.join(directory, "results.json.gz"), gzipSync(JSON.stringify(report)));
 const shellWord = (value: string) => `'${value.replace(/'/g, "'\\''")}'`;
-await fs.writeFile(path.join(directory, "command.txt"), `TYPESAFE_PROXY_URL="$TYPESAFE_PROXY_URL" ADJUDICATION_BUDGET_SCOPE=stage-a node --experimental-strip-types scripts/stage-a-evaluate.ts --policy ${values.policy} --prompt ${values.prompt} --mode ${values.mode} --threshold ${values.threshold}${values.out ? ` --out ${shellWord(directory)}` : ""}\n`);
+await fs.writeFile(path.join(directory, "command.txt"), `TYPESAFE_PROXY_URL="$TYPESAFE_PROXY_URL" ADJUDICATION_BUDGET_SCOPE=${values.experiment!.toLowerCase().replace("stage-", "stage-")} node --experimental-strip-types scripts/stage-a-evaluate.ts --experiment ${values.experiment} --dataset ${shellWord(values.dataset!)} --policy ${values.policy} --prompt ${values.prompt} --mode ${values.mode} --threshold ${values.threshold}${values.out ? ` --out ${shellWord(directory)}` : ""}\n`);
 await fs.writeFile(path.join(directory, "config.json"), JSON.stringify({ config, models, providers }, null, 2) + "\n");
 service.dispose();
 console.log(JSON.stringify({ policy: name, samples: groups.length, inputs: inputs.size, calls: service.stats().calls, cacheMisses: service.cacheMisses(), costUsd: service.stats().costUsd }));

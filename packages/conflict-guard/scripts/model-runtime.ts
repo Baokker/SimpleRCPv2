@@ -18,7 +18,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
   const jevOptions = { apiKey: env.TYPESAFE_API_KEY, baseUrl: providers.jev?.baseUrl ?? env.TYPESAFE_BASE_URL, proxyUrl: env.TYPESAFE_PROXY_URL };
   const scope = env.ADJUDICATION_BUDGET_SCOPE ?? "stage5";
   if (!/^[a-z0-9-]+$/.test(scope)) throw new Error("调用预算名称无效");
-  const limits = scope === "stage-a" ? { fast: 600, deep: 400 } : scope === "preexperiment" ? { fast: 1000, deep: 600 } : { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
+  const limits = scope === "stage-a" ? { fast: 600, deep: 400 } : scope === "stage-a2" ? { fast: 800, deep: 500 } : scope === "preexperiment" ? { fast: 1000, deep: 600 } : { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
   let budgetExhausted = false;
   let budgetFailure: unknown;
   let budgetWrites = Promise.resolve();

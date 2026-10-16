@@ -1,0 +1,25 @@
+{
+  "source": "stage-A2/pair-v4/G2",
+  "unavailableCount": 2,
+  "unavailable": [
+    {
+      "sample": "d1-0013-safe",
+      "decision": "warn",
+      "cause": "replay-cache-miss"
+    },
+    {
+      "sample": "d1-0061-safe",
+      "decision": "warn",
+      "cause": "replay-cache-miss"
+    }
+  ],
+  "callStatus": {
+    "success": 90
+  },
+  "errorTypes": {},
+  "causes": {
+    "replay-cache-miss": 2
+  },
+  "recordedResponses": 232,
+  "conclusion": "出现的 model-unavailable 来自录放阶段请求键未命中；本轮真实 Jev 请求没有失败。"
+}

@@ -25,6 +25,12 @@ const completeEvidenceCriteria = {
   warn: "The locally supplied evidence leaves a plausible interaction unresolved without proving a concrete merged failure.",
   lock: "The locally supplied evidence proves a deleted or non-exported referenced symbol, an incompatible signature, a merged type error, or another concrete shared-behavior failure."
 };
+const a2ChoiceInstructions = `${completeEvidenceInstructions} For this decision, treat interception as the positive class: choose lock only when the supplied evidence establishes that the combined change breaks a behavior still required by the other side. Choose allow when the evidence shows compatible coordinated behavior or no shared effect. Choose warn only when the evidence cannot establish either outcome; association alone is insufficient. Keep the decision binary in spirit even though the choice interface still returns allow, warn, or lock.`;
+const a2ChoiceCriteria = {
+  allow: "The supplied evidence shows compatible behavior, an adapted caller, or no shared runtime effect; there is no concrete failure to intercept.",
+  warn: "The supplied evidence is insufficient to establish either a concrete combined failure or a safe compatible continuation; association alone is insufficient.",
+  lock: "The supplied evidence establishes a concrete combined failure in a required signature, export, return value, input boundary, exception behavior, default value, or tested runtime path."
+};
 
 export interface PromptBundle { choiceInstructions: string; choiceCriteria: Record<string, string>; deepInstructions: string; fastInstructions: string }
 
@@ -37,7 +43,8 @@ export const promptBundles: Record<string, PromptBundle> = {
   "pair-v1": createBundle(baseChoiceInstructions, baseChoiceCriteria, "Give a specific suggestion even when uncertain."),
   "pair-v2": createBundle(improvedChoiceInstructions, improvedChoiceCriteria, "Give a concise, specific suggestion."),
   "pair-v3": createBundle(evidenceFocusedChoiceInstructions, evidenceFocusedChoiceCriteria, "Give a concise suggestion that names the concrete evidence and the owner who should change the code."),
-  "pair-v4": createBundle(completeEvidenceInstructions, completeEvidenceCriteria, "Give a concise suggestion that names the concrete evidence and the owner who should change the code.")
+  "pair-v4": createBundle(completeEvidenceInstructions, completeEvidenceCriteria, "Give a concise suggestion that names the concrete evidence and the owner who should change the code."),
+  "pair-v5": createBundle(a2ChoiceInstructions, a2ChoiceCriteria, "Give a concise suggestion naming the concrete evidence and the owner who should change the code.")
 };
 
 export function promptBundle(version: string): PromptBundle {

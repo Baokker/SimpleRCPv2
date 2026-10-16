@@ -1,0 +1,3269 @@
+{
+  "dataset": "d1-v4",
+  "seed": 20261017,
+  "development": {
+    "groups": 135,
+    "samples": 135,
+    "greySamples": 83,
+    "greyRelationGroups": 66,
+    "truth": {
+      "allow": 105,
+      "warn": 0,
+      "lock": 30,
+      "exclude": 0
+    },
+    "greyTruth": {
+      "allow": 60,
+      "warn": 0,
+      "lock": 23
+    },
+    "operatorFamilies": {
+      "CP": 78,
+      "IC": 34,
+      "SF": 23
+    }
+  },
+  "holdout": {
+    "groups": 145,
+    "samples": 207,
+    "greySamples": null,
+    "greyRelationGroups": null,
+    "truth": {
+      "allow": 138,
+      "warn": 0,
+      "lock": 69,
+      "exclude": 0
+    },
+    "greyTruth": null,
+    "operatorFamilies": {
+      "CP": 67,
+      "EB": 18,
+      "IC": 59,
+      "SF": 46,
+      "SS": 17
+    }
+  },
+  "grey": [
+    {
+      "id": "d1-0005-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0005",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "unparsable-side",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0005-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0005",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0013-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0013",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "lock",
+        "warn"
+      ],
+      "rules": [
+        "runtime-export-removed",
+        "semantic-interaction-uncertain",
+        "consumed-return-property-removed"
+      ]
+    },
+    {
+      "id": "d1-0013-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0013",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0021-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0021",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0026-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0026",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0037-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0037",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0045-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0045",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0045-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0045",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0051-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0051",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "unparsable-side",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0051-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0051",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "allow"
+      ],
+      "rules": [
+        "unparsable-side",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0059-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0059",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0059-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0059",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock",
+        "allow"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0061-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0061",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0066-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0066",
+      "operatorFamily": "SF",
+      "operatorId": "SF-5",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0082-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0082",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0082-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0082",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock",
+        "allow"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0083-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0083",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0091-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0091",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0091-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0091",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0101-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0101",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "unparsable-side",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0101-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0101",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "allow"
+      ],
+      "rules": [
+        "unparsable-side",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0117-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0117",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0130-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0130",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0141-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0141",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0141-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0141",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0149-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0149",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0001-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0001",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0002-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0002",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0004-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0004",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0005-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0005",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0006-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0006",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0007-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0007",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0008-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0008",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0009-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0009",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0010-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0010",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0011-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0011",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0012-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0012",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0013-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0013",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0014-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0014",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0015-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0015",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0016-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0016",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0017-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0017",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0018-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0019-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0019",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0020-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0020",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0021-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0021",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0022-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0022",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0023-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0023",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0024",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0025-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0025",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0026-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0026",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0027-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0027",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0028-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0028",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0029-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0029",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0030-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0030",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0031-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0031",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0032-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0032",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0033-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0033",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0034-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0034",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0035-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0035",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0036-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0036",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0037-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0037",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0038-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0038",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0039-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0039",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0040-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0040",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-001-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-001",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-001-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-001",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-003-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-003-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-004-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-004",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-004-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-004",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-005-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-005",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-005-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-005",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-006-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-006",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-006-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-006",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-009-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-009",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-009-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-009",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-012-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-012",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-012-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-012",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-018-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-018-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "id": "d1-0002-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0002",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [
+        "lock"
+      ],
+      "rules": [
+        "merge-only-type-error",
+        "runtime-export-removed"
+      ]
+    },
+    {
+      "id": "d1-0002-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0002",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0003-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0005-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0005",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "unparsable-side",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0005-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0005",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0010-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0010",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0011-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0011",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0013-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0013",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "lock",
+        "warn"
+      ],
+      "rules": [
+        "runtime-export-removed",
+        "semantic-interaction-uncertain",
+        "consumed-return-property-removed"
+      ]
+    },
+    {
+      "id": "d1-0013-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0013",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0018-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0019-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0019",
+      "operatorFamily": "SF",
+      "operatorId": "SF-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0021-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0021",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0021-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0021",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0026-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0026",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0026-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0026",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0027-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0027",
+      "operatorFamily": "SF",
+      "operatorId": "SF-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [
+        "allow"
+      ],
+      "rules": [
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0029-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0029",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0034-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0034",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0035-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0035",
+      "operatorFamily": "SF",
+      "operatorId": "SF-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0037-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0037",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0037-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0037",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0042-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0042",
+      "operatorFamily": "SF",
+      "operatorId": "SF-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0043-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0043",
+      "operatorFamily": "SF",
+      "operatorId": "SF-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0045-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0045",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0045-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0045",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0050-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0050",
+      "operatorFamily": "SF",
+      "operatorId": "SF-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0051-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0051",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "unparsable-side",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0051-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0051",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "allow"
+      ],
+      "rules": [
+        "unparsable-side",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0053-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0053",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0058-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0058",
+      "operatorFamily": "SF",
+      "operatorId": "SF-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0059-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0059",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0059-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0059",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock",
+        "allow"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0061-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0061",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0066-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0066",
+      "operatorFamily": "SF",
+      "operatorId": "SF-5",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0069-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0069",
+      "operatorFamily": "SF",
+      "operatorId": "SF-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0074-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0074",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0075-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0075",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [
+        "lock"
+      ],
+      "rules": [
+        "merge-only-type-error",
+        "runtime-export-removed"
+      ]
+    },
+    {
+      "id": "d1-0075-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0075",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0077-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0077",
+      "operatorFamily": "SF",
+      "operatorId": "SF-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0082-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0082",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0082-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0082",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock",
+        "allow"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain",
+        "runtime-export-removed",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0083-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0083",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0083-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0083",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0085-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0085",
+      "operatorFamily": "SF",
+      "operatorId": "SF-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0090-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0090",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0091-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0091",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0091-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0091",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0093-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0093",
+      "operatorFamily": "SF",
+      "operatorId": "SF-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0098-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0098",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0099-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0099",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0099-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0099",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0101-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0101",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "lock"
+      ],
+      "rules": [
+        "unparsable-side",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0101-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0101",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn",
+        "allow"
+      ],
+      "rules": [
+        "unparsable-side",
+        "comment-format-only"
+      ]
+    },
+    {
+      "id": "d1-0115-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0115",
+      "operatorFamily": "SF",
+      "operatorId": "SF-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0117-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0117",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0117-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0117",
+      "operatorFamily": "IC",
+      "operatorId": "IC-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0125-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0125",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [
+        "lock"
+      ],
+      "rules": [
+        "runtime-export-removed",
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0125-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0125",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0130-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0130",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0133-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0133",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0138-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0138",
+      "operatorFamily": "SF",
+      "operatorId": "SF-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0141-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0141",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0141-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0141",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-0146-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0146",
+      "operatorFamily": "SF",
+      "operatorId": "SF-3",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0147-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0147",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0149-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0149",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side"
+      ]
+    },
+    {
+      "id": "d1-0149-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0149",
+      "operatorFamily": "CP",
+      "operatorId": "CP-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0155-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0155",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0157-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0157",
+      "operatorFamily": "SF",
+      "operatorId": "SF-1",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0165-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0165",
+      "operatorFamily": "SF",
+      "operatorId": "SF-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0171-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0171",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [
+        "lock"
+      ],
+      "rules": [
+        "merge-only-type-error",
+        "runtime-export-removed"
+      ]
+    },
+    {
+      "id": "d1-0171-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0171",
+      "operatorFamily": "IC",
+      "operatorId": "IC-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0178-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0178",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0178-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0178",
+      "operatorFamily": "IC",
+      "operatorId": "IC-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0179-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0179",
+      "operatorFamily": "CP",
+      "operatorId": "CP-2",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0181-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0181",
+      "operatorFamily": "SF",
+      "operatorId": "SF-4",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0189-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0189",
+      "operatorFamily": "SF",
+      "operatorId": "SF-5",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-0197-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-0197",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "lock",
+      "grey": false,
+      "decisions": [
+        "lock"
+      ],
+      "rules": [
+        "merge-only-type-error"
+      ]
+    },
+    {
+      "id": "d1-0197-safe",
+      "split": "dev",
+      "relationGroupId": "d1-0197",
+      "operatorFamily": "IC",
+      "operatorId": "IC-1",
+      "truth": "allow",
+      "grey": false,
+      "decisions": [],
+      "rules": []
+    },
+    {
+      "id": "d1-dev-safe-0001-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0001",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0002-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0002",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0004-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0004",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0005-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0005",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0006-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0006",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0007-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0007",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0008-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0008",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0009-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0009",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0010-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0010",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0011-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0011",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0012-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0012",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0013-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0013",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0014-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0014",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0015-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0015",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0016-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0016",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0017-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0017",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0018-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0019-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0019",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0020-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0020",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0021-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0021",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0022-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0022",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0023-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0023",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0024",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0025-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0025",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0026-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0026",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0027-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0027",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0028-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0028",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0029-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0029",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0030-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0030",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0031-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0031",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0032-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0032",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0033-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0033",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0034-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0034",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0035-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0035",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0036-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0036",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0037-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0037",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0038-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0038",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0039-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0039",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-dev-safe-0040-safe",
+      "split": "dev",
+      "relationGroupId": "d1-dev-safe-0040",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-001-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-001",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-001-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-001",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-003-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-003-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-003",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-004-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-004",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-004-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-004",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-005-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-005",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-005-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-005",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "unparsable-side",
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-006-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-006",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-006-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-006",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-009-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-009",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-009-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-009",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-012-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-012",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-012-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-012",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-018-conflict",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "lock",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    },
+    {
+      "id": "d1-v4-dev-018-safe",
+      "split": "dev",
+      "relationGroupId": "d1-v4-dev-018",
+      "operatorFamily": "CP",
+      "operatorId": "CP-3",
+      "truth": "allow",
+      "grey": true,
+      "decisions": [
+        "warn"
+      ],
+      "rules": [
+        "semantic-interaction-uncertain"
+      ]
+    }
+  ],
+  "holdoutReplay": "未执行保留集回放；保留集部分只统计标签与关系组。"
+}

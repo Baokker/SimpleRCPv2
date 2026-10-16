@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-16T12:08:04.004Z",
+  "date": "2026-10-16T18:49:15.867Z",
   "transport": "provider-proxy",
   "inputSource": "G1/020846d95b5babe842dc228ce437ab21f8ee8244c24f097c345f9aadb1686939.json",
   "rows": [
@@ -7,7 +7,7 @@
       "request": 1,
       "status": 200,
       "model": "jev-1.13.0",
-      "latencyMs": 1881.0374160000001,
+      "latencyMs": 393.5735,
       "usage": {
         "inputTokens": 1371,
         "outputTokens": 38
@@ -18,11 +18,11 @@
           "decision": {
             "type": "choice",
             "choice": "lock",
-            "confidence": 0.62,
+            "confidence": 0.64,
             "probabilities": {
-              "allow": 0.02,
+              "allow": 0.01,
               "warn": 0.23,
-              "lock": 0.75
+              "lock": 0.76
             }
           }
         },
@@ -36,7 +36,7 @@
       "request": 2,
       "status": 200,
       "model": "jev-1.13.0",
-      "latencyMs": 1067.8961669999999,
+      "latencyMs": 234.7942079999999,
       "usage": {
         "inputTokens": 1371,
         "outputTokens": 38
@@ -47,11 +47,11 @@
           "decision": {
             "type": "choice",
             "choice": "lock",
-            "confidence": 0.67,
+            "confidence": 0.64,
             "probabilities": {
               "allow": 0.01,
-              "warn": 0.21,
-              "lock": 0.78
+              "warn": 0.23,
+              "lock": 0.76
             }
           }
         },
@@ -65,7 +65,7 @@
       "request": 3,
       "status": 200,
       "model": "jev-1.13.0",
-      "latencyMs": 938.9132920000002,
+      "latencyMs": 283.6690000000001,
       "usage": {
         "inputTokens": 1371,
         "outputTokens": 38
@@ -76,11 +76,11 @@
           "decision": {
             "type": "choice",
             "choice": "lock",
-            "confidence": 0.67,
+            "confidence": 0.64,
             "probabilities": {
-              "allow": 0.01,
-              "warn": 0.21,
-              "lock": 0.78
+              "allow": 0.02,
+              "warn": 0.22,
+              "lock": 0.76
             }
           }
         },

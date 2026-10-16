@@ -1,0 +1,625 @@
+{
+  "strategy": "G3a",
+  "promptVersion": "pair-v5",
+  "dataset": "d1-v4",
+  "threshold": {
+    "lower": 0.2,
+    "upper": 0.5
+  },
+  "greySamples": 83,
+  "deepInputCount": 10,
+  "model": {
+    "calls": [
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "3a8695e26bcf8f42fbe41290491edaa9313d74f066189ae86dfcd824848a61c2",
+        "cacheKey": "7458ed87ca11201cc6f6208d391e7a883cd36ac74f22fe4f84434139d857414e",
+        "status": "success",
+        "latencyMs": 16602.463,
+        "decision": "warn",
+        "confidence": 0.5,
+        "usage": {
+          "inputTokens": 1755,
+          "outputTokens": 2825
+        },
+        "costUsd": 0.0039165
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "d310049f771393acfd9e054a587e90b80dc209ff9470f0626691170fd4b4e570",
+        "cacheKey": "5709d6c8d205d42bf88da8e2842f9f2714ce6e3d49ecd04406d00c61c5ef94d9",
+        "status": "success",
+        "latencyMs": 9294.163541999998,
+        "decision": "warn",
+        "confidence": 0.62,
+        "usage": {
+          "inputTokens": 1890,
+          "outputTokens": 1584
+        },
+        "costUsd": 0.0024677999999999996
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "60f70200858635fc79c363215f51b43acfa87c3873b8bfd929c1c3fdef91fe2d",
+        "cacheKey": "e5938483fe486089717ff67acf02bc48809397c909d8d1d2845d11c4e24e3ba6",
+        "status": "success",
+        "latencyMs": 13686.155917000004,
+        "decision": "lock",
+        "confidence": 0.88,
+        "usage": {
+          "inputTokens": 2078,
+          "outputTokens": 2674
+        },
+        "costUsd": 0.0038322
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "bbf132e43accde20a34f2ae0e6436ecda95546dcde796456ee4d07f4bd756ceb",
+        "cacheKey": "98c8623c5c4b614f281445c2963f692033cb2c201ce757bac38073a3bd7e1955",
+        "status": "invalid-format",
+        "errorType": "provider invalid-format",
+        "latencyMs": 28068.636790999997,
+        "costUsd": 0
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "b4c9ef68910c8b4e58bb0f0050376963188fe1c8264c4c58e980a72a6eae8a89",
+        "cacheKey": "982af5f3a542ecc1f98fd019031adb06e18646f0b15e5ff73aa0c42c4ec9cd4c",
+        "status": "timeout",
+        "errorType": "provider timeout",
+        "latencyMs": 30006.340958999994,
+        "costUsd": 0
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "1736e4e693ddfd05603e8426811814ed1e920280262d7f6cff28ba79bca2df2d",
+        "cacheKey": "a09c46b07d028001d87497a5b5d9b4c950c2aee8b9a11cb32e7ab67d11d9d140",
+        "status": "success",
+        "latencyMs": 17230.682667,
+        "decision": "allow",
+        "confidence": 0.95,
+        "usage": {
+          "inputTokens": 1951,
+          "outputTokens": 1440
+        },
+        "costUsd": 0.0023133
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "0ac94e24deca7cbf4ce1675ab2130cccc06a85e39ffe99dc633dba80278b559e",
+        "cacheKey": "4806e96652429a5a6c9e95ead13efeb4980f2cf774b885144b0127bef6493b2c",
+        "status": "success",
+        "latencyMs": 13145.850749999998,
+        "decision": "allow",
+        "confidence": 0.9,
+        "usage": {
+          "inputTokens": 2221,
+          "outputTokens": 2152
+        },
+        "costUsd": 0.0032486999999999998
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "bcda594af75bd7e0e8e2c49a58f3e12a8bf219e39978be4c11d0ba115f5124de",
+        "cacheKey": "5b058354a6548e2b549439e32e3a63133eba288dca9dfc51db65354c64a5a23f",
+        "status": "success",
+        "latencyMs": 10654.322667000015,
+        "decision": "allow",
+        "confidence": 0.75,
+        "usage": {
+          "inputTokens": 2210,
+          "outputTokens": 1813
+        },
+        "costUsd": 0.0028385999999999997
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "6456cc51f90f49596e7164775ccfb339dd490b6c955f19522679980a1b191ac4",
+        "cacheKey": "2d1d2a26f44ec31a0b71b2d7cb276f76283050ca5dde10e4f7e623e6495152d7",
+        "status": "success",
+        "latencyMs": 11705.845249999984,
+        "decision": "allow",
+        "confidence": 0.62,
+        "usage": {
+          "inputTokens": 1970,
+          "outputTokens": 2011
+        },
+        "costUsd": 0.0030042
+      },
+      {
+        "point": "T2",
+        "role": "deep",
+        "adapter": "minimax",
+        "model": "MiniMax-M3",
+        "promptVersion": "pair-v5",
+        "inputHash": "17ca2e3c722aff245ee2dce944cb695b7dfc412f72cd26559f6ae61461492dc3",
+        "cacheKey": "e3814582e931daa547ed02de5f0d8982f12ce5b6666de564d128e2f5f8584c26",
+        "status": "success",
+        "latencyMs": 13851.449541999988,
+        "decision": "warn",
+        "confidence": 0.55,
+        "usage": {
+          "inputTokens": 1815,
+          "outputTokens": 2735
+        },
+        "costUsd": 0.0038265
+      }
+    ],
+    "stats": {
+      "calls": 10,
+      "cacheHits": 0,
+      "judgements": 10,
+      "escalations": 0,
+      "escalationRatio": 0,
+      "p50Ms": 13688.597041000005,
+      "p95Ms": 30000,
+      "syntaxDeferred": 0,
+      "syntaxWaitP50Ms": null,
+      "syntaxWaitP95Ms": null,
+      "failures": 2,
+      "infrastructureFailures": 0,
+      "costUsd": 0.0254478
+    }
+  },
+  "quality": {
+    "balancedAccuracy": 0.7960144927536232,
+    "missBlockRate": 0.391304347826087,
+    "falseBlockRate": 0.016666666666666666,
+    "conflictNotificationRate": 0.8695652173913043,
+    "safeWarningRate": 0.1,
+    "threeClassAgreement": 0.8072289156626506
+  },
+  "groups": [
+    {
+      "id": "d1-0005-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0005-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0013-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0013-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0021-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0026-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0037-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0045-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0045-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0051-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0051-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0059-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0059-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0061-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0066-safe",
+      "truth": "allow",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0082-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0082-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0083-conflict",
+      "truth": "lock",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0091-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0091-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0101-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0101-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0117-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0130-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-0141-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-0141-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-0149-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0001-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0002-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0004-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0005-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0006-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0007-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0008-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0009-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0010-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0011-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0012-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0013-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0014-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0015-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0016-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0017-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0018-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0019-safe",
+      "truth": "allow",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-dev-safe-0020-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0021-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0022-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0023-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0025-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0026-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0027-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0028-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0029-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0030-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0031-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0032-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0033-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0034-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0035-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0036-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0037-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0038-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0039-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-dev-safe-0040-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-001-conflict",
+      "truth": "lock",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-001-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-003-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-003-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-004-conflict",
+      "truth": "lock",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-004-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-005-conflict",
+      "truth": "lock",
+      "decision": "warn"
+    },
+    {
+      "id": "d1-v4-dev-005-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-006-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-006-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-009-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-009-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-012-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-012-safe",
+      "truth": "allow",
+      "decision": "allow"
+    },
+    {
+      "id": "d1-v4-dev-018-conflict",
+      "truth": "lock",
+      "decision": "lock"
+    },
+    {
+      "id": "d1-v4-dev-018-safe",
+      "truth": "allow",
+      "decision": "allow"
+    }
+  ]
+}

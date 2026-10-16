@@ -13,6 +13,7 @@ const directory = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2/s
 const recorded = JSON.parse(gunzipSync(await fs.readFile(path.join(directory, "pair-v1/G1/results.json.gz"))).toString());
 const responses = new Map<string, ZoneVerdict>(recorded.responses);
 const historicalInputs = new Set<string>(recorded.inputs.map((row: { input: AdjudicationInput }) => inputHash(row.input)));
+const historicalComparableInputs = new Set<string>(recorded.inputs.map((row: { input: AdjudicationInput }) => inputHash(row.input.syntax && row.input.syntax.batchClosed === true ? { ...row.input, syntax: { ...row.input.syntax, batchClosed: undefined } } : row.input)));
 const requests = new Map<string, { input: AdjudicationInput; complete: boolean; samples: Set<string> }>();
 const { samples } = await developmentSamples(path.join(repositoryRoot, "packages/conflict-guard/bench/datasets/d1-v3"));
 const libs = await replayLibraries();
@@ -34,12 +35,12 @@ assert.ok(groups.every((group) => group.closures.every((event) => typeof event.r
 const sourceFiles = ["adjudication/declarations.ts", "adjudication/invariants.ts", "adjudication/syntax.ts", "adjudication/adapters.ts", "semantic/changes.ts", "coordination/session.ts", "coordination/pairState.ts"];
 const sourceHashes = Object.fromEntries(await Promise.all(sourceFiles.map(async (file) => [file, createHash("sha256").update(await fs.readFile(new URL(`../src/${file}`, import.meta.url))).digest("hex")])));
 const inputRows = [...requests].map(([hash, row]) => {
-  const presentInRecording = historicalInputs.has(hash);
+  const presentInRecording = historicalInputs.has(hash) || historicalComparableInputs.has(hash);
   const candidates = presentInRecording ? [] : recorded.inputs.filter((entry: { input: AdjudicationInput }) => entry.input.left.symbol === row.input.left.symbol && entry.input.right.symbol === row.input.right.symbol).map((entry: { input: AdjudicationInput }) => {
     const changes = diffJson(entry.input, row.input).filter((change) => change.added || change.removed);
     return { previousHash: inputHash(entry.input), changes, size: changes.reduce((sum, change) => sum + change.value.length, 0) };
   }).sort((left: { size: number }, right: { size: number }) => left.size - right.size);
-  return { hash, complete: row.complete, presentInRecording, samples: [...row.samples], ...(!presentInRecording ? { difference: candidates[0] } : {}) };
+  return { hash, complete: row.complete, presentInRecording, compatibleInput: !historicalInputs.has(hash) && historicalComparableInputs.has(hash), samples: [...row.samples], ...(!presentInRecording ? { difference: candidates[0] } : {}) };
 });
 const output = { source: "offline-replay-current-code", split: "dev", modelCalls: 0, samples: groups.length, historicalInputs: historicalInputs.size, currentInputs: requests.size, matchingInputs: inputRows.filter((row) => row.presentInRecording).length, missingInputs: inputRows.filter((row) => !row.presentInRecording), completeInputs: inputRows.filter((row) => row.complete).length, incompleteInputs: inputRows.filter((row) => !row.complete).length, sourceHashes, inputs: inputRows, groups };
 await fs.writeFile(path.join(directory, "review-validation.json"), JSON.stringify(output, null, 2) + "\n");
