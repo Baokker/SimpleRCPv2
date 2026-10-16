@@ -14,6 +14,8 @@ export const guardRuleLabels: Record<string, string> = {
   "merge-only-type-error": "合并后出现类型错误",
   "type-only-unchanged": "仅类型关联，未改该类型本身",
   "unparsable-side": "修改中的代码暂时无法解析",
+  "syntax-incomplete-waiting": "代码尚未输入完整，等待后续修改",
+  "syntax-incomplete-final": "本轮修改结束，代码仍需补充",
   "semantic-interaction-uncertain": "需要研判修改之间的影响",
   "model-fast": "由快判模型研判",
   "model-deep": "由深判模型研判",
