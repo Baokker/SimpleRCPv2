@@ -1,0 +1,6026 @@
+{
+  "split": "dev",
+  "commonGrey": 61,
+  "additionalGrey": [
+    "d1-0013-safe",
+    "d1-0026-conflict",
+    "d1-0051-conflict",
+    "d1-0051-safe",
+    "d1-0061-safe",
+    "d1-0149-conflict"
+  ],
+  "prompt": "pair-v1",
+  "threshold": 0.2,
+  "policy": "G2",
+  "rows": [
+    {
+      "id": "pair-v1 G1",
+      "validResponseRatio": 0.7554347826086957,
+      "falseBlockRatio": 0.14285714285714285,
+      "missed": 3,
+      "agreement": 0.2459016393442623,
+      "p50Ms": 5724.837124999962,
+      "escalationRatio": 0,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.06557377049180328,
+          "low": 0.02579328695767287,
+          "high": 0.15683021400467229
+        },
+        "agreement": {
+          "value": 0.2459016393442623,
+          "low": 0.15506522999562844,
+          "high": 0.36684662905781873
+        },
+        "missBlockRatio": {
+          "value": 0.25,
+          "low": 0.08894003962896138,
+          "high": 0.53231033912066
+        },
+        "falseBlockRatio": {
+          "value": 0.14285714285714285,
+          "low": 0.07096333720544584,
+          "high": 0.2666797318916292
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 383.6586100839996,
+        "unattendedFrozenPersonSeconds": 18654.155867745994,
+        "cardsPerHour": 128.03704238924607,
+        "counterfactualEdits": 326,
+        "freezeCount": 48,
+        "frozenEdits": 326,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 122,
+          "p50": 2773.3823340000818,
+          "p95": 8025,
+          "byVariant": {
+            "conflict": {
+              "samples": 39,
+              "p50": 2181.0381659999257,
+              "p95": 8024.446417000028
+            },
+            "safe": {
+              "samples": 83,
+              "p50": 3506.70404099999,
+              "p95": 8025
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.7272727272727273,
+              "low": 0.4343497069897537,
+              "high": 0.9025411942607853
+            },
+            "missBlockRatio": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.14583333333333334,
+              "low": 0.07248157413793963,
+              "high": 0.27167447042858606
+            },
+            "missBlockRatio": {
+              "value": 0.2,
+              "low": 0.03622316096978745,
+              "high": 0.6244717358814613
+            },
+            "falseBlockRatio": {
+              "value": 0.16279069767441862,
+              "low": 0.08116524502857546,
+              "high": 0.2997269533591824
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.8571428571428571,
+              "low": 0.48686549668097007,
+              "high": 0.9743210440510253
+            },
+            "missBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.02567895594897479,
+              "high": 0.51313450331903
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.75,
+              "low": 0.46768966087934005,
+              "high": 0.9110599603710386
+            },
+            "missBlockRatio": {
+              "value": 0.25,
+              "low": 0.08894003962896138,
+              "high": 0.53231033912066
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 36,
+      "falseBlockCount": 7,
+      "p95Ms": 7713.737416000105,
+      "requestCount": 184,
+      "validRequests": 139,
+      "missingUsage": 45,
+      "callStatus": {
+        "success": 139,
+        "timeout": 36,
+        "invalid-format": 9
+      },
+      "syntaxDeferredRequests": null,
+      "observedIncompleteRevisions": null,
+      "syntaxWaitP50Ms": null,
+      "syntaxWaitP95Ms": null,
+      "costUsd": 0.1307139,
+      "usage": {
+        "inputTokens": 162373,
+        "outputTokens": 68335
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [],
+      "noJudgement": [
+        "d1-0005-safe",
+        "d1-0066-safe",
+        "d1-0130-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0005-safe",
+          "pairs": [
+            {
+              "id": "b7ef32dbc9c72491213546af2ce92f5cd7ed1e1ed131175b71a2452abd45119d",
+              "finalStatus": "closed",
+              "closedAt": 11248
+            }
+          ]
+        },
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 10902
+            }
+          ]
+        },
+        {
+          "id": "d1-0130-safe",
+          "pairs": [
+            {
+              "id": "22007c34869a591b64c2ac6d5ce2d59b32bc038f4223b7fd3d2745188fa2ec8b",
+              "finalStatus": "closed",
+              "closedAt": 11212
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "pair-v4 G1",
+      "validResponseRatio": 0.7571428571428571,
+      "falseBlockRatio": 0.02040816326530612,
+      "missed": 7,
+      "agreement": 0.5901639344262295,
+      "p50Ms": 4382.389792000002,
+      "escalationRatio": 0,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.5901639344262295,
+          "low": 0.46499566253828867,
+          "high": 0.7046485165072622
+        },
+        "missBlockRatio": {
+          "value": 0.5833333333333334,
+          "low": 0.3195073356553728,
+          "high": 0.8067425380947535
+        },
+        "falseBlockRatio": {
+          "value": 0.02040816326530612,
+          "low": 0.003611579538530689,
+          "high": 0.10693768467754147
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 252.30862308199994,
+        "unattendedFrozenPersonSeconds": 7121.819068916,
+        "cardsPerHour": 249.335293073795,
+        "counterfactualEdits": 152,
+        "freezeCount": 21,
+        "frozenEdits": 152,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 238,
+          "p50": 25,
+          "p95": 5080.133833,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 25,
+              "p95": 4014.4919160000063
+            },
+            "safe": {
+              "samples": 179,
+              "p50": 25,
+              "p95": 5178.207999999999
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.45454545454545453,
+              "low": 0.21270957543988045,
+              "high": 0.7199122443100118
+            },
+            "missBlockRatio": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.625,
+              "low": 0.48362506125249566,
+              "high": 0.7478492759593187
+            },
+            "missBlockRatio": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "falseBlockRatio": {
+              "value": 0.023255813953488372,
+              "low": 0.004116981177419918,
+              "high": 0.12059267861216882
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0.5,
+              "low": 0.09452865480086614,
+              "high": 0.9054713451991339
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.6326530612244898,
+              "low": 0.49266811386889864,
+              "high": 0.7533501747521878
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.02040816326530612,
+              "low": 0.003611579538530689,
+              "high": 0.10693768467754147
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "missBlockRatio": {
+              "value": 0.7142857142857143,
+              "low": 0.35892909014821267,
+              "high": 0.9177828342909844
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "missBlockRatio": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.6326530612244898,
+              "low": 0.49266811386889864,
+              "high": 0.7533501747521878
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.02040816326530612,
+              "low": 0.003611579538530689,
+              "high": 0.10693768467754147
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 17,
+      "falseBlockCount": 1,
+      "p95Ms": 6770.27029200003,
+      "requestCount": 70,
+      "validRequests": 53,
+      "missingUsage": 17,
+      "callStatus": {
+        "success": 53,
+        "invalid-format": 17
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.04975260000000001,
+      "usage": {
+        "inputTokens": 103734,
+        "outputTokens": 15527
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [],
+      "noJudgementDetails": [],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "allow"
+        }
+      ]
+    },
+    {
+      "id": "pair-v1 G1（完整声明输入）",
+      "validResponseRatio": 0.7714285714285715,
+      "falseBlockRatio": 0.12244897959183673,
+      "missed": 5,
+      "agreement": 0.22950819672131148,
+      "p50Ms": 5151.324500000002,
+      "escalationRatio": 0,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.22950819672131148,
+          "low": 0.141931023788832,
+          "high": 0.34913643907451497
+        },
+        "missBlockRatio": {
+          "value": 0.4166666666666667,
+          "low": 0.19325746190524654,
+          "high": 0.6804926643446272
+        },
+        "falseBlockRatio": {
+          "value": 0.12244897959183673,
+          "low": 0.057347477598098245,
+          "high": 0.2424466240188096
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 259.210149666,
+        "unattendedFrozenPersonSeconds": 15248.117529832,
+        "cardsPerHour": 273.5949432107048,
+        "counterfactualEdits": 147,
+        "freezeCount": 28,
+        "frozenEdits": 147,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 233,
+          "p50": 25,
+          "p95": 7269.842250000016,
+          "byVariant": {
+            "conflict": {
+              "samples": 60,
+              "p50": 25,
+              "p95": 6626.601917
+            },
+            "safe": {
+              "samples": 173,
+              "p50": 25,
+              "p95": 7719.893208000001
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.5454545454545454,
+              "low": 0.28008775568998817,
+              "high": 0.7872904245601196
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.16666666666666666,
+              "low": 0.08695410039453223,
+              "high": 0.29578100037396254
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0.13953488372093023,
+              "low": 0.06555634267713946,
+              "high": 0.2726387659442569
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "missBlockRatio": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 36,
+      "falseBlockCount": 6,
+      "p95Ms": 7338.703750000015,
+      "requestCount": 70,
+      "validRequests": 54,
+      "missingUsage": 16,
+      "callStatus": {
+        "success": 54,
+        "timeout": 13,
+        "invalid-format": 3
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.05639670000000001,
+      "usage": {
+        "inputTokens": 88453,
+        "outputTokens": 24884
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [
+        "d1-0066-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 11601
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "validResponseRatio": 1,
+      "falseBlockRatio": 0.02040816326530612,
+      "missed": 7,
+      "agreement": 0.5081967213114754,
+      "p50Ms": 516.4172920000019,
+      "escalationRatio": 0,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.5081967213114754,
+          "low": 0.386024064532302,
+          "high": 0.6293981335627482
+        },
+        "missBlockRatio": {
+          "value": 0.5833333333333334,
+          "low": 0.3195073356553728,
+          "high": 0.8067425380947535
+        },
+        "falseBlockRatio": {
+          "value": 0.02040816326530612,
+          "low": 0.003611579538530689,
+          "high": 0.10693768467754147
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 421.90142691400007,
+        "unattendedFrozenPersonSeconds": 6137.002339329999,
+        "cardsPerHour": 264.16063482412875,
+        "counterfactualEdits": 288,
+        "freezeCount": 34,
+        "frozenEdits": 288,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 235,
+          "p50": 25,
+          "p95": 834.0719580000004,
+          "byVariant": {
+            "conflict": {
+              "samples": 60,
+              "p50": 25,
+              "p95": 532.588499999998
+            },
+            "safe": {
+              "samples": 175,
+              "p50": 25,
+              "p95": 850.1263749999998
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.45454545454545453,
+              "low": 0.21270957543988045,
+              "high": 0.7199122443100118
+            },
+            "missBlockRatio": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.5416666666666666,
+              "low": 0.4029083309494732,
+              "high": 0.6742497814544648
+            },
+            "missBlockRatio": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.08201257002322722
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.5,
+              "low": 0.09452865480086614,
+              "high": 0.9054713451991339
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.5306122448979592,
+              "low": 0.39380627019919845,
+              "high": 0.6629671810210522
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.02040816326530612,
+              "low": 0.003611579538530689,
+              "high": 0.10693768467754147
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "missBlockRatio": {
+              "value": 0.7142857142857143,
+              "low": 0.35892909014821267,
+              "high": 0.9177828342909844
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "missBlockRatio": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.5306122448979592,
+              "low": 0.39380627019919845,
+              "high": 0.6629671810210522
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.02040816326530612,
+              "low": 0.003611579538530689,
+              "high": 0.10693768467754147
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 22,
+      "falseBlockCount": 1,
+      "p95Ms": 1277.932832999999,
+      "requestCount": 70,
+      "validRequests": 70,
+      "missingUsage": 0,
+      "callStatus": {
+        "success": 70
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.006591522000000001,
+      "usage": {
+        "inputTokens": 156941,
+        "outputTokens": 2660
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [],
+      "noJudgementDetails": [],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "G3-0",
+      "validResponseRatio": 0.9340659340659341,
+      "falseBlockRatio": 0,
+      "missed": 8,
+      "agreement": 0.4918032786885246,
+      "p50Ms": 631.0987079999977,
+      "escalationRatio": 0.3,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.4918032786885246,
+          "low": 0.37060186643725185,
+          "high": 0.6139759354676981
+        },
+        "missBlockRatio": {
+          "value": 0.6666666666666666,
+          "low": 0.3906175873976139,
+          "high": 0.8618821601026385
+        },
+        "falseBlockRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.07270029673590504
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 255.75323300000002,
+        "unattendedFrozenPersonSeconds": 4795.599381332,
+        "cardsPerHour": 245.2920180509767,
+        "counterfactualEdits": 147,
+        "freezeCount": 19,
+        "frozenEdits": 147,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 231,
+          "p50": 25,
+          "p95": 944.7202499999985,
+          "byVariant": {
+            "conflict": {
+              "samples": 58,
+              "p50": 25,
+              "p95": 4488.539540999998
+            },
+            "safe": {
+              "samples": 173,
+              "p50": 25,
+              "p95": 944.7202499999985
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.45454545454545453,
+              "low": 0.21270957543988045,
+              "high": 0.7199122443100118
+            },
+            "missBlockRatio": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.5208333333333334,
+              "low": 0.3832899563598438,
+              "high": 0.6552890998421255
+            },
+            "missBlockRatio": {
+              "value": 0.8,
+              "low": 0.3755282641185388,
+              "high": 0.9637768390302125
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.08201257002322722
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.5306122448979592,
+              "low": 0.39380627019919845,
+              "high": 0.6629671810210522
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.07270029673590504
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.14285714285714285,
+              "low": 0.02567895594897479,
+              "high": 0.51313450331903
+            },
+            "missBlockRatio": {
+              "value": 0.8571428571428571,
+              "low": 0.48686549668097007,
+              "high": 0.9743210440510253
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.3333333333333333,
+              "low": 0.13811783989736134,
+              "high": 0.609382412602386
+            },
+            "missBlockRatio": {
+              "value": 0.6666666666666666,
+              "low": 0.3906175873976139,
+              "high": 0.8618821601026385
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.5306122448979592,
+              "low": 0.39380627019919845,
+              "high": 0.6629671810210522
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.07270029673590504
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 23,
+      "falseBlockCount": 0,
+      "p95Ms": 7284.668875000001,
+      "requestCount": 91,
+      "validRequests": 85,
+      "missingUsage": 6,
+      "callStatus": {
+        "cache-hit": 85,
+        "timeout": 6
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.021815021999999976,
+      "usage": {
+        "inputTokens": 181526,
+        "outputTokens": 9200
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [
+        "d1-0066-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 11601
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "G3-0.2",
+      "validResponseRatio": 0.9347826086956522,
+      "falseBlockRatio": 0,
+      "missed": 7,
+      "agreement": 0.5081967213114754,
+      "p50Ms": 664.6950829999987,
+      "escalationRatio": 0.3142857142857143,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.5081967213114754,
+          "low": 0.386024064532302,
+          "high": 0.6293981335627482
+        },
+        "missBlockRatio": {
+          "value": 0.5833333333333334,
+          "low": 0.3195073356553728,
+          "high": 0.8067425380947535
+        },
+        "falseBlockRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.07270029673590504
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 255.75323300000002,
+        "unattendedFrozenPersonSeconds": 5942.12132575,
+        "cardsPerHour": 246.63977639191614,
+        "counterfactualEdits": 147,
+        "freezeCount": 20,
+        "frozenEdits": 147,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 232,
+          "p50": 25,
+          "p95": 948.6680409999972,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 25,
+              "p95": 7139.027791
+            },
+            "safe": {
+              "samples": 173,
+              "p50": 25,
+              "p95": 944.7202499999985
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.45454545454545453,
+              "low": 0.21270957543988045,
+              "high": 0.7199122443100118
+            },
+            "missBlockRatio": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.5416666666666666,
+              "low": 0.4029083309494732,
+              "high": 0.6742497814544648
+            },
+            "missBlockRatio": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.08201257002322722
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.5306122448979592,
+              "low": 0.39380627019919845,
+              "high": 0.6629671810210522
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.07270029673590504
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "missBlockRatio": {
+              "value": 0.7142857142857143,
+              "low": 0.35892909014821267,
+              "high": 0.9177828342909844
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "missBlockRatio": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.5306122448979592,
+              "low": 0.39380627019919845,
+              "high": 0.6629671810210522
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.07270029673590504
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 23,
+      "falseBlockCount": 0,
+      "p95Ms": 7284.668875000001,
+      "requestCount": 92,
+      "validRequests": 86,
+      "missingUsage": 6,
+      "callStatus": {
+        "cache-hit": 86,
+        "timeout": 6
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.022673021999999977,
+      "usage": {
+        "inputTokens": 183038,
+        "outputTokens": 9537
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [
+        "d1-0066-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 11601
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "G3-0.4",
+      "validResponseRatio": 0.8661417322834646,
+      "falseBlockRatio": 0.10204081632653061,
+      "missed": 5,
+      "agreement": 0.29508196721311475,
+      "p50Ms": 5524.320748999999,
+      "escalationRatio": 0.8142857142857143,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.29508196721311475,
+          "low": 0.19554865403985322,
+          "high": 0.4188963935838945
+        },
+        "missBlockRatio": {
+          "value": 0.4166666666666667,
+          "low": 0.19325746190524654,
+          "high": 0.6804926643446272
+        },
+        "falseBlockRatio": {
+          "value": 0.10204081632653061,
+          "low": 0.044378892487039884,
+          "high": 0.21756624164970087
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 255.75323300000002,
+        "unattendedFrozenPersonSeconds": 14062.663557173999,
+        "cardsPerHour": 266.8561515060076,
+        "counterfactualEdits": 147,
+        "freezeCount": 27,
+        "frozenEdits": 147,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 232,
+          "p50": 25,
+          "p95": 7697.925833999994,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 25,
+              "p95": 7139.027791
+            },
+            "safe": {
+              "samples": 173,
+              "p50": 25,
+              "p95": 8025
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.5454545454545454,
+              "low": 0.28008775568998817,
+              "high": 0.7872904245601196
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.25,
+              "low": 0.1492048880971003,
+              "high": 0.3878464374792707
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0.11627906976744186,
+              "low": 0.050703529948620846,
+              "high": 0.24479448890641395
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.22448979591836735,
+              "low": 0.1302483771472861,
+              "high": 0.35879056187045744
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.10204081632653061,
+              "low": 0.044378892487039884,
+              "high": 0.21756624164970087
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "missBlockRatio": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.22448979591836735,
+              "low": 0.1302483771472861,
+              "high": 0.35879056187045744
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.10204081632653061,
+              "low": 0.044378892487039884,
+              "high": 0.21756624164970087
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 33,
+      "falseBlockCount": 5,
+      "p95Ms": 7672.925833999994,
+      "requestCount": 127,
+      "validRequests": 112,
+      "missingUsage": 15,
+      "callStatus": {
+        "cache-hit": 112,
+        "timeout": 13,
+        "invalid-format": 2
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.05139682199999998,
+      "usage": {
+        "inputTokens": 226752,
+        "outputTokens": 22545
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [
+        "d1-0066-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 11601
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "G3-0.6",
+      "validResponseRatio": 0.8633093525179856,
+      "falseBlockRatio": 0.12244897959183673,
+      "missed": 5,
+      "agreement": 0.21311475409836064,
+      "p50Ms": 5774.290291000012,
+      "escalationRatio": 0.9857142857142858,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.21311475409836064,
+          "low": 0.1289965277061263,
+          "high": 0.3312265389671205
+        },
+        "missBlockRatio": {
+          "value": 0.4166666666666667,
+          "low": 0.19325746190524654,
+          "high": 0.6804926643446272
+        },
+        "falseBlockRatio": {
+          "value": 0.12244897959183673,
+          "low": 0.057347477598098245,
+          "high": 0.2424466240188096
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 255.75323300000002,
+        "unattendedFrozenPersonSeconds": 15235.110470591999,
+        "cardsPerHour": 273.5949432107048,
+        "counterfactualEdits": 147,
+        "freezeCount": 28,
+        "frozenEdits": 147,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 232,
+          "p50": 25,
+          "p95": 7697.925833999994,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 25,
+              "p95": 7407.9571670000005
+            },
+            "safe": {
+              "samples": 173,
+              "p50": 25,
+              "p95": 8025
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.5454545454545454,
+              "low": 0.28008775568998817,
+              "high": 0.7872904245601196
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.14583333333333334,
+              "low": 0.07248157413793963,
+              "high": 0.27167447042858606
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0.13953488372093023,
+              "low": 0.06555634267713946,
+              "high": 0.2726387659442569
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "missBlockRatio": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 37,
+      "falseBlockCount": 6,
+      "p95Ms": 7672.925833999994,
+      "requestCount": 139,
+      "validRequests": 123,
+      "missingUsage": 16,
+      "callStatus": {
+        "cache-hit": 123,
+        "timeout": 13,
+        "invalid-format": 3
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.062027921999999985,
+      "usage": {
+        "inputTokens": 243989,
+        "outputTokens": 27095
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [
+        "d1-0066-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 11601
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "G3-0.8",
+      "validResponseRatio": 0.8642857142857143,
+      "falseBlockRatio": 0.12244897959183673,
+      "missed": 5,
+      "agreement": 0.21311475409836064,
+      "p50Ms": 5774.290291000012,
+      "escalationRatio": 1,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.21311475409836064,
+          "low": 0.1289965277061263,
+          "high": 0.3312265389671205
+        },
+        "missBlockRatio": {
+          "value": 0.4166666666666667,
+          "low": 0.19325746190524654,
+          "high": 0.6804926643446272
+        },
+        "falseBlockRatio": {
+          "value": 0.12244897959183673,
+          "low": 0.057347477598098245,
+          "high": 0.2424466240188096
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 255.75323300000002,
+        "unattendedFrozenPersonSeconds": 15235.110470591999,
+        "cardsPerHour": 273.5949432107048,
+        "counterfactualEdits": 147,
+        "freezeCount": 28,
+        "frozenEdits": 147,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 232,
+          "p50": 25,
+          "p95": 7697.925833999994,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 25,
+              "p95": 7407.9571670000005
+            },
+            "safe": {
+              "samples": 173,
+              "p50": 25,
+              "p95": 8025
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.5454545454545454,
+              "low": 0.28008775568998817,
+              "high": 0.7872904245601196
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.14583333333333334,
+              "low": 0.07248157413793963,
+              "high": 0.27167447042858606
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0.13953488372093023,
+              "low": 0.06555634267713946,
+              "high": 0.2726387659442569
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "missBlockRatio": {
+              "value": 0.42857142857142855,
+              "low": 0.15821692226262685,
+              "high": 0.7495457695909742
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "missBlockRatio": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 37,
+      "falseBlockCount": 6,
+      "p95Ms": 7672.925833999994,
+      "requestCount": 140,
+      "validRequests": 124,
+      "missingUsage": 16,
+      "callStatus": {
+        "cache-hit": 124,
+        "timeout": 13,
+        "invalid-format": 3
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.06298822199999998,
+      "usage": {
+        "inputTokens": 245394,
+        "outputTokens": 27544
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [
+        "d1-0066-safe"
+      ],
+      "noJudgementDetails": [
+        {
+          "id": "d1-0066-safe",
+          "pairs": [
+            {
+              "id": "13d7d454b50627199c67d0d3740d50e767594a28096f8547410d86e6b8cb5a2e",
+              "finalStatus": "closed",
+              "closedAt": 11601
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    }
+  ]
+}

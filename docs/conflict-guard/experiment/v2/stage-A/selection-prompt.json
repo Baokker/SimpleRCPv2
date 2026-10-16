@@ -1,0 +1,1325 @@
+{
+  "split": "dev",
+  "commonGrey": 61,
+  "additionalGrey": [
+    "d1-0013-safe",
+    "d1-0026-conflict",
+    "d1-0051-conflict",
+    "d1-0051-safe",
+    "d1-0061-safe",
+    "d1-0149-conflict"
+  ],
+  "prompt": "pair-v1",
+  "rows": [
+    {
+      "id": "pair-v1 G1",
+      "validResponseRatio": 0.7554347826086957,
+      "falseBlockRatio": 0.14285714285714285,
+      "missed": 3,
+      "agreement": 0.2459016393442623,
+      "p50Ms": 5724.837124999962,
+      "escalationRatio": 0,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.06557377049180328,
+          "low": 0.02579328695767287,
+          "high": 0.15683021400467229
+        },
+        "agreement": {
+          "value": 0.2459016393442623,
+          "low": 0.15506522999562844,
+          "high": 0.36684662905781873
+        },
+        "missBlockRatio": {
+          "value": 0.25,
+          "low": 0.08894003962896138,
+          "high": 0.53231033912066
+        },
+        "falseBlockRatio": {
+          "value": 0.14285714285714285,
+          "low": 0.07096333720544584,
+          "high": 0.2666797318916292
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 383.6586100839996,
+        "unattendedFrozenPersonSeconds": 18654.155867745994,
+        "cardsPerHour": 128.03704238924607,
+        "counterfactualEdits": 326,
+        "freezeCount": 48,
+        "frozenEdits": 326,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 122,
+          "p50": 2773.3823340000818,
+          "p95": 8025,
+          "byVariant": {
+            "conflict": {
+              "samples": 39,
+              "p50": 2181.0381659999257,
+              "p95": 8024.446417000028
+            },
+            "safe": {
+              "samples": 83,
+              "p50": 3506.70404099999,
+              "p95": 8025
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.7272727272727273,
+              "low": 0.4343497069897537,
+              "high": 0.9025411942607853
+            },
+            "missBlockRatio": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.14583333333333334,
+              "low": 0.07248157413793963,
+              "high": 0.27167447042858606
+            },
+            "missBlockRatio": {
+              "value": 0.2,
+              "low": 0.03622316096978745,
+              "high": 0.6244717358814613
+            },
+            "falseBlockRatio": {
+              "value": 0.16279069767441862,
+              "low": 0.08116524502857546,
+              "high": 0.2997269533591824
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.8571428571428571,
+              "low": 0.48686549668097007,
+              "high": 0.9743210440510253
+            },
+            "missBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.02567895594897479,
+              "high": 0.51313450331903
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.75,
+              "low": 0.46768966087934005,
+              "high": 0.9110599603710386
+            },
+            "missBlockRatio": {
+              "value": 0.25,
+              "low": 0.08894003962896138,
+              "high": 0.53231033912066
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.12244897959183673,
+              "low": 0.057347477598098245,
+              "high": 0.2424466240188096
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.07096333720544584,
+              "high": 0.2666797318916292
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 36,
+      "falseBlockCount": 7,
+      "p95Ms": 7713.737416000105,
+      "requestCount": 184,
+      "validRequests": 139,
+      "missingUsage": 45,
+      "callStatus": {
+        "success": 139,
+        "timeout": 36,
+        "invalid-format": 9
+      },
+      "syntaxDeferredRequests": null,
+      "observedIncompleteRevisions": null,
+      "syntaxWaitP50Ms": null,
+      "syntaxWaitP95Ms": null,
+      "costUsd": 0.1307139,
+      "usage": {
+        "inputTokens": 162373,
+        "outputTokens": 68335
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [],
+      "noJudgement": [
+        "d1-0005-safe",
+        "d1-0066-safe",
+        "d1-0130-safe"
+      ],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "warn"
+        }
+      ]
+    },
+    {
+      "id": "pair-v4 G1",
+      "validResponseRatio": 0.7571428571428571,
+      "falseBlockRatio": 0.02040816326530612,
+      "missed": 7,
+      "agreement": 0.5901639344262295,
+      "p50Ms": 4382.389792000002,
+      "escalationRatio": 0,
+      "samples": 61,
+      "relationGroups": 54,
+      "metrics": {
+        "groups": 61,
+        "noRelationRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.009559985825260502
+        },
+        "localDecisionRatio": {
+          "value": 0.09836065573770492,
+          "low": 0.045863951367309724,
+          "high": 0.1984483419752358
+        },
+        "agreement": {
+          "value": 0.5901639344262295,
+          "low": 0.46499566253828867,
+          "high": 0.7046485165072622
+        },
+        "missBlockRatio": {
+          "value": 0.5833333333333334,
+          "low": 0.3195073356553728,
+          "high": 0.8067425380947535
+        },
+        "falseBlockRatio": {
+          "value": 0.02040816326530612,
+          "low": 0.003611579538530689,
+          "high": 0.10693768467754147
+        },
+        "escapeRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.2425007574992425
+        },
+        "frozenPersonSeconds": 252.30862308199994,
+        "unattendedFrozenPersonSeconds": 7121.819068916,
+        "cardsPerHour": 249.335293073795,
+        "counterfactualEdits": 152,
+        "freezeCount": 21,
+        "frozenEdits": 152,
+        "variantCounts": {
+          "conflict": 12,
+          "safe": 49
+        },
+        "decisionLatencyMs": {
+          "samples": 238,
+          "p50": 25,
+          "p95": 5080.133833,
+          "byVariant": {
+            "conflict": {
+              "samples": 59,
+              "p50": 25,
+              "p95": 4014.4919160000063
+            },
+            "safe": {
+              "samples": 179,
+              "p50": 25,
+              "p95": 5178.207999999999
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 0,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 11,
+            "agreement": {
+              "value": 0.45454545454545453,
+              "low": 0.21270957543988045,
+              "high": 0.7199122443100118
+            },
+            "missBlockRatio": {
+              "value": 0.5714285714285714,
+              "low": 0.2504542304090258,
+              "high": 0.8417830777373732
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.48990002040399916
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 11,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 4,
+              "escapeRatio": 7
+            }
+          },
+          "CP": {
+            "groups": 48,
+            "agreement": {
+              "value": 0.625,
+              "low": 0.48362506125249566,
+              "high": 0.7478492759593187
+            },
+            "missBlockRatio": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "falseBlockRatio": {
+              "value": 0.023255813953488372,
+              "low": 0.004116981177419918,
+              "high": 0.12059267861216882
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 48,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 43,
+              "escapeRatio": 5
+            }
+          },
+          "SF": {
+            "groups": 2,
+            "agreement": {
+              "value": 0.5,
+              "low": 0.09452865480086614,
+              "high": 0.9054713451991339
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.6576280471103807
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 2,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 2,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 5,
+            "agreement": {
+              "value": 0.6,
+              "low": 0.23071993220883708,
+              "high": 0.8823817688407467
+            },
+            "missBlockRatio": {
+              "value": 0.4,
+              "low": 0.1176182311592533,
+              "high": 0.769280067791163
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.43449149475208104
+            },
+            "denominators": {
+              "agreement": 5,
+              "missBlockRatio": 5,
+              "falseBlockRatio": 0,
+              "escapeRatio": 5
+            }
+          },
+          "none": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.6326530612244898,
+              "low": 0.49266811386889864,
+              "high": 0.7533501747521878
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.02040816326530612,
+              "low": 0.003611579538530689,
+              "high": 0.10693768467754147
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 7,
+            "agreement": {
+              "value": 0.2857142857142857,
+              "low": 0.0822171657090155,
+              "high": 0.6410709098517873
+            },
+            "missBlockRatio": {
+              "value": 0.7142857142857143,
+              "low": 0.35892909014821267,
+              "high": 0.9177828342909844
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.35433884297520657
+            },
+            "denominators": {
+              "agreement": 7,
+              "missBlockRatio": 7,
+              "falseBlockRatio": 0,
+              "escapeRatio": 7
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.4166666666666667,
+              "low": 0.19325746190524654,
+              "high": 0.6804926643446272
+            },
+            "missBlockRatio": {
+              "value": 0.5833333333333334,
+              "low": 0.3195073356553728,
+              "high": 0.8067425380947535
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "safe": {
+            "groups": 49,
+            "agreement": {
+              "value": 0.6326530612244898,
+              "low": 0.49266811386889864,
+              "high": 0.7533501747521878
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.02040816326530612,
+              "low": 0.003611579538530689,
+              "high": 0.10693768467754147
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 49,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 49,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 61,
+          "missBlockRatio": 12,
+          "falseBlockRatio": 49,
+          "escapeRatio": 12
+        }
+      },
+      "safeWarningCount": 17,
+      "falseBlockCount": 1,
+      "p95Ms": 6770.27029200003,
+      "requestCount": 70,
+      "validRequests": 53,
+      "missingUsage": 17,
+      "callStatus": {
+        "success": 53,
+        "invalid-format": 17
+      },
+      "syntaxDeferredRequests": 124,
+      "observedIncompleteRevisions": 2446,
+      "syntaxWaitP50Ms": 1475,
+      "syntaxWaitP95Ms": 13706,
+      "costUsd": 0.04975260000000001,
+      "usage": {
+        "inputTokens": 103734,
+        "outputTokens": 15527
+      },
+      "cacheMisses": 0,
+      "additionalGreySamples": [
+        "d1-0013-safe",
+        "d1-0061-safe"
+      ],
+      "noJudgement": [],
+      "groups": [
+        {
+          "id": "d1-0005-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0005-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0013-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0021-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0037-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0045-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0045-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0059-conflict",
+          "truth": "lock",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0059-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0066-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0082-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0082-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0083-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0091-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0101-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0101-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-0117-conflict",
+          "truth": "lock",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0130-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-0141-conflict",
+          "truth": "lock",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-0141-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0001-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0002-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0003-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0004-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0005-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0006-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0007-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0008-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0009-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0010-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0011-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0012-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0013-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0014-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0015-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0016-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0017-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0018-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0019-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0020-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0021-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0022-safe",
+          "truth": "allow",
+          "decision": "lock"
+        },
+        {
+          "id": "d1-dev-safe-0023-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0024-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0025-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0026-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0027-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0028-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0029-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0030-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0031-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0032-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0033-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0034-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0035-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0036-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0037-safe",
+          "truth": "allow",
+          "decision": "warn"
+        },
+        {
+          "id": "d1-dev-safe-0038-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0039-safe",
+          "truth": "allow",
+          "decision": "allow"
+        },
+        {
+          "id": "d1-dev-safe-0040-safe",
+          "truth": "allow",
+          "decision": "allow"
+        }
+      ]
+    }
+  ]
+}

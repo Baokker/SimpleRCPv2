@@ -1,0 +1,13 @@
+{
+  "fast": 70,
+  "deep": 140,
+  "limits": {
+    "deep": 400,
+    "fast": 600
+  },
+  "proxyProbe": 3,
+  "realAgentRuns": 0,
+  "knownCostUsd": 0.11274082200000002,
+  "missingUsage": 33,
+  "probeCostUsd": 0.000172746
+}

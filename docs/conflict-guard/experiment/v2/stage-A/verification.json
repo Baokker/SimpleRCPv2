@@ -1,0 +1,25 @@
+{
+  "split": "dev",
+  "samples": 119,
+  "commonGrey": 61,
+  "completeInputs": 70,
+  "incompleteInputs": 124,
+  "cacheMisses": 0,
+  "cascadeResponses": 350,
+  "calls": {
+    "deep": 140,
+    "fast": 70
+  },
+  "selectionRuleCommit": "d4e735f",
+  "selectionRuleSha256": "aad9169791b377118105ba49f4c823c8020d7d850f762fa2ee05dfda3ee44763",
+  "checks": [
+    "input-completeness",
+    "budget",
+    "cascade-deadline",
+    "quality-counts",
+    "selection",
+    "human-metrics",
+    "batch-close-judgement",
+    "output-protection"
+  ]
+}

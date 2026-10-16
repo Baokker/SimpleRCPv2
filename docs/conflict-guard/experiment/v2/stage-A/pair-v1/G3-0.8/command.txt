@@ -1,0 +1,1 @@
+TYPESAFE_PROXY_URL="$TYPESAFE_PROXY_URL" ADJUDICATION_BUDGET_SCOPE=stage-a node --experimental-strip-types scripts/stage-a-evaluate.ts --policy G3 --prompt pair-v1 --mode replay --threshold 0.8
