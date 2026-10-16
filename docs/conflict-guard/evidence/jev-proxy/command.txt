@@ -1,0 +1,1 @@
+TYPESAFE_PROXY_URL=<configured> pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scripts/jev-proxy-probe.ts

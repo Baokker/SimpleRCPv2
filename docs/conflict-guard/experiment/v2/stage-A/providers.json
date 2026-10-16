@@ -1,0 +1,4 @@
+{
+  "jev": { "baseUrl": "https://api.typesafe.ai" },
+  "minimax": { "baseUrl": "https://api.minimaxi.com/v1", "jsonMode": true, "temperature": 0 }
+}

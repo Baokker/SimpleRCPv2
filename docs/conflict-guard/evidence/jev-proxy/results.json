@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-16T12:08:04.004Z",
+  "transport": "provider-proxy",
+  "inputSource": "G1/020846d95b5babe842dc228ce437ab21f8ee8244c24f097c345f9aadb1686939.json",
+  "rows": [
+    {
+      "request": 1,
+      "status": 200,
+      "model": "jev-1.13.0",
+      "latencyMs": 1881.0374160000001,
+      "usage": {
+        "inputTokens": 1371,
+        "outputTokens": 38
+      },
+      "response": {
+        "model": "jev-1.13.0",
+        "answers": {
+          "decision": {
+            "type": "choice",
+            "choice": "lock",
+            "confidence": 0.62,
+            "probabilities": {
+              "allow": 0.02,
+              "warn": 0.23,
+              "lock": 0.75
+            }
+          }
+        },
+        "usage": {
+          "input_tokens": 1371,
+          "output_tokens": 38
+        }
+      }
+    },
+    {
+      "request": 2,
+      "status": 200,
+      "model": "jev-1.13.0",
+      "latencyMs": 1067.8961669999999,
+      "usage": {
+        "inputTokens": 1371,
+        "outputTokens": 38
+      },
+      "response": {
+        "model": "jev-1.13.0",
+        "answers": {
+          "decision": {
+            "type": "choice",
+            "choice": "lock",
+            "confidence": 0.67,
+            "probabilities": {
+              "allow": 0.01,
+              "warn": 0.21,
+              "lock": 0.78
+            }
+          }
+        },
+        "usage": {
+          "input_tokens": 1371,
+          "output_tokens": 38
+        }
+      }
+    },
+    {
+      "request": 3,
+      "status": 200,
+      "model": "jev-1.13.0",
+      "latencyMs": 938.9132920000002,
+      "usage": {
+        "inputTokens": 1371,
+        "outputTokens": 38
+      },
+      "response": {
+        "model": "jev-1.13.0",
+        "answers": {
+          "decision": {
+            "type": "choice",
+            "choice": "lock",
+            "confidence": 0.67,
+            "probabilities": {
+              "allow": 0.01,
+              "warn": 0.21,
+              "lock": 0.78
+            }
+          }
+        },
+        "usage": {
+          "input_tokens": 1371,
+          "output_tokens": 38
+        }
+      }
+    }
+  ]
+}
