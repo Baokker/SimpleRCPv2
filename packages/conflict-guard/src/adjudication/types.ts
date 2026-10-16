@@ -24,8 +24,6 @@ export interface AdjudicationInput {
     left: { complete: boolean; reason?: string };
     right: { complete: boolean; reason?: string };
     deferred: boolean;
-    waitMs?: number;
-    deferredCount?: number;
     batchClosed?: boolean;
   };
   local: { excludedRules: string[]; typecheck?: ZoneVerdict["typecheck"] };

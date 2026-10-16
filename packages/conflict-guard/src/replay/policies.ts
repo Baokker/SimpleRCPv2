@@ -118,7 +118,7 @@ export function createReplayModelPolicy(config: AdjudicationConfig, responses: M
       if (!input.pair || !left || !right) { complete({ ...local, decision: "warn", ruleId: "model-unavailable" }); return; }
       const cluster = { left: (input.pair.left.symbols ?? [input.pair.left.symbol]).map((symbol) => input.symbols({ ...input.pair!.left, symbol })!), right: (input.pair.right.symbols ?? [input.pair.right.symbol]).map((symbol) => input.symbols({ ...input.pair!.right, symbol })!), paths: input.pair.relations?.map((relation) => relation.path) ?? [input.pair.path] };
       const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, cluster, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles, clock.now);
-      if (request.syntax) { request.syntax.batchClosed = true; if (input.pair.syntaxWait) { request.syntax.waitMs = input.pair.syntaxWait.waitMs; request.syntax.deferredCount = input.pair.syntaxWait.deferred; } }
+      if (request.syntax) request.syntax.batchClosed = true;
       const hash = inputHash(request);
       const occurrence = (occurrences.get(hash) ?? 0) + 1;
       occurrences.set(hash, occurrence);

@@ -113,11 +113,11 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     });
   }
 
-  async function judge(rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal): Promise<ZoneVerdict> {
+  async function judge(rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal, syntaxWait?: { deferred: number; waitMs: number }): Promise<ZoneVerdict> {
     if (local.zone !== "grey" || config.strategy === "G0") return local;
     if (signal.aborted) throw new ProviderError("cancelled");
-    if (rawInput.syntax?.waitMs !== undefined) syntaxWaits.push(rawInput.syntax.waitMs);
-    syntaxDeferred += rawInput.syntax?.deferredCount ?? Number(Boolean(rawInput.syntax?.deferred));
+    if (syntaxWait) syntaxWaits.push(syntaxWait.waitMs);
+    syntaxDeferred += Number(Boolean(rawInput.syntax?.deferred));
     if (rawInput.syntax?.deferred) {
       if (rawInput.syntax.batchClosed) return { ...local, decision: "warn", ruleId: "syntax-incomplete-final", summary: "本轮修改结束时声明仍不完整，请双方检查代码。", localOnly: true };
       return { ...local, decision: "warn", ruleId: "syntax-incomplete-waiting", summary: "修改仍在输入，等待下一次完整版本后再研判。", localOnly: true, deferred: { reason: "syntax-incomplete" } };

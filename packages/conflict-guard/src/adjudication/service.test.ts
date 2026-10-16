@@ -110,11 +110,10 @@ it("defers incomplete declarations without calling either model and records the 
     syntax: {
       left: { complete: false, reason: "after declaration has syntax diagnostics" },
       right: { complete: true },
-      deferred: true,
-      waitMs: 240
+      deferred: true
     }
   };
-  const verdict = await service.judge(incomplete, local, new AbortController().signal);
+  const verdict = await service.judge(incomplete, local, new AbortController().signal, { deferred: 1, waitMs: 240 });
   expect(verdict).toMatchObject({ decision: "warn", ruleId: "syntax-incomplete-waiting", localOnly: true, deferred: { reason: "syntax-incomplete" } });
   expect(service.calls()).toHaveLength(0);
   expect(service.stats()).toMatchObject({ calls: 0, judgements: 0, syntaxDeferred: 1, syntaxWaitP50Ms: 240, syntaxWaitP95Ms: 240 });

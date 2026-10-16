@@ -41,6 +41,10 @@ it("计算首次语法推迟到声明恢复完整的全部等待时间", () => {
   expect(tracker.observe("pair", "r5", [input.left.symbol], 1200)).toEqual({ deferred: 3, waitMs: 550 });
   tracker.retain(new Set());
   expect(tracker.observe("pair", "r5", [input.left.symbol], 1300)).toBeUndefined();
+  input.left.symbol.after = "export function price(value = 3) { return value *";
+  expect(tracker.observe("closed", "r1", [input.left.symbol], 1400)).toEqual({ deferred: 1, waitMs: 0 });
+  expect(tracker.observe("closed", "r1", [input.left.symbol], 1500, true)).toEqual({ deferred: 1, waitMs: 100 });
+  expect(tracker.observe("closed", "r1", [input.left.symbol], 600000, true)).toEqual({ deferred: 1, waitMs: 100 });
 });
 
 it("等待结果保留候选且不进入最终缓存，下一次完整修改重新检查", async () => {

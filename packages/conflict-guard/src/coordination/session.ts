@@ -103,7 +103,7 @@ export function createSessionCoordinator(options: {
           const symbol = symbolFor(side.actor, key);
           return symbol ? [symbol] : [];
         }));
-        pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now());
+        pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now(), !relevantBatch(pair));
       }
     }
     coordinator.update(candidates, (pair) => !relevantBatch(pair));
