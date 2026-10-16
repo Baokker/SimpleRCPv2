@@ -41,3 +41,7 @@ OpenCode SDK 1.18.31 的 `message.updated` 信息包含 `tokens.input`、`tokens
 Agent provider 由 `AGENT_LLM_PROVIDER` 决定，默认 minimax，模型为 MiniMax-M3。运行用量另外包含人民币 estimatedCost、estimatedCostCurrency 与价格来源，计算方法见 agent-model.md。用户任务与自我复盘继续分别统计。
 
 自我复盘的 `llm-calls.jsonl.usage` 保留 `estimatedCost`、`estimatedCostCurrency` 与 `estimatedCostSource`。成功和失败调用使用相同的用量汇总路径，SDK `cost` 与估算费用分别保存。
+
+产品重排每次只请求一次 M3。成功、超时、HTTP 失败和格式校验失败均在项目的 `knowledge/llm-calls.jsonl` 写入 `mode=rerank`、runId、provider、model、promptHash、durationMs、completed、fallback 与失败原因。收到响应用量时保存 usage 和按 M3 标准价格估算的人民币费用；没有用量时费用保持未知。预览调用使用 `preview=true`，独立于任务费用。实验三把各次任务的重排调用随结果保存。
+
+实验调度遇到额度或请求速率限制时停止安排任务，取消当前 Agent，并保存中断原因、runId 和最终状态。中断组合不会进入完成结果；恢复时使用新的实验项目，保留原尝试目录。已完成的共享 Ta 片段继续用于对应的 T0、T3，片段身份保持一致。

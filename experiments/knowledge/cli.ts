@@ -11,7 +11,7 @@ import {judge} from "./client.js";
 
 const {values, positionals} = parseArgs({allowPositionals: true, options: {
   config: {type: "string"}, out: {type: "string"}, tasks: {type: "string"}, conditions: {type: "string"}, pairs: {type: "string"},
-  pilot: {type: "boolean", default: false}, sharedEpisode: {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
+  pilot: {type: "boolean", default: false}, sharedEpisode: {type: "boolean", default: false}, "shared-episode": {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
   source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}
 }});
 const command = positionals[0];
@@ -73,7 +73,7 @@ if (command === "verify") {
     }
     if (command === "k4") {
       const pairs = values.pairs ? selectIds(data.transfers, values.pairs) : data.transfers.filter(pair => values.pilot ? ["P01", "P03"].includes(pair.id) : true);
-      if (values.sharedEpisode) {
+      if (values.sharedEpisode || values["shared-episode"]) {
         if (values.conditions && values.conditions !== "T0,T3" && values.conditions !== "T3,T0") throw new Error("Shared K4 episodes require T0,T3");
         const repetitions = values.pilot ? 1 : config.repetitions;
         await runK4SharedEpisodes(data, config, store, pairs.flatMap(pair => Array.from({length: repetitions}, (_, index) => ({pair, repetition: index + 1}))));

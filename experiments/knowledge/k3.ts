@@ -2,6 +2,7 @@ import path from "node:path";
 import {type KnowledgeCard} from "@simplercp/knowledge";
 import {type Dataset, type ExperimentConfig, type Task, RunStore, digest, exists, readJsonl, pool, writeJson} from "./common.js";
 import {PlatformClient, judge} from "./client.js";
+import {attemptDirectory} from "./interruption.js";
 
 export type K3Condition = "C0" | "C1" | "C2" | "C3" | "C4" | "C5" | "C6a" | "C6b" | "C6-stale" | "C6-contradiction" | "C7";
 export const allK3Conditions: K3Condition[] = ["C0", "C1", "C2", "C5", "C6a", "C6b", "C7"];
@@ -55,6 +56,7 @@ export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
   const rerankFallbackReason = injections.map(event => event.data?.rerankFallbackReason).find((value: unknown): value is string => typeof value === "string");
   const delivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
   const targetDelivery = {lexical: 0, fileRelated: 0, projectFallback: 0};
+  const targetCandidate = injections.flatMap(event => event.data?.candidates ?? []).find((candidate: any) => targetCardIds.includes(candidate.id));
   for (const event of injections) for (const card of event.data?.cards ?? []) {
     const source = card.reason === "lexical" ? "lexical" : card.reason === "fileRelated" ? "fileRelated" : card.reason === "project-fallback" ? "projectFallback" : undefined;
     if (source) {
@@ -64,6 +66,7 @@ export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
   }
   return {
     targetInjected: injections.some(event => event.data.cards?.some((card: any) => targetCardIds.includes(card.id))),
+    targetCandidate: targetCandidate ?? null,
     targetRetrieved: tools.some(event => event.data.resultIds?.some((id: string) => targetCardIds.includes(id))),
     injectionTokens: injections.reduce((count, event) => count + (event.data.estimatedInjectionTokens ?? 0), 0),
     injectionChars: injections.reduce((count, event) => count + (event.data.totalChars ?? 0), 0),
@@ -78,7 +81,9 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
   await pool(combinations, config.concurrency, async ({task, condition, repetition}) => {
     const key = `${task.id}-${condition}-${repetition}`;
     if (store.done(key)) return;
+    client.checkScheduling();
     const raw = store.raw(key);
+    await attemptDirectory(raw, "started-run.json");
     const {project, members} = await client.create(task, raw, key);
     const member = members[0];
     const setup = conditionCards(data, task, condition);
@@ -105,11 +110,11 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
     const usage = knowledgeUsage(output.events, task.targetCardId ? [task.targetCardId] : []);
     await store.append({key, completed: true, task: task.id, repository: task.repository, taskKind: task.kind, condition, repetition,
       projectId: project.id, runId: run.id, runStatus: run.status, functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess,
-      usage: run.usage ?? null, ...usage, wallMs: run.startedAt && run.finishedAt ? Date.parse(run.finishedAt) - Date.parse(run.startedAt) : null,
+      usage: run.usage ?? null, rerankCalls: output.modelCalls, rerankEstimatedCost: output.modelCalls.reduce((sum: number, call: any) => sum + (call.estimatedCost ?? 0), 0), ...usage, wallMs: run.startedAt && run.finishedAt ? Date.parse(run.finishedAt) - Date.parse(run.startedAt) : null,
       pipelineMs: Date.now() - started, diffHash: output.diffHash, taskPromptHash: digest(task.prompt), knowledgeConfigHash: digest(configuration), judgeHash: actual.judgeHash,
       artifacts: path.relative(store.directory, raw), error: run.error ?? null});
     console.log(JSON.stringify({key, functional: actual.functional, trapAvoided: actual.trapAvoided, runStatus: run.status, wallMs: Date.now() - started}));
-  });
+  }, error => client.stop(error));
 }
 export async function calibration(store: RunStore) {
   const rows = await readJsonl(path.join(store.directory, "results.jsonl"));

@@ -55,6 +55,8 @@ def majority_table(frame):
 
 
 def analyze_agent(frame, directory):
+    if "variant" in frame and frame.variant.eq("shared-episode").all():
+        return analyze_shared_transfer(frame, directory)
     if "variant" in frame:
         if frame.variant.isna().any() or not frame.variant.isin(["delayed", "same-session", "shared-episode"]).all():
             raise ValueError("Transfer timing variants are required")
@@ -69,6 +71,18 @@ def analyze_agent(frame, directory):
 
 
 def analyze_agent_stratum(frame, directory):
+    frame.groupby("condition")[["functional", "trapAvoided", "jointSuccess"]].agg(["sum", "count", "mean"]).to_csv(directory / "individual.csv")
+    cost_rows = []
+    for condition, group in frame.groupby("condition"):
+        cost_rows.append({"condition": condition, "runs": len(group),
+                          "agentTokens": sum((value or {}).get("totalTokens", 0) for value in group.usage),
+                          "agentEstimatedCny": sum((value or {}).get("estimatedCost", 0) for value in group.usage),
+                          "agentUnpricedRuns": sum((value or {}).get("estimatedCost") is None for value in group.usage),
+                          "rerankEstimatedCny": sum(call.get("estimatedCost", 0) or 0 for calls in group.get("rerankCalls", pd.Series([[]] * len(group))) for call in calls),
+                          "rerankUnpricedCalls": sum(call.get("estimatedCost") is None for calls in group.get("rerankCalls", pd.Series([[]] * len(group))) for call in calls),
+                          "wallMs": float(group.wallMs.sum()) if "wallMs" in group else None})
+    (directory / "costs.json").write_text(json.dumps(cost_rows, ensure_ascii=False, indent=2))
+    frame[frame.runStatus.ne("completed")].to_json(directory / "run-failures.json", orient="records", force_ascii=False, indent=2) if "runStatus" in frame else None
     if "taskKind" in frame:
         controls = frame[frame.taskKind.eq("control")]
         if not controls.empty:
@@ -130,6 +144,13 @@ def analyze_agent_stratum(frame, directory):
         if tost_items:
             for item, value in zip(tost_items, multipletests([item["tost_p"] for item in tost_items], method="holm")[1]):
                 item["tost_holm_p"] = float(value)
+    primary = [item.copy() for item in comparisons if item["metric"] == "jointSuccess" and item["condition_a"] == "C0" and item["condition_b"] in ["C2", "C5"]]
+    if primary:
+        for item, value in zip(primary, multipletests([item["mcnemar_p"] for item in primary], method="holm")[1]):
+            item["holm_p"] = float(value)
+        (directory / "primary-comparisons.json").write_text(json.dumps(primary, ensure_ascii=False, indent=2))
+    if "targetInjected" in frame:
+        frame[~(frame.targetInjected | frame.targetRetrieved) & frame.condition.eq("C2")].to_json(directory / "delivery-failures.json", orient="records", force_ascii=False, indent=2)
     model = {"available": False, "reason": "至少需要两个条件以及同时存在成功和失败"}
     if frame.condition.nunique() > 1 and frame.jointSuccess.nunique() > 1:
         np.random.seed(20261007)
@@ -167,6 +188,63 @@ def analyze_agent_stratum(frame, directory):
         axis.legend()
     fig.tight_layout(); fig.savefig(directory / "tokens.png", dpi=180); plt.close(fig)
     return summary
+
+
+def analyze_shared_transfer(frame, directory):
+    if frame.episodeKey.isna().any() or frame.duplicated(["episodeKey", "condition"]).any():
+        raise ValueError("Shared transfer results require unique episode and condition")
+    episodes = []
+    for episode, group in frame.groupby("episodeKey"):
+        if set(group.condition) != {"T0", "T3"} or len(group) != 2:
+            raise ValueError("Each shared episode requires T0 and T3")
+        if len({row["runId"] for row in group.ta}) != 1 or len({row["actuallyTrapped"] for row in group.ta}) != 1:
+            raise ValueError("Shared conditions must use the same original Ta")
+        source = group.iloc[0]
+        episodes.append({"episodeKey": episode, "pair": source.pair, "crossOwner": bool(source.crossOwner),
+                         "actuallyTrapped": bool(source.ta["actuallyTrapped"]), "quality": source.recapQuality,
+                         "review": source.review, "taUsage": source.ta["usage"], "recapCalls": source.recapCalls})
+    episode_table = pd.DataFrame(episodes)
+    episode_table.to_json(directory / "episodes.json", orient="records", force_ascii=False, indent=2)
+    summaries = []
+    tests = []
+    for name, selection in [("all", episode_table), ("ta-trapped", episode_table[episode_table.actuallyTrapped])]:
+        selected = frame[frame.episodeKey.isin(selection.episodeKey)]
+        for category, subset in [("all", selected), ("cross-owner", selected[selected.crossOwner]), ("self-correction", selected[~selected.crossOwner])]:
+            for condition, group in subset.groupby("condition"):
+                summaries.append({"sample": name, "category": category, "condition": condition, "episodes": len(group),
+                                  "jointSuccess": int(group.jointSuccess.sum()), "jointRate": float(group.jointSuccess.mean()),
+                                  "functional": int(group.functional.sum()), "recurrence": int((~group.trapAvoided).sum()),
+                                  "recurrenceRate": float((~group.trapAvoided).mean()), "delivered": int(group.targetInjected.sum())})
+        for metric in ["jointSuccess", "trapAvoided"]:
+            wide = selected.pivot(index="episodeKey", columns="condition", values=metric)
+            if len(wide):
+                tests.append({"sample": name, "metric": metric, "unit": "episode", **paired_tests(wide.T0, wide.T3)})
+    costs = {"taEstimatedCny": sum((item["taUsage"] or {}).get("estimatedCost", 0) for item in episodes),
+             "tbEstimatedCny": sum((value or {}).get("estimatedCost", 0) for value in frame.usage),
+             "recapEstimatedCny": sum(((call.get("usage") or {}).get("estimatedCost") or
+                                       ((call.get("usage") or {}).get("promptTokens", 0) * 2.1 + (call.get("usage") or {}).get("completionTokens", 0) * 8.4 - (call.get("usage") or {}).get("cacheReadTokens", 0) * 1.68) / 1000000)
+                                      for item in episodes for call in item["recapCalls"]),
+             "rerankEstimatedCny": sum(call.get("estimatedCost", 0) or 0 for calls in frame.rerankCalls for call in calls)}
+    costs["agentUnpricedRuns"] = sum((item["taUsage"] or {}).get("estimatedCost") is None for item in episodes) + sum((value or {}).get("estimatedCost") is None for value in frame.usage)
+    costs["recapUnpricedCalls"] = sum((call.get("usage") or {}).get("promptTokens") is None or (call.get("usage") or {}).get("completionTokens") is None for item in episodes for call in item["recapCalls"])
+    costs["rerankUnpricedCalls"] = sum(call.get("estimatedCost") is None for calls in frame.rerankCalls for call in calls)
+    quality = {"episodes": len(episodes), "actuallyTrapped": int(episode_table.actuallyTrapped.sum()),
+               "validStructure": sum(item["quality"]["validStructure"] for item in episodes),
+               "validCitations": sum(item["quality"]["validCitations"] for item in episodes),
+               "fallback": sum(item["quality"]["fallback"] for item in episodes),
+               "editedEpisodes": sum(bool(item["review"]["changedFields"]) for item in episodes),
+               "editedChars": sum(item["review"]["changedChars"] for item in episodes)}
+    (directory / "statistics.json").write_text(json.dumps({"summary": summaries, "comparisons": tests, "quality": quality, "costs": costs}, ensure_ascii=False, indent=2))
+    pd.DataFrame(summaries).to_csv(directory / "transfer.csv", index=False)
+    frame[frame.condition.eq("T3") & ~frame.targetInjected].to_json(directory / "delivery-failures.json", orient="records", force_ascii=False, indent=2)
+    frame[frame.runStatus.ne("completed")].to_json(directory / "run-failures.json", orient="records", force_ascii=False, indent=2)
+    plot = pd.DataFrame(summaries)
+    plot = plot[plot.category.eq("all") & plot["sample"].eq("ta-trapped")]
+    fig, axis = plt.subplots(figsize=(6, 4))
+    axis.bar(plot.condition, plot.jointRate, color=["#4477aa", "#228833"])
+    axis.set(ylim=(0, 1), ylabel="Joint success", xlabel="Condition")
+    fig.tight_layout(); fig.savefig(directory / "transfer.png", dpi=180); plt.close(fig)
+    return summaries
 
 
 def analyze_anchors(frame, directory):
@@ -223,7 +301,7 @@ def main():
         analyze_anchors(frame, args.out)
     elif "jointSuccess" in frame:
         analyze_agent(frame, args.out)
-        if "ta" in frame:
+        if "ta" in frame and not frame.variant.eq("shared-episode").all():
             eligible = frame.ta.map(lambda value: value["actuallyTrapped"])
             frame[["key", "pair", "condition"]].assign(taActuallyTrapped=eligible).to_csv(args.out / "transfer-eligibility.csv", index=False)
             stability = frame[["key", "pair", "condition", "variant", "repetition"]].assign(taActuallyTrapped=eligible)

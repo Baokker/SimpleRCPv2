@@ -171,6 +171,14 @@ test("真实 HTTP 与 Yjs 检查卡片快照、T1 状态和平台锚点顺序", 
     const context = await api.request("/api/projects/demo/knowledge/cards", member, {type: "context", title: "本次纠正上下文", summary: "成员要求整张单据共同处理。", content: "后项失败时，前项库存保持原样。", scope: "team"});
     assert.equal(context.card.status, "reviewed");
     assert.equal((await api.request(`/api/projects/demo/knowledge/cards/${context.card.id}`, member)).card.status, "reviewed");
+    const second = (await api.request("/api/projects/demo/members", undefined, {name: "transfer-recipient"})).member.id;
+    const source = context.card;
+    const mapped = await api.request("/api/projects/demo/experiments/cards/import", member, {cards: [{...source, id: `${source.id}-mapped`}], memberMapping: {[member]: second}});
+    assert.equal(mapped.cards[0].ownerMemberId, second);
+    assert.equal(mapped.cards[0].provenance.author.memberId, second);
+    assert.deepEqual(mapped.cards[0].review.confirmedBy, [second]);
+    assert.equal(mapped.cards[0].review.confirmedAt, source.review.confirmedAt);
+    await assert.rejects(api.request("/api/projects/demo/experiments/cards/import", member, {cards: [source], memberMapping: {[member]: "unknown-member"}}), /project members/);
 
     const samples = collectFrozenAnchorCorpus(platformRoot, {fixtureRoot: path.join(platformRoot, "packages/knowledge/bench/fixtures/anchor-corpus-0869b7a")});
     const sample = samples[0], anchor = createAnchorBenchmarkCases(samples)[0].anchor;

@@ -3,9 +3,34 @@ import path from "node:path";
 import type {AgentRun, AgentTraceEvent, ProjectRecord} from "@simplercp/shared";
 import type {ExperimentConfig, Task} from "./common.js";
 import {benchRoot, exec, exists, hash, pause, readJson, root, writeJson} from "./common.js";
+import {isQuotaFailure} from "./interruption.js";
 
 export class PlatformClient {
+  private active = new Map<string, {project: ProjectRecord; member: string; saved: string}>();
+  private interruption: Error | undefined;
   constructor(readonly config: ExperimentConfig) {}
+  checkScheduling() {if (this.interruption) throw this.interruption;}
+  async stop(error: unknown) {
+    this.interruption ??= error instanceof Error ? error : new Error(String(error));
+    const results = await Promise.allSettled([...this.active].map(async ([id, {project, member, saved}]) => {
+      await writeJson(path.join(path.dirname(saved), "interruption.json"), {at: new Date().toISOString(), runId: id, reason: this.interruption!.message});
+      await this.request(this.projectRoute(project, `agent/runs/${id}/cancel`), member, {});
+      const settled = await this.request(this.projectRoute(project, `experiments/runs/${id}/settle`), member, {});
+      await writeJson(path.join(path.dirname(saved), "interrupted-run.json"), settled);
+    }));
+    const failures = results.filter(result => result.status === "rejected");
+    if (failures.length) throw new AggregateError(failures.map(result => (result as PromiseRejectedResult).reason), "Cancellation failed");
+  }
+  private async track(project: ProjectRecord, member: string, run: AgentRun, saved: string) {
+    this.active.set(run.id, {project, member, saved});
+    if (this.interruption) {
+      await writeJson(path.join(path.dirname(saved), "interruption.json"), {at: new Date().toISOString(), runId: run.id, reason: this.interruption.message});
+      await this.request(this.projectRoute(project, `agent/runs/${run.id}/cancel`), member, {});
+      await writeJson(path.join(path.dirname(saved), "interrupted-run.json"), await this.request(this.projectRoute(project, `experiments/runs/${run.id}/settle`), member, {}));
+      this.checkScheduling();
+    }
+    return run;
+  }
   async request<T = any>(route: string, member?: string, body?: unknown, method = body === undefined ? "GET" : "POST"): Promise<T> {
     const response = await fetch(this.config.origin + route, {
       method, headers: {"Content-Type": "application/json", ...(member ? {"X-SimpleRCP-Member": member} : {})},
@@ -18,7 +43,8 @@ export class PlatformClient {
   async verify() {
     const settings = await this.request("/api/agent/settings");
     if (settings.provider !== this.config.provider || settings.model !== this.config.model) throw new Error("Experiment model differs from server settings");
-    const status = await this.request("/api/experiments/status");
+    const {quotaFailure, ...status} = await this.request("/api/experiments/status");
+    if (quotaFailure) throw new Error(`Model quota interruption: ${JSON.stringify(quotaFailure)}`);
     if (!status.enabled || status.fakeAgentRuntime) throw new Error("A real experiment server is required");
     if (status.provider !== this.config.provider || status.model !== this.config.model || status.knowledgeProvider !== this.config.provider || status.knowledgeModel !== this.config.model) throw new Error("Experiment Agent and knowledge model must match the configuration");
     if (status.speed !== this.config.speed) throw new Error("Experiment capture clock differs from the configuration");
@@ -66,13 +92,15 @@ export class PlatformClient {
     return this.request(this.projectRoute(project, "knowledge/config"), member, patch, "PUT");
   }
   async run(project: ProjectRecord, member: string, prompt: string, saved: string, sessionId?: string): Promise<AgentRun> {
-    if (await exists(saved)) return readJson<AgentRun>(saved);
+    this.checkScheduling();
+    if (await exists(saved)) return this.track(project, member, await readJson<AgentRun>(saved), saved);
     const {run} = await this.request<{run: AgentRun}>(this.projectRoute(project, "agent/runs"), member, {prompt, ...(sessionId ? {sessionId} : {})});
     await writeJson(saved, run);
-    return run;
+    return this.track(project, member, run, saved);
   }
   async teamRun(project: ProjectRecord, member: string, handle: string, prompt: string, saved: string): Promise<AgentRun> {
-    if (await exists(saved)) return readJson<AgentRun>(saved);
+    this.checkScheduling();
+    if (await exists(saved)) return this.track(project, member, await readJson<AgentRun>(saved), saved);
     const messageFile = `${saved}.message.json`;
     let message: any;
     if (await exists(messageFile)) message = await readJson(messageFile);
@@ -84,7 +112,7 @@ export class PlatformClient {
     while (Date.now() < deadline) {
       const {runs} = await this.request<{runs: AgentRun[]}>(this.projectRoute(project, "agent/runs"), member);
       const run = runs.find(item => item.chatMessageId === message.id);
-      if (run) {await writeJson(saved, run); return run;}
+      if (run) {await writeJson(saved, run); return this.track(project, member, run, saved);}
       await pause(100);
     }
     throw new Error(`Team Agent did not accept chat: ${message.id}`);
@@ -92,9 +120,25 @@ export class PlatformClient {
   async wait(project: ProjectRecord, member: string, run: AgentRun) {
     const deadline = Date.now() + this.config.timeoutMs + 30000;
     while (Date.now() < deadline) {
+      this.checkScheduling();
+      const status = await this.request("/api/experiments/status");
+      if (status.quotaFailure) {
+        const error = new Error(`Model quota interruption: ${JSON.stringify(status.quotaFailure)}`);
+        await this.stop(error);
+        throw error;
+      }
       const {run: current} = await this.request<{run: AgentRun}>(this.projectRoute(project, `agent/runs/${run.id}`), member);
       if (["completed", "failed", "cancelled"].includes(current.status)) {
-        return (await this.request<{run: AgentRun}>(this.projectRoute(project, `experiments/runs/${run.id}/settle`), member, {})).run;
+        const settled = (await this.request<{run: AgentRun}>(this.projectRoute(project, `experiments/runs/${run.id}/settle`), member, {})).run;
+        const calls = (await this.request(this.projectRoute(project, "experiments/llm-calls"), member)).calls;
+        const quota = isQuotaFailure(settled.error ?? "") || calls.some((call: any) => call.runId === run.id && isQuotaFailure(call.failureReason ?? ""));
+        if (quota || settled.status === "cancelled") {
+          const error = new Error(quota ? `Model quota interruption: ${settled.error ?? "knowledge rerank"}` : `Agent run cancelled: ${run.id}`);
+          await this.stop(error);
+          throw error;
+        }
+        this.active.delete(run.id);
+        return settled;
       }
       await pause(500);
     }
@@ -106,6 +150,9 @@ export class PlatformClient {
     const {events} = await this.request<{events: AgentTraceEvent[]}>(this.projectRoute(project, `agent/runs/${run.id}/trace`), member);
     await writeJson(path.join(raw, "run.json"), run);
     await writeJson(path.join(raw, "trace.json"), events);
+    const {calls} = await this.request(this.projectRoute(project, "experiments/llm-calls"), member);
+    const modelCalls = calls.filter((call: any) => call.runId === run.id);
+    await writeJson(path.join(raw, "llm-calls.json"), modelCalls);
     const injected = events.filter(event => event.type === "knowledge_injected");
     const tools = events.filter(event => event.type === "knowledge_tool_call");
     const postCheck = events.filter(event => event.type === "knowledge_post_check");
@@ -123,7 +170,7 @@ export class PlatformClient {
       await fs.writeFile(savedDiff, diff);
       await fs.rename(temporary, snapshot);
     }
-    return {events, injected, tools, postCheck, snapshot, diffHash: hash(diff)};
+    return {events, injected, tools, postCheck, snapshot, diffHash: hash(diff), modelCalls};
   }
 }
 export async function judge(task: Task, workspace: string, raw: string) {

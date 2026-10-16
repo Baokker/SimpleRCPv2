@@ -8,6 +8,8 @@ import {loadConfig} from "../../apps/server/src/config.js";
 import {attachRealtimeServer} from "../../apps/server/src/realtime.js";
 import {platformRoot, root} from "./common.js";
 import {registerExperimentRoutes} from "./server-routes.js";
+import {isQuotaFailure} from "./interruption.js";
+import {redactSensitive} from "../../apps/server/src/agent/traceStore.js";
 
 if (process.env.SIMPLERCP_KNOWLEDGE_EXPERIMENTS !== "true") throw new Error("SIMPLERCP_KNOWLEDGE_EXPERIMENTS=true is required");
 const directory = path.join(root, ".work/server");
@@ -42,6 +44,11 @@ for (const name of Object.keys(process.env)) if (/KEY|TOKEN|SECRET|PASSWORD/u.te
 process.env.TMPDIR = path.join(directory, "temporary");
 await fs.mkdir(process.env.TMPDIR, {recursive: true});
 const app = await createApp(configuration);
+let quotaFailure: {at: string; status: number; reason: string} | undefined;
+app.get("/api/experiments/status", (_request, response, next) => {
+  if (!quotaFailure) {next(); return;}
+  response.json({quotaFailure});
+});
 app.post("/experiments/model/v1/chat/completions", async (request, response, next) => {
   try {
     if (request.headers.authorization !== "Bearer experiment-local") {response.sendStatus(401); return;}
@@ -51,6 +58,15 @@ app.post("/experiments/model/v1/chat/completions", async (request, response, nex
     });
     response.status(forwarded.status);
     response.setHeader("Content-Type", forwarded.headers.get("Content-Type") ?? "application/json");
+    if (!forwarded.ok) {
+      const body = await forwarded.text();
+      if (forwarded.status === 429 || isQuotaFailure(body)) {
+        quotaFailure = {at: new Date().toISOString(), status: forwarded.status, reason: String(redactSensitive(body, [actualKey, ...(configuration.sensitiveValues ?? [])])).slice(0, 600)};
+        await fs.appendFile(path.join(directory, "quota-interruptions.jsonl"), JSON.stringify(quotaFailure) + "\n", {mode: 0o600});
+      }
+      response.end(String(redactSensitive(body, [actualKey, ...(configuration.sensitiveValues ?? [])])));
+      return;
+    }
     if (!forwarded.body) throw new Error("Model response body is unavailable");
     Readable.fromWeb(forwarded.body as any).pipe(response);
   } catch (error) {next(error);}

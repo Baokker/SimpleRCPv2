@@ -6,7 +6,7 @@ import diff from "fast-diff";
 import {
   VirtualCaptureClock, NotificationPolicy, createCaptureEngine, createOpenAICompatibleClient, createAgentRevisedSuggestion,
   extractKnowledgeCardDraft, isCaptureEvent, isCaptureSuggestion, searchKnowledgeCards, changedSnippet, applyCaptureOps,
-  extractAgentRecapDraft, parseAgentRecapDraft,
+  extractAgentRecapDraft, parseAgentRecapDraft, isLlmQuotaFailure,
   type CaptureEvent, type CaptureSuggestion, type CaptureChatEvent, type CaptureConfigInput,
   type CaptureCheckpoint, type LlmUsage, type CaptureAgentRunEvent, type CaptureAgentToolEvent, type CaptureAgentFileChange
 } from "@simplercp/knowledge";
@@ -359,6 +359,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
     let checkValidation: unknown;
     let failureReason: string | undefined;
     const attemptResults: unknown[] = [];
+    const responses: string[] = [];
+    let modelDraft: unknown;
     try {
       if (ai && suggestion.origin === "human-agent" && ["agent.interrupted", "agent.revised", "agent.corrected"].includes(suggestion.triggerType)) {
         mode = "recap";
@@ -383,6 +385,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
           addLlmUsage(usage, selfResult.usage);
           const parsed = parseAgentRecapDraft(selfResult.text, suggestion.evidence);
           if (!parsed) throw new Error("Agent self recap returned invalid JSON");
+          responses.push(selfResult.text);
+          modelDraft = parsed;
           checkValidation = parsed.checkValidation;
           completed = true;
           fallback = false;
@@ -393,6 +397,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
           client: client ? { async complete(request) {
             promptHashes.push(crypto.createHash("sha256").update(JSON.stringify(request.messages)).digest("hex"));
             const result = await client.complete(request);
+            responses.push(result.text);
             addLlmUsage(usage, result.usage);
             return result;
           } } : undefined,
@@ -401,7 +406,9 @@ export function createCaptureService(options: CaptureServiceOptions) {
           onAttempt(result) {attemptResults.push(result); failureReason = result.failureReason;}
         });
         completed = !recap.fallback;
+        modelDraft = recap.draft;
         checkValidation = recap.draft.checkValidation;
+        if (recap.fallback && isLlmQuotaFailure(recap.failureReason)) throw new Error(`Model quota interruption: ${recap.failureReason}`);
         return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable, ...recap.draft.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
       }
       const draft = await extractKnowledgeCardDraft({
@@ -422,7 +429,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
     } finally {
       if (ai) {
         suggestion.ai = { provider: llmProvider, model: llmModel, durationMs: Date.now() - started, totalTokens: usage.totalTokens, fallback };
-        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, provider: llmProvider, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes, checkValidation, failureReason: mask(failureReason), attemptResults: mask(attemptResults) }) + "\n", { mode: 0o600 });
+        await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({ suggestionId: suggestion.id, at: started, mode, provider: llmProvider, ...suggestion.ai, completed, usage, attempts: promptHashes.length, promptHashes, checkValidation, failureReason: mask(failureReason), attemptResults: mask(attemptResults), responses: mask(responses), modelDraft: mask(modelDraft) }) + "\n", { mode: 0o600 });
         await save(suggestion);
       }
     }

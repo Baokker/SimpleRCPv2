@@ -54,7 +54,13 @@ pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/r
 
 判定使用冻结 `run-judge.mjs` 的逐字副本，执行前比较 SHA-256。副本放在 `.work/judge/tools/`，判定器的临时目录因此位于实验目录内。任务和隐藏测试仍从只读数据目录读取。
 
-K4 的甲通过团队 Agent 聊天提交 Ta。到达纠正时间后，interrupt 取消仍在运行的 Ta；revise 等待 Ta 完成。两条路径都等待会话停止修改文件，再保存 Ta 工作区并判定。纠正成员用原文向同一团队 Agent 发送消息，服务端通过 `recap-from-episode` 生成一次草稿并确认团队卡片。正式 `--shared-episode` 入口将这一个 episode 派生为独立项目中的 T0 与 T3 两次 Tb，T0 不导入卡片，T3 通过正常检索注入卡片；Ta 没有踩坑的 episode 仍然保留。结果记录 `captureBypassed: true`、`naturallyTriggered`、复盘结构、卡片确认和 T3 的 `rankingSource`。产品触发是否自然识别作为附带观察；K1 使用产品默认纠正词表，遗漏计入召回率。确认规则在 `review-rules.json` 中预先定义。缺少指定标识符或 fallback 草稿时替换 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时替换 appliesTo。记录修改字段、字符编辑数量（增加和删除的字符数）和规则哈希。历史 T1 到 T5 入口仍保留用于旧结果复核，数据仓库工具仅作为校准工具。
+正式 K4 使用 `--shared-episode --conditions T0,T3`。甲通过团队 Agent 聊天提交 Ta，捕获服务保持开启。Ta 结束并保存行为判定后，服务端通过 `runs/:id/correction-baseline` 保存纠正文件的当前版本；纠正成员按 `correction.json` 使用 Yjs 写入参考修订并发送聊天说明。纠正后的文件再次通过行为判定，随后经 `recap-from-episode` 和收集箱的 AI 草稿接口生成复盘。甲按 `review-rules.json` 确认卡片，再经团队升级确认接口形成团队知识。纠正成员仍按冻结数据规定，作者、确认人和卡片属主分别记录。
+
+同一个片段派生两个独立项目与会话，均由乙执行 Tb。T0 不导入卡片；T3 显式映射甲、乙的成员编号，保留源确认时间，使用正常检索注入。每对三次，共18次 Ta、36次 Tb，没有额外纠正 Agent。结果保存 `episodeKey`、原始 Ta runId、`captureBypassed`、`naturallyTriggered`、草稿结构和全部原始引用的校验、确认修改字段与字符数、`rankingSource`、重排用量、确认到乙首次注入的时间。Ta 未踩坑的片段保留，统计分别使用全部片段和实际踩坑子集，以片段配对 T0、T3。
+
+确认规则在 `review-rules.json` 中预先定义，requiredTokens 和 files 与冻结数据的 `tools/transfer-review-rules.json` 一致。缺少指定标识符或 fallback 草稿时采用 gold 的规则正文、标题、摘要与类型；缺少指定文件范围时采用规定的 appliesTo。修改字段、增加和删除的字符数与规则哈希随结果保存。产品自然识别作为附带观察。历史 T1 到 T5 入口保留用于读取历史结果，数据仓库工具用于校准。
+
+正式运行入口 `formal-run.ts` 使用 `knowledge-exp-freeze-v3.1`，分别核验实验三198条、实验四36条 Tb 与18个共享片段。额度或请求速率限制会停止新任务并取消当前 Agent，中断证据保存在原尝试目录；恢复时已完成组合直接跳过，中断 Tb 使用新的项目，已完成 Ta 保持原片段。重排请求失败直接采用 BM25，不重试。冻结前的真实验收使用 `preflight-v31.ts` 和 `verify-v31.ts`，结果位于 `.work/preflight-v31`，独立于正式结果。
 
 C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
 

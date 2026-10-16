@@ -21,7 +21,7 @@ import { isIgnoredPath } from "../workspacePolicy.js";
 import { readWorkspaceFile } from "../workspace.js";
 import { redactSensitive } from "../agent/traceStore.js";
 import {selectKnowledgeInjection, type KnowledgeSelectionPolicy} from "./injection.js";
-import {rerankKnowledge} from "./rerank.js";
+import {rerankKnowledge, buildRerankRequest, estimateRerankCost} from "./rerank.js";
 import type {LlmClient} from "@simplercp/knowledge";
 
 export {KNOWLEDGE_PROMPT_TITLE} from "./injection.js";
@@ -158,17 +158,26 @@ export interface KnowledgeProviderOptions {
   onConfigUpdated?(config: KnowledgeProviderConfig): void;
 }
 
-export function createKnowledgeRerankPolicy(options: {projectId: string; client?: LlmClient; model: string; timeoutMs?: number; sensitiveValues?: string[]}): KnowledgeSelectionPolicy {
+export function createKnowledgeRerankPolicy(options: {projectId: string; client?: LlmClient; model: string; timeoutMs?: number; sensitiveValues?: string[]; onCall?(record: Record<string, unknown>): Promise<void>}): KnowledgeSelectionPolicy {
   return async (input) => {
     const bm25Ids = input.candidates.slice(0, input.topK).map(({result}) => result.cardId);
     if (!options.client) return {ids: bm25Ids, rankingSource: "bm25-fallback", fallbackReason: "rerank-client-unavailable"};
     const seed = crypto.createHash("sha256").update(`${options.projectId}\n${input.query}\n${input.activeFiles.join("\n")}`).digest("hex");
+    const promptHash = crypto.createHash("sha256").update(JSON.stringify(buildRerankRequest(input, seed).messages)).digest("hex");
+    const at = Date.now();
+    let response: Parameters<Parameters<typeof rerankKnowledge>[1]["onResponse"]>[0] | undefined;
+    let ids: string[] = bm25Ids;
+    let failureReason: string | undefined;
     try {
-      const ids = await rerankKnowledge(input, {client: options.client, model: options.model, timeoutMs: options.timeoutMs, seed, onResponse: async () => undefined});
-      return {ids, rankingSource: "m3"};
+      ids = await rerankKnowledge(input, {client: options.client, model: options.model, timeoutMs: options.timeoutMs, seed, onResponse: async value => {response = value;}});
     } catch (error) {
-      return {ids: bm25Ids, rankingSource: "bm25-fallback", fallbackReason: rerankFailureReason(error, options.sensitiveValues)};
+      failureReason = rerankFailureReason(error, options.sensitiveValues);
     }
+    await options.onCall?.({at, mode: "rerank", provider: "minimax", model: options.model, projectId: options.projectId,
+      completed: failureReason === undefined, fallback: failureReason !== undefined, failureReason,
+      durationMs: Date.now() - at, promptHash,
+      usage: response?.usage, estimatedCost: estimateRerankCost(response?.usage), estimatedCostCurrency: "CNY", costEstimated: true});
+    return failureReason === undefined ? {ids, rankingSource: "m3"} : {ids: bm25Ids, rankingSource: "bm25-fallback", fallbackReason: failureReason};
   };
 }
 
@@ -246,7 +255,9 @@ export function createKnowledgeProvider(options: KnowledgeProviderOptions) {
       { memberId: input.initiator.id, displayName: input.initiator.displayName },
       {}
     );
-    const selectionPolicy = buildOptions?.selectionPolicy ?? (config.lexicalScoring === "bm25" && !config.fixedCardIds.length ? createKnowledgeRerankPolicy({projectId: input.project.id, client: options.rerank?.client, model: options.rerank?.model ?? "MiniMax-M3", sensitiveValues: options.sensitiveValues}) : undefined);
+    const selectionPolicy = buildOptions?.selectionPolicy ?? (config.lexicalScoring === "bm25" && !config.fixedCardIds.length ? createKnowledgeRerankPolicy({projectId: input.project.id, client: options.rerank?.client, model: options.rerank?.model ?? "MiniMax-M3", sensitiveValues: options.sensitiveValues,
+      async onCall(record) {await fs.appendFile(path.join(root, "llm-calls.jsonl"), JSON.stringify({...record, runId: input.run.id, preview: !recordUsage}) + "\n", {mode: 0o600});}
+    }) : undefined);
     const selection = await selectKnowledgeInjection({cards: visibleCards, viewerMemberId: input.initiator.id, query, activeFiles, config, excludedByUser, workspaceId: input.project.id, indexDir: path.join(root, "index"), sensitiveValues: options.sensitiveValues, selectionPolicy});
     const reviewCards = visibleCards.filter(card => ["needsReview", "orphaned"].includes(card.status) && (activeFiles.some(file => cardMatchesFile(card, file)) || selection.candidates.some(candidate => candidate.id === card.id))).map(card => ({ id: card.id, title: card.title }));
     const {records} = selection;

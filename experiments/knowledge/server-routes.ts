@@ -10,7 +10,7 @@ import {requireIdentity} from "../../apps/server/src/auth/permissions.js";
 import type {ServerConfig} from "../../apps/server/src/config.js";
 import type {ProjectRuntimeManager} from "../../apps/server/src/projectRuntimeManager.js";
 import type {AgentRunManager} from "../../apps/server/src/agent/agentRunManager.js";
-import {writeJsonFileAtomically} from "../../apps/server/src/jsonFile.js";
+import {readJsonFile, writeJsonFileAtomically} from "../../apps/server/src/jsonFile.js";
 import {getProjectMetadataPath} from "../../apps/server/src/projects.js";
 import {enrichRecapEvidence} from "../../apps/server/src/knowledge/recapEvidence.js";
 import {redactSensitive} from "../../apps/server/src/agent/traceStore.js";
@@ -29,10 +29,18 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     if (!Array.isArray(request.body.cards) || request.body.cards.length > 100) throw new Error("At most 100 cards are allowed");
     const sources: KnowledgeCard[] = request.body.cards;
     if (sources.some(card => !isKnowledgeCard(card) || !/^[\w-]+$/u.test(card.id))) throw new Error("Import requires valid schema v3 cards");
+    const memberMapping = request.body.memberMapping as Record<string, string> | undefined;
+    if (memberMapping && (typeof memberMapping !== "object" || Object.values(memberMapping).some(id => !runtime.room.members.some(member => member.id === id)))) throw new Error("Import member mapping must refer to project members");
+    const mappedMember = (id: string | undefined) => {
+      if (!memberMapping) return identity.memberId;
+      if (!id || !memberMapping[id]) throw new Error(`Import member mapping is incomplete: ${id}`);
+      return memberMapping[id];
+    };
     const cards = [];
     for (const source of sources) {
       for (const anchor of source.anchors) {
         const text = await fs.readFile(path.join(runtime.project.workspacePath, anchor.file.workspaceRelativePath), "utf8");
+        if (anchor.associationLevel === "file") continue;
         const offsets = anchor.rangeAtCapture && offsetsFromRange(text, anchor.rangeAtCapture);
         if (!offsets || text.slice(offsets.startOffset, offsets.endOffset) !== anchor.snapshot.text) throw new Error(`Import snapshot differs from its range: ${source.id}`);
       }
@@ -42,16 +50,17 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
         anchors: source.anchors.map(anchor => ({file: anchor.file.workspaceRelativePath, selection: anchor.rangeAtCapture}))
       });
       const imported: KnowledgeCard = {
-        ...source, anchors: created.anchors, ownerMemberId: identity.memberId,
+        ...source, anchors: created.anchors, ownerMemberId: mappedMember(source.ownerMemberId),
         metadata: {...source.metadata, roomId: runtime.room.id},
-        provenance: {...source.provenance!, author: {kind: "human", memberId: identity.memberId, displayName: identity.displayName}},
-        review: {...source.review!, confirmedBy: [identity.memberId]}
+        provenance: {...source.provenance!, author: {...source.provenance!.author, memberId: mappedMember(source.provenance!.author.memberId ?? source.ownerMemberId), displayName: runtime.room.members.find(member => member.id === mappedMember(source.provenance!.author.memberId ?? source.ownerMemberId))!.displayName}},
+        review: {...source.review!, confirmedBy: memberMapping ? source.review!.confirmedBy.map(mappedMember) : [identity.memberId]}
       };
       if (!isKnowledgeCard(imported)) throw new Error("Imported card schema is invalid");
       const cardsDirectory = path.join(getProjectMetadataPath(runtime.project), "knowledge/cards");
       await writeJsonFileAtomically(path.join(cardsDirectory, `${source.id}.json`), imported);
       await fs.unlink(path.join(cardsDirectory, `${created.id}.json`));
       cards.push(await runtime.knowledge!.get(identity, source.id));
+      if (imported.status === "reviewed") await runtime.knowledgeProvider!.onCardConfirmed(imported);
     }
     runtime.events.append({type: "knowledge_config_updated", roomId: runtime.room.id, memberId: identity.memberId, payload: {experiment: "cards/import", cardIds: sources.map(card => card.id)}});
     response.json({cards});
@@ -102,6 +111,35 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     const run = await agentRuns.awaitRunIdle(runtime.project.id, request.params.id);
     await runtime.documents.awaitIdle();
     response.json({run});
+  });
+  route("get", "llm-calls", async (request, response) => {
+    const identity = requireIdentity(request, response); if (!identity) return;
+    const runtime = manager.get(request.params.projectId);
+    const file = path.join(getProjectMetadataPath(runtime.project), "knowledge/llm-calls.jsonl");
+    const present = await fs.stat(file).then(() => true, error => {if (error.code === "ENOENT") return false; throw error;});
+    const calls = present ? (await fs.readFile(file, "utf8")).split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
+    response.json({calls});
+  });
+  route("post", "runs/:id/correction-baseline", async (request, response) => {
+    const identity = requireIdentity(request, response); if (!identity) return;
+    const runtime = manager.get(request.params.projectId);
+    const run = await agentRuns.awaitRunIdle(runtime.project.id, request.params.id);
+    if (!run || !["completed", "failed"].includes(run.status)) throw new Error("A finished original run is required");
+    if (!Array.isArray(request.body.files) || !request.body.files.length || request.body.files.some((file: unknown) => typeof file !== "string")) throw new Error("Correction paths are required");
+    const files = [...new Set<string>(request.body.files.map(normalizeWorkspaceRelativePath))].sort();
+    const saved = path.join(getProjectMetadataPath(runtime.project), "knowledge", `correction-baseline-${run.id}.json`);
+    let baseline = await readJsonFile<{runId: string; files: Array<{file: string; beforeText: string}>}>(saved);
+    if (baseline) {
+      if (JSON.stringify(baseline.files.map(item => item.file)) !== JSON.stringify(files)) throw new Error("Correction baseline paths changed");
+    } else {
+      await runtime.documents.awaitIdle();
+      baseline = {runId: run.id, files: await Promise.all(files.map(async file => {
+        const present = await fs.stat(path.join(runtime.project.workspacePath, file)).then(() => true, error => {if (error.code === "ENOENT") return false; throw error;});
+        return {file, beforeText: present ? await fs.readFile(path.join(runtime.project.workspacePath, file), "utf8") : ""};
+      }))};
+      await writeJsonFileAtomically(saved, baseline);
+    }
+    response.json(baseline);
   });
   route("post", "capture/agent-event", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;
@@ -183,6 +221,7 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
     if (correctionRun && (correctionRun.initiatorMemberId ?? correctionRun.memberId) !== identity.memberId) throw new Error("Correction must belong to the requesting member");
     if (!Array.isArray(correctionFiles)) throw new Error("Correction file versions must be an array");
     const previousChanges = await runtime.capture!.getAgentRunChanges(runId);
+    const baseline = await readJsonFile<{runId: string; files: Array<{file: string; beforeText: string}>}>(path.join(getProjectMetadataPath(runtime.project), "knowledge", `correction-baseline-${run.id}.json`));
     const correctedChanges = correctionRun ? await runtime.capture!.getAgentRunChanges(correctionRun.id) : [];
     const files = correctionFiles.length ? correctionFiles : correctedChanges.flatMap(change => {
       const beforeText = previousChanges.find(previous => previous.file === change.file)?.afterText ?? change.beforeText ?? "";
@@ -195,7 +234,7 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
       const secrets = [options.configuration.knowledgeLlm?.apiKey ?? "", options.configuration.agent?.apiKey ?? ""];
       if (redactSensitive(text, secrets, {preserveLength: true}) !== redactSensitive(file.afterText, secrets, {preserveLength: true})) throw new Error("Correction version differs from current workspace");
       const previous = previousChanges.find(change => change.file === normalizeWorkspaceRelativePath(file.file));
-      const expectedBefore = previous?.afterText ?? correctedChanges.find(change => change.file === normalizeWorkspaceRelativePath(file.file))?.beforeText;
+      const expectedBefore = previous?.afterText ?? correctedChanges.find(change => change.file === normalizeWorkspaceRelativePath(file.file))?.beforeText ?? baseline?.files.find(item => item.file === normalizeWorkspaceRelativePath(file.file))?.beforeText;
       if (typeof expectedBefore !== "string" || redactSensitive(expectedBefore, secrets, {preserveLength: true}) !== redactSensitive(file.beforeText, secrets, {preserveLength: true})) throw new Error("Agent version differs from the recorded original run");
     }
     const natural = (await runtime.capture!.list(identity.memberId, true)).find(item => item.evidence.captureBypassed !== true && item.actors.runIds.includes(runId) && ["agent.revised", "agent.corrected", "agent.interrupted"].includes(item.triggerType));

@@ -139,13 +139,16 @@ export class RunStore {
     }
   }
 }
-export async function pool<T>(items: T[], concurrency: number, processItem: (item: T) => Promise<void>) {
+export async function pool<T>(items: T[], concurrency: number, processItem: (item: T) => Promise<void>, onFailure?: (error: unknown) => Promise<void>) {
   let cursor = 0;
   let failure: unknown;
   const workers = Array.from({length: concurrency}, async () => {
     while (cursor < items.length && failure === undefined) {
       const item = items[cursor++];
-      try {await processItem(item);} catch (error) {failure = error; throw error;}
+      try {await processItem(item);} catch (error) {
+        if (failure === undefined) {failure = error; await onFailure?.(error);}
+        throw error;
+      }
     }
   });
   const results = await Promise.allSettled(workers);
