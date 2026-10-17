@@ -76,7 +76,7 @@ for (const scenario of definition.scenarios) {
   for (let round = 1; round <= repetitions; round += 1) {
     const humanEdit = scenario.category === "人与 Agent" ? "virtual-member" : undefined;
     const conflictAction = condition === "A0" ? "write-through" : scenario.category === "人与 Agent" ? "reject-and-adjust" : scenario.category === "同属主的两个 Agent" ? "queue-and-adjust" : "intent-card-and-accept";
-    records.push({ scenario: scenario.id, category: scenario.category, round, conflictAction, humanEdit, acceptanceProbe: scenario.acceptanceProbe, acceptance: "checked-by-frozen-probe-after-real-run", modelCalls: 0 });
+    records.push({ scenario: scenario.id, category: scenario.category, round, conflictAction, humanEdit, acceptanceProbe: scenario.acceptanceProbe, acceptance: "deferred-to-real-run", modelCalls: 0 });
   }
 }
 await fs.writeFile(path.join(output, "command.txt"), `pnpm --filter @simplercp/conflict-guard experiment:e3 --scenarios ${values.scenarios} --condition ${condition} --repeat ${repetitions} --fake-agent --out ${values.out}\n`);

@@ -8,7 +8,7 @@
 
 选择规则保存在 `selection-rule.md`、`selection-rule-a2.md` 和 `selection-rule-a3.md`，三个提交号与文件哈希记录在 `freeze.json`。数据集为 D1-v4，开发集 135 个关系组、270 个有效变体，真值为 46 个冲突与 224 个安全变更；保留集 145 个关系组、274 个有效变体，真值为 69 个冲突与 205 个安全变更，另有 16 个排除变体。
 
-P4 使用异步级联 G3a：Jev `jev-1.13.0` 使用 `pair-v5` 直接三选一，经 `TYPESAFE_PROXY_URL` 代理；提醒结论并行请求 MiniMax-M3 深判，使用 `pair-v1`、开启自适应推理、`reasoning_split`、4096 个以上输出 token、30 秒时限，MiniMax 国内站直连。阶段 A3 的配置、模型与供应方文件保存在 `stage-A3/`。
+P4 使用异步级联 G3a：Jev `jev-1.13.0` 使用 `pair-v5` 直接三选一，经 `TYPESAFE_PROXY_URL` 代理；提醒结论并行请求 MiniMax-M3 深判，使用 `pair-v1`、开启自适应推理、`reasoning_split`、4096 个以上输出 token、30 秒时限，MiniMax 国内站直连。阶段 A3 的配置、模型与供应方文件保存在 `stage-A3/`。E3 使用 `E3-agent/runtime-config.json` 固定 Agent 模型与协作预防配置。
 
 当前冻结状态为 `awaiting-human-confirmation`。用户确认后才允许读取保留集模型结果或执行保留集回放。
 

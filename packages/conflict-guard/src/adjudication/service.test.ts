@@ -31,6 +31,23 @@ it("reports replay cache misses identically when the wall clock changes", async 
   expect(service.stats().calls).toBe(0);
 });
 
+it("在配对录制中只复用快判缓存并保留深判请求", async () => {
+  const cache = new Map<string, CachedCall>();
+  let fastCalls = 0;
+  let deepCalls = 0;
+  const fast = { name: "jev", model: "jev-1.13.0", async judge() { fastCalls += 1; return { ...result, decision: "warn" as const }; } };
+  const deep = { name: "minimax", model: "MiniMax-M3", async judge() { deepCalls += 1; return { ...result, decision: "lock" as const }; } };
+  const dependencies = { clock: new VirtualClock(), cache: { async get(key: string) { return cache.get(key); }, async put(value: CachedCall) { cache.set(value.key, value); } }, fast, deep };
+  const record = createAdjudicationService({ ...dependencies, mode: "record", config: { ...defaultAdjudicationConfig, strategy: "G2" } });
+  await record.judge(input, local, new AbortController().signal);
+  const paired = createAdjudicationService({ ...dependencies, mode: "record", cacheReadRoles: new Set(["fast"]), cacheMissAsFailure: true, config: { ...defaultAdjudicationConfig, strategy: "G3a" } });
+  const verdict = await paired.judge(input, local, new AbortController().signal);
+  expect(verdict.decision).toBe("lock");
+  expect(fastCalls).toBe(1);
+  expect(deepCalls).toBe(1);
+  expect(paired.stats().cacheHits).toBe(1);
+});
+
 it("selects G4 T2 deep reasoning with its own budget and cache identity", async () => {
   const cache = new Map<string, CachedCall>();
   const received: boolean[] = [];

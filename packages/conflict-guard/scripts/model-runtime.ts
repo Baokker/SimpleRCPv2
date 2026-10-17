@@ -9,7 +9,7 @@ import { createModelCacheWriter } from "./model-cache-writer.ts";
 
 export const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 export function loadModelEnvironment() { const file = path.join(repositoryRoot, ".env"); if (existsSync(file)) process.loadEnvFile(file); }
-export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicationConfig, mode: ProviderMode = "replay", directory = path.join(repositoryRoot, "packages/conflict-guard/bench/model-cache"), onCall?: (call: ProviderCall) => void, models: Record<string, string> = {}, recordedSubscriptions?: readonly ProviderSubscription[], experimentBudget?: Awaited<ReturnType<typeof createExperimentBudget>>, providers: ModelProviderConfiguration = {}) {
+export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicationConfig, mode: ProviderMode = "replay", directory = path.join(repositoryRoot, "packages/conflict-guard/bench/model-cache"), onCall?: (call: ProviderCall) => void, models: Record<string, string> = {}, recordedSubscriptions?: readonly ProviderSubscription[], experimentBudget?: Awaited<ReturnType<typeof createExperimentBudget>>, providers: ModelProviderConfiguration = {}, cacheOptions: { cacheReadRoles?: ReadonlySet<"fast" | "deep">; cacheMissAsFailure?: boolean } = {}) {
   if (models.jev && models.jev !== config.fastModel) throw new Error("录制快判版本与配置不一致");
   for (const [adapter, provider] of Object.entries(providers)) {
     if (!["jev", "minimax", "deepseek", "openai-compatible"].includes(adapter) || !provider || typeof provider.baseUrl !== "string" || !provider.baseUrl.trim() || provider.jsonMode !== undefined && typeof provider.jsonMode !== "boolean" || provider.temperature !== undefined && (!Number.isFinite(provider.temperature) || provider.temperature < 0 || provider.temperature > 2)) throw new Error("模型请求配置无效");
@@ -56,7 +56,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
   const actualProviders = Object.fromEntries([fastJudge, deepJudge].map((judge) => [judge.name, providerConfiguration(judge.name, judge.cacheParameters!)]));
   let cacheMisses = 0;
   const cacheWriter = createModelCacheWriter(directory);
-  const service = createAdjudicationService({ config, mode, sensitiveValues: secrets, fast: fastJudge, deep: deepJudge, clock: { now: () => performance.now(), setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (handle) => clearTimeout(handle as NodeJS.Timeout) }, onCall(call) {
+  const service = createAdjudicationService({ config, mode, ...cacheOptions, sensitiveValues: secrets, fast: fastJudge, deep: deepJudge, clock: { now: () => performance.now(), setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (handle) => clearTimeout(handle as NodeJS.Timeout) }, onCall(call) {
     onCall?.(call);
     if (experimentBudget && call.status !== "cache-hit") budgetWrites = budgetWrites.then(() => experimentBudget.consume("usd", call.costUsd)).catch((error) => { budgetFailure = error; });
   }, recordedSubscriptions, onError: (stage) => console.error(JSON.stringify({ infrastructureError: stage })), cache: {

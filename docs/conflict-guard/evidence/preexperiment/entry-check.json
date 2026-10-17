@@ -77,6 +77,8 @@
           "G3",
           "G4"
         ],
+        "greyOnly": false,
+        "selection": "all samples",
         "executed": false,
         "modelCalls": 0
       }
@@ -106,6 +108,8 @@
           "G3",
           "G4"
         ],
+        "greyOnly": false,
+        "selection": "all samples",
         "executed": false,
         "modelCalls": 0
       }
@@ -122,6 +126,8 @@
           "G1",
           "G3"
         ],
+        "greyOnly": false,
+        "selection": "all samples",
         "executed": false,
         "modelCalls": 0
       }
@@ -149,6 +155,8 @@
           "G1",
           "G3"
         ],
+        "greyOnly": false,
+        "selection": "all samples",
         "executed": false,
         "modelCalls": 0
       }
@@ -168,6 +176,8 @@
           "P*",
           "G2"
         ],
+        "greyOnly": false,
+        "selection": "all samples",
         "executed": false,
         "modelCalls": 0
       }

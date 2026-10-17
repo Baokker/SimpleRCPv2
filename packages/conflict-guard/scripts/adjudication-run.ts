@@ -10,7 +10,7 @@ import { createExperimentBudget } from "./experiment-budget.ts";
 import { escapeDifference, paretoPoints } from "../dist/replay/reporting.js";
 import type { ModelProviderConfiguration } from "./model-providers.ts";
 
-const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string", default: "../../docs/conflict-guard/evidence/stage-5-dev-report" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "G0,P3,G1,G2,G3" }, repeat: { type: "string", default: "1" }, "provider-mode": { type: "string", default: "replay" }, threshold: { type: "string" }, deep: { type: "string" }, config: { type: "string" }, models: { type: "string" }, providers: { type: "string" }, cache: { type: "string" }, subscriptions: { type: "string" }, experiment: { type: "string" }, ablation: { type: "string" }, k: { type: "string", default: "2" }, "grey-only": { type: "boolean", default: false }, plan: { type: "boolean", default: false } } });
+const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string", default: "../../docs/conflict-guard/evidence/stage-5-dev-report" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "G0,P3,G1,G2,G3" }, repeat: { type: "string", default: "1" }, "provider-mode": { type: "string", default: "replay" }, "paired-fast": { type: "boolean", default: false }, threshold: { type: "string" }, deep: { type: "string" }, config: { type: "string" }, models: { type: "string" }, providers: { type: "string" }, cache: { type: "string" }, subscriptions: { type: "string" }, experiment: { type: "string" }, ablation: { type: "string" }, k: { type: "string", default: "2" }, "grey-only": { type: "boolean", default: false }, plan: { type: "boolean", default: false } } });
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 if (!["live", "record", "replay"].includes(values["provider-mode"]!)) throw new Error("provider-mode 无效");
 const ids = values.policy!.split(",");
@@ -54,7 +54,7 @@ for (const id of ids) {
   const outcomes: ReplayGroupOutcome[] = []; const rows: unknown[] = [];
   const strategy = modelStrategy(id);
   const cachePolicy = id === "G2-v5" ? "G2" : id === "P4" || id === "P4-no-four-state-typecheck" ? "G3a" : id;
-  const service = createModelRuntime({ ...config, strategy: strategy ?? "G0" }, values["provider-mode"] as ProviderMode, values.cache ? path.join(path.resolve(values.cache), cachePolicy) : undefined, undefined, models, recordedSubscriptions?.[cachePolicy], budget, providers);
+  const service = createModelRuntime({ ...config, strategy: strategy ?? "G0" }, values["provider-mode"] as ProviderMode, values.cache ? path.join(path.resolve(values.cache), cachePolicy) : undefined, undefined, models, recordedSubscriptions?.[cachePolicy], budget, providers, values["paired-fast"] ? { cacheReadRoles: new Set(["fast"]), cacheMissAsFailure: true } : {});
   const responses = new Map<string, ZoneVerdict>();
   const modelTasks: ZoneVerdict[] = [];
   const invariantInputs = new Map<string, AdjudicationInput>();

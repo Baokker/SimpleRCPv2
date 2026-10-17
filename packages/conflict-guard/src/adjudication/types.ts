@@ -135,6 +135,8 @@ export interface AdjudicationDependencies {
   onCall?(call: ProviderCall): void;
   onSubscription?(subscription: ProviderSubscription): void;
   recordedSubscriptions?: readonly ProviderSubscription[];
+  cacheReadRoles?: ReadonlySet<"fast" | "deep">;
+  cacheMissAsFailure?: boolean;
   onError?(stage: "trace" | "cache"): void;
 }
 export class ProviderError extends Error {

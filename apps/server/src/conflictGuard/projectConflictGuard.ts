@@ -111,6 +111,7 @@ export function createProjectConflictGuard(options: {
   const semantic = new SemanticChangeTracker({ index: semanticIndex, now: clock.now, readFile: semanticFiles.readFile });
   let unknownOriginWarned = false;
   const pendingCursors = new Map<string, { event: ConflictGuardEvent; timer: NodeJS.Timeout }>();
+  const suppressedTraceEdits = new Set<string>();
   const tracePath = path.join(options.metadataPath, "conflict-guard", "trace.jsonl");
   const acknowledgedWarnings = createWarningAcknowledgements(path.join(options.metadataPath, "conflict-guard", "acknowledgements.json"));
   let traceSequence = 0;
@@ -423,6 +424,7 @@ export function createProjectConflictGuard(options: {
         return;
       }
       flushPendingCursors();
+      if (event.type === "edit" && event.edit.origin.kind === "filesystem" && suppressedTraceEdits.delete(event.edit.file)) return;
       void appendTrace(traceEvent(event));
     } catch (error) {
       markDegraded(error);
@@ -495,15 +497,21 @@ export function createProjectConflictGuard(options: {
       if (applyOps(before, ops) !== after) {
         const resyncOps = textDiffOps(before, after);
         if (resyncOps.length > 0) {
-          tracker.edit({
-            file,
-            origin: { kind: "filesystem" },
-            at: clock.now(),
-            ops: resyncOps,
-            revisionAfter: options.getRevision(file),
-            textBefore: before,
-            textAfter: after
-          });
+          suppressedTraceEdits.add(file);
+          try {
+            tracker.edit({
+              file,
+              origin: { kind: "filesystem" },
+              at: clock.now(),
+              ops: resyncOps,
+              revisionAfter: options.getRevision(file),
+              textBefore: before,
+              textAfter: after
+            });
+          } catch (error) {
+            suppressedTraceEdits.delete(file);
+            throw error;
+          }
         }
         mirror.text = after;
         mirror.version = ++mirrorVersion;

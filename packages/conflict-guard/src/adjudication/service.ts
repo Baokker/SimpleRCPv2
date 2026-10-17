@@ -24,6 +24,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   async function provider(input: AdjudicationInput, fast: boolean, signal: AbortSignal, budget: number, occurrence: number, deadlineMs = config.hardDeadlineMs): Promise<CachedCall & { waitedMs?: number }> {
     if (signal.aborted) throw new ProviderError("cancelled");
     const judge = fast ? options.fast : options.deep;
+    const role = fast ? "fast" as const : "deep" as const;
     const parameters = { ...judge.cacheParameters, role: fast ? "fast" : "deep", reasoning: !fast && (config.reasoning ?? false), hardDeadlineMs: deadlineMs };
     const key = cacheKey(input, judge.name, judge.model, parameters);
     const base = { ...(input.point ? { point: input.point } : {}), role: fast ? "fast" as const : "deep" as const, adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input), cacheKey: key };
@@ -57,7 +58,8 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
         });
         const timeout = new Promise<never>((_resolve, reject) => { timer = options.clock.setTimeout(() => { reject(new ProviderError("timeout")); controller.abort(); }, deadlineMs); });
         try {
-          const cached = options.mode !== "replay" ? undefined : await Promise.race([options.cache?.get(key), timeout, abortPromise]);
+          const readsCache = options.mode === "replay" || options.cacheReadRoles?.has(role) === true;
+          const cached = readsCache ? await Promise.race([options.cache?.get(key), timeout, abortPromise]) : undefined;
           if (controller.signal.aborted) throw new ProviderError("cancelled");
           if (cached) {
             validateCachedCall(cached, key, input, judge.name, judge.model, parameters);
@@ -65,7 +67,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
             const call = { ...safe.call, cacheKey: key, status: safe.result ? "cache-hit" as const : safe.call.status, costUsd: 0 };
             emit(call); return { ...safe, call };
           }
-          if (options.mode === "replay") throw new ProviderError("failed", "provider replay cache miss");
+          if (options.mode === "replay" || options.cacheMissAsFailure && readsCache) throw new ProviderError("failed", "provider cache miss");
           requests += 1;
           const request = fast ? options.fast.judge(input, controller.signal) : options.deep.judge(input, { reasoning: config.reasoning ?? false }, controller.signal);
           const result = sanitize(await Promise.race([request, timeout, abortPromise]), options.sensitiveValues ?? []);
