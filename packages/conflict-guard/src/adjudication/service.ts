@@ -114,13 +114,16 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
   }
 
   async function judge(rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal, syntaxWait?: { deferred: number; waitMs: number }, onUpdate?: (verdict: ZoneVerdict, update?: { final?: boolean }) => void): Promise<ZoneVerdict> {
-    if (local.zone !== "grey" || config.strategy === "G0") return local;
+    if (local.zone !== "grey" || config.strategy === "G0") { onUpdate?.(local, { final: true }); return local; }
     if (signal.aborted) throw new ProviderError("cancelled");
     if (syntaxWait) syntaxWaits.push(syntaxWait.waitMs);
     syntaxDeferred += Number(Boolean(rawInput.syntax?.deferred));
     if (rawInput.syntax?.deferred) {
-      if (rawInput.syntax.batchClosed) return { ...local, decision: "warn", ruleId: "syntax-incomplete-final", summary: "本轮修改结束时声明仍不完整，请双方检查代码。", localOnly: true };
-      return { ...local, decision: "warn", ruleId: "syntax-incomplete-waiting", summary: "修改仍在输入，等待下一次完整版本后再研判。", localOnly: true, deferred: { reason: "syntax-incomplete" } };
+      const verdict: ZoneVerdict = rawInput.syntax.batchClosed
+        ? { ...local, decision: "warn", ruleId: "syntax-incomplete-final", summary: "本轮修改结束时声明仍不完整，请双方检查代码。", localOnly: true }
+        : { ...local, decision: "warn", ruleId: "syntax-incomplete-waiting", summary: "修改仍在输入，等待下一次完整版本后再研判。", localOnly: true, deferred: { reason: "syntax-incomplete" } };
+      onUpdate?.(verdict, { final: true });
+      return verdict;
     }
     judgements += 1;
     const started = options.clock.now();
@@ -135,8 +138,11 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     elapsed = first.waitedMs ?? first.call.latencyMs;
     const verdictFor = (entry: CachedCall & { waitedMs?: number }, role: "fast" | "deep", totalElapsed: number, escalatedValue: boolean, deadlineMs: number, verdictInput = input): ZoneVerdict => {
       const observedElapsed = options.mode === "replay" ? 0 : options.clock.now() - started;
-      const elapsedMs = entry.call.status === "timeout" && options.clock.now() - started >= deadlineMs ? deadlineMs : Math.min(Math.max(totalElapsed, observedElapsed), deadlineMs);
-      const result = elapsedMs <= deadlineMs ? entry.result : undefined;
+      const actualElapsedMs = entry.call.status === "timeout" && options.clock.now() - started >= deadlineMs
+        ? Math.max(totalElapsed, deadlineMs)
+        : Math.max(totalElapsed, observedElapsed);
+      const elapsedMs = Math.min(actualElapsedMs, deadlineMs);
+      const result = actualElapsedMs <= deadlineMs ? entry.result : undefined;
       const explanation = result?.userExplanation?.trim() ?? (result ? result.decision === "lock" ? "模型发现双方修改可能破坏共同使用的行为。" : result.decision === "allow" ? "模型认为双方修改可以共同继续。" : "模型建议双方检查关联修改的影响。" : "研判失败，已降级为警告。");
       const action = result?.suggestedAction ?? `请双方检查 ${verdictInput.left.symbol} 与 ${verdictInput.right.symbol} 的共同使用方式。`;
       adjudicationLatencies.push(elapsedMs);

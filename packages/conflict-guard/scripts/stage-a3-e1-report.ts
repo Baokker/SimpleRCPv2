@@ -1,13 +1,17 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { repositoryRoot } from "./model-runtime.ts";
+import { replayEvidenceSummary } from "../dist/replay/reporting.js";
+import { developmentSamples } from "./model-dataset.ts";
+import { compareEvaluations, type EvaluationRow } from "../dist/replay/evaluation.js";
 
 type ReplayResult = {
   endedAt: number;
   freezeIntervals: Array<{ pairId: string; actor: { kind: string; memberId?: string }; start: number; end?: number }>;
   coordinationEvents: Array<{ type: string; at?: number; pairId?: string; verdict?: { adjudication?: { source?: string } } }>;
+  judgements: Array<{ verdict: { ruleId: string; summary: string } }>;
 };
-type Group = { outcome: { truth: string; decision: string; virtualDurationMs?: number; frozenPersonSeconds?: number }; result: ReplayResult };
+type Group = EvaluationRow & { result: ReplayResult };
 type Evaluation = { metrics: Record<string, any>; groups: Group[] };
 type FreezeSourceBreakdown = { localRuleSeconds: number; modelSeconds: number; mixedSeconds: number; totalSeconds: number };
 
@@ -17,6 +21,8 @@ const base = await read<{ policies: Record<string, Evaluation> }>("base/results.
 const p4 = await read<Evaluation>("P4/results.json");
 const ablation = await read<Evaluation>("P4-no-four-state-typecheck/results.json");
 const evaluations: Record<string, Evaluation> = { ...base.policies, P4: p4, "P4-no-four-state-typecheck": ablation };
+const { samples } = await developmentSamples(path.join(repositoryRoot, "packages/conflict-guard/bench/datasets/d1-v4"));
+const traces = new Map(samples.map((sample) => [sample.label.id, sample.trace]));
 const metric = (value: unknown) => typeof value === "number" ? `${(value * 100).toFixed(2)}%` : value === null || value === undefined ? "N/A" : String(value);
 const rows = ["P0", "P1", "P2", "P3", "P*", "P4", "P4-no-four-state-typecheck"];
 const summary = [
@@ -28,22 +34,34 @@ const summary = [
   "|---|---:|---:|---:|---:|---:|---:|"
 ];
 const breakdown: Record<string, FreezeSourceBreakdown> = {};
+const verification = Object.fromEntries(rows.map((id) => [id, replayEvidenceSummary(evaluations[id]!.groups)]));
+const statistics = compareEvaluations(Object.fromEntries(["P1", "P2", "P3", "P4"].map((id) => [id, evaluations[id]!.groups])), 20261007, { reference: "P4" });
+const p4Statistics = compareEvaluations({ P4: p4.groups });
 for (const id of rows) {
   const evaluation = evaluations[id];
   if (!evaluation) continue;
   const metrics = evaluation.metrics;
-  const safeCount = Number(metrics.variantCounts?.safe ?? 0);
-  const safeWarnings = evaluation.groups.filter((group) => group.outcome.truth === "allow" && group.outcome.decision === "warn").length;
-  const safeWarningRate = safeCount > 0 ? safeWarnings / safeCount : null;
-  summary.push(`| ${id} | ${metric(metrics.missBlockRatio?.value)} | ${metric(metrics.falseBlockRatio?.value)} | ${metric(safeWarningRate)} | ${metrics.unnotifiedEscapes ?? "N/A"} | ${typeof metrics.frozenPersonSeconds === "number" ? metrics.frozenPersonSeconds.toFixed(2) : "N/A"} | ${metric(metrics.localDecisionRatio?.value)} |`);
+  const evidence = verification[id]!;
+  if (evidence.comparable) summary.push(`| ${id} | ${metric(metrics.missBlockRatio?.value)} | ${metric(metrics.falseBlockRatio?.value)} | ${metric(evidence.safeWarningRate)} | ${metrics.unnotifiedEscapes ?? "N/A"} | ${typeof metrics.frozenPersonSeconds === "number" ? metrics.frozenPersonSeconds.toFixed(2) : "N/A"} | ${metric(metrics.localDecisionRatio?.value)} |`);
+  else summary.push(`| ${id}（无法比较） | N/A | N/A | N/A | N/A | N/A | N/A |`);
   if (id === "P3" || id === "P4" || id === "P4-no-four-state-typecheck") breakdown[id] = splitFreezeSeconds(evaluation.groups);
 }
 await fs.writeFile(path.join(root, "freeze-source-breakdown.json"), JSON.stringify({ dataset: "d1-v4", split: "dev", k: 2, policies: breakdown }, null, 2) + "\n");
 for (const id of ["P3", "P4", "P4-no-four-state-typecheck"]) {
+  if (!verification[id]!.comparable) continue;
   const source = breakdown[id]!;
   summary.push("", `${id} 冻结时间来源：本地规则 ${source.localRuleSeconds.toFixed(2)} 人·秒，模型研判 ${source.modelSeconds.toFixed(2)} 人·秒，来源重叠 ${source.mixedSeconds.toFixed(2)} 人·秒，合计 ${source.totalSeconds.toFixed(2)} 人·秒。`);
 }
-summary.push("", "P4 的模型研判结果来自阶段 A3 的 G3a 录制，消融使用相同录制；输入哈希因关闭四状态类型检查而变化的关系会在结果文件中保留回放缓存缺失记录。", "");
+summary.push("", "安全修改提醒比例的分母为真值 allow 的全部样本。P4 的模型研判结果来自阶段 A3 的 G3a 录制。", "");
+for (const [id, evidence] of Object.entries(verification)) if (!evidence.comparable) summary.push(`${id} 有 ${evidence.cacheMissingJudgements} 条判定缺少回放缓存，涉及 ${evidence.cacheMissingGroups.length} 个样本，当前结果无法用于评价消融效果；原始输出保存在对应 results.json 中。`, "");
+summary.push("关系组的全部变体正确时记为正确。P4 与 P1、P2、P3 的三个比较构成同一 Holm 校正族；bootstrap 重复 2000 次，种子为 20261007。", "", "| 比较 | 关系组数 | exact McNemar p | Holm p |", "|---|---:|---:|---:|");
+for (const comparison of statistics.comparisons) summary.push(`| ${comparison.left} / ${comparison.right} | ${comparison.groups} | ${comparison.p.toPrecision(6)} | ${comparison.adjustedP.toPrecision(6)} |`);
+summary.push("");
+await fs.writeFile(path.join(root, "statistics.json"), JSON.stringify(statistics, null, 2) + "\n");
+await fs.writeFile(path.join(root, "P4/statistics.json"), JSON.stringify(p4Statistics, null, 2) + "\n");
+await fs.writeFile(path.join(root, "P4/verification.json"), JSON.stringify({ statistics: p4Statistics, evidence: verification.P4, source: "results.json" }, null, 2) + "\n");
+await fs.writeFile(path.join(root, "P4/command.txt"), "node --experimental-strip-types packages/conflict-guard/scripts/stage-a3-e1-model.ts\n");
+await fs.writeFile(path.join(root, "report-verification.json"), JSON.stringify(verification, null, 2) + "\n");
 await fs.writeFile(path.join(root, "summary.md"), summary.join("\n"));
 await fs.writeFile(path.join(root, "report-command.txt"), "node --experimental-strip-types packages/conflict-guard/scripts/stage-a3-e1-report.ts\n");
 console.log(JSON.stringify({ policies: Object.keys(breakdown), freezeSourceBreakdown: breakdown }));
@@ -53,9 +71,11 @@ function splitFreezeSeconds(groups: Group[]): FreezeSourceBreakdown {
   for (const group of groups) {
     const events = [...(group.result.coordinationEvents ?? [])].sort((left, right) => Number(left.at ?? 0) - Number(right.at ?? 0));
     const intervals = group.result.freezeIntervals ?? [];
-    const fallbackCutoff = group.outcome.virtualDurationMs && group.outcome.virtualDurationMs > 0 ? group.outcome.virtualDurationMs : group.result.endedAt;
-    const targetMs = typeof group.outcome.frozenPersonSeconds === "number" ? group.outcome.frozenPersonSeconds * 1000 : undefined;
-    const cutoff = targetMs === undefined ? fallbackCutoff : cutoffForDuration(intervals, group.result.endedAt, targetMs, fallbackCutoff);
+    const trace = group.id ? traces.get(group.id) : undefined;
+    if (!trace) throw new Error("冻结来源统计缺少原始轨迹");
+    const cutoff = trace.find((event) => event.type === "session_start")?.typing
+      ? Math.max(0, ...trace.filter((event) => event.type === "edit").map((event) => event.at))
+      : group.result.endedAt;
     const byActor = new Map<string, Array<{ start: number; end: number; source: "local" | "model" }>>();
     for (const interval of intervals) {
       const verdict = [...events].reverse().find((event) => event.type === "pair_judged" && event.pairId === interval.pairId && Number(event.at ?? 0) <= interval.start)?.verdict;
@@ -82,38 +102,4 @@ function splitFreezeSeconds(groups: Group[]): FreezeSourceBreakdown {
     }
   }
   return totals;
-}
-
-function unionFreezeDuration(intervals: ReplayResult["freezeIntervals"], endedAt: number, cutoff: number) {
-  const actors = new Map<string, Array<[number, number]>>();
-  for (const interval of intervals) {
-    const end = Math.min(interval.end ?? endedAt, cutoff);
-    if (end <= interval.start) continue;
-    const key = JSON.stringify(interval.actor);
-    const ranges = actors.get(key) ?? [];
-    ranges.push([interval.start, end]);
-    actors.set(key, ranges);
-  }
-  let total = 0;
-  for (const ranges of actors.values()) {
-    let end = -Infinity;
-    for (const [start, currentEnd] of ranges.sort((left, right) => left[0] - right[0])) {
-      total += Math.max(0, currentEnd - Math.max(start, end));
-      end = Math.max(end, currentEnd);
-    }
-  }
-  return total;
-}
-
-function cutoffForDuration(intervals: ReplayResult["freezeIntervals"], endedAt: number, targetMs: number, fallback: number) {
-  if (unionFreezeDuration(intervals, endedAt, fallback) >= targetMs - 0.01 && unionFreezeDuration(intervals, endedAt, fallback) <= targetMs + 0.01) return fallback;
-  let low = 0;
-  let high = endedAt;
-  if (unionFreezeDuration(intervals, endedAt, high) < targetMs) return fallback;
-  for (let iteration = 0; iteration < 50; iteration += 1) {
-    const middle = (low + high) / 2;
-    if (unionFreezeDuration(intervals, endedAt, middle) < targetMs) low = middle;
-    else high = middle;
-  }
-  return high;
 }

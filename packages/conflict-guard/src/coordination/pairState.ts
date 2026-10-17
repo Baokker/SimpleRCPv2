@@ -284,6 +284,15 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
       const { deferred: _deferred, ...attempt } = record.lastAttempt;
       applyVerdict(record, { ...attempt, ruleId: "syntax-incomplete-final", summary: "修改结束时声明仍不完整，请双方检查代码。", localOnly: true });
     },
+    resumeSyntax(id: string) {
+      const record = records.get(id);
+      if (!record || record.status === "closed" || !record.lastAttempt?.deferred) return false;
+      record.lastAttempt = undefined;
+      record.analysisPending = false;
+      record.status = "pending";
+      record.updatedAt = options.now();
+      return true;
+    },
     showAnalysis(id: string, revision: number) { const record = records.get(id); if (record?.status === "analyzing" && record.revision === revision) { record.analysisVisible = true; emit({ type: "pair_analysis_progress", record: { ...record } }); } },
     dispose() { for (const request of analyses.values()) request.abort(); analyses.clear(); options.clock?.clearTimeout(timer); for (const id of queued.keys()) options.judgementQueue?.cancel(`T1:${id}`); queued.clear(); },
     records() { return [...records.values()]; },

@@ -152,4 +152,9 @@ describe("server config", () => {
     expect(() => loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_T2_STRATEGY: "G9" })).toThrow();
     expect(() => loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_T2_REASONING: "yes" })).toThrow();
   });
+
+  it("G3a 使用 pair-v5 快判标准、自适应推理与 30 秒深判时限", () => {
+    const config = loadConfig({ CONFLICT_GUARD: "full", CONFLICT_GUARD_STRATEGY: "G3a" });
+    expect(config.conflictGuard?.adjudication?.settings).toMatchObject({ strategy: "G3a", promptVersion: "pair-v5", inputVersion: "declaration-evidence-v1", reasoning: true, deepDeadlineMs: 30_000 });
+  });
 });

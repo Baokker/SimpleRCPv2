@@ -32,5 +32,12 @@ it("真实国内站录制按保存的端点与参数读取缓存并保持判定�
       expect(runtime.stats().calls).toBe(0);
       expect(runtime.cacheMisses()).toBe(0);
     } finally { runtime.dispose(); }
+    const overdue = createModelRuntime({ ...report.config, strategy: "G1" }, "replay", path.join(directory, "G1"), undefined, { minimax: "MiniMax-M3" }, [{ ...subscription, latencyMs: report.config.hardDeadlineMs + 1 }], undefined, providers);
+    try {
+      const verdict = await overdue.judge(entry.input, original.verdict, new AbortController().signal);
+      expect(verdict).toMatchObject({ decision: "warn", ruleId: "model-unavailable", adjudication: { status: "degraded", latencyMs: report.config.hardDeadlineMs } });
+      expect(overdue.stats().calls).toBe(0);
+      expect(overdue.cacheMisses()).toBe(0);
+    } finally { overdue.dispose(); }
   } finally { await fs.rm(directory, { recursive: true }); }
 });

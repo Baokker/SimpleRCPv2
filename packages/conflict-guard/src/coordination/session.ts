@@ -9,7 +9,7 @@ import { transformRanges } from "../tracking/rangeTransform.js";
 import { symbolContractChanged, type ZoneVerdict } from "../routing/classifier.js";
 import { createPairCoordinator, type PairEvent, type PairAdjudicator, type PairRevisionMode, type PairCloseReason, type JudgementQueue } from "./pairState.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
-import { createSyntaxWaitTracker } from "../adjudication/syntax.js";
+import { createSyntaxWaitTracker, declarationSyntax } from "../adjudication/syntax.js";
 
 export interface FrozenRegion {
   pairId: string;
@@ -95,7 +95,7 @@ export function createSessionCoordinator(options: {
     const currentIds = new Set(currentPairs.map((pair) => pair.id));
     // 半成品代码可能暂时失去语义路径，保留候选直到批次关闭后检查当前文本。
     const retainedPending = coordinator.records()
-      .filter((record) => options.revisionMode === "judged-input" && ["pending", "stale", "analyzing"].includes(record.status) && (relevantBatch(record.pair) || incompleteSource(record.pair)) && !currentIds.has(record.pair.id))
+      .filter((record) => options.revisionMode === "judged-input" && ["pending", "stale", "analyzing"].includes(record.status) && (relevantBatch(record.pair) || incompleteSource(record.pair) || batches.some(({ batch }) => batchTouchesPair(batch, record.pair))) && !currentIds.has(record.pair.id))
       .map((record) => record.pair);
     const candidates = [...currentPairs, ...retainedPending];
     if (options.observeSyntax) {
@@ -133,6 +133,15 @@ export function createSessionCoordinator(options: {
       const file = side.symbol.slice(0, side.symbol.indexOf("#"));
       const text = options.index.readFile?.(file);
       return text !== undefined && !isSourceParsable(file, text);
+    });
+  }
+  function batchTouchesPair(batch: EditBatch, pair: CandidatePair) {
+    if (batch.actor.kind !== "human") return false;
+    const keys = touchedKeys(batch);
+    return [pair.left, pair.right].some((side) => {
+      if (actorKey(side.actor) !== actorKey(batch.actor) || !side.symbol.startsWith(`${batch.file}#`)) return false;
+      if (side.symbol.endsWith("#file")) return true;
+      return (side.symbols ?? [side.symbol]).some((symbol) => keys.some((key) => nested(key, symbol)));
     });
   }
   function pending(file: string) {
@@ -261,7 +270,14 @@ export function createSessionCoordinator(options: {
       );
       if (matches && !syntaxFinalized.has(record.pair.id) && record.lastAttempt?.deferred) {
         syntaxWaits.finalize(record.pair.id, record.revisionKey ?? "", options.now());
-        coordinator.finishSyntax(record.pair.id);
+        const declarationsComplete = [record.pair.left, record.pair.right].every((side) =>
+          (side.symbols ?? [side.symbol]).every((key) => {
+            const symbol = symbolFor(side.actor, key);
+            return symbol !== undefined && declarationSyntax(symbol).complete;
+          })
+        );
+        if (declarationsComplete) coordinator.resumeSyntax(record.pair.id);
+        else coordinator.finishSyntax(record.pair.id);
         syntaxFinalized.add(record.pair.id);
       }
     }

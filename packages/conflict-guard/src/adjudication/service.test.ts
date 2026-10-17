@@ -118,7 +118,7 @@ it("defers incomplete declarations without calling either model and records the 
   const registry = createJudgeRegistry({ fetch: globalThis.fetch, now: () => 0, config: defaultAdjudicationConfig, jev: {}, deepseek: { model: "unused" } });
   const service = createAdjudicationService({
     clock: new VirtualClock(),
-    config: { ...defaultAdjudicationConfig, strategy: "G3" },
+    config: { ...defaultAdjudicationConfig, strategy: "G3a" },
     mode: "live",
     fast: registry.fast("jev"),
     deep: registry.deep("minimax")
@@ -131,10 +131,18 @@ it("defers incomplete declarations without calling either model and records the 
       deferred: true
     }
   };
-  const verdict = await service.judge(incomplete, local, new AbortController().signal, { deferred: 1, waitMs: 240 });
+  const updates: Array<{ verdict: unknown; final?: boolean }> = [];
+  const verdict = await service.judgeWithUpdates(incomplete, local, new AbortController().signal, { deferred: 1, waitMs: 240 }, (verdict, update) => updates.push({ verdict, final: update?.final }));
   expect(verdict).toMatchObject({ decision: "warn", ruleId: "syntax-incomplete-waiting", localOnly: true, deferred: { reason: "syntax-incomplete" } });
+  expect(updates).toEqual([{ verdict, final: true }]);
   expect(service.calls()).toHaveLength(0);
   expect(service.stats()).toMatchObject({ calls: 0, judgements: 0, syntaxDeferred: 1, syntaxWaitP50Ms: 240, syntaxWaitP95Ms: 240 });
+  const closed = await service.judgeWithUpdates({ ...incomplete, syntax: { ...incomplete.syntax, batchClosed: true } }, local, new AbortController().signal, undefined, (verdict, update) => updates.push({ verdict, final: update?.final }));
+  expect(closed).toMatchObject({ decision: "warn", ruleId: "syntax-incomplete-final" });
+  const white = { ...local, zone: "white" as const, decision: "allow" as const };
+  expect(await service.judgeWithUpdates(input, white, new AbortController().signal, undefined, (verdict, update) => updates.push({ verdict, final: update?.final }))).toEqual(white);
+  expect(updates).toEqual([{ verdict, final: true }, { verdict: closed, final: true }, { verdict: white, final: true }]);
+  expect(service.calls()).toHaveLength(0);
 });
 
 it("rejects corrupted cached decisions and confidence", async () => {
