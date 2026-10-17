@@ -1,6 +1,6 @@
 # v2 冻结清单
 
-冻结状态为 `awaiting-human-confirmation`，对应源码提交在本次工程修复提交完成后更新。用户确认后才进入阶段 C；本阶段没有读取保留集模型结果，也没有运行保留集回放评价。
+冻结状态为 `awaiting-human-confirmation`，对应源码提交为 `407647e662e74837c99dcb809e84a5d9df3ff870`。用户确认后才进入阶段 C；本阶段没有读取保留集模型结果，也没有运行保留集回放评价。
 
 P4 使用异步级联 `G3a`。快判使用 Jev `jev-1.13.0`、`pair-v5` 和直接三选一，经 `TYPESAFE_PROXY_URL` 代理；提醒时并行请求 MiniMax-M3 深判，使用 `pair-v1`、`thinking: adaptive`、`reasoning_split: true`、4096 个以上输出 token、30 秒时限，MiniMax 国内站直连。冻结输入整理版本为 `declaration-evidence-v1`，包括完整声明语法、签名、导出状态、四状态诊断和共同调用位置。
 

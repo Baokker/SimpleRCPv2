@@ -1,12 +1,12 @@
 {
   "version": "conflict-guard-v2-freeze",
   "status": "awaiting-human-confirmation",
-  "codeCommit": "e6454e89e50339f3d68ee3078a9862770371f3ce",
+  "codeCommit": "407647e662e74837c99dcb809e84a5d9df3ff870",
   "freezeDate": "2026-10-18",
   "protocol": "protocol.json",
   "models": "models.json",
   "artifactHashes": {
-    "protocolSha256": "0618927af5e0e54358d648aa1c99762168cae622c1b9577f8783368fadf6cf27",
+    "protocolSha256": "3eddba9120c8b97863d33458c4ea8e192e54b6981c5d27f5d47e84e3026a8bb7",
     "modelsSha256": "1bdaa2a2b194877279936f0b361e0d3ca36ee0ba35a66e2cdf20c7fd37a225f2",
     "e3ScenariosSha256": "f403ad8173689f70d316b3b4c1066ead1f03c106b1f298c1be4fe0e68c89ff42",
     "budgetSha256": "7d17bc6ea8bcbf0fc866f9bb986b9d78d55642ff5f2787ac8fcbd48b751055ff",
