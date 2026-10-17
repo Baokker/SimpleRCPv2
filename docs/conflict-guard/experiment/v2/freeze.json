@@ -6,7 +6,7 @@
   "protocol": "protocol.json",
   "models": "models.json",
   "artifactHashes": {
-    "protocolSha256": "d6925757605d04882481f467c51166bc27b823efae99159c24aa55073562760d",
+    "protocolSha256": "385e5100f80f20a52d8861df1aa579960b301aa8a6110e9cebe5633584a715a4",
     "modelsSha256": "1bdaa2a2b194877279936f0b361e0d3ca36ee0ba35a66e2cdf20c7fd37a225f2",
     "e3ScenariosSha256": "bde09d50910b0826ea40ae82913180bb8cc1d18bb8c5bf9b93c936fd35b0fe23",
     "traceSyntaxCheckSha256": "7ccb080334e925a98bb44b25ad6830552080517b3b2849145bdf7cd6615ccaa7"
@@ -38,6 +38,6 @@
   "invalidRunRule": "只有代理或网络环境故障可以作废整轮重录；模型超时和格式无效计入分母；每次作废记录原因",
   "developmentObservation": "G3a 六次深判中三次把提醒更新为拦截；开发集灰区含 23 个冲突样本，保留集结果可能低于开发集",
   "e3Scenarios": "E3-agent/scenarios.json",
-  "expectedBudget": { "holdoutFast": 900, "holdoutDeep": 330, "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFast": 200, "developmentAblationDeep": 100, "agentRuns": 40, "agentRunLimit": 50 },
+  "expectedBudget": { "holdoutFast": 900, "holdoutDeep": 330, "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFast": 200, "developmentAblationDeep": 100, "agentRuns": 40, "agentRunLimit": 50, "estimatedCostUsd": { "holdoutE2AndAblation": 1.04097, "developmentAblation": 0.30747, "agentE3": 0.39652, "total": 1.74496 } },
   "sourceArtifacts": { "stageA3Summary": "stage-A3/summary.md", "stageA3Attempts": ["stage-A3/attempts/G3a-retry/calls.jsonl", "stage-A3/attempts/G3a-rerun/calls.jsonl"], "stageA3Final": "stage-A3/pair-v5/G3a-final/calls.jsonl" }
 }

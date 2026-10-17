@@ -90,5 +90,5 @@
       "metrics": ["全量索引构建 p50/p95", "增量索引更新 p50/p95", "本地分区判定 p50/p95", "变更单元数", "变更对数", "灰区数", "模型请求数", "候选对聚合前后判定次数"]
     }
   ],
-  "budget": { "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFastLimit": 200, "developmentAblationDeepLimit": 100, "stopAtRatio": 1.2, "estimateBasis": "开发集 G3a 的 90 次快判、6 次深判及保留集 145 个关系组按约 90 个灰区变更对估算；E1 消融另录一次；真实数量以阶段 C 记录为准", "estimatedCalls": { "holdoutFast": 900, "holdoutDeep": 330 } }
+  "budget": { "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFastLimit": 200, "developmentAblationDeepLimit": 100, "stopAtRatio": 1.2, "estimateBasis": "开发集 G3a 的 90 次快判、6 次深判及保留集 145 个关系组按约 90 个灰区变更对估算；E1 消融另录一次；真实数量以阶段 C 记录为准", "estimatedCalls": { "holdoutFast": 900, "holdoutDeep": 330 }, "estimatedCostUsd": { "holdoutE2AndAblation": 1.04097, "developmentAblation": 0.30747, "agentE3": 0.39652, "total": 1.74496, "basis": "快判与深判使用阶段 A3 平均 token 费用；Agent 使用既有 MiniMax 冒烟的平均请求量和费用；阶段 C 以实际 usage 为准" } }
 }
