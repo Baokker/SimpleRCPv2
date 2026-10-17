@@ -6,7 +6,23 @@
 
 ## 条件与运行
 
-当前试跑使用 P01、P03，各运行 T0 与 T3 delayed，各 1 次。T3 通过 `recap-from-episode` 直接记录纠正建议，结果包含 `captureBypassed: true` 与 `naturallyTriggered`。
+v2.1 正式路径使用平台 `k4`，统一 `minimax / MiniMax-M3`。冻结标签 `knowledge-exp-freeze-v2.1`，平台提交 `418a4ccc758de803efc5427bea0b0cd09cc26dc5`，数据提交 `ea11a85ed344c522fe3b63288cd8577c94fa6498`。manifest 哈希 `3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137`，配置哈希 `1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef`。
+
+核心矩阵为6对、T0/T1/T3、两种时间变体、3次重复，共108组合。主表只使用 Ta 功能通过且实际踩坑的组合，另报告全体及条件间 Ta 结果不一致的清单。M3 校准36次中33次功能通过、23次功能通过且踩坑，P06-Ta三次均避开陷阱，见 `preparation-v21.md`。该校准不属于正式样本。
+
+T0 不向 Tb 提供纠正知识。T1 使用固定注入的 context 卡片，正文包含完整纠正原文和真实 Ta diff 的增删行摘要，总计最多800字符。T3 由真实服务端复盘生成草稿，确认采用冻结的 `review-rules.json`：指定标识符缺失或草稿兜底时使用 gold 的标题、摘要、类型和正文；适用文件不全时补充范围。每次记录修改字段与增删字符数量。这个主对比评价预设确认规则下的纠正迁移，真实成员的编辑行为由 pilot 单独观察。
+
+每个组合中 Ta 由甲通过团队 Agent 执行，纠正成员修改代码并在同一团队会话提交纠正原文，Tb 由乙的个人 Agent 执行。`same-session` 表示卡片确认后立即执行 Tb，乙使用自己的个人会话；`delayed` 等待固定60秒。卡片从确认到首次提供给乙的时间来自 reuse 记录。
+
+```sh
+pnpm --filter @simplercp/experiments exec tsx formal-run.ts E5-core E5-core
+```
+
+正式目录为 `experiments/knowledge/runs/E5-k4-core-formal-v21-m3/`，在 E4 第一批完成并检查后执行。
+
+## v2 试跑（MiniMax-M2）
+
+v2 试跑使用 P01、P03，各运行 T0 与 T3 delayed，各1次。T3 通过 `recap-from-episode` 直接记录纠正建议，结果包含 `captureBypassed: true` 与 `naturallyTriggered`。
 
 ```sh
 pnpm --filter @simplercp/experiments experiment k4 \

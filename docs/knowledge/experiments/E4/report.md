@@ -2,11 +2,19 @@
 
 ## 研究问题
 
-把知识送达和规则遵守分开记录，比较无知识、Oracle 目标卡片和无关卡片条件。
+把知识送达和规则遵守分开记录，主对比为检索注入 C2 与无知识 C0，另报告 C5 的上界、C7 的无关知识对照、C1 静态文档及 C6a/C6b 的过期与矛盾条件。
 
-## 当前试跑
+## v2.1 正式运行
 
-当前冻结快照运行 5 个组合（R1-T01、R1-T02、R2-T01、R2-T02、R1-C01），每个条件 1 次，共 15 次运行。命令：
+冻结标签为 `knowledge-exp-freeze-v2.1`，平台提交 `418a4ccc758de803efc5427bea0b0cd09cc26dc5`，数据提交 `ea11a85ed344c522fe3b63288cd8577c94fa6498`。manifest 哈希 `3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137`，配置哈希 `1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef`。模型统一为 `minimax / MiniMax-M3`。
+
+第一批使用 C0/C2/C5/C7、22任务、3次重复，计划264次，目录为 `experiments/knowledge/runs/E4-k3-first-formal-v21-m3/`。运行命令为 `pnpm --filter @simplercp/experiments exec tsx formal-run.ts E4-first E4-first`。正式指标在矩阵完成后计算；结果中的每次运行与卡片来源独立保存。
+
+第二批 C1/C6a/C6b 计划198次，使用同一冻结配置，目录为 `E4-k3-second-formal-v21-m3`。六个对照的功能退化与16个陷阱分别统计。
+
+## v2 试跑（MiniMax-M2）
+
+v2 冻结快照运行5个组合（R1-T01、R1-T02、R2-T01、R2-T02、R1-C01），每个条件1次，共15次运行。命令：
 
 ```sh
 pnpm --filter @simplercp/experiments experiment k3 \
