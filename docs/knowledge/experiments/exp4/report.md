@@ -61,7 +61,7 @@ T3 的 18 次注入均使用 `rankingSource=m3`，没有 BM25 回退。T0 的目
 
 T2 使用新冻结标签 `knowledge-exp-freeze-v3.2`，T2 实现提交为 `1b9cf09fa13988839ac4d2c958509a226a380972`，冻结标签提交为 `33787ee0bb57f54bf7911faded940c56446b1cfd`。数据提交、manifest 哈希和 `formal-v3.json` 配置哈希与 v3.1 相同。工具读取 `runs/exp4-freeze-v31/raw/` 中保存的18个 Ta episode、纠正记录和 `recap-quality.modelDraft`，原样导入并确认模型生成的卡片字段，再在独立 Tb 项目中使用与 T3 相同的 BM25 候选和 MiniMax-M3 重排。T0、T3 的结果文件没有被追加或改写。
 
-18 个 T2 Tb 均完成，结果位于 `runs/exp4-t2-freeze-v31/results.jsonl`，每条记录包含 `draftHasRequiredTokens`、空的 `changedFields`、模型与重排用量、目标送达和判定结果。1 个原稿（P01-episode-3）引用校验未通过，仍按原样确认并运行，单独计入下表。
+18 个 T2 Tb 均完成，结果位于 `runs/exp4-t2-freeze-v31/results.jsonl`。每条记录包含 `draftHasRequiredTokens`、空的 `changedFields`、模型与重排用量、目标送达和判定结果，并补齐了与 T3 一致的 `captureBypassed`、`naturallyTriggered`、`recapCalls` 和 Ta 运行明细；这些字段从同一冻结 episode 的已保存记录复制并逐条核验，未重新运行模型。1 个原稿（P01-episode-3）引用校验未通过，仍按原样确认并运行，单独计入下表。
 
 | 样本 | 条件 | Tb 功能通过 | 陷阱避开 | 联合成功 | 复犯 | 目标卡片送达 |
 |---|---|---:|---:|---:|---:|---:|
