@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-17",
+  "models": {
+    "minimax": {
+      "model": "MiniMax-M3",
+      "site": "https://api.minimaxi.com/v1",
+      "connection": "直连",
+      "inputPrice": "CNY 2.1 / 1M tokens",
+      "outputPrice": "CNY 8.4 / 1M tokens",
+      "cacheReadPrice": "CNY 0.42 / 1M tokens",
+      "priceSource": "MiniMax 国内站官方价格，2026-10-17"
+    },
+    "jev": {
+      "model": "jev-1.13.0",
+      "site": "https://api.typesafe.ai/v1",
+      "connection": "TYPESAFE_PROXY_URL 指定的本机代理",
+      "inputPrice": "USD 0.042 / 1M tokens",
+      "outputPrice": "USD 0 / 1M tokens",
+      "priceSource": "TypeSafe 官方价格，2026-10-17"
+    }
+  },
+  "agent": { "provider": "minimax", "model": "MiniMax-M3", "site": "https://api.minimaxi.com/v1", "connection": "直连" }
+}

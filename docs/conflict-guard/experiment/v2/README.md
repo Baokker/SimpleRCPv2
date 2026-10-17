@@ -1,6 +1,8 @@
 # 语义冲突预防实验
 
-实验包含人与人协作回放、灰区模型研判、六个 Agent 协作场景，以及性能测量。当前进行开发集选择，保留集与 Agent 场景等待阶段确认。
+实验包含人与人协作回放、灰区模型研判、六个 Agent 协作场景，以及性能测量。阶段 A3 已选择 G3a 作为 P4；阶段 B 冻结材料见 [protocol.json](protocol.json)、[models.json](models.json)、[freeze.json](freeze.json) 和 [freeze.md](freeze.md)，当前状态为 `awaiting-human-confirmation`。
+
+阶段 C 开始前不得读取保留集模型结果或运行保留集回放评价。D1 使用 d1-v4，E1 到 E4 的正式协议只登记在 [protocol.json](protocol.json) 中。
 
 ## 开发集选择
 

@@ -1,0 +1,43 @@
+{
+  "version": "conflict-guard-v2-freeze",
+  "status": "awaiting-human-confirmation",
+  "codeCommit": "085537e88e66f2e105fbcf00571aaf6a734339e7",
+  "freezeDate": "2026-10-17",
+  "protocol": "protocol.json",
+  "models": "models.json",
+  "artifactHashes": {
+    "protocolSha256": "d6925757605d04882481f467c51166bc27b823efae99159c24aa55073562760d",
+    "modelsSha256": "1bdaa2a2b194877279936f0b361e0d3ca36ee0ba35a66e2cdf20c7fd37a225f2",
+    "e3ScenariosSha256": "bde09d50910b0826ea40ae82913180bb8cc1d18bb8c5bf9b93c936fd35b0fe23",
+    "traceSyntaxCheckSha256": "7ccb080334e925a98bb44b25ad6830552080517b3b2849145bdf7cd6615ccaa7"
+  },
+  "dataset": {
+    "version": "d1-v4",
+    "manifestSha256": "5372a6922d761a5403952d585caed597b9b62179485035d68734f30751b9a378",
+    "labelsSha256": "871cb5c794149f561ded65df0f2ee17fc812c858f0f055814e07fe7b98384bbe",
+    "archiveSha256": "0a1fa8923c5185da047a4f11b74bd34c9c380050649953ea9630506f1101528c",
+    "development": { "groups": 135, "conflicts": 46, "safe": 224, "excluded": 0 },
+    "holdout": { "groups": 145, "conflicts": 69, "safe": 205, "excluded": 16 }
+  },
+  "configuration": {
+    "selectedStrategy": "G3a",
+    "fastPrompt": "pair-v5",
+    "deepPrompt": "pair-v1",
+    "g3aThreshold": null,
+    "inputVersion": "declaration-evidence-v1",
+    "selectionRule": "selection-rule-a3.md",
+    "configSha256": "ab4c360816f2a145a743bf1700dbf43019bbefd67c994f87bc5286e870a63d87",
+    "providersSha256": "30b36cf8be1400d2af80536424d445c3d04eda3c3024fc288aed8228ed3085fc",
+    "modelsSha256": "2f38803ec24964da54e30e0fc1a8b2e2e0b8cc72ac859f861ae1b8737a0f16e7"
+  },
+  "selectionRules": [
+    { "file": "selection-rule.md", "commit": "d4e735f4862befb671c6ce8669ebdc9a3484f034", "sha256": "aad9169791b377118105ba49f4c823c8020d7d850f762fa2ee05dfda3ee44763" },
+    { "file": "selection-rule-a2.md", "commit": "d08c1aee23c2c2f21a771b33ec48a6a40c0aaea5", "sha256": "52bda84105b334a99ad8da01e696c280b87c55c1f3c79d0a95de6af567bc61fb" },
+    { "file": "selection-rule-a3.md", "commit": "7abf2d61d96df91e8a4dfb32880f74361a5f7b44", "sha256": "a8d12ee483a79f2ac0f6901077222afd2bd840609c142198cb37d465780a43a3" }
+  ],
+  "invalidRunRule": "只有代理或网络环境故障可以作废整轮重录；模型超时和格式无效计入分母；每次作废记录原因",
+  "developmentObservation": "G3a 六次深判中三次把提醒更新为拦截；开发集灰区含 23 个冲突样本，保留集结果可能低于开发集",
+  "e3Scenarios": "E3-agent/scenarios.json",
+  "expectedBudget": { "holdoutFast": 900, "holdoutDeep": 330, "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFast": 200, "developmentAblationDeep": 100, "agentRuns": 40, "agentRunLimit": 50 },
+  "sourceArtifacts": { "stageA3Summary": "stage-A3/summary.md", "stageA3Attempts": ["stage-A3/attempts/G3a-retry/calls.jsonl", "stage-A3/attempts/G3a-rerun/calls.jsonl"], "stageA3Final": "stage-A3/pair-v5/G3a-final/calls.jsonl" }
+}

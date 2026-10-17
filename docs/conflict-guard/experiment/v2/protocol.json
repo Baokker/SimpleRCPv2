@@ -1,0 +1,94 @@
+{
+  "version": "conflict-guard-v2",
+  "status": "awaiting-human-confirmation",
+  "codeCommit": "085537e88e66f2e105fbcf00571aaf6a734339e7",
+  "date": "2026-10-17",
+  "dataset": {
+    "version": "d1-v4",
+    "manifest": "packages/conflict-guard/bench/datasets/d1-v4/manifest.json",
+    "archive": "packages/conflict-guard/bench/datasets/d1-v4/archive-sha256.json",
+    "development": { "groups": 135, "validVariants": 270, "conflicts": 46, "safe": 224, "excluded": 0 },
+    "holdout": { "groups": 145, "validVariants": 274, "conflicts": 69, "safe": 205, "excluded": 16 },
+    "holdoutEvaluation": "阶段 C 执行前不得读取模型或回放结果"
+  },
+  "statistics": {
+    "confidence": 0.95,
+    "wilsonZ": 1.96,
+    "bootstrapRepetitions": 2000,
+    "bootstrapSeed": 20261007,
+    "mcnemar": "exact-two-sided",
+    "multiplicity": "Holm-within-experiment",
+    "pairedUnit": "relationGroupId"
+  },
+  "session": {
+    "k": 2,
+    "idleMs": 1500,
+    "maxBatchDurationMs": 5000,
+    "activeIdleMs": 600000,
+    "typecheckBudgetMs": 500,
+    "deepDeadlineMs": 30000,
+    "agentRunTimeoutMs": 240000
+  },
+  "policy": {
+    "p4": {
+      "strategy": "G3a",
+      "fast": { "adapter": "jev", "model": "jev-1.13.0", "site": "https://api.typesafe.ai/v1", "proxy": "TYPESAFE_PROXY_URL", "promptVersion": "pair-v5", "decision": "直接三选一", "deadlineMs": 8000 },
+      "deep": { "adapter": "minimax", "model": "MiniMax-M3", "site": "https://api.minimaxi.com/v1", "proxy": "直连", "promptVersion": "pair-v1", "thinking": "adaptive", "reasoningSplit": true, "maxTokens": 4096, "deadlineMs": 30000 },
+      "cascade": "快判为提醒时立即并行深判；深判有效返回更新结论，超时或无效保持提醒；新版本使旧深判结果失效"
+    },
+    "inputVersion": "declaration-evidence-v1",
+    "inputPreparation": ["完整声明语法检查", "签名前后对比", "删除与非导出状态", "四状态类型检查摘要", "最多三处共同使用位置"],
+    "threshold": null,
+    "thresholdNote": "G3a 使用 pair-v5 直接三选一快判，不使用概率阈值"
+  },
+  "selectionRules": [
+    { "file": "selection-rule.md", "commit": "d4e735f4862befb671c6ce8669ebdc9a3484f034", "sha256": "aad9169791b377118105ba49f4c823c8020d7d850f762fa2ee05dfda3ee44763" },
+    { "file": "selection-rule-a2.md", "commit": "d08c1aee23c2c2f21a771b33ec48a6a40c0aaea5", "sha256": "52bda84105b334a99ad8da01e696c280b87c55c1f3c79d0a95de6af567bc61fb" },
+    { "file": "selection-rule-a3.md", "commit": "7abf2d61d96df91e8a4dfb32880f74361a5f7b44", "sha256": "a8d12ee483a79f2ac0f6901077222afd2bd840609c142198cb37d465780a43a3" }
+  ],
+  "invalidRunRule": "只有代理或网络环境故障（Jev HTTP 451、连接被拒、DNS 失败）可以作废整轮重录；模型超时和格式无效属于正常结果，计入分母；每次作废必须记录原因",
+  "experiments": [
+    {
+      "id": "E1",
+      "name": "人与人协作回放",
+      "dataset": "d1-v4 holdout；开发集结果作为附录",
+      "policies": ["P0", "P1", "P2", "P3", "P4(G3a)", "P*", "P4-no-four-state-typecheck"],
+      "repetitions": 1,
+      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment E1 --dataset bench/datasets/d1-v4 --split holdout --policy P0,P1,P2,P3,P4,P*,P4-no-four-state-typecheck --provider-mode replay --repeat 1 --out ../../docs/conflict-guard/experiment/v2/E1-human",
+      "modelCalls": { "holdout": { "fast": 90, "deep": 6 }, "developmentAblationRecording": { "fast": 200, "deep": 100 } },
+      "metrics": ["未及时通知的冲突写入比例", "漏阻断率", "安全修改误拦率", "安全修改提醒比例", "冻结人·秒", "本地决定比例"],
+      "statistics": "P4 与 P1、P2、P3 按关系组做精确双侧 McNemar，Holm 校正，Wilson 区间与关系组 bootstrap"
+    },
+    {
+      "id": "E2",
+      "name": "灰区模型研判",
+      "dataset": "d1-v4 holdout grey，由 P3 实际触发的变更对决定",
+      "policies": ["G1", "G2-v5", "G3a"],
+      "repetitions": { "record": 1, "replay": 3, "live": 2 },
+      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G1,G2-v5,G3a --provider-mode record --repeat 1 --out ../../docs/conflict-guard/experiment/v2/E2-grey",
+      "modelCalls": { "estimate": { "greyPairsPerRound": 90, "fast": 810, "deep": 324 }, "upperBound": { "fast": 1200, "deep": 800 } },
+      "metrics": ["平衡准确率", "两类召回率", "漏阻断率", "安全修改误拦率", "冲突通知率", "安全修改提醒比例", "三分类一致率", "快判与深判有效率", "变更对覆盖率", "快判与深判确认时延 p50/p95", "G3a 升级与改判次数", "重复一致率", "调用次数与费用"]
+    },
+    {
+      "id": "E3",
+      "name": "Agent 协作场景",
+      "dataset": "D3-S 六个冻结场景",
+      "policies": ["A0", "A1"],
+      "repetitions": { "A0": 1, "A1": 3 },
+      "command": "pnpm --filter @simplercp/conflict-guard bench:agents --experiment E3 --dataset docs/conflict-guard/experiment/v2/E3-agent/scenarios --condition A0,A1 --out ../../docs/conflict-guard/experiment/v2/E3-agent",
+      "modelCalls": { "agentRuns": { "A0": 10, "A1": 30, "reserve": 10, "limit": 50 }, "model": "MiniMax-M3" },
+      "metrics": ["写入前拦截", "拒绝后自行调整", "任务验收通过", "需要人处理的卡片数", "Agent 等待时长", "模型调用次数与费用"]
+    },
+    {
+      "id": "E4",
+      "name": "性能",
+      "dataset": "d1-v4 全部轨迹，k=2",
+      "policies": ["索引构建", "本地分区", "过滤漏斗", "候选对聚合前后"],
+      "repetitions": 1,
+      "command": "pnpm --filter @simplercp/conflict-guard index:run --experiment E4 --dataset bench/datasets/d1-v4 --split all --k 2 --out ../../docs/conflict-guard/experiment/v2/E4-perf",
+      "modelCalls": { "fast": 0, "deep": 0 },
+      "metrics": ["全量索引构建 p50/p95", "增量索引更新 p50/p95", "本地分区判定 p50/p95", "变更单元数", "变更对数", "灰区数", "模型请求数", "候选对聚合前后判定次数"]
+    }
+  ],
+  "budget": { "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFastLimit": 200, "developmentAblationDeepLimit": 100, "stopAtRatio": 1.2, "estimateBasis": "开发集 G3a 的 90 次快判、6 次深判及保留集 145 个关系组按约 90 个灰区变更对估算；E1 消融另录一次；真实数量以阶段 C 记录为准", "estimatedCalls": { "holdoutFast": 900, "holdoutDeep": 330 } }
+}

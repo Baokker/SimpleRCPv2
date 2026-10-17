@@ -1,0 +1,15 @@
+{
+  "method": "逐文件读取轨迹，按 edit 与 mirror_resync 顺序重建最终文本，再与 manifest 中的 merged 程序逐文件比较；不运行回放、不读取模型结果",
+  "development": {
+    "samples": [
+      { "id": "d1-0005-conflict", "finalTextMatchesMerged": true },
+      { "id": "d1-0005-safe", "finalTextMatchesMerged": true },
+      { "id": "d1-0026-conflict", "finalTextMatchesMerged": true },
+      { "id": "d1-0130-safe", "finalTextMatchesMerged": true },
+      { "id": "d1-0149-conflict", "finalTextMatchesMerged": true }
+    ],
+    "conclusion": "五个样本的生成文本与探针程序一致，但 A3 结束检查仍报告语法不完整；d1-0026-conflict 与 d1-0149-conflict 因此没有模型研判。"
+  },
+  "holdout": { "incompleteVariants": 0, "conclusion": "没有发现同类的轨迹最终文本不完整样本" },
+  "decision": "保留现有数据与标签，阶段 C 前不修改生成器"
+}

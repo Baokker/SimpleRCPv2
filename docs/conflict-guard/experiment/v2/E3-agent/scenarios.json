@@ -1,0 +1,69 @@
+{
+  "version": "D3-S-v1",
+  "source": "d3-v0 acceptance.test.mjs",
+  "execution": { "humanEdits": "回放器以虚拟成员身份在固定时间点写入", "agentModel": "MiniMax-M3", "A0": 1, "A1": 3, "agentRuns": { "A0": 10, "A1": 30 } },
+  "scenarios": [
+    {
+      "id": "human-agent-pricing-signature",
+      "category": "人与 Agent",
+      "sourceTasks": ["d3-01"],
+      "initialCode": ["commerce/src/pricing.ts", "commerce/src/cart.ts"],
+      "humanTask": "将 quote 的 amount 改为 net 并增加 currency，保持新签名。",
+      "agentTask": "在 cart.ts 增加 invoiceLabel，并按原有 amount 字段调用 quote。",
+      "conflict": "Agent 依据旧返回字段写入调用方。",
+      "mechanism": "Agent 写入前检查拒绝旧接口调用，Agent 重新读取签名后调整。",
+      "acceptanceProbe": "pricing.quote(100, 0.1, 'USD').net === 90 且 cart.invoiceLabel(100, 'USD') === 'USD 90.00'"
+    },
+    {
+      "id": "human-agent-capacity-field",
+      "category": "人与 Agent",
+      "sourceTasks": ["d3-02"],
+      "initialCode": ["calendar/src/intervals.ts", "calendar/src/availability.ts"],
+      "humanTask": "将 capacity 返回的 occupied 改为 used，保持 available。",
+      "agentTask": "在 availability.ts 增加 roomSummary，并读取 capacity.occupied。",
+      "conflict": "Agent 依据旧字段生成调用方。",
+      "mechanism": "Agent 写入前检查拒绝旧字段访问，Agent 按新接口调整。",
+      "acceptanceProbe": "intervals.capacity(100, 0.1, 'room').used === 116 且 availability.roomSummary(100) === '116/364'"
+    },
+    {
+      "id": "same-owner-budget-field",
+      "category": "同属主的两个 Agent",
+      "sourceTasks": ["d3-09"],
+      "initialCode": ["cache/src/weights.ts", "cache/src/lru.ts"],
+      "agentTasks": ["Agent A 扩展 memoryBudget 增加 overBudget", "Agent B 增加 fitsBudget 并读取 overBudget"],
+      "conflict": "两个 Agent 同时修改有调用关系的返回结构。",
+      "mechanism": "按属主自动排队或拒绝后重新读取调整，不产生人工卡片。",
+      "acceptanceProbe": "weights.memoryBudget(2000000, 0.1, 'image').overBudget === true 且 lru.fitsBudget(10) === true 且 lru.fitsBudget(2000000) === false"
+    },
+    {
+      "id": "same-owner-retry-helper",
+      "category": "同属主的两个 Agent",
+      "sourceTasks": ["d3-10"],
+      "initialCode": ["events/src/retry.ts", "events/src/delivery.ts"],
+      "agentTasks": ["Agent A 增加 retryWindow 并重构 retryBudget", "Agent B 增加 retryWindowLabel 并调用 retryWindow"],
+      "conflict": "两个 Agent 在同一属主下先后改动同一辅助函数接口。",
+      "mechanism": "自动等待并重试，任务完成后复检保持调用关系正确。",
+      "acceptanceProbe": "retry.retryWindow(1) 深度相等于 { delay: 100, attemptsLeft: 5 } 且 delivery.retryWindowLabel(1) === '100:5'"
+    },
+    {
+      "id": "cross-owner-pricing-gross",
+      "category": "跨属主的两个 Agent",
+      "sourceTasks": ["d3-07"],
+      "initialCode": ["commerce/src/pricing.ts", "commerce/src/cart.ts"],
+      "agentTasks": ["属主 A 让 pricing.quote 增加 gross", "属主 B 让 cart 增加 grossEstimate 并读取 gross"],
+      "conflict": "两个属主对同一业务规则提出不同返回结构或更新顺序。",
+      "mechanism": "意图差异卡片交给双方属主；双方采纳建议后继续，后到者在无建议时让路。",
+      "acceptanceProbe": "pricing.quote(100, 0.1, 'CNY').gross === 101.7 且 cart.grossEstimate(100) === 101.7"
+    },
+    {
+      "id": "cross-owner-calendar-full",
+      "category": "跨属主的两个 Agent",
+      "sourceTasks": ["d3-08"],
+      "initialCode": ["calendar/src/intervals.ts", "calendar/src/availability.ts"],
+      "agentTasks": ["属主 A 扩展 capacity 增加 full", "属主 B 增加 roomFull 并读取 full"],
+      "conflict": "两个属主同时修改 capacity 结果与调用方。",
+      "mechanism": "双方通过意图差异卡片协商，采纳共同建议后完成。",
+      "acceptanceProbe": "availability.roomFull(500) === true 且 availability.roomFull(10) === false"
+    }
+  ]
+}
