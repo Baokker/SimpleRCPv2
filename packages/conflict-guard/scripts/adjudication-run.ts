@@ -46,7 +46,8 @@ const summary = [`# ${values.split === "dev" ? "开发集" : "保留集"}研判�
 for (const id of ids) {
   const outcomes: ReplayGroupOutcome[] = []; const rows: unknown[] = [];
   const strategy = modelStrategy(id);
-  const service = createModelRuntime({ ...config, strategy: strategy ?? "G0" }, values["provider-mode"] as ProviderMode, values.cache ? path.join(path.resolve(values.cache), id) : undefined, undefined, models, recordedSubscriptions?.[id], budget, providers);
+  const cachePolicy = id === "G2-v5" ? "G2" : id === "P4" || id === "P4-no-four-state-typecheck" ? "G3a" : id;
+  const service = createModelRuntime({ ...config, strategy: strategy ?? "G0" }, values["provider-mode"] as ProviderMode, values.cache ? path.join(path.resolve(values.cache), cachePolicy) : undefined, undefined, models, recordedSubscriptions?.[cachePolicy], budget, providers);
   const responses = new Map<string, ZoneVerdict>();
   const modelTasks: ZoneVerdict[] = [];
   const invariantInputs = new Map<string, AdjudicationInput>();
