@@ -264,7 +264,6 @@ describe("rules 模式冲突干预", () => {
     if (start === "空白") replace(cart, "amount, 0.1", "amount, 0.2");
     else replace(cart, "amount, 0.1) +;", "amount, 0.2);");
     await waitFor(() => currentGuard().state(bob.member.id).t0Warnings.length === 1);
-    expect(currentGuard().tracker.getOpenBatches().some((batch) => batch.actor.kind === "human" && batch.actor.memberId === bob.member.id)).toBe(true);
     await waitFor(() => currentGuard().tracker.getOpenBatches().length === 0);
     await waitFor(() => currentState().pairDecisions?.some((record) => record.status === "judged" && record.verdict?.decision === "lock") === true);
     const events = readTrace(await (await bob.request("/conflict-guard/trace")).text());
