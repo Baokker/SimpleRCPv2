@@ -15,12 +15,12 @@
     "agentRuns": 50
   },
   "estimate": {
-    "holdoutFast": 630,
+    "holdoutFast": 360,
     "holdoutDeep": 294,
     "developmentAblationFast": 200,
     "developmentAblationDeep": 100,
     "agentRuns": 40,
     "usd": 1.58399
   },
-  "basis": "以阶段 A3 的 90 次快判、6 次深判和既有 Agent 冒烟平均费用估算；阶段 C 以实际 usage 记录为准。"
+    "basis": "E2 使用配对设计：每轮 G3a 复用 G2-v5 快判，因此只计 G1 深判、G2-v5 快判和 G3a 深判；阶段 C 以实际 usage 记录为准。"
 }

@@ -1,15 +1,15 @@
 {
   "version": "conflict-guard-v2-freeze",
   "status": "awaiting-human-confirmation",
-  "codeCommit": "4a09e9a8bf6d90d2a353851b59597c28dd9b61b0",
-  "freezeDate": "2026-10-17",
+  "codeCommit": "e6454e89e50339f3d68ee3078a9862770371f3ce",
+  "freezeDate": "2026-10-18",
   "protocol": "protocol.json",
   "models": "models.json",
   "artifactHashes": {
-    "protocolSha256": "e20a34c1224c52c1dda9c7c673d1d3e4fcf52246a53810094d7d9b98d13f3297",
+    "protocolSha256": "0618927af5e0e54358d648aa1c99762168cae622c1b9577f8783368fadf6cf27",
     "modelsSha256": "1bdaa2a2b194877279936f0b361e0d3ca36ee0ba35a66e2cdf20c7fd37a225f2",
-    "e3ScenariosSha256": "a542603421bbfb935aefddd42555f3cca3b8ed5c2c3121e0b43f064b0777c2a6",
-    "budgetSha256": "3c8e4223b6233a12f24e3f78dd78c55c0051e8edf06b611a31d303943ea617ce",
+    "e3ScenariosSha256": "f403ad8173689f70d316b3b4c1066ead1f03c106b1f298c1be4fe0e68c89ff42",
+    "budgetSha256": "7d17bc6ea8bcbf0fc866f9bb986b9d78d55642ff5f2787ac8fcbd48b751055ff",
     "traceSyntaxCheckSha256": "7ccb080334e925a98bb44b25ad6830552080517b3b2849145bdf7cd6615ccaa7"
   },
   "dataset": {
@@ -36,9 +36,9 @@
     { "file": "selection-rule-a2.md", "commit": "d08c1aee23c2c2f21a771b33ec48a6a40c0aaea5", "sha256": "52bda84105b334a99ad8da01e696c280b87c55c1f3c79d0a95de6af567bc61fb" },
     { "file": "selection-rule-a3.md", "commit": "7abf2d61d96df91e8a4dfb32880f74361a5f7b44", "sha256": "a8d12ee483a79f2ac0f6901077222afd2bd840609c142198cb37d465780a43a3" }
   ],
-  "invalidRunRule": "只有代理或网络环境故障可以作废整轮重录；模型超时和格式无效计入分母；每次作废记录原因",
+  "invalidRunRule": "只有代理或网络环境故障（Jev HTTP 451、连接被拒、DNS 失败）可以作废整轮重录；模型超时和格式无效计入分母；输出路径错误时移动已有结果，不重新调用模型；每次作废或移动都记录原因",
   "developmentObservation": "G3a 六次深判中三次把提醒更新为拦截；开发集灰区含 23 个冲突样本，保留集结果可能低于开发集",
   "e3Scenarios": "E3-agent/scenarios.json",
-  "expectedBudget": { "holdoutFast": 630, "holdoutDeep": 294, "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFast": 200, "developmentAblationDeep": 100, "agentRuns": 40, "agentRunLimit": 50, "estimatedCostUsd": { "holdoutE2AndAblation": 0.88, "developmentAblation": 0.30747, "agentE3": 0.39652, "total": 1.58399 } },
+  "expectedBudget": { "holdoutFast": 360, "holdoutDeep": 294, "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFast": 200, "developmentAblationDeep": 100, "agentRuns": 40, "agentRunLimit": 50, "estimatedCostUsd": { "holdoutE2AndAblation": 0.88, "developmentAblation": 0.30747, "agentE3": 0.39652, "total": 1.58399 } },
   "sourceArtifacts": { "stageA3Summary": "stage-A3/summary.md", "stageA3Attempts": ["stage-A3/attempts/G3a-retry/calls.jsonl", "stage-A3/attempts/G3a-rerun/calls.jsonl"], "stageA3Final": "stage-A3/pair-v5/G3a-final/calls.jsonl" }
 }
