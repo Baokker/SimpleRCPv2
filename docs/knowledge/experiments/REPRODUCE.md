@@ -1,119 +1,136 @@
-# 实验复现
+# 四组实验的复现说明
 
-## 环境与版本
+## 固定环境
 
-- 平台：`/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2`
-- 数据：`/Users/baokker/Work/Master/CSCW/过程性知识管理/code/knowledge-bench`
-- 平台标签：`knowledge-exp-freeze-v2.1`
-- 平台提交：`418a4ccc758de803efc5427bea0b0cd09cc26dc5`
-- 数据提交：`ea11a85ed344c522fe3b63288cd8577c94fa6498`
-- manifest SHA-256：`3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137`
-- 正式配置哈希：`1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef`
-- Node.js `v24.7.0`、pnpm `9.0.0`、实际 OpenCode runtime `1.18.31`
-- 全部新的模型请求：`minimax / MiniMax-M3`
+平台冻结标签为 `knowledge-exp-freeze-v3.1`，冻结提交 `f0c20bd431024cd900243f73c27b9bbdcccaf947`，实现提交 `95bf21a3379487f647edb2b3ebb2f79b200f9383`。数据提交为 `ea11a85ed344c522fe3b63288cd8577c94fa6498`，包含16个陷阱、6个对照、6对迁移任务。
 
-使用上述提交的独立工作目录执行，`formal-run.ts` 要求 HEAD 等于冻结标签。历史记录使用其原有冻结版本与模型，分别统计。完整配置文件哈希见 `freeze-v2.1.md`。
+manifest SHA-256 为 `3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137`，配置解析后 SHA-256 为 `1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef`。Node.js 24.7.0、pnpm 9.0.0、OpenCode 1.18.31；Agent 与知识模型均为 `minimax / MiniMax-M3`。文件哈希、真实服务状态与验证记录见 [freeze-v3.1.md](freeze-v3.1.md)。
 
-E3 新增 BM25 比较使用 `knowledge-exp-freeze-v2.2`，平台提交 `efda9418f5aefa18780891f2619e154381491fb4`；数据、manifest 和基础配置保持上述值，额外协议哈希为 `289e9e47ce5b4de215680a7098930a36099d5bde3927cff54ab149a9d065fb92`。记录见 `freeze-v2.2.md`，结果在 `E3/report.md`。E3 使用本地 MiniSearch BM25+，无需模型、API key 或实验服务。
-
-## E3 BM25 比较复现
-
-在 v2.2 标签的独立工作目录运行。统计环境由 `experiments/knowledge/analysis/pyproject.toml` 与 `uv.lock` 定义。
+模型实验必须在该标签对应的独立检出目录运行。可在平台仓库执行以下命令创建同级 worktree，随后进入新目录：
 
 ```sh
-pnpm install --frozen-lockfile --ignore-scripts
-pnpm --filter @simplercp/knowledge build
-uv sync --project experiments/knowledge/analysis --frozen
-pnpm --filter @simplercp/experiments experiment k5 \
-  --config experiments/knowledge/formal-v21.json \
-  --protocol experiments/knowledge/bm25-full-protocol.json \
-  --conditions R1,R2,R3,R6,R6-lexical,R2-wrong-file,R3-wrong-file,R6-wrong-file \
-  --out experiments/knowledge/runs/E3-k5-bm25-v22
-pnpm --filter @simplercp/experiments experiment summarize \
-  --config experiments/knowledge/formal-v21.json \
-  --source experiments/knowledge/runs/E3-k5-bm25-v22
-experiments/knowledge/analysis/.venv/bin/python \
-  experiments/knowledge/analysis/analyze.py \
-  experiments/knowledge/runs/E3-k5-bm25-v22/results.jsonl \
-  --out experiments/knowledge/runs/E3-k5-bm25-v22/analysis/statistics
-```
-
-22任务与八条件共176查询，16个陷阱用于 Recall，6个对照仅统计误注入。`bm25-protocol.json` 保存小规模选择与采用标准，`bm25-full-protocol.json` 保存完整比较、三项主检验与未参与小规模比较的任务范围。已保存小规模结果由 `pnpm --filter @simplercp/experiments exec tsx --test test/bm25.test.ts` 重现。完整结果两次执行的全部候选排名相同，独立复跑耗时4.33秒、模型费用0元。
-
-E3 只需使用新标签的源文件。下面的模型矩阵命令继续在 v2.1 独立工作目录执行；当前模型额度不足，E4 保持114条已完成记录，详见 `pause-20261010.md`。为 BM25 新建端到端实验时单独记录冻结版本、配置与目录。
-
-## 凭据与服务
-
-平台根目录的本地 `.env` 设置 `MINIMAX_API_KEY`。API key 由服务端读取；OpenCode 使用本机模型代理。当前接口为 `https://api.minimaxi.com/v1`，模型名为 `MiniMax-M3`。API key 不写入命令参数、任务、实验配置或结果。
-
-在数据目录运行：
-
-```sh
-node tools/validate.mjs
-```
-
-在平台目录运行：
-
-```sh
-pnpm install
+git worktree add ../SimpleRCPv2-knowledge-exp-v31 knowledge-exp-freeze-v3.1
+cd ../SimpleRCPv2-knowledge-exp-v31
+pnpm install --frozen-lockfile
 pnpm build
 pnpm test
 pnpm --filter @simplercp/experiments build
 pnpm --filter @simplercp/experiments test
-pnpm test:e2e
-pnpm test:e2e:knowledge
+uv sync --project experiments/knowledge/analysis --frozen
 ```
 
-E2E 两条命令顺序执行，共用测试端口。启动独立实验服务：
+数据仓库应位于平台同级的 `knowledge-bench`，也可以用 `KNOWLEDGE_BENCH_ROOT` 指定路径。在数据目录执行 `node tools/validate.mjs`，验证全部文件哈希与124份参考补丁的行为判定。数据与判定器保持只读。
+
+## 配置凭据与启动
+
+在本地 `.env` 中填写 `MINIMAX_API_KEY`，`MINIMAX_BASE_URL` 使用 `https://api.minimaxi.com/v1`，`MINIMAX_MODEL`、`AGENT_MINIMAX_MODEL` 均为 `MiniMax-M3`，`KNOWLEDGE_LLM_PROVIDER` 为 `minimax`。API key 仅由服务端读取，OpenCode 使用本机代理。命令、配置、提示词、trace、结果中均不填写 API key。
+
+在平台根目录启动服务，保持该终端运行：
 
 ```sh
 MINIMAX_MODEL=MiniMax-M3 AGENT_MINIMAX_MODEL=MiniMax-M3 \
+KNOWLEDGE_LLM_PROVIDER=minimax \
 SIMPLERCP_KNOWLEDGE_EXPERIMENTS=true EXPERIMENT_SPEED=1 \
-SIMPLERCP_DATA_DIR="$PWD/experiments/knowledge/.work/server-v21-m3/data" \
-PORT=4203 SIMPLERCP_OPENCODE_PORT=4205 \
+SIMPLERCP_DATA_DIR="$PWD/experiments/knowledge/.work/server-v31-formal-exp4-speed1/data" \
+PORT=4203 SIMPLERCP_OPENCODE_PORT=4215 \
 pnpm --filter @simplercp/experiments run server
 ```
 
-复盘单次请求120秒，首次失败后最多重试两次，间隔5秒。工具核验 Agent、知识模块均为 M3，捕获 `speed=1`。
+正式运行前使用该实验专用的新数据目录。旧目录累计的工作区文件可能让 Node 服务进程超过系统文件描述符上限，后续 OpenCode 子进程会出现 `spawn EBADF`。服务的 `EXPERIMENT_SPEED` 必须与冻结配置的 `speed=1` 一致。
 
-## 正式矩阵
+使用另一个终端读取 `/api/agent/status`，确认 provider 为 minimax、model 为 MiniMax-M3、version 为1.18.31、state 为 ready。runner 还会核验 Agent、知识模块和实验配置三者一致。
 
-```sh
-pnpm --filter @simplercp/experiments exec tsx formal-run.ts E2 E1
-pnpm --filter @simplercp/experiments exec tsx formal-run.ts E4-first E4-first
-pnpm --filter @simplercp/experiments exec tsx formal-run.ts E5-core E5-core
-pnpm --filter @simplercp/experiments exec tsx formal-run.ts E4-second E4-second
-pnpm --filter @simplercp/experiments exec tsx formal-run.ts E6 E6
-```
+## 实验一：并发锚定
 
-| 阶段 | 结果目录（`experiments/knowledge/runs/` 下） | 计划规模 |
-|---|---|---:|
-| E2 | E2-k7-formal-v21-m3 | 1440轨迹、7200策略评价 |
-| E3 | E3-k5-formal-v21-m3 | 110查询 |
-| E3 BM25比较（v2.2） | E3-k5-bm25-v22 | 176查询 |
-| E1 | E1-k1-formal-v21-m3 | 2脚本、52标注时刻 |
-| E4第一批 | E4-k3-first-formal-v21-m3 | 264次 |
-| E5核心 | E5-k4-core-formal-v21-m3 | 108组合、每组合3次Agent任务 |
-| E4第二批 | E4-k3-second-formal-v21-m3 | 198次 |
-| E6 | E6-k2-formal-v21-m3 | 合格纠正episode及52个脚本时刻，各3种草稿 |
+本轮使用已有1440条轨迹，不调用模型。来源为 `runs/E2-k7-formal-v21-m3/`，对应标签 `knowledge-exp-freeze-v2.1`、平台提交 `418a4ccc758de803efc5427bea0b0cd09cc26dc5`。来源哈希与每类操作结果见 [实验一报告](exp1/report.md)。
 
-每一步完成后查看 `summary.json`、`checkpoint.json` 和 `analysis/statistics/`，检查失败清单。K4 是唯一正式迁移入口，数据仓库工具仅用于校准。E6 人工评分使用 `ratings-a.csv` 与 `ratings-b.csv`，由两名标注者独立填写；未填写时均分与 κ 无数据。
-
-## 统计与续跑
+重算操作分组与图：
 
 ```sh
 experiments/knowledge/analysis/.venv/bin/python \
   experiments/knowledge/analysis/analyze.py \
-  experiments/knowledge/runs/E4-k3-first-formal-v21-m3/results.jsonl \
-  --out experiments/knowledge/runs/E4-k3-first-formal-v21-m3/analysis/statistics
+  experiments/knowledge/runs/E2-k7-formal-v21-m3/results.jsonl \
+  --out experiments/knowledge/.work/exp1-statistics
 ```
 
-逐次结果、任务多数投票、精确 McNemar、任务重采样CI、Holm和任务随机效应 logistic分别保留。对照任务的功能退化单独分析。`targetDelivery` 保存目标卡片的文本命中、文件相关、项目级兜底来源；送达子集的规则遵守与端到端结果分别统计。C1 的静态文档阅读没有注入trace，其送达口径单独注明。
+48个锚点为 bootstrap 重采样单位。报告附件 `exp1/cluster-bootstrap.json` 保存10000次重采样的差值区间，`anchors.csv` 保存六类操作的全部指标。
 
-相同命令读取已完成key并跳过；尚未结束的run继续等待。续跑核验代码提交、配置、manifest、provider与模型。保留原始失败记录。冻结内容需要修改时停止运行，由人工决定重新冻结。
+## 实验二：检索与送达
 
-## 时间、费用与复现范围
+来源为 `knowledge-e3-freeze-v2.4.1` 的220条历史记录，其中132条为 M3 重排。对失败的 C 请求使用同一任务、同一查询变体的 B 最终预算结果。补算不请求模型，相关清单与查询保持固定。
 
-每次任务记录 `wallMs`、用量和人民币估算，供应商账单单独记为未知。M3 按每条请求估算：每百万非缓存输入2.10元、输出8.40元、缓存读取0.42元；单次输入超过512k时按官方价格乘二。Agent `inputTokens` 为非缓存输入，知识请求 `promptTokens` 包含缓存，这两个定义分别处理。运行时 `cost=0` 保留原值。
+```sh
+experiments/knowledge/analysis/.venv/bin/python \
+  docs/knowledge/experiments/exp2/summarize.py
+```
 
-E1、E2、E3 为确定性运行，可逐条复现。模型输出、token和墙钟时间存在随机差异，以三次重复、任务多数投票和CI报告。任务来自构造项目，真人协作需要独立pilot。各实验耗时和费用以相应正式报告中的实际结果为准。
+生成 `exp2/delivery-with-fallback.json` 和 `exp2/delivery.png`。脚本检查来源 SHA-256、唯一 key、132次 M3 请求和5次失败。原查询与改写分别计算；对照误提供依照事前相关清单。完整数字见 [实验二报告](exp2/report.md)。
+
+## 实验三：Agent 复犯
+
+```sh
+pnpm --filter @simplercp/experiments exec tsx formal-run.ts EXP3 EXP3
+```
+
+执行22任务 × C0/C2/C5 × 3次，共198次。输出为 `runs/exp3-freeze-v31/`。并发上限2；C2 的 top-5、单卡800字符、总4000字符保持固定。每次保存 run、trace、注入、重排用量、工作区快照与冻结行为判定。
+
+运行完成：198/198 条，C0、C2、C5 各66条，运行状态全部为 `completed`。陷阱任务的多数联合成功为 C0 2/16、C2 12/16、C5 12/16；C2 目标卡片送达46/48次，漏送两次均由 `selection-excluded` 过滤。C2 对 C0、C5 对 C0 的多数联合成功差值均为62.50个百分点，95% bootstrap CI [37.50, 87.50]，精确 McNemar p=0.00195，Holm p=0.00781。详情见 [实验三报告](exp3/report.md)。
+
+## 实验四：跨成员纠正迁移
+
+检查实验三汇总后执行：
+
+```sh
+pnpm --filter @simplercp/experiments exec tsx formal-run.ts EXP4 EXP4
+```
+
+输出为 `runs/exp4-freeze-v31/`。18个共享片段各执行一次 Ta、Yjs 纠正与服务端复盘，再派生独立项目中的T0、T3，共36次Tb。数据仓库 `tools/run-transfer.ts` 用于校准；本实验使用平台 `k4 --shared-episode --conditions T0,T3`。本次运行已完成36/36条，18个 episode 均有共享 Ta `runId` 的 T0/T3 配对。Ta 实际踩坑子集为13个：T0 联合成功0/13，T3 7/13，精确 McNemar p=0.015625。全部episode中 T0 为3/18，T3 为12/18，p=0.00390625。复盘草稿结构合法18/18，引用可解析17/18。详情见 [实验四报告](exp4/report.md)。
+
+甲生成草稿并按冻结规则确认，纠正成员依照 correction.json；乙执行Tb。源属主、作者、确认人与确认时间通过显式成员映射保留。每个 episodeKey 对应同一个 Ta runId 和两个条件，主统计以 Ta 实际踩坑片段为单位配对，另报告全部18个片段、跨属主和自我纠正分组。草稿结构与全部原始引用采用产品解析器和引用检查，确认修改量按增加、删除字符数计算。
+
+T2 使用单独冻结标签 `knowledge-exp-freeze-v3.2`，复用 `runs/exp4-freeze-v31/raw/` 中的18个 episode，不重新执行 Ta 或复盘。命令如下：
+
+```sh
+pnpm --filter @simplercp/experiments experiment k4 \
+  --config experiments/knowledge/formal-v3.json \
+  --source experiments/knowledge/runs/exp4-freeze-v31 \
+  --conditions T2 --shared-episode \
+  --out experiments/knowledge/runs/exp4-t2-freeze-v31
+```
+
+T2 的模型原稿通过实验专用原样确认入口确认，`changedFields` 为空；确认后仍使用与 T3 相同的 BM25、MiniMax-M3 重排、top-5 和字符预算。结果统计与图位于 `runs/exp4-t2-freeze-v31/analysis/statistics/`。
+
+复算 T2 的送达、配对 McNemar、Holm 校正、bootstrap 区间与图：
+
+```sh
+experiments/knowledge/analysis/.venv/bin/python \
+  experiments/knowledge/analysis/analyze-t2.py
+```
+
+## 恢复与核验
+
+同一冻结提交、数据、配置和输出目录下再次执行正式命令，会按 key 跳过完成组合。额度或请求速率限制会停止安排新任务并取消当前Agent，保留中断原因和最终状态。恢复前确认额度并重启实验服务；中断任务使用新的项目，原始尝试目录保留。已经完成的Ta继续用于同一片段，不重复执行。
+
+单独重算正式统计：
+
+```sh
+experiments/knowledge/analysis/.venv/bin/python \
+  experiments/knowledge/analysis/analyze.py \
+  experiments/knowledge/runs/exp3-freeze-v31/results.jsonl \
+  --out experiments/knowledge/runs/exp3-freeze-v31/analysis/statistics
+experiments/knowledge/analysis/.venv/bin/python \
+  experiments/knowledge/analysis/analyze.py \
+  experiments/knowledge/runs/exp4-freeze-v31/results.jsonl \
+  --out experiments/knowledge/runs/exp4-freeze-v31/analysis/statistics
+node docs/knowledge/experiments/verify-artifacts.mjs
+```
+
+原43条部分记录保存在 `runs/exp3-freeze-v3/`，不进入正式样本。一次未通过纠正后项目测试的早期 Ta 尝试保存在 `runs/exp4-freeze-v31/raw/P01-episode-3-failure-20261017/`，不计入正式36条结果；同一 episode 后续重跑并通过判定。原E1到E6目录保留，编号对应见 [README](README.md)。冻结前两个真实片段的验收与取消检查位于 `freeze-v31-checks/`，也不进入正式样本。
+
+## 费用与复现范围
+
+实验一整理和实验二补算新增模型费用均为0元。实验三模型费用估算约124.62元；实验四正式结果费用估算约20.05元，另有未纳入正式样本的早期 Ta 尝试估算0.36元。费用按 MiniMax-M3 标准 token 价格估算，供应商实际账单另计。样本数、费用和运行时间见各实验报告。
+
+每百万非缓存输入2.10元、输出8.40元、缓存读取0.42元；单次输入超过512k的请求依照价格规则乘二。Agent inputTokens 为非缓存输入，知识 promptTokens 包含缓存，分别计算。保留原始 cost 字段与估算字段。
+
+并发轨迹与确定性检索可以逐条核验。M3 选择、Agent输出、token和时间会随模型服务变化；完整复现指固定数据、重复次数、协议和统计方法，比较统计结果。构造任务、规定的卡片确认规则与真人协作的适用范围分别说明。

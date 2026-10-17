@@ -1,0 +1,170 @@
+{
+  "summary": [
+    {
+      "sample": "all",
+      "condition": "T0",
+      "episodes": 18,
+      "functional": 17,
+      "jointSuccess": 3,
+      "jointRate": 0.16666666666666666,
+      "recurrence": 15,
+      "recurrenceRate": 0.8333333333333334,
+      "delivered": 0,
+      "deliveryRate": 0.0
+    },
+    {
+      "sample": "all",
+      "condition": "T2",
+      "episodes": 18,
+      "functional": 15,
+      "jointSuccess": 4,
+      "jointRate": 0.2222222222222222,
+      "recurrence": 14,
+      "recurrenceRate": 0.7777777777777778,
+      "delivered": 6,
+      "deliveryRate": 0.3333333333333333
+    },
+    {
+      "sample": "all",
+      "condition": "T3",
+      "episodes": 18,
+      "functional": 16,
+      "jointSuccess": 12,
+      "jointRate": 0.6666666666666666,
+      "recurrence": 6,
+      "recurrenceRate": 0.3333333333333333,
+      "delivered": 18,
+      "deliveryRate": 1.0
+    },
+    {
+      "sample": "ta-trapped",
+      "condition": "T0",
+      "episodes": 13,
+      "functional": 12,
+      "jointSuccess": 0,
+      "jointRate": 0.0,
+      "recurrence": 13,
+      "recurrenceRate": 1.0,
+      "delivered": 0,
+      "deliveryRate": 0.0
+    },
+    {
+      "sample": "ta-trapped",
+      "condition": "T2",
+      "episodes": 13,
+      "functional": 11,
+      "jointSuccess": 1,
+      "jointRate": 0.07692307692307693,
+      "recurrence": 12,
+      "recurrenceRate": 0.9230769230769231,
+      "delivered": 2,
+      "deliveryRate": 0.15384615384615385
+    },
+    {
+      "sample": "ta-trapped",
+      "condition": "T3",
+      "episodes": 13,
+      "functional": 11,
+      "jointSuccess": 7,
+      "jointRate": 0.5384615384615384,
+      "recurrence": 6,
+      "recurrenceRate": 0.46153846153846156,
+      "delivered": 13,
+      "deliveryRate": 1.0
+    }
+  ],
+  "pairedJointSuccess": [
+    {
+      "sample": "all",
+      "episodes": 18,
+      "left": "T0",
+      "right": "T2",
+      "leftOnly": 0,
+      "rightOnly": 1,
+      "difference": 0.05555555555555555,
+      "differenceCi95": [
+        0.0,
+        0.16666666666666666
+      ],
+      "mcnemarP": 1.0,
+      "holmP": 1.0
+    },
+    {
+      "sample": "all",
+      "episodes": 18,
+      "left": "T2",
+      "right": "T3",
+      "leftOnly": 0,
+      "rightOnly": 8,
+      "difference": 0.4444444444444444,
+      "differenceCi95": [
+        0.2222222222222222,
+        0.6666666666666666
+      ],
+      "mcnemarP": 0.0078125,
+      "holmP": 0.03125
+    },
+    {
+      "sample": "ta-trapped",
+      "episodes": 13,
+      "left": "T0",
+      "right": "T2",
+      "leftOnly": 0,
+      "rightOnly": 1,
+      "difference": 0.07692307692307693,
+      "differenceCi95": [
+        0.0,
+        0.23076923076923078
+      ],
+      "mcnemarP": 1.0,
+      "holmP": 1.0
+    },
+    {
+      "sample": "ta-trapped",
+      "episodes": 13,
+      "left": "T2",
+      "right": "T3",
+      "leftOnly": 0,
+      "rightOnly": 6,
+      "difference": 0.46153846153846156,
+      "differenceCi95": [
+        0.23076923076923078,
+        0.6923076923076923
+      ],
+      "mcnemarP": 0.03125,
+      "holmP": 0.09375
+    }
+  ],
+  "draftTokenGroups": [
+    {
+      "draftHasRequiredTokens": true,
+      "episodes": 7,
+      "taTrapped": 4,
+      "jointSuccess": 4,
+      "jointRate": 0.5714285714285714,
+      "trappedJointSuccess": 1,
+      "trappedJointRate": 0.25,
+      "delivered": 5
+    },
+    {
+      "draftHasRequiredTokens": false,
+      "episodes": 11,
+      "taTrapped": 9,
+      "jointSuccess": 0,
+      "jointRate": 0.0,
+      "trappedJointSuccess": 0,
+      "trappedJointRate": 0.0,
+      "delivered": 1
+    }
+  ],
+  "quality": {
+    "episodes": 18,
+    "validStructure": 18,
+    "validCitations": 17,
+    "changedFieldsEmpty": 18
+  },
+  "agentCostEstimatedCny": 6.4626622199999995,
+  "rerankCostEstimatedCny": 0.10146906,
+  "costEstimatedCny": 6.56413128,
+  "wallMsSum": 1594357
+}
