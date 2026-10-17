@@ -32,6 +32,6 @@ for (const id of ["P3", "P4"] as const) {
     verification: replayEvidenceSummary(rows),
     changedDecisions: rows.filter((row) => previous.get(row.id) !== row.outcome.decision).map((row) => ({ id: row.id, before: previous.get(row.id), after: row.outcome.decision }))
   };
+  console.log(JSON.stringify({ policy: id, samples: rows.length, verification: replayEvidenceSummary(rows) }));
 }
 await fs.writeFile(path.join(root, "review-replay.json"), JSON.stringify({ dataset: "d1-v4", split: "dev", modelCalls: 0, policies }, null, 2) + "\n");
-console.log(JSON.stringify(policies));

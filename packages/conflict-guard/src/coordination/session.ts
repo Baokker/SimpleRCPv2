@@ -95,7 +95,7 @@ export function createSessionCoordinator(options: {
     const currentIds = new Set(currentPairs.map((pair) => pair.id));
     // 半成品代码可能暂时失去语义路径，保留候选直到批次关闭后检查当前文本。
     const retainedPending = coordinator.records()
-      .filter((record) => options.revisionMode === "judged-input" && ["pending", "stale", "analyzing"].includes(record.status) && (relevantBatch(record.pair) || incompleteSource(record.pair) || batches.some(({ batch }) => batchTouchesPair(batch, record.pair))) && !currentIds.has(record.pair.id))
+      .filter((record) => options.revisionMode === "judged-input" && ["pending", "stale", "analyzing"].includes(record.status) && (relevantBatch(record.pair) || incompleteSource(record.pair) || record.lastAttempt?.deferred && batches.some(({ batch }) => batchTouchesPair(batch, record.pair))) && !currentIds.has(record.pair.id))
       .map((record) => record.pair);
     const candidates = [...currentPairs, ...retainedPending];
     if (options.observeSyntax) {

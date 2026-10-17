@@ -74,6 +74,15 @@ describe("阶段 4 回放基础设施", () => {
     expect(result.judgements.some((judgement) => judgement.verdict.zone === "grey" && judgement.verdict.decision === "warn")).toBe(true);
   });
 
+  it("安全轨迹没有语义修改时关闭候选并保持放行", async () => {
+    const archive = JSON.parse(gunzipSync(await fs.readFile(new URL("../../bench/datasets/d1-v3/dataset.json.gz", import.meta.url))).toString());
+    const events = readTrace(archive.traces["d1-0002-safe.jsonl"]);
+    const result = replayTrace(events, { policy: "P3", k: 2 });
+    expect(result.errors).toEqual([]);
+    expect(result.finalDecision).toBe("allow");
+    expect(result.pairs.every((pair) => pair.final?.status === "closed")).toBe(true);
+  });
+
   it("内存文件提供者使用全局递增版本", () => {
     const files = new MemoryFileProvider({ "src/a.ts": "export const a = 1;" });
     const first = files.version("src/a.ts");
