@@ -14,3 +14,5 @@
 | `pair-v5/G3a-rerun/calls.jsonl` | 仅包目录存在，保留 |
 
 包目录副本不是阶段 B 的正式结果。正式材料只引用 `docs/conflict-guard/experiment/v2/` 下的文件。`stage-a-evaluate.ts` 现在拒绝把输出写到包目录的 `docs/conflict-guard/experiment` 路径；后续命令必须传入仓库根目录下的正式输出路径。
+
+审查时仍能看到 `packages/conflict-guard/docs/` 下的六个未跟踪文件。它们与正式目录中的调用记录不同，作为历史追溯材料保留，不属于冻结输入，也不会被任何 v2 命令引用。输出保护使用规范化路径和目录边界判断，后续阶段的命令统一写入仓库根目录下的 `docs/conflict-guard/experiment/v2/`。

@@ -1,0 +1,26 @@
+{
+  "stage": "stage-B-and-C",
+  "stopRatio": 1.2,
+  "stopBeforeExceeding": {
+    "fast": 1680,
+    "deep": 1080,
+    "agentBaseRuns": 50,
+    "agentExecutionsIncludingFollowups": 50,
+    "agentHttpRequests": 10000,
+    "usd": 1.900788
+  },
+  "plannedLimits": {
+    "holdoutFast": 1200,
+    "holdoutDeep": 800,
+    "agentRuns": 50
+  },
+  "estimate": {
+    "holdoutFast": 630,
+    "holdoutDeep": 294,
+    "developmentAblationFast": 200,
+    "developmentAblationDeep": 100,
+    "agentRuns": 40,
+    "usd": 1.58399
+  },
+  "basis": "以阶段 A3 的 90 次快判、6 次深判和既有 Agent 冒烟平均费用估算；阶段 C 以实际 usage 记录为准。"
+}

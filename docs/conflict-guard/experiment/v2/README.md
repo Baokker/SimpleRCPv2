@@ -4,11 +4,17 @@
 
 阶段 C 开始前不得读取保留集模型结果或运行保留集回放评价。D1 使用 d1-v4，E1 到 E4 的正式协议只登记在 [protocol.json](protocol.json) 中。
 
-## 开发集选择
+## 冻结配置
 
-选择规则保存在 selection-rule.md，提交为 `d4e735f`。数据为 D1-v3 开发集，119 个有效轨迹、97 个关系组。共同灰区主表使用已登记的 61 个轨迹；新增六个灰区轨迹与全部 67 个灰区轨迹均提供独立质量表。
+选择规则保存在 `selection-rule.md`、`selection-rule-a2.md` 和 `selection-rule-a3.md`，三个提交号与文件哈希记录在 `freeze.json`。数据集为 D1-v4，开发集 135 个关系组、270 个有效变体，真值为 46 个冲突与 224 个安全变更；保留集 145 个关系组、274 个有效变体，真值为 69 个冲突与 205 个安全变更，另有 16 个排除变体。
 
-模型配置保存在 stage-A/config.json、models.json、providers.json。MiniMax-M3 使用国内站直连；Jev 固定 `jev-1.13.0`，通过环境变量 `TYPESAFE_PROXY_URL` 指定代理。
+P4 使用异步级联 G3a：Jev `jev-1.13.0` 使用 `pair-v5` 直接三选一，经 `TYPESAFE_PROXY_URL` 代理；提醒结论并行请求 MiniMax-M3 深判，使用 `pair-v1`、开启自适应推理、`reasoning_split`、4096 个以上输出 token、30 秒时限，MiniMax 国内站直连。阶段 A3 的配置、模型与供应方文件保存在 `stage-A3/`。
+
+当前冻结状态为 `awaiting-human-confirmation`。用户确认后才允许读取保留集模型结果或执行保留集回放。
+
+## 阶段 A 历史材料
+
+阶段 A 至 A3 的输入、缓存、失败记录和开发集结果保存在 `stage-A/`、`stage-A2/`、`stage-A3/`。这些目录中的 D1-v3 数字和旧命令用于解释选择过程，不代表当前正式实验配置。
 
 在仓库根目录准备输入：
 

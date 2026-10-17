@@ -1,6 +1,17 @@
 {
   "version": "D3-S-v1",
   "source": "d3-v0 acceptance.test.mjs",
+  "initialCodeRoot": "packages/conflict-guard/bench/seeds/native",
+  "initialCodeHashes": {
+    "commerce/src/pricing.ts": "3f7a700fd6693d833a3126e7d7ec684122962102fe9514d2560cee781aaf3449",
+    "commerce/src/cart.ts": "af0d26a677f204515187d07ee84ed4c9b71c891e2aa8154a47b8215b6ebe79e2",
+    "calendar/src/intervals.ts": "8afd2e050fd9b56bef6891be795d7646b844b6c6db669ee4f0e8210df5bc0297",
+    "calendar/src/availability.ts": "db57f6ee079bb2335c1e82139c9a6bd3406a2a164357632af633d639c959d415",
+    "cache/src/weights.ts": "60dac1f6728185a01d56a960c08919e7919eb363577bd7f1173f4ca9ff0c2584",
+    "cache/src/lru.ts": "a78f53cd0eaa591ee073d9f0b50bd7c5d7458c1810787a2f4d3d04f27b928a5c",
+    "events/src/retry.ts": "79778a4c0161700d88024a5deb54ee48acfc751630e5bc72ca355860d590ca84",
+    "events/src/delivery.ts": "c4bdd8f16b7cfd198013d159e2928a7949074c7aba7da5b2415d20013241ed57"
+  },
   "execution": { "humanEdits": "回放器以虚拟成员身份在固定时间点写入", "agentModel": "MiniMax-M3", "A0": 1, "A1": 3, "agentRuns": { "A0": 10, "A1": 30 } },
   "scenarios": [
     {

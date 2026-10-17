@@ -2,7 +2,7 @@
 
 本目录的冻结与实验材料已由 `v2` 取代。请使用 [v2/README.md](v2/README.md) 及其下的阶段材料；本目录保留用于历史复现。
 
-当前准备因 Jev HTTP 451 地区限制受阻，阈值校准与完整冻结尚未完成。正式 X1 至 X7 和保留集策略评价尚未执行。准备状态见 [freeze.md](freeze.md)，可机读协议见 [protocol.json](protocol.json)，实际修复与录制结果见 [实验前报告](../review-fix-preexperiment.md)。完整冻结导出完成后再核验配置、哈希与调用预算。
+本目录内容属于旧版实验方案，当前冻结材料与实验命令全部以 [v2/README.md](v2/README.md) 和 [v2/protocol.json](v2/protocol.json) 为准。这里的 Jev 451 记录、旧样本数量和旧实验编号只用于历史追溯。
 
 本轮开发集比较与指标判定见 [实验问题、指标与开发集结果](focused-experiment-report.md)。报告围绕人与人协作、灰区模型质量、Agent 协作组织，包含三个 MiniMax-M3 提示词版本的真实录制，并分别统计全部样本与灰区子集。报告末尾提供收缩后的正式实验设计建议；以下协议命令仍属于等待确认的完整实验方案。
 
