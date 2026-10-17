@@ -32,6 +32,14 @@ export function createSyntaxWaitTracker() {
       }
       return wait ? { deferred: wait.revisions.size, waitMs: wait.elapsedMs + (wait.startedAt === undefined ? 0 : Math.max(0, now - wait.startedAt)) } : undefined;
     },
+    finalize(id: string, revision: string, now: number) {
+      const wait = waits.get(id);
+      if (!wait || wait.finalizedRevision === revision) return;
+      if (wait.startedAt !== undefined) wait.elapsedMs += Math.max(0, now - wait.startedAt);
+      wait.startedAt = undefined;
+      wait.finalizedRevision = revision;
+    },
+    reset(id: string) { waits.delete(id); },
     retain(ids: ReadonlySet<string>) { for (const id of waits.keys()) if (!ids.has(id)) waits.delete(id); }
   };
 }

@@ -4,13 +4,17 @@
   "unavailable": [
     {
       "sample": "d1-0013-safe",
+      "pairId": "7c033bf08ef6491cd36467b0e8d47df74e20560e88827fe53ea46fc38aafafb6",
+      "revision": 0,
       "decision": "warn",
-      "cause": "replay-cache-miss"
+      "cause": "request-skipped-missing-symbol"
     },
     {
       "sample": "d1-0061-safe",
+      "pairId": "3b982d5a1e41f4c8dd02e55e952a5e7f29594e99046621e919499aad93f8dbac",
+      "revision": 0,
       "decision": "warn",
-      "cause": "replay-cache-miss"
+      "cause": "request-skipped-incomplete-input"
     }
   ],
   "callStatus": {
@@ -18,8 +22,9 @@
   },
   "errorTypes": {},
   "causes": {
-    "replay-cache-miss": 2
+    "request-skipped-missing-symbol": 1,
+    "request-skipped-incomplete-input": 1
   },
   "recordedResponses": 232,
-  "conclusion": "出现的 model-unavailable 来自录放阶段请求键未命中；本轮真实 Jev 请求没有失败。"
+  "conclusion": "已根据候选关闭、请求跳过、请求失败和录放缓存缺项分别归类；真实录制调用状态另行统计。"
 }

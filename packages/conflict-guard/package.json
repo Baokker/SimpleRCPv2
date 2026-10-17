@@ -39,6 +39,7 @@
     "experiment:a2-data-check": "node --experimental-strip-types scripts/stage-a2-data-check.ts",
     "experiment:a2-fair-compare": "node --experimental-strip-types scripts/stage-a2-fair-compare.ts",
     "experiment:a2-unavailable": "node --experimental-strip-types scripts/stage-a2-model-unavailable.ts",
+    "experiment:a2-impact": "node --experimental-strip-types scripts/stage-a2-b1-impact.ts",
     "experiment:a2-g3a": "node --experimental-strip-types scripts/stage-a2-g3a-record.ts",
     "experiment:a2-report": "node --experimental-strip-types scripts/stage-a2-write-report.ts",
     "adjudication:evidence": "node --experimental-strip-types scripts/adjudication-evidence.ts",

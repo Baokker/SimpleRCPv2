@@ -135,6 +135,7 @@ export function replayTrace(events: TraceEvent[], options: ReplayOptions): Repla
     }
   });
   tracker.onEvent((event: ConflictGuardEvent) => {
+    if (event.type === "change_set_opened") session.changeSetOpened(event.changeSet.actor);
     if (event.type === "batch_opened") session.batchOpened(event.batch);
     if (event.type === "batch_closed") {
       session.batchClosed(event.batch);

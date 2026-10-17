@@ -1,33 +1,82 @@
 {
   "dataset": "d1-v3",
   "greySamples": 67,
-  "commonInputCount": 194,
-  "inputUnionCount": 194,
+  "matchedGroupCount": 58,
+  "unmatchedGroups": [
+    {
+      "id": "d1-0013-conflict",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 0
+    },
+    {
+      "id": "d1-0045-safe",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 2
+    },
+    {
+      "id": "d1-0066-safe",
+      "pairV1InputCount": 0,
+      "pairV4InputCount": 1
+    },
+    {
+      "id": "d1-0083-conflict",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 1
+    },
+    {
+      "id": "d1-0091-safe",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 2
+    },
+    {
+      "id": "d1-0141-safe",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 2
+    },
+    {
+      "id": "d1-dev-safe-0003-safe",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 2
+    },
+    {
+      "id": "d1-dev-safe-0012-safe",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 2
+    },
+    {
+      "id": "d1-dev-safe-0024-safe",
+      "pairV1InputCount": 1,
+      "pairV4InputCount": 1
+    }
+  ],
+  "commonInputCount": 45,
+  "inputUnionCount": 45,
   "normalizedInputCoverage": {
     "pairV1": 1,
-    "pairV4": 1
+    "pairV4": 1,
+    "matchedGroups": 0.8656716417910447
   },
   "pairV1": {
-    "samples": 67,
-    "conflicts": 15,
-    "safe": 52,
-    "balancedAccuracy": 0.7089743589743589,
-    "missBlockRate": 0.4666666666666667,
-    "falseBlockRate": 0.11538461538461539,
-    "conflictNotificationRate": 0.9333333333333333,
-    "safeWarningRate": 0.7307692307692307,
-    "threeClassAgreement": 0.23880597014925373
+    "samples": 58,
+    "conflicts": 13,
+    "safe": 45,
+    "balancedAccuracy": 0.7025641025641025,
+    "missBlockRate": 0.46153846153846156,
+    "falseBlockRate": 0.13333333333333333,
+    "conflictNotificationRate": 0.9230769230769231,
+    "safeWarningRate": 0.7333333333333333,
+    "threeClassAgreement": 0.22413793103448276
   },
   "pairV4": {
-    "samples": 67,
-    "conflicts": 15,
-    "safe": 52,
-    "balancedAccuracy": 0.6903846153846154,
-    "missBlockRate": 0.6,
-    "falseBlockRate": 0.019230769230769232,
-    "conflictNotificationRate": 0.9333333333333333,
-    "safeWarningRate": 0.36538461538461536,
-    "threeClassAgreement": 0.5671641791044776
+    "samples": 58,
+    "conflicts": 13,
+    "safe": 45,
+    "balancedAccuracy": 0.6811965811965812,
+    "missBlockRate": 0.6153846153846154,
+    "falseBlockRate": 0.022222222222222223,
+    "conflictNotificationRate": 0.9230769230769231,
+    "safeWarningRate": 0.35555555555555557,
+    "threeClassAgreement": 0.5689655172413793
   },
   "changedFinalDecisions": [
     {
@@ -46,16 +95,6 @@
       "pairV4": "lock"
     },
     {
-      "id": "d1-0045-safe",
-      "pairV1": "allow",
-      "pairV4": "warn"
-    },
-    {
-      "id": "d1-0066-safe",
-      "pairV1": "warn",
-      "pairV4": "allow"
-    },
-    {
       "id": "d1-0091-conflict",
       "pairV1": "lock",
       "pairV4": "warn"
@@ -67,11 +106,6 @@
     },
     {
       "id": "d1-dev-safe-0002-safe",
-      "pairV1": "warn",
-      "pairV4": "allow"
-    },
-    {
-      "id": "d1-dev-safe-0003-safe",
       "pairV1": "warn",
       "pairV4": "allow"
     },
@@ -134,11 +168,6 @@
       "id": "d1-dev-safe-0022-safe",
       "pairV1": "warn",
       "pairV4": "lock"
-    },
-    {
-      "id": "d1-dev-safe-0024-safe",
-      "pairV1": "warn",
-      "pairV4": "allow"
     },
     {
       "id": "d1-dev-safe-0026-safe",

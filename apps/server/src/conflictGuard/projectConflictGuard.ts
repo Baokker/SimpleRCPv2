@@ -370,55 +370,56 @@ export function createProjectConflictGuard(options: {
 
   const removeTrackerListener = tracker.onEvent((event) => {
     try {
-    if (event.type === "batch_opened" && event.batch.actor.kind === "human") {
-      const key = `${event.batch.actor.memberId}:${event.batch.file}`;
-      const manager = undoManagers.get(key);
-      if (manager) {
-        manager.stopCapturing();
-        if (!undoBaselines.has(key)) undoBaselines.set(key, manager.undoStack.length);
-      }
-      session.batchOpened(event.batch);
-    }
-    if (event.type === "batch_closed") {
-      session.batchClosed(event.batch);
-      const change = tracker.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(event.batch.actor))?.files.get(event.batch.file);
-      closedBatches.push({ batch: event.batch, change });
-      scheduleSemanticUpdate(event.batch.file);
-    }
-    if (event.type === "change_set_closed" || event.type === "change_set_file_closed") {
-      const actor = event.type === "change_set_closed" ? event.changeSet.actor : event.actor;
-      session.finishSyntax(event.type === "change_set_file_closed" ? event.file : undefined, actor);
-      if (actor.kind === "human") {
-        const files = event.type === "change_set_closed" ? [...event.changeSet.files.keys()] : [event.file];
-        for (const file of files) {
-          const key = `${actor.memberId}:${file}`;
-          undoManagers.get(key)?.stopCapturing();
-          undoBaselines.delete(key);
+      if (event.type === "change_set_opened") session.changeSetOpened(event.changeSet.actor);
+      if (event.type === "batch_opened" && event.batch.actor.kind === "human") {
+        const key = `${event.batch.actor.memberId}:${event.batch.file}`;
+        const manager = undoManagers.get(key);
+        if (manager) {
+          manager.stopCapturing();
+          if (!undoBaselines.has(key)) undoBaselines.set(key, manager.undoStack.length);
         }
+        session.batchOpened(event.batch);
       }
-      scheduleSemanticUpdate();
-    }
-    if (event.type === "cursor") {
-      const memberId = event.cursor.actor.memberId;
-      const pending = pendingCursors.get(memberId);
-      if (pending) {
-        pending.event = event;
+      if (event.type === "batch_closed") {
+        session.batchClosed(event.batch);
+        const change = tracker.getActiveChangeSets().find((set) => actorKey(set.actor) === actorKey(event.batch.actor))?.files.get(event.batch.file);
+        closedBatches.push({ batch: event.batch, change });
+        scheduleSemanticUpdate(event.batch.file);
+      }
+      if (event.type === "change_set_closed" || event.type === "change_set_file_closed") {
+        const actor = event.type === "change_set_closed" ? event.changeSet.actor : event.actor;
+        session.finishSyntax(event.type === "change_set_file_closed" ? event.file : undefined, actor);
+        if (actor.kind === "human") {
+          const files = event.type === "change_set_closed" ? [...event.changeSet.files.keys()] : [event.file];
+          for (const file of files) {
+            const key = `${actor.memberId}:${file}`;
+            undoManagers.get(key)?.stopCapturing();
+            undoBaselines.delete(key);
+          }
+        }
+        scheduleSemanticUpdate();
+      }
+      if (event.type === "cursor") {
+        const memberId = event.cursor.actor.memberId;
+        const pending = pendingCursors.get(memberId);
+        if (pending) {
+          pending.event = event;
+          return;
+        }
+        const timer = setTimeout(() => {
+          try {
+            const latest = pendingCursors.get(memberId);
+            pendingCursors.delete(memberId);
+            if (latest) void appendTrace(traceEvent(latest.event));
+          } catch (error) {
+            markDegraded(error);
+          }
+        }, options.config.cursorDebounceMs);
+        pendingCursors.set(memberId, { event, timer });
         return;
       }
-      const timer = setTimeout(() => {
-        try {
-          const latest = pendingCursors.get(memberId);
-          pendingCursors.delete(memberId);
-          if (latest) void appendTrace(traceEvent(latest.event));
-        } catch (error) {
-          markDegraded(error);
-        }
-      }, options.config.cursorDebounceMs);
-      pendingCursors.set(memberId, { event, timer });
-      return;
-    }
-    flushPendingCursors();
-    void appendTrace(traceEvent(event));
+      flushPendingCursors();
+      void appendTrace(traceEvent(event));
     } catch (error) {
       markDegraded(error);
     }

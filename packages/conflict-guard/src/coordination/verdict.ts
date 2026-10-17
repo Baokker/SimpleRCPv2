@@ -9,6 +9,9 @@ export function isEffectiveVerdict(verdict: ZoneVerdict) {
 export function effectiveVerdict(current: ZoneVerdict, previous?: ZoneVerdict): ZoneVerdict {
   if (current.ruleId === "agent-analysis-unavailable") return current;
   if (isEffectiveVerdict(current)) return current;
-  if (previous && isEffectiveVerdict(previous) && previous.decision === "lock") return previous;
+  if (previous && isEffectiveVerdict(previous)) {
+    if (current.ruleId === "model-unavailable" && previous.decision !== "lock") return { ...current, decision: "warn" };
+    return previous;
+  }
   return { ...current, decision: "warn" };
 }

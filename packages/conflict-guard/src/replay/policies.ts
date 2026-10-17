@@ -120,7 +120,11 @@ export function createReplayModelPolicy(config: AdjudicationConfig, responses: M
   return { ...createP3Policy(), id: config.strategy, observeSyntax: Boolean(config.inputVersion), beginReplay: () => occurrences.clear(), maxLatencyMs: config.strategy === "G0" ? 0 : config.hardDeadlineMs,
     ...(config.strategy === "G0" ? {} : { adjudicate(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]) {
       const left = input.pair && input.symbols(input.pair.left); const right = input.pair && input.symbols(input.pair.right);
-      if (!input.pair || !left || !right) { complete({ ...local, decision: "warn", ruleId: "model-unavailable" }); return; }
+      if (!input.pair || !left || !right) {
+        const missing = !input.pair ? "没有候选变更对" : !left && !right ? "双方修改的声明都无法读取" : !left ? "左侧修改的声明无法读取" : "右侧修改的声明无法读取";
+        complete({ ...local, decision: "warn", ruleId: "model-unavailable", summary: `研判请求未发出：${missing}。`, evidence: [...local.evidence, { file: input.pair?.left.symbol ?? "", detail: missing }] });
+        return;
+      }
       const cluster = { left: (input.pair.left.symbols ?? [input.pair.left.symbol]).map((symbol) => input.symbols({ ...input.pair!.left, symbol })!), right: (input.pair.right.symbols ?? [input.pair.right.symbol]).map((symbol) => input.symbols({ ...input.pair!.right, symbol })!), paths: input.pair.relations?.map((relation) => relation.path) ?? [input.pair.path] };
       const request = buildAdjudicationInput({ left: { actor: input.pair.left.actor, symbol: left }, right: { actor: input.pair.right.actor, symbol: right }, cluster, path: input.pair.path, nested: false, typeOnly: Boolean(input.pair.path?.typeOnly), project: input.project }, local, config, contextFiles, clock.now);
       const hash = inputHash(request);

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createJudgementQueue, createPairCoordinator } from "./pairState.js";
+import { createSessionCoordinator } from "./session.js";
 import { VirtualClock } from "../replay/clock.js";
 import type { CandidatePair } from "../routing/candidates.js";
 
@@ -166,6 +167,18 @@ describe("变更对状态机", () => {
     completes[1]!(unavailable);
     expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "warn", ruleId: "model-unavailable" });
   });
+  test("有效放行遇到语法结束提醒时仍采用最后一个完整版本", () => {
+    const completes: Array<(value: typeof verdict) => void> = [];
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const allowed = { ...grey, zone: "white" as const, decision: "allow" as const, ruleId: "model-fast", adjudication: { strategy: "G2" as const, source: "fast" as const, latencyMs: 1, status: "success" as const, escalated: false, userExplanation: "可以继续", suggestedAction: "继续修改", inputHash: "x", promptVersion: "pair-v1" } };
+    const final = { ...grey, decision: "warn" as const, ruleId: "syntax-incomplete-final", localOnly: true };
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, done) { completes.push(done); } });
+    coordinator.update([{ ...pair, revisionKey: "allow" }]);
+    completes[0]!(allowed);
+    coordinator.update([{ ...pair, revisionKey: "syntax" }]);
+    completes[1]!(final);
+    expect(coordinator.get(pair.id)?.verdict).toMatchObject({ decision: "allow", ruleId: "model-fast" });
+  });
   test("语法不完整只在变更集结束时生成一次结束提醒", () => {
     const waiting = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "syntax-incomplete-waiting", deferred: { reason: "syntax-incomplete" } };
     const events: string[] = [];
@@ -179,6 +192,31 @@ describe("变更对状态机", () => {
     coordinator.finishSyntax(pair.id);
     expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", verdict: { ruleId: "syntax-incomplete-final", decision: "warn" } });
     expect(events.filter((event) => event === "pair_judged")).toHaveLength(1);
+  });
+  test("同一活跃变更集的多个修订不会重复生成语法结束提醒", () => {
+    const waiting = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "syntax-incomplete-waiting", deferred: { reason: "syntax-incomplete" } };
+    const events: string[] = [];
+    const actor = pair.left.actor;
+    const session = createSessionCoordinator({
+      tracker: { getOpenBatches: () => [] } as never,
+      semantic: { getActiveChangeSets: () => [] } as never,
+      index: {} as never,
+      now: () => 1,
+      intervene: false,
+      classify: () => ({ ...verdict, zone: "grey", decision: "warn", ruleId: "semantic-interaction-uncertain" }),
+      adjudicate: (_pair, _local, _signal, complete) => complete(waiting),
+      onError: () => undefined
+    });
+    session.coordinator.onEvent((event) => events.push(event.type));
+    session.coordinator.update([{ ...pair, revisionKey: "r1" }]);
+    session.finishSyntax("a.ts", actor);
+    session.coordinator.update([{ ...pair, revisionKey: "r2" }]);
+    session.finishSyntax("a.ts", actor);
+    expect(events.filter((event) => event === "pair_judged")).toHaveLength(1);
+    session.changeSetOpened(actor);
+    session.coordinator.update([{ ...pair, revisionKey: "r3" }]);
+    session.finishSyntax("a.ts", actor);
+    expect(events.filter((event) => event === "pair_unchanged")).toHaveLength(1);
   });
   test("候选关系消失时记录关闭原因", () => {
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
@@ -224,5 +262,25 @@ describe("变更对状态机", () => {
     coordinator.update([]);
     expect(coordinator.get(pair.id)).toMatchObject({ status: "closed" });
     expect(coordinator.get(pair.id)?.resolution).toBeUndefined();
+  });
+  test("d1-0059-conflict 在模型失败和语法结束提醒之后保留最后有效拦截", () => {
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const unavailable = { ...grey, ruleId: "model-unavailable", adjudication: { strategy: "G2" as const, source: "fallback" as const, latencyMs: 1, status: "degraded" as const, escalated: false, userExplanation: "研判失败", suggestedAction: "请检查", inputHash: "d1-0059", promptVersion: "pair-v1" } };
+    const waiting = { ...grey, ruleId: "syntax-incomplete-waiting", deferred: { reason: "syntax-incomplete" } };
+    let attempt = 0;
+    const results = [verdict, verdict, unavailable, waiting];
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, complete) { complete(results[attempt++]!); } });
+    for (const revisionKey of ["rev1", "rev2", "rev15", "final"]) coordinator.update([{ ...pair, id: "d1-0059-conflict", revisionKey }]);
+    coordinator.finishSyntax("d1-0059-conflict");
+    expect(coordinator.get("d1-0059-conflict")).toMatchObject({ status: "judged", verdict: { decision: "lock", ruleId: "call-signature-incompatible" } });
+  });
+  test("d1-0082-conflict 在后续无效结果之后保留最后有效拦截", () => {
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const unavailable = { ...grey, ruleId: "model-unavailable", adjudication: { strategy: "G2" as const, source: "fallback" as const, latencyMs: 1, status: "degraded" as const, escalated: false, userExplanation: "研判失败", suggestedAction: "请检查", inputHash: "d1-0082", promptVersion: "pair-v1" } };
+    let attempt = 0;
+    const results = [verdict, verdict, unavailable];
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, complete) { complete(results[attempt++]!); } });
+    for (const revisionKey of ["rev1", "rev2", "final"]) coordinator.update([{ ...pair, id: "d1-0082-conflict", revisionKey }]);
+    expect(coordinator.get("d1-0082-conflict")).toMatchObject({ status: "judged", verdict: { decision: "lock", ruleId: "call-signature-incompatible" } });
   });
 });

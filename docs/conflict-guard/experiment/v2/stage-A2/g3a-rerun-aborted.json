@@ -1,0 +1,8 @@
+{
+  "promptVersion": "pair-v1",
+  "dataset": "d1-v4",
+  "reportedDeepCallsBeforeStop": 5,
+  "formalResultRestored": true,
+  "reason": "D1-v4 的 G2 输入与现有深判缓存没有完整匹配，重算已停止；部分输出没有写入正式 g3a-results.json。",
+  "nextRun": "缺少缓存时直接停止，不发起新的模型请求。"
+}

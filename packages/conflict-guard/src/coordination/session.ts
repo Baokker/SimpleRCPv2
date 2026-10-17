@@ -52,6 +52,7 @@ export function createSessionCoordinator(options: {
   const batchSymbols = new Map<string, Set<string>>();
   const batchPaths = new Map<string, Array<{ actor: string; path: RelationPath }>>();
   const syntaxWaits = createSyntaxWaitTracker();
+  const syntaxFinalized = new Set<string>();
   let lastFrozen = "[]";
   const coordinator = createPairCoordinator({ now: options.now, clock: options.clock, judgementFrameMs: options.judgementFrameMs, maxJudgementsPerFrame: options.maxJudgementsPerFrame, judgementQueue: options.judgementQueue, adjudicate: options.adjudicate, revisionMode: options.revisionMode, classify(pair) {
     try { return options.classify(pair); }
@@ -256,7 +257,18 @@ export function createSessionCoordinator(options: {
       const matches = [record.pair.left, record.pair.right].some((side) =>
         (!file || side.symbol.startsWith(`${file}#`)) && (!actor || actorKey(side.actor) === actorKey(actor))
       );
-      if (matches) coordinator.finishSyntax(record.pair.id);
+      if (matches && !syntaxFinalized.has(record.pair.id) && record.lastAttempt?.deferred) {
+        syntaxWaits.finalize(record.pair.id, record.revisionKey ?? "", options.now());
+        coordinator.finishSyntax(record.pair.id);
+        syntaxFinalized.add(record.pair.id);
+      }
+    }
+  }
+  function changeSetOpened(actor: ActorRef) {
+    for (const record of coordinator.records()) {
+      if (![record.pair.left.actor, record.pair.right.actor].some((side) => actorKey(side) === actorKey(actor))) continue;
+      syntaxFinalized.delete(record.pair.id);
+      syntaxWaits.reset(record.pair.id);
     }
   }
   function recordContracts(batch: EditBatch) {
@@ -276,7 +288,7 @@ export function createSessionCoordinator(options: {
     lastFrozen = current;
     emit({ type: "freeze", regions: regions() });
   }
-  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, finishSyntax, regions, analyzingRegions: () => [...analyzing.values()].map((region) => ({ ...region })), symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })), dispose() { coordinator.dispose(); for (const timer of analysisTimers.values()) options.clock?.clearTimeout(timer); analysisTimers.clear(); } };
+  return { coordinator, refresh, gate, refreshGates, edit, batchOpened, batchClosed, changeSetOpened, finishSyntax, regions, analyzingRegions: () => [...analyzing.values()].map((region) => ({ ...region })), symbolFor, blockedFiles: () => [...gates].map(([file, reason]) => ({ file, reason })), dispose() { coordinator.dispose(); for (const timer of analysisTimers.values()) options.clock?.clearTimeout(timer); analysisTimers.clear(); } };
 }
 
 function hash(value: string) { return createHash("sha256").update(value).digest("hex"); }

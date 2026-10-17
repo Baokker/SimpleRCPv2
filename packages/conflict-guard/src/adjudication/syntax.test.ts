@@ -47,6 +47,16 @@ it("计算首次语法推迟到声明恢复完整的全部等待时间", () => {
   expect(tracker.observe("closed", "r1", [input.left.symbol], 600000, true)).toEqual({ deferred: 1, waitMs: 100 });
 });
 
+it("变更集结束后停止语法等待计时，并且同一版本不重复累计", () => {
+  const input = declarations();
+  const tracker = createSyntaxWaitTracker();
+  expect(tracker.observe("pair", "r1", [input.left.symbol], 100)).toEqual({ deferred: 1, waitMs: 0 });
+  tracker.finalize("pair", "r1", 250);
+  expect(tracker.observe("pair", "r1", [input.left.symbol], 1000)).toEqual({ deferred: 1, waitMs: 150 });
+  expect(tracker.observe("pair", "r1", [input.left.symbol], 2000)).toEqual({ deferred: 1, waitMs: 150 });
+  expect(tracker.observe("pair", "r2", [input.left.symbol], 2100)).toEqual({ deferred: 2, waitMs: 150 });
+});
+
 it("等待结果保留候选且不进入最终缓存，下一次完整修改重新检查", async () => {
   const input = declarations();
   const config = { ...defaultAdjudicationConfig, strategy: "G1" as const };

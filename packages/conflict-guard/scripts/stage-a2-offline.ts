@@ -62,7 +62,7 @@ for (const strategy of strategies) {
   const quality = binaryQuality(outcomes);
   const calls = report.model.calls.filter((call) => call.role === "fast");
   const validGroups = groups.filter((row) => rowHasValidModelResult(report.groups.find((sample) => sample.id === row.id)?.result));
-  results.push({ id: strategy.id, promptVersion, metrics, quality, completion: { completedChangePairs: validGroups.length, totalChangePairs: groups.length, rate: groups.length ? validGroups.length / groups.length : 0 }, model: modelMetrics(report.model, calls), probabilityInputs: probabilities.size, groups });
+  results.push({ id: strategy.id, promptVersion, metrics, quality, completion: { completedChangePairs: validGroups.length, totalChangePairs: groups.length, rate: groups.length ? validGroups.length / groups.length : 0 }, model: modelMetrics(report.model, calls, report.groups.filter((row) => greyIds.has(row.id))), probabilityInputs: probabilities.size, groups });
 }
 
 await fs.mkdir(path.dirname(path.resolve(repositoryRoot, values.out!)), { recursive: true });
@@ -92,10 +92,18 @@ function binaryQuality(outcomes: Array<ReturnType<typeof replayOutcome>>) {
   };
 }
 
-function modelMetrics(model: RecordedReport["model"], calls: Array<Record<string, unknown>>) {
+function modelMetrics(model: RecordedReport["model"], calls: Array<Record<string, unknown>>, groups: RecordedGroup[]) {
   const latency = calls.map((call) => Number(call.latencyMs)).filter(Number.isFinite).sort((left, right) => left - right);
   const percentile = (fraction: number) => latency.length ? latency[Math.max(0, Math.ceil(latency.length * fraction) - 1)]! : null;
-  return { requestCompletionRate: calls.length ? calls.filter((call) => ["success", "cache-hit"].includes(String(call.status))).length / calls.length : 0, calls: calls.length, successfulRequests: calls.filter((call) => ["success", "cache-hit"].includes(String(call.status))).length, failures: calls.filter((call) => !["success", "cache-hit"].includes(String(call.status))).length, p50Ms: percentile(0.5), p95Ms: percentile(0.95), syntaxDeferred: model.syntaxDeferred ?? 0, syntaxWaitP50Ms: model.syntaxWaitP50Ms ?? null, syntaxWaitP95Ms: model.syntaxWaitP95Ms ?? null, costUsd: calls.reduce((sum, call) => sum + Number(call.costUsd ?? 0), 0) };
+  const syntaxPairs = new Map<string, { deferred: number; waitMs: number }>();
+  for (const group of groups) for (const pair of group.result.pairs ?? []) {
+    const records = Array.isArray(pair.records) ? pair.records : [];
+    const waits = records.map((record: any) => record.pair?.syntaxWait).filter((value: any) => value && Number.isFinite(value.waitMs));
+    if (waits.length) syntaxPairs.set(String(pair.id), waits.reduce((current: { deferred: number; waitMs: number }, value: { deferred?: number; waitMs: number }) => ({ deferred: Math.max(current.deferred, Number(value.deferred ?? 0)), waitMs: Math.max(current.waitMs, Number(value.waitMs)) }), { deferred: 0, waitMs: 0 }));
+  }
+  const syntaxWaits = [...syntaxPairs.values()].map((value) => value.waitMs).sort((left, right) => left - right);
+  const syntaxPercentile = (fraction: number) => syntaxWaits.length ? syntaxWaits[Math.max(0, Math.ceil(syntaxWaits.length * fraction) - 1)]! : null;
+  return { requestCompletionRate: calls.length ? calls.filter((call) => ["success", "cache-hit"].includes(String(call.status))).length / calls.length : 0, calls: calls.length, successfulRequests: calls.filter((call) => ["success", "cache-hit"].includes(String(call.status))).length, failures: calls.filter((call) => !["success", "cache-hit"].includes(String(call.status))).length, p50Ms: percentile(0.5), p95Ms: percentile(0.95), syntaxDeferred: [...syntaxPairs.values()].reduce((sum, value) => sum + value.deferred, 0) || (model.syntaxDeferred ?? 0), syntaxWaitP50Ms: syntaxPercentile(0.5) ?? model.syntaxWaitP50Ms ?? null, syntaxWaitP95Ms: syntaxPercentile(0.95) ?? model.syntaxWaitP95Ms ?? null, costUsd: calls.reduce((sum, call) => sum + Number(call.costUsd ?? 0), 0) };
 }
 
 function rowHasValidModelResult(result: Record<string, any> | undefined) {

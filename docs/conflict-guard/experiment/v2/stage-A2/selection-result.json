@@ -1,0 +1,145 @@
+{
+  "rule": "completion>=0.95, falseBlockRate<=0.15, max balancedAccuracy, then safeWarningRate, fast p50, registration order",
+  "counts": {
+    "total": 33,
+    "completed": 0,
+    "quality": 0,
+    "g3aComputed": false
+  },
+  "excluded": [
+    {
+      "id": "G2(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.05-0.50(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.05-0.60(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.05-0.70(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.05-0.80(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.10-0.50(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.10-0.60(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.10-0.70(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.10-0.80(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.15-0.50(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.15-0.60(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.15-0.70(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.15-0.80(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.20-0.50(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.20-0.60(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.20-0.70(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-0.20-0.80(pair-v5)",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.05-0.50",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.05-0.60",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.05-0.70",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.05-0.80",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.10-0.50",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.10-0.60",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.10-0.70",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.10-0.80",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.15-0.50",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.15-0.60",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.15-0.70",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.15-0.80",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.20-0.50",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.20-0.60",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.20-0.70",
+      "reason": "completion-below-95-percent"
+    },
+    {
+      "id": "G2p-new-0.20-0.80",
+      "reason": "completion-below-95-percent"
+    }
+  ],
+  "excludedForFalseBlock": [],
+  "candidates": []
+}

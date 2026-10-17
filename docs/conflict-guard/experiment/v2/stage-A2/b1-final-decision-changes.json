@@ -1,0 +1,28 @@
+{
+  "before": "docs/conflict-guard/experiment/v2/stage-A2/pair-v4/G2/results.json.gz",
+  "after": ".test-workspaces/stage-a2-replay-current-v2/G2/results.json.gz",
+  "comparedGroups": 135,
+  "changedCount": 1,
+  "changes": [
+    {
+      "id": "d1-0082-safe",
+      "before": "allow",
+      "after": "warn",
+      "reason": "结论聚合修复"
+    }
+  ],
+  "focus": [
+    {
+      "id": "d1-0059-conflict",
+      "before": "lock",
+      "after": "lock",
+      "changed": false
+    },
+    {
+      "id": "d1-0082-conflict",
+      "before": "lock",
+      "after": "lock",
+      "changed": false
+    }
+  ]
+}
