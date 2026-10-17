@@ -1,0 +1,1 @@
+ADJUDICATION_BUDGET_SCOPE=stage-a3 node --experimental-strip-types scripts/stage-a-evaluate.ts --experiment stage-A3 --dataset 'packages/conflict-guard/bench/datasets/d1-v4' --policy G2 --prompt pair-v5 --mode record --threshold 0

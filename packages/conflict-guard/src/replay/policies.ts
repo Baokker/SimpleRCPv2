@@ -117,7 +117,7 @@ function legacyInputHash(input: AdjudicationInput) {
 
 export function createReplayModelPolicy(config: AdjudicationConfig, responses: Map<string, ZoneVerdict>, onInput?: (input: AdjudicationInput, local: ZoneVerdict, occurrence: number) => void, contextFiles: string[] = [], cancelledInputs: ReadonlySet<string> = new Set()): ZoningPolicy {
   const occurrences = new Map<string, number>();
-  return { ...createP3Policy(), id: config.strategy, observeSyntax: Boolean(config.inputVersion), beginReplay: () => occurrences.clear(), maxLatencyMs: config.strategy === "G0" ? 0 : config.hardDeadlineMs,
+  return { ...createP3Policy(), id: config.strategy, observeSyntax: Boolean(config.inputVersion), beginReplay: () => occurrences.clear(), maxLatencyMs: config.strategy === "G3a" ? config.hardDeadlineMs + (config.deepDeadlineMs ?? 30000) : config.strategy === "G0" ? 0 : config.hardDeadlineMs,
     ...(config.strategy === "G0" ? {} : { adjudicate(input: PolicyInput, local: ZoneVerdict, clock: ConflictGuardClock, signal: AbortSignal, complete: Parameters<PairAdjudicator>[3]) {
       const left = input.pair && input.symbols(input.pair.left); const right = input.pair && input.symbols(input.pair.right);
       if (!input.pair || !left || !right) {
@@ -139,7 +139,16 @@ export function createReplayModelPolicy(config: AdjudicationConfig, responses: M
       }
       const response = responses.get(requestKey) ?? responses.get(hash) ?? (legacyInputHash(request) ? responses.get(legacyInputHash(request)!) : undefined);
       const verdict = response ?? { ...local, decision: "warn" as const, ruleId: "model-unavailable", summary: "研判录放缓存未命中，已降级为警告。" };
-      const timer = clock.setTimeout(() => { signal.removeEventListener("abort", abort); if (!signal.aborted) complete(verdict); }, verdict.adjudication?.latencyMs ?? 0);
+      const deepVerdict = responses.get(`${requestKey}:deep`) ?? responses.get(`${hash}:deep`);
+      const timer = clock.setTimeout(() => {
+        if (signal.aborted) return;
+        if (config.strategy !== "G3a" || verdict.decision !== "warn") { signal.removeEventListener("abort", abort); complete(verdict); return; }
+        complete(verdict, { final: false });
+        const confirmation = deepVerdict ?? { ...verdict, decision: "warn" as const, ruleId: "model-unavailable", summary: "深判缓存缺失，保持提醒。", adjudication: verdict.adjudication ? { ...verdict.adjudication, source: "fallback" as const, status: "degraded" as const, latencyMs: verdict.adjudication.latencyMs } : undefined };
+        const deepTimer = clock.setTimeout(() => { signal.removeEventListener("abort", abort); if (!signal.aborted) complete(confirmation, { final: true }); }, confirmation.adjudication?.latencyMs ?? 0);
+        const deepAbort = () => clock.clearTimeout(deepTimer);
+        signal.addEventListener("abort", deepAbort, { once: true });
+      }, verdict.adjudication?.latencyMs ?? 0);
       const abort = () => clock.clearTimeout(timer);
       signal.addEventListener("abort", abort, { once: true });
       if (signal.aborted) abort();

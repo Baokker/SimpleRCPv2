@@ -22,6 +22,7 @@ export interface PairRecord {
   revisionKey?: string;
   analysisStartedAt?: number;
   analysisVisible?: boolean;
+  analysisPending?: boolean;
   closeReason?: PairCloseReason;
   lastAttempt?: ZoneVerdict;
 }
@@ -34,7 +35,8 @@ export type PairEvent =
   | { type: "pair_resolved"; record: PairRecord }
   | { type: "pair_closed"; record: PairRecord };
 
-export type PairAdjudicator = (pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict) => void) => void;
+export type PairAdjudicationUpdate = { final?: boolean };
+export type PairAdjudicator = (pair: CandidatePair, local: ZoneVerdict, signal: AbortSignal, complete: (verdict: ZoneVerdict, update?: PairAdjudicationUpdate) => void) => void;
 
 export function createJudgementQueue(options: { clock: ConflictGuardClock; frameMs: number; maximum: number }) {
   const jobs = new Map<string, { run(): void; cancelled?(): void }>();
@@ -102,7 +104,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
   const ensure = (pair: CandidatePair) => {
     const previous = records.get(pair.id);
     if (previous && previous.status !== "closed") { previous.pair = pair; previous.revisionKey = pair.revisionKey; previous.updatedAt = options.now(); return previous; }
-    const retryFailure = previous?.status === "closed" && previous.verdict && (previous.verdict.adjudication?.status === "degraded" || previous.verdict.ruleId === "model-unavailable" || previous.verdict.ruleId === "agent-analysis-unavailable");
+    const retryFailure = previous?.status === "closed" && previous.verdict && (previous.verdict.adjudication?.status === "degraded" || previous.verdict.ruleId === "model-unavailable" || previous.verdict.ruleId === "agent-analysis-unavailable" || previous.verdict.ruleId === "syntax-incomplete-final");
     const advance = retryFailure || previous && previous.revisionKey !== pair.revisionKey && (options.revisionMode === "legacy" || previous.verdict && !invalidated.has(pair.id));
     const revision = (revisionHistory.get(pair.id) ?? 0) + (advance ? 1 : 0);
     if (advance) { invalidated.add(pair.id); finalized.delete(pair.id); }
@@ -156,15 +158,18 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
       analyses.set(record.pair.id, request);
       const revision = record.revision;
       record.status = "analyzing";
+      record.analysisPending = false;
       record.verdict = effective.get(record.pair.id) ?? verdict;
       record.analysisStartedAt = options.now();
       record.analysisVisible = false;
-      if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; }
       emit({ type: "pair_analyzing", record: { ...record } });
-      const complete = (result: ZoneVerdict) => {
-        if (request.signal.aborted || record.revision !== revision || record.status !== "analyzing" || analyses.get(record.pair.id) !== request) return;
-        analyses.delete(record.pair.id);
+      const complete = (result: ZoneVerdict, update: PairAdjudicationUpdate = {}) => {
+        const isFinal = update.final !== false;
+        const activeStatus = record.status === "analyzing" || (record.status === "judged" && record.analysisPending);
+        if (request.signal.aborted || record.revision !== revision || !activeStatus || analyses.get(record.pair.id) !== request) return;
         if (result.deferred) {
+          analyses.delete(record.pair.id);
+          record.analysisPending = false;
           record.status = "pending";
           record.lastAttempt = result;
           record.verdict = effectiveVerdict(result, effective.get(record.pair.id));
@@ -172,6 +177,19 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
           emit({ type: "pair_syntax_waiting", record: { ...record } });
           return;
         }
+        if (!isFinal) {
+          record.analysisPending = true;
+          // 快判提醒只用于界面展示，保留上一次有效结论供最终研判使用。
+          record.lastAttempt = result;
+          record.analysisVisible = false;
+          record.status = "judged";
+          record.verdict = previous?.decision === "lock" ? previous : result;
+          record.updatedAt = options.now();
+          emit({ type: "pair_judged", record: { ...record } });
+          return;
+        }
+        analyses.delete(record.pair.id);
+        record.analysisPending = false;
         const minimum = classified.find((entry) => entry.verdict.localOnly && entry.verdict.decision === "warn");
         const final = result.decision === "allow" && minimum ? minimum.verdict : result;
         results.set(cacheKey, { verdict: final, pair: record.pair });
@@ -214,6 +232,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     revisionHistory.set(id, record.revision);
     finalized.delete(id);
     record.status = "stale";
+    record.analysisPending = false;
     record.lastAttempt = undefined;
     record.leftConfirmed = false;
     record.rightConfirmed = false;
@@ -249,6 +268,7 @@ export function createPairCoordinator(options: { now(): number; classify(pair: C
     options.judgementQueue?.cancel(`T1:${record.pair.id}`);
     if (record.firstLockedAt !== undefined) { record.totalLockMs += Math.max(0, options.now() - record.firstLockedAt); record.firstLockedAt = undefined; }
     record.status = "closed";
+    record.analysisPending = false;
     record.updatedAt = options.now();
     emit({ type: "pair_closed", record: { ...record } });
   }

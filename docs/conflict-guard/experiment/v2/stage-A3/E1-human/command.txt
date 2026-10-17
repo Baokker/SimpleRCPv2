@@ -1,0 +1,1 @@
+node --experimental-strip-types packages/conflict-guard/scripts/stage-a3-e1-model.ts

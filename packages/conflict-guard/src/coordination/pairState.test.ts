@@ -3,6 +3,7 @@ import { createJudgementQueue, createPairCoordinator } from "./pairState.js";
 import { createSessionCoordinator } from "./session.js";
 import { VirtualClock } from "../replay/clock.js";
 import type { CandidatePair } from "../routing/candidates.js";
+import type { ZoneVerdict } from "../routing/classifier.js";
 
 const pair: CandidatePair = { id: "p", left: { actor: { kind: "human", memberId: "a" }, symbol: "a.ts#run", status: "modified" }, right: { actor: { kind: "human", memberId: "b" }, symbol: "b.ts#call", status: "modified" }, distance: 1, path: { from: "a.ts#run", to: "b.ts#call", hops: [{ from: "a.ts#run", to: "b.ts#call", kind: "call", direction: "forward" }], typeOnly: false }, firstSeenAt: 1, updatedAt: 1 };
 const verdict = { zone: "black" as const, decision: "lock" as const, ruleId: "call-signature-incompatible", summary: "冲突", evidence: [], contractChanged: { left: true, right: false } };
@@ -218,6 +219,18 @@ describe("变更对状态机", () => {
     session.finishSyntax("a.ts", actor);
     expect(events.filter((event) => event === "pair_unchanged")).toHaveLength(1);
   });
+  test("语法结束提醒后重新出现的完整修订重新进入研判", () => {
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const waiting = { ...grey, ruleId: "syntax-incomplete-waiting", deferred: { reason: "syntax-incomplete" } };
+    const judged = { ...grey, ruleId: "model-fast", adjudication: { strategy: "G2" as const, source: "fast" as const, latencyMs: 1, status: "success" as const, escalated: false, userExplanation: "可以继续", suggestedAction: "继续修改", inputHash: "complete", promptVersion: "pair-v1" } };
+    let calls = 0;
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, complete) { complete(calls++ === 0 ? waiting : judged); } });
+    coordinator.update([{ ...pair, revisionKey: "incomplete" }]);
+    coordinator.finishSyntax(pair.id);
+    coordinator.update([]);
+    coordinator.update([{ ...pair, revisionKey: "complete" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", revision: 1, verdict: { ruleId: "model-fast" } });
+  });
   test("候选关系消失时记录关闭原因", () => {
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => verdict });
     coordinator.update([pair]);
@@ -282,5 +295,38 @@ describe("变更对状态机", () => {
     const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, complete) { complete(results[attempt++]!); } });
     for (const revisionKey of ["rev1", "rev2", "final"]) coordinator.update([{ ...pair, id: "d1-0082-conflict", revisionKey }]);
     expect(coordinator.get("d1-0082-conflict")).toMatchObject({ status: "judged", verdict: { decision: "lock", ruleId: "call-signature-incompatible" } });
+  });
+  test("G3a 的旧深判结果不会覆盖新修订", () => {
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const fast = { ...grey, ruleId: "model-fast", adjudication: { strategy: "G3a" as const, source: "fast" as const, latencyMs: 20, status: "success" as const, escalated: false, userExplanation: "快判提醒", suggestedAction: "继续确认", inputHash: "fast", promptVersion: "pair-v1" } };
+    const deep = { ...grey, zone: "white" as const, decision: "allow" as const, ruleId: "model-deep", adjudication: { strategy: "G3a" as const, source: "deep" as const, latencyMs: 100, status: "success" as const, escalated: true, userExplanation: "深判允许", suggestedAction: "继续修改", inputHash: "deep", promptVersion: "pair-v1" } };
+    const completions: Array<(result: ZoneVerdict, update?: { final?: boolean }) => void> = [];
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, complete) { complete(fast, { final: false }); completions.push(complete); } });
+    coordinator.update([{ ...pair, revisionKey: "r1" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", analysisPending: true, verdict: { ruleId: "model-fast" } });
+    coordinator.update([{ ...pair, revisionKey: "r2" }]);
+    completions[0]!(deep, { final: true });
+    expect(coordinator.get(pair.id)).toMatchObject({ revision: 1, analysisPending: true, verdict: { ruleId: "model-fast" } });
+    completions[1]!(deep, { final: true });
+    expect(coordinator.get(pair.id)).toMatchObject({ revision: 1, status: "judged", analysisPending: false, verdict: { decision: "allow", ruleId: "model-deep" } });
+  });
+  test("G3a 新版本的临时提醒不会解除上一版本黑区", () => {
+    const lock = { ...verdict, adjudication: { strategy: "G2" as const, source: "fast" as const, latencyMs: 1, status: "success" as const, escalated: false, userExplanation: "已拦截", suggestedAction: "停止修改", inputHash: "old", promptVersion: "pair-v1" } };
+    const grey = { ...verdict, zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain" };
+    const fast = { ...grey, ruleId: "model-fast", adjudication: { strategy: "G3a" as const, source: "fast" as const, latencyMs: 20, status: "success" as const, escalated: false, userExplanation: "需要进一步确认", suggestedAction: "继续确认", inputHash: "new-fast", promptVersion: "pair-v1" } };
+    const deep = { ...grey, zone: "black" as const, decision: "lock" as const, ruleId: "model-deep", adjudication: { strategy: "G3a" as const, source: "deep" as const, latencyMs: 100, status: "success" as const, escalated: true, userExplanation: "仍然存在冲突", suggestedAction: "停止修改", inputHash: "new-deep", promptVersion: "pair-v1" } };
+    const completions: Array<(result: ZoneVerdict, update?: { final?: boolean }) => void> = [];
+    let first = true;
+    const coordinator = createPairCoordinator({ now: () => 1, classify: () => grey, adjudicate(_pair, _local, _signal, complete) {
+      if (first) { first = false; complete(lock); return; }
+      complete(fast, { final: false });
+      completions.push(complete);
+    } });
+    coordinator.update([{ ...pair, revisionKey: "r1" }]);
+    coordinator.update([{ ...pair, revisionKey: "r2" }]);
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", analysisPending: true, verdict: { decision: "lock", ruleId: "call-signature-incompatible" } });
+    expect(coordinator.get(pair.id)?.resolution).toBeUndefined();
+    completions[0]!(deep, { final: true });
+    expect(coordinator.get(pair.id)).toMatchObject({ status: "judged", analysisPending: false, verdict: { decision: "lock", ruleId: "model-deep" } });
   });
 });

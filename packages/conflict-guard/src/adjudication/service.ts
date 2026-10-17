@@ -21,10 +21,10 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     const conversion = fast ? 1 : config.prices.usdPerCurrencyUnit ?? 1;
     return result?.usage ? conversion * (result.usage.inputTokens * (fast ? config.prices.fastInputPerMillion : config.prices.deepInputPerMillion) + result.usage.outputTokens * (fast ? config.prices.fastOutputPerMillion : config.prices.deepOutputPerMillion)) / 1_000_000 : 0;
   }
-  async function provider(input: AdjudicationInput, fast: boolean, signal: AbortSignal, budget: number, occurrence: number): Promise<CachedCall & { waitedMs?: number }> {
+  async function provider(input: AdjudicationInput, fast: boolean, signal: AbortSignal, budget: number, occurrence: number, deadlineMs = config.hardDeadlineMs): Promise<CachedCall & { waitedMs?: number }> {
     if (signal.aborted) throw new ProviderError("cancelled");
     const judge = fast ? options.fast : options.deep;
-    const parameters = { ...judge.cacheParameters, role: fast ? "fast" : "deep", reasoning: config.reasoning ?? false, hardDeadlineMs: config.hardDeadlineMs };
+    const parameters = { ...judge.cacheParameters, role: fast ? "fast" : "deep", reasoning: !fast && (config.reasoning ?? false), hardDeadlineMs: deadlineMs };
     const key = cacheKey(input, judge.name, judge.model, parameters);
     const base = { ...(input.point ? { point: input.point } : {}), role: fast ? "fast" as const : "deep" as const, adapter: judge.name, model: judge.model, promptVersion: input.promptVersion, inputHash: inputHash(input), cacheKey: key };
     const recorded = options.mode === "replay" ? options.recordedSubscriptions?.find((entry) => entry.inputHash === base.inputHash && entry.role === base.role && entry.occurrence === occurrence) : undefined;
@@ -55,9 +55,9 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
           abortListener = () => reject(new ProviderError("cancelled"));
           controller.signal.addEventListener("abort", abortListener, { once: true });
         });
-        const timeout = new Promise<never>((_resolve, reject) => { timer = options.clock.setTimeout(() => { reject(new ProviderError("timeout")); controller.abort(); }, config.hardDeadlineMs); });
+        const timeout = new Promise<never>((_resolve, reject) => { timer = options.clock.setTimeout(() => { reject(new ProviderError("timeout")); controller.abort(); }, deadlineMs); });
         try {
-          const cached = options.mode === "live" ? undefined : await Promise.race([options.cache?.get(key), timeout, abortPromise]);
+          const cached = options.mode !== "replay" ? undefined : await Promise.race([options.cache?.get(key), timeout, abortPromise]);
           if (controller.signal.aborted) throw new ProviderError("cancelled");
           if (cached) {
             validateCachedCall(cached, key, input, judge.name, judge.model, parameters);
@@ -113,7 +113,7 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     });
   }
 
-  async function judge(rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal, syntaxWait?: { deferred: number; waitMs: number }): Promise<ZoneVerdict> {
+  async function judge(rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal, syntaxWait?: { deferred: number; waitMs: number }, onUpdate?: (verdict: ZoneVerdict, update?: { final?: boolean }) => void): Promise<ZoneVerdict> {
     if (local.zone !== "grey" || config.strategy === "G0") return local;
     if (signal.aborted) throw new ProviderError("cancelled");
     if (syntaxWait) syntaxWaits.push(syntaxWait.waitMs);
@@ -133,6 +133,29 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     let elapsed = 0; let escalated = false;
     const first = await provider(input, source === "fast", signal, config.hardDeadlineMs, occurrence);
     elapsed = first.waitedMs ?? first.call.latencyMs;
+    const verdictFor = (entry: CachedCall & { waitedMs?: number }, role: "fast" | "deep", totalElapsed: number, escalatedValue: boolean, deadlineMs: number, verdictInput = input): ZoneVerdict => {
+      const observedElapsed = options.mode === "replay" ? 0 : options.clock.now() - started;
+      const elapsedMs = entry.call.status === "timeout" && options.clock.now() - started >= deadlineMs ? deadlineMs : Math.min(Math.max(totalElapsed, observedElapsed), deadlineMs);
+      const result = elapsedMs <= deadlineMs ? entry.result : undefined;
+      const explanation = result?.userExplanation?.trim() ?? (result ? result.decision === "lock" ? "模型发现双方修改可能破坏共同使用的行为。" : result.decision === "allow" ? "模型认为双方修改可以共同继续。" : "模型建议双方检查关联修改的影响。" : "研判失败，已降级为警告。");
+      const action = result?.suggestedAction ?? `请双方检查 ${verdictInput.left.symbol} 与 ${verdictInput.right.symbol} 的共同使用方式。`;
+      adjudicationLatencies.push(elapsedMs);
+      const reportedLatencyMs = role === "deep" && strategy === "G3a" ? entry.waitedMs ?? entry.call.latencyMs : elapsedMs;
+      return { ...local, decision: result?.decision ?? "warn", ruleId: result ? `model-${role}` : "model-unavailable", summary: explanation, evidence: result?.evidence?.map((item) => ({ file: item.path, symbol: item.symbol, detail: item.reason })) ?? local.evidence, adjudication: { ...(config.point ? { point: config.point } : {}), strategy: config.strategy, source: result ? role : "fallback", adapter: entry.call.adapter, model: entry.call.model, confidence: result?.confidence, latencyMs: reportedLatencyMs, status: result ? "success" : "degraded", escalated: escalatedValue, userExplanation: explanation, suggestedAction: action, inputHash: inputHash(verdictInput), promptVersion: verdictInput.promptVersion } };
+    };
+    if (strategy === "G3a") {
+      const firstVerdict = verdictFor(first, "fast", elapsed, false, config.hardDeadlineMs);
+      onUpdate?.(firstVerdict, { final: firstVerdict.decision !== "warn" });
+      if (firstVerdict.decision !== "warn") return firstVerdict;
+      escalated = true; escalations += 1;
+      const deepDeadline = config.deepDeadlineMs ?? 30000;
+      const deepInput = { ...input, promptVersion: "pair-v1" };
+      const deep = await provider(deepInput, false, signal, deepDeadline, occurrence, deepDeadline);
+      const deepElapsed = deep.waitedMs ?? deep.call.latencyMs;
+      const deepVerdict = verdictFor(deep, "deep", elapsed + deepElapsed, true, config.hardDeadlineMs + deepDeadline, deepInput);
+      onUpdate?.(deepVerdict, { final: true });
+      return deepVerdict;
+    }
     let final = first;
     if (strategy === "G3" && (!first.result || first.result.confidence < config.threshold || first.result.decision === "lock")) {
       escalated = true; escalations += 1; source = "deep";
@@ -141,14 +164,9 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
       else final = { ...first, result: undefined, call: { ...first.call, status: "timeout" } };
     }
     if (signal.aborted) throw new ProviderError("cancelled");
-    if (final.call.status === "timeout" && options.clock.now() - started >= config.hardDeadlineMs) elapsed = config.hardDeadlineMs;
-    const result = Math.max(elapsed, options.mode === "replay" ? 0 : options.clock.now() - started) <= config.hardDeadlineMs ? final.result : undefined;
-    const explanation = result?.userExplanation?.trim() ?? (result ? result.decision === "lock" ? "模型发现双方修改可能破坏共同使用的行为。" : result.decision === "allow" ? "模型认为双方修改可以共同继续。" : "模型建议双方检查关联修改的影响。" : "研判失败，已降级为警告。");
-    const action = result?.suggestedAction ?? `请双方检查 ${input.left.symbol} 与 ${input.right.symbol} 的共同使用方式。`;
-    adjudicationLatencies.push(Math.min(Math.max(elapsed, options.mode === "replay" ? 0 : options.clock.now() - started), config.hardDeadlineMs));
-    return { ...local, decision: result?.decision ?? "warn", ruleId: result ? `model-${source}` : "model-unavailable", summary: explanation, evidence: result?.evidence?.map((item) => ({ file: item.path, symbol: item.symbol, detail: item.reason })) ?? local.evidence, adjudication: { ...(config.point ? { point: config.point } : {}), strategy: config.strategy, source: result ? source : "fallback", adapter: final.call.adapter, model: final.call.model, confidence: result?.confidence, latencyMs: Math.min(elapsed, config.hardDeadlineMs), status: result ? "success" : "degraded", escalated, userExplanation: explanation, suggestedAction: action, inputHash: inputHash(input), promptVersion: config.promptVersion } };
+    return verdictFor(final, source, elapsed, escalated, config.hardDeadlineMs);
   }
-  return { judge, calls: () => [...calls], subscriptions: () => [...subscriptions], stats() {
+  return { judge, judgeWithUpdates: (rawInput: AdjudicationInput, local: ZoneVerdict, signal: AbortSignal, syntaxWait: { deferred: number; waitMs: number } | undefined, onUpdate: (verdict: ZoneVerdict, update?: { final?: boolean }) => void) => judge(rawInput, local, signal, syntaxWait, onUpdate), calls: () => [...calls], subscriptions: () => [...subscriptions], stats() {
     const latency = [...adjudicationLatencies].sort((left, right) => left - right);
     const percentile = (p: number) => latency.length ? latency[Math.max(0, Math.ceil(latency.length * p) - 1)]! : 0;
     const syntaxPercentile = (p: number) => syntaxWaits.length ? [...syntaxWaits].sort((left, right) => left - right)[Math.max(0, Math.ceil(syntaxWaits.length * p) - 1)]! : null;

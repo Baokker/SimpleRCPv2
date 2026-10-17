@@ -1,0 +1,9 @@
+{
+  "dataset": "d1-v4",
+  "split": "dev",
+  "policy": "P4",
+  "strategy": "G3a",
+  "source": "stage-A3/pair-v5/G3a-final/results.json.gz",
+  "disableFourState": true,
+  "k": 2
+}

@@ -16,7 +16,7 @@ const directory = values.out ? path.resolve(values.out) : path.dirname(reportFil
 await fs.mkdir(directory, { recursive: true });
 const read = async (file: string) => JSON.parse(gunzipSync(await fs.readFile(file)).toString());
 const recorded = await read(reportFile);
-const policies = Object.keys(recorded.policies).filter((id) => ["G1", "G2", "G3", "G4"].includes(id)).sort();
+const policies = Object.keys(recorded.policies).filter((id) => ["G1", "G2", "G3", "G3a", "G4"].includes(id)).sort();
 if (!policies.length) throw new Error("录制报告没有模型策略");
 const configuration = path.join(directory, "adjudication-config.json");
 await fs.writeFile(configuration, JSON.stringify(recorded.config, null, 2) + "\n");

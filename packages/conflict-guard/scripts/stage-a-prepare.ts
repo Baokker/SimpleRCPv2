@@ -8,9 +8,10 @@ import { replayLibraries } from "./replay-libs.ts";
 import { repositoryRoot } from "./model-runtime.ts";
 import { parseArgs } from "node:util";
 
-const { values } = parseArgs({ options: { dataset: { type: "string", default: "packages/conflict-guard/bench/datasets/d1-v3" }, experiment: { type: "string", default: "stage-A" } } });
+const { values } = parseArgs({ options: { dataset: { type: "string", default: "packages/conflict-guard/bench/datasets/d1-v3" }, experiment: { type: "string", default: "stage-A" }, config: { type: "string" } } });
 const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2", values.experiment!);
-const config: AdjudicationConfig = JSON.parse(await fs.readFile(path.join(output, "config.json"), "utf8"));
+const configPath = values.config ? path.resolve(repositoryRoot, values.config) : path.join(output, "config.json");
+const config: AdjudicationConfig = JSON.parse(await fs.readFile(configPath, "utf8"));
 const { samples, manifest } = await developmentSamples(path.resolve(repositoryRoot, values.dataset!));
 const libs = await replayLibraries();
 const sourceFiles = ["src/adjudication/declarations.ts", "src/adjudication/invariants.ts", "src/adjudication/syntax.ts", "src/adjudication/prompts.ts", "src/adjudication/adapters.ts", "src/adjudication/service.ts", "src/adjudication/config.ts", "src/replay/policies.ts", "src/coordination/session.ts", "src/coordination/pairState.ts", "src/routing/typecheck.ts", "src/semantic/changes.ts"];

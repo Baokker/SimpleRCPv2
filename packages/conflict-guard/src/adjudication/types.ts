@@ -1,7 +1,7 @@
 import type { Decision, ZoneVerdict } from "../routing/classifier.js";
 import type { ConflictGuardClock } from "../tracking/tracker.js";
 
-export type GreyStrategy = "G0" | "G1" | "G2" | "G3" | "G4";
+export type GreyStrategy = "G0" | "G1" | "G2" | "G3" | "G3a" | "G4";
 export type ProviderMode = "live" | "record" | "replay";
 export type ProviderStatus = "success" | "timeout" | "failed" | "invalid-format" | "cancelled" | "cache-hit";
 export interface AdjudicationInput {
@@ -109,7 +109,7 @@ export interface AdjudicationConfig {
   fastModel: string;
   fastSamplingCount?: number;
   threshold: number;
-  t1Strategy: "G2" | "G3";
+  t1Strategy: "G2" | "G3" | "G3a";
   t2Strategy?: "G1" | "G2" | "G3";
   t3Strategy?: "G1" | "G2" | "G3";
   t2Reasoning?: boolean;
@@ -121,6 +121,7 @@ export interface AdjudicationConfig {
   invariants: boolean;
   softDeadlineMs: number;
   hardDeadlineMs: number;
+  deepDeadlineMs?: number;
   prices: { date: string; site?: string; currency?: string; fastCurrency?: string; usdPerCurrencyUnit?: number; deepCacheReadPerMillion?: number; fastInputPerMillion: number; fastOutputPerMillion: number; deepInputPerMillion: number; deepOutputPerMillion: number };
 }
 export interface AdjudicationDependencies {

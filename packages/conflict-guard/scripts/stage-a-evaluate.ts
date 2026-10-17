@@ -12,7 +12,7 @@ import { createModelRuntime, loadModelEnvironment, repositoryRoot } from "./mode
 
 const { values } = parseArgs({ options: { policy: { type: "string", default: "G1" }, prompt: { type: "string", default: "pair-v4" }, mode: { type: "string", default: "replay" }, threshold: { type: "string", default: "0" }, out: { type: "string" }, dataset: { type: "string", default: "packages/conflict-guard/bench/datasets/d1-v3" }, experiment: { type: "string", default: "stage-A" }, "allow-source-change": { type: "boolean", default: false } } });
 loadModelEnvironment();
-if (!["G1", "G2", "G3"].includes(values.policy!) || !["pair-v1", "pair-v4", "pair-v5"].includes(values.prompt!) || !["record", "replay"].includes(values.mode!)) throw new Error("阶段 A 参数无效");
+if (!["G1", "G2", "G3", "G3a"].includes(values.policy!) || !["pair-v1", "pair-v4", "pair-v5"].includes(values.prompt!) || !["record", "replay"].includes(values.mode!)) throw new Error("阶段 A 参数无效");
 if (values["allow-source-change"] && values.mode !== "replay") throw new Error("仅允许回放时跳过输入来源哈希校验");
 if (values.policy === "G3" && values.mode !== "replay") throw new Error("级联阈值使用离线缓存");
 if (values.mode === "record" && process.env.ADJUDICATION_BUDGET_SCOPE !== values.experiment!.toLowerCase().replace("stage-", "stage-")) throw new Error("真实录制必须使用登记的阶段预算");
@@ -24,13 +24,14 @@ const directory = values.out ? path.resolve(values.out) : path.join(output, valu
 if (existsSync(path.join(directory, "calls.jsonl"))) throw new Error("结果调用日志已存在，请指定独立结果目录");
 const prepared = JSON.parse(gunzipSync(await fs.readFile(path.join(output, "prepared.json.gz"))).toString());
 if (!values["allow-source-change"]) for (const [file, expected] of Object.entries(prepared.sourceHashes)) assert.equal(createHash("sha256").update(await fs.readFile(new URL(`../${file}`, import.meta.url))).digest("hex"), expected, `输入来源变化：${file}`);
-const config: AdjudicationConfig = { ...prepared.config, promptVersion: values.prompt, strategy: values.policy, threshold: Number(values.threshold) };
+const config: AdjudicationConfig = { ...prepared.config, promptVersion: values.prompt, strategy: values.policy, threshold: Number(values.threshold), ...(values.policy === "G3a" ? { reasoning: true, deepDeadlineMs: 30000 } : {}) };
 const models = JSON.parse(await fs.readFile(path.join(output, "models.json"), "utf8"));
 const providers = JSON.parse(await fs.readFile(path.join(output, "providers.json"), "utf8"));
 const name = values.policy === "G3" ? `G3-${config.threshold}` : values.policy!;
 await fs.mkdir(directory, { recursive: true });
 await fs.writeFile(path.join(directory, "calls.jsonl"), "", { flag: "wx" });
-const cache = path.join(repositoryRoot, ".test-workspaces/stage-a-cache", values.prompt!, values.policy!);
+const cacheRoot = values.experiment!.toLowerCase() === "stage-a3" ? ".test-workspaces/stage-a3-cache" : ".test-workspaces/stage-a-cache";
+const cache = path.join(repositoryRoot, cacheRoot, values.prompt!, values.policy!);
 let writes = Promise.resolve();
 let proxyFailure: string | undefined;
 const service = createModelRuntime(config, values.mode as ProviderMode, cache, (call) => {
@@ -44,7 +45,18 @@ async function resolveInput(input: AdjudicationInput, local: ZoneVerdict) {
   const key = inputHash(input);
   if (responses.has(key)) return;
   inputs.set(key, { input, local });
-  responses.set(key, await service.judge(input, local, new AbortController().signal));
+  if (values.policy === "G3a") {
+    let initial: ZoneVerdict | undefined;
+    let final: ZoneVerdict | undefined;
+    await service.judgeWithUpdates(input, local, new AbortController().signal, undefined, (verdict, update) => {
+      if (update?.final === false) initial = verdict;
+      else final = verdict;
+    });
+    responses.set(key, initial ?? final!);
+    if (initial && final) responses.set(`${key}:deep`, final);
+  } else {
+    responses.set(key, await service.judge(input, local, new AbortController().signal));
+  }
   if (proxyFailure) { await writes; throw new Error(`Jev 代理请求失败：${proxyFailure}`); }
 }
 for (const request of prepared.requests) await resolveInput({ ...request.input, promptVersion: values.prompt }, request.local);

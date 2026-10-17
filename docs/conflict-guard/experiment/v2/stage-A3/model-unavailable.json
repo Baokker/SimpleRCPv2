@@ -1,0 +1,11 @@
+{
+  "dataset": "d1-v4",
+  "source": "stage-A3/pair-v5/G2/results.json.gz",
+  "count": 2,
+  "records": [
+    { "sample": "d1-0013-safe", "cause": "request-skipped-missing-symbol", "decision": "warn" },
+    { "sample": "d1-0061-safe", "cause": "request-skipped-incomplete-input", "decision": "warn" }
+  ],
+  "recordedCallStatus": { "success": 90 },
+  "conclusion": "开发集录制中没有 Jev HTTP 失败；两条 model-unavailable 都来自请求前输入检查。"
+}

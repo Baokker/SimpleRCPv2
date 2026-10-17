@@ -14,7 +14,7 @@ const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 if (!["live", "record", "replay"].includes(values["provider-mode"]!)) throw new Error("provider-mode 无效");
 const ids = values.policy!.split(",");
-if (ids.some((id) => !["G0", "G1", "G2", "G3", "G4", "P0", "P1", "P2", "P3", "P*"].includes(id))) throw new Error("模型回放策略无效");
+if (ids.some((id) => !["G0", "G1", "G2", "G3", "G3a", "G4", "P0", "P1", "P2", "P3", "P*"].includes(id))) throw new Error("模型回放策略无效");
 if (values.ablation && !["no-four-state-typecheck", "no-invariants", "no-T0", "no-T3", "all-history"].includes(values.ablation)) throw new Error("消融条件无效");
 if (![1, 2, 3].includes(Number(values.k))) throw new Error("k 必须为 1、2 或 3");
 if (values.ablation && (ids.length !== 1 || ids[0] !== "G2")) throw new Error("消融使用冻结 G2 配置");
@@ -55,7 +55,18 @@ for (const id of ids) {
         const missing = [...requests].filter(([hash]) => !responses.has(hash));
         for (const [hash, request] of requests) invariantInputs.set(hash, request.input);
         if (!missing.length) break;
-        for (const [hash, request] of missing) responses.set(hash, await service.judge(request.input, request.local, new AbortController().signal));
+        for (const [hash, request] of missing) {
+          if (id === "G3a") {
+            let initial: ZoneVerdict | undefined;
+            let final: ZoneVerdict | undefined;
+            await service.judgeWithUpdates(request.input, request.local, new AbortController().signal, undefined, (verdict, update) => {
+              if (update?.final === false) initial = verdict;
+              else final = verdict;
+            });
+            responses.set(hash, initial ?? final!);
+            if (initial && final) responses.set(`${hash}:deep`, final);
+          } else responses.set(hash, await service.judge(request.input, request.local, new AbortController().signal));
+        }
       }
     }
     const policy = id.startsWith("P") ? policyFor(id as "P0" | "P1" | "P2" | "P3" | "P*", { oracleTruth: label.label as "allow" | "warn" | "lock" }) : createReplayModelPolicy({ ...config, strategy: id as GreyStrategy }, responses, undefined, contexts);

@@ -174,7 +174,7 @@ export function ConflictGuardPanel({ state, projectId, members, memberId, onOpen
       <FilterControls name="candidates" filter={preferences.filters.candidates} counts={countsForPairs(candidates, preferences.filters.candidates.mine)} total={candidates.filter((pair) => pairMatches(pair, { kinds: [], mine: preferences.filters.candidates.mine }, memberId)).length} onChange={(filter) => updateFilter("candidates", filter)} />
       <div data-testid="conflict-candidates">{visibleCandidates.slice(0, preferences.limits.candidates).map((pair) => {
       const record = records.find((record) => record.pair.id === pair.id || record.pair.id.endsWith(`:${pair.id}`));
-      return <Candidate key={pair.id} pair={pair} projectId={projectId} actorName={actorName} symbolKinds={symbolKinds} onError={onError} decision={record?.verdict} recordStatus={record?.status} revision={record?.revision} />;
+      return <Candidate key={pair.id} pair={pair} projectId={projectId} actorName={actorName} symbolKinds={symbolKinds} onError={onError} decision={record?.verdict} recordStatus={record?.status} analysisPending={record?.analysisPending} revision={record?.revision} />;
     })}</div>
       {visibleCandidates.length === 0 ? <p className="empty-panel-state">当前筛选下没有相互关联的修改。</p> : null}
       <ListLimit total={visibleCandidates.length} limit={preferences.limits.candidates} initial={10} showAll onChange={(count) => setLimit("candidates", count)} />
@@ -297,13 +297,13 @@ function RelationPath({ lines }: { lines: string[] }) {
 
 function zoneTone(zone?: "white" | "black" | "grey") { return zone === "black" ? "danger" : zone === "grey" ? "warning" : "neutral"; }
 function agentOutcome(record: NonNullable<ConflictGuardState["pairDecisions"]>[number]) {
-  if (record.status === "analyzing") return "分析中";
+  if (record.status === "analyzing" || record.analysisPending) return "正在进一步确认";
   if (record.shadow) return record.verdict?.decision === "lock" ? "若启用将被拒绝" : "观察记录";
   return record.verdict ? decisionName(record.verdict.decision) : "等待检查";
 }
 
-function Candidate({ pair, projectId, actorName, symbolKinds, onError, decision, recordStatus, revision }: {
-  pair: ConflictGuardState["candidatePairs"][number]; projectId: string; actorName(actor: GuardActorRef): string; symbolKinds: Map<string, ActiveSymbol["kind"]>; onError(error: unknown): void; decision?: NonNullable<ConflictGuardState["pairDecisions"]>[number]["verdict"]; recordStatus?: string; revision?: number;
+function Candidate({ pair, projectId, actorName, symbolKinds, onError, decision, recordStatus, analysisPending, revision }: {
+  pair: ConflictGuardState["candidatePairs"][number]; projectId: string; actorName(actor: GuardActorRef): string; symbolKinds: Map<string, ActiveSymbol["kind"]>; onError(error: unknown): void; decision?: NonNullable<ConflictGuardState["pairDecisions"]>[number]["verdict"]; recordStatus?: string; analysisPending?: boolean; revision?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [texts, setTexts] = useState<ConflictGuardSymbol[]>();
@@ -325,7 +325,7 @@ function Candidate({ pair, projectId, actorName, symbolKinds, onError, decision,
     </button>
     <div className="conflict-candidate-labels" data-testid="conflict-candidate-labels">{decision ? <div className="conflict-tags"><GuardBadge tone={zoneTone(decision.zone)}>{zoneName(decision.zone)}</GuardBadge><GuardBadge tone={zoneTone(decision.zone)}>{recordStatus === "resolved" ? "已解除" : recordStatus === "stale" ? "等待重新判定" : decision.decision === "lock" && !humanConflict(pair) ? "Agent 修改被拒绝" : decisionName(decision.decision)}</GuardBadge><GuardBadge>{ruleName(decision.ruleId)}</GuardBadge></div> : null}{pair.path?.typeOnly ? <GuardBadge>仅类型关联</GuardBadge> : null}</div>
     <RelationPath lines={lines} />
-    {recordStatus === "analyzing" ? <p data-testid="adjudication-analyzing">分析中，相关文件等待研判结果。</p> : <ModelDetail metadata={decision?.adjudication} />}
+    {recordStatus === "analyzing" ? <p data-testid="adjudication-analyzing">正在研判，相关文件等待初步结果。</p> : analysisPending ? <p data-testid="adjudication-analyzing">正在进一步确认，编辑可以继续。</p> : <ModelDetail metadata={decision?.adjudication} />}
     {detailError ? <p role="alert">读取符号详情失败：{detailError}</p> : null}
     <TechnicalDetail ruleId={decision?.ruleId} pairId={pair.id} revision={revision} />
     {expanded ? <div className="conflict-pair-texts">{[pair.left, pair.right].map((side, index) => {

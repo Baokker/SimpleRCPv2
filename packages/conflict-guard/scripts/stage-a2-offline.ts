@@ -19,7 +19,8 @@ const { values } = parseArgs({ options: {
   out: { type: "string", default: "docs/conflict-guard/experiment/v2/stage-A2/offline-results.json" },
   lower: { type: "string", multiple: true },
   upper: { type: "string", multiple: true },
-  standard: { type: "boolean", default: false }
+  standard: { type: "boolean", default: false },
+  direct: { type: "boolean", default: false }
 } });
 
 const sourcePath = path.resolve(repositoryRoot, values.source!);
@@ -44,7 +45,7 @@ for (const call of report.model.calls) {
 
 const thresholdPairs = (values.lower?.length ? values.lower.map(Number) : [0.05, 0.10, 0.15, 0.20]).flatMap((lower) => (values.upper?.length ? values.upper.map(Number) : [0.50, 0.60, 0.70, 0.80]).filter((upper) => lower < upper).map((upper) => ({ lower, upper })));
 const strategies = [
-  ...(values.standard ? thresholdPairs.map((pair) => ({ id: `G2p-new-${pair.lower.toFixed(2)}-${pair.upper.toFixed(2)}`, kind: "threshold" as const, ...pair })) : [{ id: "G2", kind: "original" as const }, ...thresholdPairs.map((pair) => ({ id: `G2p-${pair.lower.toFixed(2)}-${pair.upper.toFixed(2)}`, kind: "threshold" as const, ...pair }))]),
+  ...(values.standard ? thresholdPairs.map((pair) => ({ id: `G2p-new-${pair.lower.toFixed(2)}-${pair.upper.toFixed(2)}`, kind: "threshold" as const, ...pair })) : values.direct ? [{ id: "G2-v5", kind: "original" as const }, ...thresholdPairs.map((pair) => ({ id: `G2p-v5-${pair.lower.toFixed(2)}-${pair.upper.toFixed(2)}`, kind: "threshold" as const, ...pair }))] : [{ id: "G2", kind: "original" as const }, ...thresholdPairs.map((pair) => ({ id: `G2p-${pair.lower.toFixed(2)}-${pair.upper.toFixed(2)}`, kind: "threshold" as const, ...pair }))]),
 ];
 const manifest = JSON.parse(await fs.readFile(path.join(datasetPath, "manifest.json"), "utf8")) as { version: string };
 

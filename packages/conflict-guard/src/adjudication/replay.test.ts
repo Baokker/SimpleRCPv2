@@ -20,6 +20,22 @@ it("model replay reproduces recorded latency, analysis gate and byte-identical r
   expect(JSON.stringify(first)).toBe(JSON.stringify(second));
 });
 
+it("G3a 缺少深判记录时保持提醒并记录降级状态", () => {
+  const a = "export function price(){return 10;}";
+  const b = 'import {price} from "./a.ts"; export function buy(){return price()+1;}';
+  const trace: TraceEvent[] = [
+    { schema: 3, seq: 1, at: 0, type: "session_start" },
+    { schema: 3, seq: 2, at: 0, type: "doc_open", file: "a.ts", text: a },
+    { schema: 3, seq: 3, at: 0, type: "doc_open", file: "b.ts", text: b },
+    { schema: 3, seq: 4, at: 0, type: "edit", file: "a.ts", origin: { kind: "human", memberId: "a" }, ops: [{ from: a.indexOf("10"), deleted: "10", inserted: "20" }] },
+    { schema: 3, seq: 5, at: 10, type: "edit", file: "b.ts", origin: { kind: "human", memberId: "b" }, ops: [{ from: b.indexOf("+1"), deleted: "+1", inserted: "+2" }] }
+  ];
+  const config = { ...defaultAdjudicationConfig, strategy: "G3a" as const };
+  const responses = new Map<string, ZoneVerdict>();
+  const result = replayTrace(trace, { policy: createReplayModelPolicy(config, responses, (input) => responses.set(inputHash(input), { zone: "grey", decision: "warn", ruleId: "model-fast", summary: "需要进一步确认。", evidence: [], contractChanged: { left: false, right: false }, typecheck: { ran: true }, adjudication: { strategy: "G3a", source: "fast", confidence: 0.5, latencyMs: 10, status: "success", escalated: false, userExplanation: "需要进一步确认。", suggestedAction: "请继续检查。", inputHash: inputHash(input), promptVersion: "pair-v1" } })), initialFiles: { "a.ts": a, "b.ts": b } });
+  expect(result.judgements.at(-1)?.verdict).toMatchObject({ decision: "warn", ruleId: "model-unavailable", adjudication: { status: "degraded", source: "fallback" } });
+});
+
 it("calibration uses forced lock escalation and minimizes missed blocking before coverage", () => {
   const result = calibrateThreshold([{ truth: "allow", fast: { decision: "allow", confidence: 0.9 }, deep: { decision: "allow" } }, { truth: "lock", fast: { decision: "allow", confidence: 0.4 }, deep: { decision: "lock" } }, { truth: "lock", fast: { decision: "lock", confidence: 1 }, deep: { decision: "lock" } }]);
   expect(result.recommended).toBe(0.45);

@@ -1,0 +1,18 @@
+{
+  "before": "docs/conflict-guard/experiment/v2/stage-A2/pair-v5/G2/results.json.gz",
+  "after": "docs/conflict-guard/experiment/v2/stage-A3/pair-v5/G2/results.json.gz",
+  "comparedGroups": 135,
+  "changedCount": 1,
+  "changes": [
+    {
+      "id": "d1-v4-dev-004-conflict",
+      "before": "warn",
+      "after": "allow",
+      "reason": "结束时只保留最后一次完整版本，移除中途重复的结束提醒；二分类结果仍为未拦截。"
+    }
+  ],
+  "focus": [
+    { "id": "d1-0059-conflict", "before": "lock", "after": "lock", "changed": false },
+    { "id": "d1-0082-conflict", "before": "lock", "after": "lock", "changed": false }
+  ]
+}

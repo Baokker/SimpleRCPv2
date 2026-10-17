@@ -64,6 +64,7 @@ export interface ConflictGuardState {
     leftConfirmed?: boolean;
     rightConfirmed?: boolean;
     analysisVisible?: boolean;
+    analysisPending?: boolean;
     verdict?: { zone: "white" | "black" | "grey"; decision: "allow" | "warn" | "lock"; ruleId: string; summary: string; contractChanged?: { left: boolean; right: boolean }; adjudication?: { point?: "T1" | "T2" | "T3"; source: "fast" | "deep" | "fallback"; confidence?: number; latencyMs: number; status: "success" | "degraded"; userExplanation: string; suggestedAction: string } };
     resolution?: string;
     totalLockMs?: number;

@@ -18,7 +18,7 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
   const jevOptions = { apiKey: env.TYPESAFE_API_KEY, baseUrl: providers.jev?.baseUrl ?? env.TYPESAFE_BASE_URL, proxyUrl: env.TYPESAFE_PROXY_URL };
   const scope = env.ADJUDICATION_BUDGET_SCOPE ?? "stage5";
   if (!/^[a-z0-9-]+$/.test(scope)) throw new Error("调用预算名称无效");
-  const limits = scope === "stage-a" ? { fast: 600, deep: 400 } : scope === "stage-a2" ? { fast: 800, deep: 500 } : scope === "preexperiment" ? { fast: 1000, deep: 600 } : { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
+  const limits = scope === "stage-a" ? { fast: 600, deep: 400 } : scope === "stage-a2" ? { fast: 800, deep: 500 } : scope === "stage-a3" ? { fast: 300, deep: 300 } : scope === "preexperiment" ? { fast: 1000, deep: 600 } : { fast: 2000, deep: scope === "checkpoint-b" ? 1000 : 800 };
   let budgetExhausted = false;
   let budgetFailure: unknown;
   let budgetWrites = Promise.resolve();
@@ -61,7 +61,8 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
     if (experimentBudget && call.status !== "cache-hit") budgetWrites = budgetWrites.then(() => experimentBudget.consume("usd", call.costUsd)).catch((error) => { budgetFailure = error; });
   }, recordedSubscriptions, onError: (stage) => console.error(JSON.stringify({ infrastructureError: stage })), cache: {
     async get(key) {
-      const candidates = [directory, ...(/^G[0-4]$/.test(path.basename(directory)) ? ["G1", "G2"].map((policy) => path.join(path.dirname(directory), policy)).filter((candidate) => candidate !== directory) : [])];
+      const siblings = /^(?:G[0-4]|G3a.*)$/.test(path.basename(directory)) ? ["G1", "G2"].map((policy) => path.join(path.dirname(directory), policy)).filter((candidate) => candidate !== directory) : [];
+      const candidates = [...siblings, directory];
       for (const candidate of candidates) {
         try { return JSON.parse(await fs.readFile(path.join(candidate, `${key}.json`), "utf8")) as CachedCall; }
         catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
@@ -75,6 +76,12 @@ export function createModelRuntime(config: AdjudicationConfig = defaultAdjudicat
   } });
   return { ...service, providerConfiguration: actualProviders, cacheMisses: () => cacheMisses, async judge(...args: Parameters<typeof service.judge>) {
     const verdict = await service.judge(...args);
+    await budgetWrites;
+    if (budgetFailure) throw budgetFailure;
+    if (budgetExhausted) throw new Error("真实调用预算已达到上限，命令已经停止，原因已写入证据目录");
+    return verdict;
+  }, async judgeWithUpdates(...args: Parameters<typeof service.judgeWithUpdates>) {
+    const verdict = await service.judgeWithUpdates(...args);
     await budgetWrites;
     if (budgetFailure) throw budgetFailure;
     if (budgetExhausted) throw new Error("真实调用预算已达到上限，命令已经停止，原因已写入证据目录");

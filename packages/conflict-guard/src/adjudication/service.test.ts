@@ -88,6 +88,24 @@ it("G3 escalates low confidence, lock and failures within one T1 budget", async 
   }
 });
 
+it("G3a publishes the fast conclusion before the deep confirmation", async () => {
+  const updates: string[] = [];
+  const received: boolean[] = [];
+  const promptVersions: string[] = [];
+  const service = createAdjudicationService({
+    clock: new VirtualClock(),
+    config: { ...defaultAdjudicationConfig, strategy: "G3a", reasoning: true },
+    mode: "live",
+    fast: { name: "jev", model: "jev-1.13.0", async judge() { return { ...result, decision: "warn" as const }; } },
+    deep: { name: "minimax", model: "MiniMax-M3", async judge(deepInput, options) { received.push(options.reasoning); promptVersions.push(deepInput.promptVersion); return { ...result, decision: "allow" as const }; } }
+  });
+  const final = await service.judgeWithUpdates(input, local, new AbortController().signal, undefined, (verdict, update) => { updates.push(`${verdict.decision}:${update?.final !== false ? "final" : "initial"}`); });
+  expect(updates).toEqual(["warn:initial", "allow:final"]);
+  expect(received).toEqual([true]);
+  expect(promptVersions).toEqual(["pair-v1"]);
+  expect(final).toMatchObject({ decision: "allow", ruleId: "model-deep" });
+});
+
 it("white and black verdicts never call providers", async () => {
   let calls = 0;
   const judge = async () => { calls += 1; return result; };

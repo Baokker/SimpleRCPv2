@@ -108,6 +108,8 @@ export function createSessionCoordinator(options: {
         pair.syntaxWait = syntaxWaits.observe(pair.id, pair.revisionKey ?? "", symbols, options.now());
       }
     }
+    // 在协调器关闭失去候选关系之前完成最后一次语法检查，确保完整文本仍能触发研判。
+    for (const { batch } of batches) finishSyntax(batch.file, batch.actor);
     coordinator.update(candidates, (pair) => !relevantBatch(pair), (pair): PairCloseReason => {
       const sets = options.semantic.getActiveChangeSets();
       const sides = [pair.left, pair.right].map((side) => ({ side, set: sets.find((set) => actorKey(set.actor) === actorKey(side.actor)) }));
