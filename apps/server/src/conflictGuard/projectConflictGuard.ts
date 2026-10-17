@@ -509,7 +509,7 @@ export function createProjectConflictGuard(options: {
         mirror.version = ++mirrorVersion;
         scheduleSemanticUpdate(file);
         session.edit(file, resyncOps, false);
-        void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(safeAfter.value), textHash: hashText(safeAfter.value), text: safeAfter.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
+        void appendTrace({ type: "mirror_resync", file, previousTextHash: hashText(safeBefore.value), textHash: hashText(safeAfter.value), text: safeAfter.value, ...(redactedFiles.has(file) ? { redacted: true } : {}) });
         return;
       }
       const origin = actorForOrigin(event.transaction.origin);

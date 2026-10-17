@@ -21,6 +21,7 @@
       "initialCode": ["commerce/src/pricing.ts", "commerce/src/cart.ts"],
       "humanTask": "将 quote 的 amount 改为 net 并增加 currency，保持新签名。",
       "agentTask": "在 cart.ts 增加 invoiceLabel，并按原有 amount 字段调用 quote。",
+      "humanEdits": [{ "file": "src/pricing.ts", "find": "return { amount, tax };", "replace": "return { net: amount, tax, currency: currency ?? \"CNY\" };" }],
       "conflict": "Agent 依据旧返回字段写入调用方。",
       "mechanism": "Agent 写入前检查拒绝旧接口调用，Agent 重新读取签名后调整。",
       "acceptanceProbe": "pricing.quote(100, 0.1, 'USD').net === 90 且 cart.invoiceLabel(100, 'USD') === 'USD 90.00'"
@@ -32,6 +33,7 @@
       "initialCode": ["calendar/src/intervals.ts", "calendar/src/availability.ts"],
       "humanTask": "将 capacity 返回的 occupied 改为 used，保持 available。",
       "agentTask": "在 availability.ts 增加 roomSummary，并读取 capacity.occupied。",
+      "humanEdits": [{ "file": "src/intervals.ts", "find": "return { occupied, available };", "replace": "return { used: occupied, available };" }],
       "conflict": "Agent 依据旧字段生成调用方。",
       "mechanism": "Agent 写入前检查拒绝旧字段访问，Agent 按新接口调整。",
       "acceptanceProbe": "intervals.capacity(100, 0.1, 'room').used === 116 且 availability.roomSummary(100) === '116/364'"

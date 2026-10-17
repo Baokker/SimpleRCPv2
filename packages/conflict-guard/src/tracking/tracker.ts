@@ -286,14 +286,15 @@ export class ConflictGuardTracker {
     if (timer !== undefined) this.options.clock.clearTimeout(timer);
     activeState.fileTimers.delete(file);
     if (activeState.changeSet.files.size === 1) {
+      // 先发出关闭事件，再移除活动变更，结束语法检查需要读取最后一份声明。
       this.emit({ type: "change_set_file_closed", actor: activeState.changeSet.actor, file, reason });
       activeState.changeSet.status = "closed";
-      this.active.delete(key);
       this.emit({ type: "change_set_closed", changeSet: snapshotChangeSet(activeState.changeSet) });
+      this.active.delete(key);
       return;
     }
-    activeState.changeSet.files.delete(file);
     this.emit({ type: "change_set_file_closed", actor: activeState.changeSet.actor, file, reason });
+    activeState.changeSet.files.delete(file);
   }
 
   private closeActive(key: string) {
@@ -302,8 +303,8 @@ export class ConflictGuardTracker {
     for (const timer of activeState.fileTimers.values()) this.options.clock.clearTimeout(timer);
     activeState.fileTimers.clear();
     activeState.changeSet.status = "closed";
-    this.active.delete(key);
     this.emit({ type: "change_set_closed", changeSet: snapshotChangeSet(activeState.changeSet) });
+    this.active.delete(key);
   }
 
   private cursorIsOutsideBatch(text: string, ranges: TrackedRange[], cursorLine: number) {

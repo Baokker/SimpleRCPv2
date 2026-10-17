@@ -47,11 +47,6 @@
     { "file": "selection-rule-a3.md", "commit": "7abf2d61d96df91e8a4dfb32880f74361a5f7b44", "sha256": "a8d12ee483a79f2ac0f6901077222afd2bd840609c142198cb37d465780a43a3" }
   ],
   "invalidRunRule": "只有代理或网络环境故障（Jev HTTP 451、连接被拒、DNS 失败）可以作废整轮重录；模型超时和格式无效属于正常结果，计入分母；每次作废必须记录原因",
-  "executionGaps": [
-    { "experiment": "E1", "status": "runner-required", "reason": "当前回放入口可以计算策略判定，但没有输出六项冻结指标、E1 配对统计及 P4 冻结时间拆分的完整报告。" },
-    { "experiment": "E2", "status": "runner-required", "reason": "当前研判入口尚无按 P3 实际触发关系筛选灰区的选项；G1 的 pair-v1 与 G2-v5、G3a 的 pair-v5 也需要分别运行并汇总。" },
-    { "experiment": "E3", "status": "runner-required", "reason": "当前 Agent 入口按通用 D3 任务运行两个 Agent，无法按六个冻结场景注入人的修改，也无法使用场景文件中的定制任务说明与验收探针。" }
-  ],
   "experiments": [
     {
       "id": "E1",
@@ -59,7 +54,7 @@
       "dataset": "d1-v4 holdout；开发集结果作为附录",
       "policies": ["P0", "P1", "P2", "P3", "P4(G3a)", "P*", "P4-no-four-state-typecheck"],
       "repetitions": 1,
-      "command": "pnpm --filter @simplercp/conflict-guard replay:run --experiment E1 --dataset bench/datasets/d1-v4 --split holdout --policy 'P0,P1,P2,P3,P4,P*,P4-no-four-state-typecheck' --provider-mode replay --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E1-human",
+      "command": "pnpm --filter @simplercp/conflict-guard experiment:e1 --experiment E1 --dataset bench/datasets/d1-v4 --split holdout --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E1-human",
       "modelCalls": { "holdout": { "fast": 90, "deep": 6 }, "developmentAblationRecording": { "fast": 200, "deep": 100 } },
       "metrics": ["未及时通知的冲突写入比例", "漏阻断率", "安全修改误拦率", "安全修改提醒比例", "冻结人·秒", "本地决定比例"],
       "statistics": "P4 与 P1、P2、P3 按关系组做精确双侧 McNemar，Holm 校正，Wilson 区间与关系组 bootstrap"
@@ -71,7 +66,7 @@
       "policies": ["G1", "G2-v5", "G3a"],
       "repetitions": { "record": 1, "replay": 3, "live": 2 },
       "commands": [
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G1 --provider-mode record --repeat 1 --config ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record-G1",
+        "pnpm --filter @simplercp/conflict-guard experiment:e2 --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --configG1 ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record",
         "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G2-v5 --provider-mode record --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record-G2-v5",
         "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G3a --provider-mode record --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record-G3a",
         "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G1 --provider-mode replay --repeat 3 --config ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/replay-G1",
@@ -94,8 +89,10 @@
       "policies": ["A0", "A1"],
       "repetitions": { "A0": 1, "A1": 3 },
       "commands": [
-        "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P0 --dataset d3 --tasks d3-01,d3-02,d3-09,d3-10,d3-07,d3-08 --injection off --repeat 1 --out ../../docs/conflict-guard/experiment/v2/E3-agent/A0",
-        "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P5 --dataset d3 --tasks d3-01,d3-02,d3-09,d3-10,d3-07,d3-08 --injection on --repeat 3 --out ../../docs/conflict-guard/experiment/v2/E3-agent/A1"
+        "pnpm --filter @simplercp/conflict-guard experiment:e3 --condition A0 --plan",
+        "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P0 --dataset d3 --scenarios ../../docs/conflict-guard/experiment/v2/E3-agent/scenarios.json --injection off --repeat 1 --out ../../docs/conflict-guard/experiment/v2/E3-agent/A0",
+        "pnpm --filter @simplercp/conflict-guard experiment:e3 --condition A1 --plan",
+        "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P5 --dataset d3 --scenarios ../../docs/conflict-guard/experiment/v2/E3-agent/scenarios.json --injection on --repeat 3 --out ../../docs/conflict-guard/experiment/v2/E3-agent/A1"
       ],
       "modelCalls": { "agentRuns": { "A0": 10, "A1": 30, "reserve": 10, "limit": 50 }, "model": "MiniMax-M3" },
       "metrics": ["写入前拦截", "拒绝后自行调整", "任务验收通过", "需要人处理的卡片数", "Agent 等待时长", "模型调用次数与费用"]

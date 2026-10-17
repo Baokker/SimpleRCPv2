@@ -74,6 +74,14 @@ describe("阶段 4 回放基础设施", () => {
     expect(result.judgements.some((judgement) => judgement.verdict.zone === "grey" && judgement.verdict.decision === "warn")).toBe(true);
   });
 
+  it.each(["d1-0026-conflict", "d1-0149-conflict"])("%s 结束检查读取最终完整声明", async (id) => {
+    const events = readTrace(await fs.readFile(new URL(`../../bench/datasets/d1-v4/traces/${id}.jsonl`, import.meta.url), "utf8"));
+    const result = replayTrace(events, { policy: "P3", k: 2 });
+    expect(result.errors).toEqual([]);
+    expect(result.pairs.flatMap((pair) => pair.records).every((record) => record.verdict?.ruleId !== "syntax-incomplete-final")).toBe(true);
+    expect(result.judgements.length).toBeGreaterThan(0);
+  });
+
   it("安全轨迹没有语义修改时关闭候选并保持放行", async () => {
     const archive = JSON.parse(gunzipSync(await fs.readFile(new URL("../../bench/datasets/d1-v3/dataset.json.gz", import.meta.url))).toString());
     const events = readTrace(archive.traces["d1-0002-safe.jsonl"]);

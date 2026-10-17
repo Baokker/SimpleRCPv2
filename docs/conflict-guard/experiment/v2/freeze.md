@@ -22,4 +22,4 @@ E3 的六个场景及验收探针冻结在 `E3-agent/scenarios.json`。每个场
 
 阶段 B 的独立调用预算定义在 `budget.json`，冻结哈希同时写入 `freeze.json`。协议中的 CLI 参数已按现有入口核对；E2、E3、E4 的多步骤命令通过 `commands` 列出，执行顺序以该列为准。
 
-本次复核还发现 E1、E2、E3 需要专用实验入口，缺口登记在 `protocol.json` 的 `executionGaps`。当前命令通过参数计划检查只能证明 CLI 参数有效，不能证明它们已经实现对应的指标、样本筛选和场景行为。因此该冻结清单仍保持等待确认状态，阶段 C 暂不具备完整执行条件。
+阶段 C 的执行入口已经登记在 `protocol.json`：E1 使用 `experiment:e1` 输出主策略、配对统计和消融结果；E2 使用 `experiment:e2` 按 P3 实际灰区筛选，并让 G3a 复用同一轮 G2 快判缓存；E3 使用 `bench:agents --scenarios` 读取六个冻结场景，人与 Agent 场景由虚拟成员注入人的修改，另外两类场景运行两个 Agent。`experiment:e3 --plan` 与 `--fake-agent` 只用于运行前校验和流程冒烟，不计入正式结果。冻结清单仍保持等待确认状态，阶段 C 需要人工确认后执行。

@@ -10,18 +10,25 @@ import { createExperimentBudget } from "./experiment-budget.ts";
 import { escapeDifference, paretoPoints } from "../dist/replay/reporting.js";
 import type { ModelProviderConfiguration } from "./model-providers.ts";
 
-const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string", default: "../../docs/conflict-guard/evidence/stage-5-dev-report" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "G0,P3,G1,G2,G3" }, repeat: { type: "string", default: "1" }, "provider-mode": { type: "string", default: "replay" }, threshold: { type: "string" }, deep: { type: "string" }, config: { type: "string" }, models: { type: "string" }, providers: { type: "string" }, cache: { type: "string" }, subscriptions: { type: "string" }, experiment: { type: "string" }, ablation: { type: "string" }, k: { type: "string", default: "2" }, plan: { type: "boolean", default: false } } });
+const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string", default: "../../docs/conflict-guard/evidence/stage-5-dev-report" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "G0,P3,G1,G2,G3" }, repeat: { type: "string", default: "1" }, "provider-mode": { type: "string", default: "replay" }, threshold: { type: "string" }, deep: { type: "string" }, config: { type: "string" }, models: { type: "string" }, providers: { type: "string" }, cache: { type: "string" }, subscriptions: { type: "string" }, experiment: { type: "string" }, ablation: { type: "string" }, k: { type: "string", default: "2" }, "grey-only": { type: "boolean", default: false }, plan: { type: "boolean", default: false } } });
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 if (!["live", "record", "replay"].includes(values["provider-mode"]!)) throw new Error("provider-mode 无效");
 const ids = values.policy!.split(",");
 if (ids.some((id) => !["G0", "G1", "G2", "G2-v5", "G3", "G3a", "G4", "P0", "P1", "P2", "P3", "P4", "P4-no-four-state-typecheck", "P*"].includes(id))) throw new Error("模型回放策略无效");
 if (values.ablation && !["no-four-state-typecheck", "no-invariants", "no-T0", "no-T3", "all-history"].includes(values.ablation)) throw new Error("消融条件无效");
 if (![1, 2, 3].includes(Number(values.k))) throw new Error("k 必须为 1、2 或 3");
-if (values.ablation && (ids.length !== 1 || ids[0] !== "G2")) throw new Error("消融使用冻结 G2 配置");
+if (values.ablation && (ids.length !== 1 || !["G2", "P4-no-four-state-typecheck"].includes(ids[0]!))) throw new Error("消融使用冻结配置");
 const repetitions = Number(values.repeat); if (!Number.isInteger(repetitions) || repetitions < 1) throw new Error("repeat 无效");
 loadModelEnvironment();
 const { manifest, samples } = await developmentSamples(path.resolve(values.dataset!), values.split as "dev" | "holdout");
-if (values.plan) { console.log(JSON.stringify({ dataset: manifest.version, split: values.split, samples: samples.length, policies: ids, ablation: values.ablation, executed: false, modelCalls: 0 })); process.exit(0); }
+if (values.plan) {
+  console.log(JSON.stringify({ dataset: manifest.version, split: values.split, samples: samples.length, policies: ids, ablation: values.ablation, greyOnly: values["grey-only"], selection: values["grey-only"] ? "execution-time P3 replay" : "all samples", executed: false, modelCalls: 0 }));
+  process.exit(0);
+}
+const selectedSamples = values["grey-only"] ? samples.filter((sample) => {
+  const local = replayTrace(sample.trace, { policy: "P3", k: Number(values.k), seed: sample.group.seed, initialFiles: sample.variant.baseline });
+  return local.judgements.some((judgement) => judgement.verdict.zone === "grey");
+}) : samples;
 if (values.split === "holdout" && !values.experiment) throw new Error("保留集评价必须指定实验编号并获得冻结确认");
 const budget = values.experiment ? await createExperimentBudget(values.experiment) : undefined;
 const libs = await replayLibraries();
@@ -53,7 +60,7 @@ for (const id of ids) {
   const invariantInputs = new Map<string, AdjudicationInput>();
   comparisonRows[id] = [];
   const policyReplayOptions = { ...replayOptions, ...(id === "P4-no-four-state-typecheck" ? { disableFourState: true } : {}) };
-  for (const sample of samples) {
+  for (const sample of selectedSamples) {
     const { group, variant, label, trace } = sample;
     const requests = new Map<string, { input: AdjudicationInput; local: ZoneVerdict }>();
     const contexts = Object.keys(variant.baseline);

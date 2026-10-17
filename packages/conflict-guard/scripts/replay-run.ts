@@ -14,11 +14,11 @@ import { compareEvaluations, type EvaluationRow } from "../dist/replay/evaluatio
 import { escapeDifference, paretoPoints } from "../dist/replay/reporting.js";
 import { createExperimentBudget } from "./experiment-budget.ts";
 
-if (process.argv.some((argument) => /(?:^|,)(?:G[0-4]|G2-v5|P4|P4-no-four-state-typecheck)(?:,|$)/.test(argument))) {
+if (process.argv.some((argument) => /(?:^|,)(?:G[0-4]|G2-v5|G3a|P4|P4-no-four-state-typecheck)(?:,|$)/.test(argument))) {
   await new Promise<void>((resolve, reject) => { const child = execFile(process.execPath, ["--experimental-strip-types", fileURLToPath(new URL("adjudication-run.ts", import.meta.url)), ...process.argv.slice(2)], (error) => error ? reject(error) : resolve()); child.stdout?.pipe(process.stdout); child.stderr?.pipe(process.stderr); });
   process.exit(0);
 }
-const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "P0,P1,P2,P3,P*" }, repeat: { type: "string", default: "1" }, k: { type: "string", default: "2" }, experiment: { type: "string" }, plan: { type: "boolean", default: false } } });
+const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item !== "--"), options: { dataset: { type: "string", default: "bench/datasets/d1-v1" }, out: { type: "string" }, split: { type: "string", default: "dev" }, policy: { type: "string", default: "P0,P1,P2,P3,P*" }, repeat: { type: "string", default: "1" }, k: { type: "string", default: "2" }, experiment: { type: "string" }, "grey-only": { type: "boolean", default: false }, plan: { type: "boolean", default: false } } });
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 const ids = values.policy!.split(",");
 if (ids.some((id) => !["P0", "P1", "P2", "P3", "P*"].includes(id))) throw new Error("policy 必须为 P0、P1、P2、P3、P*");
