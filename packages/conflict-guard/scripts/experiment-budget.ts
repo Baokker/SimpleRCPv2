@@ -9,22 +9,26 @@ export const experimentBudgetCategories = ["fast", "deep", "agentBaseRuns", "age
 export type ExperimentBudgetCategory = typeof experimentBudgetCategories[number];
 
 export async function createExperimentBudget(experiment: string) {
-  if (!/^X[1-7]b?$/.test(experiment)) throw new Error("实验编号无效");
-  const directory = path.join(repository, "docs/conflict-guard/experiment");
+  const v2 = /^E[1-4]$/.test(experiment);
+  if (!v2 && !/^X[1-7]b?$/.test(experiment)) throw new Error("实验编号无效");
+  const directory = path.join(repository, "docs/conflict-guard/experiment", v2 ? "v2" : "");
   const protocolContents = await fs.readFile(path.join(directory, "protocol.json"));
   const protocol = JSON.parse(protocolContents.toString());
   if (protocol.status !== "frozen") throw new Error("冻结材料尚未获得人工确认，实验已经停止");
-  if (protocol.preparation?.status !== "ready") throw new Error("实验准备尚未完成，实验已经停止");
+  if (!v2 && protocol.preparation?.status !== "ready") throw new Error("实验准备尚未完成，实验已经停止");
   const snapshot = JSON.parse(await fs.readFile(path.join(directory, "freeze.json"), "utf8"));
-  if (snapshot.status !== "frozen" || snapshot.codeCommit !== protocol.codeCommit || snapshot.artifacts["docs/conflict-guard/experiment/protocol.json"]?.sha256 !== createHash("sha256").update(protocolContents).digest("hex")) throw new Error("协议与冻结材料不一致");
+  const protocolHash = createHash("sha256").update(protocolContents).digest("hex");
+  const frozenProtocolHash = v2 ? snapshot.artifactHashes?.protocolSha256 : snapshot.artifacts?.["docs/conflict-guard/experiment/protocol.json"]?.sha256;
+  if (snapshot.status !== "frozen" || snapshot.codeCommit !== protocol.codeCommit || frozenProtocolHash !== protocolHash) throw new Error("协议与冻结材料不一致");
   const sourcePaths = ["apps/*/src", "apps/*/scripts", "packages/*/src", "packages/*/scripts", "scripts", "package.json", "apps/*/package.json", "packages/*/package.json", "pnpm-lock.yaml"];
   execFileSync("git", ["diff", "--exit-code", protocol.codeCommit, "--", ...sourcePaths], { cwd: repository });
   if (execFileSync("git", ["status", "--porcelain", "--untracked-files=all", "--", ...sourcePaths], { cwd: repository, encoding: "utf8" }).trim()) throw new Error("实验源码与冻结提交不一致");
   const contents = await fs.readFile(path.join(directory, "budget.json"));
   const definition = JSON.parse(contents.toString());
   const definitionHash = createHash("sha256").update(contents).digest("hex");
-  if (definitionHash !== snapshot.generated["budget.json"]?.sha256) throw new Error("调用预算与冻结材料不一致");
-  const file = path.join(repository, ".test-workspaces/stage8-budget.json");
+  const frozenBudgetHash = v2 ? snapshot.artifactHashes?.budgetSha256 : snapshot.generated?.["budget.json"]?.sha256;
+  if (definitionHash !== frozenBudgetHash) throw new Error("调用预算与冻结材料不一致");
+  const file = path.join(repository, ".test-workspaces", v2 ? "conflict-guard-v2-budget.json" : "stage8-budget.json");
   await fs.mkdir(path.dirname(file), { recursive: true });
   let pending = Promise.resolve();
   return {

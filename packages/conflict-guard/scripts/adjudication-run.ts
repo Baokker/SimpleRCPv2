@@ -14,7 +14,7 @@ const { values } = parseArgs({ args: process.argv.slice(2).filter((item) => item
 if (!["dev", "holdout"].includes(values.split!)) throw new Error("split 必须为 dev 或 holdout");
 if (!["live", "record", "replay"].includes(values["provider-mode"]!)) throw new Error("provider-mode 无效");
 const ids = values.policy!.split(",");
-if (ids.some((id) => !["G0", "G1", "G2", "G3", "G3a", "G4", "P0", "P1", "P2", "P3", "P*"].includes(id))) throw new Error("模型回放策略无效");
+if (ids.some((id) => !["G0", "G1", "G2", "G2-v5", "G3", "G3a", "G4", "P0", "P1", "P2", "P3", "P4", "P4-no-four-state-typecheck", "P*"].includes(id))) throw new Error("模型回放策略无效");
 if (values.ablation && !["no-four-state-typecheck", "no-invariants", "no-T0", "no-T3", "all-history"].includes(values.ablation)) throw new Error("消融条件无效");
 if (![1, 2, 3].includes(Number(values.k))) throw new Error("k 必须为 1、2 或 3");
 if (values.ablation && (ids.length !== 1 || ids[0] !== "G2")) throw new Error("消融使用冻结 G2 配置");
@@ -35,28 +35,37 @@ const providers: ModelProviderConfiguration = values.providers ? JSON.parse(awai
 if (recordedSubscriptions && (values["provider-mode"] !== "replay" || typeof recordedSubscriptions !== "object" || Array.isArray(recordedSubscriptions) || Object.values(recordedSubscriptions).some((entries) => !Array.isArray(entries)))) throw new Error("订阅记录只能用于 replay 模式，并且必须按策略提供记录数组");
 const reports: Record<string, { metrics: ReturnType<typeof calculateReplayMetrics>; model: { cacheMisses: number; providers: ModelProviderConfiguration } }> = {};
 const comparisonRows: Record<string, EvaluationRow[]> = {};
+const modelStrategy = (id: string): GreyStrategy | undefined => {
+  if (id === "G2-v5") return "G2";
+  if (id === "P4" || id === "P4-no-four-state-typecheck") return "G3a";
+  if (["G1", "G2", "G3", "G3a", "G4"].includes(id)) return id as GreyStrategy;
+  return undefined;
+};
+const isModelPolicy = (id: string) => modelStrategy(id) !== undefined;
 const summary = [`# ${values.split === "dev" ? "开发集" : "保留集"}研判评价`, "", `配置 ${config.version}；提示词 ${config.promptVersion}；阈值 ${config.threshold}；缓存模式 ${values["provider-mode"]}。bootstrap 重复 2000 次，种子 20261007。${values.ablation === "no-T3" ? "D1 没有 Agent 任务完成后复检，本条件标记 N/A。" : ""}`, "", "| 策略 | 三分类一致率 | 漏阻断率 | 误阻断率 | 逃逸率 | 模型完成率 | p50/p95 ms | HTTP 调用 | token 合计 | 费用估算 USD |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"];
 for (const id of ids) {
   const outcomes: ReplayGroupOutcome[] = []; const rows: unknown[] = [];
-  const service = createModelRuntime({ ...config, strategy: id.startsWith("P") ? "G0" : id as GreyStrategy }, values["provider-mode"] as ProviderMode, values.cache ? path.join(path.resolve(values.cache), id) : undefined, undefined, models, recordedSubscriptions?.[id], budget, providers);
+  const strategy = modelStrategy(id);
+  const service = createModelRuntime({ ...config, strategy: strategy ?? "G0" }, values["provider-mode"] as ProviderMode, values.cache ? path.join(path.resolve(values.cache), id) : undefined, undefined, models, recordedSubscriptions?.[id], budget, providers);
   const responses = new Map<string, ZoneVerdict>();
   const modelTasks: ZoneVerdict[] = [];
   const invariantInputs = new Map<string, AdjudicationInput>();
   comparisonRows[id] = [];
+  const policyReplayOptions = { ...replayOptions, ...(id === "P4-no-four-state-typecheck" ? { disableFourState: true } : {}) };
   for (const sample of samples) {
     const { group, variant, label, trace } = sample;
     const requests = new Map<string, { input: AdjudicationInput; local: ZoneVerdict }>();
     const contexts = Object.keys(variant.baseline);
-    if (!id.startsWith("P") && id !== "G0") {
+    if (isModelPolicy(id)) {
       for (let pass = 0; ; pass += 1) {
         if (pass > trace.length) throw new Error("模型回放的输入集合未能稳定");
         requests.clear();
-        replayTrace(trace, { ...replayOptions, policy: createReplayModelPolicy({ ...config, strategy: id as GreyStrategy }, responses, (input, local) => requests.set(inputHash(input), { input, local }), contexts), initialFiles: variant.baseline, libs, seed: group.seed });
+        replayTrace(trace, { ...policyReplayOptions, policy: createReplayModelPolicy({ ...config, strategy: strategy! }, responses, (input, local) => requests.set(inputHash(input), { input, local }), contexts), initialFiles: variant.baseline, libs, seed: group.seed });
         const missing = [...requests].filter(([hash]) => !responses.has(hash));
         for (const [hash, request] of requests) invariantInputs.set(hash, request.input);
         if (!missing.length) break;
         for (const [hash, request] of missing) {
-          if (id === "G3a") {
+          if (strategy === "G3a") {
             let initial: ZoneVerdict | undefined;
             let final: ZoneVerdict | undefined;
             await service.judgeWithUpdates(request.input, request.local, new AbortController().signal, undefined, (verdict, update) => {
@@ -69,9 +78,11 @@ for (const id of ids) {
         }
       }
     }
-    const policy = id.startsWith("P") ? policyFor(id as "P0" | "P1" | "P2" | "P3" | "P*", { oracleTruth: label.label as "allow" | "warn" | "lock" }) : createReplayModelPolicy({ ...config, strategy: id as GreyStrategy }, responses, undefined, contexts);
-    const result = replayTrace(trace, { ...replayOptions, policy, initialFiles: variant.baseline, libs, seed: group.seed });
-    for (let repetition = 1; repetition < repetitions; repetition += 1) if (JSON.stringify(replayTrace(trace, { ...replayOptions, policy, initialFiles: variant.baseline, libs, seed: group.seed })) !== JSON.stringify(result)) throw new Error("录放结果重复不一致");
+    const policy = isModelPolicy(id)
+      ? createReplayModelPolicy({ ...config, strategy: strategy! }, responses, undefined, contexts)
+      : policyFor(id as "P0" | "P1" | "P2" | "P3" | "P*", { oracleTruth: label.label as "allow" | "warn" | "lock" });
+    const result = replayTrace(trace, { ...policyReplayOptions, policy, initialFiles: variant.baseline, libs, seed: group.seed });
+    for (let repetition = 1; repetition < repetitions; repetition += 1) if (JSON.stringify(replayTrace(trace, { ...policyReplayOptions, policy, initialFiles: variant.baseline, libs, seed: group.seed })) !== JSON.stringify(result)) throw new Error("录放结果重复不一致");
     const outcome = replayOutcome({ truth: label.label as "allow" | "warn" | "lock", variantKind: variant.kind, operatorFamily: group.operator.family, detectability: label.detectability, baseline: variant.baseline, merged: variant.merged, trace, result });
     outcomes.push(outcome);
     comparisonRows[id]!.push({ id: label.id, relationGroupId: group.id, outcome, modelLatenciesMs: result.judgements.flatMap((item) => item.verdict.adjudication ? [item.verdict.adjudication.latencyMs] : []) });

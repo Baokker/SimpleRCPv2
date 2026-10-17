@@ -18,7 +18,7 @@ import { createAgentBenchmarkProxy } from "./agent-benchmark-proxy.ts";
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 dotenv.config({ path: path.join(repository, ".env") });
 const { values } = parseArgs({ options: { dataset: { type: "string", default: "d3" }, policy: { type: "string", default: "P5" }, experiment: { type: "string", default: "X5" }, plan: { type: "boolean", default: false }, config: { type: "string" }, injection: { type: "string", default: "on" }, repeat: { type: "string", default: "3" }, tasks: { type: "string" }, out: { type: "string" }, arbitration: { type: "string", default: "owner" }, "card-action": { type: "string", default: "accept" } } });
-if (!["P0", "P3", "P5"].includes(values.policy!) || !["X5", "X6"].includes(values.experiment!) || !["owner", "all-human", "all-auto"].includes(values.arbitration!)) throw new Error("实验策略、编号或仲裁模式无效");
+if (!["P0", "P3", "P5"].includes(values.policy!) || !["E3", "X5", "X6"].includes(values.experiment!) || !["owner", "all-human", "all-auto"].includes(values.arbitration!)) throw new Error("实验策略、编号或仲裁模式无效");
 if (!["on", "off"].includes(values.injection!) || !["accept", "yield"].includes(values["card-action"]!)) throw new Error("Invalid benchmark configuration");
 const repeat = Number(values.repeat); if (!Number.isInteger(repeat) || repeat < 1) throw new Error("repeat must be a positive integer");
 const dataset = values.dataset === "d3" ? path.join(repository, "packages/conflict-guard/bench/datasets/d3-v0") : path.resolve(values.dataset!);

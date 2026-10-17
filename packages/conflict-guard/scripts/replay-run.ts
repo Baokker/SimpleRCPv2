@@ -14,7 +14,7 @@ import { compareEvaluations, type EvaluationRow } from "../dist/replay/evaluatio
 import { escapeDifference, paretoPoints } from "../dist/replay/reporting.js";
 import { createExperimentBudget } from "./experiment-budget.ts";
 
-if (process.argv.some((argument) => /^G[0-4](?:,|$)|(?:^|,)G[0-4](?:,|$)/.test(argument))) {
+if (process.argv.some((argument) => /(?:^|,)(?:G[0-4]|G2-v5|P4|P4-no-four-state-typecheck)(?:,|$)/.test(argument))) {
   await new Promise<void>((resolve, reject) => { const child = execFile(process.execPath, ["--experimental-strip-types", fileURLToPath(new URL("adjudication-run.ts", import.meta.url)), ...process.argv.slice(2)], (error) => error ? reject(error) : resolve()); child.stdout?.pipe(process.stdout); child.stderr?.pipe(process.stderr); });
   process.exit(0);
 }

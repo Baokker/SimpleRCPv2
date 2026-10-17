@@ -21,7 +21,9 @@ if (values.mode === "replay" && values.policy !== "G3" && !values.out) throw new
 const output = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2", values.experiment!);
 const outputName = values.policy === "G3" ? `G3-${Number(values.threshold)}` : values.policy!;
 const directory = values.out ? path.resolve(values.out) : path.join(output, values.prompt!, outputName);
-if (directory.includes(`${path.sep}packages${path.sep}conflict-guard${path.sep}docs${path.sep}conflict-guard${path.sep}experiment`)) throw new Error("实验输出必须写入仓库根目录下的 docs/conflict-guard/experiment/v2；请使用仓库根目录路径");
+const packageDocs = path.join(repositoryRoot, "packages/conflict-guard/docs");
+const relativeToPackageDocs = path.relative(packageDocs, directory);
+if (relativeToPackageDocs === "" || (!relativeToPackageDocs.startsWith(`..${path.sep}`) && relativeToPackageDocs !== ".." && !path.isAbsolute(relativeToPackageDocs))) throw new Error("实验输出必须写入仓库根目录下的 docs/conflict-guard/experiment/v2；请使用仓库根目录路径");
 if (existsSync(path.join(directory, "calls.jsonl"))) throw new Error("结果调用日志已存在，请指定独立结果目录");
 const prepared = JSON.parse(gunzipSync(await fs.readFile(path.join(output, "prepared.json.gz"))).toString());
 if (!values["allow-source-change"]) for (const [file, expected] of Object.entries(prepared.sourceHashes)) assert.equal(createHash("sha256").update(await fs.readFile(new URL(`../${file}`, import.meta.url))).digest("hex"), expected, `输入来源变化：${file}`);
