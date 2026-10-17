@@ -16,7 +16,7 @@ import {configSchema, dataset, root, benchRoot, RunStore, exists, platformRoot, 
 import {normalizeScript, anchorMetrics, triggerMetrics} from "../k1.js";
 import {updateRatingSheet, episodes} from "../k2.js";
 import {evaluateStrategies} from "../k7.js";
-import {correctionContext} from "../k4.js";
+import {correctionContext, draftHasRequiredTokens} from "../k4.js";
 import {retrievalMetrics, summarizeRetrieval} from "../k5.js";
 import {collectFrozenAnchorCorpus, createAnchorBenchmarkCases} from "../../../packages/knowledge/test/fixtures/anchor-benchmark.js";
 
@@ -67,6 +67,11 @@ test("T1 正文预算保留纠正原文与实际 diff 摘要", async () => {
   assert.ok(content.includes("src/"));
   assert.ok(content.length <= 800);
   assert.throws(() => correctionContext(pair.correction.text, patch, 1), /card budget/);
+});
+
+test("T2 只按保存的模型原稿判断 requiredTokens", () => {
+  assert.equal(draftHasRequiredTokens({rule: "transaction 必须处理全部失败"}, ["transaction", "全部", "失败"]), true);
+  assert.equal(draftHasRequiredTokens({rule: "transaction 必须处理失败"}, ["transaction", "全部", "失败"]), false);
 });
 
 test("评分表续跑保留填写内容并增加新草稿", async () => {

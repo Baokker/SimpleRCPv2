@@ -3,7 +3,7 @@ import path from "node:path";
 import {applyPatch, parsePatch, diffChars} from "diff";
 import {parseAgentRecapDraft, type KnowledgeCard} from "@simplercp/knowledge";
 import type {AgentRun} from "@simplercp/shared";
-import {type Dataset, type ExperimentConfig, RunStore, root, benchRoot, digest, exists, pause, pool, readJson, writeJson} from "./common.js";
+import {type Dataset, type ExperimentConfig, RunStore, root, benchRoot, digest, exists, pause, pool, readJson, readJsonl, writeJson} from "./common.js";
 import {PlatformClient, judge} from "./client.js";
 import {CollaborationClient} from "./collaboration.js";
 import {knowledgeUsage} from "./k3.js";
@@ -12,6 +12,10 @@ import {draftMetrics} from "./k2.js";
 
 export type K4Condition = "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
 export const allK4Conditions: K4Condition[] = ["T0", "T1", "T2", "T3", "T4", "T5"];
+export function draftHasRequiredTokens(modelDraft: Record<string, unknown>, requiredTokens: string[]) {
+  const serialized = JSON.stringify(modelDraft);
+  return requiredTokens.every(token => serialized.includes(token));
+}
 export async function correctionReferenceFiles(pair: Dataset["transfers"][number]) {
   if (pair.correction.mode !== "revise" || pair.correction.revision?.strategy !== "reference-files") throw new Error(`Unsupported correction strategy: ${pair.id}`);
   const reference = await fs.readFile(path.join(pair.directory, pair.correction.revision.referencePatch), "utf8");
@@ -181,6 +185,85 @@ type SharedEpisode = {
   pair: Dataset["transfers"][number];
   repetition: number;
 };
+
+export async function runK4T2FromSavedEpisodes(data: Dataset, config: ExperimentConfig, store: RunStore, episodes: SharedEpisode[], sourceDirectory: string) {
+  const api = new PlatformClient(config); await api.verifyFor(store.directory);
+  const rules = await readJson<Record<string, {requiredTokens: string[]}>>(path.join(root, "review-rules.json"));
+  const sourceRows = await readJsonl(path.join(sourceDirectory, "results.jsonl"));
+  for (const {pair, repetition} of episodes) {
+    const episodeKey = `${pair.id}-episode-${repetition}`;
+    const paired = sourceRows.filter(row => row.episodeKey === episodeKey && ["T0", "T3"].includes(row.condition));
+    if (paired.length !== 2 || new Set(paired.map(row => row.condition)).size !== 2) throw new Error(`Source episode lacks its T0/T3 pair: ${episodeKey}`);
+  }
+  await pool(episodes, config.concurrency, async ({pair, repetition}) => {
+    const key = `${pair.id}-T2-${repetition}`;
+    if (store.done(key)) return;
+    api.checkScheduling();
+    const episodeKey = `${pair.id}-episode-${repetition}`;
+    const episodeRaw = path.join(sourceDirectory, "raw", episodeKey);
+    const episode = await readJson<any>(path.join(episodeRaw, "episode.json"));
+    const sourceCard = await readJson<KnowledgeCard>(path.join(episodeRaw, "draft.json"));
+    const quality = await readJson<any>(path.join(episodeRaw, "recap-quality.json"));
+    const modelDraft = quality.modelDraft;
+    if (!modelDraft || typeof modelDraft !== "object") throw new Error(`Saved model draft is absent: ${episodeKey}`);
+    const rule = rules[pair.id];
+    if (!rule) throw new Error(`Review rule is absent: ${pair.id}`);
+    const hasTokens = draftHasRequiredTokens(modelDraft, rule.requiredTokens);
+    const raw = store.raw(key), started = Date.now();
+    const {project, members} = await api.create(pair.tb, raw, key);
+    const sourceActors = episode.actors;
+    const mapping = {[sourceActors.a]: members[0], [sourceActors.b]: members[1], [sourceActors.correcting]: sourceActors.correcting === sourceActors.a ? members[0] : members[1]};
+    const member = members[1];
+    const owner = mapping[sourceCard.ownerMemberId ?? sourceActors.a];
+    const confirmedFile = path.join(raw, "confirmed-card.json");
+    let card: KnowledgeCard;
+    let review: {patch: Record<string, never>; changedFields: string[]; changedChars: number; draftHasRequiredTokens: boolean};
+    if (await exists(confirmedFile)) {
+      card = await readJson<KnowledgeCard>(confirmedFile);
+      review = await readJson(path.join(raw, "review.json"));
+    } else {
+      await api.request(api.projectRoute(project, "experiments/cards/import"), members[0], {cards: [sourceCard], memberMapping: mapping});
+      const direct = (await api.request(api.projectRoute(project, `experiments/cards/${sourceCard.id}/review`), owner, {})).card as KnowledgeCard;
+      card = direct;
+      for (const field of ["type", "title", "summary", "content", "appliesTo"] as const) {
+        if (JSON.stringify(card[field]) !== JSON.stringify(sourceCard[field])) throw new Error(`T2 confirmation changed model draft field ${field}: ${episodeKey}`);
+      }
+      if (card.scope !== "team") {
+        await api.request(api.projectRoute(project, `knowledge/cards/${card.id}/scope/request-team`), owner, {});
+        card = (await api.request(api.projectRoute(project, `knowledge/cards/${card.id}/scope/confirm-team`), owner === members[0] ? members[1] : members[0], {})).card as KnowledgeCard;
+      }
+      review = {patch: {}, changedFields: [], changedChars: 0, draftHasRequiredTokens: hasTokens};
+      await writeJson(path.join(raw, "draft.json"), sourceCard);
+      await writeJson(path.join(raw, "recap-quality.json"), quality);
+      await writeJson(path.join(raw, "model-draft-card.json"), sourceCard);
+      await writeJson(path.join(raw, "review.json"), review);
+      await writeJson(confirmedFile, card);
+    }
+    const confirmedAt = card.review?.confirmedAt ?? Date.now();
+    const projectPath = path.join(raw, "tb-started.json");
+    const tbPath = projectPath;
+    if (!await exists(tbPath)) {
+      await api.configure(project, members[0], {injectEnabled: true, toolEnabled: false, proposeEnabled: false, lexicalScoring: "bm25", ranking: "bounded", topK: 5, maxCharsPerCard: 800, maxTotalChars: 4000});
+    }
+    const tbInitial = await api.run(project, member, pair.tb.prompt, tbPath);
+    const tb = await api.wait(project, member, tbInitial);
+    const output = await api.collect(project, member, tb, path.join(raw, "tb"));
+    if (tb.provider !== config.provider || tb.model !== config.model || tb.runtime !== "opencode") throw new Error("Transfer run used an unexpected model or runtime");
+    const actual = await judge(pair.tb, output.snapshot, path.join(raw, "tb"));
+    const usage = knowledgeUsage(output.events, [card.id]);
+    const firstInjection = output.events.find(event => event.type === "knowledge_injected" && (event.data?.cards as any[] | undefined)?.some(item => item.id === card.id));
+    const injectedAt = firstInjection ? Date.parse(firstInjection.timestamp) : undefined;
+    const confirmedCard = {...card, id: card.id, review: {...card.review!, confirmedAt}};
+    await store.append({key, completed: true, episodeKey, pair: pair.id, task: pair.tb.id, condition: "T2", variant: "saved-model-draft", repetition, crossOwner: pair.crossOwner,
+      ta: {runId: episode.taRunId, actuallyTrapped: episode.actuallyTrapped}, functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess,
+      runStatus: tb.status, usage: tb.usage ?? null, runId: tb.id, projectId: project.id, initiator: member, ...usage, cardId: confirmedCard.id,
+      cardScope: card.scope, cardOwner: card.ownerMemberId, recapQuality: {validStructure: quality.validStructure, validCitations: quality.validCitations, fallback: quality.fallback},
+      review, draftHasRequiredTokens: hasTokens, rankingSource: usage.rankingSource, rerankCalls: output.modelCalls, confirmedAt, injectedAt: injectedAt ?? null,
+      reuseLatencyMs: injectedAt === undefined ? null : injectedAt - confirmedAt, agentWallMs: tb.startedAt && tb.finishedAt ? Date.parse(tb.finishedAt) - Date.parse(tb.startedAt) : null,
+      wallMs: Date.now() - started, artifacts: path.relative(store.directory, raw), episodeArtifacts: path.relative(store.directory, episodeRaw)});
+    console.log(JSON.stringify({key, functional: actual.functional, trapAvoided: actual.trapAvoided, targetInjected: usage.targetInjected, draftHasRequiredTokens: hasTokens}));
+  }, error => api.stop(error));
+}
 
 async function prepareSharedEpisode(data: Dataset, config: ExperimentConfig, api: PlatformClient, store: RunStore, episode: SharedEpisode) {
   const {pair, repetition} = episode;
