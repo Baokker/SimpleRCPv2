@@ -4,22 +4,22 @@
   "k": 2,
   "policies": {
     "P3": {
-      "localRuleSeconds": 534.7100000000025,
+      "localRuleSeconds": 534.7100000000003,
       "modelSeconds": 0,
       "mixedSeconds": 0,
-      "totalSeconds": 534.7100000000025
+      "totalSeconds": 534.7100000000003
     },
     "P4": {
-      "localRuleSeconds": 547.4912906680058,
-      "modelSeconds": 295.7882475820106,
+      "localRuleSeconds": 547.4912906680004,
+      "modelSeconds": 295.7882475820001,
       "mixedSeconds": 0,
-      "totalSeconds": 843.2795382500158
+      "totalSeconds": 843.2795382499996
     },
     "P4-no-four-state-typecheck": {
-      "localRuleSeconds": 424.4680000000022,
+      "localRuleSeconds": 424.4680000000002,
       "modelSeconds": 0,
       "mixedSeconds": 0,
-      "totalSeconds": 424.4680000000022
+      "totalSeconds": 424.4680000000002
     }
   }
 }

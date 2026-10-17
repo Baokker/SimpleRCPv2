@@ -6,19 +6,19 @@
   "mcnemar": "exact-two-sided",
   "bootstrapRepetitions": 2000,
   "intervals": {
-    "G2": {
+    "P4": {
       "agreement": {
-        "estimate": 0.8888888888888888,
-        "low": 0.837037037037037,
-        "high": 0.9384615384615385,
+        "estimate": 0.9185185185185185,
+        "low": 0.8716216216216216,
+        "high": 0.9609375,
         "groups": 105,
         "repetitions": 2000,
         "seed": 20261007
       },
       "missed": {
-        "estimate": 0.3,
-        "low": 0.16666666666666666,
-        "high": 0.4666666666666667,
+        "estimate": 0.16666666666666666,
+        "low": 0.03333333333333333,
+        "high": 0.3,
         "groups": 30,
         "repetitions": 2000,
         "seed": 20261007
@@ -40,18 +40,18 @@
         "seed": 20261007
       },
       "p50Ms": {
-        "estimate": 388.47070800000074,
-        "low": 375.455833,
-        "high": 417.58166600000186,
-        "groups": 58,
+        "estimate": 147,
+        "low": 25,
+        "high": 300,
+        "groups": 72,
         "repetitions": 2000,
         "seed": 20261007
       },
       "p95Ms": {
-        "estimate": 935.8397499999992,
-        "low": 635.3799580000014,
-        "high": 1007.167625,
-        "groups": 58,
+        "estimate": 935.5095000000001,
+        "low": 705.6603750000068,
+        "high": 1356.2210830000004,
+        "groups": 72,
         "repetitions": 2000,
         "seed": 20261007
       }

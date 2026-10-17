@@ -36,14 +36,16 @@ G3a 的 3 个漏阻断冲突为：`d1-0021-conflict`（IC，运行时可见，`p
 
 ## E1 人与人协作回放
 
-P4 使用选定的 G3a 录制，开发集回放结果见 `E1-human/`。P4 的漏阻断率为 16.67%，安全修改误拦率为 0.95%，未及时通知的冲突写入为 2，冻结人·秒为 843.28，本地决定比例为 17.69%，安全修改提醒比例为 5.38%。P3 的对应结果为 70.00%、0%、2、534.71、12.31% 和 62.37%。完整策略表见 `E1-human/summary.md`。
+P4 使用选定的 G3a 录制，开发集回放结果见 `E1-human/`。P4 的漏阻断率为 16.67%，安全修改误拦率为 0.95%，未及时通知的冲突写入比例为 6.67%（2/30），冻结人·秒为 843.28，本地决定比例为 17.69%，安全修改提醒比例为 4.76%（5/105）。P3 的对应结果为 70.00%、0%、6.67%、534.71、12.31% 和 55.24%（58/105）。完整策略表见 `E1-human/summary.md`。
+
+关闭四状态类型检查的消融有 216 条判定缺少录放缓存，当前结果无法用于评价消融效果，缺失清单见 `E1-human/report-verification.json`。本节数字来自已保存的阶段 A3 开发集输出。
 
 P4 比 P3 多冻结 308.57 人·秒。按冻结来源统计，P3 为本地规则 534.71 人·秒；P4 为本地规则 547.49 人·秒、模型研判 295.79 人·秒，来源没有重叠。模型研判产生的冻结时间来自 G3a 的最终拦截，提醒期间不冻结。来源明细见 `E1-human/freeze-source-breakdown.json`。
 
 ## 工程验证
 
-`pnpm -r build` 通过。`pnpm --filter @simplercp/conflict-guard test` 通过 35 个测试文件、315 个测试；`pnpm --filter @simplercp/server test` 通过 52 个测试文件、310 个测试，另有 2 个文件共 9 个测试按既有条件跳过。`pnpm test:demo` 通过 2 个测试。`CONFLICT_GUARD=off|observe|rules|full pnpm test:collab` 四种模式各通过 2 个浏览器测试；rules 与 full 使用 `SIMPLERCP_SKIP_MODEL_REQUESTS=true`，没有产生模型请求。
+`pnpm -r build` 通过。`pnpm --filter @simplercp/conflict-guard test` 完整运行通过 35 个测试文件，最新变更的 23 个定向回归测试通过；`pnpm --filter @simplercp/server test` 通过 52 个测试文件、311 个测试，另有 2 个文件共 9 个测试按既有条件跳过。`pnpm test:demo` 通过 2 个测试。`CONFLICT_GUARD=off|observe|rules|full pnpm test:collab` 四种模式各通过 2 个浏览器测试，使用 `SIMPLERCP_SKIP_MODEL_REQUESTS=true` 和 `SIMPLERCP_FAKE_AGENT_RUNTIME=false`，没有产生模型请求。审查记录见 `review.md`。
 
 ## 当前阶段状态
 
-阶段 A3 的规则登记、工程修复、开发集录制、候选选择和 E1 开发集回放已经完成。尚未读取保留集，也没有进入阶段 B 冻结。完整构建、conflict-guard 包测试、服务端测试、演示测试和四种协作模式测试的结果在阶段提交说明中记录。
+阶段 A3 已完成规则登记、工程修复、开发集录制、候选选择和主要策略的开发集回放。四状态类型检查消融仍需补充输入对应的模型录制。尚未读取保留集，也没有进入阶段 B 冻结。完整构建、conflict-guard 包测试、服务端测试、演示测试和四种协作模式测试均已通过。

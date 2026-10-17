@@ -1,0 +1,651 @@
+{
+  "dataset": "d1-v4",
+  "split": "dev",
+  "modelCalls": 0,
+  "policies": {
+    "P3": {
+      "metrics": {
+        "groups": 135,
+        "noRelationRatio": {
+          "value": 0.09486780715396578,
+          "low": 0.07456354714827457,
+          "high": 0.11998423703876596
+        },
+        "localDecisionRatio": {
+          "value": 0.12307692307692308,
+          "low": 0.07719563620964337,
+          "high": 0.1905955438121137
+        },
+        "agreement": {
+          "value": 0.4148148148148148,
+          "low": 0.33518393096474086,
+          "high": 0.4991596663432707
+        },
+        "missBlockRatio": {
+          "value": 0.7,
+          "low": 0.5212387898833981,
+          "high": 0.8333543735604105
+        },
+        "falseBlockRatio": {
+          "value": 0,
+          "low": 0,
+          "high": 0.035295328256842964
+        },
+        "escapeRatio": {
+          "value": 0.06666666666666667,
+          "low": 0.018476635327693364,
+          "high": 0.2132381772107209
+        },
+        "frozenPersonSeconds": 534.7099999999999,
+        "unattendedFrozenPersonSeconds": 10958.862,
+        "cardsPerHour": 222.35894079379307,
+        "counterfactualEdits": 319,
+        "freezeCount": 28,
+        "frozenEdits": 319,
+        "variantCounts": {
+          "conflict": 42,
+          "safe": 93
+        },
+        "decisionLatencyMs": {
+          "samples": 325,
+          "p50": 25,
+          "p95": 25,
+          "byVariant": {
+            "conflict": {
+              "samples": 105,
+              "p50": 25,
+              "p95": 25
+            },
+            "safe": {
+              "samples": 220,
+              "p50": 25,
+              "p95": 25
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 2,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 34,
+            "agreement": {
+              "value": 0.7352941176470589,
+              "low": 0.5688253783710155,
+              "high": 0.8539897245844621
+            },
+            "missBlockRatio": {
+              "value": 0.35714285714285715,
+              "low": 0.16344490737202735,
+              "high": 0.6123599531785959
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.1611301254949332
+            },
+            "escapeRatio": {
+              "value": 0.07142857142857142,
+              "low": 0.012721886112291636,
+              "high": 0.3146926955395781
+            },
+            "denominators": {
+              "agreement": 34,
+              "missBlockRatio": 14,
+              "falseBlockRatio": 20,
+              "escapeRatio": 14
+            }
+          },
+          "CP": {
+            "groups": 78,
+            "agreement": {
+              "value": 0.14102564102564102,
+              "low": 0.08060961324830107,
+              "high": 0.23514178946132336
+            },
+            "missBlockRatio": {
+              "value": 1,
+              "low": 0.8063865817272802,
+              "high": 1
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.05834609122500061
+            },
+            "escapeRatio": {
+              "value": 0.0625,
+              "low": 0.01111905730833121,
+              "high": 0.2832926836802987
+            },
+            "denominators": {
+              "agreement": 78,
+              "missBlockRatio": 16,
+              "falseBlockRatio": 62,
+              "escapeRatio": 16
+            }
+          },
+          "SF": {
+            "groups": 23,
+            "agreement": {
+              "value": 0.8695652173913043,
+              "low": 0.678721020269818,
+              "high": 0.954624234856553
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.14312112541726274
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 23,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 23,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.75,
+              "low": 0.46768966087934005,
+              "high": 0.9110599603710386
+            },
+            "missBlockRatio": {
+              "value": 0.25,
+              "low": 0.08894003962896138,
+              "high": 0.53231033912066
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0.08333333333333333,
+              "low": 0.014864709450773478,
+              "high": 0.35388592179859524
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "none": {
+            "groups": 105,
+            "agreement": {
+              "value": 0.44761904761904764,
+              "low": 0.35603119776618125,
+              "high": 0.5429045032892974
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.035295328256842964
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 105,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 105,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 18,
+            "agreement": {
+              "value": 0,
+              "low": 0,
+              "high": 0.1758845505823749
+            },
+            "missBlockRatio": {
+              "value": 1,
+              "low": 0.8241154494176252,
+              "high": 1
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0.05555555555555555,
+              "low": 0.009874935830924525,
+              "high": 0.2575779980200754
+            },
+            "denominators": {
+              "agreement": 18,
+              "missBlockRatio": 18,
+              "falseBlockRatio": 0,
+              "escapeRatio": 18
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 42,
+            "agreement": {
+              "value": 0.5,
+              "low": 0.3552574591652803,
+              "high": 0.6447425408347197
+            },
+            "missBlockRatio": {
+              "value": 0.7,
+              "low": 0.5212387898833981,
+              "high": 0.8333543735604105
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "escapeRatio": {
+              "value": 0.06666666666666667,
+              "low": 0.018476635327693364,
+              "high": 0.2132381772107209
+            },
+            "denominators": {
+              "agreement": 42,
+              "missBlockRatio": 30,
+              "falseBlockRatio": 12,
+              "escapeRatio": 30
+            }
+          },
+          "safe": {
+            "groups": 93,
+            "agreement": {
+              "value": 0.3763440860215054,
+              "low": 0.284633031376476,
+              "high": 0.4778657294866242
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.0396689026203615
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 93,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 93,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 135,
+          "missBlockRatio": 30,
+          "falseBlockRatio": 105,
+          "escapeRatio": 30
+        }
+      },
+      "verification": {
+        "safeTruthCount": 105,
+        "safeWarnings": 58,
+        "safeWarningRate": 0.5523809523809524,
+        "cacheMissingJudgements": 0,
+        "cacheMissingGroups": [],
+        "comparable": true
+      },
+      "changedDecisions": []
+    },
+    "P4": {
+      "metrics": {
+        "groups": 135,
+        "noRelationRatio": {
+          "value": 0.09486780715396578,
+          "low": 0.07456354714827457,
+          "high": 0.11998423703876596
+        },
+        "localDecisionRatio": {
+          "value": 0.17692307692307693,
+          "low": 0.12088390047519747,
+          "high": 0.2515085395434514
+        },
+        "agreement": {
+          "value": 0.9185185185185185,
+          "low": 0.859982177478421,
+          "high": 0.9538949313996098
+        },
+        "missBlockRatio": {
+          "value": 0.16666666666666666,
+          "low": 0.07336434240351686,
+          "high": 0.33564705185680177
+        },
+        "falseBlockRatio": {
+          "value": 0.009523809523809525,
+          "low": 0.0016831259050527937,
+          "high": 0.051987529432612214
+        },
+        "escapeRatio": {
+          "value": 0.06666666666666667,
+          "low": 0.018476635327693364,
+          "high": 0.2132381772107209
+        },
+        "frozenPersonSeconds": 843.2795382500003,
+        "unattendedFrozenPersonSeconds": 27275.968378502006,
+        "cardsPerHour": 126.1249074010695,
+        "counterfactualEdits": 786,
+        "freezeCount": 90,
+        "frozenEdits": 786,
+        "variantCounts": {
+          "conflict": 42,
+          "safe": 93
+        },
+        "decisionLatencyMs": {
+          "samples": 216,
+          "p50": 147,
+          "p95": 935.5095000000001,
+          "byVariant": {
+            "conflict": {
+              "samples": 84,
+              "p50": 25,
+              "p95": 1356.2210830000004
+            },
+            "safe": {
+              "samples": 132,
+              "p50": 222,
+              "p95": 816.6714999999967
+            }
+          },
+          "missingTriggers": 0
+        },
+        "exposureWindowMs": {
+          "samples": 0,
+          "p50": 0,
+          "p95": 0
+        },
+        "unnotifiedEscapes": 2,
+        "byOperatorFamily": {
+          "IC": {
+            "groups": 34,
+            "agreement": {
+              "value": 0.8529411764705882,
+              "low": 0.6987161182594804,
+              "high": 0.9355065361737359
+            },
+            "missBlockRatio": {
+              "value": 0.14285714285714285,
+              "low": 0.040093073737921175,
+              "high": 0.39941907763863693
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.1611301254949332
+            },
+            "escapeRatio": {
+              "value": 0.07142857142857142,
+              "low": 0.012721886112291636,
+              "high": 0.3146926955395781
+            },
+            "denominators": {
+              "agreement": 34,
+              "missBlockRatio": 14,
+              "falseBlockRatio": 20,
+              "escapeRatio": 14
+            }
+          },
+          "CP": {
+            "groups": 78,
+            "agreement": {
+              "value": 0.9615384615384616,
+              "low": 0.8929137832970124,
+              "high": 0.9868344132191849
+            },
+            "missBlockRatio": {
+              "value": 0.1875,
+              "low": 0.06591478773586765,
+              "high": 0.4300935986845823
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.05834609122500061
+            },
+            "escapeRatio": {
+              "value": 0.0625,
+              "low": 0.01111905730833121,
+              "high": 0.2832926836802987
+            },
+            "denominators": {
+              "agreement": 78,
+              "missBlockRatio": 16,
+              "falseBlockRatio": 62,
+              "escapeRatio": 16
+            }
+          },
+          "SF": {
+            "groups": 23,
+            "agreement": {
+              "value": 0.8695652173913043,
+              "low": 0.678721020269818,
+              "high": 0.954624234856553
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.043478260869565216,
+              "low": 0.007716466962126758,
+              "high": 0.2099158649405914
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 23,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 23,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "byDetectability": {
+          "typecheck": {
+            "groups": 12,
+            "agreement": {
+              "value": 0.9166666666666666,
+              "low": 0.6461140782014047,
+              "high": 0.9851352905492264
+            },
+            "missBlockRatio": {
+              "value": 0.08333333333333333,
+              "low": 0.014864709450773478,
+              "high": 0.35388592179859524
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0.08333333333333333,
+              "low": 0.014864709450773478,
+              "high": 0.35388592179859524
+            },
+            "denominators": {
+              "agreement": 12,
+              "missBlockRatio": 12,
+              "falseBlockRatio": 0,
+              "escapeRatio": 12
+            }
+          },
+          "none": {
+            "groups": 105,
+            "agreement": {
+              "value": 0.9428571428571428,
+              "low": 0.8809019831863215,
+              "high": 0.9735507260719031
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.009523809523809525,
+              "low": 0.0016831259050527937,
+              "high": 0.051987529432612214
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 105,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 105,
+              "escapeRatio": 0
+            }
+          },
+          "runtime-only": {
+            "groups": 18,
+            "agreement": {
+              "value": 0.7777777777777778,
+              "low": 0.5478497354769452,
+              "high": 0.90999218086618
+            },
+            "missBlockRatio": {
+              "value": 0.2222222222222222,
+              "low": 0.09000781913382,
+              "high": 0.4521502645230549
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "escapeRatio": {
+              "value": 0.05555555555555555,
+              "low": 0.009874935830924525,
+              "high": 0.2575779980200754
+            },
+            "denominators": {
+              "agreement": 18,
+              "missBlockRatio": 18,
+              "falseBlockRatio": 0,
+              "escapeRatio": 18
+            }
+          }
+        },
+        "byVariantKind": {
+          "conflict": {
+            "groups": 42,
+            "agreement": {
+              "value": 0.8809523809523809,
+              "low": 0.7499931819289246,
+              "high": 0.9480627323498091
+            },
+            "missBlockRatio": {
+              "value": 0.16666666666666666,
+              "low": 0.07336434240351686,
+              "high": 0.33564705185680177
+            },
+            "falseBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0.2425007574992425
+            },
+            "escapeRatio": {
+              "value": 0.06666666666666667,
+              "low": 0.018476635327693364,
+              "high": 0.2132381772107209
+            },
+            "denominators": {
+              "agreement": 42,
+              "missBlockRatio": 30,
+              "falseBlockRatio": 12,
+              "escapeRatio": 30
+            }
+          },
+          "safe": {
+            "groups": 93,
+            "agreement": {
+              "value": 0.9354838709677419,
+              "low": 0.8663184315371988,
+              "high": 0.9700989758579701
+            },
+            "missBlockRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "falseBlockRatio": {
+              "value": 0.010752688172043012,
+              "low": 0.001900593097955601,
+              "high": 0.05842059118648415
+            },
+            "escapeRatio": {
+              "value": 0,
+              "low": 0,
+              "high": 0
+            },
+            "denominators": {
+              "agreement": 93,
+              "missBlockRatio": 0,
+              "falseBlockRatio": 93,
+              "escapeRatio": 0
+            }
+          }
+        },
+        "denominators": {
+          "agreement": 135,
+          "missBlockRatio": 30,
+          "falseBlockRatio": 105,
+          "escapeRatio": 30
+        }
+      },
+      "verification": {
+        "safeTruthCount": 105,
+        "safeWarnings": 5,
+        "safeWarningRate": 0.047619047619047616,
+        "cacheMissingJudgements": 0,
+        "cacheMissingGroups": [],
+        "comparable": true
+      },
+      "changedDecisions": []
+    }
+  }
+}

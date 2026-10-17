@@ -30,7 +30,7 @@ const summary = [
   "",
   "数据集 D1-v4 开发集，k=2。P4 使用阶段 A3 的 G3a 录制；消融条件关闭四状态类型检查。",
   "",
-  "| 策略 | 漏阻断率 | 安全修改误拦率 | 安全修改提醒比例 | 未及时通知的冲突写入 | 冻结人·秒 | 本地决定比例 |",
+  "| 策略 | 漏阻断率 | 安全修改误拦率 | 安全修改提醒比例 | 未及时通知的冲突写入比例 | 冻结人·秒 | 本地决定比例 |",
   "|---|---:|---:|---:|---:|---:|---:|"
 ];
 const breakdown: Record<string, FreezeSourceBreakdown> = {};
@@ -42,7 +42,7 @@ for (const id of rows) {
   if (!evaluation) continue;
   const metrics = evaluation.metrics;
   const evidence = verification[id]!;
-  if (evidence.comparable) summary.push(`| ${id} | ${metric(metrics.missBlockRatio?.value)} | ${metric(metrics.falseBlockRatio?.value)} | ${metric(evidence.safeWarningRate)} | ${metrics.unnotifiedEscapes ?? "N/A"} | ${typeof metrics.frozenPersonSeconds === "number" ? metrics.frozenPersonSeconds.toFixed(2) : "N/A"} | ${metric(metrics.localDecisionRatio?.value)} |`);
+  if (evidence.comparable) summary.push(`| ${id} | ${metric(metrics.missBlockRatio?.value)} | ${metric(metrics.falseBlockRatio?.value)} | ${metric(evidence.safeWarningRate)} | ${metric(metrics.escapeRatio?.value)} | ${typeof metrics.frozenPersonSeconds === "number" ? metrics.frozenPersonSeconds.toFixed(2) : "N/A"} | ${metric(metrics.localDecisionRatio?.value)} |`);
   else summary.push(`| ${id}（无法比较） | N/A | N/A | N/A | N/A | N/A | N/A |`);
   if (id === "P3" || id === "P4" || id === "P4-no-four-state-typecheck") breakdown[id] = splitFreezeSeconds(evaluation.groups);
 }

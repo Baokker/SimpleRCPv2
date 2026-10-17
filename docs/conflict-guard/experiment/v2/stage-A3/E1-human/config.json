@@ -3,7 +3,7 @@
   "split": "dev",
   "k": 2,
   "policies": ["P0", "P1", "P2", "P3", "P4", "P*", "P4-no-four-state-typecheck"],
-  "p4": { "strategy": "G2-v5", "fast": "jev", "fastModel": "jev-1.13.0", "promptVersion": "pair-v5" },
+  "p4": { "strategy": "G3a", "fast": "jev", "fastModel": "jev-1.13.0", "promptVersion": "pair-v5", "deep": "minimax", "deepModel": "MiniMax-M3", "deepPromptVersion": "pair-v1", "reasoning": true, "deepDeadlineMs": 30000 },
   "statistics": { "bootstrapRepetitions": 2000, "bootstrapSeed": 20261007, "mcnemar": "exact-two-sided", "correction": "Holm" },
   "source": "base/results.json; stage-A3/selection-result.json; P4 replay uses stage-A3 pair-v5 cache"
 }
