@@ -5,7 +5,7 @@ balanced accuracy. A relation group is correct when every variant is correct (tr
 truth allow -> not lock). P4 is compared with P1, P2 and P3 by exact two-sided McNemar tests in one Holm
 family. Frozen person-seconds are bootstrapped by relation group (2000 resamples, seed 20261007)
 and split by verdict source (local rule or model) for the zoned policies.
-Usage: python3 e1_analysis.py <results.json.gz> [more results files ...] [--json out.json]
+Usage: python3 e1_analysis.py <results.json.gz> [more results files ...] [--holdout] [--json out.json]
 """
 import gzip
 import json
@@ -46,7 +46,8 @@ def holm(pvalues: list[float]) -> list[float]:
     return adjusted
 
 
-CUTOFFS = json.loads((Path(__file__).parent / "freeze-cutoffs-dev.json").read_text(encoding="utf8"))
+CUTOFF_FILE = Path(__file__).parent / ("freeze-cutoffs-holdout.json" if "--holdout" in sys.argv else "freeze-cutoffs-dev.json")
+CUTOFFS = json.loads(CUTOFF_FILE.read_text(encoding="utf8"))
 
 
 def freeze_sources(group: dict) -> dict:
@@ -115,7 +116,7 @@ def summarize(policy: str, body: dict) -> dict:
 
 
 def main() -> None:
-    args = sys.argv[1:]
+    args = [arg for arg in sys.argv[1:] if arg != "--holdout"]
     out = None
     if "--json" in args:
         out = args[args.index("--json") + 1]

@@ -1,115 +1,292 @@
 {
-  "version": "conflict-guard-v2",
-  "status": "awaiting-human-confirmation",
-  "codeCommit": "407647e662e74837c99dcb809e84a5d9df3ff870",
-  "date": "2026-10-17",
-  "dataset": {
-    "version": "d1-v4",
-    "manifest": "packages/conflict-guard/bench/datasets/d1-v4/manifest.json",
-    "archive": "packages/conflict-guard/bench/datasets/d1-v4/archive-sha256.json",
-    "development": { "groups": 135, "validVariants": 270, "conflicts": 46, "safe": 224, "excluded": 0 },
-    "holdout": { "groups": 145, "validVariants": 274, "conflicts": 69, "safe": 205, "excluded": 16 },
-    "holdoutEvaluation": "阶段 C 执行前不得读取模型或回放结果"
+ "version": "conflict-guard-v2.1",
+ "status": "frozen",
+ "codeCommit": "020f42630e52c7a873ad9521abb08d163e9e4638",
+ "date": "2026-10-19",
+ "dataset": {
+  "version": "d1-v4",
+  "manifest": "packages/conflict-guard/bench/datasets/d1-v4/manifest.json",
+  "archive": "packages/conflict-guard/bench/datasets/d1-v4/archive-sha256.json",
+  "development": {
+   "groups": 135,
+   "validVariants": 270,
+   "conflicts": 46,
+   "safe": 224,
+   "excluded": 0
   },
-  "statistics": {
-    "confidence": 0.95,
-    "wilsonZ": 1.96,
-    "bootstrapRepetitions": 2000,
-    "bootstrapSeed": 20261007,
-    "mcnemar": "exact-two-sided",
-    "multiplicity": "Holm-within-experiment",
-    "pairedUnit": "relationGroupId"
+  "holdout": {
+   "groups": 145,
+   "validVariants": 274,
+   "conflicts": 69,
+   "safe": 205,
+   "excluded": 16
   },
-  "session": {
-    "k": 2,
-    "idleMs": 1500,
-    "maxBatchDurationMs": 5000,
-    "activeIdleMs": 600000,
-    "typecheckBudgetMs": 500,
-    "deepDeadlineMs": 30000,
-    "agentRunTimeoutMs": 240000
+  "holdoutEvaluation": "阶段 C 执行前不得读取模型或回放结果"
+ },
+ "statistics": {
+  "confidence": 0.95,
+  "wilsonZ": 1.96,
+  "bootstrapRepetitions": 2000,
+  "bootstrapSeed": 20261007,
+  "mcnemar": "exact-two-sided",
+  "multiplicity": "Holm-within-experiment",
+  "pairedUnit": "relationGroupId"
+ },
+ "session": {
+  "k": 2,
+  "idleMs": 1500,
+  "maxBatchDurationMs": 5000,
+  "activeIdleMs": 600000,
+  "typecheckBudgetMs": 500,
+  "deepDeadlineMs": 30000,
+  "agentRunTimeoutMs": 240000
+ },
+ "policy": {
+  "p4": {
+   "strategy": "G3a",
+   "fast": {
+    "adapter": "jev",
+    "model": "jev-1.13.0",
+    "site": "https://api.typesafe.ai/v1",
+    "proxy": "TYPESAFE_PROXY_URL",
+    "promptVersion": "pair-v5",
+    "decision": "直接三选一",
+    "deadlineMs": 8000
+   },
+   "deep": {
+    "adapter": "minimax",
+    "model": "MiniMax-M3",
+    "site": "https://api.minimaxi.com/v1",
+    "proxy": "直连",
+    "promptVersion": "pair-v1",
+    "thinking": "adaptive",
+    "reasoningSplit": true,
+    "maxTokens": 4096,
+    "deadlineMs": 30000
+   },
+   "cascade": "快判为提醒时立即并行深判；深判有效返回更新结论，超时或无效保持提醒；新版本使旧深判结果失效"
   },
-  "policy": {
-    "p4": {
-      "strategy": "G3a",
-      "fast": { "adapter": "jev", "model": "jev-1.13.0", "site": "https://api.typesafe.ai/v1", "proxy": "TYPESAFE_PROXY_URL", "promptVersion": "pair-v5", "decision": "直接三选一", "deadlineMs": 8000 },
-      "deep": { "adapter": "minimax", "model": "MiniMax-M3", "site": "https://api.minimaxi.com/v1", "proxy": "直连", "promptVersion": "pair-v1", "thinking": "adaptive", "reasoningSplit": true, "maxTokens": 4096, "deadlineMs": 30000 },
-      "cascade": "快判为提醒时立即并行深判；深判有效返回更新结论，超时或无效保持提醒；新版本使旧深判结果失效"
-    },
-    "inputVersion": "declaration-evidence-v1",
-    "inputPreparation": ["完整声明语法检查", "签名前后对比", "删除与非导出状态", "四状态类型检查摘要", "最多三处共同使用位置"],
-    "threshold": null,
-    "thresholdNote": "G3a 使用 pair-v5 直接三选一快判，不使用概率阈值"
-  },
-  "selectionRules": [
-    { "file": "selection-rule.md", "commit": "d4e735f4862befb671c6ce8669ebdc9a3484f034", "sha256": "aad9169791b377118105ba49f4c823c8020d7d850f762fa2ee05dfda3ee44763" },
-    { "file": "selection-rule-a2.md", "commit": "d08c1aee23c2c2f21a771b33ec48a6a40c0aaea5", "sha256": "52bda84105b334a99ad8da01e696c280b87c55c1f3c79d0a95de6af567bc61fb" },
-    { "file": "selection-rule-a3.md", "commit": "7abf2d61d96df91e8a4dfb32880f74361a5f7b44", "sha256": "a8d12ee483a79f2ac0f6901077222afd2bd840609c142198cb37d465780a43a3" }
+  "inputVersion": "declaration-evidence-v1",
+  "inputPreparation": [
+   "完整声明语法检查",
+   "签名前后对比",
+   "删除与非导出状态",
+   "四状态类型检查摘要",
+   "最多三处共同使用位置"
   ],
-  "invalidRunRule": "只有代理或网络环境故障（Jev HTTP 451、连接被拒、DNS 失败）可以作废整轮重录；模型超时和格式无效属于正常结果，计入分母；输出路径错误时移动已有结果，不重新调用模型；每次作废或移动都记录原因",
-  "experiments": [
-    {
-      "id": "E1",
-      "name": "人与人协作回放",
-      "dataset": "d1-v4 holdout；开发集结果作为附录",
-      "policies": ["P0", "P1", "P2", "P3", "P4(G3a)", "P*", "P4-no-four-state-typecheck"],
-      "repetitions": 1,
-      "command": "pnpm --filter @simplercp/conflict-guard experiment:e1 --experiment E1 --dataset bench/datasets/d1-v4 --split holdout --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E1-human",
-      "modelCalls": { "holdout": { "fast": 90, "deep": 6 }, "developmentAblationRecording": { "fast": 200, "deep": 100 } },
-      "metrics": ["未及时通知的冲突写入比例", "漏阻断率", "安全修改误拦率", "安全修改提醒比例", "冻结人·秒", "本地决定比例"],
-      "statistics": "P4 与 P1、P2、P3 按关系组做精确双侧 McNemar，Holm 校正，Wilson 区间与关系组 bootstrap"
-    },
-    {
-      "id": "E2",
-      "name": "灰区模型研判",
-      "dataset": "d1-v4 holdout grey，由 P3 实际触发的变更对决定",
-      "policies": ["G1", "G2-v5", "G3a"],
-      "repetitions": { "record": 1, "replay": 3, "live": 2 },
-      "commands": [
-        "pnpm --filter @simplercp/conflict-guard experiment:e2 --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --configG1 ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G2-v5 --provider-mode record --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record-G2-v5",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G3a --provider-mode record --paired-fast --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/record-G3a",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G1 --provider-mode replay --repeat 3 --config ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/replay-G1",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G2-v5 --provider-mode replay --repeat 3 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/replay-G2-v5",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G3a --provider-mode replay --repeat 3 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/record/model-cache --out ../../docs/conflict-guard/experiment/v2/E2-grey/replay-G3a",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G1 --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/live-G1-1 --out ../../docs/conflict-guard/experiment/v2/E2-grey/live-G1-1",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G1 --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/v2/E2-grey/config-G1-pair-v1.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/live-G1-2 --out ../../docs/conflict-guard/experiment/v2/E2-grey/live-G1-2",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G2-v5 --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/live-G2-v5-1 --out ../../docs/conflict-guard/experiment/v2/E2-grey/live-G2-v5-1",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G2-v5 --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/live-G2-v5-2 --out ../../docs/conflict-guard/experiment/v2/E2-grey/live-G2-v5-2",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G3a --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/live-G3a-1 --out ../../docs/conflict-guard/experiment/v2/E2-grey/live-G3a-1",
-        "pnpm --filter @simplercp/conflict-guard replay:run --experiment E2 --dataset bench/datasets/d1-v4 --split holdout --policy G3a --provider-mode live --repeat 1 --config ../../docs/conflict-guard/experiment/v2/stage-A3/config.json --models ../../docs/conflict-guard/experiment/v2/stage-A3/models.json --providers ../../docs/conflict-guard/experiment/v2/stage-A3/providers.json --cache ../../docs/conflict-guard/experiment/v2/E2-grey/live-G3a-2 --out ../../docs/conflict-guard/experiment/v2/E2-grey/live-G3a-2"
-      ],
-      "modelCalls": { "estimate": { "greyPairsPerStrategyRound": 90, "recordAndTwoLiveRounds": 3, "G1Deep": 270, "G2v5Fast": 270, "G3aFastReused": 0, "G3aDeepAtObservedDevelopmentRate": 18, "holdoutAblationFast": 90, "holdoutAblationDeep": 6, "holdoutFastTotal": 360, "holdoutDeepTotal": 294 }, "upperBound": { "fast": 1200, "deep": 800 } },
-      "metrics": ["平衡准确率", "两类召回率", "漏阻断率", "安全修改误拦率", "冲突通知率", "安全修改提醒比例", "三分类一致率", "快判与深判有效率", "变更对覆盖率", "快判与深判确认时延 p50/p95", "G3a 升级与改判次数", "重复一致率", "调用次数与费用"]
-    },
-    {
-      "id": "E3",
-      "name": "Agent 协作场景",
-      "dataset": "D3-S 六个冻结场景",
-      "policies": ["A0", "A1"],
-      "repetitions": { "A0": 1, "A1": 3 },
-      "commands": [
-        "pnpm --filter @simplercp/conflict-guard experiment:e3 --condition A0 --plan",
-        "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P0 --config ../../docs/conflict-guard/experiment/v2/E3-agent/runtime-config.json --dataset d3 --scenarios ../../docs/conflict-guard/experiment/v2/E3-agent/scenarios.json --injection off --repeat 1 --out ../../docs/conflict-guard/experiment/v2/E3-agent/A0",
-        "pnpm --filter @simplercp/conflict-guard experiment:e3 --condition A1 --plan",
-        "SIMPLERCP_AGENT_PROVIDER=minimax MINIMAX_BASE_URL=https://api.minimaxi.com/v1 pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P5 --config ../../docs/conflict-guard/experiment/v2/E3-agent/runtime-config.json --dataset d3 --scenarios ../../docs/conflict-guard/experiment/v2/E3-agent/scenarios.json --injection on --repeat 3 --out ../../docs/conflict-guard/experiment/v2/E3-agent/A1"
-      ],
-      "modelCalls": { "agentRuns": { "A0": 10, "A1": 30, "reserve": 10, "limit": 50 }, "model": "MiniMax-M3" },
-      "metrics": ["写入前拦截", "拒绝后自行调整", "任务验收通过", "需要人处理的卡片数", "Agent 等待时长", "模型调用次数与费用"]
-    },
-    {
-      "id": "E4",
-      "name": "性能",
-      "dataset": "d1-v4 全部轨迹，k=2",
-      "policies": ["索引构建", "本地分区", "过滤漏斗", "候选对聚合前后"],
-      "repetitions": 1,
-      "commands": [
-        "pnpm --filter @simplercp/conflict-guard index:run --experiment E4 --dataset bench/datasets/d1-v4 --split all --k 2 --out ../../docs/conflict-guard/experiment/v2/E4-perf/index",
-        "pnpm --filter @simplercp/conflict-guard replay:counts --trace ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/project-trace.jsonl.gz --run ../../docs/conflict-guard/evidence/round2-dual-agent/original-source/run.json.gz --out ../../docs/conflict-guard/experiment/v2/E4-perf/candidate-counts"
-      ],
-      "modelCalls": { "fast": 0, "deep": 0 },
-      "metrics": ["全量索引构建 p50/p95", "增量索引更新 p50/p95", "本地分区判定 p50/p95", "变更单元数", "变更对数", "灰区数", "模型请求数", "候选对聚合前后判定次数"]
+  "threshold": null,
+  "thresholdNote": "G3a 使用 pair-v5 直接三选一快判，不使用概率阈值"
+ },
+ "selectionRules": [
+  {
+   "file": "selection-rule.md",
+   "commit": "d4e735f4862befb671c6ce8669ebdc9a3484f034",
+   "sha256": "aad9169791b377118105ba49f4c823c8020d7d850f762fa2ee05dfda3ee44763"
+  },
+  {
+   "file": "selection-rule-a2.md",
+   "commit": "d08c1aee23c2c2f21a771b33ec48a6a40c0aaea5",
+   "sha256": "52bda84105b334a99ad8da01e696c280b87c55c1f3c79d0a95de6af567bc61fb"
+  },
+  {
+   "file": "selection-rule-a3.md",
+   "commit": "7abf2d61d96df91e8a4dfb32880f74361a5f7b44",
+   "sha256": "a8d12ee483a79f2ac0f6901077222afd2bd840609c142198cb37d465780a43a3"
+  }
+ ],
+ "invalidRunRule": "只有代理或网络环境故障（Jev HTTP 451、连接被拒、DNS 失败）可以作废整轮重录；模型超时和格式无效属于正常结果，计入分母；输出路径错误时移动已有结果，不重新调用模型；每次作废或移动都记录原因",
+ "experiments": [
+  {
+   "id": "E1",
+   "name": "人与人协作回放",
+   "dataset": "d1-v4 holdout；开发集结果作为附录",
+   "policies": [
+    "P0",
+    "P1",
+    "P2",
+    "P3",
+    "P4(G3a)",
+    "P*",
+    "P4-no-four-state-typecheck"
+   ],
+   "repetitions": 1,
+   "modelCalls": {
+    "holdout": {
+     "main": "复用 E2 第 1 轮缓存",
+     "ablationFast": 120,
+     "ablationDeep": 20
     }
-  ],
-  "budget": { "holdoutFastLimit": 1200, "holdoutDeepLimit": 800, "developmentAblationFastLimit": 200, "developmentAblationDeepLimit": 100, "stopAtRatio": 1.2, "estimateBasis": "按保留集约 90 个灰区变更对估算；G1 每轮请求深判，G2-v5 每轮请求快判，G3a 每轮复用同一轮 G2-v5 快判并按开发集比例估算深判；E1 消融另录一次；Agent run 按场景类型分别计数", "estimatedCalls": { "holdoutFast": 360, "holdoutDeep": 294, "developmentAblationFast": 200, "developmentAblationDeep": 100, "agentRuns": 40 }, "estimatedCostUsd": { "holdoutE2AndAblation": 0.88, "developmentAblation": 0.30747, "agentE3": 0.39652, "total": 1.58399, "basis": "按各策略预计请求数、阶段 A3 平均 token 费用与既有 Agent 冒烟均值估算；实际 usage 和费用以阶段 C 报告为准" } }
+   },
+   "metrics": [
+    "未及时通知的冲突写入比例",
+    "漏阻断率",
+    "安全修改误拦率",
+    "安全修改提醒比例",
+    "冻结人·秒",
+    "本地决定比例",
+    "平衡准确率（应拦截样本的拦截率与应放行样本的非拦截率的均值）"
+   ],
+   "statistics": "P4 与 P1、P2、P3 按关系组做精确双侧 McNemar，Holm 校正，Wilson 区间与关系组 bootstrap",
+   "commands": [
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e1-main",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e1-ablation"
+   ],
+   "note": "P4 回放 E2 第 1 轮保留集录制（G3a 快判来自同轮 G2-v5）；消融单独录制。样本按真值划分为应拦截（lock）与应放行（allow）。"
+  },
+  {
+   "id": "E2",
+   "name": "灰区模型研判",
+   "dataset": "d1-v4 holdout grey，由 P3 实际触发的变更对决定",
+   "policies": [
+    "G1",
+    "G2-v5",
+    "G3a"
+   ],
+   "repetitions": {
+    "pairedLiveRounds": 3
+   },
+   "commands": [
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 1 G2-v5",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 1 G3a",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 1 G1",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 2 G2-v5",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 2 G3a",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 2 G1",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 3 G2-v5",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 3 G3a",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e2 3 G1"
+   ],
+   "modelCalls": {
+    "estimate": {
+     "greyPairsPerStrategyRound": 90,
+     "recordAndTwoLiveRounds": 3,
+     "G1Deep": 270,
+     "G2v5Fast": 270,
+     "G3aFastReused": 0,
+     "G3aDeepAtObservedDevelopmentRate": 18,
+     "holdoutAblationFast": 90,
+     "holdoutAblationDeep": 6,
+     "holdoutFastTotal": 360,
+     "holdoutDeepTotal": 294
+    },
+    "upperBound": {
+     "fast": 1200,
+     "deep": 800
+    }
+   },
+   "metrics": [
+    "平衡准确率",
+    "两类召回率",
+    "漏阻断率",
+    "安全修改误拦率",
+    "冲突通知率",
+    "安全修改提醒比例",
+    "三分类一致率",
+    "快判与深判有效率",
+    "变更对覆盖率",
+    "快判与深判确认时延 p50/p95",
+    "G3a 升级与改判次数",
+    "重复一致率",
+    "调用次数与费用"
+   ],
+   "note": "每轮写入独立的 round-N/model-cache；同一轮先运行 G2-v5，再运行读取其快判缓存的 G3a，G1 可与两者并行。主指标为平衡准确率，报告三轮均值与范围、轮间决定不一致的样本数和深判改变的决定。",
+   "configs": {
+    "G1": "configs/config-G1.json",
+    "G2-v5": "configs/config-G2-v5.json",
+    "G3a": "configs/config-G3a.json"
+   }
+  },
+  {
+   "id": "E3",
+   "name": "Agent 协作场景",
+   "dataset": "D3-S-v2 八个场景（人与 Agent 四个，同属主两个，跨属主两个）",
+   "policies": [
+    "A0",
+    "A1"
+   ],
+   "repetitions": {
+    "A0": 1,
+    "A1": 3
+   },
+   "commands": [
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e3 A0",
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e3 A1"
+   ],
+   "modelCalls": {
+    "agentRuns": {
+     "A0": 12,
+     "A1": 36,
+     "reserve": 12,
+     "limit": 60
+    },
+    "model": "MiniMax-M3"
+   },
+   "metrics": [
+    "写入前拦截及其正确性",
+    "拒绝后自行调整",
+    "任务结束复检与撤回",
+    "任务验收通过",
+    "Agent 与 Agent 场景误打断次数",
+    "Agent 等待时长",
+    "守卫模型调用次数与费用"
+   ],
+   "positioning": "可行性案例。报告写入前拦截是否正确、Agent 与 Agent 场景中的误打断次数、任务验收通过率是否下降、额外费用与时延。"
+  },
+  {
+   "id": "E4",
+   "name": "性能",
+   "dataset": "d1-v4 全部轨迹，k=2",
+   "policies": [
+    "索引构建",
+    "本地分区",
+    "过滤漏斗",
+    "候选对聚合前后"
+   ],
+   "repetitions": 1,
+   "commands": [
+    "sh ../../docs/conflict-guard/experiment/v2/run-holdout.sh e4"
+   ],
+   "modelCalls": {
+    "fast": 0,
+    "deep": 0
+   },
+   "metrics": [
+    "全量索引构建 p50/p95",
+    "增量索引更新 p50/p95",
+    "本地分区判定 p50/p95",
+    "变更单元数",
+    "变更对数",
+    "灰区数",
+    "模型请求数",
+    "候选对聚合前后判定次数"
+   ]
+  }
+ ],
+ "budget": {
+  "file": "budget.json",
+  "stopBeforeExceeding": {
+   "fast": 1000,
+   "deep": 800,
+   "agentBaseRuns": 60,
+   "agentExecutionsIncludingFollowups": 60,
+   "agentHttpRequests": 12000,
+   "usd": 2.5
+  },
+  "estimate": {
+   "holdoutFast": 420,
+   "holdoutDeep": 350,
+   "agentRuns": 48,
+   "usd": 1.7
+  }
+ },
+ "confirmation": {
+  "by": "用户",
+  "date": "2026-10-19",
+  "basis": "用户复核开发集彩排（rehearsal-dev/summary.md）后同意进入阶段 C"
+ },
+ "rehearsal": {
+  "directory": "rehearsal-dev",
+  "summary": "rehearsal-dev/summary.md",
+  "note": "开发集彩排发现的配置与执行入口问题已在本版本修正，开发集结果作为附录"
+ }
 }

@@ -1,0 +1,131 @@
+{
+  "statistics": {
+    "seed": 20261007,
+    "samplingUnit": "relationGroupId",
+    "pairedCorrectness": "all-variants-correct",
+    "multiplicity": "Holm-all-policy-pairs-within-experiment",
+    "mcnemar": "exact-two-sided",
+    "bootstrapRepetitions": 2000,
+    "intervals": {
+      "P3": {
+        "agreement": {
+          "estimate": 0.4148148148148148,
+          "low": 0.32558139534883723,
+          "high": 0.5037037037037037,
+          "groups": 105,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "missed": {
+          "estimate": 0.7,
+          "low": 0.5333333333333333,
+          "high": 0.8666666666666667,
+          "groups": 30,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "falseBlocking": {
+          "estimate": 0,
+          "low": 0,
+          "high": 0,
+          "groups": 105,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "escape": {
+          "estimate": 0.03333333333333333,
+          "low": 0,
+          "high": 0.1,
+          "groups": 30,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p50Ms": {
+          "estimate": null,
+          "low": null,
+          "high": null,
+          "groups": 0,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p95Ms": {
+          "estimate": null,
+          "low": null,
+          "high": null,
+          "groups": 0,
+          "repetitions": 2000,
+          "seed": 20261007
+        }
+      },
+      "P4": {
+        "agreement": {
+          "estimate": 0.9037037037037037,
+          "low": 0.8541666666666666,
+          "high": 0.9485294117647058,
+          "groups": 105,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "missed": {
+          "estimate": 0.23333333333333334,
+          "low": 0.1,
+          "high": 0.4,
+          "groups": 30,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "falseBlocking": {
+          "estimate": 0.009523809523809525,
+          "low": 0,
+          "high": 0.02857142857142857,
+          "groups": 105,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "escape": {
+          "estimate": 0.03333333333333333,
+          "low": 0,
+          "high": 0.1,
+          "groups": 30,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p50Ms": {
+          "estimate": 920.2979160000104,
+          "low": 783.7810000001919,
+          "high": 1288.8064579999773,
+          "groups": 61,
+          "repetitions": 2000,
+          "seed": 20261007
+        },
+        "p95Ms": {
+          "estimate": 9474.845333000005,
+          "low": 3207.2017909999704,
+          "high": 21061.902832999942,
+          "groups": 61,
+          "repetitions": 2000,
+          "seed": 20261007
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "id": "P3:P4",
+        "left": "P3",
+        "right": "P4",
+        "groups": 105,
+        "leftOnlyCorrect": 0,
+        "rightOnlyCorrect": 53,
+        "discordant": 53,
+        "p": 2.220446049250313e-16,
+        "adjustedP": 2.220446049250313e-16
+      }
+    ]
+  },
+  "cacheMisses": {
+    "P3": 0,
+    "P4": 0
+  },
+  "ablationComparable": true,
+  "t3Applicable": true
+}

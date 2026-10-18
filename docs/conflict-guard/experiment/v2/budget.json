@@ -1,26 +1,24 @@
 {
-  "stage": "stage-B-and-C",
+  "stage": "stage-C",
   "stopRatio": 1.2,
   "stopBeforeExceeding": {
-    "fast": 1680,
-    "deep": 1080,
-    "agentBaseRuns": 50,
-    "agentExecutionsIncludingFollowups": 50,
-    "agentHttpRequests": 10000,
-    "usd": 1.900788
+    "fast": 1000,
+    "deep": 800,
+    "agentBaseRuns": 60,
+    "agentExecutionsIncludingFollowups": 60,
+    "agentHttpRequests": 12000,
+    "usd": 2.5
   },
   "plannedLimits": {
-    "holdoutFast": 1200,
-    "holdoutDeep": 800,
-    "agentRuns": 50
+    "holdoutFast": 840,
+    "holdoutDeep": 660,
+    "agentRuns": 48
   },
   "estimate": {
-    "holdoutFast": 360,
-    "holdoutDeep": 294,
-    "developmentAblationFast": 200,
-    "developmentAblationDeep": 100,
-    "agentRuns": 40,
-    "usd": 1.58399
+    "holdoutFast": 420,
+    "holdoutDeep": 350,
+    "agentRuns": 48,
+    "usd": 1.7
   },
-    "basis": "E2 使用配对设计：每轮 G3a 复用 G2-v5 快判，因此只计 G1 深判、G2-v5 快判和 G3a 深判；阶段 C 以实际 usage 记录为准。"
+  "basis": "E2 三轮配对：每轮 G1 请求深判、G2-v5 请求快判、G3a 复用同轮快判只请求提醒样本的深判，按约 100 个灰区变更对估算；E1 主行复用 E2 第 1 轮缓存，消融单独录制约 120 次快判与 20 次深判；E3 为 A0 一轮 12 个 run 与 A1 三轮 36 个 run，按开发集彩排每个 run 约 0.025 USD 估算。实际 usage 以阶段 C 记录为准。"
 }
