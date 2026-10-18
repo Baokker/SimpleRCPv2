@@ -502,10 +502,10 @@ export function CollaborationPanel({
                     <small title={approval.decision.matchedRules.join(", ")}>{reason}{remaining !== undefined ? ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
                     {llm ? (
                       <div className="guard-llm-result">
-                        <strong>Model judgment: {llm.risk}</strong>
+                        <strong>Model judgment: {llm.risk} · Recommendation: {llmRecommendation(llm.risk)}</strong>
                         <span>Confidence {Math.round(llm.confidence * 100)}%</span>
                         <p>{llm.reason}</p>
-                        <small>{llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : llm.mode === "auto" && llm.risk === "high" ? "Model recommends rejection; human approval remains required" : "Human approval remains required"}</small>
+                        <small>{llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : "Recommendation only; human approval remains required"}</small>
                       </div>
                     ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">Model judgment unavailable. This request is waiting for human approval.</div> : null}
                     {approval.noApprover ? <small>No owner online — ask a teacher or lead to join.</small> : null}
@@ -715,13 +715,28 @@ function formatActivity(
       return item(event, "general", `${actor}'s request is being reviewed by the model`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
+    case "guard_llm_result": {
+      const model = payload.llm;
+      if (!model || typeof model !== "object") return null;
+      const judgment = model as Record<string, unknown>;
+      const risk = stringValue(judgment.risk) ?? "unknown";
+      const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : undefined;
+      const reason = stringValue(judgment.reason);
+      const applied = judgment.applied === true;
+      const followup = applied
+        ? `Automatically ${payload.action === "deny" ? "rejected" : "approved"}`
+        : "Human approval remains required";
+      return item(event, "general", `${actor}'s model recommendation: ${llmRecommendation(risk)}`, {
+        detail: [stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined), `risk ${risk}`, confidence, reason, followup].filter(Boolean).join(" · ")
+      });
+    }
     case "guard_llm_unavailable":
       return item(event, "general", `${actor}'s request could not be judged by the model`, {
         detail: stringValue(payload.reason) ?? "Human approval is still required"
       });
     case "guard_approval":
       return item(event, "general", `${actor}'s request was ${payload.outcome === "timeout" ? "expired" : payload.outcome === "withdrawn" ? "withdrawn" : payload.approved ? "approved" : "rejected"}`, {
-        detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
+        detail: formatGuardApprovalDetail(payload)
       });
     case "terminal_control_granted":
       return item(event, "general", `${actor} received interactive terminal control`);
@@ -883,6 +898,12 @@ function guardCapabilityText(capability: string) {
   return labels[capability] ?? capability;
 }
 
+function llmRecommendation(risk: string) {
+  if (risk === "high") return "reject";
+  if (risk === "low") return "approve";
+  return "manual review";
+}
+
 function guardActionText(actor: string, payload: Record<string, unknown>) {
   const llm = payload.llm;
   if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
@@ -902,6 +923,17 @@ function formatGuardActionDetail(payload: Record<string, unknown>) {
   const confidence = typeof model.confidence === "number" ? `${Math.round(model.confidence * 100)}% confidence` : undefined;
   const reason = stringValue(model.reason);
   return [command, risk ? `risk ${risk}` : undefined, confidence, reason].filter(Boolean).join(" · ");
+}
+
+function formatGuardApprovalDetail(payload: Record<string, unknown>) {
+  const command = stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined);
+  const model = payload.llm;
+  if (!model || typeof model !== "object") return command;
+  const judgment = model as Record<string, unknown>;
+  const risk = stringValue(judgment.risk);
+  const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : undefined;
+  const reason = stringValue(judgment.reason);
+  return [command, risk ? `Model recommendation: ${llmRecommendation(risk)} (risk ${risk})` : undefined, confidence, reason].filter(Boolean).join(" · ");
 }
 
 function numberValue(value: unknown) {

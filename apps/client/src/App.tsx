@@ -413,6 +413,17 @@ function WorkspacePage({
               setLlmJudging(true);
               setGuardNotice({ title: "The model is reviewing a guarded request", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "Review in progress"), tone: "model" });
             }
+            if (message.event.type === "guard_llm_result") {
+              setLlmJudging(false);
+              const model = message.event.payload?.llm;
+              if (model && typeof model === "object") {
+                const judgment = model as Record<string, unknown>;
+                const risk = String(judgment.risk ?? "unknown");
+                const recommendation = risk === "high" ? "reject" : risk === "low" ? "approve" : "manual review";
+                const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : "confidence unavailable";
+                setGuardNotice({ title: `Model recommendation: ${recommendation}`, detail: `${confidence} · ${String(judgment.reason ?? "No reason provided")}`, tone: "model" });
+              }
+            }
             if (message.event.type === "guard_llm_unavailable") {
               setLlmJudging(false);
               setGuardNotice({ title: "Model judgment unavailable", detail: String(message.event.payload?.reason ?? "Human approval is still required"), tone: "model" });
