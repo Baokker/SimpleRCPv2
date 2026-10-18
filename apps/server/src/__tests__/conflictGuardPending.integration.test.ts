@@ -66,10 +66,13 @@ it("服务端保留半成品候选并在批次结束时判定，关闭时记录�
     replace("b.ts", baseline["b.ts"].replace("target(1)", "target(4)"), bob);
     finishBatch("bob");
     await waitFor(() => guard.pairCoordinator.get(pairId)?.status === "judged");
+    // Bob 把对 target 的调用写死为常量，而 Alice 仍在修改 target，两者仍然相关，候选对保留。
     replace("b.ts", baseline["b.ts"].replace("target(1)", "42"), bob);
+    await refresh();
     finishBatch("bob");
-    await waitFor(() => guard.pairCoordinator.get(pairId)?.status === "closed");
-    expect(guard.pairCoordinator.get(pairId)?.closeReason).toBe("relation-removed");
+    await waitFor(() => guard.pairCoordinator.get(pairId)?.status === "judged");
+    expect(guard.state().candidatePairs.map((pair) => pair.id)).toContain(pairId);
+    expect(guard.pairCoordinator.get(pairId)?.status).not.toBe("closed");
 
     replace("b.ts", baseline["b.ts"].replace("target(1)", "target(5)"), bob);
     finishBatch("bob");
@@ -80,7 +83,7 @@ it("服务端保留半成品候选并在批次结束时判定，关闭时记录�
     await guard.waitForTrace();
     const events = readTrace(await guard.exportTrace());
     expect(events.find((event) => event.type === "session_start")?.pairRevisionMode).toBe("judged-input");
-    expect(events.filter((event) => event.type === "pair_closed").map((event) => event.closeReason)).toEqual(["no-semantic-change", "relation-removed", "change-set-closed"]);
+    expect(events.filter((event) => event.type === "pair_closed").map((event) => event.closeReason)).toEqual(["no-semantic-change", "change-set-closed"]);
   } finally {
     await guard.dispose();
     for (const document of documents.values()) document.destroy();

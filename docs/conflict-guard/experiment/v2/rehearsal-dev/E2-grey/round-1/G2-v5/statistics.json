@@ -1,0 +1,61 @@
+{
+  "seed": 20261007,
+  "samplingUnit": "relationGroupId",
+  "pairedCorrectness": "all-variants-correct",
+  "multiplicity": "Holm-all-policy-pairs-within-experiment",
+  "mcnemar": "exact-two-sided",
+  "bootstrapRepetitions": 2000,
+  "intervals": {
+    "G2-v5": {
+      "agreement": {
+        "estimate": 0.8488372093023255,
+        "low": 0.7684210526315789,
+        "high": 0.9166666666666666,
+        "groups": 69,
+        "repetitions": 2000,
+        "seed": 20261007
+      },
+      "missed": {
+        "estimate": 0.2692307692307692,
+        "low": 0.11538461538461539,
+        "high": 0.4230769230769231,
+        "groups": 26,
+        "repetitions": 2000,
+        "seed": 20261007
+      },
+      "falseBlocking": {
+        "estimate": 0.016666666666666666,
+        "low": 0,
+        "high": 0.05,
+        "groups": 60,
+        "repetitions": 2000,
+        "seed": 20261007
+      },
+      "escape": {
+        "estimate": 0,
+        "low": 0,
+        "high": 0,
+        "groups": 26,
+        "repetitions": 2000,
+        "seed": 20261007
+      },
+      "p50Ms": {
+        "estimate": 881.4089580000145,
+        "low": 744.1807500000577,
+        "high": 1183.487041000044,
+        "groups": 61,
+        "repetitions": 2000,
+        "seed": 20261007
+      },
+      "p95Ms": {
+        "estimate": 2573.165249999962,
+        "low": 1884.0799579999875,
+        "high": 3883.2093340000138,
+        "groups": 61,
+        "repetitions": 2000,
+        "seed": 20261007
+      }
+    }
+  },
+  "comparisons": []
+}

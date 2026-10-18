@@ -1,0 +1,30 @@
+[
+  {
+    "name": "human-agent-pricing-signature-P0-on-owner-1",
+    "taskId": "human-agent-pricing-signature",
+    "ownership": "cross",
+    "round": 1,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-capacity-field-P0-on-owner-1",
+    "taskId": "human-agent-capacity-field",
+    "ownership": "cross",
+    "round": 1,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  }
+]

@@ -1,0 +1,1 @@
+pnpm --filter @simplercp/conflict-guard index:run --dataset bench/datasets/d1-v4 --split dev --k 2 --out ../../docs/conflict-guard/experiment/v2/rehearsal-dev/E4-performance

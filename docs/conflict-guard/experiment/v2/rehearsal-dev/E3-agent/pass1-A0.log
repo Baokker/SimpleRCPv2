@@ -1,0 +1,7 @@
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+{"name":"human-agent-pricing-signature-P0-on-owner-1","taskId":"human-agent-pricing-signature","ownership":"cross","round":1,"success":true,"statuses":["completed"],"rejected":[0],"interruptions":null}
+{"name":"human-agent-capacity-field-P0-on-owner-1","taskId":"human-agent-capacity-field","ownership":"cross","round":1,"success":false,"statuses":["completed"],"rejected":[0],"interruptions":null}
+{"name":"same-owner-budget-field-P0-on-owner-1","taskId":"same-owner-budget-field","ownership":"same","round":1,"success":true,"statuses":["completed","completed"],"rejected":[0,0],"interruptions":null}
+{"name":"same-owner-retry-helper-P0-on-owner-1","taskId":"same-owner-retry-helper","ownership":"same","round":1,"success":true,"statuses":["completed","completed"],"rejected":[0,0],"interruptions":null}
+{"name":"cross-owner-pricing-gross-P0-on-owner-1","taskId":"cross-owner-pricing-gross","ownership":"cross","round":1,"success":true,"statuses":["completed","completed"],"rejected":[0,0],"interruptions":null}
+{"name":"cross-owner-calendar-full-P0-on-owner-1","taskId":"cross-owner-calendar-full","ownership":"cross","round":1,"success":true,"statuses":["completed","completed"],"rejected":[0,0],"interruptions":null}
