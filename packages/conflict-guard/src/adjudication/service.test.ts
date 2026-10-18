@@ -4,6 +4,7 @@ import { createAdjudicationService } from "./service.js";
 import { defaultAdjudicationConfig } from "./config.js";
 import type { CachedCall, JudgeResult, ProviderSubscription } from "./types.js";
 import { createJudgeRegistry } from "./adapters.js";
+import { ProviderError } from "./types.js";
 
 const input = { promptVersion: "pair-v1", left: { actorKind: "human", file: "a.ts", symbol: "a.ts#a", before: "a", after: "b" }, right: { actorKind: "human", file: "b.ts", symbol: "b.ts#b", before: "c", after: "d" }, relationship: "call", invariants: "", local: { excludedRules: [] } };
 const local = { zone: "grey" as const, decision: "warn" as const, ruleId: "semantic-interaction-uncertain", summary: "可能互相影响", evidence: [], contractChanged: { left: false, right: false } };
@@ -289,4 +290,20 @@ for (const point of ["T2", "T3"] as const) it(`aborts the ${point} provider at t
   clock.advanceTo(duration);
   expect(await pending).toMatchObject({ adjudication: { status: "degraded", latencyMs: duration } });
   expect(providerSignal?.aborted).toBe(true);
+});
+
+it("Agent 时点的深判使用 pair-v1，格式无效时在时限内重试一次", async () => {
+  const prompts: string[] = [];
+  let attempts = 0;
+  const deep = { name: "minimax", model: "MiniMax-M3", async judge(received: { promptVersion: string }) {
+    prompts.push(received.promptVersion); attempts += 1;
+    if (attempts === 1) throw new ProviderError("invalid-format");
+    return { ...result, decision: "allow" as const };
+  } };
+  const fast = { name: "jev", model: "jev-1.13.0", async judge() { throw new Error("T2 must select deep"); } };
+  const service = createAdjudicationService({ clock: new VirtualClock(), mode: "live", fast, deep, config: { ...defaultAdjudicationConfig, promptVersion: "pair-v5", strategy: "G4", point: "T2", t2Strategy: "G1", hardDeadlineMs: 30000 } });
+  const verdict = await service.judge({ ...input, promptVersion: "pair-v5" }, local, new AbortController().signal);
+  expect(prompts).toEqual(["pair-v1", "pair-v1"]);
+  expect(verdict.decision).toBe("allow");
+  expect(verdict.adjudication).toMatchObject({ source: "deep", point: "T2" });
 });

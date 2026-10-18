@@ -67,3 +67,31 @@ export async function createExperimentBudget(experiment: string) {
     async snapshot() { await pending; return JSON.parse(await fs.readFile(file, "utf8")); }
   };
 }
+
+// 开发集彩排不经过冻结检查，沿用 v2 预算上限，计数写入独立文件，避免占用正式实验的额度。
+export async function createRehearsalBudget(scope: string) {
+  if (!/^[a-z0-9-]+$/.test(scope)) throw new Error("彩排预算范围无效");
+  const definition = JSON.parse(await fs.readFile(path.join(repository, "docs/conflict-guard/experiment/v2/budget.json"), "utf8"));
+  const file = path.join(repository, ".test-workspaces", `conflict-guard-rehearsal-${scope}.json`);
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  let pending = Promise.resolve();
+  const read = async () => {
+    try { return JSON.parse(await fs.readFile(file, "utf8")); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; return { scope, totals: Object.fromEntries(experimentBudgetCategories.map((key) => [key, 0])), events: [] }; }
+  };
+  return {
+    consume(category: ExperimentBudgetCategory, amount = 1) {
+      if (!Number.isFinite(amount) || amount < 0 || category !== "usd" && !Number.isInteger(amount)) throw new Error("预算增量无效");
+      pending = pending.then(async () => {
+        const state = await read();
+        const limit = definition.stopBeforeExceeding[category];
+        if (state.totals[category] + amount > limit) throw new Error(`彩排 ${category} 预算即将超过上限，实验已经停止`);
+        state.totals[category] += amount;
+        state.events.push({ category, amount, time: new Date().toISOString() });
+        await fs.writeFile(file, JSON.stringify(state, null, 2) + "\n");
+      });
+      return pending;
+    },
+    async snapshot() { await pending; return read(); }
+  };
+}

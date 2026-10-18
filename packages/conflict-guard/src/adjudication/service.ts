@@ -129,14 +129,26 @@ export function createAdjudicationService(options: AdjudicationDependencies) {
     }
     judgements += 1;
     const started = options.clock.now();
-    const input = sanitize(config.point && config.point !== "T1" ? { ...rawInput, point: config.point, reasoning: config.reasoning ?? false } : rawInput, options.sensitiveValues ?? []);
+    const strategy = config.strategy === "G4" ? config.point === "T2" ? config.t2Strategy ?? "G1" : config.point === "T3" ? config.t3Strategy ?? "G1" : config.t1Strategy : config.strategy;
+    // Agent 时点的深判与 G3a 深判一致，使用经过开发集评价的 pair-v1 提示词；快判提示词只用于 Jev。
+    const agentDeep = config.strategy === "G4" && strategy === "G1" && config.point !== undefined && config.point !== "T1";
+    const pointInput = config.point && config.point !== "T1" ? { ...rawInput, point: config.point, reasoning: config.reasoning ?? false, ...(agentDeep ? { promptVersion: "pair-v1" as const } : {}) } : rawInput;
+    const input = sanitize(pointInput, options.sensitiveValues ?? []);
     const hash = inputHash(input);
     const occurrence = (occurrences.get(hash) ?? 0) + 1;
     occurrences.set(hash, occurrence);
-    const strategy = config.strategy === "G4" ? config.point === "T2" ? config.t2Strategy ?? "G1" : config.point === "T3" ? config.t3Strategy ?? "G1" : config.t1Strategy : config.strategy;
     let source: "fast" | "deep" = strategy === "G1" ? "deep" : "fast";
     let elapsed = 0; let escalated = false;
-    const first = await provider(input, source === "fast", signal, config.hardDeadlineMs, occurrence);
+    let first = await provider(input, source === "fast", signal, config.hardDeadlineMs, occurrence);
+    // Agent 时点的深判返回格式无效或请求失败时，在剩余时限内重试一次；超时不重试。
+    if (agentDeep && !first.result && ["invalid-format", "failed"].includes(first.call.status)) {
+      const used = first.waitedMs ?? first.call.latencyMs;
+      if (used < config.hardDeadlineMs) {
+        occurrences.set(hash, occurrence + 1);
+        const retry = await provider(input, false, signal, config.hardDeadlineMs - used, occurrence + 1);
+        first = { ...retry, waitedMs: used + (retry.waitedMs ?? retry.call.latencyMs) };
+      }
+    }
     elapsed = first.waitedMs ?? first.call.latencyMs;
     const verdictFor = (entry: CachedCall & { waitedMs?: number }, role: "fast" | "deep", totalElapsed: number, escalatedValue: boolean, deadlineMs: number, verdictInput = input): ZoneVerdict => {
       const observedElapsed = options.mode === "replay" ? 0 : options.clock.now() - started;
