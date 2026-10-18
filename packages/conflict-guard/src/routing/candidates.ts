@@ -63,7 +63,15 @@ export class SemanticChangeTracker {
     }
     const active = this.changeSets.filter((set) => ["human", "agent"].includes(set.actor.kind) && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
     const deletedKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => symbol.key)));
-    for (const [key, edge] of this.staleEdges) if (edge.dangling || (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to))) this.staleEdges.delete(key);
+    // 修改前存在、两端分别被不同参与者修改的依赖保留：一方去掉对另一方正在修改的符号的引用（例如把常量写死），两者仍然相关。
+    const modifiers = new Map<string, Set<string>>();
+    for (const set of active) for (const file of set.files.values()) for (const symbol of file.symbols ?? []) {
+      const actors = modifiers.get(symbol.key) ?? new Set<string>();
+      actors.add(actorKey(set.actor));
+      modifiers.set(symbol.key, actors);
+    }
+    const crossActor = (from: string, to: string) => [...(modifiers.get(from) ?? [])].some((actor) => [...(modifiers.get(to) ?? [])].some((other) => other !== actor));
+    for (const [key, edge] of this.staleEdges) if (edge.dangling || (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to) && !crossActor(edge.from, edge.to))) this.staleEdges.delete(key);
     const deletedSymbols = active.flatMap((set) => [...set.files.values()].flatMap((file) => (file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => ({ actor: actorKey(set.actor), symbol }))));
     for (const set of active) for (const change of set.files.values()) for (const symbol of change.symbols ?? []) {
       if (symbol.status === "deleted") continue;

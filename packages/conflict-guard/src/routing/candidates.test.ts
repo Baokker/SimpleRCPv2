@@ -71,8 +71,8 @@ describe("候选对", () => {
     version += 1;
     index.update(["a.ts"]);
     tracker.update([changeSet("alice", "a"), changeSet("bob", "c")]);
-    expect(tracker.getCandidatePairs()).toEqual([]);
-    expect(events.at(-1)?.type).toBe("pair_candidate_closed");
+    // Bob 去掉了对 Alice 正在修改的 a 的引用，双方仍在并发修改相关符号，修改前的依赖保留，候选对不关闭。
+    expect(tracker.getCandidatePairs()).toMatchObject([{ id: pair.id, distance: 1 }]);
     source = source.replace("return 4;", "return a() + 2;");
     version += 1;
     index.update(["a.ts"]);

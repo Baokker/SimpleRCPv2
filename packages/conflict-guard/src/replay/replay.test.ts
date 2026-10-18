@@ -87,8 +87,10 @@ describe("阶段 4 回放基础设施", () => {
     const events = readTrace(archive.traces["d1-0002-safe.jsonl"]);
     const result = replayTrace(events, { policy: "P3", k: 2 });
     expect(result.errors).toEqual([]);
-    expect(result.finalDecision).toBe("allow");
+    // 修改前的依赖在双方并发修改期间保留，这条安全轨迹中途会形成灰区候选并提醒；修改撤回后候选全部关闭，且不会拦截。
+    expect(result.finalDecision).not.toBe("lock");
     expect(result.pairs.every((pair) => pair.final?.status === "closed")).toBe(true);
+    expect(result.pairs.flatMap((pair) => pair.records).filter((record) => record.status === "closed").every((record) => record.closeReason === "no-semantic-change" || record.closeReason === "change-set-closed")).toBe(true);
   });
 
   it("内存文件提供者使用全局递增版本", () => {
