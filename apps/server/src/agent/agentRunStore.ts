@@ -36,6 +36,9 @@ export function createAgentRunStore(projectId: string, projectRoot: string) {
     },
     update(runId: string, update: Partial<AgentRun>) {
       return records.update(runId, (current) => ({ ...current, ...update, id: current.id }));
+    },
+    updateIfStatus(runId: string, status: AgentRun["status"], update: Partial<AgentRun>) {
+      return records.updateIf(runId, (current) => current.status === status, (current) => ({ ...current, ...update, id: current.id }));
     }
   };
 }

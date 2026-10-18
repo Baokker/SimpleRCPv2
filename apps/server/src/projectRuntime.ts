@@ -11,6 +11,7 @@ import { watchWorkspace } from "./workspaceWatcher.js";
 import type { MemberStore } from "./auth/identity.js";
 import { createGuardService } from "./guard/service.js";
 import { createMemberStore } from "./auth/identity.js";
+import { canonicalWorkspaceRoot } from "./workspacePath.js";
 
 export function createProjectRuntime(
   project: ProjectRecord,
@@ -25,6 +26,7 @@ export function createProjectRuntime(
     otherWorkspaceRoots?: (currentProjectId: string) => string[];
   } = {}
 ) {
+  project = { ...project, workspacePath: canonicalWorkspaceRoot(project.workspacePath) };
   const projectRoot = getProjectMetadataPath(project);
   const events = createEventLog(path.join(projectRoot, "activity.json"));
   const guardMode = options.guardMode ?? "off";
@@ -206,6 +208,7 @@ export function createProjectRuntime(
       guard.dispose();
       terminal.dispose();
       await watcher.close();
+      await documents.dispose();
     }
   };
 }

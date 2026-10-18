@@ -129,4 +129,5 @@ describe("realtime message handling", () => {
     });
     expect(events.list()).toHaveLength(eventCountBeforeCursorMove);
   });
+
 });

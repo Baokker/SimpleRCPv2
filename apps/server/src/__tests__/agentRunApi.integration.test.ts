@@ -18,7 +18,7 @@ const environment = fs.existsSync(environmentPath)
 const apiKey = environment.DEEPSEEK_API_KEY?.trim();
 const baseUrl = environment.DEEPSEEK_BASE_URL?.trim();
 const model = environment.DEEPSEEK_MODEL?.trim();
-const configured = Boolean(apiKey && baseUrl && model);
+const configured = process.env.SIMPLERCP_LIVE_AGENT_TESTS === "1" && Boolean(apiKey && baseUrl && model);
 let root: string;
 
 beforeEach(async () => {
@@ -162,7 +162,8 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
         realtimeMessages.some(
           (message) =>
             message.type === "agent_trace_appended" &&
-            message.runId === created.run.id
+            message.runId === created.run.id &&
+            (message.event as { type?: string } | undefined)?.type === "run_completed"
         )
       );
       socket.close();
@@ -329,7 +330,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       );
       const body = await response.json() as { run: AgentRunResult & { error?: string } };
       expect(body.run.status).toBe("failed");
-      expect(body.run.error).toBe("Agent run was interrupted by a server restart");
+      expect(body.run.error).toBe("服务端重启中断了任务。");
 
       const traceResponse = await fetch(
         `${running.origin}/api/projects/demo/agent/runs/${runId}/trace`, { headers: memberHeaders(memberId) }
@@ -339,7 +340,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
       };
       expect(traceBody.events.at(-1)).toMatchObject({
         type: "run_failed",
-        summary: "Agent run was interrupted by a server restart"
+        summary: "服务端重启中断了任务。"
       });
     } finally {
       await running.close();
@@ -481,7 +482,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
   }, 120_000);
 
   it("keeps one project run active and cancels queued and running tasks", async () => {
-    const running = await startServer();
+    const running = await startServer(undefined, apiKey, 1);
 
     try {
       const memberId = await joinAgentTester(running.origin);
@@ -506,10 +507,7 @@ describe.skipIf(!configured)("Agent run API with OpenCode", () => {
           enabled: true
         })
       });
-      expect(settingsResponse.status).toBe(400);
-      await expect(settingsResponse.json()).resolves.toMatchObject({
-        error: "Agent settings cannot change while tasks are active"
-      });
+      expect(settingsResponse.status).toBe(200);
 
       const second = await createRun(
         running.origin,
@@ -684,7 +682,7 @@ async function createRun(origin: string, memberId: string, prompt: string) {
   return body.run;
 }
 
-async function startServer(runTimeoutMs?: number, agentApiKey = apiKey) {
+async function startServer(runTimeoutMs?: number, agentApiKey = apiKey, maxConcurrentRuns = 3) {
   const app = await createApp({
     port: 4000,
     host: "127.0.0.1",
@@ -696,7 +694,8 @@ async function startServer(runTimeoutMs?: number, agentApiKey = apiKey) {
       baseUrl: baseUrl!,
       model: model!,
       openCodePort: await getAvailablePort(),
-      runTimeoutMs
+      runTimeoutMs,
+      maxConcurrentRuns
     }
   });
   const server = http.createServer(app);

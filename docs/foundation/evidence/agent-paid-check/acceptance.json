@@ -1,0 +1,20 @@
+{
+  "model": "deepseek-flash",
+  "openCodeVersion": "1.18.31",
+  "conflictGuard": "off",
+  "runs": 6,
+  "completed": 5,
+  "interrupted": 1,
+  "questionsAnswered": 3,
+  "recordedTokens": 302543,
+  "interruptedRunId": "008a44ed-6e92-4151-b039-d25bef462cbc",
+  "replacementRunId": "21db5a4b-d3e7-4969-86ef-b9346896d468",
+  "filesVerified": [
+    "alice-readme.md",
+    "bob-notes.md",
+    "interrupt-readme.md",
+    "team-guide.md",
+    "streaming-check.md"
+  ],
+  "realToolSnapshotAt": "2026-10-09T04:42:00.641Z"
+}

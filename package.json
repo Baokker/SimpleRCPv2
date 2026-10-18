@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --parallel --filter @simplercp/server --filter @simplercp/client dev",
+    "dev:stable": "pnpm --parallel --filter @simplercp/server --filter @simplercp/client dev:once",
     "dev:demo": "node scripts/start-demo.mjs",
     "dev:server": "pnpm --filter @simplercp/server dev",
     "dev:client": "pnpm --filter @simplercp/client dev",

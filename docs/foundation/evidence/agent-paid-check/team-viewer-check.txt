@@ -1,0 +1,19 @@
+### Result
+{"viewer":"Alice","responder":"Bob","questionAndActivityAgree":true}
+### Ran Playwright code
+```js
+await (async (page) => {
+  const questions = page.getByTestId("agent-question");
+  if (!(await questions.count())) throw new Error("团队任务没有待回答的问题");
+  if (!(await questions.first().innerText()).includes("等待 Bob 回答")) throw new Error("问题缺少发起者说明");
+  const progress = await page.getByTestId("agent-run-progress").first().innerText();
+  if (progress.includes("等待你的回答")) throw new Error("旁观成员被显示为回答者");
+  if (!progress.includes("等待 Bob 回答")) throw new Error("实时状态缺少回答者姓名");
+  return { viewer: "Alice", responder: "Bob", questionAndActivityAgree: true };
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:5187/projects/interaction
+- Page Title: SimpleRCPv2
+- Console: 1 errors, 0 warnings

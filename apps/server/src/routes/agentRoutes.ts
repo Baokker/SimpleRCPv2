@@ -5,6 +5,8 @@ import type { AgentRunManager } from "../agent/agentRunManager.js";
 import type { AgentSettingsStore } from "../agent/agentSettingsStore.js";
 import { can, requirePermission } from "../auth/permissions.js";
 import { requireIdentity } from "../auth/permissions.js";
+import { diagnoseAgentFailure } from "../agent/agentRunFailure.js";
+import { canReadAgentRun } from "../agent/agentVisibility.js";
 
 export function registerAgentRoutes(
   app: Express,
@@ -28,12 +30,8 @@ export function registerAgentRoutes(
         model?: unknown;
         enabled?: unknown;
       };
-      if (
-        agentRuns.hasActiveTasks() &&
-        (nextSettings.model !== current.model ||
-          nextSettings.enabled !== current.enabled)
-      ) {
-        throw new Error("Agent settings cannot change while tasks are active");
+      if (agentRuns.hasActiveTasks() && nextSettings.enabled !== current.enabled) {
+        throw new Error("Agent enabled setting cannot change while tasks are active");
       }
       res.json(await agentSettings.update(req.body));
     } catch (error) {
@@ -45,7 +43,8 @@ export function registerAgentRoutes(
     try {
       res.json(await agentRuntime.status());
     } catch (error) {
-      next(error);
+      const failure = diagnoseAgentFailure(error, "creating-session", 0);
+      res.status(503).json({ error: failure.guidance, failure });
     }
   });
 
@@ -188,7 +187,8 @@ export function registerAgentRoutes(
           initiatorRole: req.identity?.role,
           prompt,
           sessionId: req.params.sessionId,
-          contexts
+          contexts,
+          interrupt: true
         });
         res.status(202).json({ run });
       } catch (error) {
@@ -200,7 +200,7 @@ export function registerAgentRoutes(
   app.get("/api/projects/:projectId/agent/runs", async (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
-      res.json({ runs: await agentRuns.listRuns(req.params.projectId) });
+      res.json({ runs: await agentRuns.listVisibleRuns(req.params.projectId, req.identity!.memberId) });
     } catch (error) {
       next(error);
     }
@@ -225,7 +225,8 @@ export function registerAgentRoutes(
         initiatorRole: req.identity?.role,
         prompt,
         sessionId,
-        contexts
+        contexts,
+        interrupt: true
       });
       res.status(202).json({ run });
     } catch (error) {
@@ -236,9 +237,9 @@ export function registerAgentRoutes(
   app.get("/api/projects/:projectId/agent/runs/:runId", async (req, res, next) => {
     try {
       if (!requireIdentity(req, res)) return;
-      res.json({
-        run: await agentRuns.getRun(req.params.projectId, req.params.runId)
-      });
+      const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+      if (!canReadAgentRun(run, req.identity!.memberId)) { res.sendStatus(403); return; }
+      res.json({ run });
     } catch (error) {
       next(error);
     }
@@ -249,6 +250,8 @@ export function registerAgentRoutes(
     async (req, res, next) => {
       try {
         if (!requireIdentity(req, res)) return;
+        const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+        if (!canReadAgentRun(run, req.identity!.memberId)) { res.sendStatus(403); return; }
         const events = await agentRuns.listTrace(
           req.params.projectId,
           req.params.runId
@@ -275,6 +278,7 @@ export function registerAgentRoutes(
       try {
         const memberId = memberIdFor(req);
         const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+        if (memberId && !canReadAgentRun(run, memberId)) { res.sendStatus(403); return; }
         if (!requirePermission(req, res, "agent:cancel", { projectId: req.params.projectId, ownerMemberId: run.initiatorMemberId ?? run.memberId })) return;
         if (!memberId) {
           res.status(401).json({ error: "Member identity is required" });
@@ -292,6 +296,37 @@ export function registerAgentRoutes(
       }
     }
   );
+
+  app.post("/api/projects/:projectId/agent/runs/:runId/retry", async (req, res, next) => {
+    try {
+      const identity = requirePermission(req, res, "agent:create"); if (!identity) return;
+      const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+      if (run.memberId !== identity.memberId) { res.sendStatus(403); return; }
+      if (run.status !== "failed" || !run.failure?.retryable) { res.status(409).json({ error: "当前任务无法重试" }); return; }
+      res.status(202).json({ run: await agentRuns.retryRun(req.params.projectId, run.id, identity.memberId) });
+    } catch (error) { next(error); }
+  });
+
+  app.delete("/api/projects/:projectId/agent/sessions/:sessionId", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const session = await agentRuns.getSession(req.params.projectId, req.params.sessionId);
+      if (session.memberId !== identity.memberId || session.scope === "team") { res.sendStatus(403); return; }
+      await agentRuns.deleteSession(req.params.projectId, session.id, identity.memberId);
+      res.status(204).end();
+    } catch (error) { next(error); }
+  });
+  app.post("/api/projects/:projectId/agent/runs/:runId/questions/:requestId/:action", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res); if (!identity) return;
+      const run = await agentRuns.getRun(req.params.projectId, req.params.runId);
+      if (run.memberId !== identity.memberId) { res.sendStatus(403); return; }
+      if (!["reply", "reject"].includes(req.params.action)) { res.sendStatus(400); return; }
+      if (req.params.action === "reply" && !Array.isArray(req.body?.answers)) { res.status(400).json({ error: "请提供回答" }); return; }
+      await agentRuns.answerQuestion(req.params.projectId, run.id, identity.memberId, req.params.requestId, req.params.action === "reply" ? req.body.answers : undefined);
+      res.status(204).end();
+    } catch (error) { next(error); }
+  });
 }
 
 function memberIdFor(req: import("express").Request) {

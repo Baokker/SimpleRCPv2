@@ -1,0 +1,34 @@
+{
+  "model": "deepseek-flash",
+  "openCodeVersion": "1.18.31",
+  "startedAt": "2026-10-09T07:19:07.835Z",
+  "checks": {
+    "imePersonal": true,
+    "personalPrivacy": true,
+    "personalInterruption": true,
+    "questionPersonal": true,
+    "deleteSession": true,
+    "imeChat": true,
+    "chatStop": true,
+    "questionChat": true,
+    "chatInterruption": true,
+    "sharedProgress": true,
+    "streaming": true,
+    "reasoningProvided": true
+  },
+  "runIds": [
+    "c3ppoWpfn99h",
+    "-PnABAz6ij8U",
+    "BjQxafNyDBqF",
+    "p5RU71UeiwsY",
+    "X6BjDmek1ayc",
+    "BiP_oce2WZig",
+    "B5Z4aY5x_WSR",
+    "z9wyOzvOLP6u",
+    "LyFywPfltSn7"
+  ],
+  "finishedAt": "2026-10-09T07:36:10.126Z",
+  "browserErrors": [],
+  "workspace": "/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2/.test-workspaces/main-agent-check/attempt-7fGijm",
+  "passed": true
+}

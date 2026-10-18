@@ -50,6 +50,8 @@ allow_snapshot 按命令涉及的工作区路径复制被跟踪和未被忽略�
 
 ## OpenCode 接入
 
+OpenCode 的 `question` 工具与团队 Agent 的启动、打断、取消和问题回答保留主分支的原有行为，当前不纳入 Guard 能力判定。这是已知局限，后续需要补充相应的授权规则与审计。问题等待保留运行时间暂停机制，Guard 审批继续使用自身的有限等待时间。
+
 Guard 模式为 `full` 时，OpenCode 的 `bash`、`edit`、`read`、`grep`、`glob`、`list`、`webfetch`、`websearch` 全部配置为 `ask`，子 Agent `task` 使用 `deny`，`external_directory` 保持 `deny`。普通工作区读取由 Guard 直接批准；受保护路径与工作区外路径进入审批；元数据与其他项目路径直接拒绝。
 
 每次运行通过 OpenCode `/path` 查询实际 worktree。read permission 的相对 pattern 按该 worktree 解析；工具载荷中的 `filePath` 按 OpenCode 当前 directory 解析。grep、glob 与 list 的目录参数使用工具载荷或 permission metadata，并遵循 OpenCode 当前 directory；glob 的文件 pattern 与 grep 的 include 按搜索目录解析。`human-only` 与 `off` 保留读取工具的 OpenCode 默认配置。`human-only` 中发出的 permission 请求由服务端自动批准。

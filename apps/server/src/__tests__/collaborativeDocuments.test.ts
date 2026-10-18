@@ -146,4 +146,18 @@ describe("collaborative document store", () => {
       fs.readFile(path.join(root, "src", "hello.ts"))
     ).resolves.toEqual(Buffer.from([1, 0, 2, 3]));
   });
+
+  it("关闭文件后先保存尚未写入的修改，再释放文档", async () => {
+    const store = createCollaborativeDocumentStore({ workspaceRoot: root, persistDelayMs: 300 });
+    const document = await store.getDocument("room-release", "src/hello.ts");
+    document.getText("content").insert(5, " member");
+    document.destroy();
+    expect(document.isDestroyed).toBe(false);
+    expect(await store.getDocument("room-release", "src/hello.ts")).toBe(document);
+    await store.flushDocument("room-release:src/hello.ts", document);
+    expect(document.isDestroyed).toBe(true);
+    await expect(fs.readFile(path.join(root, "src", "hello.ts"), "utf8")).resolves.toBe("hello member");
+    await store.dispose();
+  });
+
 });
