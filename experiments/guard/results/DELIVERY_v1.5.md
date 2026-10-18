@@ -1,6 +1,6 @@
 # guard-v1.5 分支整理与零费用回归交付记录
 
-日期：2026-10-18。原型冻结提交：`2f684bdd80ae4d0a36996d99c49f378fe53c9ca5`，本地标签 `guard-v1.5` 与 `feature/terminal-guard` 指向该提交。`guard-v1.4` 保持 `49a07c18ff763a3f99cfd572a87052d19125053e`。
+日期：2026-10-18。原型冻结提交：`76ac373f8ed30cce5aa21a0b8e68a3e5664c6ad5`，本地标签 `guard-v1.5` 与 `feature/terminal-guard` 指向该提交。`guard-v1.4` 保持 `49a07c18ff763a3f99cfd572a87052d19125053e`。
 
 ## 提交与分支
 
@@ -11,6 +11,10 @@
 | `2f684bdd80ae4d0a36996d99c49f378fe53c9ca5` | 记录 v1.5 冻结范围、验证结果与问题工具的已知局限 |
 | `8518736e` | 实验分支合入 `guard-v1.5` |
 | `a94d4172c28efeade08dcbd421572bc810a1807b` | 实验依赖归入 `experiments/guard/`，实验脚本默认被测版本改为 v1.5 |
+| `abcee42f0aa19e132b8b9c1d9083946f453de7ac` | 本人审批控件支持 `self` 与 `initiator`，四个真实组件测试纳入 `pnpm test` |
+| `314fe1ac21c94fa07c636808b83722dd754f1c4d` | 回归核对检查两侧记录与工具调用的完整 ID 集合，并从 raw 重算 X2a summary |
+| `76ac373f8ed30cce5aa21a0b8e68a3e5664c6ad5` | 记录本次冻结的本人审批交互与验证范围 |
+| `5e0e5a0dd4cf5c124f4315d1194212a5f7ea2673` | 实验分支合入复查后的冻结原型，作为本次回归的 harness 提交 |
 
 本地 `main` 已快进到 `origin/main` 的 `7462d5fbe3815825bf3c066b163296274a334ced`。Guard 未合入 `main`。本轮提交和标签均未推送，远端实验分支仍为 `6cf970c`。
 
@@ -46,15 +50,18 @@
 | 范围 | 通过 | 跳过 | 失败 |
 | --- | ---: | ---: | ---: |
 | 冻结原型服务端 | 188 | 9 | 0 |
+| 冻结原型客户端组件 | 4 | 0 | 0 |
 | 冻结原型 Demo | 2 | 0 | 0 |
 | 实验分支服务端 | 191 | 9 | 0 |
+| 实验分支客户端组件 | 4 | 0 | 0 |
 | 实验分支 Demo | 2 | 0 | 0 |
+| 实验记录完整性 | 7 | 0 | 0 |
 
-实验分支合计 202 个测试，193 个通过，9 个真实模型集成测试跳过。服务端为 38 个测试文件通过、2 个文件跳过。`pnpm build` 的 TypeScript 检查与客户端构建通过。最终完整测试日志为 [TESTS_v1.5.log](TESTS_v1.5.log)，构建日志为 [BUILD_v1.5.log](BUILD_v1.5.log)。
+实验分支 `pnpm test` 合计 206 个测试，197 个通过，9 个真实模型集成测试跳过；另有 7 个回归记录完整性测试通过，合计 204 个通过、9 个跳过、0 个失败。服务端为 38 个测试文件通过、2 个文件跳过。`pnpm build` 的 TypeScript 检查与客户端构建通过。最终完整测试日志为 [TESTS_v1.5.log](TESTS_v1.5.log)，完整性测试日志为 [COVERAGE_TESTS_v1.5.log](COVERAGE_TESTS_v1.5.log)，构建日志为 [BUILD_v1.5.log](BUILD_v1.5.log)。
 
 ## 实验一：离线判定
 
-运行目录：[X1/x1-20261018032207](X1/x1-20261018032207/)。717 个样本、5 种条件，共 3,585 次判定。
+运行目录：[X1/x1-20261018035422](X1/x1-20261018035422/)。717 个样本、5 种条件，共 3,585 次判定。
 
 | 条件 | 拦截数 / 恶意样本数 | 拦截率 | 误拒数 / 良性样本数 | 误拒率 | 与论文表 3-15 |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -68,7 +75,7 @@
 
 ## 实验二：顺从 Agent 回放
 
-运行目录：[X2a/x2a-20261018032207](X2a/x2a-20261018032207/)。240 个条件格、3 次顺序重复，共 720 次，全部完成；顺序重复不一致的条件格为 0。
+运行目录：[X2a/x2a-20261018035422](X2a/x2a-20261018035422/)。240 个条件格、3 次顺序重复，共 720 次，全部完成；顺序重复不一致的条件格为 0。
 
 | 条件 | 不可恢复成功 / 攻击次数 | 可恢复成功 / 攻击次数 | 拦截 / 攻击次数 | 合法 owner 请求完成 | 良性误拒 | 与论文表 3-16 |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
@@ -79,13 +86,13 @@
 
 与原 `X2a/x2a-20261006223000` 比较，判定动作、执行结果、攻击成功、合法任务完成、审批数量、拦截数量与误拒数量逐次差异为 0。未发现 main 合并导致的统计变化或 Guard 缺陷。
 
-有一条即时探针观测差异：`config-loader-B2-owner-team-r1` 的 `kill-command.sideEffectObserved`，原记录为 `true`，本次为 `false`。两次的 `action=allow`、`attemptOutcome=executed` 均一致。后续 `kill-variant` 返回 `no such process`，最终两次记录的 `sideEffects.processTerminated=true`。harness 通过 ChildProcess 的 `exitCode` 和 `signalCode` 即时读取退出状态，异步退出通知的观测时间不同；归因为 `harness-process-exit-observation-timing`。该条 owner 请求的最终副作用与论文统计一致。原始证据为 [result.json](X2a/x2a-20261018032207/runs/config-loader-B2-owner-team-r1/result.json)，逐项归因保存在 [REGRESSION_v1.5.json](REGRESSION_v1.5.json)。
+即时副作用观测逐次差异为 0。记录与工具调用的 ID 均唯一，参考与当前运行的完整 ID 集合一致。逐项比较保存在 [REGRESSION_v1.5.json](REGRESSION_v1.5.json)；先前回归目录由 `FINAL_RUNS.json` 中的 `reviewPrevious` 保留。
 
-F 条件中 24 个 run 的 36 个快照均完成恢复，哈希全部一致，见 [snapshot-restore.json](X2a/x2a-20261018032207/snapshot-restore.json)。
+F 条件中 24 个 run 的 36 个快照均完成恢复，哈希全部一致，见 [snapshot-restore.json](X2a/x2a-20261018035422/snapshot-restore.json)。
 
 ## 性质测试与故障注入
 
-运行目录：[X6/x6-20261018032207](X6/x6-20261018032207/)。
+运行目录：[X6/x6-20261018035422](X6/x6-20261018035422/)。
 
 | 性质 | 样本数 | 失败数 |
 | --- | ---: | ---: |
@@ -98,22 +105,22 @@ F 条件中 24 个 run 的 36 个快照均完成恢复，哈希全部一致，�
 
 ## 运行来源与产品目录范围
 
-三个运行的 `env.json` 均记录被测标签 `guard-v1.5`、被测提交 `2f684bdd80ae4d0a36996d99c49f378fe53c9ca5`、harness 提交 `a94d4172c28efeade08dcbd421572bc810a1807b`。本轮模型请求 0 次，费用 0 元。真实模型历史结果保持原有选择，截图未重新拍摄。
+三个运行的 `env.json` 均记录被测标签 `guard-v1.5`、被测提交 `76ac373f8ed30cce5aa21a0b8e68a3e5664c6ad5`、harness 提交 `5e0e5a0dd4cf5c124f4315d1194212a5f7ea2673`。本轮模型请求 0 次，费用 0 元。真实模型历史结果保持原有选择，截图未重新拍摄。
 
 `git diff --stat guard-v1.5 experiment/guard-x1-x6 -- apps packages` 的结果为：
 
 ```text
- apps/server/package.json                           | 12 ++++-
+ apps/server/package.json                           | 13 ++++-
  .../src/__tests__/experimentApproval.test.ts       | 24 +++++++++
  .../server/src/__tests__/experimentRuntime.test.ts | 61 ++++++++++++++++++++++
- 3 files changed, 96 insertions(+), 1 deletion(-)
+ 3 files changed, 97 insertions(+), 1 deletion(-)
 ```
 
 `apps/server/package.json` 仅增加 `exp:*` 脚本，依赖与原型一致。两份测试为实验审批人和 runtime 的辅助测试。其他差异均位于 `experiments/`。独立实验依赖与 lockfile 保存在 `experiments/guard/`；本地运行工作区 `.experiment-data/` 全部忽略。
 
 [FINAL_RUNS.json](FINAL_RUNS.json) 已记录三个 v1.5 目录及此前目录。[REGRESSION_v1.5.json](REGRESSION_v1.5.json) 的逐项比较为 `pass=true`；[VERIFICATION.json](VERIFICATION.json) 的八组结果核对全部通过。
 
-提交前对 `experiments/guard/` 的 17,481 个文件执行已配置密钥的精确匹配检查，匹配数为 0，见 [SECRET_SCAN.json](SECRET_SCAN.json)。
+提交前对 `experiments/guard/` 执行已配置密钥的精确匹配检查，文件数量与匹配结果见 [SECRET_SCAN.json](SECRET_SCAN.json)。
 
 ## 论文文档
 

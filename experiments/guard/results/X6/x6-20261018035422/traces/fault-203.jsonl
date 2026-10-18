@@ -1,0 +1,5 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-18T03:54:56.659Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-18T03:54:56.662Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"controlled-203"},"sequence":3,"timestamp":"2026-10-18T03:54:56.667Z"}
+{"type":"opencode.permission.asked","data":{"id":"permission-controlled-203","permission":"bash","sessionID":"controlled-203","metadata":{"command":"rm peer.txt"}},"sequence":4,"timestamp":"2026-10-18T03:54:56.675Z"}
+{"type":"run_failed","summary":"Controlled permission rejected","data":{"phase":"approval","source":"server","errorType":"Error","message":"Controlled permission rejected","lastSuccessfulSequence":4,"retryable":false,"guidance":"请检查服务配置与错误详情后重新发起任务。"},"sequence":5,"timestamp":"2026-10-18T03:54:56.721Z"}

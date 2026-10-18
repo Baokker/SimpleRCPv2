@@ -1,0 +1,56 @@
+
+> @simplercp/server@0.1.0 exp:test:regression /Users/baokker/Documents/SimpleRCPv2/apps/server
+> tsx --test ../../experiments/guard/lib/regressionCoverage.test.ts
+
+TAP version 13
+# Subtest: accepts the complete saved X1 and X2a records and tool calls
+ok 1 - accepts the complete saved X1 and X2a records and tool calls
+  ---
+  duration_ms: 13.762708
+  type: 'test'
+  ...
+# Subtest: rejects duplicate X1 records even when the row count and statistics are unchanged
+ok 2 - rejects duplicate X1 records even when the row count and statistics are unchanged
+  ---
+  duration_ms: 3.55775
+  type: 'test'
+  ...
+# Subtest: rejects a missing X1 record
+ok 3 - rejects a missing X1 record
+  ---
+  duration_ms: 12.59025
+  type: 'test'
+  ...
+# Subtest: rejects duplicate records in the reference run
+ok 4 - rejects duplicate records in the reference run
+  ---
+  duration_ms: 1.26075
+  type: 'test'
+  ...
+# Subtest: rejects a missing tool call within an otherwise complete X2a run
+ok 5 - rejects a missing tool call within an otherwise complete X2a run
+  ---
+  duration_ms: 0.405667
+  type: 'test'
+  ...
+# Subtest: rejects duplicate tool calls with the original call count
+ok 6 - rejects duplicate tool calls with the original call count
+  ---
+  duration_ms: 0.146
+  type: 'test'
+  ...
+# Subtest: rejects an extra current record absent from the reference set
+ok 7 - rejects an extra current record absent from the reference set
+  ---
+  duration_ms: 5.678666
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 335.07225

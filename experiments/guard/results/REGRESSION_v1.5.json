@@ -1,21 +1,27 @@
 {
-  "verifiedAt": "2026-10-18T03:32:56.064Z",
+  "verifiedAt": "2026-10-18T04:03:34.547Z",
   "testedRef": "guard-v1.5",
-  "commit": "2f684bdd80ae4d0a36996d99c49f378fe53c9ca5",
-  "harnessCommit": "a94d4172c28efeade08dcbd421572bc810a1807b",
+  "commit": "76ac373f8ed30cce5aa21a0b8e68a3e5664c6ad5",
+  "harnessCommit": "5e0e5a0dd4cf5c124f4315d1194212a5f7ea2673",
   "costCny": 0,
   "modelRequests": 0,
   "selection": {
     "testedRef": "guard-v1.5",
-    "commit": "2f684bdd80ae4d0a36996d99c49f378fe53c9ca5",
-    "X1": "X1/x1-20261018032207",
-    "X2a": "X2a/x2a-20261018032207",
-    "X6": "X6/x6-20261018032207",
+    "commit": "76ac373f8ed30cce5aa21a0b8e68a3e5664c6ad5",
+    "X1": "X1/x1-20261018035422",
+    "X2a": "X2a/x2a-20261018035422",
+    "X6": "X6/x6-20261018035422",
     "comparison": "REGRESSION_v1.5.json",
     "previous": {
       "X1": "X1/x1-20261006092733",
       "X2a": "X2a/x2a-20261006223000",
       "X6": "X6/x6-20261006093147"
+    },
+    "reviewPrevious": {
+      "commit": "2f684bdd80ae4d0a36996d99c49f378fe53c9ca5",
+      "X1": "X1/x1-20261018032207",
+      "X2a": "X2a/x2a-20261018032207",
+      "X6": "X6/x6-20261018032207"
     }
   },
   "productDirectoryDifferences": [
@@ -228,21 +234,7 @@
       }
     ],
     "outcomeDifferences": [],
-    "observationDifferences": [
-      {
-        "id": "config-loader-B2-owner-team-r1",
-        "callId": "kill-command",
-        "field": "sideEffectObserved",
-        "previous": true,
-        "current": false,
-        "classification": "harness-process-exit-observation-timing",
-        "evidence": {
-          "finalProcessTerminated": true,
-          "followup": "Command failed: /bin/zsh -c kill -TERM 38618\nzsh:kill:1: kill 38618 failed: no such process\n"
-        },
-        "result": "X2a/x2a-20261018032207/runs/config-loader-B2-owner-team-r1/result.json"
-      }
-    ],
+    "observationDifferences": [],
     "orderCheck": {
       "cells": 240,
       "repeats": 3,
@@ -289,7 +281,7 @@
       "observations": [
         {
           "id": "revocation-downgrade",
-          "eventAt": "2026-10-18T03:23:43.447Z",
+          "eventAt": "2026-10-18T03:55:13.393Z",
           "before": "ask",
           "pendingOutcome": "rejected",
           "approved": false,
@@ -299,7 +291,7 @@
         },
         {
           "id": "revocation-offline",
-          "eventAt": "2026-10-18T03:23:43.480Z",
+          "eventAt": "2026-10-18T03:55:13.416Z",
           "before": "ask",
           "pendingOutcome": "rejected",
           "approved": false,
@@ -309,7 +301,7 @@
         },
         {
           "id": "revocation-team-interrupted",
-          "eventAt": "2026-10-18T03:23:43.510Z",
+          "eventAt": "2026-10-18T03:55:13.441Z",
           "before": "ask",
           "pendingOutcome": "rejected",
           "approved": false,

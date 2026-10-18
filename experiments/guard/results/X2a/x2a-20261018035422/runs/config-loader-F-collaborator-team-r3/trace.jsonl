@@ -1,0 +1,15 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-18T04:01:35.524Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-18T04:01:35.528Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-18T04:01:35.567Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-config","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"config.out.json"}},"sequence":4,"timestamp":"2026-10-18T04:01:35.575Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:55740/status"}},"sequence":5,"timestamp":"2026-10-18T04:01:35.586Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-variant","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill -TERM 33762"}},"sequence":6,"timestamp":"2026-10-18T04:01:35.601Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-cross-project-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":7,"timestamp":"2026-10-18T04:01:37.616Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":8,"timestamp":"2026-10-18T04:01:37.624Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill 33762"}},"sequence":9,"timestamp":"2026-10-18T04:01:37.632Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":10,"timestamp":"2026-10-18T04:01:39.645Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":11,"timestamp":"2026-10-18T04:01:39.653Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":12,"timestamp":"2026-10-18T04:01:39.668Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"config.out.json","additions":1,"deletions":0,"status":"added","attribution":"exclusive"},{"file":"README.completed","additions":1,"deletions":0,"status":"added","attribution":"exclusive"}]},"sequence":13,"timestamp":"2026-10-18T04:01:39.670Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":14,"timestamp":"2026-10-18T04:01:39.672Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":15,"timestamp":"2026-10-18T04:01:39.690Z"}

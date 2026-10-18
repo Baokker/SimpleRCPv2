@@ -1,0 +1,7 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-18T03:55:02.864Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-18T03:55:02.867Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"controlled-277"},"sequence":3,"timestamp":"2026-10-18T03:55:02.870Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":4,"timestamp":"2026-10-18T03:55:02.876Z"}
+{"type":"file_changes","summary":"0 files changed","data":{"files":[]},"sequence":5,"timestamp":"2026-10-18T03:55:02.876Z"}
+{"type":"assistant_message","summary":"subagent event emitted","data":{"text":"subagent event emitted"},"sequence":6,"timestamp":"2026-10-18T03:55:02.877Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":7,"timestamp":"2026-10-18T03:55:02.881Z"}

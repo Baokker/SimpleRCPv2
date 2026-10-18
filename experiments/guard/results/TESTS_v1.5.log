@@ -1,6 +1,6 @@
 
 > simple-rcp-v2@0.1.0 test /Users/baokker/Documents/SimpleRCPv2
-> pnpm --filter @simplercp/server test && pnpm test:demo
+> pnpm --filter @simplercp/server test && pnpm test:client && pnpm test:demo
 
 
 > @simplercp/server@0.1.0 test /Users/baokker/Documents/SimpleRCPv2/apps/server
@@ -10,39 +10,39 @@
  RUN  v1.6.1 /Users/baokker/Documents/SimpleRCPv2/apps/server
 
  ↓ src/__tests__/agentRunApi.integration.test.ts  (7 tests | 7 skipped)
- ✓ src/__tests__/guard.test.ts  (32 tests) 52ms
- ✓ src/__tests__/agentGuardFakeRuntime.test.ts  (8 tests) 2170ms
- ✓ src/__tests__/memberIdentityApi.test.ts  (9 tests) 1495ms
- ✓ src/__tests__/agentSessionApi.test.ts  (3 tests) 162ms
- ✓ src/__tests__/agentProgress.test.ts  (7 tests) 14ms
- ✓ src/__tests__/guardScenarios.test.ts  (16 tests) 44ms
- ✓ src/__tests__/projects.test.ts  (9 tests) 197ms
- ✓ src/__tests__/teamAgentApi.test.ts  (3 tests) 209ms
- ✓ src/__tests__/workspace.test.ts  (11 tests) 47ms
- ✓ src/__tests__/chat.test.ts  (3 tests) 163ms
- ✓ src/__tests__/collaborativeDocuments.test.ts  (8 tests) 41ms
- ✓ src/__tests__/storageMigration.test.ts  (3 tests) 153ms
- ✓ src/__tests__/openCodeQuestions.integration.test.ts  (2 tests) 4625ms
- ✓ src/__tests__/agentPrivacy.test.ts  (1 test) 138ms
- ✓ src/__tests__/projectApi.test.ts  (2 tests) 106ms
- ✓ src/__tests__/agentWriteLedger.test.ts  (4 tests) 16ms
- ✓ src/__tests__/config.test.ts  (8 tests) 7ms
- ✓ src/__tests__/rooms.test.ts  (6 tests) 45ms
- ✓ src/__tests__/foundation.test.ts  (4 tests) 27ms
- ✓ src/__tests__/openCodeStatus.test.ts  (2 tests) 2695ms
- ✓ src/__tests__/sharedTerminal.test.ts  (11 tests) 67ms
- ✓ src/__tests__/experimentRuntime.test.ts  (2 tests) 48ms
- ✓ src/__tests__/realtime.test.ts  (3 tests) 18ms
- ✓ src/__tests__/chatAgentBridge.test.ts  (2 tests) 14ms
+ ✓ src/__tests__/guard.test.ts  (32 tests) 41ms
+ ✓ src/__tests__/agentGuardFakeRuntime.test.ts  (8 tests) 4290ms
+ ✓ src/__tests__/memberIdentityApi.test.ts  (9 tests) 3648ms
+ ✓ src/__tests__/agentSessionApi.test.ts  (3 tests) 681ms
+ ✓ src/__tests__/agentProgress.test.ts  (7 tests) 20ms
+ ✓ src/__tests__/guardScenarios.test.ts  (16 tests) 48ms
+ ✓ src/__tests__/projects.test.ts  (9 tests) 171ms
+ ✓ src/__tests__/teamAgentApi.test.ts  (3 tests) 307ms
+ ✓ src/__tests__/workspace.test.ts  (11 tests) 114ms
+ ✓ src/__tests__/chat.test.ts  (3 tests) 187ms
+ ✓ src/__tests__/collaborativeDocuments.test.ts  (8 tests) 86ms
+ ✓ src/__tests__/storageMigration.test.ts  (3 tests) 536ms
+ ✓ src/__tests__/openCodeQuestions.integration.test.ts  (2 tests) 6014ms
+ ✓ src/__tests__/agentPrivacy.test.ts  (1 test) 186ms
+ ✓ src/__tests__/projectApi.test.ts  (2 tests) 885ms
+ ✓ src/__tests__/agentWriteLedger.test.ts  (4 tests) 78ms
+ ✓ src/__tests__/config.test.ts  (8 tests) 6ms
+ ✓ src/__tests__/rooms.test.ts  (6 tests) 63ms
+ ✓ src/__tests__/foundation.test.ts  (4 tests) 52ms
+ ✓ src/__tests__/openCodeStatus.test.ts  (2 tests) 2413ms
+ ✓ src/__tests__/sharedTerminal.test.ts  (11 tests) 103ms
+ ✓ src/__tests__/experimentRuntime.test.ts  (2 tests) 176ms
+ ✓ src/__tests__/realtime.test.ts  (3 tests) 57ms
+ ✓ src/__tests__/chatAgentBridge.test.ts  (2 tests) 32ms
  ↓ src/__tests__/openCodeRuntime.integration.test.ts  (2 tests | 2 skipped)
- ✓ src/__tests__/guardSnapshots.test.ts  (3 tests) 19ms
- ✓ src/__tests__/agentRunSupport.test.ts  (4 tests) 102ms
- ✓ src/__tests__/agentSettingsApi.test.ts  (2 tests) 55ms
- ✓ src/__tests__/agentSessionStore.test.ts  (2 tests) 26ms
- ✓ src/__tests__/agentRunStore.test.ts  (2 tests) 28ms
- ✓ src/__tests__/experimentApproval.test.ts  (1 test) 8ms
+ ✓ src/__tests__/guardSnapshots.test.ts  (3 tests) 190ms
+ ✓ src/__tests__/agentRunSupport.test.ts  (4 tests) 191ms
+ ✓ src/__tests__/agentSettingsApi.test.ts  (2 tests) 275ms
+ ✓ src/__tests__/agentSessionStore.test.ts  (2 tests) 340ms
+ ✓ src/__tests__/agentRunStore.test.ts  (2 tests) 94ms
+ ✓ src/__tests__/experimentApproval.test.ts  (1 test) 11ms
 stderr | src/__tests__/traceStore.test.ts > Agent trace 写入隔离 > 文件路径故障恢复后继续写入并保持成功事件的连续序号
-Agent trace write failed Error: EISDIR: illegal operation on a directory, open '/Users/baokker/Documents/SimpleRCPv2/.test-workspaces/agent-trace-recovery-6vuiOH/trace.jsonl'
+Agent trace write failed Error: EISDIR: illegal operation on a directory, open '/Users/baokker/Documents/SimpleRCPv2/.test-workspaces/agent-trace-recovery-GuJSZj/trace.jsonl'
     at open (node:internal/fs/promises:641:25)
     at writeFile (node:internal/fs/promises:1215:14)
     at /Users/baokker/Documents/SimpleRCPv2/apps/server/src/agent/traceStore.ts:26:9
@@ -56,23 +56,61 @@ Agent trace write failed Error: EISDIR: illegal operation on a directory, open '
   errno: -21,
   code: 'EISDIR',
   syscall: 'open',
-  path: '/Users/baokker/Documents/SimpleRCPv2/.test-workspaces/agent-trace-recovery-6vuiOH/trace.jsonl'
+  path: '/Users/baokker/Documents/SimpleRCPv2/.test-workspaces/agent-trace-recovery-GuJSZj/trace.jsonl'
 }
 
- ✓ src/__tests__/traceStore.test.ts  (2 tests) 1598ms
+ ✓ src/__tests__/traceStore.test.ts  (2 tests) 1552ms
  ✓ src/__tests__/guardService.test.ts  (5 tests) 3ms
- ✓ src/__tests__/agentRunSelection.test.ts  (3 tests) 11ms
- ✓ src/__tests__/guardFixtures.test.ts  (2 tests) 22ms
- ✓ src/__tests__/agentSettingsStore.test.ts  (1 test) 10ms
- ✓ src/__tests__/teamAgentSupport.test.ts  (3 tests) 3ms
+ ✓ src/__tests__/agentRunSelection.test.ts  (3 tests) 16ms
+ ✓ src/__tests__/guardFixtures.test.ts  (2 tests) 29ms
+ ✓ src/__tests__/agentSettingsStore.test.ts  (1 test) 11ms
+ ✓ src/__tests__/teamAgentSupport.test.ts  (3 tests) 5ms
  ✓ src/__tests__/openCodeWorkspace.test.ts  (1 test) 5ms
  ✓ src/__tests__/processEnv.test.ts  (1 test) 5ms
 
  Test Files  38 passed | 2 skipped (40)
       Tests  191 passed | 9 skipped (200)
-   Start at  11:31:29
-   Duration  26.34s (transform 627ms, setup 0ms, collect 3.96s, tests 14.45s, environment 5ms, prepare 2.43s)
+   Start at  11:56:08
+   Duration  45.32s (transform 1.09s, setup 1ms, collect 7.89s, tests 22.92s, environment 6ms, prepare 4.20s)
 
+
+> simple-rcp-v2@0.1.0 test:client /Users/baokker/Documents/SimpleRCPv2
+> pnpm --filter @simplercp/server exec tsx --tsconfig ../client/tsconfig.json --test ../client/tests/*.test.ts
+
+TAP version 13
+# Subtest: renders confirmation controls for an Agent request assigned to its initiator
+ok 1 - renders confirmation controls for an Agent request assigned to its initiator
+  ---
+  duration_ms: 7.041583
+  type: 'test'
+  ...
+# Subtest: renders confirmation controls for an owner self-approval
+ok 2 - renders confirmation controls for an owner self-approval
+  ---
+  duration_ms: 1.110167
+  type: 'test'
+  ...
+# Subtest: only lets a student withdraw a request assigned to owners
+ok 3 - only lets a student withdraw a request assigned to owners
+  ---
+  duration_ms: 0.781708
+  type: 'test'
+  ...
+# Subtest: renders owner approval controls for another member's request
+ok 4 - renders owner approval controls for another member's request
+  ---
+  duration_ms: 1.159708
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 314.404209
 
 > simple-rcp-v2@0.1.0 test:demo /Users/baokker/Documents/SimpleRCPv2
 > node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs
@@ -81,13 +119,13 @@ TAP version 13
 # Subtest: demo command starts SimpleRCPv2 with the bundled workspace
 ok 1 - demo command starts SimpleRCPv2 with the bundled workspace
   ---
-  duration_ms: 2659.462166
+  duration_ms: 3282.591791
   type: 'test'
   ...
 # Subtest: bundled demo workspace passes its own tests
 ok 2 - bundled demo workspace passes its own tests
   ---
-  duration_ms: 318.278917
+  duration_ms: 384.379167
   type: 'test'
   ...
 1..2
@@ -98,4 +136,4 @@ ok 2 - bundled demo workspace passes its own tests
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2820.661875
+# duration_ms 3424.360083

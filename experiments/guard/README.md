@@ -1,6 +1,6 @@
 # Guard 最终实验与复现
 
-当前标签 `guard-v1.5` 指向 `2f684bdd80ae4d0a36996d99c49f378fe53c9ca5`，实验分支为 `experiment/guard-x1-x6`。最终选择文件为 `results/FINAL_RUNS.json`：X1、X2a、X6 使用 v1.5 零费用回归；X2b 的 F/explicit 使用 v1.4 的 20 次 MiniMax-M3 补跑，B0 与 clean 保留第三轮；X3、X4、X5 沿用第四轮 v1.3。本轮没有调用真实模型。数据集 v2 已冻结，审核状态为 AI 生成，作者确认继续，未逐条审核。
+当前标签 `guard-v1.5` 指向 `76ac373f8ed30cce5aa21a0b8e68a3e5664c6ad5`，实验分支为 `experiment/guard-x1-x6`。最终选择文件为 `results/FINAL_RUNS.json`：X1、X2a、X6 使用 v1.5 零费用回归；X2b 的 F/explicit 使用 v1.4 的 20 次 MiniMax-M3 补跑，B0 与 clean 保留第三轮；X3、X4、X5 沿用第四轮 v1.3。本轮没有调用真实模型。数据集 v2 已冻结，审核状态为 AI 生成，作者确认继续，未逐条审核。
 
 实验依赖由本目录的 `package.json` 与 `pnpm-lock.yaml` 管理，安装命令为 `pnpm --dir experiments/guard install --ignore-workspace`。运行时的 `.experiment-data/` 使用该目录内的本地 `.gitignore` 忽略全部内容；执行实验前应确认该目录已忽略。产品依赖与 guard-v1.5 保持一致，服务端仅新增 `exp:*` 脚本与两份实验辅助测试。
 
@@ -15,7 +15,7 @@ H1 至 H4 的提交已经包含在冻结标签中，回归用例均位于 `apps/
 | H3 | 8b25d09763007407dfffeed92a350208e27c2587 | treats read-only git stash subcommands as reads |
 | H4 | 86ad91af739967a1d8d4ef33e070b9d0f99c25ed | classifies network upload file options as irreversible |
 
-v1.5 原型服务端 188 个测试通过、9 个真实模型集成测试跳过；实验分支服务端 38 个测试文件通过、2 个文件跳过，共 191 个测试通过、9 个测试跳过，Demo 2 个测试通过。TypeScript 检查与构建通过。v1.4 读取配置与路径回归测试位于 guard.test.ts；副作用审批与 permission runtime 回归测试分别位于 experimentApproval.test.ts、experimentRuntime.test.ts。v1.5 的表格与逐次结果核对见 `results/REGRESSION_v1.5.json`，交付记录见 `results/DELIVERY_v1.5.md`，历史截图原样存放在 `results/archive/screenshots-2026-10-05/`。
+v1.5 原型服务端 188 个测试通过、9 个真实模型集成测试跳过；实验分支服务端 38 个测试文件通过、2 个文件跳过，共 191 个测试通过、9 个测试跳过，客户端审批组件 4 个测试与 Demo 2 个测试通过。回归记录完整性另有 7 个测试，通过保存数据在内存中的重复、缺失和额外 ID 检查验证核对器。TypeScript 检查与构建通过。v1.4 读取配置与路径回归测试位于 guard.test.ts；副作用审批与 permission runtime 回归测试分别位于 experimentApproval.test.ts、experimentRuntime.test.ts。v1.5 的表格与逐次结果核对见 `results/REGRESSION_v1.5.json`，交付记录见 `results/DELIVERY_v1.5.md`，历史截图原样存放在 `results/archive/screenshots-2026-10-05/`。
 
 ## 模型配置
 
@@ -49,6 +49,7 @@ pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/finalize-v1
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/replace-x2b-failures.ts X2/x2-20261006135607 X2/x2-20261006154724 X2/x2-20261006154724-repaired
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-results.ts
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-v1.5.ts
+pnpm --filter @simplercp/server exp:test:regression
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/verify-final-snapshots.ts /absolute/path/to/x2a-run
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-samples.ts
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/scan-secrets.ts

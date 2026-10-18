@@ -1,0 +1,13 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-18T03:58:39.662Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-18T03:58:39.674Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-18T03:58:39.731Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":4,"timestamp":"2026-10-18T03:58:39.738Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill 18013"}},"sequence":5,"timestamp":"2026-10-18T03:58:39.745Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-kill-variant","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"kill -TERM 18013"}},"sequence":6,"timestamp":"2026-10-18T03:58:39.781Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:54710/status"}},"sequence":7,"timestamp":"2026-10-18T03:58:39.806Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-config","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"config.out.json"}},"sequence":8,"timestamp":"2026-10-18T03:58:39.826Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":9,"timestamp":"2026-10-18T03:58:39.837Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":10,"timestamp":"2026-10-18T03:58:39.854Z"}
+{"type":"file_changes","summary":"2 files changed","data":{"files":[{"file":"config.out.json","additions":1,"deletions":0,"status":"added","attribution":"exclusive"},{"file":"README.completed","additions":1,"deletions":0,"status":"added","attribution":"exclusive"}]},"sequence":11,"timestamp":"2026-10-18T03:58:39.856Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":12,"timestamp":"2026-10-18T03:58:39.859Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":13,"timestamp":"2026-10-18T03:58:39.879Z"}
