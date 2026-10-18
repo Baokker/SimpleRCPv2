@@ -2,8 +2,8 @@
   "sourceFile": "packages/open-collaboration-vscode/test/pair-zone-classifier.test.ts",
   "sourceSha256": "ee17458de796fbd9ad29fe40c51fae6dfb531abef3d8c8af26d513cee968cf5b",
   "cases": 47,
-  "matchedZones": 27,
-  "matchedRules": 27,
+  "matchedZones": 28,
+  "matchedRules": 28,
   "rows": [
     {
       "title": "classifies a strict proposal observability change as white despite an origin policy change",
@@ -1579,11 +1579,11 @@
         "ruleId": "consumed-return-property-removed"
       },
       "current": {
-        "zone": "grey",
-        "ruleId": "semantic-interaction-uncertain"
+        "zone": "black",
+        "ruleId": "consumed-return-property-removed"
       },
-      "matchedZone": false,
-      "matchedRule": false
+      "matchedZone": true,
+      "matchedRule": true
     },
     {
       "title": "classifies removal of a directly consumed awaited return-object property as black",

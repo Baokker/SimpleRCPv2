@@ -114,6 +114,13 @@ describe("阶段 3 分区规则", () => {
     index.update();
     expect(classify({ ...input(left, right), project: index })).toMatchObject({ zone: "grey", decision: "warn", ruleId: "semantic-interaction-uncertain" });
   });
+  test("解构读取被删除的返回属性命中黑区", () => {
+    const left = side("a.ts", "result", "function result() { return { total: 1, label: 'x' }; }", "function result() { return { total: 1, content: 'x' }; }");
+    const right = side("b.ts", "use", "function use() { return 1; }", "function use() { const { label } = result(); return label; }");
+    expect(classify(input(left, right))).toMatchObject({ zone: "black", decision: "lock", ruleId: "consumed-return-property-removed" });
+    const renamed = side("b.ts", "use", "function use() { return 1; }", "function use() { const { content: label } = result(); return label; }");
+    expect(classify(input(left, renamed)).ruleId).not.toBe("consumed-return-property-removed");
+  });
   test("删除被引用符号命中黑区", () => {
     const left = side("a.ts", "run", "function run() { return 1; }", "", { status: "deleted" });
     const right = side("b.ts", "call", "function call() { return run(); }", "function call() { return run(); }");

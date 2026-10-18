@@ -107,11 +107,19 @@ function addObjectProperties(expression: ts.Expression, properties: Set<string>)
   return known;
 }
 
+function usesLocal(source: ts.SourceFile, binding: ts.Identifier) {
+  let used = false;
+  visit(source, (node) => { if (node !== binding && ts.isIdentifier(node) && node.text === binding.text && !(ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) && !(ts.isBindingElement(node.parent) && node.parent.propertyName === node)) used = true; });
+  return used;
+}
+
 export function readsProperty(source: ts.SourceFile | undefined, name: string) {
   let found = false;
   if (source) visit(source, (node) => {
     if (ts.isPropertyAccessExpression(node) && node.name.text === name) found = true;
     if (ts.isElementAccessExpression(node) && nameOf(node.argumentExpression) === name) found = true;
+    // 解构读取同样消费返回对象的属性，例如 const { usable } = lineMetrics(...)。带本地默认值或解构后未使用的属性可以容忍缺失，不计入。
+    if (ts.isBindingElement(node) && ts.isObjectBindingPattern(node.parent) && !node.dotDotDotToken && !node.initializer && nameOf(node.propertyName ?? node.name) === name && ts.isIdentifier(node.name) && usesLocal(source, node.name)) found = true;
   });
   return found;
 }
