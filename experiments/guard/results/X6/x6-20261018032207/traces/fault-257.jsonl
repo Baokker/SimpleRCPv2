@@ -1,0 +1,8 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-18T03:23:25.876Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-18T03:23:25.879Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"controlled-257"},"sequence":3,"timestamp":"2026-10-18T03:23:25.883Z"}
+{"type":"opencode.permission.asked","data":{"id":"permission-controlled-257","permission":"bash","sessionID":"controlled-257","metadata":{"command":"rm peer.txt"}},"sequence":4,"timestamp":"2026-10-18T03:23:25.890Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":5,"timestamp":"2026-10-18T03:23:25.918Z"}
+{"type":"file_changes","summary":"0 files changed","data":{"files":[]},"sequence":6,"timestamp":"2026-10-18T03:23:25.919Z"}
+{"type":"assistant_message","summary":"approved","data":{"text":"approved"},"sequence":7,"timestamp":"2026-10-18T03:23:25.920Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":8,"timestamp":"2026-10-18T03:23:25.928Z"}

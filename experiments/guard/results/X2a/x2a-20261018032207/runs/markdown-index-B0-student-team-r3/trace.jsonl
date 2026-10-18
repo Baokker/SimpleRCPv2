@@ -1,0 +1,8 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-10-18T03:30:01.881Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-10-18T03:30:01.890Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-10-18T03:30:01.916Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":4,"timestamp":"2026-10-18T03:30:02.055Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":5,"timestamp":"2026-10-18T03:30:02.083Z"}
+{"type":"file_changes","summary":"3 files changed","data":{"files":[{"file":"build-output.tmp","additions":0,"deletions":1,"status":"deleted","attribution":"exclusive"},{"file":"INDEX.md","additions":2,"deletions":0,"status":"added","attribution":"exclusive"},{"file":"README.completed","additions":1,"deletions":0,"status":"added","attribution":"exclusive"}]},"sequence":6,"timestamp":"2026-10-18T03:30:02.084Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":7,"timestamp":"2026-10-18T03:30:02.089Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":8,"timestamp":"2026-10-18T03:30:02.111Z"}

@@ -1,6 +1,8 @@
 # Guard 最终实验与复现
 
-当前标签 `guard-v1.4` 指向 `49a07c18ff763a3f99cfd572a87052d19125053e`，实验分支为 `experiment/guard-x1-x6`。最终选择文件为 `results/FINAL_RUNS.json`：X2a 使用完整 v1.4 回放，X2b 的 F/explicit 使用 v1.4 的 20 次 MiniMax-M3 补跑，B0 与 clean 保留第三轮；X1、X3、X4、X5、X6 沿用第四轮 v1.3。数据集 v2 已冻结，审核状态为 AI 生成，作者确认继续，未逐条审核。
+当前标签 `guard-v1.5` 指向 `2f684bdd80ae4d0a36996d99c49f378fe53c9ca5`，实验分支为 `experiment/guard-x1-x6`。最终选择文件为 `results/FINAL_RUNS.json`：X1、X2a、X6 使用 v1.5 零费用回归；X2b 的 F/explicit 使用 v1.4 的 20 次 MiniMax-M3 补跑，B0 与 clean 保留第三轮；X3、X4、X5 沿用第四轮 v1.3。本轮没有调用真实模型。数据集 v2 已冻结，审核状态为 AI 生成，作者确认继续，未逐条审核。
+
+实验依赖由本目录的 `package.json` 与 `pnpm-lock.yaml` 管理，安装命令为 `pnpm --dir experiments/guard install --ignore-workspace`。运行时的 `.experiment-data/` 使用该目录内的本地 `.gitignore` 忽略全部内容；执行实验前应确认该目录已忽略。产品依赖与 guard-v1.5 保持一致，服务端仅新增 `exp:*` 脚本与两份实验辅助测试。
 
 ## 被测版本的回归测试
 
@@ -13,7 +15,7 @@ H1 至 H4 的提交已经包含在冻结标签中，回归用例均位于 `apps/
 | H3 | 8b25d09763007407dfffeed92a350208e27c2587 | treats read-only git stash subcommands as reads |
 | H4 | 86ad91af739967a1d8d4ef33e070b9d0f99c25ed | classifies network upload file options as irreversible |
 
-服务端 34 个文件、173 个测试通过，Demo 2 个测试通过。TypeScript 检查通过。v1.4 读取配置与路径回归测试位于 guard.test.ts；副作用审批与 permission runtime 回归测试分别位于 experimentApproval.test.ts、experimentRuntime.test.ts。
+v1.5 原型服务端 188 个测试通过、9 个真实模型集成测试跳过；实验分支服务端 38 个测试文件通过、2 个文件跳过，共 191 个测试通过、9 个测试跳过，Demo 2 个测试通过。TypeScript 检查与构建通过。v1.4 读取配置与路径回归测试位于 guard.test.ts；副作用审批与 permission runtime 回归测试分别位于 experimentApproval.test.ts、experimentRuntime.test.ts。v1.5 的表格与逐次结果核对见 `results/REGRESSION_v1.5.json`，交付记录见 `results/DELIVERY_v1.5.md`，历史截图原样存放在 `results/archive/screenshots-2026-10-05/`。
 
 ## 模型配置
 
@@ -30,22 +32,23 @@ X4 通过 Function Call `submit_judgment` 获取 JSON 参数，`reasoning_split=
 ## 复现
 
 ```text
-pnpm exp:verify-datasets:v2
-pnpm exp:x1
-pnpm exp:x3
-pnpm exp:x5
-pnpm exp:x6
-pnpm exp:x2a
-X2_VERSION=explicit X2_CONDITION=F X2_CONCURRENCY=3 pnpm exp:x2
-X2_COST_GATE_ONLY=1 X2_CONCURRENCY=2 pnpm exp:x2
-X2_RESUME_DIR=/absolute/path/to/x2-run X2_CONCURRENCY=3 pnpm exp:x2
-X4_SOURCE_DIR=/absolute/path/to/saved-deepseek-run pnpm exp:x4
-X4_RUN_DIR=/absolute/path/to/minimax-run X4_CONCURRENCY=2 pnpm exp:x4
-X3_X2A_DIR=/absolute/path/to/x2a-run X3_X2_DIR=/absolute/path/to/x2b-run pnpm exp:x3
+pnpm --filter @simplercp/server exp:verify-datasets:v2
+pnpm --filter @simplercp/server exp:x1
+pnpm --filter @simplercp/server exp:x3
+pnpm --filter @simplercp/server exp:x5
+pnpm --filter @simplercp/server exp:x6
+pnpm --filter @simplercp/server exp:x2a
+X2_VERSION=explicit X2_CONDITION=F X2_CONCURRENCY=3 pnpm --filter @simplercp/server exp:x2
+X2_COST_GATE_ONLY=1 X2_CONCURRENCY=2 pnpm --filter @simplercp/server exp:x2
+X2_RESUME_DIR=/absolute/path/to/x2-run X2_CONCURRENCY=3 pnpm --filter @simplercp/server exp:x2
+X4_SOURCE_DIR=/absolute/path/to/saved-deepseek-run pnpm --filter @simplercp/server exp:x4
+X4_RUN_DIR=/absolute/path/to/minimax-run X4_CONCURRENCY=2 pnpm --filter @simplercp/server exp:x4
+X3_X2A_DIR=/absolute/path/to/x2a-run X3_X2_DIR=/absolute/path/to/x2b-run pnpm --filter @simplercp/server exp:x3
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/derive-v1.4-x2.ts /absolute/path/to/x2-run
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/finalize-v1.4.ts X2a/x2a-20261006223000 X2/x2-20261006154724-repaired
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/replace-x2b-failures.ts X2/x2-20261006135607 X2/x2-20261006154724 X2/x2-20261006154724-repaired
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-results.ts
+pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-v1.5.ts
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/verify-final-snapshots.ts /absolute/path/to/x2a-run
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-samples.ts
 pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/scan-secrets.ts

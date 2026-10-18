@@ -1,8 +1,8 @@
 {
-  "version": "guard-v1.4",
+  "version": "guard-v1.5",
   "dataset": "v2",
-  "X1": "X1/x1-20261006092733",
-  "X2a": "X2a/x2a-20261006223000",
+  "X1": "X1/x1-20261018032207",
+  "X2a": "X2a/x2a-20261018032207",
   "X2": "X2/x2-final-v1.4",
   "X2_round4": "X2/x2-20261006094123",
   "X3_static": "X3/x3-20261006093725",
@@ -10,8 +10,22 @@
   "X4_history": "X4/x4-20261006092724",
   "X4": "X4/x4-20261006092724",
   "X5": "X5/x5-20261006093122",
-  "X6": "X6/x6-20261006093147",
+  "X6": "X6/x6-20261018032207",
   "X2_new": "X2/x2-20261006154724-repaired",
   "retainedVersion": "guard-v1.3",
-  "inheritedX2Version": "guard-v1.2"
+  "inheritedX2Version": "guard-v1.2",
+  "inheritedRealModelVersion": "guard-v1.4",
+  "regressionV1_5": {
+    "testedRef": "guard-v1.5",
+    "commit": "2f684bdd80ae4d0a36996d99c49f378fe53c9ca5",
+    "X1": "X1/x1-20261018032207",
+    "X2a": "X2a/x2a-20261018032207",
+    "X6": "X6/x6-20261018032207",
+    "comparison": "REGRESSION_v1.5.json",
+    "previous": {
+      "X1": "X1/x1-20261006092733",
+      "X2a": "X2a/x2a-20261006223000",
+      "X6": "X6/x6-20261006093147"
+    }
+  }
 }
