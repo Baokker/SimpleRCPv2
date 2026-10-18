@@ -63,15 +63,17 @@ export class SemanticChangeTracker {
     }
     const active = this.changeSets.filter((set) => ["human", "agent"].includes(set.actor.kind) && set.status !== "closed").sort((a, b) => actorKey(a.actor).localeCompare(actorKey(b.actor)));
     const deletedKeys = new Set(active.flatMap((set) => [...set.files.values()].flatMap((file) => file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => symbol.key)));
-    // 修改前存在、两端分别被不同参与者修改的依赖保留：一方去掉对另一方正在修改的符号的引用（例如把常量写死），两者仍然相关。
-    const modifiers = new Map<string, Set<string>>();
+    // 一方在修改中删去了对另一方正在修改的符号的引用（例如把常量写死为旧值），两者仍然相关，保留修改前的依赖。
+    // 只在修改后的文本里确实不再出现被依赖符号的名字时保留；暂时被注释吞掉或正在改名的引用不算删除。
+    const modified = new Map<string, Array<{ actor: string; symbol: SymbolChange }>>();
     for (const set of active) for (const file of set.files.values()) for (const symbol of file.symbols ?? []) {
-      const actors = modifiers.get(symbol.key) ?? new Set<string>();
-      actors.add(actorKey(set.actor));
-      modifiers.set(symbol.key, actors);
+      const entries = modified.get(symbol.key) ?? [];
+      entries.push({ actor: actorKey(set.actor), symbol });
+      modified.set(symbol.key, entries);
     }
-    const crossActor = (from: string, to: string) => [...(modifiers.get(from) ?? [])].some((actor) => [...(modifiers.get(to) ?? [])].some((other) => other !== actor));
-    for (const [key, edge] of this.staleEdges) if (edge.dangling || (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to) && !crossActor(edge.from, edge.to))) this.staleEdges.delete(key);
+    const referenceRemoved = (from: string, to: string) => (modified.get(from) ?? []).some((source) => source.symbol.status === "modified" && (modified.get(to) ?? []).some((target) =>
+      target.actor !== source.actor && target.symbol.status === "modified" && mentions(source.symbol.before, target.symbol.name) && !mentions(source.symbol.after, target.symbol.name)));
+    for (const [key, edge] of this.staleEdges) if (edge.dangling || (!deletedKeys.has(edge.from) && !deletedKeys.has(edge.to) && !referenceRemoved(edge.from, edge.to))) this.staleEdges.delete(key);
     const deletedSymbols = active.flatMap((set) => [...set.files.values()].flatMap((file) => (file.symbols ?? []).filter((symbol) => symbol.status === "deleted").map((symbol) => ({ actor: actorKey(set.actor), symbol }))));
     for (const set of active) for (const change of set.files.values()) for (const symbol of change.symbols ?? []) {
       if (symbol.status === "deleted") continue;
@@ -230,6 +232,7 @@ export class SemanticChangeTracker {
 function actorKey(actor: ActorRef) { return actor.kind === "human" ? `human:${actor.memberId}` : actor.kind === "agent" ? `agent:${actor.runId}` : actor.kind; }
 function hash(text: string) { return createHash("sha256").update(text).digest("hex"); }
 function symbolsByKey(changeSet: ActiveChangeSet) { return new Map([...changeSet.files.values()].flatMap((file) => file.symbols ?? []).map((symbol) => [symbol.key, symbol])); }
+function mentions(text: string, name: string) { return name.length > 0 && new RegExp(`(^|[^A-Za-z0-9_$])${name.replace(/[$]/g, "\\$")}([^A-Za-z0-9_$]|$)`).test(text); }
 function generation(change: FileChange) { return hash(JSON.stringify([change.file, change.firstTouchedAt, change.baseText])); }
 
 function isNestedPair(left: string, right: string) {

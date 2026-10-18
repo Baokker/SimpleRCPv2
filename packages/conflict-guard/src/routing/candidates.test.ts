@@ -71,8 +71,8 @@ describe("候选对", () => {
     version += 1;
     index.update(["a.ts"]);
     tracker.update([changeSet("alice", "a"), changeSet("bob", "c")]);
-    // Bob 去掉了对 Alice 正在修改的 a 的引用，双方仍在并发修改相关符号，修改前的依赖保留，候选对不关闭。
-    expect(tracker.getCandidatePairs()).toMatchObject([{ id: pair.id, distance: 1 }]);
+    expect(tracker.getCandidatePairs()).toEqual([]);
+    expect(events.at(-1)?.type).toBe("pair_candidate_closed");
     source = source.replace("return 4;", "return a() + 2;");
     version += 1;
     index.update(["a.ts"]);
@@ -80,6 +80,32 @@ describe("候选对", () => {
     tracker.update([changeSet("alice", "a")]);
     expect(tracker.getCandidatePairs()).toEqual([]);
     expect(events.at(-1)?.type).toBe("pair_candidate_closed");
+  });
+
+  it("一方删去对另一方正在修改的符号的引用时保留候选对", () => {
+    const baseline = "export const unit = 1;\nexport function total(x: number) { return x / unit; }\n";
+    let source = "export const unit = 1000;\nexport function total(x: number) { return x / unit + 0; }\n";
+    let version = 1;
+    const index = createSemanticIndex({ files: { listFiles: () => ["a.ts"], readFile: () => source, version: () => version }, now: () => 0 });
+    index.update();
+    const tracker = new SemanticChangeTracker({ index, readFile: () => source, now: () => version });
+    function changeSet(memberId: string, name: string): ActiveChangeSet {
+      const symbol = index.symbolsInFile("a.ts").find((symbol) => symbol.name === name)!;
+      return { actor: { kind: "human", memberId }, status: "settled", files: new Map([["a.ts", { file: "a.ts", baseText: baseline, ranges: [{ start: symbol.start, end: symbol.end }], firstTouchedAt: 0, lastTouchedAt: version }]]) };
+    }
+    tracker.update([changeSet("alice", "unit"), changeSet("bob", "total")]);
+    const pair = tracker.getCandidatePairs()[0]!;
+    expect(pair.distance).toBe(1);
+    tracker.captureStaleEdges();
+    // Bob 把 unit 写死为旧值 1，修改后的 total 不再出现 unit；Alice 同时把 unit 改为 1000，两者仍然相关。
+    source = "export const unit = 1000;\nexport function total(x: number) { return x / 1; }\n";
+    version += 1;
+    index.update(["a.ts"]);
+    tracker.update([changeSet("alice", "unit"), changeSet("bob", "total")]);
+    expect(tracker.getCandidatePairs()).toMatchObject([{ id: pair.id }]);
+    // Alice 不再修改 unit 时，保留条件不再成立，候选对关闭。
+    tracker.update([changeSet("bob", "total")]);
+    expect(tracker.getCandidatePairs()).toEqual([]);
   });
 
   it("删除符号后使用活跃变更期间的墓碑关系", () => {
