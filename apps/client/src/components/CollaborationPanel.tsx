@@ -23,6 +23,7 @@ import { AgentRunProgress } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
 import { AgentWorkDetails } from "./AgentWorkDetails";
+import { GuardApprovalActions } from "./GuardApprovalActions";
 import type {
   AgentRun,
   AgentSession,
@@ -509,7 +510,19 @@ export function CollaborationPanel({
                       </div>
                     ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">Model judgment unavailable. This request is waiting for human approval.</div> : null}
                     {approval.noApprover ? <small>No owner online — ask a teacher or lead to join.</small> : null}
-                    {llm?.applied ? <small className="guard-llm-resolved">Resolved automatically by the model</small> : approval.request.memberId === member?.id && approval.decision.approvers === "self" ? <div><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Run anyway</button><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Cancel</button></div> : approval.request.memberId === member?.id ? <button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void withdrawGuardApproval(projectId, approval.id).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Withdraw request</button> : <div><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, true).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Approve</button><button type="button" disabled={replyingApprovalId === approval.id} onClick={() => { setReplyingApprovalId(approval.id); void replyGuardApproval(projectId, approval.id, false).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined)); }}>Reject</button></div>}
+                    <GuardApprovalActions
+                      approval={approval}
+                      memberId={member?.id}
+                      disabled={replyingApprovalId === approval.id}
+                      onReply={(approve) => {
+                        setReplyingApprovalId(approval.id);
+                        void replyGuardApproval(projectId, approval.id, approve).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined));
+                      }}
+                      onWithdraw={() => {
+                        setReplyingApprovalId(approval.id);
+                        void withdrawGuardApproval(projectId, approval.id).then(() => onApprovalResolved?.()).catch(onError).finally(() => setReplyingApprovalId(undefined));
+                      }}
+                    />
                   </div>
                 );
               })}
