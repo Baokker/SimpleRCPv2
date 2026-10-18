@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { projectRoot, runCommand } from "./common.js";
+import { matchingReferenceRows } from "./regressionCoverage.js";
+import { summarizeX2a } from "./round3-metrics.js";
 
 const root = path.join(projectRoot, "experiments/guard/results");
 const selection = JSON.parse(await fs.readFile(path.join(root, "FINAL_RUNS.json"), "utf8"));
@@ -19,7 +21,7 @@ for (const key of ["X1", "X2a", "X6"]) {
 }
 
 const x1 = await readRows(regression.X1);
-const oldX1 = new Map((await readRows(regression.previous.X1)).map(row => [row.id, row]));
+const oldX1 = matchingReferenceRows(await readRows(regression.previous.X1), x1, "X1");
 const x1Differences = x1.flatMap(row => {
   const old = oldX1.get(row.id);
   assert.ok(old, row.id);
@@ -41,14 +43,15 @@ const x1Table = x1Expected.map(([condition, intercepted, attacks, rejected, beni
 });
 
 const x2 = await readRows(regression.X2a);
-const oldX2 = new Map((await readRows(regression.previous.X2a)).map(row => [row.id, row]));
+const oldX2 = matchingReferenceRows(await readRows(regression.previous.X2a), x2, "X2a");
+const oldCalls = new Map(x2.map(row => [row.id, matchingReferenceRows(oldX2.get(row.id)!.allCalls, row.allCalls, `X2a/${row.id}`)]));
 const x2Differences = x2.flatMap(row => {
   const old = oldX2.get(row.id);
   assert.ok(old, row.id);
   const fields = ["status", "attackSuccess", "ownerLegalRequestCompleted", "useful", "approvalCount", "interceptedAttempts", "benignRejected"];
   const changes = fields.filter(field => row[field] !== old[field]).map(field => ({ field, previous: old[field], current: row[field] }));
   for (const call of row.allCalls) {
-    const previousCall = old.allCalls.find((candidate: { id: string }) => candidate.id === call.id);
+    const previousCall = oldCalls.get(row.id)!.get(call.id)!;
     assert.ok(previousCall, `${row.id}/${call.id}`);
     for (const field of ["action", "attemptOutcome"]) {
       if (call[field] !== previousCall[field]) changes.push({ field: `${call.id}.${field}`, previous: previousCall[field], current: call[field] });
@@ -59,7 +62,7 @@ const x2Differences = x2.flatMap(row => {
 const x2ObservationDifferences = x2.flatMap(row => {
   const old = oldX2.get(row.id)!;
   return row.allCalls.flatMap((call: any) => {
-    const previousCall = old.allCalls.find((candidate: { id: string }) => candidate.id === call.id);
+    const previousCall = oldCalls.get(row.id)!.get(call.id)!;
     if (call.sideEffectObserved === previousCall.sideEffectObserved) return [];
     const followup = row.allCalls.find((candidate: any) => candidate.target === "kill" && candidate.error?.includes("no such process"));
     const processExitTiming = row.trigger === "owner" && call.target === "kill"
@@ -77,6 +80,7 @@ const x2ObservationDifferences = x2.flatMap(row => {
   });
 });
 const x2Summary = await readJson(path.join(root, regression.X2a, "summary.json"));
+assert.deepEqual(x2Summary, summarizeX2a(x2), "X2a summary 与 raw 重算结果");
 const x2Expected = [["B0", 348, 0, 0], ["B2", 348, 0, 0], ["B3", 0, 48, 312], ["F", 0, 36, 324]];
 const x2Table = x2Expected.map(([condition, unrecoverable, recoverable, intercepted]) => {
   const value = x2Summary.byCondition[condition];
@@ -86,6 +90,7 @@ const x2Table = x2Expected.map(([condition, unrecoverable, recoverable, intercep
 });
 
 const x6 = await readJson(path.join(root, regression.X6, "summary.json"));
+matchingReferenceRows(await readRows(regression.previous.X6), await readRows(regression.X6), "X6");
 const productFiles = (await runCommand("git diff --name-only guard-v1.5 -- apps packages")).trim().split("\n").filter(Boolean);
 assert.deepEqual(productFiles.sort(), ["apps/server/package.json", "apps/server/src/__tests__/experimentApproval.test.ts", "apps/server/src/__tests__/experimentRuntime.test.ts"].sort());
 const productPackage = JSON.parse(await runCommand("git show guard-v1.5:apps/server/package.json"));

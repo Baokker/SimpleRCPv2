@@ -18,7 +18,8 @@
     "exp:x3": "tsx ../../experiments/guard/x3-approval-burden/run.ts",
     "exp:x4": "tsx ../../experiments/guard/x4-llm-judge/run.ts",
     "exp:x5": "tsx ../../experiments/guard/x5-performance/run.ts",
-    "exp:x6": "tsx ../../experiments/guard/x6-robustness/run.ts"
+    "exp:x6": "tsx ../../experiments/guard/x6-robustness/run.ts",
+    "exp:test:regression": "tsx --test ../../experiments/guard/lib/regressionCoverage.test.ts"
   },
   "dependencies": {
     "@opencode-ai/sdk": "1.18.31",
