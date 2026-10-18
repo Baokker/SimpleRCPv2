@@ -10,7 +10,7 @@ import { projectRoot, environmentRecord } from "../lib/common.js";
 import { summarizeX2a } from "../lib/round3-metrics.js";
 import { openCodeConfig } from "../../../apps/server/src/agent/openCodeProcess.js";
 import { pathToFileURL } from "node:url";
-import wildcardMatch from "../../../apps/server/node_modules/wildcard-match/build/index.js";
+import wildcardMatch from "wildcard-match";
 import { reviewAttackTargets } from "../lib/approval.js";
 
 const execute = promisify(execFile);

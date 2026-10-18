@@ -15,17 +15,7 @@
     "test:e2e": "playwright test --config tests/playwright.config.ts",
     "test:e2e:terminal-disabled": "SIMPLERCP_TERMINAL_ENABLED=false playwright test --config tests/playwright.config.ts tests/e2e/terminal-disabled.spec.ts",
     "test:collab": "playwright test --config tests/playwright.config.ts tests/e2e/collaboration.spec.ts",
-    "demo:record": "SIMPLERCP_RECORD_VIDEO=1 playwright test --config tests/playwright.config.ts tests/e2e/demo.spec.ts",
-    "exp:datasets": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/dataset-generator.ts",
-    "exp:datasets:v2": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/dataset-generator-v2.ts",
-    "exp:verify-datasets:v2": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/lib/verify-dataset-v2.ts",
-    "exp:x1": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x1-static/run.ts",
-    "exp:x2a": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/run-deterministic.ts",
-    "exp:x2": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x2-agent-e2e/run.ts",
-    "exp:x3": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x3-approval-burden/run.ts",
-    "exp:x4": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x4-llm-judge/run.ts",
-    "exp:x5": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x5-performance/run.ts",
-    "exp:x6": "pnpm --filter @simplercp/server exec tsx ../../experiments/guard/x6-robustness/run.ts"
+    "demo:record": "SIMPLERCP_RECORD_VIDEO=1 playwright test --config tests/playwright.config.ts tests/e2e/demo.spec.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",

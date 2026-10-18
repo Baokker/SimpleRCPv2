@@ -124,7 +124,9 @@ export async function ensureRuntimeDirectory() {
 export async function environmentRecord(extra: Record<string, unknown> = {}) {
   const packageManager = await fs.readFile(path.join(projectRoot, "package.json"), "utf8").then((text) => JSON.parse(text) as { packageManager?: string });
   return {
-    commit: (await runCommand("git rev-parse guard-v1.4^{commit}")).trim(),
+    testedRef: "guard-v1.5",
+    commit: (await runCommand("git rev-parse guard-v1.5^{commit}")).trim(),
+    harnessCommit: (await runCommand("git rev-parse HEAD")).trim(),
     branch: (await runCommand("git branch --show-current")).trim(),
     node: process.version,
     pnpm: packageManager.packageManager ?? "unknown",

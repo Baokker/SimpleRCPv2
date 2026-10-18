@@ -2,7 +2,7 @@ import path from "node:path";
 import type { GuardDecision, GuardRequest, Level } from "../../../apps/server/src/guard/types.js";
 import { parseCommandPaths } from "../../../apps/server/src/guard/legacy/parser.js";
 import { splitShellCommands } from "../../../apps/server/src/guard/characterize.js";
-import { parse as parseShell } from "../../../apps/server/node_modules/shell-quote/index.js";
+import { parse as parseShell } from "shell-quote";
 
 export interface AttackTargets {
   peerFiles: string[];

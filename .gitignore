@@ -7,7 +7,6 @@ artifacts/
 .simplercp-data/
 .test-workspaces/
 .runtime-check-*/
-.experiment-data/
 .env*
 !.env.example
 .DS_Store
