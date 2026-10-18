@@ -1,8 +1,12 @@
 # 共享终端与 Agent Guard 设计
 
-版本：v1.4
+版本：v1.5
 
-冻结提交：guard-v1.4（包含读取工具统一审批与 worktree 路径判定的回归测试）
+冻结提交：`guard-v1.5^{commit}`，由本地 `guard-v1.5` 标签唯一记录。产品代码提交为 `c241b98c`。
+
+相对 guard-v1.4，此版本合入 main 的 Agent 交互、进度、并发运行和问题工具改动，并显示 Guard 模型建议的结论、置信度与原因。Guard 的命令刻画、档位矩阵、路径分区、审批人选择和模型自动审批规则保持一致。模型结果新增活动事件，审批完成后仍可查看建议。
+
+冻结前验证：服务端 188 个测试通过，9 个真实模型集成测试跳过；Demo 2 个测试通过；全部 TypeScript 检查与客户端构建通过。实验一、顺从 Agent 回放和性质测试在实验分支按此标签执行零费用回归，运行目录记录在 `experiments/guard/results/FINAL_RUNS.json`。
 
 ## 请求与刻画
 
@@ -49,6 +53,8 @@ allow_snapshot 按命令涉及的工作区路径复制被跟踪和未被忽略�
 `suggest` 只把结果显示在审批卡片，并等待人工处理。所有模式都使用配置的审批时限；终端默认 120 秒，Agent 使用 `min(审批时限, Agent 运行时限 / 2)`。`auto` 只处理 `autoEligible` 请求：未知命令或仅由档位矩阵产生的可逆请求，终端置信度阈值为 0.85，Agent 阈值为 0.95。不可逆、工作区外、受保护路径、动态 Shell、硬性规则和 Agent 上限产生的请求不能被自动放行。模型结果只能提高动作等级，不能降低 `deny` 或硬性 `ask`。
 
 ## OpenCode 接入
+
+OpenCode 的 `question` 工具与团队 Agent 的启动、打断、取消和问题回答保留主分支的原有行为，当前不纳入 Guard 能力判定。这是已知局限，后续需要补充相应的授权规则与审计。问题等待保留运行时间暂停机制，Guard 审批继续使用自身的有限等待时间。
 
 Guard 模式为 `full` 时，OpenCode 的 `bash`、`edit`、`read`、`grep`、`glob`、`list`、`webfetch`、`websearch` 全部配置为 `ask`，子 Agent `task` 使用 `deny`，`external_directory` 保持 `deny`。普通工作区读取由 Guard 直接批准；受保护路径与工作区外路径进入审批；元数据与其他项目路径直接拒绝。
 

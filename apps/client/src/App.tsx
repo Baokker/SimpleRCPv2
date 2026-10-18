@@ -205,7 +205,6 @@ function WorkspacePage({
   const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
   const [agentTraces, setAgentTraces] = useState<Record<string, AgentTraceEvent[]>>({});
   const loadedAgentTraceIdsRef = useRef(new Set<string>());
-  const [agentRefreshVersion, setAgentRefreshVersion] = useState(0);
   const [remoteCursorMap, setRemoteCursorMap] = useState<
     Record<string, RemoteCursor>
   >({});
@@ -414,6 +413,17 @@ function WorkspacePage({
               setLlmJudging(true);
               setGuardNotice({ title: "The model is reviewing a guarded request", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "Review in progress"), tone: "model" });
             }
+            if (message.event.type === "guard_llm_result") {
+              setLlmJudging(false);
+              const model = message.event.payload?.llm;
+              if (model && typeof model === "object") {
+                const judgment = model as Record<string, unknown>;
+                const risk = String(judgment.risk ?? "unknown");
+                const recommendation = risk === "high" ? "reject" : risk === "low" ? "approve" : "manual review";
+                const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : "confidence unavailable";
+                setGuardNotice({ title: `Model recommendation: ${recommendation}`, detail: `${confidence} · ${String(judgment.reason ?? "No reason provided")}`, tone: "model" });
+              }
+            }
             if (message.event.type === "guard_llm_unavailable") {
               setLlmJudging(false);
               setGuardNotice({ title: "Model judgment unavailable", detail: String(message.event.payload?.reason ?? "Human approval is still required"), tone: "model" });
@@ -595,7 +605,6 @@ function WorkspacePage({
   async function refreshAgentState() {
     const runs = await getAgentRuns(projectId);
     setAgentRuns(runs);
-    setAgentRefreshVersion((version) => version + 1);
   }
 
   async function loadAgentTrace(runId: string) {
@@ -984,7 +993,6 @@ function WorkspacePage({
           onApprovalResolved={() => void listGuardApprovals(projectId).then((result) => { guardApprovalsRef.current = result.approvals; setGuardApprovals(result.approvals); }).catch(showWorkspaceError)}
           controlHolderMemberId={terminalControl.holderMemberId}
           onControlState={(holderMemberId: string | null) => setTerminalControl((current) => ({ ...current, holderMemberId }))}
-          agentRefreshVersion={agentRefreshVersion}
           followingMemberId={followingMemberId}
           onFollowMember={followMember}
           onOpenFile={(path) => void openFile(path).catch(showWorkspaceError)}

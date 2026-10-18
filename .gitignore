@@ -15,3 +15,5 @@ artifacts/
 .claude/logs/
 docs/.claude/
 .scratch/verify-opencode-concurrent-diff/
+.playwright-cli/
+output/

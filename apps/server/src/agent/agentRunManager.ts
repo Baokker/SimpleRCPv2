@@ -41,21 +41,6 @@ export type AgentRunManagerEvent =
   | { type: "trace_appended"; projectId: string; runId: string; memberId: string; shared: boolean; event: AgentTraceEvent }
   | { type: "team_agents_changed"; projectId: string; agents: AgentSession[] };
 
-function buildInterruptionPrompt(
-  interruptedRun: AgentRun,
-  nextRun: AgentRun,
-  members: Array<{ id: string; displayName: string }>
-) {
-  const interruptedBy = members.find((member) => member.id === nextRun.memberId)?.displayName
-    ?? nextRun.memberName
-    ?? nextRun.memberId;
-  const files = interruptedRun.fileChanges?.map((change) => change.file) ?? [];
-  return [
-    `The previous task from ${interruptedRun.memberName ?? interruptedRun.memberId} was interrupted by ${interruptedBy}. Continue from the current workspace state.`,
-    `Files changed before interruption: ${files.length ? files.join(", ") : "none"}.`
-  ].join(" ");
-}
-
 export function createAgentRunManager(options: AgentRunManagerOptions) {
   const stores = new Map<string, AgentRunStore>();
   const sessionStores = new Map<string, AgentSessionStore>();
@@ -174,6 +159,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const runtime = options.runtimeManager.get(projectId);
     const revisions = runtime.documents.getRevisions();
     const recordedConcurrentFiles = new Set<string>();
+    let guardRejected = false;
     async function collectChanges(messageId?: string) {
       if (!snapshot) return [];
       const changes = compareAgentWorkspaceSnapshots(snapshot, await createAgentWorkspaceSnapshot(runtime.project.workspacePath));
@@ -198,127 +184,31 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const session = current.sessionId
         ? await getSessionStore(projectId).get(current.sessionId)
         : undefined;
-      if (!session) throw new Error("Agent session not found");
+      if (!session || session.deletedAt) throw new Error("Agent session not found");
+      if ((await store.get(runId))?.status === "cancelled") return;
+      if (!await updateRunIfStatus(projectId, runId, "queued", { status: "running", startedAt: new Date().toISOString(), sessionScope: session.scope ?? "personal", activity: { ...progress.snapshot(), phase }, overlappingRunIds: [...(overlaps.get(runId) ?? [])] })) return;
+      await appendTrace(projectId, runId, { type: "run_started", summary: "Agent run started" });
       const currentSession = session;
-      const workspacePrepared = session.scope === "team"
-        ? await options.runtime.prepareWorkspace?.(projectRuntime.project.workspacePath)
-        : false;
-      if (workspacePrepared) {
-        const sessions = await getSessionStore(projectId).list();
-        const affectedSessionIds = new Set(
-          sessions
-            .filter((candidate) => candidate.scope === "team" && candidate.runtimeSessionId)
-            .map((candidate) => candidate.id)
-        );
-        await Promise.all(
-          sessions
-            .filter((candidate) => affectedSessionIds.has(candidate.id))
-            .map((candidate) => getSessionStore(projectId).update(candidate.id, { runtimeSessionId: undefined }))
-        );
-        const existingRuns = await getStore(projectId).list();
-        await Promise.all(
-          existingRuns
-            .filter((candidate) => candidate.sessionId && affectedSessionIds.has(candidate.sessionId) && candidate.runtimeSessionId)
-            .map((candidate) => updateRun(projectId, candidate.id, { runtimeSessionId: undefined }))
-        );
-        if (affectedSessionIds.size > 0) {
-          appendActivity(projectId, {
-            type: "agent_workspace_isolated",
-            memberId: current.memberId,
-            participantId: current.participantId,
-            payload: {
-              sessionIds: [...affectedSessionIds],
-              reason: "Team Agent workspace now has an isolated Git repository"
-            }
-          });
-        }
-      }
-      const workspaceBefore = await createAgentWorkspaceSnapshot(
-        projectRuntime.project.workspacePath
-      );
-      snapshot = workspaceBefore;
+      const prepared = await options.runtime.prepareWorkspace?.(runtime.project.workspacePath);
       scheduler.workspacePrepared(projectId, runId);
-      const revisionsBefore = projectRuntime.documents.getRevisions();
-      const startedAt = new Date().toISOString();
-      let run = await updateRunIfStatus(projectId, runId, "queued", {
-        status: "running",
-        startedAt,
-        sessionScope: session.scope ?? "personal",
-        activity: { ...progress.snapshot(), phase },
-        overlappingRunIds: [...(overlaps.get(runId) ?? [])]
-      });
-      if (!run) return;
-      const activeRun = run;
-      if (workspacePrepared && run.runtimeSessionId) run = await updateRun(projectId, runId, { runtimeSessionId: undefined });
-      await appendTrace(projectId, runId, {
-        type: "run_started",
-        summary: "Agent run started"
-      });
-
-      let runtimeSessionId = workspacePrepared ? undefined : run.runtimeSessionId ?? session.runtimeSessionId;
-      if (!runtimeSessionId) {
-        const session = await options.runtime.createSession({
-          workspacePath: projectRuntime.project.workspacePath,
-          title: run.prompt.slice(0, 80)
-        });
-        runtimeSessionId = session.id;
-        await getSessionStore(projectId).update(run.sessionId!, {
-          runtimeSessionId,
-          lastRunId: run.id
-        });
-        run = await updateRun(projectId, runId, { runtimeSessionId });
-        await appendTrace(projectId, runId, {
-          type: "session_created",
-          summary: "OpenCode session created",
-          data: { sessionId: runtimeSessionId }
-        });
-      } else {
-        await getSessionStore(projectId).update(run.sessionId!, { lastRunId: run.id });
-      }
+      snapshot = await createAgentWorkspaceSnapshot(runtime.project.workspacePath);
+      if ((await store.get(runId))?.status === "cancelled") return;
+      runtimeSessionId = prepared ? undefined : session.runtimeSessionId;
+      if (!runtimeSessionId) runtimeSessionId = (await options.runtime.createSession({ workspacePath: runtime.project.workspacePath, title: current.prompt.slice(0, 80) })).id;
+      await getSessionStore(projectId).update(session.id, { runtimeSessionId, lastRunId: runId });
+      await updateRun(projectId, runId, { runtimeSessionId });
+      activeRuns.set(runId, { workspacePath: runtime.project.workspacePath, runtimeSessionId });
+      if ((await store.get(runId))?.status === "cancelled" || disposing) { await options.runtime.cancel({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId }); return; }
+      await appendTrace(projectId, runId, { type: "session_created", summary: "OpenCode session ready", data: { sessionId: runtimeSessionId } });
+      appendActivity(projectId, { type: "agent_task_started", memberId: current.memberId, participantId: current.participantId, payload: { runId, sessionId: session.id, sessionTitle: session.title, name: current.memberName, promptPreview: previewPrompt(current.prompt) } });
+      const run = current;
       const activeRuntimeSessionId: string = runtimeSessionId;
-
-      appendActivity(projectId, {
-        type: "agent_task_started",
-        memberId: run.memberId,
-        participantId: run.participantId,
-        payload: {
-          runId: run.id,
-          sessionId: run.sessionId,
-          sessionTitle: session.title,
-          name: run.memberName,
-          promptPreview: previewPrompt(run.prompt)
-        }
-      });
-
-      activeRuns.set(runId, {
-        workspacePath: projectRuntime.project.workspacePath,
-        runtimeSessionId
-      });
-
-      const previousRun = run.interruptsRunId
-        ? await store.get(run.interruptsRunId)
-        : undefined;
-      const interruptionPrompt = previousRun
-        ? buildInterruptionPrompt(previousRun, run, projectRuntime.room.members)
-        : undefined;
-      const runtimePrompt = await buildRuntimePrompt(
-        projectRuntime.project.workspacePath,
-        [interruptionPrompt, run.extraPrompt, run.prompt].filter(Boolean).join("\n\n"),
-        run.contexts,
-        projectRuntime.project.name
-      );
-      await options.runtime.prepareRun?.({
-        workspacePath: projectRuntime.project.workspacePath,
-        sessionId: runtimeSessionId,
-        runPrompt: run.prompt
-      });
 
       const permissionWorktree = await options.runtime.getWorktree?.(projectRuntime.project.workspacePath) ?? projectRuntime.project.workspacePath;
       const permissionTasks = new Set<Promise<void>>();
       const handledPermissionIds = new Set<string>();
       const toolInputs = new Map<string, unknown>();
       const permissionBatches = new Map<string, { active: number; deferredRejects: Array<{ requestId: string; message: string }>; flushing: boolean }>();
-      let guardRejected = false;
       const batchFor = (sessionId: string) => {
         const currentBatch = permissionBatches.get(sessionId);
         if (currentBatch) return currentBatch;
@@ -386,9 +276,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         const commandValue = metadata.command ?? metadata.description ?? patterns[0];
         const request = {
           projectId,
-          memberId: activeRun.initiatorMemberId ?? activeRun.memberId,
+          memberId: run.initiatorMemberId ?? run.memberId,
           source: "agent" as const,
-          agentRunId: activeRun.id,
+          agentRunId: run.id,
           sessionScope: currentSession.scope ?? "personal",
           agentHandle: currentSession.handle,
           kind: permission === "edit" ? "edit" as const : readPermission ? "read" as const : permission === "webfetch" || permission === "websearch" ? "fetch" as const : "command" as const,
@@ -424,171 +314,100 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         }
       }
 
-      const stopEvents = await options.runtime.subscribe(
-        {
-          workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId
+      const approval = createApprovalBudget();
+      questionManager = createAgentQuestions({
+        pause: () => approval.pause(),
+        async reply(id, answers, signal) {
+          if (!options.runtime.replyQuestion) throw new Error("当前 Agent runtime 不支持问题回答");
+          await options.runtime.replyQuestion({ workspacePath: runtime.project.workspacePath, requestId: id, answers, signal });
         },
-        (event) => {
-          const part = event.data.part;
-          if (part && typeof part === "object") {
-            const record = part as Record<string, unknown>;
-            const callId = typeof record.callID === "string" ? record.callID : undefined;
-            const state = record.state && typeof record.state === "object" ? record.state as Record<string, unknown> : undefined;
-            if (callId && state?.input && typeof state.input === "object") toolInputs.set(callId, state.input);
-          }
-          void appendTrace(projectId, runId, {
-            type: `opencode.${event.type}`,
-            data: event.data
-          }).catch((error) => appendTrace(projectId, runId, { type: "trace_failed", summary: error instanceof Error ? error.message : "Trace append failed" }));
-          const permissionEvent = event.type === "permission.asked" || event.type === "permission.v2.asked";
-          if (!permissionEvent) return;
+        async reject(id, signal) {
+          if (!options.runtime.rejectQuestion) throw new Error("当前 Agent runtime 不支持跳过问题");
+          await options.runtime.rejectQuestion({ workspacePath: runtime.project.workspacePath, requestId: id, signal });
+        },
+        abort: (signal) => options.runtime.cancel({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId!, signal }),
+        async changed(pending) { progress.syncQuestions(pending.map((question) => question.id)); await updateRun(projectId, runId, { questions: pending, activity: progress.snapshot() }); },
+        report: (error) => console.error("Agent question cleanup failed", redactSensitive(error instanceof Error ? error.message : String(error), options.sensitiveValues))
+      });
+      questions.set(runId, questionManager);
+      stopEvents = await options.runtime.subscribe({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId }, async (event) => {
+        const part = event.data.part;
+        if (part && typeof part === "object") {
+          const record = part as Record<string, unknown>;
+          const callId = typeof record.callID === "string" ? record.callID : undefined;
+          const state = record.state && typeof record.state === "object" ? record.state as Record<string, unknown> : undefined;
+          if (callId && state?.input && typeof state.input === "object") toolInputs.set(callId, state.input);
+        }
+        const stored = await appendTrace(projectId, runId, { type: `opencode.${event.type}`, data: event.data });
+        sequence = stored.sequence; progress.event(event, stored.timestamp); phase = progress.phase();
+        if (event.type === "question.asked") await questionManager!.asked(event.data as unknown as AgentQuestion);
+        if (["question.replied", "question.rejected"].includes(event.type)) await questionManager!.closed(String(event.data.requestID));
+        const writes = await ledger.record(projectId, runId, runtime.project.workspacePath, event.data);
+        if (writes?.length) {
+          await appendTrace(projectId, runId, { type: "agent_write", data: { files: writes } });
+          await updateRun(projectId, runId, { fileChanges: await collectChanges() });
+        }
+        if (event.type !== "message.part.delta" || Date.now() - lastPublished >= 150) { lastPublished = Date.now(); await updateRun(projectId, runId, { activity: progress.snapshot() }); }
+        if (event.type === "permission.asked" || event.type === "permission.v2.asked") {
           const task = handlePermissionEvent(event);
           permissionTasks.add(task);
           void task.then(() => permissionTasks.delete(task), () => permissionTasks.delete(task));
         }
-      );
-
-      let result: { text: string; messageId?: string };
-      try {
-        result = await runWithTimeout(options.runtime.run({
-          workspacePath: projectRuntime.project.workspacePath,
-          sessionId: runtimeSessionId,
-          prompt: runtimePrompt
-        }),
-        options.runTimeoutMs,
-        async () => {
-          projectRuntime.guard.cancelRun(run.id);
-          await options.runtime.cancel({
-            workspacePath: projectRuntime.project.workspacePath,
-            sessionId: runtimeSessionId
-          });
-        }
-      ).finally(stopEvents);
-      } catch (error) {
-        if (guardRejected && error instanceof OpenCodeEmptyResponseError) {
-          const message = "blocked_by_guard";
-          await updateRun(projectId, runId, {
-            status: "blocked_by_guard",
-            error: message,
-            finishedAt: new Date().toISOString()
-          });
-          appendActivity(projectId, {
-            type: "agent_task_blocked",
-            memberId: current.memberId,
-            participantId: current.participantId,
-            payload: {
-              runId: current.id,
-              sessionId: current.sessionId,
-              name: current.memberName,
-              error: message
-            }
-          });
-          await appendTrace(projectId, runId, {
-            type: "run_blocked_by_guard",
-            summary: message
-          });
-          return;
-        }
-        const latestAfterFailure = await store.get(runId);
-        if (latestAfterFailure?.status === "cancelled") {
-          await updateRun(projectId, runId, { fileChanges: await collectChanges() });
-          return;
-        }
-        throw error;
-      }
-      const latest = await store.get(runId);
-      if (latest?.status === "cancelled") {
-        await updateRun(projectId, runId, { fileChanges: await collectChanges(result.messageId) });
+      });
+      await updateRun(projectId, runId, { model: options.runtime.getCurrentModel?.() ?? options.getSettings().model });
+      const previous = current.interruptsRunId ? await store.get(current.interruptsRunId) : undefined;
+      const interruption = previous ? `The previous task was interrupted. Continue from the current workspace files. Follow the latest user request. Files already changed: ${(previous.fileChanges ?? []).map((change) => change.file).join(", ") || "none"}.` : undefined;
+      const prompt = await buildRuntimePrompt(runtime.project.workspacePath, current.prompt, current.contexts, runtime.project.name, [interruption, current.extraPrompt].filter(Boolean).join("\n\n"));
+      await options.runtime.prepareRun?.({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId, runPrompt: current.prompt });
+      if ((await store.get(runId))?.status === "cancelled") return;
+      phase = "first-request";
+      const result = await runWithTimeout(options.runtime.run({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId, prompt }), options.runTimeoutMs, () => {
+        runtime.guard.cancelRun(runId);
+        return options.runtime.cancel({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId! });
+      }, approval);
+      await stopEvents(); stopEvents = undefined;
+      if ((await store.get(runId))?.status === "cancelled") return;
+      const fileChanges = await collectChanges(result.messageId);
+      await appendTrace(projectId, runId, { type: "file_changes", summary: `${fileChanges.length} files changed`, data: { files: fileChanges } });
+      await appendTrace(projectId, runId, { type: "assistant_message", summary: result.text, data: { text: result.text } });
+      if (!await updateRunIfStatus(projectId, runId, "running", { status: "completed", output: result.text, fileChanges, activity: progress.snapshot(), finishedAt: new Date().toISOString() })) return;
+      if (current.source === "chat" && session.scope === "team") await runtime.chat.createMessage({ roomId: runtime.room.id, authorId: "agent", authorName: session.handle ?? session.title, kind: "agent", agentSessionId: session.id, runId, text: result.text });
+      appendActivity(projectId, { type: "agent_task_completed", memberId: current.memberId, participantId: current.participantId, payload: { runId, sessionId: session.id, name: current.memberName, files: fileChanges } });
+      await appendTrace(projectId, runId, { type: "run_completed", summary: "Agent run completed", data: { overlappingRunIds: [...(overlaps.get(runId) ?? [])] } });
+    } catch (error) {
+      const failedRun = await store.get(runId);
+      if (failedRun?.status === "running" && guardRejected && error instanceof OpenCodeEmptyResponseError) {
+        await updateRun(projectId, runId, { status: "blocked_by_guard", error: "blocked_by_guard", activity: progress.snapshot(), finishedAt: new Date().toISOString() });
+        appendActivity(projectId, { type: "agent_task_blocked", memberId: current.memberId, participantId: current.participantId, payload: { runId, sessionId: current.sessionId, name: current.memberName, error: "blocked_by_guard" } });
+        await appendTrace(projectId, runId, { type: "run_blocked_by_guard", summary: "blocked_by_guard" });
         return;
       }
-      const fileChanges = await collectChanges(result.messageId);
-      if (fileChanges.length > 0) {
-        await appendTrace(projectId, runId, {
-          type: "file_changes",
-          summary: `${fileChanges.length} file${fileChanges.length === 1 ? "" : "s"} changed`,
-          data: { files: fileChanges }
-        });
+      if (failedRun && ["queued", "running"].includes(failedRun.status)) {
+        const failure = diagnoseAgentFailure(error, phase, sequence, options.sensitiveValues);
+        if (!await updateRunIfStatus(projectId, runId, failedRun.status, { status: "failed", error: failure.message, failure, activity: progress.snapshot(), finishedAt: new Date().toISOString() })) return;
+        await appendTrace(projectId, runId, { type: "run_failed", summary: failure.message, data: failure as unknown as Record<string, unknown> });
+        appendActivity(projectId, { type: "agent_task_failed", memberId: current.memberId, participantId: current.participantId, payload: { runId, sessionId: current.sessionId, name: current.memberName, error: failure.message } });
       }
-      await appendTrace(projectId, runId, {
-        type: "assistant_message",
-        summary: result.text,
-        data: { text: result.text }
-      });
-      const finishedAt = new Date().toISOString();
-      await updateRun(projectId, runId, {
-        status: "completed",
-        output: result.text,
-        fileChanges,
-        finishedAt
-      });
-      if (run.source === "chat" && session.scope === "team") {
-        await projectRuntime.chat.createMessage({
-          roomId: projectRuntime.room.id,
-          authorId: "agent",
-          authorName: session.handle ?? session.title,
-          kind: "agent",
-          agentSessionId: session.id,
-          runId: run.id,
-          text: result.text
-        });
-      }
-      appendActivity(projectId, {
-        type: "agent_task_completed",
-        memberId: run.memberId,
-        participantId: run.participantId,
-        payload: {
-          runId: run.id,
-          sessionId: run.sessionId,
-          name: run.memberName,
-          files: fileChanges
-        }
-      });
-      await appendTrace(projectId, runId, {
-        type: "run_completed",
-        summary: "Agent run completed"
-      });
-    } catch (error) {
-      const latest = await store.get(runId);
-      if (latest?.status === "cancelled") return;
-      const message = error instanceof Error ? error.message : "Agent run failed";
-      await updateRun(projectId, runId, {
-        status: "failed",
-        error: message,
-        finishedAt: new Date().toISOString()
-      });
-      appendActivity(projectId, {
-        type: "agent_task_failed",
-        memberId: current.memberId,
-        participantId: current.participantId,
-        payload: {
-          runId: current.id,
-          sessionId: current.sessionId,
-          name: current.memberName,
-          error: message
-        }
-      });
-      if (current.source === "chat" && current.sessionId) {
-        const session = await getSessionStore(projectId).get(current.sessionId);
-        if (session?.scope === "team") {
-          await options.runtimeManager.get(projectId).chat.createMessage({
-            roomId: options.runtimeManager.get(projectId).room.id,
-            authorId: "agent",
-            authorName: "System",
-            kind: "system",
-            agentSessionId: session.id,
-            runId: current.id,
-            text: `Team Agent task failed: ${message}`
-          });
-        }
-      }
-      await appendTrace(projectId, runId, {
-        type: "run_failed",
-        summary: message
-      });
     } finally {
-      options.runtimeManager.find(projectId)?.guard.cancelRun(runId);
-      activeRuns.delete(runId);
+      runtime.guard.cancelRun(runId);
+      try {
+        const final = await store.get(runId);
+        const cancellation = cancellations.get(runId);
+        if (cancellation) await cancellation;
+        else if (runtimeSessionId && final?.status === "failed") await options.runtime.cancel({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId });
+      } finally {
+        try {
+          await stopEvents?.();
+        } finally {
+          try {
+            await questionManager?.dispose();
+            if (snapshot && (await store.get(runId))?.status !== "completed") await updateRun(projectId, runId, { fileChanges: await collectChanges(), activity: progress.snapshot() });
+          } finally {
+            questions.delete(runId);
+            activeRuns.delete(runId);
+          }
+        }
+      }
     }
   }
 
@@ -697,60 +516,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     hasActiveTasks() { return [...queues.values()].some((queue) => queue.activeRunIds.size || queue.runIds.length); },
     getWriteLedger(projectId: string, runId: string) { return ledger.list(projectId, runId); },
     async disposeProject(projectId: string) {
-      const store = getStore(projectId);
-      const active = (await store.list()).filter(
-        (run) => run.status === "queued" || run.status === "running"
-      );
-      const activeIds = new Set(active.map((run) => run.id));
-      const queue = getQueue(projectId);
-      queue.closing = true;
-      queue.runIds = queue.runIds.filter((runId) => !activeIds.has(runId));
-
-      for (const run of active) {
-        options.runtimeManager.find(projectId)?.guard.cancelRun(run.id);
-        await updateRun(projectId, run.id, {
-          status: "cancelled",
-          finishedAt: new Date().toISOString()
-        });
-        await appendTrace(projectId, run.id, {
-          type: "run_cancelled",
-          summary: "Agent run cancelled because the project was deleted"
-        });
-        appendActivity(projectId, {
-          type: "agent_task_cancelled",
-          memberId: run.memberId,
-          participantId: run.participantId,
-          payload: {
-            runId: run.id,
-            sessionId: run.sessionId,
-            name: run.memberName,
-            reason: "Project deleted"
-          }
-        });
-      }
-
-      await Promise.all(
-        active.flatMap((run) => {
-          const running = activeRuns.get(run.id);
-          return running
-            ? [
-                options.runtime.cancel({
-                  workspacePath: running.workspacePath,
-                  sessionId: running.runtimeSessionId
-                })
-              ]
-            : [];
-        })
-      );
-      if (queue.completion) await queue.completion;
-      await Promise.all(queue.runningPromises);
-      ledger.clearProject(projectId);
-      queues.delete(projectId);
-      stores.delete(projectId);
-      for (const key of traces.keys()) {
-        if (key.startsWith(`${projectId}:`)) traces.delete(key);
-      }
-      sessionStores.delete(projectId);
+      const queue = getQueue(projectId); queue.closing = true;
+      for (const run of await getStore(projectId).list()) if (["queued", "running"].includes(run.status)) await manager.cancelRun(projectId, run.id, run.memberId);
+      await queue.completion; await Promise.all(queue.runningPromises);
+      ledger.clearProject(projectId); queues.delete(projectId); stores.delete(projectId); sessionStores.delete(projectId);
+      for (const key of traces.keys()) if (key.startsWith(`${projectId}:`)) traces.delete(key);
     },
     async dispose() { disposing = true; for (const projectId of queues.keys()) await manager.disposeProject(projectId); listeners.clear(); }
   };

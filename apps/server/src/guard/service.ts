@@ -145,6 +145,18 @@ export function createGuardService(options: {
       const model = await judgeGuardRequest({ request, decision, mode: llmMode, ...options.llm });
       if (model) {
         decision = applyLlmJudgment(decision, llmMode, request.source, model);
+        publishActivity({
+          type: "guard_llm_result",
+          memberId: request.memberId,
+          payload: {
+            source: request.source,
+            runId: request.agentRunId,
+            command: request.command,
+            paths: request.paths,
+            action: decision.action,
+            llm: decision.llm
+          }
+        });
       } else {
         decision = { ...decision, llmUnavailable: true };
         publishActivity({
