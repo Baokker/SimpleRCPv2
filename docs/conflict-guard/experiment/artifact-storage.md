@@ -42,4 +42,6 @@ gzip -d -c docs/conflict-guard/experiment/v2/stage-A3/E1-human/P4/results-expand
 
 ## Git 历史
 
-取消跟踪与忽略文件只影响新提交。提交 `98f3a56` 中的 `base/results.json` 为 121,010,301 字节，仍存在于尚未推送的历史中，超过 GitHub 的 100 MiB 文件限制。清理这部分内容需要单独处理本地提交历史。
+当前分支的未推送历史已清除 `base/results.json`、`P4/results.json` 与 `P4-no-four-state-typecheck/results.json` 三份大型展开结果。已发布的历史、其他分支和当前文件内容保持一致，待推送历史中最大的文件为 8,985,945 字节。
+
+提交号的对应关系保存在 [history-commit-map.txt](history-commit-map.txt)，实验材料中的原有提交号可以通过该文件查找。清理前的完整 Git 备份保存在本机已忽略的 `.test-workspaces/history-cleanup/before-cleanup.bundle`，验证结果保存在同目录的 `verification.json`。
