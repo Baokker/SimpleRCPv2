@@ -68,5 +68,5 @@
     "cacheMissingGroups": [],
     "comparable": true
   },
-  "source": "results.json"
+  "source": "results-expanded.json.gz"
 }

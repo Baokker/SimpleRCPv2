@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { gunzipSync } from "node:zlib";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { calculateReplayMetrics, createReplayModelPolicy, replayOutcome, replayTrace, type AdjudicationConfig, type ZoneVerdict } from "../dist/index.js";
 import { developmentSamples } from "./model-dataset.ts";
 import { replayLibraries } from "./replay-libs.ts";
@@ -28,7 +28,10 @@ async function run(name: string, disableFourState: boolean) {
   const metrics = calculateReplayMetrics(rows.map((row) => row.outcome));
   const output = path.join(outputRoot, name);
   await fs.mkdir(output, { recursive: true });
-  await fs.writeFile(path.join(output, "results.json"), JSON.stringify({ dataset: manifest.version, split: "dev", policy: "P4", disableFourState, responses: responses.size, metrics, groups: rows }, null, 2) + "\n");
+  const resultText = JSON.stringify({ dataset: manifest.version, split: "dev", policy: "P4", disableFourState, responses: responses.size, metrics, groups: rows }, null, 2) + "\n";
+  await fs.writeFile(path.join(output, "results.json"), resultText);
+  const archiveName = name === "P4" ? "results-expanded.json.gz" : "results.json.gz";
+  await fs.writeFile(path.join(output, archiveName), gzipSync(resultText, { level: 9 }));
   await fs.writeFile(path.join(output, "config.json"), JSON.stringify({ dataset: manifest.version, split: "dev", policy: "P4", strategy: selectedStrategy, source: `stage-A3/${modelResultRelativePath}`, disableFourState, k: 2 }, null, 2) + "\n");
   return { name, metrics, rows };
 }

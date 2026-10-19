@@ -38,3 +38,8 @@ packages/conflict-guard/bench/model-cache/exploratory-grey-pair-v3/G1/*.json
 docs/conflict-guard/evidence/checkpoint-b-dev-report/rules/results.json
 docs/conflict-guard/evidence/preexperiment/baseline/results.json
 docs/conflict-guard/evidence/preexperiment/repaired-d1-v2/results.json
+# 实验结果保留压缩归档，展开副本保存在本机。
+docs/conflict-guard/evidence/**/results.json
+docs/conflict-guard/experiment/**/results.json
+# 实验输出统一保存在仓库根目录的 docs 下。
+packages/conflict-guard/docs/

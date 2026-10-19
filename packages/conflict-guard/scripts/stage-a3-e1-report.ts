@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { gunzipSync } from "node:zlib";
 import { repositoryRoot } from "./model-runtime.ts";
 import { replayEvidenceSummary } from "../dist/replay/reporting.js";
 import { developmentSamples } from "./model-dataset.ts";
@@ -16,10 +17,10 @@ type Evaluation = { metrics: Record<string, any>; groups: Group[] };
 type FreezeSourceBreakdown = { localRuleSeconds: number; modelSeconds: number; mixedSeconds: number; totalSeconds: number };
 
 const root = path.join(repositoryRoot, "docs/conflict-guard/experiment/v2/stage-A3/E1-human");
-const read = async <T>(file: string) => JSON.parse(await fs.readFile(path.join(root, file), "utf8")) as T;
-const base = await read<{ policies: Record<string, Evaluation> }>("base/results.json");
-const p4 = await read<Evaluation>("P4/results.json");
-const ablation = await read<Evaluation>("P4-no-four-state-typecheck/results.json");
+const read = async <T>(file: string) => JSON.parse(gunzipSync(await fs.readFile(path.join(root, file))).toString()) as T;
+const base = await read<{ policies: Record<string, Evaluation> }>("base/results.json.gz");
+const p4 = await read<Evaluation>("P4/results-expanded.json.gz");
+const ablation = await read<Evaluation>("P4-no-four-state-typecheck/results.json.gz");
 const evaluations: Record<string, Evaluation> = { ...base.policies, P4: p4, "P4-no-four-state-typecheck": ablation };
 const { samples } = await developmentSamples(path.join(repositoryRoot, "packages/conflict-guard/bench/datasets/d1-v4"));
 const traces = new Map(samples.map((sample) => [sample.label.id, sample.trace]));
@@ -53,13 +54,13 @@ for (const id of ["P3", "P4", "P4-no-four-state-typecheck"]) {
   summary.push("", `${id} 冻结时间来源：本地规则 ${source.localRuleSeconds.toFixed(2)} 人·秒，模型研判 ${source.modelSeconds.toFixed(2)} 人·秒，来源重叠 ${source.mixedSeconds.toFixed(2)} 人·秒，合计 ${source.totalSeconds.toFixed(2)} 人·秒。`);
 }
 summary.push("", "安全修改提醒比例的分母为真值 allow 的全部样本。P4 的模型研判结果来自阶段 A3 的 G3a 录制。", "");
-for (const [id, evidence] of Object.entries(verification)) if (!evidence.comparable) summary.push(`${id} 有 ${evidence.cacheMissingJudgements} 条判定缺少回放缓存，涉及 ${evidence.cacheMissingGroups.length} 个样本，当前结果无法用于评价消融效果；原始输出保存在对应 results.json 中。`, "");
+for (const [id, evidence] of Object.entries(verification)) if (!evidence.comparable) summary.push(`${id} 有 ${evidence.cacheMissingJudgements} 条判定缺少回放缓存，涉及 ${evidence.cacheMissingGroups.length} 个样本，当前结果无法用于评价消融效果；原始输出保存在对应压缩归档中。`, "");
 summary.push("关系组的全部变体正确时记为正确。P4 与 P1、P2、P3 的三个比较构成同一 Holm 校正族；bootstrap 重复 2000 次，种子为 20261007。", "", "| 比较 | 关系组数 | exact McNemar p | Holm p |", "|---|---:|---:|---:|");
 for (const comparison of statistics.comparisons) summary.push(`| ${comparison.left} / ${comparison.right} | ${comparison.groups} | ${comparison.p.toPrecision(6)} | ${comparison.adjustedP.toPrecision(6)} |`);
 summary.push("");
 await fs.writeFile(path.join(root, "statistics.json"), JSON.stringify(statistics, null, 2) + "\n");
 await fs.writeFile(path.join(root, "P4/statistics.json"), JSON.stringify(p4Statistics, null, 2) + "\n");
-await fs.writeFile(path.join(root, "P4/verification.json"), JSON.stringify({ statistics: p4Statistics, evidence: verification.P4, source: "results.json" }, null, 2) + "\n");
+await fs.writeFile(path.join(root, "P4/verification.json"), JSON.stringify({ statistics: p4Statistics, evidence: verification.P4, source: "results-expanded.json.gz" }, null, 2) + "\n");
 await fs.writeFile(path.join(root, "P4/command.txt"), "node --experimental-strip-types packages/conflict-guard/scripts/stage-a3-e1-model.ts\n");
 await fs.writeFile(path.join(root, "report-verification.json"), JSON.stringify(verification, null, 2) + "\n");
 await fs.writeFile(path.join(root, "summary.md"), summary.join("\n"));

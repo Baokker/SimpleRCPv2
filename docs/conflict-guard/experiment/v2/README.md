@@ -36,6 +36,8 @@ pnpm --filter @simplercp/conflict-guard exec node --experimental-strip-types scr
 
 ## 数据索引
 
+大型逐样本结果使用 gzip 归档，展开文件保存在本机；归档映射与恢复命令见 [实验产物存储](../artifact-storage.md)。
+
 | 文件 | 内容 |
 |---|---|
 | stage-A/prepared.json.gz | 输入、完整声明、分析证据、本地回放结果与源码哈希 |
