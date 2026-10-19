@@ -1,0 +1,86 @@
+{
+  "actualConfig": {
+    "config": {
+      "injectEnabled": true,
+      "toolEnabled": false,
+      "toolInstructionPlacement": "prompt",
+      "proposeEnabled": false,
+      "recapLanguage": "zh",
+      "topK": 5,
+      "maxCharsPerCard": 800,
+      "maxTotalChars": 4000,
+      "lexicalScoring": "legacy",
+      "ranking": "bounded",
+      "useActiveFiles": true,
+      "statuses": [
+        "reviewed"
+      ],
+      "fixedCardIds": [
+        "R1-T02-target"
+      ],
+      "postRunCheck": true,
+      "inflightNotify": false,
+      "requireSecondConfirmForTeam": true,
+      "recapMode": "server",
+      "orphanedAfterMs": 604800000,
+      "riskWarning": {
+        "files": [
+          "**/package.json",
+          "**/tsconfig*.json",
+          "**/vite.config.*",
+          "**/.eslintrc*",
+          "**/Dockerfile",
+          "**/docker-compose*.yml",
+          ".github/workflows/*"
+        ],
+        "lexicalThreshold": 1,
+        "vectorThreshold": 0.8,
+        "cooldownMs": 300000,
+        "dedupeThreshold": 0.8
+      }
+    }
+  },
+  "cardIds": [
+    "R1-T01-target",
+    "R1-T01-d1",
+    "R1-T01-d2",
+    "R1-T02-target",
+    "R1-T02-d1",
+    "R1-T02-d2",
+    "R1-T03-target",
+    "R1-T03-d1",
+    "R1-T03-d2",
+    "R1-T04-target",
+    "R1-T04-d1",
+    "R1-T04-d2",
+    "R1-T05-target",
+    "R1-T05-d1",
+    "R1-T05-d2",
+    "R1-I01",
+    "R1-I02",
+    "R1-I03",
+    "R1-I04",
+    "R1-I05",
+    "R1-I06",
+    "R1-I07",
+    "R1-I08",
+    "R1-I09",
+    "R1-I10",
+    "R1-I11",
+    "R1-I12",
+    "R1-I13",
+    "R1-I14",
+    "R1-I15",
+    "R1-I16",
+    "R1-I17",
+    "R1-I18",
+    "R1-I19",
+    "R1-I20",
+    "R1-I21",
+    "R1-I22",
+    "R1-I23",
+    "R1-I24",
+    "R1-I25"
+  ],
+  "lengthDifference": null
+}

@@ -1,0 +1,158 @@
+{
+  "state": "paused",
+  "plannedCombinations": 198,
+  "collectedResults": 43,
+  "createdCombinations": 45,
+  "notCreated": 153,
+  "sourceResults": "experiments/knowledge/runs/exp3-freeze-v3/results.jsonl",
+  "sourceSha256": "5bc45cd3cfc97a233a4fcbf8f55ac113fc0335cbf364aa15ce3fb93cee7a3ba7",
+  "conditions": [
+    {
+      "condition": "C0",
+      "collectedRuns": 15,
+      "plannedRuns": 66,
+      "controlRuns": 9,
+      "controlFunctional": 9,
+      "trapRuns": 6,
+      "trapFunctional": 6,
+      "trapJointSuccess": 2,
+      "trapAvoided": 2,
+      "targetDelivered": 0,
+      "deliveredRecurrence": 0,
+      "targetSources": {
+        "lexical": 0,
+        "fileRelated": 0,
+        "projectFallback": 0
+      },
+      "rankingSource": {
+        "m3": 0,
+        "bm25-fallback": 0
+      },
+      "totalTokens": 11727547,
+      "estimatedCostCny": 6.669781019999999,
+      "summedAgentWallMs": 1519619
+    },
+    {
+      "condition": "C2",
+      "collectedRuns": 15,
+      "plannedRuns": 66,
+      "controlRuns": 9,
+      "controlFunctional": 9,
+      "trapRuns": 6,
+      "trapFunctional": 6,
+      "trapJointSuccess": 5,
+      "trapAvoided": 5,
+      "targetDelivered": 6,
+      "deliveredRecurrence": 1,
+      "targetSources": {
+        "lexical": 6,
+        "fileRelated": 0,
+        "projectFallback": 0
+      },
+      "rankingSource": {
+        "m3": 15,
+        "bm25-fallback": 0
+      },
+      "totalTokens": 11766903,
+      "estimatedCostCny": 6.806062200000001,
+      "summedAgentWallMs": 1682349
+    },
+    {
+      "condition": "C5",
+      "collectedRuns": 13,
+      "plannedRuns": 66,
+      "controlRuns": 9,
+      "controlFunctional": 7,
+      "trapRuns": 4,
+      "trapFunctional": 2,
+      "trapJointSuccess": 1,
+      "trapAvoided": 3,
+      "targetDelivered": 4,
+      "deliveredRecurrence": 1,
+      "targetSources": {
+        "lexical": 4,
+        "fileRelated": 0,
+        "projectFallback": 0
+      },
+      "rankingSource": {
+        "m3": 0,
+        "bm25-fallback": 0
+      },
+      "totalTokens": 10509818,
+      "estimatedCostCny": 5.91232488,
+      "summedAgentWallMs": 1225685
+    }
+  ],
+  "uncollected": [
+    {
+      "key": "R1-T02-C5-2",
+      "projectId": "Vak6u_YKt4g_",
+      "runId": "BCCXuz5RerEa",
+      "status": "completed",
+      "startedAt": "2026-10-16T13:00:42.089Z",
+      "finishedAt": "2026-10-16T13:02:45.841Z",
+      "usage": {
+        "inputTokens": 36837,
+        "outputTokens": 6190,
+        "reasoningTokens": 0,
+        "cacheReadTokens": 891008,
+        "cacheWriteTokens": 0,
+        "totalTokens": 934035,
+        "cost": 0,
+        "estimatedCost": 0.50357706,
+        "estimatedCostCurrency": "CNY",
+        "estimatedCostSource": "MiniMax-M3 official standard token prices per request (2026-10-10)"
+      },
+      "source": "experiments/knowledge/.work/server-v3/data/projects/Vak6u_YKt4g_/agent-runs/BCCXuz5RerEa/run.json",
+      "resultCollected": false
+    },
+    {
+      "key": "R1-T02-C5-3",
+      "projectId": "MyXOLgcJNlRe",
+      "runId": "MO2NRvvhgPIo",
+      "status": "cancelled",
+      "startedAt": "2026-10-16T13:00:47.588Z",
+      "finishedAt": "2026-10-16T13:02:52.990Z",
+      "usage": null,
+      "source": "experiments/knowledge/.work/server-v3/data/projects/MyXOLgcJNlRe/agent-runs/MO2NRvvhgPIo/run.json",
+      "resultCollected": false
+    }
+  ],
+  "runtimeFailures": [],
+  "functionalFailures": [
+    {
+      "key": "R1-C01-C5-3",
+      "runStatus": "completed",
+      "trapAvoided": true,
+      "artifacts": "raw/R1-C01-C5-3"
+    },
+    {
+      "key": "R1-C03-C5-3",
+      "runStatus": "completed",
+      "trapAvoided": true,
+      "artifacts": "raw/R1-C03-C5-3"
+    },
+    {
+      "key": "R1-T01-C5-1",
+      "runStatus": "completed",
+      "trapAvoided": true,
+      "artifacts": "raw/R1-T01-C5-1"
+    },
+    {
+      "key": "R1-T01-C5-3",
+      "runStatus": "completed",
+      "trapAvoided": true,
+      "artifacts": "raw/R1-T01-C5-3"
+    }
+  ],
+  "observedElapsedMs": 2387731,
+  "collectedTotalTokens": 34004268,
+  "collectedEstimatedCostCny": 19.3881681,
+  "knownAgentEstimatedCostCny": 19.89174516,
+  "unknownAgentUsageRuns": [
+    "MO2NRvvhgPIo"
+  ],
+  "rerankCostCny": null,
+  "supplierBilledCostCny": null,
+  "inference": "计划矩阵尚未完成，不进行条件间比较。"
+}

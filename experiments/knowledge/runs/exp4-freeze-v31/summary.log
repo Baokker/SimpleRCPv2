@@ -1,0 +1,5 @@
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "summarize" "--config" "experiments/knowledge/formal-v3.json" "--source" "experiments/knowledge/runs/exp4-freeze-v31"
+
+[{"condition":"T0","combinations":18,"functional":0.9444444444444444,"trapAvoided":0.16666666666666666,"jointSuccess":0.16666666666666666,"recall1":null,"recall3":null,"recall5":null,"mrr":null,"ndcg5":null},{"condition":"T3","combinations":18,"functional":0.8888888888888888,"trapAvoided":0.6666666666666666,"jointSuccess":0.6666666666666666,"recall1":null,"recall3":null,"recall5":null,"mrr":null,"ndcg5":null}]

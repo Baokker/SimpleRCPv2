@@ -1,0 +1,123 @@
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"
+
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:39
+    if (!response.ok) throw new Error(`${method} ${route}: HTTP ${response.status} ${await response.text()}`);
+                            ^
+
+
+Error: GET /api/agent/status: HTTP 503 {"error":"请检查服务配置与错误详情后重新发起任务。","failure":{"phase":"creating-session","source":"server","errorType":"Error","message":"spawn EBADF","errno":"EBADF","lastSuccessfulSequence":0,"retryable":false,"guidance":"请检查服务配置与错误详情后重新发起任务。"}}
+    at PlatformClient.request (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:39:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PlatformClient.verifyFor (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:59:66)
+    at async runK4SharedEpisodes (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:287:43)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/cli.ts:79:9)
+
+Node.js v24.7.0
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"`
+Exit status 1
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"
+
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:39
+    if (!response.ok) throw new Error(`${method} ${route}: HTTP ${response.status} ${await response.text()}`);
+                            ^
+
+
+Error: GET /api/agent/status: HTTP 503 {"error":"请检查服务配置与错误详情后重新发起任务。","failure":{"phase":"creating-session","source":"server","errorType":"Error","message":"spawn EBADF","errno":"EBADF","lastSuccessfulSequence":0,"retryable":false,"guidance":"请检查服务配置与错误详情后重新发起任务。"}}
+    at PlatformClient.request (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:39:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PlatformClient.verifyFor (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:59:66)
+    at async runK4SharedEpisodes (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:287:43)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/cli.ts:79:9)
+
+Node.js v24.7.0
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"`
+Exit status 1
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"
+
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:50
+    if (status.speed !== this.config.speed) throw new Error("Experiment capture clock differs from the configuration");
+                                                  ^
+
+
+Error: Experiment capture clock differs from the configuration
+    at PlatformClient.verify (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:50:51)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PlatformClient.verifyFor (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:54:20)
+    at async runK4SharedEpisodes (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:287:43)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/cli.ts:79:9)
+
+Node.js v24.7.0
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"`
+Exit status 1
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"
+
+{"key":"P01-T0-1","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P01-T0-2","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P01-T3-1","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P01-T3-2","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:240
+  if (!(await readJson(correctionJudgeFile)).jointSuccess) throw new Error(`Correction did not pass the behavior checks: ${episodeKey}`);
+                                                                 ^
+
+
+Error: Correction did not pass the behavior checks: P01-episode-3
+    at prepareSharedEpisode (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:240:66)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:291:22)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/common.ts:148:12)
+    at async Promise.allSettled (index 0)
+    at async pool (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/common.ts:154:19)
+    at async runK4SharedEpisodes (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k4.ts:288:3)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/cli.ts:79:9)
+
+Node.js v24.7.0
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"`
+Exit status 1
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k4" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp4-freeze-v31" "--conditions" "T0,T3" "--shared-episode"
+
+{"key":"P02-T0-1","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P02-T3-1","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P02-T0-2","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P01-T0-3","functional":true,"trapAvoided":false,"taActuallyTrapped":false,"targetInjected":false}
+{"key":"P02-T3-2","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P01-T3-3","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":true}
+{"key":"P02-T0-3","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P02-T3-3","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P03-T0-2","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P03-T0-1","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P03-T3-2","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P03-T3-1","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P03-T0-3","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P04-T0-1","functional":true,"trapAvoided":false,"taActuallyTrapped":false,"targetInjected":false}
+{"key":"P03-T3-3","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P04-T3-1","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":true}
+{"key":"P04-T0-3","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P04-T0-2","functional":false,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P04-T3-2","functional":false,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P04-T3-3","functional":false,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P05-T0-1","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P05-T0-2","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P05-T3-2","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P05-T3-1","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P05-T0-3","functional":true,"trapAvoided":false,"taActuallyTrapped":true,"targetInjected":false}
+{"key":"P06-T0-1","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":false}
+{"key":"P06-T3-1","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":true}
+{"key":"P05-T3-3","functional":true,"trapAvoided":true,"taActuallyTrapped":true,"targetInjected":true}
+{"key":"P06-T0-3","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":false}
+{"key":"P06-T0-2","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":false}
+{"key":"P06-T3-3","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":true}
+{"key":"P06-T3-2","functional":true,"trapAvoided":true,"taActuallyTrapped":false,"targetInjected":true}
+{"directory":"/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/exp4-freeze-v31","complete":true}

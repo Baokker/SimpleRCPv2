@@ -1,0 +1,40 @@
+[
+  {
+    "metric": "jointSuccess",
+    "condition_a": "C0",
+    "condition_b": "C2",
+    "tasks": 16,
+    "left_only": 0,
+    "right_only": 10,
+    "mcnemar_p": 0.001953125,
+    "difference": 0.625,
+    "difference_ci": [
+      0.375,
+      0.875
+    ],
+    "tost_bound": 0.05,
+    "tost_p": 0.9998265089114556,
+    "tost_reason": null,
+    "holm_p": 0.00390625,
+    "tost_holm_p": 1.0
+  },
+  {
+    "metric": "jointSuccess",
+    "condition_a": "C0",
+    "condition_b": "C5",
+    "tasks": 16,
+    "left_only": 0,
+    "right_only": 10,
+    "mcnemar_p": 0.001953125,
+    "difference": 0.625,
+    "difference_ci": [
+      0.375,
+      0.875
+    ],
+    "tost_bound": 0.05,
+    "tost_p": 0.9998265089114556,
+    "tost_reason": null,
+    "holm_p": 0.00390625,
+    "tost_holm_p": 1.0
+  }
+]

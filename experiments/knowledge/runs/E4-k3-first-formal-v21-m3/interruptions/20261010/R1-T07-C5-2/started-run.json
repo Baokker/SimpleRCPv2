@@ -1,0 +1,18 @@
+{
+  "projectId": "W_U39tLE73RA",
+  "memberId": "dc3233b9-670b-4faa-9776-3e353ff34070",
+  "initiatorMemberId": "dc3233b9-670b-4faa-9776-3e353ff34070",
+  "initiatorRole": "developer",
+  "participantId": "dc3233b9-670b-4faa-9776-3e353ff34070",
+  "memberName": "member-a",
+  "prompt": "增加按事件 topic 下载业务事件的服务和 HTTP 入口，供客服查看订单事件。返回写入顺序的事件数组，保持 payload 层级和普通字段，保持原始存储内容。\n\n接口要求：`src/services/topic-download.ts` 导出 `downloadTopicEvents(store,topic)`，store 为 `EventStore`，topic 为字符串。`src/http/topic-download-routes.ts` 导出 `registerTopicDownloadRoutes(registry,store)`，注册 `GET /events/topic`，handler 接收 `{topic}`，返回相同数组。每条事件包含 id、topic、actorId、createdAt、payload，payload 是嵌套 JSON。保留 `EventStore.append`、`all`、`topic`、`RouteRegistry`。相对 import 使用 `.ts`，interface 使用 `import type`。",
+  "sessionId": "TYKEnFf8fV-J",
+  "sessionScope": "personal",
+  "status": "queued",
+  "runtime": "opencode",
+  "provider": "minimax",
+  "model": "MiniMax-M3",
+  "source": "agent-panel",
+  "id": "ReISqBsFfkZz",
+  "createdAt": "2026-10-10T06:29:38.303Z"
+}

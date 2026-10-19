@@ -1,0 +1,14 @@
+[
+  {
+    "condition": "offline",
+    "combinations": 2,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  }
+]

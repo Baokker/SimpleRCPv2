@@ -1,0 +1,5 @@
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k1" "--config" "experiments/knowledge/formal-v21.json" "--out" "experiments/knowledge/runs/E1-k1-formal-v21-m3"
+
+{"directory":"/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/E1-k1-formal-v21-m3","complete":true}

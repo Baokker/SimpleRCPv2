@@ -1,0 +1,15 @@
+{
+  "binary": "pnpm",
+  "args": [
+    "--filter",
+    "@simplercp/experiments",
+    "experiment",
+    "k7",
+    "--config",
+    "experiments/knowledge/formal-v21.json",
+    "--out",
+    "experiments/knowledge/runs/E2-k7-formal-v21-m3"
+  ],
+  "freeze": "knowledge-exp-freeze-v2.1",
+  "commit": "418a4ccc758de803efc5427bea0b0cd09cc26dc5"
+}

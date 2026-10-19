@@ -1,0 +1,4 @@
+condition,runs,delivered,deliveryRate,lexicalRate,fileRelatedRate,projectFallbackRate,recurrenceWhenDelivered,jointWhenDelivered
+C0,48,0,0.0,0.0,0.0,0.0,,
+C2,48,46,0.9583333333333334,0.6458333333333334,0.3125,0.0,0.13043478260869568,0.7391304347826086
+C5,48,48,1.0,0.6875,0.3125,0.0,0.14583333333333337,0.7708333333333334

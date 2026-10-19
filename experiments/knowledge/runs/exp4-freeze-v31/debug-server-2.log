@@ -1,0 +1,47 @@
+{"origin":"http://127.0.0.1:4303","provider":"minimax","model":"MiniMax-M3","speed":1,"dataDir":"/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/.work/server-v31-formal/data"}
+CHILD_PROCESS 98976: spawn [Object: null prototype] {
+  env: {
+    COLORTERM: '',
+    HOME: '/Users/baokker',
+    LANG: 'C.UTF-8',
+    LC_ALL: 'C.UTF-8',
+    LC_CTYPE: 'C.UTF-8',
+    LOGNAME: 'baokker',
+    PATH: '/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/TeX/texbin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/baokker/.codex/tmp/arg0-macos/codex-arg0X5fGpd:/Users/baokker/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/baokker/.nvm/versions/node/v22.19.0/bin:/Users/baokker/.grok/bin:/Users/baokker/.opencode/bin:/Users/baokker/.local/bin:/opt/homebrew/opt/openjdk/bin:/Users/baokker/.gvm/bin:/opt/homebrew/opt/go@1.19/bin:/Users/baokker/anaconda3/envs/py311/bin:/Users/baokker/anaconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/baokker/.cargo/bin:/Users/baokker/.orbstack/bin:/Users/baokker/Library/Application:Support/JetBrains/Toolbox/scripts:/usr/local/apache-maven-3.9.1//bin:/Users/baokker/go/bin:/usr/local/mysql/bin:/Users/baokker/Downloads/chrome-mac-arm64:/Users/baokker/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS:/Users/baokker/.orbstack/bin:/Users/baokker/Library/Application Support/JetBrains/Toolbox/scripts',
+    SHELL: '/bin/zsh',
+    TERM: 'dumb',
+    TMPDIR: '/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/.work/server/temporary',
+    USER: 'baokker',
+    MINIMAX_API_KEY: 'experiment-local',
+    OPENCODE_ENABLE_QUESTION_TOOL: 'true',
+    OPENCODE_CONFIG_CONTENT: '{"autoupdate":false,"share":"disabled","enabled_providers":["simplercp-minimax"],"model":"simplercp-minimax/MiniMax-M3","small_model":"simplercp-minimax/MiniMax-M3","mcp":{"knowledge":{"type":"remote","url":"http://127.0.0.1:4303/mcp/knowledge","headers":{"Authorization":"Bearer 975d2eff-e6b2-4393-982a-281ca4948eb8"},"oauth":false,"enabled":true}},"provider":{"simplercp-minimax":{"npm":"@ai-sdk/openai-compatible","name":"MiniMax","options":{"apiKey":"{env:MINIMAX_API_KEY}","baseURL":"http://127.0.0.1:4303/experiments/model/v1"},"models":{"MiniMax-M3":{"name":"MiniMax-M3","tool_call":true,"reasoning":true,"interleaved":{"field":"reasoning_content"},"options":{"reasoning_split":true}}}}},"permission":{"edit":"allow","bash":"allow","webfetch":"allow","doom_loop":"allow","external_directory":"deny","knowledge_knowledge_search":"allow","knowledge_knowledge_get":"allow","knowledge_knowledge_propose":"allow"}}'
+  },
+  stdio: [ 'ignore', 'pipe', 'pipe' ],
+  args: [
+    '/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/node_modules/.pnpm/opencode-ai@1.18.31/node_modules/opencode-ai/bin/opencode.exe',
+    'serve',
+    '--hostname=127.0.0.1',
+    '--port=4315'
+  ],
+  cwd: undefined,
+  detached: false,
+  envPairs: [
+    'COLORTERM=',
+    'HOME=/Users/baokker',
+    'LANG=C.UTF-8',
+    'LC_ALL=C.UTF-8',
+    'LC_CTYPE=C.UTF-8',
+    'LOGNAME=baokker',
+    'PATH=/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/TeX/texbin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/baokker/.codex/tmp/arg0-macos/codex-arg0X5fGpd:/Users/baokker/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/baokker/.nvm/versions/node/v22.19.0/bin:/Users/baokker/.grok/bin:/Users/baokker/.opencode/bin:/Users/baokker/.local/bin:/opt/homebrew/opt/openjdk/bin:/Users/baokker/.gvm/bin:/opt/homebrew/opt/go@1.19/bin:/Users/baokker/anaconda3/envs/py311/bin:/Users/baokker/anaconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/baokker/.cargo/bin:/Users/baokker/.orbstack/bin:/Users/baokker/Library/Application:Support/JetBrains/Toolbox/scripts:/usr/local/apache-maven-3.9.1//bin:/Users/baokker/go/bin:/usr/local/mysql/bin:/Users/baokker/Downloads/chrome-mac-arm64:/Users/baokker/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS:/Users/baokker/.orbstack/bin:/Users/baokker/Library/Application Support/JetBrains/Toolbox/scripts',
+    'SHELL=/bin/zsh',
+    'TERM=dumb',
+    'TMPDIR=/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/.work/server/temporary',
+    'USER=baokker',
+    'MINIMAX_API_KEY=experiment-local',
+    'OPENCODE_ENABLE_QUESTION_TOOL=true',
+    'OPENCODE_CONFIG_CONTENT={"autoupdate":false,"share":"disabled","enabled_providers":["simplercp-minimax"],"model":"simplercp-minimax/MiniMax-M3","small_model":"simplercp-minimax/MiniMax-M3","mcp":{"knowledge":{"type":"remote","url":"http://127.0.0.1:4303/mcp/knowledge","headers":{"Authorization":"Bearer 975d2eff-e6b2-4393-982a-281ca4948eb8"},"oauth":false,"enabled":true}},"provider":{"simplercp-minimax":{"npm":"@ai-sdk/openai-compatible","name":"MiniMax","options":{"apiKey":"{env:MINIMAX_API_KEY}","baseURL":"http://127.0.0.1:4303/experiments/model/v1"},"models":{"MiniMax-M3":{"name":"MiniMax-M3","tool_call":true,"reasoning":true,"interleaved":{"field":"reasoning_content"},"options":{"reasoning_split":true}}}}},"permission":{"edit":"allow","bash":"allow","webfetch":"allow","doom_loop":"allow","external_directory":"deny","knowledge_knowledge_search":"allow","knowledge_knowledge_get":"allow","knowledge_knowledge_propose":"allow"}}'
+  ],
+  file: '/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/node_modules/.pnpm/opencode-ai@1.18.31/node_modules/opencode-ai/bin/opencode.exe',
+  windowsHide: false,
+  windowsVerbatimArguments: false
+}

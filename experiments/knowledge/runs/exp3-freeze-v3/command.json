@@ -1,0 +1,17 @@
+{
+  "binary": "pnpm",
+  "args": [
+    "--filter",
+    "@simplercp/experiments",
+    "experiment",
+    "k3",
+    "--config",
+    "experiments/knowledge/formal-v3.json",
+    "--out",
+    "experiments/knowledge/runs/exp3-freeze-v3",
+    "--conditions",
+    "C0,C2,C5"
+  ],
+  "freeze": "knowledge-exp-freeze-v3",
+  "commit": "76ed3f8757a999c7c58c9a65596552fcee5e0148"
+}

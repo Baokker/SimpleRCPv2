@@ -1,0 +1,74 @@
+[
+  {
+    "condition": "insert-around",
+    "combinations": 240,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "interleaved",
+    "combinations": 240,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "move-and-edit",
+    "combinations": 240,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "duplicate-before",
+    "combinations": 240,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "delete",
+    "combinations": 240,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "three-members",
+    "combinations": 240,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  }
+]

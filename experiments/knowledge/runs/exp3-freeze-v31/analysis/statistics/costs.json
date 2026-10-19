@@ -1,0 +1,32 @@
+[
+  {
+    "condition": "C0",
+    "runs": 66,
+    "agentTokens": 73313559,
+    "agentEstimatedCny": 39.99734591999997,
+    "agentUnpricedRuns": 0,
+    "rerankEstimatedCny": 0,
+    "rerankUnpricedCalls": 0,
+    "wallMs": 7899272.0
+  },
+  {
+    "condition": "C2",
+    "runs": 66,
+    "agentTokens": 72875155,
+    "agentEstimatedCny": 40.79212157999998,
+    "agentUnpricedRuns": 0,
+    "rerankEstimatedCny": 1.21474122,
+    "rerankUnpricedCalls": 0,
+    "wallMs": 9999172.0
+  },
+  {
+    "condition": "C5",
+    "runs": 66,
+    "agentTokens": 77197922,
+    "agentEstimatedCny": 42.61630295999998,
+    "agentUnpricedRuns": 0,
+    "rerankEstimatedCny": 0,
+    "rerankUnpricedCalls": 0,
+    "wallMs": 8787102.0
+  }
+]

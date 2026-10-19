@@ -1,0 +1,6568 @@
+{
+  "method": "每个失败C请求使用相同任务与查询变体的已保存B结果；成功C请求保持已保存选择。",
+  "sourceResults": "experiments/knowledge/runs/E3-delivery-v241-m3/results.jsonl",
+  "sourceSha256": "a03bfdcfd20a3722273ca69093b0e76f6c344e796708f79fa49750eff5249ae8",
+  "protocolSha256": "92f506d58eade6a2a4b7f65311f746c2663ce2e8bf07674e9a7e0bd0a844a25a",
+  "queriesSha256": "add761affa1630cd4b01bd7f32ad23d416f464ecc0a0fb9f27c7c3c40d8433e9",
+  "newModelRequests": 0,
+  "summary": [
+    {
+      "variant": "original",
+      "condition": "A",
+      "trapRequests": 16,
+      "deliveredRequests": 5,
+      "trapTasks": 16,
+      "deliveredTasks": 5,
+      "controlRequests": 6,
+      "irrelevantRequests": 6,
+      "controlTasks": 6,
+      "irrelevantTasks": 6,
+      "fallbackRequests": 0,
+      "fallbackTrapRequests": 0,
+      "deliverySourceRequests": {
+        "lexical": 0,
+        "fileRelated": 5,
+        "project-fallback": 0
+      },
+      "activeFileGroups": [
+        {
+          "activeFilesPresent": false,
+          "requests": 8,
+          "delivered": 0
+        },
+        {
+          "activeFilesPresent": true,
+          "requests": 8,
+          "delivered": 5
+        }
+      ],
+      "taskOutcomes": {
+        "R1-T01": false,
+        "R1-T02": false,
+        "R1-T03": false,
+        "R1-T04": false,
+        "R1-T05": false,
+        "R1-T06": false,
+        "R1-T07": false,
+        "R1-T08": false,
+        "R2-T01": true,
+        "R2-T02": true,
+        "R2-T03": false,
+        "R2-T04": true,
+        "R2-T05": false,
+        "R2-T06": true,
+        "R2-T07": true,
+        "R2-T08": false
+      }
+    },
+    {
+      "variant": "original",
+      "condition": "B",
+      "trapRequests": 16,
+      "deliveredRequests": 11,
+      "trapTasks": 16,
+      "deliveredTasks": 11,
+      "controlRequests": 6,
+      "irrelevantRequests": 6,
+      "controlTasks": 6,
+      "irrelevantTasks": 6,
+      "fallbackRequests": 0,
+      "fallbackTrapRequests": 0,
+      "deliverySourceRequests": {
+        "lexical": 7,
+        "fileRelated": 4,
+        "project-fallback": 0
+      },
+      "activeFileGroups": [
+        {
+          "activeFilesPresent": false,
+          "requests": 8,
+          "delivered": 4
+        },
+        {
+          "activeFilesPresent": true,
+          "requests": 8,
+          "delivered": 7
+        }
+      ],
+      "taskOutcomes": {
+        "R1-T01": true,
+        "R1-T02": false,
+        "R1-T03": true,
+        "R1-T04": true,
+        "R1-T05": false,
+        "R1-T06": true,
+        "R1-T07": false,
+        "R1-T08": false,
+        "R2-T01": false,
+        "R2-T02": true,
+        "R2-T03": true,
+        "R2-T04": true,
+        "R2-T05": true,
+        "R2-T06": true,
+        "R2-T07": true,
+        "R2-T08": true
+      }
+    },
+    {
+      "variant": "original",
+      "condition": "C-fallback",
+      "trapRequests": 48,
+      "deliveredRequests": 47,
+      "trapTasks": 16,
+      "deliveredTasks": 16,
+      "controlRequests": 18,
+      "irrelevantRequests": 15,
+      "controlTasks": 6,
+      "irrelevantTasks": 5,
+      "fallbackRequests": 4,
+      "fallbackTrapRequests": 4,
+      "deliverySourceRequests": {
+        "lexical": 32,
+        "fileRelated": 15,
+        "project-fallback": 0
+      },
+      "activeFileGroups": [
+        {
+          "activeFilesPresent": false,
+          "requests": 24,
+          "delivered": 23
+        },
+        {
+          "activeFilesPresent": true,
+          "requests": 24,
+          "delivered": 24
+        }
+      ],
+      "taskOutcomes": {
+        "R1-T01": true,
+        "R1-T02": true,
+        "R1-T03": true,
+        "R1-T04": true,
+        "R1-T05": true,
+        "R1-T06": true,
+        "R1-T07": true,
+        "R1-T08": true,
+        "R2-T01": true,
+        "R2-T02": true,
+        "R2-T03": true,
+        "R2-T04": true,
+        "R2-T05": true,
+        "R2-T06": true,
+        "R2-T07": true,
+        "R2-T08": true
+      }
+    },
+    {
+      "variant": "paraphrase",
+      "condition": "A",
+      "trapRequests": 16,
+      "deliveredRequests": 5,
+      "trapTasks": 16,
+      "deliveredTasks": 5,
+      "controlRequests": 6,
+      "irrelevantRequests": 6,
+      "controlTasks": 6,
+      "irrelevantTasks": 6,
+      "fallbackRequests": 0,
+      "fallbackTrapRequests": 0,
+      "deliverySourceRequests": {
+        "lexical": 0,
+        "fileRelated": 5,
+        "project-fallback": 0
+      },
+      "activeFileGroups": [
+        {
+          "activeFilesPresent": false,
+          "requests": 8,
+          "delivered": 0
+        },
+        {
+          "activeFilesPresent": true,
+          "requests": 8,
+          "delivered": 5
+        }
+      ],
+      "taskOutcomes": {
+        "R1-T01": false,
+        "R1-T02": false,
+        "R1-T03": false,
+        "R1-T04": false,
+        "R1-T05": false,
+        "R1-T06": false,
+        "R1-T07": false,
+        "R1-T08": false,
+        "R2-T01": true,
+        "R2-T02": true,
+        "R2-T03": false,
+        "R2-T04": true,
+        "R2-T05": false,
+        "R2-T06": true,
+        "R2-T07": true,
+        "R2-T08": false
+      }
+    },
+    {
+      "variant": "paraphrase",
+      "condition": "B",
+      "trapRequests": 16,
+      "deliveredRequests": 13,
+      "trapTasks": 16,
+      "deliveredTasks": 13,
+      "controlRequests": 6,
+      "irrelevantRequests": 6,
+      "controlTasks": 6,
+      "irrelevantTasks": 6,
+      "fallbackRequests": 0,
+      "fallbackTrapRequests": 0,
+      "deliverySourceRequests": {
+        "lexical": 9,
+        "fileRelated": 4,
+        "project-fallback": 0
+      },
+      "activeFileGroups": [
+        {
+          "activeFilesPresent": false,
+          "requests": 8,
+          "delivered": 6
+        },
+        {
+          "activeFilesPresent": true,
+          "requests": 8,
+          "delivered": 7
+        }
+      ],
+      "taskOutcomes": {
+        "R1-T01": true,
+        "R1-T02": false,
+        "R1-T03": true,
+        "R1-T04": true,
+        "R1-T05": true,
+        "R1-T06": true,
+        "R1-T07": false,
+        "R1-T08": true,
+        "R2-T01": false,
+        "R2-T02": true,
+        "R2-T03": true,
+        "R2-T04": true,
+        "R2-T05": true,
+        "R2-T06": true,
+        "R2-T07": true,
+        "R2-T08": true
+      }
+    },
+    {
+      "variant": "paraphrase",
+      "condition": "C-fallback",
+      "trapRequests": 48,
+      "deliveredRequests": 44,
+      "trapTasks": 16,
+      "deliveredTasks": 15,
+      "controlRequests": 18,
+      "irrelevantRequests": 13,
+      "controlTasks": 6,
+      "irrelevantTasks": 4,
+      "fallbackRequests": 1,
+      "fallbackTrapRequests": 0,
+      "deliverySourceRequests": {
+        "lexical": 29,
+        "fileRelated": 15,
+        "project-fallback": 0
+      },
+      "activeFileGroups": [
+        {
+          "activeFilesPresent": false,
+          "requests": 24,
+          "delivered": 21
+        },
+        {
+          "activeFilesPresent": true,
+          "requests": 24,
+          "delivered": 23
+        }
+      ],
+      "taskOutcomes": {
+        "R1-T01": true,
+        "R1-T02": true,
+        "R1-T03": true,
+        "R1-T04": true,
+        "R1-T05": true,
+        "R1-T06": true,
+        "R1-T07": false,
+        "R1-T08": true,
+        "R2-T01": true,
+        "R2-T02": true,
+        "R2-T03": true,
+        "R2-T04": true,
+        "R2-T05": true,
+        "R2-T06": true,
+        "R2-T07": true,
+        "R2-T08": true
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "variant": "original",
+      "left": "A",
+      "right": "B",
+      "n": 16,
+      "gain": 7,
+      "loss": 1,
+      "difference": 0.375,
+      "ci95": [
+        0.0625,
+        0.6875
+      ],
+      "mcnemarP": 0.0703125,
+      "holmP": 0.125
+    },
+    {
+      "variant": "original",
+      "left": "B",
+      "right": "C-fallback",
+      "n": 16,
+      "gain": 5,
+      "loss": 0,
+      "difference": 0.3125,
+      "ci95": [
+        0.125,
+        0.5625
+      ],
+      "mcnemarP": 0.0625,
+      "holmP": 0.125
+    },
+    {
+      "variant": "paraphrase",
+      "left": "A",
+      "right": "B",
+      "n": 16,
+      "gain": 9,
+      "loss": 1,
+      "difference": 0.5,
+      "ci95": [
+        0.1875,
+        0.75
+      ],
+      "mcnemarP": 0.021484375,
+      "holmP": 0.04296875
+    },
+    {
+      "variant": "paraphrase",
+      "left": "B",
+      "right": "C-fallback",
+      "n": 16,
+      "gain": 2,
+      "loss": 0,
+      "difference": 0.125,
+      "ci95": [
+        0.0,
+        0.3125
+      ],
+      "mcnemarP": 0.5,
+      "holmP": 0.5
+    }
+  ],
+  "failures": [
+    {
+      "key": "R1-T01-original-C-1",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "[\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      0\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      1\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      2\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      3\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  }\n]",
+      "sourceKey": "R1-T01-original-B-1",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-T01-d2",
+        "R1-T01-d1",
+        "R1-I25",
+        "R1-I05"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I05",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-C02-paraphrase-C-1",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-C02-paraphrase-B-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-I24",
+        "R2-I14",
+        "R2-T04-target"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I14",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T04-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-T04-original-C-1",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-T04-original-B-1",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-T02-target",
+        "R2-I25",
+        "R2-I03",
+        "R2-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T05-original-C-3",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-T05-original-B-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-T05-target",
+        "R2-I04",
+        "R2-I15"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I04",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I15",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T08-original-C-2",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-T08-original-B-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-T03-d1",
+        "R2-T02-target",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    }
+  ],
+  "resolvedRequests": [
+    {
+      "key": "R1-C01-original-C-1",
+      "task": "R1-C01",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C01-original-C-1",
+      "resultIds": [
+        "R1-T01-d2",
+        "R1-I22"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C01-original-C-2",
+      "task": "R1-C01",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C01-original-C-2",
+      "resultIds": [
+        "R1-T01-d2",
+        "R1-I22"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C01-original-C-3",
+      "task": "R1-C01",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C01-original-C-3",
+      "resultIds": [
+        "R1-T01-d2",
+        "R1-I22"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C01-paraphrase-C-1",
+      "task": "R1-C01",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C01-paraphrase-C-1",
+      "resultIds": [
+        "R1-T01-d2",
+        "R1-I22"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C01-paraphrase-C-2",
+      "task": "R1-C01",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C01-paraphrase-C-2",
+      "resultIds": [
+        "R1-T01-d2",
+        "R1-I22"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C01-paraphrase-C-3",
+      "task": "R1-C01",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C01-paraphrase-C-3",
+      "resultIds": [
+        "R1-T01-d2",
+        "R1-I22"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C02-original-C-1",
+      "task": "R1-C02",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C02-original-C-1",
+      "resultIds": [
+        "R1-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C02-original-C-2",
+      "task": "R1-C02",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C02-original-C-2",
+      "resultIds": [
+        "R1-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C02-original-C-3",
+      "task": "R1-C02",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C02-original-C-3",
+      "resultIds": [
+        "R1-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C02-paraphrase-C-1",
+      "task": "R1-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C02-paraphrase-C-1",
+      "resultIds": [
+        "R1-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C02-paraphrase-C-2",
+      "task": "R1-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C02-paraphrase-C-2",
+      "resultIds": [
+        "R1-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C02-paraphrase-C-3",
+      "task": "R1-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C02-paraphrase-C-3",
+      "resultIds": [
+        "R1-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C03-original-C-1",
+      "task": "R1-C03",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C03-original-C-1",
+      "resultIds": [
+        "R1-I19"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C03-original-C-2",
+      "task": "R1-C03",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C03-original-C-2",
+      "resultIds": [
+        "R1-I19"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C03-original-C-3",
+      "task": "R1-C03",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C03-original-C-3",
+      "resultIds": [
+        "R1-I19"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C03-paraphrase-C-1",
+      "task": "R1-C03",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C03-paraphrase-C-1",
+      "resultIds": [],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": false,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C03-paraphrase-C-2",
+      "task": "R1-C03",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C03-paraphrase-C-2",
+      "resultIds": [
+        "R1-I19"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-C03-paraphrase-C-3",
+      "task": "R1-C03",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-C03-paraphrase-C-3",
+      "resultIds": [],
+      "targetDelivered": null,
+      "irrelevantDelivered": false,
+      "anyDelivered": false,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-T01-original-C-1",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "[\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      0\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      1\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      2\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"file\"\n    ],\n    \"path\": [\n      \"selected\",\n      3\n    ],\n    \"message\": \"Unrecognized key: \\\"file\\\"\"\n  }\n]",
+      "sourceKey": "R1-T01-original-B-1",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-T01-d2",
+        "R1-T01-d1",
+        "R1-I25",
+        "R1-I05"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I05",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T01-original-C-2",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T01-original-C-2",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I22",
+        "R1-T01-d1",
+        "R1-I11"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T01-original-C-3",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T01-original-C-3",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I22",
+        "R1-I11",
+        "R1-T01-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T01-paraphrase-C-1",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T01-paraphrase-C-1",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-T01-d1",
+        "R1-I11",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T01-paraphrase-C-2",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T01-paraphrase-C-2",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I22",
+        "R1-T01-d1",
+        "R1-I11",
+        "R1-T01-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T01-paraphrase-C-3",
+      "task": "R1-T01",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T01-paraphrase-C-3",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I22",
+        "R1-I11",
+        "R1-T01-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T02-original-C-1",
+      "task": "R1-T02",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T02-original-C-1",
+      "resultIds": [
+        "R1-T02-d1",
+        "R1-I09",
+        "R1-I20",
+        "R1-T02-target",
+        "R1-I03"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T02-original-C-2",
+      "task": "R1-T02",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T02-original-C-2",
+      "resultIds": [
+        "R1-T02-target",
+        "R1-T02-d1",
+        "R1-I09",
+        "R1-I20",
+        "R1-I03"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T02-original-C-3",
+      "task": "R1-T02",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T02-original-C-3",
+      "resultIds": [
+        "R1-T02-target",
+        "R1-T02-d1",
+        "R1-I20",
+        "R1-I03",
+        "R1-I09"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T02-paraphrase-C-1",
+      "task": "R1-T02",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T02-paraphrase-C-1",
+      "resultIds": [
+        "R1-T02-d1",
+        "R1-T02-target",
+        "R1-I09",
+        "R1-I03",
+        "R1-I20"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T02-paraphrase-C-2",
+      "task": "R1-T02",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T02-paraphrase-C-2",
+      "resultIds": [
+        "R1-T02-target",
+        "R1-T02-d1",
+        "R1-I03",
+        "R1-I09",
+        "R1-I20"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T02-paraphrase-C-3",
+      "task": "R1-T02",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T02-paraphrase-C-3",
+      "resultIds": [
+        "R1-T02-target",
+        "R1-T02-d1",
+        "R1-I09",
+        "R1-I20",
+        "R1-I03"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T03-original-C-1",
+      "task": "R1-T03",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T03-original-C-1",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-T03-d1",
+        "R1-I10",
+        "R1-I18",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T03-original-C-2",
+      "task": "R1-T03",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T03-original-C-2",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-I18",
+        "R1-T03-d1",
+        "R1-I22",
+        "R1-I10"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T03-original-C-3",
+      "task": "R1-T03",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T03-original-C-3",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-I18",
+        "R1-I22",
+        "R1-T03-d1",
+        "R1-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T03-paraphrase-C-1",
+      "task": "R1-T03",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T03-paraphrase-C-1",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-T03-d1",
+        "R1-I18",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T03-paraphrase-C-2",
+      "task": "R1-T03",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T03-paraphrase-C-2",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-I18",
+        "R1-I22",
+        "R1-T03-d1",
+        "R1-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T03-paraphrase-C-3",
+      "task": "R1-T03",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T03-paraphrase-C-3",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-I18",
+        "R1-I22",
+        "R1-T03-d1",
+        "R1-I10"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T04-original-C-1",
+      "task": "R1-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T04-original-C-1",
+      "resultIds": [
+        "R1-T04-target",
+        "R1-I24",
+        "R1-T04-d2",
+        "R1-I22",
+        "R1-I21"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T04-original-C-2",
+      "task": "R1-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T04-original-C-2",
+      "resultIds": [
+        "R1-T04-target",
+        "R1-I24",
+        "R1-T04-d2",
+        "R1-I21",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T04-original-C-3",
+      "task": "R1-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T04-original-C-3",
+      "resultIds": [
+        "R1-T04-target",
+        "R1-I24",
+        "R1-T04-d2",
+        "R1-I21",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T04-paraphrase-C-1",
+      "task": "R1-T04",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T04-paraphrase-C-1",
+      "resultIds": [
+        "R1-T04-target",
+        "R1-I24",
+        "R1-T04-d2",
+        "R1-I21"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T04-paraphrase-C-2",
+      "task": "R1-T04",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T04-paraphrase-C-2",
+      "resultIds": [
+        "R1-T04-target",
+        "R1-I24",
+        "R1-T04-d2",
+        "R1-I21"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T04-paraphrase-C-3",
+      "task": "R1-T04",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T04-paraphrase-C-3",
+      "resultIds": [
+        "R1-T04-target",
+        "R1-I24",
+        "R1-T04-d2",
+        "R1-I21"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T05-original-C-1",
+      "task": "R1-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T05-original-C-1",
+      "resultIds": [
+        "R1-T05-target",
+        "R1-I19",
+        "R1-I23"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I23",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T05-original-C-2",
+      "task": "R1-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T05-original-C-2",
+      "resultIds": [
+        "R1-T05-target",
+        "R1-I19",
+        "R1-I23",
+        "R1-I03"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I23",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I03",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T05-original-C-3",
+      "task": "R1-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T05-original-C-3",
+      "resultIds": [
+        "R1-T05-target",
+        "R1-I23",
+        "R1-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I23",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T05-paraphrase-C-1",
+      "task": "R1-T05",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T05-paraphrase-C-1",
+      "resultIds": [
+        "R1-T05-target",
+        "R1-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T05-paraphrase-C-2",
+      "task": "R1-T05",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T05-paraphrase-C-2",
+      "resultIds": [
+        "R1-T05-target",
+        "R1-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T05-paraphrase-C-3",
+      "task": "R1-T05",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T05-paraphrase-C-3",
+      "resultIds": [
+        "R1-T05-target",
+        "R1-I23",
+        "R1-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I23",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T06-original-C-1",
+      "task": "R1-T06",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T06-original-C-1",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I11",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T06-original-C-2",
+      "task": "R1-T06",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T06-original-C-2",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I22",
+        "R1-I11"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T06-original-C-3",
+      "task": "R1-T06",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T06-original-C-3",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I22",
+        "R1-I11",
+        "R1-T01-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T06-paraphrase-C-1",
+      "task": "R1-T06",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T06-paraphrase-C-1",
+      "resultIds": [
+        "R1-T01-target",
+        "R1-I11",
+        "R1-I22"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T06-paraphrase-C-2",
+      "task": "R1-T06",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T06-paraphrase-C-2",
+      "resultIds": [
+        "R1-I22",
+        "R1-T01-target",
+        "R1-I11"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T06-paraphrase-C-3",
+      "task": "R1-T06",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T06-paraphrase-C-3",
+      "resultIds": [
+        "R1-I22",
+        "R1-T01-target",
+        "R1-T01-d1",
+        "R1-I11"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T01-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I11",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T07-original-C-1",
+      "task": "R1-T07",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T07-original-C-1",
+      "resultIds": [
+        "R1-I21"
+      ],
+      "targetDelivered": false,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-T07-original-C-2",
+      "task": "R1-T07",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T07-original-C-2",
+      "resultIds": [
+        "R1-I21",
+        "R1-I09",
+        "R1-T02-target",
+        "R1-I20"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I20",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T07-original-C-3",
+      "task": "R1-T07",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T07-original-C-3",
+      "resultIds": [
+        "R1-T02-target",
+        "R1-I21",
+        "R1-T04-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T04-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T07-paraphrase-C-1",
+      "task": "R1-T07",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T07-paraphrase-C-1",
+      "resultIds": [
+        "R1-I21",
+        "R1-I09"
+      ],
+      "targetDelivered": false,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-T07-paraphrase-C-2",
+      "task": "R1-T07",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T07-paraphrase-C-2",
+      "resultIds": [
+        "R1-I21"
+      ],
+      "targetDelivered": false,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-T07-paraphrase-C-3",
+      "task": "R1-T07",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T07-paraphrase-C-3",
+      "resultIds": [
+        "R1-I21",
+        "R1-I09"
+      ],
+      "targetDelivered": false,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-I21",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I09",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R1-T08-original-C-1",
+      "task": "R1-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T08-original-C-1",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-I18",
+        "R1-I22",
+        "R1-T03-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T08-original-C-2",
+      "task": "R1-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T08-original-C-2",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-I10",
+        "R1-T03-d1",
+        "R1-I22",
+        "R1-I18"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T08-original-C-3",
+      "task": "R1-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T08-original-C-3",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-T03-d1",
+        "R1-I22",
+        "R1-I18"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I22",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T08-paraphrase-C-1",
+      "task": "R1-T08",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T08-paraphrase-C-1",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-T03-d1",
+        "R1-I18",
+        "R1-I10"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T08-paraphrase-C-2",
+      "task": "R1-T08",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T08-paraphrase-C-2",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-T03-d1",
+        "R1-I10",
+        "R1-I18"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R1-T08-paraphrase-C-3",
+      "task": "R1-T08",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R1-T08-paraphrase-C-3",
+      "resultIds": [
+        "R1-T03-target",
+        "R1-T03-d1",
+        "R1-I18",
+        "R1-I10",
+        "R1-I16"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [],
+      "activeFileSources": [],
+      "deliverySources": [
+        {
+          "id": "R1-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I18",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I10",
+          "reason": "lexical"
+        },
+        {
+          "id": "R1-I16",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-C01-original-C-1",
+      "task": "R2-C01",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C01-original-C-1",
+      "resultIds": [
+        "R2-I10",
+        "R2-I23",
+        "R2-T01-d2",
+        "R2-I16",
+        "R2-I01"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C01-original-C-2",
+      "task": "R2-C01",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C01-original-C-2",
+      "resultIds": [
+        "R2-I01",
+        "R2-I16",
+        "R2-T01-d2",
+        "R2-I23",
+        "R2-T03-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C01-original-C-3",
+      "task": "R2-C01",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C01-original-C-3",
+      "resultIds": [
+        "R2-I23",
+        "R2-I10",
+        "R2-I01",
+        "R2-I16",
+        "R2-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C01-paraphrase-C-1",
+      "task": "R2-C01",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C01-paraphrase-C-1",
+      "resultIds": [
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I10",
+        "R2-I01",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C01-paraphrase-C-2",
+      "task": "R2-C01",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C01-paraphrase-C-2",
+      "resultIds": [
+        "R2-T01-d2",
+        "R2-I01",
+        "R2-I16",
+        "R2-I10",
+        "R2-I23"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C01-paraphrase-C-3",
+      "task": "R2-C01",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C01-paraphrase-C-3",
+      "resultIds": [
+        "R2-I10",
+        "R2-T02-d1",
+        "R2-I23",
+        "R2-I01",
+        "R2-I16"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C02-original-C-1",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C02-original-C-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-T03-target",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C02-original-C-2",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C02-original-C-2",
+      "resultIds": [
+        "R2-I08",
+        "R2-T01-d2",
+        "R2-T03-target"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C02-original-C-3",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C02-original-C-3",
+      "resultIds": [
+        "R2-I08",
+        "R2-T03-target",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C02-paraphrase-C-1",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-C02-paraphrase-B-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-I24",
+        "R2-I14",
+        "R2-T04-target"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I14",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T04-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C02-paraphrase-C-2",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C02-paraphrase-C-2",
+      "resultIds": [
+        "R2-T01-d2",
+        "R2-T03-target"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C02-paraphrase-C-3",
+      "task": "R2-C02",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C02-paraphrase-C-3",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C03-original-C-1",
+      "task": "R2-C03",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C03-original-C-1",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I10",
+        "R2-T03-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C03-original-C-2",
+      "task": "R2-C03",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C03-original-C-2",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C03-original-C-3",
+      "task": "R2-C03",
+      "taskKind": "control",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C03-original-C-3",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I10",
+        "R2-T03-d2"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C03-paraphrase-C-1",
+      "task": "R2-C03",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C03-paraphrase-C-1",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T03-d2",
+        "R2-I10"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C03-paraphrase-C-2",
+      "task": "R2-C03",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C03-paraphrase-C-2",
+      "resultIds": [
+        "R2-I23",
+        "R2-T02-target",
+        "R2-T03-d2",
+        "R2-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-C03-paraphrase-C-3",
+      "task": "R2-C03",
+      "taskKind": "control",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-C03-paraphrase-C-3",
+      "resultIds": [
+        "R2-I23",
+        "R2-T02-target",
+        "R2-T03-d2",
+        "R2-I24"
+      ],
+      "targetDelivered": null,
+      "irrelevantDelivered": true,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-T01-original-C-1",
+      "task": "R2-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T01-original-C-1",
+      "resultIds": [
+        "R2-T01-target",
+        "R2-T01-d1",
+        "R2-I01",
+        "R2-I16",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/traceStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T01-original-C-2",
+      "task": "R2-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T01-original-C-2",
+      "resultIds": [
+        "R2-T01-d1",
+        "R2-T01-target",
+        "R2-I01",
+        "R2-T01-d2",
+        "R2-I16"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/traceStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T01-original-C-3",
+      "task": "R2-T01",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T01-original-C-3",
+      "resultIds": [
+        "R2-T01-d1",
+        "R2-T01-target",
+        "R2-I01",
+        "R2-T01-d2",
+        "R2-I16"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/traceStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T01-paraphrase-C-1",
+      "task": "R2-T01",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T01-paraphrase-C-1",
+      "resultIds": [
+        "R2-T01-d1",
+        "R2-T01-target",
+        "R2-I01",
+        "R2-T01-d2",
+        "R2-I16"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/traceStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T01-paraphrase-C-2",
+      "task": "R2-T01",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T01-paraphrase-C-2",
+      "resultIds": [
+        "R2-T01-target",
+        "R2-T01-d1",
+        "R2-I01",
+        "R2-T01-d2",
+        "R2-I16"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/traceStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I16",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T01-paraphrase-C-3",
+      "task": "R2-T01",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T01-paraphrase-C-3",
+      "resultIds": [
+        "R2-T01-target",
+        "R2-T01-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/traceStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/traceStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T01-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d1",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T02-original-C-1",
+      "task": "R2-T02",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T02-original-C-1",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I25",
+        "R2-I10"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        },
+        {
+          "file": "src/extracted/types.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T02-original-C-2",
+      "task": "R2-T02",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T02-original-C-2",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I10",
+        "R2-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        },
+        {
+          "file": "src/extracted/types.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T02-original-C-3",
+      "task": "R2-T02",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T02-original-C-3",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-T02-d1",
+        "R2-I23",
+        "R2-I19",
+        "R2-I25"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        },
+        {
+          "file": "src/extracted/types.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T02-paraphrase-C-1",
+      "task": "R2-T02",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T02-paraphrase-C-1",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I25",
+        "R2-I01"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        },
+        {
+          "file": "src/extracted/types.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T02-paraphrase-C-2",
+      "task": "R2-T02",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T02-paraphrase-C-2",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I10",
+        "R2-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        },
+        {
+          "file": "src/extracted/types.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T02-paraphrase-C-3",
+      "task": "R2-T02",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T02-paraphrase-C-3",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I10",
+        "R2-T02-d1",
+        "R2-I25"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts",
+        "src/extracted/types.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        },
+        {
+          "file": "src/extracted/types.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T03-original-C-1",
+      "task": "R2-T03",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T03-original-C-1",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target",
+        "R2-I15",
+        "R2-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/auth/identity.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I15",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T03-original-C-2",
+      "task": "R2-T03",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T03-original-C-2",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target",
+        "R2-I15"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/auth/identity.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I15",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T03-original-C-3",
+      "task": "R2-T03",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T03-original-C-3",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/auth/identity.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T03-paraphrase-C-1",
+      "task": "R2-T03",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T03-paraphrase-C-1",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/auth/identity.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T03-paraphrase-C-2",
+      "task": "R2-T03",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T03-paraphrase-C-2",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/auth/identity.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T03-paraphrase-C-3",
+      "task": "R2-T03",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T03-paraphrase-C-3",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/auth/identity.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/auth/identity.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T04-original-C-1",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-T04-original-B-1",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-T02-target",
+        "R2-I25",
+        "R2-I03",
+        "R2-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T04-original-C-2",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T04-original-C-2",
+      "resultIds": [
+        "R2-T04-d2",
+        "R2-T04-target",
+        "R2-I13",
+        "R2-T04-d1",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T04-original-C-3",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T04-original-C-3",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-T04-d1",
+        "R2-T04-d2",
+        "R2-I13",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T04-paraphrase-C-1",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T04-paraphrase-C-1",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-T04-d2",
+        "R2-I13",
+        "R2-I01",
+        "R2-T04-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T04-paraphrase-C-2",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T04-paraphrase-C-2",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I01",
+        "R2-T01-d2",
+        "R2-I13",
+        "R2-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T04-paraphrase-C-3",
+      "task": "R2-T04",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T04-paraphrase-C-3",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I13",
+        "R2-T04-d2",
+        "R2-I01",
+        "R2-T01-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T05-original-C-1",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T05-original-C-1",
+      "resultIds": [
+        "R2-T05-target",
+        "R2-T05-d2",
+        "R2-I08",
+        "R2-I24",
+        "R2-I14"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T05-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I14",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T05-original-C-2",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T05-original-C-2",
+      "resultIds": [
+        "R2-T05-target",
+        "R2-I08",
+        "R2-T05-d2",
+        "R2-I14",
+        "R2-T05-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T05-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I14",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T05-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T05-original-C-3",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-T05-original-B-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-T05-target",
+        "R2-I04",
+        "R2-I15"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I04",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I15",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T05-paraphrase-C-1",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T05-paraphrase-C-1",
+      "resultIds": [
+        "R2-T05-target",
+        "R2-I08",
+        "R2-T05-d2",
+        "R2-I24",
+        "R2-I14"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T05-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I14",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T05-paraphrase-C-2",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T05-paraphrase-C-2",
+      "resultIds": [
+        "R2-T05-target",
+        "R2-T05-d2",
+        "R2-I14",
+        "R2-I08",
+        "R2-T05-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T05-d2",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I14",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T05-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T05-paraphrase-C-3",
+      "task": "R2-T05",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T05-paraphrase-C-3",
+      "resultIds": [
+        "R2-T05-target",
+        "R2-I08",
+        "R2-I24",
+        "R2-T05-d1",
+        "R2-T05-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T05-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I24",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T05-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T05-d2",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T06-original-C-1",
+      "task": "R2-T06",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T06-original-C-1",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I10",
+        "R2-T02-d2",
+        "R2-I25"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T06-original-C-2",
+      "task": "R2-T06",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T06-original-C-2",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I25",
+        "R2-I10",
+        "R2-T02-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T06-original-C-3",
+      "task": "R2-T06",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T06-original-C-3",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I10",
+        "R2-I25"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T06-paraphrase-C-1",
+      "task": "R2-T06",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T06-paraphrase-C-1",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I10",
+        "R2-T02-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T06-paraphrase-C-2",
+      "task": "R2-T06",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T06-paraphrase-C-2",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-I10",
+        "R2-I25",
+        "R2-T01-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I25",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T01-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T06-paraphrase-C-3",
+      "task": "R2-T06",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T06-paraphrase-C-3",
+      "resultIds": [
+        "R2-T02-target",
+        "R2-I23",
+        "R2-T02-d1",
+        "R2-I10",
+        "R2-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/chat.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/chat.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T02-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I23",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T02-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I10",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T07-original-C-1",
+      "task": "R2-T07",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T07-original-C-1",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I13",
+        "R2-T04-d1",
+        "R2-T04-d2",
+        "R2-I03"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T07-original-C-2",
+      "task": "R2-T07",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T07-original-C-2",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I01",
+        "R2-I13",
+        "R2-I03",
+        "R2-T04-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T07-original-C-3",
+      "task": "R2-T07",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T07-original-C-3",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I13",
+        "R2-I03",
+        "R2-I01",
+        "R2-T04-d1"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I01",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T07-paraphrase-C-1",
+      "task": "R2-T07",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T07-paraphrase-C-1",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I13",
+        "R2-T04-d2",
+        "R2-T04-d1",
+        "R2-I03"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T07-paraphrase-C-2",
+      "task": "R2-T07",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T07-paraphrase-C-2",
+      "resultIds": [
+        "R2-I13",
+        "R2-T04-target",
+        "R2-T04-d1",
+        "R2-I03",
+        "R2-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T07-paraphrase-C-3",
+      "task": "R2-T07",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T07-paraphrase-C-3",
+      "resultIds": [
+        "R2-T04-target",
+        "R2-I13",
+        "R2-T04-d1",
+        "R2-I03",
+        "R2-T04-d2"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/eventLog.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/eventLog.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T04-target",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I13",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d1",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I03",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T04-d2",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "fileRelated"
+      ]
+    },
+    {
+      "key": "R2-T08-original-C-1",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T08-original-C-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-T03-d1",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T08-original-C-2",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 2,
+      "rankingSource": "bm25-fallback",
+      "fallbackReason": "Knowledge rerank response did not contain a JSON object",
+      "sourceKey": "R2-T08-original-B-1",
+      "resultIds": [
+        "R2-I08",
+        "R2-I18",
+        "R2-T03-d1",
+        "R2-T02-target",
+        "R2-T03-target"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T02-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T08-original-C-3",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "original",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T08-original-C-3",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target",
+        "R2-I08"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T08-paraphrase-C-1",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 1,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T08-paraphrase-C-1",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-I18",
+        "R2-I08",
+        "R2-T03-target",
+        "R2-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I18",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    },
+    {
+      "key": "R2-T08-paraphrase-C-2",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 2,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T08-paraphrase-C-2",
+      "resultIds": [
+        "R2-I08",
+        "R2-T03-d1"
+      ],
+      "targetDelivered": false,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": []
+    },
+    {
+      "key": "R2-T08-paraphrase-C-3",
+      "task": "R2-T08",
+      "taskKind": "trap",
+      "variant": "paraphrase",
+      "repetition": 3,
+      "rankingSource": "m3",
+      "fallbackReason": null,
+      "sourceKey": "R2-T08-paraphrase-C-3",
+      "resultIds": [
+        "R2-T03-d1",
+        "R2-T03-target",
+        "R2-I08",
+        "R2-I19"
+      ],
+      "targetDelivered": true,
+      "irrelevantDelivered": null,
+      "anyDelivered": true,
+      "activeFiles": [
+        "src/extracted/agent/agentRunStore.ts"
+      ],
+      "activeFileSources": [
+        {
+          "file": "src/extracted/agent/agentRunStore.ts",
+          "sources": [
+            "prompt-existing-path"
+          ]
+        }
+      ],
+      "deliverySources": [
+        {
+          "id": "R2-T03-d1",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-T03-target",
+          "reason": "lexical"
+        },
+        {
+          "id": "R2-I08",
+          "reason": "fileRelated"
+        },
+        {
+          "id": "R2-I19",
+          "reason": "lexical"
+        }
+      ],
+      "targetDeliverySources": [
+        "lexical"
+      ]
+    }
+  ]
+}

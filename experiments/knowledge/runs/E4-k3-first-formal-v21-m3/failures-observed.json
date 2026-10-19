@@ -1,0 +1,26 @@
+[
+  {
+    "key": "R1-C03-C0-3",
+    "runStatus": "completed",
+    "functional": false,
+    "error": null,
+    "tests": {
+      "project": {
+        "status": 0,
+        "passed": 84,
+        "failed": 0,
+        "output": "\n> test\n> node --experimental-strip-types test/run-tests.mjs\n\nR1 tests passed: 84\n\nnpm warn Unknown env config \"recursive\". This will stop working in the next major version of npm.\n",
+        "signal": null
+      },
+      "hidden": {
+        "status": 1,
+        "passed": 0,
+        "failed": 1,
+        "output": "\nfile:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-C03-29205-1791608479003/src/http/request.ts:18\n        throw new DomainError(ERROR_CODES.INVALID_ORDER, 'Request must be an object');\n              ^\n\nDomainError: Request must be an object\n    at objectInput (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-C03-29205-1791608479003/src/http/request.ts:18:15)\n    at Object.handler (file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-C03-29205-1791608479003/src/http/order-quantity-routes.ts:11:13)\n    at file:///Users/baokker/Work/Master/CSCW/%E8%BF%87%E7%A8%8B%E6%80%A7%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86/code/SimpleRCPv2/experiments/knowledge/.work/judge/.judge-work/runs/R1-C03-29205-1791608479003/test/.judge-hidden-R1-C03.mjs:4:213 {\n  code: 'ORDER_INVALID'\n}\n\nNode.js v24.7.0\n",
+        "evidence": null,
+        "signal": null
+      }
+    },
+    "artifacts": "raw/R1-C03-C0-3"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "binary": "pnpm",
+  "args": [
+    "--filter",
+    "@simplercp/experiments",
+    "experiment",
+    "k4",
+    "--config",
+    "experiments/knowledge/formal-v3.json",
+    "--out",
+    "experiments/knowledge/runs/exp4-freeze-v31",
+    "--conditions",
+    "T0,T3",
+    "--shared-episode"
+  ],
+  "freeze": "knowledge-exp-freeze-v3.1",
+  "commit": "f0c20bd431024cd900243f73c27b9bbdcccaf947"
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "condition": "C0",
+    "combinations": 66,
+    "functional": 0.9242424242424242,
+    "trapAvoided": 0.36363636363636365,
+    "jointSuccess": 0.3181818181818182,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "C2",
+    "combinations": 66,
+    "functional": 0.8636363636363636,
+    "trapAvoided": 0.8787878787878788,
+    "jointSuccess": 0.7424242424242424,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  },
+  {
+    "condition": "C5",
+    "combinations": 66,
+    "functional": 0.9090909090909091,
+    "trapAvoided": 0.8939393939393939,
+    "jointSuccess": 0.803030303030303,
+    "recall1": null,
+    "recall3": null,
+    "recall5": null,
+    "mrr": null,
+    "ndcg5": null
+  }
+]

@@ -1,0 +1,246 @@
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v31" "--conditions" "C0,C2,C5"
+
+{"key":"R1-C01-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":46104}
+{"key":"R1-C01-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":97402}
+{"key":"R1-C01-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":58301}
+{"key":"R1-C01-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":113974}
+{"key":"R1-C01-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":121757}
+{"key":"R1-C01-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":84802}
+{"key":"R1-C01-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":104517}
+{"key":"R1-C01-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":56855}
+{"key":"R1-C01-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":69527}
+{"key":"R1-C02-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":42576}
+{"key":"R1-C02-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":89371}
+{"key":"R1-C02-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":97430}
+{"key":"R1-C02-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":90807}
+{"key":"R1-C02-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":129069}
+{"key":"R1-C02-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":126054}
+{"key":"R1-C02-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":44940}
+{"key":"R1-C02-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":106573}
+{"key":"R1-C02-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":120604}
+{"key":"R1-C03-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":59234}
+{"key":"R1-C03-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":72300}
+{"key":"R1-C03-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":37488}
+{"key":"R1-C03-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":67601}
+{"key":"R1-C03-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":105636}
+{"key":"R1-C03-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":34294}
+{"key":"R1-C03-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":45950}
+{"key":"R1-C03-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":138281}
+{"key":"R1-C03-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":40366}
+{"key":"R1-T01-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":65025}
+{"key":"R1-T01-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":125839}
+{"key":"R1-T01-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":105100}
+{"key":"R1-T01-C2-2","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":119918}
+{"key":"R1-T01-C2-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":239614}
+{"key":"R1-T01-C2-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":133841}
+{"key":"R1-T01-C5-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":180878}
+{"key":"R1-T01-C5-2","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":145438}
+{"key":"R1-T01-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":159336}
+{"key":"R1-T02-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":158138}
+{"key":"R1-T02-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":104787}
+{"key":"R1-T02-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":127162}
+{"key":"R1-T02-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":228128}
+{"key":"R1-T02-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":133115}
+{"key":"R1-T02-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":125648}
+{"key":"R1-T02-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":44000}
+{"key":"R1-T02-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":116163}
+{"key":"R1-T02-C5-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":172205}
+{"key":"R1-T03-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":81568}
+{"key":"R1-T03-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":60367}
+{"key":"R1-T03-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":87713}
+{"key":"R1-T03-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":125565}
+{"key":"R1-T03-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":154186}
+{"key":"R1-T03-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":221395}
+{"key":"R1-T03-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":212695}
+{"key":"R1-T03-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":76530}
+{"key":"R1-T03-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":214808}
+{"key":"R1-T04-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":62060}
+{"key":"R1-T04-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":140231}
+{"key":"R1-T04-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":90707}
+{"key":"R1-T04-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":137481}
+{"key":"R1-T04-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":209310}
+{"key":"R1-T04-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":189379}
+{"key":"R1-T04-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":146170}
+{"key":"R1-T04-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":189673}
+{"key":"R1-T05-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":75127}
+{"key":"R1-T04-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":213982}
+{"key":"R1-T05-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":143324}
+{"key":"R1-T05-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":83611}
+{"key":"R1-T05-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":145584}
+{"key":"R1-T05-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":136701}
+{"key":"R1-T05-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":220707}
+{"key":"R1-T05-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":274745}
+{"key":"R1-T05-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":76448}
+{"key":"R1-T05-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":190571}
+{"key":"R1-T06-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":64809}
+{"key":"R1-T06-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":65138}
+{"key":"R1-T06-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":68827}
+{"key":"R1-T06-C2-2","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":81667}
+{"key":"R1-T06-C2-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":101968}
+{"key":"R1-T06-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":94805}
+{"key":"R1-T06-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":113166}
+{"key":"R1-T06-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":115619}
+{"key":"R1-T06-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":135389}
+{"key":"R1-T07-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":75141}
+{"key":"R1-T07-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":84617}
+{"key":"R1-T07-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":73827}
+{"key":"R1-T07-C2-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":80099}
+{"key":"R1-T07-C2-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":75414}
+{"key":"R1-T07-C2-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":96133}
+{"key":"R1-T07-C5-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":65701}
+{"key":"R1-T07-C5-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":140491}
+{"key":"R1-T08-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":50133}
+{"key":"R1-T07-C5-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":125367}
+{"key":"R1-T08-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":68453}
+{"key":"R1-T08-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":80284}
+{"key":"R1-T08-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":95409}
+{"key":"R1-T08-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":182708}
+{"key":"R1-T08-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":72702}
+{"key":"R1-T08-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":160495}
+{"key":"R1-T08-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":21170}
+{"key":"R1-T08-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":94563}
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v31" "--conditions" "C0,C2,C5"`
+Exit status 143
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v31" "--conditions" "C0,C2,C5"
+
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:22
+    if (failures.length) throw new AggregateError(failures.map(result => (result as PromiseRejectedResult).reason), "Cancellation failed");
+                               ^
+
+
+AggregateError: Cancellation failed
+    at PlatformClient.stop (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:22:32)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/common.ts:149:54)
+    at async Promise.allSettled (index 0)
+    at async pool (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/common.ts:154:19)
+    at async runK3 (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k3.ts:81:3)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/cli.ts:72:7) {
+  [errors]: [
+    Error: POST /api/projects/ql86JgYIPVPO/agent/runs/dAaAXJicPouL/cancel: HTTP 404 {"error":"Project not found"}
+        at PlatformClient.request (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:39:29)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:17:7)
+        at async Promise.allSettled (index 0)
+        at async PlatformClient.stop (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/client.ts:15:21)
+        at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/common.ts:149:54)
+        at async Promise.allSettled (index 0)
+        at async pool (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/common.ts:154:19)
+        at async runK3 (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/k3.ts:81:3)
+        at async <anonymous> (/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/cli.ts:72:7)
+  ]
+}
+
+Node.js v24.7.0
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v31" "--conditions" "C0,C2,C5"`
+Exit status 1
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v31" "--conditions" "C0,C2,C5"
+
+{"key":"R2-C01-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":70771}
+{"key":"R2-C01-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":77312}
+{"key":"R2-C01-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":100420}
+{"key":"R2-C01-C2-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":164320}
+{"key":"R2-C01-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":99197}
+{"key":"R2-C01-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":214015}
+{"key":"R2-C01-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":184665}
+{"key":"R2-C01-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":40473}
+{"key":"R2-C01-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":91474}
+{"key":"R2-C02-C0-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":133432}
+{"key":"R2-C02-C0-2","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":90636}
+{"key":"R2-C02-C0-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":89220}
+{"key":"R2-C02-C2-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":101334}
+{"key":"R2-C02-C2-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":95668}
+{"key":"R2-C02-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":121948}
+{"key":"R2-C02-C5-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":65395}
+{"key":"R2-C02-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":71392}
+{"key":"R2-C03-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":85685}
+{"key":"R2-C02-C5-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":161237}
+{"key":"R2-C03-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":160861}
+{"key":"R2-C03-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":164619}
+{"key":"R2-C03-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":279564}
+{"key":"R2-C03-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":172805}
+{"key":"R2-C03-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":187245}
+{"key":"R2-C03-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":107919}
+{"key":"R2-C03-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":181892}
+{"key":"R2-C03-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":152313}
+{"key":"R2-T01-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":80296}
+{"key":"R2-T01-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":144545}
+{"key":"R2-T01-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":98980}
+{"key":"R2-T01-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":123013}
+{"key":"R2-T01-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":108722}
+{"key":"R2-T01-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":178438}
+{"key":"R2-T01-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":137256}
+{"key":"R2-T01-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":86633}
+{"key":"R2-T01-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":213111}
+{"key":"R2-T02-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":122132}
+{"key":"R2-T02-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":233125}
+{"key":"R2-T02-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":105901}
+{"key":"R2-T02-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":140124}
+{"key":"R2-T02-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":288629}
+{"key":"R2-T02-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":205654}
+{"key":"R2-T02-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":257992}
+{"key":"R2-T02-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":235107}
+{"key":"R2-T02-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":151323}
+{"key":"R2-T03-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":98792}
+{"key":"R2-T03-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":79575}
+{"key":"R2-T03-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":170388}
+{"key":"R2-T03-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":56314}
+{"key":"R2-T03-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":122407}
+{"key":"R2-T03-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":162330}
+{"key":"R2-T03-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":163363}
+{"key":"R2-T03-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":154930}
+{"key":"R2-T04-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":69171}
+{"key":"R2-T03-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":263016}
+{"key":"R2-T04-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":93340}
+{"key":"R2-T04-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":123366}
+{"key":"R2-T04-C2-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":123627}
+{"key":"R2-T04-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":124344}
+{"key":"R2-T04-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":257828}
+{"key":"R2-T04-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":176550}
+{"key":"R2-T04-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":136604}
+{"key":"R2-T05-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":230400}
+{"key":"R2-T04-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":342587}
+{"key":"R2-T05-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":160770}
+{"key":"R2-T05-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":86584}
+{"key":"R2-T05-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":307257}
+{"key":"R2-T05-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":150358}
+{"key":"R2-T05-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":114736}
+{"key":"R2-T05-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":263176}
+{"key":"R2-T05-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":115416}
+{"key":"R2-T05-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":161966}
+{"key":"R2-T06-C0-1","functional":false,"trapAvoided":false,"runStatus":"completed","wallMs":199764}
+{"key":"R2-T06-C0-3","functional":false,"trapAvoided":false,"runStatus":"completed","wallMs":154737}
+{"key":"R2-T06-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":509210}
+{"key":"R2-T06-C2-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":361242}
+{"key":"R2-T06-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":283446}
+{"key":"R2-T06-C5-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":215027}
+{"key":"R2-T06-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":303106}
+{"key":"R2-T06-C5-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":138317}
+{"key":"R2-T06-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":162380}
+{"key":"R2-T07-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":192617}
+{"key":"R2-T07-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":186284}
+{"key":"R2-T07-C2-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":114210}
+{"key":"R2-T07-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":134677}
+{"key":"R2-T07-C2-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":146974}
+{"key":"R2-T07-C2-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":174598}
+{"key":"R2-T07-C5-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":93676}
+{"key":"R2-T07-C5-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":144252}
+{"key":"R2-T07-C5-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":186505}
+{"key":"R2-T08-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":143650}
+{"key":"R2-T08-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":185626}
+{"key":"R2-T08-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":213469}
+{"key":"R2-T08-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":152816}
+{"key":"R2-T08-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":405943}
+{"key":"R2-T08-C2-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":227964}
+{"key":"R2-T08-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":129351}
+{"key":"R2-T08-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":111501}
+{"key":"R2-T08-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":163694}
+{"directory":"/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/runs/exp3-freeze-v31","complete":true}

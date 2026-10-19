@@ -1,0 +1,50 @@
+
+> @simplercp/experiments@ experiment /Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge
+> tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v3" "--conditions" "C0,C2,C5"
+
+{"key":"R1-C01-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":66118}
+{"key":"R1-C01-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":112710}
+{"key":"R1-C01-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":51548}
+{"key":"R1-C01-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":127772}
+{"key":"R1-C01-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":45112}
+{"key":"R1-C01-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":59282}
+{"key":"R1-C01-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":56846}
+{"key":"R1-C01-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":26955}
+{"key":"R1-C01-C5-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":60809}
+{"key":"R1-C02-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":80069}
+{"key":"R1-C02-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":40896}
+{"key":"R1-C02-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":107706}
+{"key":"R1-C02-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":49748}
+{"key":"R1-C02-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":39941}
+{"key":"R1-C02-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":169056}
+{"key":"R1-C02-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":129687}
+{"key":"R1-C02-C5-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":63741}
+{"key":"R1-C02-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":105871}
+{"key":"R1-C03-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":59527}
+{"key":"R1-C03-C0-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":85778}
+{"key":"R1-C03-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":42418}
+{"key":"R1-C03-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":48142}
+{"key":"R1-C03-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":137383}
+{"key":"R1-C03-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":56540}
+{"key":"R1-C03-C5-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":43829}
+{"key":"R1-C03-C5-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":58397}
+{"key":"R1-C03-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":101026}
+{"key":"R1-T01-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":105957}
+{"key":"R1-T01-C0-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":61022}
+{"key":"R1-T01-C0-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":185678}
+{"key":"R1-T01-C2-1","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":214919}
+{"key":"R1-T01-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":216337}
+{"key":"R1-T01-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":114836}
+{"key":"R1-T01-C5-1","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":218633}
+{"key":"R1-T01-C5-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":164445}
+{"key":"R1-T01-C5-3","functional":false,"trapAvoided":true,"runStatus":"completed","wallMs":105324}
+{"key":"R1-T02-C0-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":152009}
+{"key":"R1-T02-C0-2","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":129165}
+{"key":"R1-T02-C0-3","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":179240}
+{"key":"R1-T02-C2-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":163931}
+{"key":"R1-T02-C2-2","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":127825}
+{"key":"R1-T02-C5-1","functional":true,"trapAvoided":false,"runStatus":"completed","wallMs":112360}
+{"key":"R1-T02-C2-3","functional":true,"trapAvoided":true,"runStatus":"completed","wallMs":213793}
+/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @simplercp/experiments@ experiment: `tsx cli.ts "k3" "--config" "experiments/knowledge/formal-v3.json" "--out" "experiments/knowledge/runs/exp3-freeze-v3" "--conditions" "C0,C2,C5"`
+Exit status 130

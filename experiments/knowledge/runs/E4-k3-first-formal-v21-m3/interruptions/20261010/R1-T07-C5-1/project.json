@@ -1,0 +1,17 @@
+{
+  "project": {
+    "id": "SD4mUK2PvF-Y",
+    "name": "R1-T07-C5-1-1791613716098",
+    "source": "directory",
+    "workspacePath": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/.work/server-v21-m3/data/workspaces/SD4mUK2PvF-Y",
+    "metadataPath": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/experiments/knowledge/.work/server-v21-m3/data/projects/SD4mUK2PvF-Y",
+    "createdAt": "2026-10-10T06:28:36.181Z",
+    "lastOpenedAt": "2026-10-10T06:28:36.181Z"
+  },
+  "members": [
+    "862e86e3-4ce4-4bf6-8a60-179095f64de4",
+    "c94c843a-0212-465a-b8ed-913f983768d5",
+    "425b0f72-a27c-4615-b8a3-7904a2f1f172"
+  ],
+  "initialized": true
+}

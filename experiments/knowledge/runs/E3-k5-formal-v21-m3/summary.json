@@ -1,0 +1,62 @@
+[
+  {
+    "condition": "R1",
+    "combinations": 22,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": 0,
+    "recall3": 0,
+    "recall5": 0,
+    "mrr": 0.03679847509060157,
+    "ndcg5": 0
+  },
+  {
+    "condition": "R2",
+    "combinations": 22,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": 0,
+    "recall3": 0,
+    "recall5": 0,
+    "mrr": 0.03679847509060157,
+    "ndcg5": 0
+  },
+  {
+    "condition": "R3",
+    "combinations": 22,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": 0.0625,
+    "recall3": 0.0625,
+    "recall5": 0.3125,
+    "mrr": 0.17221678444104913,
+    "ndcg5": 0.17016913951834825
+  },
+  {
+    "condition": "R2-wrong-file",
+    "combinations": 22,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": 0,
+    "recall3": 0,
+    "recall5": 0,
+    "mrr": 0.03679847509060157,
+    "ndcg5": 0
+  },
+  {
+    "condition": "R3-wrong-file",
+    "combinations": 22,
+    "functional": null,
+    "trapAvoided": null,
+    "jointSuccess": null,
+    "recall1": 0,
+    "recall3": 0,
+    "recall5": 0,
+    "mrr": 0.06643370416348357,
+    "ndcg5": 0
+  }
+]

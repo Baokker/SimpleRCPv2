@@ -1,0 +1,231 @@
+{
+  "summary": [
+    {
+      "condition": "C0",
+      "metric": "recurrence",
+      "mean": 0.875,
+      "ci": [
+        0.6875,
+        1.0
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C0",
+      "metric": "jointSuccess",
+      "mean": 0.125,
+      "ci": [
+        0.0,
+        0.3125
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C0",
+      "metric": "functional",
+      "mean": 0.9375,
+      "ci": [
+        0.8125,
+        1.0
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C2",
+      "metric": "recurrence",
+      "mean": 0.125,
+      "ci": [
+        0.0,
+        0.3125
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C2",
+      "metric": "jointSuccess",
+      "mean": 0.75,
+      "ci": [
+        0.5625,
+        0.9375
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C2",
+      "metric": "functional",
+      "mean": 0.875,
+      "ci": [
+        0.6875,
+        1.0
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C5",
+      "metric": "recurrence",
+      "mean": 0.125,
+      "ci": [
+        0.0,
+        0.3125
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C5",
+      "metric": "jointSuccess",
+      "mean": 0.75,
+      "ci": [
+        0.5,
+        0.9375
+      ],
+      "tasks": 16
+    },
+    {
+      "condition": "C5",
+      "metric": "functional",
+      "mean": 0.875,
+      "ci": [
+        0.6875,
+        1.0
+      ],
+      "tasks": 16
+    }
+  ],
+  "comparisons": [
+    {
+      "metric": "trapAvoided",
+      "condition_a": "C0",
+      "condition_b": "C2",
+      "tasks": 16,
+      "left_only": 0,
+      "right_only": 12,
+      "mcnemar_p": 0.00048828125,
+      "difference": 0.75,
+      "difference_ci": [
+        0.5,
+        0.9375
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9999923731506641,
+      "tost_reason": null,
+      "holm_p": 0.0029296875,
+      "tost_holm_p": 1.0
+    },
+    {
+      "metric": "trapAvoided",
+      "condition_a": "C0",
+      "condition_b": "C5",
+      "tasks": 16,
+      "left_only": 0,
+      "right_only": 12,
+      "mcnemar_p": 0.00048828125,
+      "difference": 0.75,
+      "difference_ci": [
+        0.5,
+        0.9375
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9999923731506641,
+      "tost_reason": null,
+      "holm_p": 0.0029296875,
+      "tost_holm_p": 1.0
+    },
+    {
+      "metric": "trapAvoided",
+      "condition_a": "C2",
+      "condition_b": "C5",
+      "tasks": 16,
+      "left_only": 0,
+      "right_only": 0,
+      "mcnemar_p": 1.0,
+      "difference": 0.0,
+      "difference_ci": [
+        0.0,
+        0.0
+      ],
+      "tost_bound": 0.05,
+      "tost_p": null,
+      "tost_reason": "样本数量或差值方差不足",
+      "holm_p": 1.0
+    },
+    {
+      "metric": "jointSuccess",
+      "condition_a": "C0",
+      "condition_b": "C2",
+      "tasks": 16,
+      "left_only": 0,
+      "right_only": 10,
+      "mcnemar_p": 0.001953125,
+      "difference": 0.625,
+      "difference_ci": [
+        0.375,
+        0.875
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9998265089114556,
+      "tost_reason": null,
+      "holm_p": 0.0078125,
+      "tost_holm_p": 1.0
+    },
+    {
+      "metric": "jointSuccess",
+      "condition_a": "C0",
+      "condition_b": "C5",
+      "tasks": 16,
+      "left_only": 0,
+      "right_only": 10,
+      "mcnemar_p": 0.001953125,
+      "difference": 0.625,
+      "difference_ci": [
+        0.375,
+        0.875
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9998265089114556,
+      "tost_reason": null,
+      "holm_p": 0.0078125,
+      "tost_holm_p": 1.0
+    },
+    {
+      "metric": "jointSuccess",
+      "condition_a": "C2",
+      "condition_b": "C5",
+      "tasks": 16,
+      "left_only": 1,
+      "right_only": 1,
+      "mcnemar_p": 1.0,
+      "difference": 0.0,
+      "difference_ci": [
+        -0.1875,
+        0.1875
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.2959700368352583,
+      "tost_reason": null,
+      "holm_p": 1.0,
+      "tost_holm_p": 1.0
+    }
+  ],
+  "mixed_logistic": {
+    "available": true,
+    "method": "BinomialBayesMixedGLM.fit_vb",
+    "fixed_names": [
+      "Intercept",
+      "C(condition)[T.C2]",
+      "C(condition)[T.C5]"
+    ],
+    "fixed_mean": [
+      -2.326624260204577,
+      3.7712406361920436,
+      4.296489111143334
+    ],
+    "fixed_sd": [
+      0.2503998673000207,
+      0.4024890615072795,
+      0.43115990863099396
+    ],
+    "task_log_sd": [
+      0.7792990529658366
+    ]
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "summary": [
+    {
+      "sample": "all",
+      "category": "all",
+      "condition": "T0",
+      "episodes": 18,
+      "jointSuccess": 3,
+      "jointRate": 0.16666666666666666,
+      "functional": 17,
+      "recurrence": 15,
+      "recurrenceRate": 0.8333333333333334,
+      "delivered": 0
+    },
+    {
+      "sample": "all",
+      "category": "all",
+      "condition": "T3",
+      "episodes": 18,
+      "jointSuccess": 12,
+      "jointRate": 0.6666666666666666,
+      "functional": 16,
+      "recurrence": 6,
+      "recurrenceRate": 0.3333333333333333,
+      "delivered": 18
+    },
+    {
+      "sample": "all",
+      "category": "cross-owner",
+      "condition": "T0",
+      "episodes": 9,
+      "jointSuccess": 0,
+      "jointRate": 0.0,
+      "functional": 8,
+      "recurrence": 9,
+      "recurrenceRate": 1.0,
+      "delivered": 0
+    },
+    {
+      "sample": "all",
+      "category": "cross-owner",
+      "condition": "T3",
+      "episodes": 9,
+      "jointSuccess": 4,
+      "jointRate": 0.4444444444444444,
+      "functional": 7,
+      "recurrence": 5,
+      "recurrenceRate": 0.5555555555555556,
+      "delivered": 9
+    },
+    {
+      "sample": "all",
+      "category": "self-correction",
+      "condition": "T0",
+      "episodes": 9,
+      "jointSuccess": 3,
+      "jointRate": 0.3333333333333333,
+      "functional": 9,
+      "recurrence": 6,
+      "recurrenceRate": 0.6666666666666666,
+      "delivered": 0
+    },
+    {
+      "sample": "all",
+      "category": "self-correction",
+      "condition": "T3",
+      "episodes": 9,
+      "jointSuccess": 8,
+      "jointRate": 0.8888888888888888,
+      "functional": 9,
+      "recurrence": 1,
+      "recurrenceRate": 0.1111111111111111,
+      "delivered": 9
+    },
+    {
+      "sample": "ta-trapped",
+      "category": "all",
+      "condition": "T0",
+      "episodes": 13,
+      "jointSuccess": 0,
+      "jointRate": 0.0,
+      "functional": 12,
+      "recurrence": 13,
+      "recurrenceRate": 1.0,
+      "delivered": 0
+    },
+    {
+      "sample": "ta-trapped",
+      "category": "all",
+      "condition": "T3",
+      "episodes": 13,
+      "jointSuccess": 7,
+      "jointRate": 0.5384615384615384,
+      "functional": 11,
+      "recurrence": 6,
+      "recurrenceRate": 0.46153846153846156,
+      "delivered": 13
+    },
+    {
+      "sample": "ta-trapped",
+      "category": "cross-owner",
+      "condition": "T0",
+      "episodes": 8,
+      "jointSuccess": 0,
+      "jointRate": 0.0,
+      "functional": 7,
+      "recurrence": 8,
+      "recurrenceRate": 1.0,
+      "delivered": 0
+    },
+    {
+      "sample": "ta-trapped",
+      "category": "cross-owner",
+      "condition": "T3",
+      "episodes": 8,
+      "jointSuccess": 3,
+      "jointRate": 0.375,
+      "functional": 6,
+      "recurrence": 5,
+      "recurrenceRate": 0.625,
+      "delivered": 8
+    },
+    {
+      "sample": "ta-trapped",
+      "category": "self-correction",
+      "condition": "T0",
+      "episodes": 5,
+      "jointSuccess": 0,
+      "jointRate": 0.0,
+      "functional": 5,
+      "recurrence": 5,
+      "recurrenceRate": 1.0,
+      "delivered": 0
+    },
+    {
+      "sample": "ta-trapped",
+      "category": "self-correction",
+      "condition": "T3",
+      "episodes": 5,
+      "jointSuccess": 4,
+      "jointRate": 0.8,
+      "functional": 5,
+      "recurrence": 1,
+      "recurrenceRate": 0.2,
+      "delivered": 5
+    }
+  ],
+  "comparisons": [
+    {
+      "sample": "all",
+      "metric": "jointSuccess",
+      "unit": "episode",
+      "tasks": 18,
+      "left_only": 0,
+      "right_only": 9,
+      "mcnemar_p": 0.00390625,
+      "difference": 0.5,
+      "difference_ci": [
+        0.2777777777777778,
+        0.7222222222222222
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9991316772420303,
+      "tost_reason": null
+    },
+    {
+      "sample": "all",
+      "metric": "trapAvoided",
+      "unit": "episode",
+      "tasks": 18,
+      "left_only": 0,
+      "right_only": 9,
+      "mcnemar_p": 0.00390625,
+      "difference": 0.5,
+      "difference_ci": [
+        0.2777777777777778,
+        0.7222222222222222
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9991316772420303,
+      "tost_reason": null
+    },
+    {
+      "sample": "ta-trapped",
+      "metric": "jointSuccess",
+      "unit": "episode",
+      "tasks": 13,
+      "left_only": 0,
+      "right_only": 7,
+      "mcnemar_p": 0.015625,
+      "difference": 0.5384615384615384,
+      "difference_ci": [
+        0.3057692307692325,
+        0.7692307692307693
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9973368392923745,
+      "tost_reason": null
+    },
+    {
+      "sample": "ta-trapped",
+      "metric": "trapAvoided",
+      "unit": "episode",
+      "tasks": 13,
+      "left_only": 0,
+      "right_only": 7,
+      "mcnemar_p": 0.015625,
+      "difference": 0.5384615384615384,
+      "difference_ci": [
+        0.3057692307692325,
+        0.7692307692307693
+      ],
+      "tost_bound": 0.05,
+      "tost_p": 0.9973368392923745,
+      "tost_reason": null
+    }
+  ],
+  "quality": {
+    "episodes": 18,
+    "actuallyTrapped": 13,
+    "validStructure": 18,
+    "validCitations": 17,
+    "fallback": 0,
+    "editedEpisodes": 18,
+    "editedChars": 22180
+  },
+  "costs": {
+    "taEstimatedCny": 6.229726859999994,
+    "tbEstimatedCny": 12.863084639999986,
+    "recapEstimatedCny": 0.8914928400000001,
+    "rerankEstimatedCny": 0.06455568,
+    "agentUnpricedRuns": 0,
+    "recapUnpricedCalls": 0,
+    "rerankUnpricedCalls": 0
+  }
+}

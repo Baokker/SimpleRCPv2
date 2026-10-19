@@ -1,0 +1,13 @@
+sample,category,condition,episodes,jointSuccess,jointRate,functional,recurrence,recurrenceRate,delivered
+all,all,T0,18,3,0.16666666666666666,17,15,0.8333333333333334,0
+all,all,T3,18,12,0.6666666666666666,16,6,0.3333333333333333,18
+all,cross-owner,T0,9,0,0.0,8,9,1.0,0
+all,cross-owner,T3,9,4,0.4444444444444444,7,5,0.5555555555555556,9
+all,self-correction,T0,9,3,0.3333333333333333,9,6,0.6666666666666666,0
+all,self-correction,T3,9,8,0.8888888888888888,9,1,0.1111111111111111,9
+ta-trapped,all,T0,13,0,0.0,12,13,1.0,0
+ta-trapped,all,T3,13,7,0.5384615384615384,11,6,0.46153846153846156,13
+ta-trapped,cross-owner,T0,8,0,0.0,7,8,1.0,0
+ta-trapped,cross-owner,T3,8,3,0.375,6,5,0.625,8
+ta-trapped,self-correction,T0,5,0,0.0,5,5,1.0,0
+ta-trapped,self-correction,T3,5,4,0.8,5,1,0.2,5
