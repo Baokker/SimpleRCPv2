@@ -1,0 +1,1 @@
+pnpm --filter @simplercp/conflict-guard index:run --experiment E4 --dataset bench/datasets/d1-v4 --split all --k 2 --out ../../docs/conflict-guard/experiment/v2/E4-perf/index

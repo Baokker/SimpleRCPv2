@@ -1,0 +1,1134 @@
+[
+  {
+    "condition": "A0",
+    "name": "cross-owner-calendar-full-P0-off-owner-1",
+    "scenario": "cross-owner-calendar-full",
+    "category": "跨属主的两个 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [],
+    "t3": [
+      null,
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.03389262,
+    "guardCostUsd": 0,
+    "trigger": null
+  },
+  {
+    "condition": "A0",
+    "name": "cross-owner-pricing-gross-P0-off-owner-1",
+    "scenario": "cross-owner-pricing-gross",
+    "category": "跨属主的两个 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [],
+    "t3": [
+      null,
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.034499339999999996,
+    "guardCostUsd": 0,
+    "trigger": null
+  },
+  {
+    "condition": "A0",
+    "name": "human-agent-capacity-field-P0-off-owner-1",
+    "scenario": "human-agent-capacity-field",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": false,
+    "t2": [],
+    "t3": [
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.01449642,
+    "guardCostUsd": 0,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2430
+    }
+  },
+  {
+    "condition": "A0",
+    "name": "human-agent-layout-metrics-P0-off-owner-1",
+    "scenario": "human-agent-layout-metrics",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": false,
+    "t2": [],
+    "t3": [
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.019584600000000004,
+    "guardCostUsd": 0,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 4062
+    }
+  },
+  {
+    "condition": "A0",
+    "name": "human-agent-pricing-signature-P0-off-owner-1",
+    "scenario": "human-agent-pricing-signature",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [],
+    "t3": [
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.07897661999999998,
+    "guardCostUsd": 0,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 6107
+    }
+  },
+  {
+    "condition": "A0",
+    "name": "human-agent-retry-delay-P0-off-owner-1",
+    "scenario": "human-agent-retry-delay",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": false,
+    "t2": [],
+    "t3": [
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.01589886,
+    "guardCostUsd": 0,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 3374
+    }
+  },
+  {
+    "condition": "A0",
+    "name": "same-owner-budget-field-P0-off-owner-1",
+    "scenario": "same-owner-budget-field",
+    "category": "同属主的两个 Agent",
+    "round": 1,
+    "success": false,
+    "t2": [],
+    "t3": [
+      null,
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.03195546,
+    "guardCostUsd": 0,
+    "trigger": null
+  },
+  {
+    "condition": "A0",
+    "name": "same-owner-retry-helper-P0-off-owner-1",
+    "scenario": "same-owner-retry-helper",
+    "category": "同属主的两个 Agent",
+    "round": 1,
+    "success": false,
+    "t2": [],
+    "t3": [
+      null,
+      null
+    ],
+    "cards": 0,
+    "approvalWaitMs": 0,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.050031599999999996,
+    "guardCostUsd": 0,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "cross-owner-calendar-full-P5-on-owner-1",
+    "scenario": "cross-owner-calendar-full",
+    "category": "跨属主的两个 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 3845.6875829999335,
+    "guardCalls": 1,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      10648
+    ],
+    "agentCostUsd": 0.03113304,
+    "guardCostUsd": 0.0014004,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "cross-owner-calendar-full-P5-on-owner-2",
+    "scenario": "cross-owner-calendar-full",
+    "category": "跨属主的两个 Agent",
+    "round": 2,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 10731.768039999995,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      7232,
+      15833
+    ],
+    "agentCostUsd": 0.0323136,
+    "guardCostUsd": 0.0027633,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "cross-owner-calendar-full-P5-on-owner-3",
+    "scenario": "cross-owner-calendar-full",
+    "category": "跨属主的两个 Agent",
+    "round": 3,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 9609.889208000386,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      5904,
+      13732
+    ],
+    "agentCostUsd": 0.029054039999999993,
+    "guardCostUsd": 0.0023931,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "cross-owner-pricing-gross-P5-on-owner-1",
+    "scenario": "cross-owner-pricing-gross",
+    "category": "跨属主的两个 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "warned",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 13537.483581999957,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      10203,
+      24940
+    ],
+    "agentCostUsd": 0.03148848,
+    "guardCostUsd": 0.0036464999999999996,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "cross-owner-pricing-gross-P5-on-owner-2",
+    "scenario": "cross-owner-pricing-gross",
+    "category": "跨属主的两个 Agent",
+    "round": 2,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 2480.7724170001457,
+    "guardCalls": 1,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      15819
+    ],
+    "agentCostUsd": 0.0380847,
+    "guardCostUsd": 0.0017694,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "cross-owner-pricing-gross-P5-on-owner-3",
+    "scenario": "cross-owner-pricing-gross",
+    "category": "跨属主的两个 Agent",
+    "round": 3,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "warned",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 7175.81908200006,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      3877,
+      16190
+    ],
+    "agentCostUsd": 0.03899838,
+    "guardCostUsd": 0.0028412999999999997,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-capacity-field-P5-on-owner-1",
+    "scenario": "human-agent-capacity-field",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 17351.067791999987,
+    "guardCalls": 5,
+    "guardCallStatuses": [
+      "invalid-format",
+      "success"
+    ],
+    "guardLatencyMs": [
+      6336,
+      4772,
+      4708,
+      10341,
+      11567
+    ],
+    "agentCostUsd": 0.025008000000000002,
+    "guardCostUsd": 0.005055,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2353
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-capacity-field-P5-on-owner-2",
+    "scenario": "human-agent-capacity-field",
+    "category": "人与 Agent",
+    "round": 2,
+    "success": false,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "lock",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 17047.22049899993,
+    "guardCalls": 3,
+    "guardCallStatuses": [
+      "invalid-format",
+      "success"
+    ],
+    "guardLatencyMs": [
+      5433,
+      4647,
+      5502
+    ],
+    "agentCostUsd": 0.014964299999999996,
+    "guardCostUsd": 0.0009267,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2470
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-capacity-field-P5-on-owner-3",
+    "scenario": "human-agent-capacity-field",
+    "category": "人与 Agent",
+    "round": 3,
+    "success": false,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "lock",
+        "rule": "model-deep",
+        "readsStale": false
+      },
+      {
+        "decision": "lock",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 14393.272416000022,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      8158,
+      4272
+    ],
+    "agentCostUsd": 0.01915434,
+    "guardCostUsd": 0.0019482000000000002,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 3568
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-layout-metrics-P5-on-owner-1",
+    "scenario": "human-agent-layout-metrics",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 23108.387707999966,
+    "guardCalls": 5,
+    "guardCallStatuses": [
+      "invalid-format",
+      "success"
+    ],
+    "guardLatencyMs": [
+      8514,
+      6437,
+      6809,
+      15624,
+      23829
+    ],
+    "agentCostUsd": 0.02342412,
+    "guardCostUsd": 0.0071802,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 3259
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-layout-metrics-P5-on-owner-2",
+    "scenario": "human-agent-layout-metrics",
+    "category": "人与 Agent",
+    "round": 2,
+    "success": false,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "reverted"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 87.23787499999162,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.015117599999999998,
+    "guardCostUsd": 0,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 4500
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-layout-metrics-P5-on-owner-3",
+    "scenario": "human-agent-layout-metrics",
+    "category": "人与 Agent",
+    "round": 3,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 14926.999083000002,
+    "guardCalls": 4,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      4635,
+      8797,
+      25782,
+      26047
+    ],
+    "agentCostUsd": 0.02175084,
+    "guardCostUsd": 0.007281599999999999,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2865
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-pricing-signature-P5-on-owner-1",
+    "scenario": "human-agent-pricing-signature",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "merge-only-type-error",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "warned"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 11647.304248999999,
+    "guardCalls": 4,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      6570,
+      3293,
+      27080,
+      14305
+    ],
+    "agentCostUsd": 0.021239339999999995,
+    "guardCostUsd": 0.0072768,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 5718
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-pricing-signature-P5-on-owner-2",
+    "scenario": "human-agent-pricing-signature",
+    "category": "人与 Agent",
+    "round": 2,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 20191.64775200002,
+    "guardCalls": 4,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      7085,
+      11701,
+      15212,
+      20556
+    ],
+    "agentCostUsd": 0.022400279999999998,
+    "guardCostUsd": 0.006021,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 3191
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-pricing-signature-P5-on-owner-3",
+    "scenario": "human-agent-pricing-signature",
+    "category": "人与 Agent",
+    "round": 3,
+    "success": false,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "reverted"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 10641.133875000058,
+    "guardCalls": 5,
+    "guardCallStatuses": [
+      "cancelled",
+      "invalid-format",
+      "success"
+    ],
+    "guardLatencyMs": [
+      5497,
+      4004,
+      30525,
+      24007,
+      4874
+    ],
+    "agentCostUsd": 0.022152420000000003,
+    "guardCostUsd": 0.0047235,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 3384
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-retry-delay-P5-on-owner-1",
+    "scenario": "human-agent-retry-delay",
+    "category": "人与 Agent",
+    "round": 1,
+    "success": false,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "reverted"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 84.41354199999478,
+    "guardCalls": 0,
+    "guardCallStatuses": [],
+    "guardLatencyMs": [],
+    "agentCostUsd": 0.01846098,
+    "guardCostUsd": 0,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2979
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-retry-delay-P5-on-owner-2",
+    "scenario": "human-agent-retry-delay",
+    "category": "人与 Agent",
+    "round": 2,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 4054.7848339999327,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      3117,
+      18003
+    ],
+    "agentCostUsd": 0.02033034,
+    "guardCostUsd": 0.0032918999999999995,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2252
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "human-agent-retry-delay-P5-on-owner-3",
+    "scenario": "human-agent-retry-delay",
+    "category": "人与 Agent",
+    "round": 3,
+    "success": true,
+    "t2": [
+      {
+        "decision": "lock",
+        "rule": "consumed-return-property-removed",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "warned"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 5159.789539999794,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      4251,
+      21366
+    ],
+    "agentCostUsd": 0.019432259999999996,
+    "guardCostUsd": 0.0036549,
+    "trigger": {
+      "kind": "after-first-agent-tool",
+      "atMs": 2657
+    }
+  },
+  {
+    "condition": "A1",
+    "name": "same-owner-budget-field-P5-on-owner-1",
+    "scenario": "same-owner-budget-field",
+    "category": "同属主的两个 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "warned"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 10064.407876000041,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      6550,
+      44531
+    ],
+    "agentCostUsd": 0.03726624,
+    "guardCostUsd": 0.0054471,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "same-owner-budget-field-P5-on-owner-2",
+    "scenario": "same-owner-budget-field",
+    "category": "同属主的两个 Agent",
+    "round": 2,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "warned",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 9681.338875000132,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      5183,
+      21460
+    ],
+    "agentCostUsd": 0.036604260000000007,
+    "guardCostUsd": 0.0045891,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "same-owner-budget-field-P5-on-owner-3",
+    "scenario": "same-owner-budget-field",
+    "category": "同属主的两个 Agent",
+    "round": 3,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "lock",
+        "rule": "model-deep",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 17138.263125000056,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      5906,
+      19642
+    ],
+    "agentCostUsd": 0.05106527999999999,
+    "guardCostUsd": 0.003015,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "same-owner-retry-helper-P5-on-owner-1",
+    "scenario": "same-owner-retry-helper",
+    "category": "同属主的两个 Agent",
+    "round": 1,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "warned",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 3110.190125999972,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "cancelled",
+      "invalid-format"
+    ],
+    "guardLatencyMs": [
+      40725,
+      18907
+    ],
+    "agentCostUsd": 0.04886735999999999,
+    "guardCostUsd": 0,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "same-owner-retry-helper-P5-on-owner-2",
+    "scenario": "same-owner-retry-helper",
+    "category": "同属主的两个 Agent",
+    "round": 2,
+    "success": true,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "passed"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 9592.593250999926,
+    "guardCalls": 2,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      6451,
+      14328
+    ],
+    "agentCostUsd": 0.029506499999999998,
+    "guardCostUsd": 0.0025245,
+    "trigger": null
+  },
+  {
+    "condition": "A1",
+    "name": "same-owner-retry-helper-P5-on-owner-3",
+    "scenario": "same-owner-retry-helper",
+    "category": "同属主的两个 Agent",
+    "round": 3,
+    "success": false,
+    "t2": [
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": null,
+        "readsStale": false
+      },
+      {
+        "decision": "lock",
+        "rule": "same-symbol-concurrent-write",
+        "readsStale": false
+      },
+      {
+        "decision": "lock",
+        "rule": "model-deep",
+        "readsStale": false
+      },
+      {
+        "decision": "allow",
+        "rule": "model-deep",
+        "readsStale": false
+      }
+    ],
+    "t3": [
+      "passed",
+      "warned"
+    ],
+    "cards": 0,
+    "approvalWaitMs": 612147.8357910002,
+    "guardCalls": 1,
+    "guardCallStatuses": [
+      "success"
+    ],
+    "guardLatencyMs": [
+      9705
+    ],
+    "agentCostUsd": 0.03319146,
+    "guardCostUsd": 0.0010146,
+    "trigger": null
+  }
+]

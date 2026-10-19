@@ -1,0 +1,854 @@
+[
+  {
+    "name": "human-agent-pricing-signature-P5-on-owner-1",
+    "taskId": "human-agent-pricing-signature",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "8a3c2d84-886b-4683-a17f-d591524a6c1e",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-capacity-field-P5-on-owner-1",
+    "taskId": "human-agent-capacity-field",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "676e2aea-c425-459f-8bc2-50964a56cdc6",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-layout-metrics-P5-on-owner-1",
+    "taskId": "human-agent-layout-metrics",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "01a6b8fd-0df5-4a1c-a320-7bde31c40106",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-retry-delay-P5-on-owner-1",
+    "taskId": "human-agent-retry-delay",
+    "ownership": "cross",
+    "round": 1,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "d1fd5ffe-e2de-4b9a-b4c7-a3184cd1827d",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "same-owner-budget-field-P5-on-owner-1",
+    "taskId": "same-owner-budget-field",
+    "ownership": "same",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "69b7ec25-c8f5-49d8-9a2f-e9361feb163e",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "same-owner-retry-helper-P5-on-owner-1",
+    "taskId": "same-owner-retry-helper",
+    "ownership": "same",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "fe8f5d3f-b456-4df3-a507-7612133c9f90",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 2,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "cross-owner-pricing-gross-P5-on-owner-1",
+    "taskId": "cross-owner-pricing-gross",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "84a9e100-6d7f-4b3e-96b4-18deba432619",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "cross-owner-calendar-full-P5-on-owner-1",
+    "taskId": "cross-owner-calendar-full",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-pricing-signature-P5-on-owner-2",
+    "taskId": "human-agent-pricing-signature",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "39fc1275-6a76-4973-be08-fc95d17511a8",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-capacity-field-P5-on-owner-2",
+    "taskId": "human-agent-capacity-field",
+    "ownership": "cross",
+    "round": 2,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      2
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "98eed1bf-bc89-452d-a6dc-d63ccf52b3d8",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-layout-metrics-P5-on-owner-2",
+    "taskId": "human-agent-layout-metrics",
+    "ownership": "cross",
+    "round": 2,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "1eafe308-bc93-486f-b27e-1e993ae38ca5",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-retry-delay-P5-on-owner-2",
+    "taskId": "human-agent-retry-delay",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "8596770b-00ab-4852-89dc-0b7844b47aca",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "same-owner-budget-field-P5-on-owner-2",
+    "taskId": "same-owner-budget-field",
+    "ownership": "same",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      1,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "5c3ecb1b-7856-4ddd-ba17-10d180944e15",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "same-owner-retry-helper-P5-on-owner-2",
+    "taskId": "same-owner-retry-helper",
+    "ownership": "same",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "cross-owner-pricing-gross-P5-on-owner-2",
+    "taskId": "cross-owner-pricing-gross",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "cross-owner-calendar-full-P5-on-owner-2",
+    "taskId": "cross-owner-calendar-full",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-pricing-signature-P5-on-owner-3",
+    "taskId": "human-agent-pricing-signature",
+    "ownership": "cross",
+    "round": 3,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "5b0afbb3-f80d-4d8f-a868-7beb10a193d1",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-capacity-field-P5-on-owner-3",
+    "taskId": "human-agent-capacity-field",
+    "ownership": "cross",
+    "round": 3,
+    "success": false,
+    "statuses": [
+      "cancelled"
+    ],
+    "rejected": [
+      3
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "8089f5c4-a20b-4389-8892-4f12f39e0a87",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-layout-metrics-P5-on-owner-3",
+    "taskId": "human-agent-layout-metrics",
+    "ownership": "cross",
+    "round": 3,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "035ce854-c7ae-4ab3-82cb-3f0eb5ef7124",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "human-agent-retry-delay-P5-on-owner-3",
+    "taskId": "human-agent-retry-delay",
+    "ownership": "cross",
+    "round": 3,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "4b05c956-c520-49a4-84e6-c400cb7fe398",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "same-owner-budget-field-P5-on-owner-3",
+    "taskId": "same-owner-budget-field",
+    "ownership": "same",
+    "round": 3,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      1,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "automaticRetries": 1,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "same-owner-retry-helper-P5-on-owner-3",
+    "taskId": "same-owner-retry-helper",
+    "ownership": "same",
+    "round": 3,
+    "success": false,
+    "statuses": [
+      "cancelled",
+      "cancelled"
+    ],
+    "rejected": [
+      1,
+      1
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "c3beab89-88be-4bb9-91b7-e3625d55be51",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 2,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 2,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "cross-owner-pricing-gross-P5-on-owner-3",
+    "taskId": "cross-owner-pricing-gross",
+    "ownership": "cross",
+    "round": 3,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      1,
+      0
+    ],
+    "interruptions": {
+      "members": [
+        {
+          "memberId": "8480b7ec-3426-442e-b65e-e3ee12cde8c9",
+          "interruptions": 0,
+          "perHour": 0,
+          "light": 1,
+          "byKind": {
+            "human-human": 0,
+            "human-agent": 0,
+            "agent-agent-same-owner": 0,
+            "agent-agent-cross-owner": 0,
+            "agent-system": 0
+          }
+        }
+      ],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  },
+  {
+    "name": "cross-owner-calendar-full-P5-on-owner-3",
+    "taskId": "cross-owner-calendar-full",
+    "ownership": "cross",
+    "round": 3,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": {
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    }
+  }
+]
