@@ -57,6 +57,7 @@ export interface GuardDecision {
     confidence: number;
     reason: string;
     applied: boolean;
+    latencyMs?: number;
   };
 }
 

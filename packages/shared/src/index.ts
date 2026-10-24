@@ -410,7 +410,7 @@ export interface GuardSettings {
   protectedPaths: string[];
   llmMode: GuardLlmMode;
   llmConfigured: boolean;
-  guardMode: "full" | "human-only" | "off";
+  guardMode: "full" | "human-only" | "native" | "off";
 }
 
 export type TerminalClientMessage =
@@ -425,4 +425,4 @@ export type TerminalServerMessage =
   | { type: "terminal_error"; message: string }
   | { type: "guard_decision"; requestId?: string; action: string; reason: string; outcome?: "allowed" | "approved" | "rejected" | "withdrawn" | "timeout" | "denied" | "busy"; approverName?: string; snapshotId?: string; command?: string }
   | { type: "guard_pending"; requestId: string; noApprover?: boolean; expiresAt?: string; command?: string; llmUnavailable?: boolean; llm?: { mode: "off" | "suggest" | "auto"; risk: string; confidence: number; reason: string; applied: boolean } }
-  | { type: "control"; holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" };
+  | { type: "control"; holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "native" | "off" };

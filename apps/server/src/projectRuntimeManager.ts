@@ -9,10 +9,10 @@ export function createProjectRuntimeManager(
     terminalEnabled?: boolean;
     guardMembers?: MemberStore;
     guardDataRoot?: string;
-    guardMode?: "full" | "human-only" | "off";
+    guardMode?: "full" | "human-only" | "native" | "off";
     guardLlmMode?: GuardLlmMode;
     guardApprovalTimeoutMs?: number;
-    guardLlm?: { baseUrl?: string; apiKey?: string; model?: string };
+    guardLlm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
     otherWorkspaceRoots?: (currentProjectId: string) => string[];
   } = {}
 ) {

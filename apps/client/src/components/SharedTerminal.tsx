@@ -18,7 +18,7 @@ export const SharedTerminal = forwardRef<
     memberId: string;
     canInput: boolean;
     theme: ThemeMode;
-    onControl(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "off"): void;
+    onControl(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "native" | "off"): void;
     onStatus(message: string): void;
     onSnapshot(snapshotId: string): void;
     onConnectionState(state: "Connecting" | "Connected" | "Reconnecting" | "Offline"): void;

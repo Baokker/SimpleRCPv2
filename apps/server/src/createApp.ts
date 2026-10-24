@@ -35,9 +35,11 @@ export async function createApp(config: ServerConfig) {
     guardApprovalTimeoutMs: config.guardApprovalTimeoutMs,
     otherWorkspaceRoots: (currentProjectId) => registry.listProjectsSync().filter((project) => project.id !== currentProjectId).map((project) => project.workspacePath),
     guardLlm: {
+      provider: config.agent?.provider,
       baseUrl: config.agent?.baseUrl,
       apiKey: config.agent?.apiKey,
-      model: config.agent?.model
+      model: config.agent?.model,
+      timeoutMs: config.guardLlmTimeoutMs
     }
   });
   const agentSettings = await createAgentSettingsStore({

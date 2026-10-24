@@ -13,7 +13,7 @@ interface OpenCodeProcessOptions {
   apiKey?: string;
   baseUrl: string;
   model: string;
-  guardMode?: "full" | "human-only" | "off";
+  guardMode?: "full" | "human-only" | "native" | "off";
 }
 
 interface RunningOpenCodeProcess {
@@ -108,7 +108,10 @@ function resolveOpenCodeExecutable() {
 export function openCodeConfig(options: OpenCodeProcessOptions): Config {
   const guardMode = options.guardMode ?? process.env.SIMPLERCP_GUARD_MODE ?? "full";
   const guarded = guardMode !== "off";
-  const permission = {
+  // Native mode keeps OpenCode's own default rules; its asks go to the Agent's initiator only.
+  const permission = guardMode === "native" ? {
+    task: "deny"
+  } as NonNullable<Config["permission"]> : {
     ...(guardMode === "full" ? { read: "ask", grep: "ask", glob: "ask", list: "ask" } : {}),
     edit: guarded ? "ask" : "allow",
     bash: guarded ? "ask" : "allow",
@@ -135,7 +138,9 @@ export function openCodeConfig(options: OpenCodeProcessOptions): Config {
         models: {
           [options.model]: {
             name: options.model,
-            tool_call: true
+            tool_call: true,
+            // MiniMax otherwise inlines <think> reasoning into the visible reply.
+            ...(/minimax/i.test(options.baseUrl) ? { options: { reasoning_split: true } } : {})
           }
         }
       }

@@ -32,7 +32,7 @@ export function TerminalPanel({
   guardSettings?: GuardSettings;
   onLlmModeChange(mode: GuardLlmMode): Promise<void>;
   onError(error: unknown): void;
-  onControlState?(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "off"): void;
+  onControlState?(holderMemberId: string | null, expiresAt?: string, mode?: "full" | "human-only" | "native" | "off"): void;
 }) {
   const terminalRef = useRef<SharedTerminalHandle>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +41,7 @@ export function TerminalPanel({
   const [controlHolder, setControlHolder] = useState<string | null>(null);
   const [controlExpiresAt, setControlExpiresAt] = useState<string>();
   const [status, setStatus] = useState("");
-  const [guardMode, setGuardMode] = useState<"full" | "human-only" | "off">("full");
+  const [guardMode, setGuardMode] = useState<"full" | "human-only" | "native" | "off">("full");
   const [savingReviewMode, setSavingReviewMode] = useState(false);
   const [snapshotId, setSnapshotId] = useState<string>();
   const [history, setHistory] = useState<string[]>([]);

@@ -16,6 +16,7 @@ describe("server config", () => {
       fakeAgentRuntime: false,
       sensitiveValues: [],
       agent: {
+        provider: "deepseek",
         apiKey: undefined,
         baseUrl: "https://api.deepseek.com/v1",
         model: "deepseek-flash",
@@ -53,6 +54,7 @@ describe("server config", () => {
       fakeAgentRuntime: false,
       sensitiveValues: ["configured-key"],
       agent: {
+        provider: "deepseek",
         apiKey: "configured-key",
         baseUrl: "https://models.example.com/v1",
         model: "DeepSeek-V4-Flash",

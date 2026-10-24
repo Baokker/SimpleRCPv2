@@ -17,6 +17,7 @@ export interface GuardAuditRecord {
   approver?: string;
   result?: string;
   durationMicros: number;
+  stage?: "decision" | "llm" | "approval";
   model?: unknown;
 }
 

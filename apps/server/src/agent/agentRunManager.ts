@@ -282,7 +282,9 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           sessionScope: currentSession.scope ?? "personal",
           agentHandle: currentSession.handle,
           kind: permission === "edit" ? "edit" as const : readPermission ? "read" as const : permission === "webfetch" || permission === "websearch" ? "fetch" as const : "command" as const,
-          command: permission === "bash" ? String(commandValue ?? "") : undefined,
+          command: permission === "bash"
+            ? String(commandValue ?? "")
+            : !supported && projectRuntime.guard.mode() === "native" ? `${permission} ${patterns.join(" ")}`.trim() : undefined,
           paths: permission === "edit" || readPermission ? allPaths : undefined,
           url: permission === "webfetch" || permission === "websearch" ? String(metadata.url ?? patterns[0] ?? "") : undefined,
           cwd: projectRuntime.project.workspacePath,
@@ -429,7 +431,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       if (disposing) throw new Error("Agent manager is closing");
       const settings = options.getSettings();
       if (!settings.enabled) throw new Error("Agent is disabled");
-      if (!settings.apiKeyConfigured) throw new Error("DEEPSEEK_API_KEY is required");
+      if (!settings.apiKeyConfigured) throw new Error("Agent model API key is required (DEEPSEEK_API_KEY or MINIMAX_API_KEY)");
       const prompt = input.prompt.trim(); if (!prompt) throw new Error("Agent prompt is required");
       const member = requireMember(input.projectId, input.memberId);
       const session = input.sessionId ? await manager.getSessionForMember(input.projectId, input.sessionId, input.memberId) : await manager.createSession({ projectId: input.projectId, memberId: input.memberId, title: prompt.slice(0, 80) });

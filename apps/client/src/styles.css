@@ -2299,6 +2299,11 @@ body[data-resizing="terminal"] {
   color: var(--text-icon);
 }
 
+.event-list li > .activity-undo {
+  grid-column: 2;
+  justify-self: start;
+}
+
 .activity-entry {
   display: flex;
   width: 100%;

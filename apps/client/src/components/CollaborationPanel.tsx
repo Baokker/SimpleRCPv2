@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel, type AgentDraft } from "./AgentPanel";
-import { downloadAgentTrace, retryAgentRun } from "../api";
+import { downloadAgentTrace, restoreGuardSnapshot, retryAgentRun } from "../api";
 import { AgentRunProgress } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
@@ -57,6 +57,8 @@ interface ActivityItem {
   path?: string;
   startedAt?: string;
   timestamp: string;
+  snapshotId?: string;
+  snapshotMemberId?: string;
 }
 
 export function CollaborationPanel({
@@ -132,6 +134,11 @@ export function CollaborationPanel({
   const [teamAgentDescription, setTeamAgentDescription] = useState("");
   const [unseenMessages, setUnseenMessages] = useState(0);
   const [replyingApprovalId, setReplyingApprovalId] = useState<string>();
+  const [restoringSnapshotId, setRestoringSnapshotId] = useState<string>();
+  const restoredSnapshotIds = useMemo(
+    () => new Set(events.filter((event) => event.type === "guard_snapshot_restored").map((event) => String(event.payload?.snapshotId ?? ""))),
+    [events]
+  );
   const [clock, setClock] = useState(() => Date.now());
   function selectTab(tab: CollaborationTab) {
     setActiveTab(tab);
@@ -550,6 +557,21 @@ export function CollaborationPanel({
                           <ActivityText item={item} />
                         </span>
                       )}
+                      {item.snapshotId && !restoredSnapshotIds.has(item.snapshotId) && (owner || item.snapshotMemberId === member?.id) ? (
+                        <button
+                          type="button"
+                          className="member-control activity-undo"
+                          data-testid={`undo-snapshot-${item.snapshotId}`}
+                          disabled={restoringSnapshotId === item.snapshotId}
+                          onClick={() => {
+                            const snapshotId = item.snapshotId!;
+                            setRestoringSnapshotId(snapshotId);
+                            void restoreGuardSnapshot(projectId, snapshotId).catch(onError).finally(() => setRestoringSnapshotId(undefined));
+                          }}
+                        >
+                          Undo
+                        </button>
+                      ) : null}
                     </li>
                   ))
                 )}
@@ -724,6 +746,16 @@ function formatActivity(
       return item(event, "general", guardActionText(actor, payload), {
         detail: formatGuardActionDetail(payload)
       });
+    case "guard_snapshot":
+      return {
+        ...item(event, "general", `${actor}'s ${payload.source === "agent" ? "Agent change" : "command"} ran after a snapshot`, {
+          detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
+        }),
+        snapshotId: stringValue(payload.snapshotId),
+        snapshotMemberId: event.memberId
+      };
+    case "guard_snapshot_restored":
+      return item(event, "general", `${actor} restored a snapshot`, { detail: stringValue(payload.command) });
     case "guard_llm_judging":
       return item(event, "general", `${actor}'s request is being reviewed by the model`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
@@ -878,7 +910,8 @@ function humanGuardReason(rules: string[], action?: GuardApproval["decision"]["a
     "hard.dynamic": "Dynamic shell syntax needs review",
     "hard.cwd": "Changing the terminal directory is blocked",
     "hard.control-character": "Control characters are blocked",
-    "agent.default": "Agent requests require owner approval"
+    "agent.default": "Agent requests require owner approval",
+    "native.platform-ask": "The Agent asks you to confirm this operation"
   };
   return rules.map((rule) => {
     if (labels[rule]) return labels[rule];

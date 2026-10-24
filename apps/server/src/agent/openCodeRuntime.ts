@@ -20,13 +20,13 @@ interface OpenCodeRuntimeOptions {
   baseUrl: string;
   activityConfig?: { waitingMs: number; stalledMs: number };
   getSettings(): AgentSettingsResponse;
-  guardMode?: "full" | "human-only" | "off";
+  guardMode?: "full" | "human-only" | "native" | "off";
   createProcess?: (options: {
     port: number;
     apiKey?: string;
     baseUrl: string;
     model: string;
-    guardMode?: "full" | "human-only" | "off";
+    guardMode?: "full" | "human-only" | "native" | "off";
   }) => {
     start(): Promise<{ url: string; version: string }>;
     dispose(): Promise<void>;
@@ -105,7 +105,7 @@ export function createOpenCodeRuntime(
   function requireAvailableSettings() {
     const settings = options.getSettings();
     if (!settings.enabled) throw new Error("Agent is disabled");
-    if (!options.apiKey) throw new Error("DEEPSEEK_API_KEY is required");
+    if (!options.apiKey) throw new Error("Agent model API key is required (DEEPSEEK_API_KEY or MINIMAX_API_KEY)");
     return settings;
   }
 

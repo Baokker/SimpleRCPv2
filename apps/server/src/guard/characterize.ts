@@ -228,7 +228,8 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   if (kind === "read" || kind === "fetch" && !/\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "reversible";
   const subcommand = name === "git" ? gitSubcommand(command) : "";
   if (name === "git" && (subcommand === "push" || subcommand === "clean" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
-  if (/\bkill(?:all|\s)|\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
+  if (capabilities.includes("process") || /(?:^|[\s|;&(])(?:kill|pkill|killall|taskkill|stop-process)(?=\s|$)/i.test(command)) return "irreversible";
+  if (/\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && (name === "scp" || name === "rsync" || hasNetworkUpload(command))) return "irreversible";
   if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";

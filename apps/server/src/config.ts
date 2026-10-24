@@ -12,13 +12,15 @@ export interface ServerConfig {
   workspacesDir?: string;
   demoProjectRoot: string;
   terminalEnabled?: boolean;
-  guardMode?: "full" | "human-only" | "off";
+  guardMode?: "full" | "human-only" | "native" | "off";
   guardLlmMode?: GuardLlmMode;
   guardApprovalTimeoutMs?: number;
+  guardLlmTimeoutMs?: number;
   fakeAgentRuntime?: boolean;
   sensitiveValues?: string[];
   importRoots?: string[];
   agent?: {
+    provider?: "deepseek" | "minimax";
     apiKey?: string;
     baseUrl: string;
     model: string;
@@ -49,13 +51,18 @@ export function loadConfig(
     throw new Error("SIMPLERCP_PUBLIC_URL must use http or https");
   }
 
+  const llmProvider = env.SIMPLERCP_LLM_PROVIDER?.trim().toLowerCase() || "deepseek";
+  if (llmProvider !== "deepseek" && llmProvider !== "minimax") {
+    throw new Error("SIMPLERCP_LLM_PROVIDER must be deepseek or minimax");
+  }
+  const providerPrefix = llmProvider === "minimax" ? "MINIMAX" : "DEEPSEEK";
   const agentBaseUrl = new URL(
-    env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1"
+    env[`${providerPrefix}_BASE_URL`]?.trim() || (llmProvider === "minimax" ? "https://api.minimaxi.com/v1" : "https://api.deepseek.com/v1")
   );
   if (!["http:", "https:"].includes(agentBaseUrl.protocol)) {
-    throw new Error("DEEPSEEK_BASE_URL must use http or https");
+    throw new Error(`${providerPrefix}_BASE_URL must use http or https`);
   }
-  const agentModel = env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
+  const agentModel = env[`${providerPrefix}_MODEL`]?.trim() || (llmProvider === "minimax" ? "MiniMax-M3" : "deepseek-flash");
   const openCodePort = Number(env.SIMPLERCP_OPENCODE_PORT ?? 4096);
   if (!Number.isInteger(openCodePort) || openCodePort < 1 || openCodePort > 65_535) {
     throw new Error("SIMPLERCP_OPENCODE_PORT must be an integer between 1 and 65535");
@@ -74,8 +81,8 @@ export function loadConfig(
     true
   );
   const guardMode = env.SIMPLERCP_GUARD_MODE ?? "full";
-  if (!["full", "human-only", "off"].includes(guardMode)) {
-    throw new Error("SIMPLERCP_GUARD_MODE must be full, human-only, or off");
+  if (!["full", "human-only", "native", "off"].includes(guardMode)) {
+    throw new Error("SIMPLERCP_GUARD_MODE must be full, human-only, native, or off");
   }
   const guardLlmMode = env.SIMPLERCP_GUARD_LLM_MODE?.trim() || undefined;
   if (guardLlmMode !== undefined && !["off", "suggest", "auto"].includes(guardLlmMode)) {
@@ -84,6 +91,10 @@ export function loadConfig(
   const guardApprovalTimeoutMs = Number(env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS ?? 120_000);
   if (!Number.isInteger(guardApprovalTimeoutMs) || guardApprovalTimeoutMs < 1) {
     throw new Error("SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS must be a positive integer");
+  }
+  const guardLlmTimeoutMs = Number(env.SIMPLERCP_GUARD_LLM_TIMEOUT_MS ?? 5_000);
+  if (!Number.isInteger(guardLlmTimeoutMs) || guardLlmTimeoutMs < 1) {
+    throw new Error("SIMPLERCP_GUARD_LLM_TIMEOUT_MS must be a positive integer");
   }
   const fakeAgentRuntime = readBoolean(
     env.SIMPLERCP_FAKE_AGENT_RUNTIME,
@@ -111,7 +122,8 @@ export function loadConfig(
     fakeAgentRuntime,
     sensitiveValues: Object.entries(env).filter(([name, value]) => /(?:KEY|TOKEN|SECRET)(?:_|$)/i.test(name) && value).map(([, value]) => value!),
     agent: {
-      apiKey: env.DEEPSEEK_API_KEY?.trim() || undefined,
+      provider: llmProvider,
+      apiKey: env[`${providerPrefix}_API_KEY`]?.trim() || undefined,
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,
@@ -125,7 +137,8 @@ export function loadConfig(
   };
   Object.defineProperties(config, {
     guardMode: { value: guardMode, enumerable: env.SIMPLERCP_GUARD_MODE !== undefined },
-    guardApprovalTimeoutMs: { value: guardApprovalTimeoutMs, enumerable: env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS !== undefined }
+    guardApprovalTimeoutMs: { value: guardApprovalTimeoutMs, enumerable: env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS !== undefined },
+    guardLlmTimeoutMs: { value: guardLlmTimeoutMs, enumerable: env.SIMPLERCP_GUARD_LLM_TIMEOUT_MS !== undefined }
   });
   if (config.agent!.activityConfig!.stalledMs <= config.agent!.activityConfig!.waitingMs) throw new Error("SIMPLERCP_AGENT_STALLED_MS 必须大于 SIMPLERCP_AGENT_WAITING_MS");
   return config;

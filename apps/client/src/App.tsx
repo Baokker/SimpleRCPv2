@@ -195,7 +195,7 @@ function WorkspacePage({
   const [scenarioRoles, setScenarioRoles] = useState<Awaited<ReturnType<typeof getGuardRoles>>["scenarios"]>();
   const [guardApprovals, setGuardApprovals] = useState<GuardApproval[]>([]);
   const [guardSettings, setGuardSettings] = useState<GuardSettings>();
-  const [terminalControl, setTerminalControl] = useState<{ holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "off" }>({ holderMemberId: null });
+  const [terminalControl, setTerminalControl] = useState<{ holderMemberId: string | null; expiresAt?: string; mode?: "full" | "human-only" | "native" | "off" }>({ holderMemberId: null });
   const [tree, setTree] = useState<WorkspaceNode[]>([]);
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activePath, setActivePath] = useState<string>();

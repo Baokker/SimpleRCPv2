@@ -57,9 +57,9 @@ export function createGuardService(options: {
   members: MemberStore;
   metadataRoot: string;
   platformDataRoot: string;
-  mode: "full" | "human-only" | "off";
+  mode: "full" | "human-only" | "native" | "off";
   llmMode?: GuardLlmMode;
-  llm?: { baseUrl?: string; apiKey?: string; model?: string };
+  llm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
   approvalTimeoutMs?: number;
   otherWorkspaceRoots?: (currentProjectId: string) => string[];
 }) {
@@ -119,7 +119,7 @@ export function createGuardService(options: {
       protectedPaths: currentPolicy.protectedPaths
     });
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros, stage: "decision" });
     return { decision, member: stored, policy: currentPolicy };
   }
 
@@ -128,9 +128,10 @@ export function createGuardService(options: {
       const cancelledDecision: GuardDecision = { action: "deny", segments: [], legacyRisk: "unknown", matchedRules: ["guard.run-cancelled"], unknown: false, autoEligible: false, approvers: null, outcome: "denied", command: request.command };
       return { request, decision: cancelledDecision, approved: false };
     }
-    if (options.mode === "off" || options.mode === "human-only" && request.source === "agent") {
+    if (options.mode === "off" || options.mode === "native" && request.source === "terminal" || options.mode === "human-only" && request.source === "agent") {
       return { request, decision: { action: "allow", segments: [], legacyRisk: "unknown", matchedRules: [], unknown: false, autoEligible: false, approvers: null } satisfies GuardDecision, approved: true };
     }
+    if (options.mode === "native") return submitNative(request, input);
     const initial = await makeDecision(request);
     let decision = initial.decision;
     const llmMode = effectiveGuardLlmMode(initial.policy.llmMode, Boolean(options.llm?.baseUrl && options.llm.apiKey));
@@ -142,9 +143,14 @@ export function createGuardService(options: {
           payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, mode: llmMode }
         });
       }
+      const llmStarted = Date.now();
       const model = await judgeGuardRequest({ request, decision, mode: llmMode, ...options.llm });
-      if (model) {
-        decision = applyLlmJudgment(decision, llmMode, request.source, model);
+      const latencyMs = Date.now() - llmStarted;
+      const judged = model ? applyLlmJudgment(decision, llmMode, request.source, model) : undefined;
+      if (judged?.llm) judged.llm.latencyMs = latencyMs;
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: judged?.action ?? decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "llm", model: judged?.llm ?? { mode: llmMode, unavailable: true, latencyMs } });
+      if (judged) {
+        decision = judged;
         publishActivity({
           type: "guard_llm_result",
           memberId: request.memberId,
@@ -217,13 +223,28 @@ export function createGuardService(options: {
     const approverName = approverId
       ? (await options.members.getMember(options.project.id, approverId))?.displayName
       : undefined;
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", durationMicros: 0, model: decision.llm });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", durationMicros: 0, stage: "approval", model: decision.llm });
     publishActivity({
       type: "guard_approval",
       memberId: request.memberId,
       payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules }
     });
     return { request, decision: { ...decision, outcome: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", approverName }, approved };
+  }
+
+  // Agent platform's native permissions: whatever OpenCode asks is confirmed by the Agent's initiator alone.
+  async function submitNative(request: GuardRequest, input: { timeoutMs?: number | null }) {
+    const decision: GuardDecision = { action: "ask", segments: [], legacyRisk: "unknown", matchedRules: ["native.platform-ask"], unknown: false, autoEligible: false, approvers: "initiator", command: request.command };
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "decision" });
+    const pending = approvals.enqueue(request, decision, [request.memberId], approvalTimeoutForMode("off", input.timeoutMs, options.approvalTimeoutMs ?? 120_000));
+    const pendingItem = approvals.list().find((item) => item.id === pending.id);
+    if (pendingItem) for (const listener of pendingListeners) listener(pendingItem as Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">);
+    const approved = await pending.result;
+    const resolution = await pending.outcome;
+    const outcome = resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected";
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: request.memberId, result: outcome, durationMicros: 0, stage: "approval" });
+    publishActivity({ type: "guard_approval", memberId: request.memberId, payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules } });
+    return { request, decision: { ...decision, outcome: outcome as GuardDecision["outcome"] }, approved };
   }
 
   async function setControl(memberId: string | null, requesterId: string) {
@@ -267,8 +288,10 @@ export function createGuardService(options: {
         ? item.request.memberId === memberId && current.online
         : current.online && current.level === "owner";
       if (!authorized) return false;
-      const refreshed = await makeDecision(item.request);
-      if (refreshed.decision.action === "deny") return approvals.reject(id, memberId);
+      if (options.mode !== "native") {
+        const refreshed = await makeDecision(item.request);
+        if (refreshed.decision.action === "deny") return approvals.reject(id, memberId);
+      }
       return approvals.approve(id, memberId);
     },
     async reject(id: string, memberId: string) {
@@ -303,14 +326,22 @@ export function createGuardService(options: {
     async createSnapshot(request: GuardRequest) {
       const parsed = request.kind === "command" && request.command ? parseCommandPaths(request.command, request.cwd) : undefined;
       const paths = request.paths ?? parsed?.targets.map((target) => target.resolvedPath);
-      return snapshots.create({ memberId: request.memberId, command: request.command, paths });
+      const manifest = await snapshots.create({ memberId: request.memberId, command: request.command, paths });
+      publishActivity({
+        type: "guard_snapshot",
+        memberId: request.memberId,
+        payload: { snapshotId: manifest.id, source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, fileCount: manifest.files.length }
+      });
+      return manifest;
     },
     async restoreSnapshot(id: string, memberId: string) {
       const current = await currentMember(memberId);
       const snapshot = (await snapshots.list()).find((candidate) => candidate.id === id);
       if (!snapshot) throw new Error("Snapshot not found");
       if (current.level !== "owner" && (snapshot.scope === "workspace" || snapshot.memberId !== memberId)) throw new Error("Snapshot belongs to another member");
-      return snapshots.restore(id);
+      const manifest = await snapshots.restore(id);
+      publishActivity({ type: "guard_snapshot_restored", memberId, payload: { snapshotId: id, command: snapshot.command, fileCount: manifest.files.length } });
+      return manifest;
     },
     listSnapshots: () => snapshots.list(),
     async getPolicy() { return policy(); },
