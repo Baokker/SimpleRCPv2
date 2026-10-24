@@ -2,7 +2,7 @@ import { getYDoc, docs } from "y-websocket/bin/utils";
 import { arbitrate, buildIntentInjection, conflictKind, createIntentBoard, createOwnerCards, interruptionStats, participantKey, proposalSymbolKeys, sanitize, type ActiveChangeSet, type ActorRef, type AgentIntent, type AgentTextProposal, type ArbitrationMode, type ConflictGuardClock, type GuardConflict, type Interruption, type OwnerCard, type Participant, type SemanticIndex } from "@simplercp/conflict-guard";
 import type { AgentPermissionRequest } from "../agent/permissionDispatcher.js";
 import type { createProjectAgentGuard } from "./projectAgentGuard.js";
-import { intentReviewKey, reviewExplicitDiscounts, type IntentReview } from "./intentReview.js";
+import { intentReviewKey, type IntentReview } from "./intentReview.js";
 
 type AgentGuard = ReturnType<typeof createProjectAgentGuard>;
 type Judgement = Awaited<ReturnType<AgentGuard["judge"]>>;
@@ -148,10 +148,9 @@ export function createProjectArbitration(options: {
       if (!operation) {
         operation = (async () => {
           const leftScope = inferredScope(earlier), rightScope = inferredScope(later);
-          const explicit = reviewExplicitDiscounts(earlier, later);
-          if (!explicit && leftScope.length && rightScope.length && !related(leftScope, rightScope)) return;
+          if (leftScope.length && rightScope.length && !related(leftScope, rightScope)) return;
           const reviewSignal = AbortSignal.any([signal, adviceController.signal, intentController(earlier.actor.runId).signal, intentController(later.actor.runId).signal]);
-          const result = explicit ?? await options.reviewIntents?.(earlier, later, reviewSignal);
+          const result = await options.reviewIntents?.(earlier, later, reviewSignal);
           if (!result) return;
           if (reviewSignal.aborted || [earlier, later].some((intent) => cancelledIntents.has(intent.actor.runId) || ["done", "reverted"].includes(board.get(intent.actor.runId)?.status ?? "done")) || intentReviewKey(board.get(earlier.actor.runId)!, board.get(later.actor.runId)!) !== key) return;
           emit({ type: "intent_judged", actors: [later.actor, earlier.actor], inputHash: key, result });

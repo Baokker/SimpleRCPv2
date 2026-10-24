@@ -35,8 +35,8 @@ import { createWorkspaceSemanticFiles } from "./semanticFiles.js";
 import { createServerAdjudication, type ServerAdjudicationConfig } from "./adjudicationRuntime.js";
 import { createProjectAgentGuard } from "./projectAgentGuard.js";
 import { createProjectArbitration } from "./projectArbitration.js";
-import { createIntentReviewer } from "./intentReview.js";
-import type { ArbitrationMode } from "@simplercp/conflict-guard";
+import { createIntentReviewer, type IntentReview } from "./intentReview.js";
+import type { AgentIntent, ArbitrationMode } from "@simplercp/conflict-guard";
 import { resolveWorkspacePath } from "../workspace.js";
 
 const require = createRequire(import.meta.url);
@@ -75,6 +75,7 @@ export function createProjectConflictGuard(options: {
   onStateChanged?(version: number): void;
   reconcileAgentFile?(file: string): Promise<void>;
   displayActor?(actor: ActorRef): string;
+  reviewIntents?(left: AgentIntent, right: AgentIntent, signal: AbortSignal): Promise<IntentReview>;
 }) {
   if (options.config.mode === "off") return undefined;
   const clock: ConflictGuardClock = {
@@ -245,7 +246,7 @@ export function createProjectConflictGuard(options: {
   const advice = options.config.mode === "full" && options.config.adjudication ? createServerAdjudication({ ...options.config.adjudication, settings: { ...adjudicationSettings, strategy: "G1", point: "T2", hardDeadlineMs: 30_000 } }, clock, options.sensitiveValues ?? [], (call) => { void appendTrace({ type: "provider_call", ...call, purpose: "compromise" }); }, (subscription) => { void appendTrace({ type: "provider_subscription", ...subscription, purpose: "compromise" }); }) : undefined;
   const arbitration = createProjectArbitration({ projectId: options.projectId, clock, mode: options.config.arbitration ?? "owner", injection: options.config.intentInjection ?? true, guard: agentGuard, index: semanticIndex, active: () => semantic.getActiveChangeSets(), display: options.displayActor ?? (() => "协作成员"), sensitiveValues: options.sensitiveValues ?? [], emit: (event) => { void appendTrace(event); }, changed: () => { stateVersion += 1; options.onStateChanged?.(stateVersion); },
     enforceIntents: ["rules", "full"].includes(options.config.mode),
-    ...(options.config.mode === "full" && options.config.adjudication && options.config.adjudication.mode !== "replay" && !options.config.adjudication.judges && process.env.SIMPLERCP_SKIP_MODEL_REQUESTS !== "true" ? { reviewIntents: createIntentReviewer({ ...options.config.adjudication.deepseek, sensitiveValues: options.sensitiveValues ?? [], report: (event) => { void appendTrace(event); } }) } : {}),
+    ...(options.reviewIntents ? { reviewIntents: options.reviewIntents } : options.config.mode === "full" && options.config.adjudication && options.config.adjudication.mode !== "replay" && !options.config.adjudication.judges && process.env.SIMPLERCP_SKIP_MODEL_REQUESTS !== "true" ? { reviewIntents: createIntentReviewer({ ...options.config.adjudication.deepseek, sensitiveValues: options.sensitiveValues ?? [], report: (event) => { void appendTrace(event); } }) } : {}),
     resolveHuman(conflict, yielding) {
       const human = [conflict.self, conflict.other].find((actor) => actor.kind === "human" && actor.memberId === yielding);
       if (human) { if (!revertPair(conflict.pairId, human, true)) throw new Error(revertFailure); }

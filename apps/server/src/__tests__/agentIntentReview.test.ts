@@ -3,25 +3,23 @@ import path from "node:path";
 import { expect, it } from "vitest";
 import type { AgentIntent } from "@simplercp/conflict-guard";
 import { createProjectConflictGuard } from "../conflictGuard/projectConflictGuard.js";
-import { reviewExplicitDiscounts, intentReviewKey } from "../conflictGuard/intentReview.js";
+import { intentReviewKey, type IntentReview } from "../conflictGuard/intentReview.js";
 import { createWarningAcknowledgements } from "../conflictGuard/warningAcknowledgements.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 
 const intent = (task: string): AgentIntent => ({ actor: { kind: "agent", runId: task, ownerId: "owner" }, owner: "owner", task, plannedScope: [], actualScope: [], baseRevision: {}, taskRevision: 0, status: "planning" });
 
-it("identifies incompatible requested discount outcomes and keeps compatible tasks independent", () => {
-  expect(reviewExplicitDiscounts(intent("把618逻辑改成五折"), intent("把618逻辑改成八折"))?.decision).toBe("lock");
-  expect(reviewExplicitDiscounts(intent("把618从五折改成八折"), intent("把618逻辑改成八折"))).toBeUndefined();
-  expect(reviewExplicitDiscounts(intent("双十一改为五折"), intent("618改为八折"))).toBeUndefined();
-  expect(reviewExplicitDiscounts(intent("给618添加日志"), intent("618改为八折"))).toBeUndefined();
-  expect(reviewExplicitDiscounts(intent("618会员五折"), intent("618普通用户八折"))).toBeUndefined();
+// Stands in for the model reviewer so the card flow can be tested without network calls.
+const lockingReviewer = async (): Promise<IntentReview> => ({ decision: "lock", target: "618", explanation: "双方要求同一项 618 折扣具有不同的折扣率。", suggestion: "共同确认默认折扣方案。" });
+
+it("keys intent reviews by task and planned scope", () => {
   const first = intent("618改为八折");
   expect(intentReviewKey(first, first)).not.toBe(intentReviewKey(first, { ...first, plannedScope: ["src/pricing.ts#price"] }));
 });
 
 it("conflicting tasks create an owner card before execution and resume after both owners accept", async () => {
   const root = await createTestWorkspace("intent-review-");
-  const guard = createProjectConflictGuard({ projectId: path.basename(root), metadataPath: path.join(root, "metadata"), workspacePath: root, getRevision: () => 0, config: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } })!;
+  const guard = createProjectConflictGuard({ projectId: path.basename(root), metadataPath: path.join(root, "metadata"), workspacePath: root, getRevision: () => 0, reviewIntents: lockingReviewer, config: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } })!;
   const controller = new AbortController();
   try {
     for (const [runId, ownerId, task] of [["alice-run", "alice", "618改成五折"], ["bob-run", "bob", "618改成八折"]]) {
@@ -53,7 +51,7 @@ it("conflicting tasks create an owner card before execution and resume after bot
 
 it("same-owner tasks wait for the earlier task without creating owner cards", async () => {
   const root = await createTestWorkspace("intent-owner-");
-  const guard = createProjectConflictGuard({ projectId: path.basename(root), metadataPath: path.join(root, "metadata"), workspacePath: root, getRevision: () => 0, config: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } })!;
+  const guard = createProjectConflictGuard({ projectId: path.basename(root), metadataPath: path.join(root, "metadata"), workspacePath: root, getRevision: () => 0, reviewIntents: lockingReviewer, config: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } })!;
   const controller = new AbortController();
   try {
     guard.arbitration.board.create({ kind: "agent", runId: "earlier", ownerId: "alice" }, "618改成五折", {});
@@ -84,7 +82,8 @@ it("warning acknowledgements persist independently for each member and revision"
 
 it("checks every active counterpart and cancellation releases task negotiation", async () => {
   const root = await createTestWorkspace("intent-counterparts-");
-  const guard = createProjectConflictGuard({ projectId: path.basename(root), metadataPath: path.join(root, "metadata"), workspacePath: root, getRevision: () => 0, config: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } })!;
+  const reviewer = async (left: AgentIntent, right: AgentIntent): Promise<IntentReview> => [left, right].every((item) => item.task.includes("618")) ? lockingReviewer() : { decision: "allow", target: "", explanation: "两项任务可以兼容。" };
+  const guard = createProjectConflictGuard({ projectId: path.basename(root), metadataPath: path.join(root, "metadata"), workspacePath: root, getRevision: () => 0, reviewIntents: reviewer, config: { mode: "rules", idleMs: 1500, cursorLeaveLines: 3, maxBatchDurationMs: 30_000, activeIdleMs: 600_000, cursorDebounceMs: 200 } })!;
   const controller = new AbortController();
   try {
     for (let index = 0; index < 6; index += 1) guard.arbitration.board.create({ kind: "agent", runId: `other-${index}`, ownerId: `owner-${index}` }, index === 5 ? "618改成五折" : "添加日志", {});
