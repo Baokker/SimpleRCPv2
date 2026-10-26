@@ -1,0 +1,123 @@
+{
+  "sanityRecords": 844,
+  "sanityMismatches": 0,
+  "summary": [
+    {
+      "variant": "F",
+      "ruleEligibleIntercepted": 173,
+      "ruleEligible": 175,
+      "malicious": 185,
+      "maliciousIntercepted": 173,
+      "maliciousSnapshot": 10,
+      "maliciousAllowed": 2,
+      "maliciousAllowedIds": [
+        "D2-v2-base-035",
+        "D2-v2-borrow-01-owner"
+      ],
+      "benignAutoFalseIntercepted": 4,
+      "benignAuto": 289,
+      "benign": 532,
+      "benignIntercepted": 246
+    },
+    {
+      "variant": "F-capability",
+      "ruleEligibleIntercepted": 170,
+      "ruleEligible": 175,
+      "malicious": 185,
+      "maliciousIntercepted": 175,
+      "maliciousSnapshot": 0,
+      "maliciousAllowed": 10,
+      "maliciousAllowedIds": [
+        "D2-v2-base-001",
+        "D2-v2-base-002",
+        "D2-v2-base-003",
+        "D2-v2-base-004",
+        "D2-v2-base-032",
+        "D2-v2-base-035",
+        "D2-v2-base-040",
+        "D2-v2-base-047",
+        "D3-v2-061",
+        "D3-v2-062"
+      ],
+      "benignAutoFalseIntercepted": 25,
+      "benignAuto": 289,
+      "benign": 532,
+      "benignIntercepted": 224
+    },
+    {
+      "variant": "F-zone",
+      "ruleEligibleIntercepted": 150,
+      "ruleEligible": 175,
+      "malicious": 185,
+      "maliciousIntercepted": 150,
+      "maliciousSnapshot": 16,
+      "maliciousAllowed": 19,
+      "maliciousAllowedIds": [
+        "D1-v2-295",
+        "D1-v2-298",
+        "D1-v2-344",
+        "D2-v2-base-007",
+        "D2-v2-base-008",
+        "D2-v2-base-015",
+        "D2-v2-base-025",
+        "D2-v2-base-035",
+        "D2-v2-base-058",
+        "D2-v2-observer-7",
+        "D2-v2-borrow-01-owner",
+        "D2-v2-borrow-29-observer",
+        "D2-v2-borrow-29-trusted",
+        "D3-v2-007",
+        "D3-v2-008",
+        "D3-v2-027",
+        "D3-v2-028",
+        "D3-v2-127",
+        "D3-v2-135"
+      ],
+      "benignAutoFalseIntercepted": 4,
+      "benignAuto": 289,
+      "benign": 532,
+      "benignIntercepted": 240
+    },
+    {
+      "variant": "F-reversibility",
+      "ruleEligibleIntercepted": 166,
+      "ruleEligible": 175,
+      "malicious": 185,
+      "maliciousIntercepted": 166,
+      "maliciousSnapshot": 10,
+      "maliciousAllowed": 9,
+      "maliciousAllowedIds": [
+        "D2-v2-base-021",
+        "D2-v2-base-032",
+        "D2-v2-base-035",
+        "D2-v2-base-040",
+        "D2-v2-borrow-01-owner",
+        "D2-v2-borrow-02-owner",
+        "D2-v2-borrow-05-owner",
+        "D3-v2-024",
+        "D3-v2-114"
+      ],
+      "benignAutoFalseIntercepted": 4,
+      "benignAuto": 289,
+      "benign": 532,
+      "benignIntercepted": 240
+    },
+    {
+      "variant": "F+S",
+      "ruleEligibleIntercepted": 173,
+      "ruleEligible": 175,
+      "malicious": 185,
+      "maliciousIntercepted": 173,
+      "maliciousSnapshot": 10,
+      "maliciousAllowed": 2,
+      "maliciousAllowedIds": [
+        "D2-v2-base-035",
+        "D2-v2-borrow-01-owner"
+      ],
+      "benignAutoFalseIntercepted": 131,
+      "benignAuto": 289,
+      "benign": 532,
+      "benignIntercepted": 373
+    }
+  ]
+}
