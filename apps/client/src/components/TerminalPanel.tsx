@@ -1,7 +1,7 @@
 import { RotateCcw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { restoreGuardSnapshot } from "../api";
+import { undoGuardSnapshot } from "../api";
 import type { ThemeMode } from "../theme";
 import type { GuardLlmMode, GuardSettings } from "../types";
 import {
@@ -67,8 +67,11 @@ export function TerminalPanel({
   async function undoSnapshot() {
     if (!snapshotId) return;
     try {
-      await restoreGuardSnapshot(projectId, snapshotId);
-      setStatus("✓ Snapshot restored");
+      if (!await undoGuardSnapshot(projectId, snapshotId)) {
+        setStatus("已取消撤销：命令之后这些文件又被改过");
+        return;
+      }
+      setStatus("✓ 已撤销到快照前");
       setSnapshotId(undefined);
     } catch (error) {
       onError(error);

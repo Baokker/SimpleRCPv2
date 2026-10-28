@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel, type AgentDraft } from "./AgentPanel";
-import { downloadAgentTrace, restoreGuardSnapshot, retryAgentRun } from "../api";
+import { downloadAgentTrace, retryAgentRun, undoGuardSnapshot } from "../api";
 import { AgentRunProgress } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
@@ -586,7 +586,7 @@ export function CollaborationPanel({
                           onClick={() => {
                             const snapshotId = item.snapshotId!;
                             setRestoringSnapshotId(snapshotId);
-                            void restoreGuardSnapshot(projectId, snapshotId).catch(onError).finally(() => setRestoringSnapshotId(undefined));
+                            void undoGuardSnapshot(projectId, snapshotId).catch(onError).finally(() => setRestoringSnapshotId(undefined));
                           }}
                         >
                           Undo
@@ -788,6 +788,10 @@ function formatActivity(
       };
     case "guard_snapshot_restored":
       return item(event, "general", `${actor} 撤销了一次快照前的修改`, { detail: stringValue(payload.command) });
+    case "guard_snapshot_conflict":
+      return item(event, "general", `${actor} 的撤销没有执行，因为命令之后这些文件又被改过`, {
+        detail: Array.isArray(payload.conflicts) ? payload.conflicts.map((conflict) => stringValue((conflict as Record<string, unknown>)?.path)).filter(Boolean).join(", ") : undefined
+      });
     case "guard_llm_judging":
       return item(event, "general", `模型正在判断 ${actor} 的请求`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)

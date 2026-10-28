@@ -10,6 +10,19 @@ interface SnapshotManifest {
   command?: string;
   scope: "paths" | "workspace";
   files: Array<{ path: string; hash: string; size: number }>;
+  // Hashes taken when the snapshotted command finished. Restore only overwrites files that still match them.
+  sealed?: { at: string; files: Array<{ path: string; hash: string }> };
+}
+
+export interface RestoreConflict { path: string; reason: "changed-after-command" | "not-sealed" }
+export interface RestoreResult { manifest: SnapshotManifest; restored: boolean; conflicts: RestoreConflict[]; backupId?: string }
+
+async function fileHash(file: string) {
+  const bytes = await fs.readFile(file).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT" || error.code === "EISDIR") return undefined;
+    throw error;
+  });
+  return bytes ? crypto.createHash("sha256").update(bytes).digest("hex") : "";
 }
 
 async function collectFiles(root: string, relative = "") {
@@ -31,7 +44,7 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
     if (!/^[0-9]+-[a-f0-9]{8}$/.test(id)) throw new Error("Invalid snapshot id");
     return path.join(snapshotsRoot, id);
   }
-  return {
+  const store = {
     async create(input: { memberId: string; command?: string; paths?: string[] }) {
       const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
       const directory = snapshotDirectory(id);
@@ -60,20 +73,45 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
       }
       return manifest;
     },
-    async restore(id: string) {
+    async seal(id: string) {
+      const manifestPath = path.join(snapshotDirectory(id), "manifest.json");
+      const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")) as SnapshotManifest;
+      if (manifest.sealed) return manifest;
+      const files = [];
+      for (const file of manifest.files) files.push({ path: file.path, hash: await fileHash(path.join(workspaceRoot, file.path)) });
+      manifest.sealed = { at: new Date().toISOString(), files };
+      await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
+      return manifest;
+    },
+    // Restores only when no snapshotted file changed after the command finished. Otherwise nothing is
+    // written and the conflicting files are returned for a person to resolve; `force` overrides this.
+    // Every restore first snapshots the files it is about to overwrite, so the restore can be undone.
+    async restore(id: string, options: { memberId?: string; force?: boolean } = {}): Promise<RestoreResult> {
       const directory = snapshotDirectory(id);
       const manifest = JSON.parse(await fs.readFile(path.join(directory, "manifest.json"), "utf8")) as SnapshotManifest;
+      const sealed = new Map(manifest.sealed?.files.map((file) => [file.path, file.hash]));
+      const pending: Array<{ path: string; bytes?: Buffer }> = [];
+      const conflicts: RestoreConflict[] = [];
       for (const file of manifest.files) {
-        const source = path.join(directory, file.path);
+        const current = await fileHash(path.join(workspaceRoot, file.path));
+        if (current === file.hash) continue;
+        if (!manifest.sealed) conflicts.push({ path: file.path, reason: "not-sealed" });
+        else if (current !== sealed.get(file.path)) conflicts.push({ path: file.path, reason: "changed-after-command" });
+        pending.push({ path: file.path, bytes: file.hash ? await fs.readFile(path.join(directory, file.path)) : undefined });
+      }
+      if (conflicts.length && !options.force) return { manifest, restored: false, conflicts };
+      if (!pending.length) return { manifest, restored: true, conflicts };
+      const backup = await store.create({ memberId: options.memberId ?? manifest.memberId, command: `restore ${id}`, paths: pending.map((file) => file.path) });
+      for (const file of pending) {
         const destination = path.join(workspaceRoot, file.path);
-        if (!file.hash) {
+        if (!file.bytes) {
           await fs.rm(destination, { recursive: true, force: true });
           continue;
         }
         await fs.mkdir(path.dirname(destination), { recursive: true });
-        await fs.copyFile(source, destination);
+        await fs.writeFile(destination, file.bytes);
       }
-      return manifest;
+      return { manifest, restored: true, conflicts, backupId: backup.id };
     },
     async list() {
       const entries = await fs.readdir(snapshotsRoot).catch((error: NodeJS.ErrnoException) => error.code === "ENOENT" ? [] : (() => { throw error; })());
@@ -86,6 +124,7 @@ export function createSnapshotStore(root: string, workspaceRoot: string) {
       return manifests.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
     }
   };
+  return store;
 }
 
 async function collectSelectedFiles(root: string, selections: string[]) {
