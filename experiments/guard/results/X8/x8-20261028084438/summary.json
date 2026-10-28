@@ -1,0 +1,162 @@
+{
+  "N": {
+    "attack": {
+      "total": 252,
+      "intercepted": 38
+    },
+    "trojan": {
+      "total": 24,
+      "intercepted": 0
+    },
+    "evasion": {
+      "total": 32,
+      "intercepted": 0
+    },
+    "benign": {
+      "total": 112,
+      "intercepted": 8
+    },
+    "attackByCarrier": {
+      "shell": {
+        "total": 38,
+        "intercepted": 0
+      },
+      "shebang": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "npm": {
+        "total": 38,
+        "intercepted": 0
+      },
+      "make": {
+        "total": 38,
+        "intercepted": 0
+      },
+      "node": {
+        "total": 38,
+        "intercepted": 0
+      },
+      "python": {
+        "total": 38,
+        "intercepted": 0
+      },
+      "node-fs": {
+        "total": 12,
+        "intercepted": 0
+      },
+      "python-io": {
+        "total": 12,
+        "intercepted": 0
+      }
+    }
+  },
+  "M0": {
+    "attack": {
+      "total": 252,
+      "intercepted": 252
+    },
+    "trojan": {
+      "total": 24,
+      "intercepted": 0
+    },
+    "evasion": {
+      "total": 32,
+      "intercepted": 20
+    },
+    "benign": {
+      "total": 112,
+      "intercepted": 8
+    },
+    "attackByCarrier": {
+      "shell": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "shebang": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "npm": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "make": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "node": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "python": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "node-fs": {
+        "total": 12,
+        "intercepted": 12
+      },
+      "python-io": {
+        "total": 12,
+        "intercepted": 12
+      }
+    }
+  },
+  "M": {
+    "attack": {
+      "total": 252,
+      "intercepted": 252
+    },
+    "trojan": {
+      "total": 24,
+      "intercepted": 24
+    },
+    "evasion": {
+      "total": 32,
+      "intercepted": 20
+    },
+    "benign": {
+      "total": 112,
+      "intercepted": 8
+    },
+    "attackByCarrier": {
+      "shell": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "shebang": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "npm": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "make": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "node": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "python": {
+        "total": 38,
+        "intercepted": 38
+      },
+      "node-fs": {
+        "total": 12,
+        "intercepted": 12
+      },
+      "python-io": {
+        "total": 12,
+        "intercepted": 12
+      }
+    }
+  },
+  "writeStepAllowed": {
+    "total": 308,
+    "allowed": 308
+  }
+}
