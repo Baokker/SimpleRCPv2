@@ -11,8 +11,13 @@ const require = createRequire(import.meta.url);
 const { parse } = require("../apps/server/node_modules/dotenv/lib/main.js");
 const environment = parse(await fs.readFile(path.join(root, ".env"), "utf8"));
 const secrets = Object.entries(environment).filter(([name, value]) => /(?:KEY|TOKEN|SECRET)(?:_|$)/i.test(name) && value).map(([, value]) => value);
-const intermediate = path.join(root, ".test-workspaces/thesis-screenshots");
-const evidence = path.join(root, "docs/conflict-guard/evidence/thesis-screenshots");
+// CAPTURE_TAG keeps a new capture batch (and its Agent budget) apart from earlier ones.
+const batch = process.env.CAPTURE_TAG ? `thesis-screenshots-${process.env.CAPTURE_TAG}` : "thesis-screenshots";
+const intermediate = path.join(root, ".test-workspaces", batch);
+const evidence = path.join(root, "docs/conflict-guard/evidence", batch);
+// Narrow panes keep the side panel prominent (the shell needs 180 + 360 + 420 px); scale 2 keeps text sharp after the figure is shrunk to page width.
+const viewport = { width: 1000, height: 900 };
+const scale = 2;
 const runtime = path.join(intermediate, "runtime");
 const origin = "http://127.0.0.1:5187";
 const action = process.argv[2];
@@ -37,12 +42,14 @@ if (action === "serve") {
     CONFLICT_GUARD: "full", CONFLICT_GUARD_STRATEGY: "G3",
     CONFLICT_GUARD_T2_STRATEGY: "G3", CONFLICT_GUARD_T3_STRATEGY: "G3",
     CONFLICT_GUARD_PROVIDER_MODE: "live", CONFLICT_GUARD_ARBITRATION: "owner",
-    CONFLICT_GUARD_INTENT_INJECTION: "on", DEEPSEEK_MODEL: "deepseek-flash",
+    CONFLICT_GUARD_INTENT_INJECTION: "on", CONFLICT_GUARD_T2_REASONING: "false", CONFLICT_GUARD_T3_REASONING: "false", DEEPSEEK_MODEL: "deepseek-flash",
+    // Jev rejects requests from this region (HTTP 451) unless they go through the local proxy.
+    TYPESAFE_PROXY_URL: process.env.TYPESAFE_PROXY_URL ?? "http://127.0.0.1:7897",
     VITE_SIMPLERCP_API_ORIGIN: "http://127.0.0.1:4027",
     VITE_SIMPLERCP_CLIENT_PORT: "5187", VITE_SIMPLERCP_CLIENT_HOST: "127.0.0.1",
     TMPDIR: runtime
   };
-  await writeJson("config.json", { ...settings, codeCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), modelEndpoint: environment.DEEPSEEK_BASE_URL, startedAt: new Date().toISOString(), viewport: { width: 1440, height: 1000 } });
+  await writeJson("config.json", { ...settings, codeCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), modelEndpoint: environment.DEEPSEEK_BASE_URL, startedAt: new Date().toISOString(), viewport, scale });
   const children = [
     spawn(process.execPath, ["--import", "tsx", "src/index.ts"], { cwd: path.join(root, "apps/server"), env: { ...process.env, ...settings }, stdio: ["ignore", "pipe", "pipe"] }),
     spawn(process.execPath, [path.join(root, "apps/client/node_modules/vite/bin/vite.js")], { cwd: path.join(root, "apps/client"), env: { ...process.env, ...settings }, stdio: ["ignore", "pipe", "pipe"] })
@@ -114,19 +121,22 @@ async function request(page, id, route, method = "GET", body) {
 }
 async function openPair(browser, scenario) {
   const contexts = await Promise.all(["dark", "light"].map(async (theme) => {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+    const context = await browser.newContext({ viewport, deviceScaleFactor: scale });
     await context.addInitScript(({ theme }) => {
       localStorage.setItem("simplercp.theme", theme);
-      localStorage.setItem("simplercp.layout.collaborationWidth", "540");
-      localStorage.setItem("simplercp.layout.workspaceWidth", "185");
+      localStorage.setItem("simplercp.layout.collaborationWidth", "420");
+      localStorage.setItem("simplercp.layout.workspaceWidth", "180");
     }, { theme });
     return context;
   }));
   const [alice, bob] = await Promise.all(contexts.map((context) => context.newPage()));
+  const labels = { black: "黑区拦截", white: "白区放行", grey: "灰区模型研判", "human-agent": "人与 Agent 协作", "agent-agent": "跨属主 Agent 协商" };
+  // Project names appear in the status bar, so a retake replaces the earlier project instead of adding a suffix.
+  const { projects } = await fetch(`${origin}/api/projects`).then((response) => response.json());
+  for (const project of projects.filter((project) => project.name === labels[scenario])) await fetch(`${origin}/api/projects/${project.id}`, { method: "DELETE" });
   await alice.goto(origin);
   await alice.getByTestId("import-directory").click();
-  const labels = { black: "黑区拦截", white: "白区放行", grey: "灰区模型研判", "human-agent": "人与 Agent 协作", "agent-agent": "跨属主 Agent 协商" };
-  await alice.getByTestId("project-name").fill(`${labels[scenario]} ${Date.now()}`);
+  await alice.getByTestId("project-name").fill(labels[scenario]);
   await alice.getByTestId("project-directory").fill(path.join(root, "demo/conflict-shop"));
   await alice.getByTestId("create-project-submit").click();
   await alice.waitForURL(/\/projects\/[^/]+$/);
@@ -257,20 +267,29 @@ async function humanAgent(pair) {
   const { alice, bob, id } = pair;
   await openFile(alice, "src/cart.ts");
   await openFile(bob, "src/pricing.ts");
-  const run = await startRun(alice, id, `在 src/cart.ts 的 Cart.total 中给 amount 增加 1 元运费，然后计算折扣。先读取 cart.ts 与 pricing.ts，输出计划；使用 bash 执行 sleep 20，给协作者编辑时间，然后进行修改。第一次修改将 applyDiscount(amount, 0.1) 改为 applyDiscount(amount + 1, 0.1)，保持阅读时的两个参数调用。审批通过后检查最新签名；如果审批被拒，请重新读取 pricing.ts 与 cart.ts，适配最新签名，再提交修改。仅修改 cart.ts，保留其他逻辑。${boundaries}`);
+  const run = await startRun(alice, id, `在 src/cart.ts 中新增常量 const CART_DISCOUNT_RATE = 0.1，并让 Cart.total 改用这个常量计算折扣，计算结果保持不变。先读取 cart.ts 与 pricing.ts，输出计划；使用 bash 执行 sleep 20，给协作者编辑时间，然后进行修改。第一次修改将 applyDiscount(amount, 0.1) 改为 applyDiscount(amount, CART_DISCOUNT_RATE)，保持阅读时的两个参数调用。如果审批被拒，请重新读取 pricing.ts 与 cart.ts，按 applyDiscount 的最新签名补齐参数（currency 可传 Currency.USD，并从 types.ts 导入 Currency），再提交修改。仅修改 cart.ts，保留其他逻辑。${boundaries}`);
   await waitUntil(() => request(alice, id, `/agent/runs/${run.id}`), ({ run }) => run.activity?.tools.some((tool) => tool.name === "bash" && tool.status === "running"), 90_000);
   await edit(bob, "src/pricing.ts", "rate: number)", "rate: number, currency: string)");
   await waitUntil(() => request(bob, id, "/conflict-guard/state"), (state) => state.activeSymbols.some((entry) => entry.actor.kind === "human" && entry.symbols.some((symbol) => symbol.key.endsWith("#applyDiscount"))));
+  // The paper figure shows the moment a write is approved after an earlier rejection, before the end-of-task recheck.
+  const adapted = () => alice.evaluate(() => /applyDiscount\(amount,[^,)]+,[^)]+\)/u.test(window.__simplercpEditors["src/cart.ts"].getValue()));
+  await waitUntil(async () => ({ adapted: await adapted(), status: (await request(alice, id, `/agent/runs/${run.id}`)).run.status }), (state) => state.adapted || state.status !== "running", 240_000);
+  assert(await adapted(), "Agent 结束前没有按新签名提交调用");
+  const show = async () => {
+    await disclosure(alice, "agent-trace-disclosure", true);
+    await alice.getByTestId("agent-trace-disclosure").scrollIntoViewIfNeeded();
+    await bob.getByTestId("collab-tab-conflict").click();
+    await disclosure(bob, "conflict-history", true);
+    const row = bob.getByTestId("agent-conflict-record").first();
+    if (await row.count() && !(await row.evaluate((element) => element.open))) await row.locator(":scope > summary").click();
+  };
+  await show();
+  const approved = await exportRun(alice, id, run.id, "04-human-agent");
+  await save(pair, "04-human-agent", { run: approved.run, permissionReplies: approved.trace.events.filter((event) => event.type === "permission_reply"), cart: await alice.evaluate(() => window.__simplercpEditors["src/cart.ts"].getValue()) });
   await finished(alice, id, run.id);
-  const record = await exportRun(alice, id, run.id, "04-human-agent");
-  await disclosure(alice, "agent-trace-disclosure", true);
-  const details = alice.getByTestId("agent-trace-disclosure");
-  await details.scrollIntoViewIfNeeded();
-  await bob.getByTestId("collab-tab-conflict").click();
-  await disclosure(bob, "conflict-history", true);
-  const row = bob.getByTestId("agent-conflict-record").first();
-  if (await row.count()) await row.locator(":scope > summary").click();
-  await save(pair, "04-human-agent", { run: record.run, permissionReplies: record.trace.events.filter((event) => event.type === "permission_reply"), humanFrozenDecorations: await bob.locator(".conflict-frozen-range").count() });
+  await show();
+  const record = await exportRun(alice, id, run.id, "04-human-agent-completed");
+  await save(pair, "04-human-agent-completed", { run: record.run, permissionReplies: record.trace.events.filter((event) => event.type === "permission_reply"), humanFrozenDecorations: await bob.locator(".conflict-frozen-range").count() });
 }
 async function agents(pair) {
   const { alice, bob, id } = pair;
@@ -286,6 +305,8 @@ async function agents(pair) {
     await disclosure(page, "conflict-progress", true);
     await page.getByTestId("owner-intent-card").first().waitFor();
   }
+  // The narrow panel pushes the suggestion below the fold; show it on Bob's side as in the paper figure.
+  await bob.getByTestId("owner-intent-card").first().getByRole("button", { name: "采纳建议" }).scrollIntoViewIfNeeded();
   await exportRun(alice, id, first.id, "05-agent-agent-paused");
   await exportRun(bob, id, second.id, "05-agent-agent-paused");
   await save(pair, "05-agent-agent-paused", { card: state.ownerCards.find((card) => card.status === "waiting"), firstRunId: first.id, secondRunId: second.id });
@@ -321,10 +342,11 @@ async function compose(browser) {
     const prefix = name.replace("-alice-dark.png", "");
     const counterpart = `${prefix}-bob-light.png`;
     assert(files.includes(counterpart), "缺少另一位协作者的截图");
-    const context = await browser.newContext({ viewport: { width: 2880, height: 1000 }, deviceScaleFactor: 1 });
+    const gap = 8;
+    const context = await browser.newContext({ viewport: { width: viewport.width * 2 + gap, height: viewport.height }, deviceScaleFactor: scale });
     const page = await context.newPage();
     const sources = await Promise.all([name, counterpart].map(async (file) => `data:image/png;base64,${(await fs.readFile(path.join(evidence, file))).toString("base64")}`));
-    await page.setContent(`<html><body style="margin:0;display:flex"><img width="1440" height="1000" src="${sources[0]}"><img width="1440" height="1000" src="${sources[1]}"></body></html>`);
+    await page.setContent(`<html><body style="margin:0;display:flex;gap:${gap}px;background:#fff"><img width="${viewport.width}" height="${viewport.height}" src="${sources[0]}"><img width="${viewport.width}" height="${viewport.height}" src="${sources[1]}"></body></html>`);
     await page.locator("img").evaluateAll((images) => Promise.all(images.map((image) => image.decode())));
     await page.screenshot({ path: path.join(evidence, `${prefix}-dual.png`) });
     await context.close();

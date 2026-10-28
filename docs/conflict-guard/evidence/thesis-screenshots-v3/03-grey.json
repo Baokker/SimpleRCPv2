@@ -1,0 +1,575 @@
+{
+  "capturedAt": "2026-10-28T05:44:59.020Z",
+  "projectId": "3eqCssPhuQbH",
+  "state": {
+    "mode": "full",
+    "version": 20,
+    "indexing": false,
+    "degraded": false,
+    "traceWriteFailures": 0,
+    "index": {
+      "files": 7,
+      "symbols": 22,
+      "edges": 28,
+      "truncated": false,
+      "latestUpdate": {
+        "files": 2,
+        "durationMs": 2.562959000002593,
+        "full": false
+      }
+    },
+    "changeSets": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "967e8143-d629-40bf-97f1-ac4301ec0032"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/pricing.ts",
+            "ranges": [
+              {
+                "start": 149,
+                "end": 160
+              },
+              {
+                "start": 178,
+                "end": 191
+              }
+            ],
+            "firstTouchedAt": 1793166290380,
+            "lastTouchedAt": 1793166290380
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "c28ef0f8-c506-429f-8461-f4130f55000b"
+        },
+        "status": "settled",
+        "files": [
+          {
+            "file": "src/checkout.ts",
+            "ranges": [
+              {
+                "start": 160,
+                "end": 167
+              }
+            ],
+            "firstTouchedAt": 1793166290469,
+            "lastTouchedAt": 1793166290469
+          }
+        ]
+      }
+    ],
+    "activeSymbols": [
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "967e8143-d629-40bf-97f1-ac4301ec0032"
+        },
+        "symbols": [
+          {
+            "key": "src/pricing.ts#applyDiscount",
+            "file": "src/pricing.ts",
+            "name": "applyDiscount",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 3,
+            "endLine": 5,
+            "editedLineRanges": [
+              {
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "lastTouchedAt": 1793166290380
+          }
+        ]
+      },
+      {
+        "actor": {
+          "kind": "human",
+          "memberId": "c28ef0f8-c506-429f-8461-f4130f55000b"
+        },
+        "symbols": [
+          {
+            "key": "src/checkout.ts#checkout",
+            "file": "src/checkout.ts",
+            "name": "checkout",
+            "kind": "function",
+            "exported": true,
+            "status": "modified",
+            "startLine": 4,
+            "endLine": 6,
+            "editedLineRanges": [
+              {
+                "start": 5,
+                "end": 5
+              }
+            ],
+            "lastTouchedAt": 1793166290469
+          }
+        ]
+      }
+    ],
+    "candidatePairs": [
+      {
+        "id": "90c5905c5ffc88ef2d40f1f9fc938855be54266efbc0ae6c8c11b45688d5b0f6",
+        "left": {
+          "actor": {
+            "kind": "human",
+            "memberId": "967e8143-d629-40bf-97f1-ac4301ec0032"
+          },
+          "symbol": "src/pricing.ts#applyDiscount",
+          "symbols": [
+            "src/pricing.ts#applyDiscount"
+          ],
+          "status": "modified"
+        },
+        "right": {
+          "actor": {
+            "kind": "human",
+            "memberId": "c28ef0f8-c506-429f-8461-f4130f55000b"
+          },
+          "symbol": "src/checkout.ts#checkout",
+          "symbols": [
+            "src/checkout.ts#checkout"
+          ],
+          "status": "modified"
+        },
+        "relations": [
+          {
+            "left": "src/pricing.ts#applyDiscount",
+            "right": "src/checkout.ts#checkout",
+            "path": {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/checkout.ts#checkout",
+              "hops": [
+                {
+                  "from": "src/pricing.ts#applyDiscount",
+                  "to": "src/cart.ts#Cart.total",
+                  "kind": "call",
+                  "direction": "backward"
+                },
+                {
+                  "from": "src/cart.ts#Cart.total",
+                  "to": "src/checkout.ts#checkout",
+                  "kind": "call",
+                  "direction": "backward"
+                }
+              ],
+              "typeOnly": false
+            }
+          }
+        ],
+        "distance": 2,
+        "path": {
+          "from": "src/pricing.ts#applyDiscount",
+          "to": "src/checkout.ts#checkout",
+          "hops": [
+            {
+              "from": "src/pricing.ts#applyDiscount",
+              "to": "src/cart.ts#Cart.total",
+              "kind": "call",
+              "direction": "backward"
+            },
+            {
+              "from": "src/cart.ts#Cart.total",
+              "to": "src/checkout.ts#checkout",
+              "kind": "call",
+              "direction": "backward"
+            }
+          ],
+          "typeOnly": false
+        },
+        "firstSeenAt": 1793166290507,
+        "updatedAt": 1793166290507,
+        "revisionKey": "3c9ea73c1679befa6f383134217273108ef082e92f5dcdea314d99ade71ebdb1"
+      }
+    ],
+    "pairDecisions": [
+      {
+        "pair": {
+          "id": "90c5905c5ffc88ef2d40f1f9fc938855be54266efbc0ae6c8c11b45688d5b0f6",
+          "left": {
+            "actor": {
+              "kind": "human",
+              "memberId": "967e8143-d629-40bf-97f1-ac4301ec0032"
+            },
+            "symbol": "src/pricing.ts#applyDiscount",
+            "symbols": [
+              "src/pricing.ts#applyDiscount"
+            ],
+            "status": "modified"
+          },
+          "right": {
+            "actor": {
+              "kind": "human",
+              "memberId": "c28ef0f8-c506-429f-8461-f4130f55000b"
+            },
+            "symbol": "src/checkout.ts#checkout",
+            "symbols": [
+              "src/checkout.ts#checkout"
+            ],
+            "status": "modified"
+          },
+          "relations": [
+            {
+              "left": "src/pricing.ts#applyDiscount",
+              "right": "src/checkout.ts#checkout",
+              "path": {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/checkout.ts#checkout",
+                "hops": [
+                  {
+                    "from": "src/pricing.ts#applyDiscount",
+                    "to": "src/cart.ts#Cart.total",
+                    "kind": "call",
+                    "direction": "backward"
+                  },
+                  {
+                    "from": "src/cart.ts#Cart.total",
+                    "to": "src/checkout.ts#checkout",
+                    "kind": "call",
+                    "direction": "backward"
+                  }
+                ],
+                "typeOnly": false
+              }
+            }
+          ],
+          "distance": 2,
+          "path": {
+            "from": "src/pricing.ts#applyDiscount",
+            "to": "src/checkout.ts#checkout",
+            "hops": [
+              {
+                "from": "src/pricing.ts#applyDiscount",
+                "to": "src/cart.ts#Cart.total",
+                "kind": "call",
+                "direction": "backward"
+              },
+              {
+                "from": "src/cart.ts#Cart.total",
+                "to": "src/checkout.ts#checkout",
+                "kind": "call",
+                "direction": "backward"
+              }
+            ],
+            "typeOnly": false
+          },
+          "firstSeenAt": 1793166290507,
+          "updatedAt": 1793166290507,
+          "revisionKey": "3c9ea73c1679befa6f383134217273108ef082e92f5dcdea314d99ade71ebdb1"
+        },
+        "status": "judged",
+        "revision": 0,
+        "leftConfirmed": false,
+        "rightConfirmed": false,
+        "totalLockMs": 0,
+        "updatedAt": 1793166297824,
+        "revisionKey": "3c9ea73c1679befa6f383134217273108ef082e92f5dcdea314d99ade71ebdb1",
+        "analysisPending": false,
+        "verdict": {
+          "zone": "grey",
+          "decision": "allow",
+          "ruleId": "model-deep",
+          "summary": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "新增 Math.round(price * (1 - rate) * 100) / 100 仍返回 number；测试中的 applyDiscount(100, 0.1) 结果仍为 90，且被 src/cart.ts#Cart.total 直接调用。"
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "调用链明确为 applyDiscount(amount, 0.1) 返回折扣后的总价；合并后未改变调用关系，现有购物车总价断言 cart.total() === 18 仍与该行为一致。"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "trim() 仅移除 formatMoney(cart.total()) 两端空白，不会改变测试所依赖的 \"USD 18.00\" 内容或结账金额格式；该符号的导出状态和签名保持不变。"
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "折扣返回折后价格",
+              "detail": "现有断言 assert.equal(applyDiscount(100, 0.1), 90) 验证舍入后的折扣结果仍为 90。"
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "结账使用购物车折后总价",
+              "detail": "现有断言同时验证 cart.total() === 18 和 checkout(cart) === \"USD 18.00\"，覆盖两个修改通过调用链共同依赖的行为。"
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "舍入修改对所给调用和测试值不产生可观察差异；在当前证据边界内，合并未显示违反既有共同依赖。"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "trim 对无前导或尾随空白的现有结账字符串不产生可观察差异；合并诊断与各单边状态相同，没有新增合并专属错误。"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 78.41562499999418,
+            "states": {
+              "baseline": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              },
+              "leftOnly": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              },
+              "rightOnly": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              },
+              "merged": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              }
+            },
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "strategy": "G3",
+            "source": "deep",
+            "adapter": "minimax",
+            "model": "MiniMax-M3",
+            "confidence": 0.96,
+            "latencyMs": 5520,
+            "status": "success",
+            "escalated": true,
+            "userExplanation": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+            "suggestedAction": "无需修改 applyDiscount 或 checkout；保留当前实现并运行 test/shop.test.mjs 验证。",
+            "inputHash": "cbad563a9ac247e8466541e06daf2402c11bf2e09c2a118114191c092ef698c8",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "analysisStartedAt": 1793166292289,
+        "analysisVisible": false,
+        "lastAttempt": {
+          "zone": "grey",
+          "decision": "allow",
+          "ruleId": "model-deep",
+          "summary": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+          "evidence": [
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "新增 Math.round(price * (1 - rate) * 100) / 100 仍返回 number；测试中的 applyDiscount(100, 0.1) 结果仍为 90，且被 src/cart.ts#Cart.total 直接调用。"
+            },
+            {
+              "file": "src/cart.ts",
+              "symbol": "src/cart.ts#Cart.total",
+              "detail": "调用链明确为 applyDiscount(amount, 0.1) 返回折扣后的总价；合并后未改变调用关系，现有购物车总价断言 cart.total() === 18 仍与该行为一致。"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "trim() 仅移除 formatMoney(cart.total()) 两端空白，不会改变测试所依赖的 \"USD 18.00\" 内容或结账金额格式；该符号的导出状态和签名保持不变。"
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "折扣返回折后价格",
+              "detail": "现有断言 assert.equal(applyDiscount(100, 0.1), 90) 验证舍入后的折扣结果仍为 90。"
+            },
+            {
+              "file": "test/shop.test.mjs",
+              "symbol": "结账使用购物车折后总价",
+              "detail": "现有断言同时验证 cart.total() === 18 和 checkout(cart) === \"USD 18.00\"，覆盖两个修改通过调用链共同依赖的行为。"
+            },
+            {
+              "file": "src/pricing.ts",
+              "symbol": "src/pricing.ts#applyDiscount",
+              "detail": "舍入修改对所给调用和测试值不产生可观察差异；在当前证据边界内，合并未显示违反既有共同依赖。"
+            },
+            {
+              "file": "src/checkout.ts",
+              "symbol": "src/checkout.ts#checkout",
+              "detail": "trim 对无前导或尾随空白的现有结账字符串不产生可观察差异；合并诊断与各单边状态相同，没有新增合并专属错误。"
+            }
+          ],
+          "contractChanged": {
+            "left": false,
+            "right": false
+          },
+          "typecheck": {
+            "ran": true,
+            "durationMs": 78.41562499999418,
+            "states": {
+              "baseline": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              },
+              "leftOnly": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              },
+              "rightOnly": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              },
+              "merged": {
+                "diagnostics": [
+                  "src/pricing.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/checkout.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                  "src/cart.ts:5097:An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                ]
+              }
+            },
+            "mergeOnlyDiagnostics": []
+          },
+          "adjudication": {
+            "strategy": "G3",
+            "source": "deep",
+            "adapter": "minimax",
+            "model": "MiniMax-M3",
+            "confidence": 0.96,
+            "latencyMs": 5520,
+            "status": "success",
+            "escalated": true,
+            "userExplanation": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+            "suggestedAction": "无需修改 applyDiscount 或 checkout；保留当前实现并运行 test/shop.test.mjs 验证。",
+            "inputHash": "cbad563a9ac247e8466541e06daf2402c11bf2e09c2a118114191c092ef698c8",
+            "promptVersion": "pair-v1"
+          }
+        },
+        "conflict": {
+          "pairId": "90c5905c5ffc88ef2d40f1f9fc938855be54266efbc0ae6c8c11b45688d5b0f6",
+          "revision": 0,
+          "self": {
+            "kind": "human",
+            "memberId": "967e8143-d629-40bf-97f1-ac4301ec0032"
+          },
+          "other": {
+            "kind": "human",
+            "memberId": "c28ef0f8-c506-429f-8461-f4130f55000b"
+          },
+          "otherDisplayName": "Bob（人）",
+          "symbols": {
+            "self": "src/pricing.ts#applyDiscount",
+            "other": "src/checkout.ts#checkout"
+          },
+          "beforeSignature": "export function checkout(cart: Cart): string",
+          "afterSignature": "export function checkout(cart: Cart): string",
+          "ruleId": "model-deep",
+          "zone": "grey",
+          "decision": "allow",
+          "summaryZh": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+          "explanationZh": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+          "suggestionZh": "无需修改 applyDiscount 或 checkout；保留当前实现并运行 test/shop.test.mjs 验证。"
+        },
+        "warningKey": "2992f23fbaff9d5b7d1170acb29ca7a6ef25e8701edc6bf4cb8590d0a18cae56",
+        "acknowledged": false
+      }
+    ],
+    "agentNotices": [],
+    "intents": [],
+    "ownerCards": [],
+    "arbitration": {
+      "mode": "owner",
+      "members": [],
+      "automaticRetries": 0,
+      "outcomes": {
+        "accepted": 0,
+        "yielded": 0,
+        "timeout": 0,
+        "closed": 0
+      },
+      "suspendedMs": 0
+    },
+    "frozenFiles": [],
+    "analyzingFiles": [],
+    "adjudication": {
+      "calls": 2,
+      "cacheHits": 0,
+      "judgements": 1,
+      "escalations": 1,
+      "escalationRatio": 1,
+      "p50Ms": 5520,
+      "p95Ms": 5520,
+      "syntaxDeferred": 0,
+      "syntaxWaitP50Ms": null,
+      "syntaxWaitP95Ms": null,
+      "failures": 1,
+      "infrastructureFailures": 0,
+      "costUsd": 0.0012626999999999998
+    },
+    "blockedPersists": [],
+    "persistConflicts": 0,
+    "persistBlockedCount": 2,
+    "uiActionCount": 0,
+    "intervention": {
+      "decisions": 1,
+      "localDecisionRatio": 0,
+      "white": 0,
+      "black": 0,
+      "grey": 1,
+      "frozenDurationMs": 0,
+      "persistBlockedCount": 2,
+      "uiActionCount": 0
+    },
+    "t0Warnings": [],
+    "statistics": {
+      "total": 2,
+      "related": 2,
+      "unrelated": 0,
+      "unrelatedRatio": 0,
+      "typeOnly": 0
+    },
+    "cursors": []
+  },
+  "verification": {
+    "zone": "grey",
+    "decision": "allow",
+    "model": {
+      "strategy": "G3",
+      "source": "deep",
+      "adapter": "minimax",
+      "model": "MiniMax-M3",
+      "confidence": 0.96,
+      "latencyMs": 5520,
+      "status": "success",
+      "escalated": true,
+      "userExplanation": "这两项修改合并后仍满足现有折扣、总价和结账文本的共同依赖，未见行为回归。",
+      "suggestedAction": "无需修改 applyDiscount 或 checkout；保留当前实现并运行 test/shop.test.mjs 验证。",
+      "inputHash": "cbad563a9ac247e8466541e06daf2402c11bf2e09c2a118114191c092ef698c8",
+      "promptVersion": "pair-v1"
+    },
+    "frozenFiles": []
+  }
+}
