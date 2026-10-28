@@ -146,6 +146,25 @@ describe("member identity API", () => {
     expect(nextResult).toMatchObject({ approved: true, decision: { action: "allow", outcome: "allowed" } });
   });
 
+  it("judges a script by its content and by the level of its last writer", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("script-provenance-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 80 });
+    const owner = await joinMember(running.origin, "demo", { name: "Owner", role: "owner" });
+    const student = await joinMember(running.origin, "demo", { name: "Student", role: "student" });
+    const runtime = running.app.locals.runtimeManager.get("demo");
+    const request = (memberId: string, command: string) => ({ projectId: "demo", memberId, source: "terminal" as const, kind: "command" as const, command, cwd: runtime.project.workspacePath });
+    const written = await runtime.guard.submit(request(student.member.id, "printf 'rm -rf src' > fix.sh"));
+    expect(written).toMatchObject({ approved: true, decision: { action: "allow_snapshot" } });
+    await fs.writeFile(path.join(runtime.project.workspacePath, "fix.sh"), "rm -rf src\n");
+    const byOwner = await runtime.guard.submit(request(owner.member.id, "bash fix.sh"));
+    expect(byOwner).toMatchObject({ approved: false, decision: { action: "ask", approvers: "self" } });
+    expect(byOwner.decision.matchedRules).toEqual(expect.arrayContaining(["script.writer.student", "script.role.student.delete"]));
+    await fs.writeFile(path.join(runtime.project.workspacePath, "own.sh"), "rm -rf src\n");
+    expect(await runtime.guard.submit(request(owner.member.id, "bash own.sh"))).toMatchObject({ approved: true, decision: { action: "allow" } });
+  });
+
   it("keeps ordinary commands available and lets controlled users reach normal review", async () => {
     await running.close();
     await fs.rm(root, { recursive: true, force: true });

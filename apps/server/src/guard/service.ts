@@ -10,7 +10,9 @@ import { createGuardAudit } from "./audit.js";
 import { decide } from "./decide.js";
 import { judgeGuardRequest, type JudgeResult } from "./llmJudge.js";
 import { roleLevel } from "./roles.js";
+import { applyScriptInspection, fileScriptSource, inspectScripts } from "./scriptInspection.js";
 import { createSnapshotStore } from "./snapshots.js";
+import { createWriteProvenance } from "./writeProvenance.js";
 import { parseCommandPaths } from "./legacy/parser.js";
 import type { Action, GuardDecision, GuardRequest, Level } from "./types.js";
 
@@ -62,11 +64,13 @@ export function createGuardService(options: {
   llm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
   approvalTimeoutMs?: number;
   otherWorkspaceRoots?: (currentProjectId: string) => string[];
+  scriptInspection?: boolean;
 }) {
   const policyPath = path.join(options.metadataRoot, "guard-policy.json");
   const audit = createGuardAudit(path.join(options.metadataRoot, "guard-audit.jsonl"), options.llm?.apiKey ? [options.llm.apiKey] : []);
   const approvals = createApprovalQueue(options.approvalTimeoutMs ?? 120_000);
   const snapshots = createSnapshotStore(options.metadataRoot, options.project.workspacePath);
+  const provenance = createWriteProvenance(path.join(options.metadataRoot, "guard-provenance.json"), options.project.workspacePath);
   const pendingListeners = new Set<(approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void>();
   const activityListeners = new Set<(event: ReturnType<EventLog["append"]>) => void>();
   const resolutionListeners = new Set<(id: string, outcome: ApprovalOutcome) => void>();
@@ -110,20 +114,33 @@ export function createGuardService(options: {
     const started = process.hrtime.bigint();
     const stored = await currentMember(request.memberId);
     const currentPolicy = await policy();
-    const decision = decide(request, {
+    const context = {
       memberLevel: stored.level,
       initiatorOnline: stored.online,
       workspaceRoot: options.project.workspacePath,
       platformDataRoot: options.platformDataRoot,
       otherWorkspaceRoots: options.otherWorkspaceRoots?.(options.project.id),
       protectedPaths: currentPolicy.protectedPaths
-    });
+    };
+    await provenance.load();
+    const decision = options.scriptInspection === false
+      ? decide(request, context)
+      : applyScriptInspection(decide(request, context), inspectScripts(request, context, fileScriptSource(undefined, (file) => provenance.levelOf(file))), stored.level, request.source);
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);
     audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros, stage: "decision" });
     return { decision, member: stored, policy: currentPolicy };
   }
 
   async function submit(request: GuardRequest, input: { timeoutMs?: number | null } = {}) {
+    const result = await submitDecision(request, input);
+    if (result.approved && options.mode === "full") {
+      const member = await options.members.getMember(options.project.id, request.memberId);
+      if (member) await provenance.record(request, roleLevel(member.role) as Level);
+    }
+    return result;
+  }
+
+  async function submitDecision(request: GuardRequest, input: { timeoutMs?: number | null } = {}) {
     if (request.agentRunId && cancelledRunIds.has(request.agentRunId)) {
       const cancelledDecision: GuardDecision = { action: "deny", segments: [], legacyRisk: "unknown", matchedRules: ["guard.run-cancelled"], unknown: false, autoEligible: false, approvers: null, outcome: "denied", command: request.command };
       return { request, decision: cancelledDecision, approved: false };
