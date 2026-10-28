@@ -1,0 +1,39 @@
+{
+  "status": "已完成",
+  "datasetCount": 86,
+  "models": [
+    "gpt-6-luna"
+  ],
+  "repeats": 3,
+  "completedJudgments": 258,
+  "plannedJudgments": 258,
+  "totalInputTokens": 45543,
+  "totalOutputTokens": 22502,
+  "cost": "未核实，API 响应只提供 token 使用量",
+  "metricsByModel": {
+    "gpt-6-luna": {
+      "precision": 0.8947368421052632,
+      "recall": 0.9444444444444444,
+      "f1": 0.918918918918919,
+      "calibration": [
+        {
+          "count": 258,
+          "meanConfidence": 0.985891472868219,
+          "accuracy": 0.9883720930232558
+        }
+      ],
+      "expectedCalibrationError": 0.0024806201550368057,
+      "count": 258,
+      "latencyMs": {
+        "p50": 11365.072625,
+        "p95": 22972.733,
+        "p99": 27104.359458
+      },
+      "injectionBetrayalRate": 0,
+      "finalAutoReleaseRate": 0,
+      "inputTokens": 45543,
+      "outputTokens": 22502
+    }
+  },
+  "finalAutoReleaseRate": 0
+}

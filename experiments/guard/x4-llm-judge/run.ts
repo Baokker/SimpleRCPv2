@@ -116,14 +116,17 @@ function binaryMetrics(rows: RawRow[]) {
 
 async function main() {
   const startedAt = new Date().toISOString();
+  // X4_ENV_FILE points at an OpenAI-compatible credential file with base_url and api_key; X4_MODELS lists the models to run.
+  const externalEnvironment = process.env.X4_ENV_FILE ? parse(await fs.readFile(path.resolve(process.env.X4_ENV_FILE), "utf8")) : undefined;
   const environmentPath = path.join(projectRoot, ".env");
-  const environment = parse(await fs.readFile(environmentPath, "utf8"));
-  const provider = process.env.GUARD_LLM_PROVIDER ?? (environment.MINIMAX_API_KEY ? "minimax" : "deepseek");
-  const apiKey = provider === "minimax" ? environment.MINIMAX_API_KEY?.trim() : environment.DEEPSEEK_API_KEY?.trim();
-  const baseUrl = provider === "minimax" ? environment.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1" : environment.DEEPSEEK_BASE_URL?.trim();
-  const configuredModel = provider === "minimax" ? environment.MINIMAX_MODEL ?? "MiniMax-M3" : environment.DEEPSEEK_MODEL?.trim();
+  const environment = externalEnvironment ?? parse(await fs.readFile(environmentPath, "utf8"));
+  const provider = externalEnvironment ? "openai-compatible" : process.env.GUARD_LLM_PROVIDER ?? (environment.MINIMAX_API_KEY ? "minimax" : "deepseek");
+  const apiKey = externalEnvironment ? externalEnvironment.api_key?.trim() : provider === "minimax" ? environment.MINIMAX_API_KEY?.trim() : environment.DEEPSEEK_API_KEY?.trim();
+  const baseUrl = externalEnvironment ? externalEnvironment.base_url?.trim() : provider === "minimax" ? environment.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1" : environment.DEEPSEEK_BASE_URL?.trim();
+  const requestedModels = process.env.X4_MODELS?.split(",").map((model) => model.trim()).filter(Boolean);
+  const configuredModel = requestedModels?.[0] ?? (provider === "minimax" ? environment.MINIMAX_MODEL ?? "MiniMax-M3" : environment.DEEPSEEK_MODEL?.trim());
   if (!apiKey || !baseUrl || !configuredModel) throw new Error("Configured provider credentials and endpoint required");
-  let models = [...new Set([configuredModel, provider === "minimax" ? "MiniMax-M2.7" : "deepseek-v4-pro"])];
+  let models = requestedModels ?? [...new Set([configuredModel, provider === "minimax" ? "MiniMax-M2.7" : "deepseek-v4-pro"])];
   const dataset = await loadDataset("D6");
   const runDirectory = process.env.X4_RUN_DIR
     ? path.resolve(process.env.X4_RUN_DIR)
@@ -273,7 +276,7 @@ async function main() {
     finalAutoReleaseRate: rows.filter((row) => row.malicious && (row.finalAction === "allow" || row.finalAction === "allow_snapshot")).length / rows.filter((row) => row.malicious).length
   };
   await writeRun(runDirectory, rows, summary, { experiment: "X4", datasetCount: dataset.length, modelConfigured: true, models, repeats: 3 });
-  await fs.writeFile(path.join(runDirectory, "summary.md"), `# X4 大模型研判质量实验\n\n状态：${rows.length === jobs.length ? "已完成" : "部分运行"}。D6 共 ${dataset.length} 条，两个模型各重复 3 次，计划 ${jobs.length} 次，实际完成 ${rows.length} 次判定。\n\n模型：${models.join(", ")}。总 token ${totalInputTokens + totalOutputTokens}，费用依据 API 返回的 token 无法核实。\n\n${models.map((model) => `## ${model}\n\n\`${JSON.stringify(byModel[model])}\``).join("\n\n")}\n`);
+  await fs.writeFile(path.join(runDirectory, "summary.md"), `# X4 大模型研判质量实验\n\n状态：${rows.length === jobs.length ? "已完成" : "部分运行"}。D6 共 ${dataset.length} 条，${models.length} 个模型各重复 3 次，计划 ${jobs.length} 次，实际完成 ${rows.length} 次判定。\n\n模型：${models.join(", ")}。总 token ${totalInputTokens + totalOutputTokens}，费用依据 API 返回的 token 无法核实。\n\n${models.map((model) => `## ${model}\n\n\`${JSON.stringify(byModel[model])}\``).join("\n\n")}\n`);
   await fs.writeFile(path.join(runDirectory, "judge-input-policy.md"), "判官输入只包含命令、路径、规则判定与研判模式，不包含 memberId、绝对 cwd 或任何密钥。\n");
   const env = await environmentRecord({ experiment: "X4", provider, baseUrl, temperature: 0, model: configuredModel, modelConfigured: true, models, repeats: 3, startedAt, endedAt: new Date().toISOString() });
   await fs.writeFile(path.join(runDirectory, "env.json"), `${JSON.stringify(env, null, 2)}\n`);
