@@ -28,6 +28,23 @@ export async function correctionReferenceFiles(pair: Dataset["transfers"][number
     return {file, afterText};
   }));
 }
+// Test files the Ta agent added or changed. The corrector reverts them together with the reference files,
+// because tests written by the agent encode the behaviour being corrected.
+export async function agentTestChanges(workspace: string, baselineRoot: string) {
+  const list = async (root: string) => (await fs.readdir(path.join(root, "test")).catch(() => [] as string[])).filter(name => /\.(ts|mjs)$/u.test(name));
+  const baseline = new Set(await list(baselineRoot));
+  const changes: Array<{file: string; beforeText: string; afterText: string | null}> = [];
+  for (const name of (await list(workspace)).sort()) {
+    const file = `test/${name}`;
+    const current = await fs.readFile(path.join(workspace, file), "utf8");
+    if (!baseline.has(name)) changes.push({file, beforeText: current, afterText: null});
+    else {
+      const original = await fs.readFile(path.join(baselineRoot, file), "utf8");
+      if (original !== current) changes.push({file, beforeText: current, afterText: original});
+    }
+  }
+  return changes;
+}
 export function correctionContext(text: string, diff: string, limit = 800) {
   const prefix = `${text}\n\nTa diff:\n`;
   if (prefix.length > limit) throw new Error("Correction text exceeds the configured card budget");
@@ -297,6 +314,7 @@ async function prepareSharedEpisode(data: Dataset, config: ExperimentConfig, api
       await writeJson(taJudged, await judge(pair.ta, before.snapshot, path.join(raw, "ta")));
     } else ta = await readJson(path.join(raw, "ta/run.json"));
     const correctionFiles: Array<{file: string; beforeText: string; afterText: string}> = [];
+    const revertedTests: Array<{file: string; removed: boolean}> = [];
     if (pair.correction.mode === "revise") {
       const revisions = await correctionReferenceFiles(pair);
       const baseline = await api.request(route(`experiments/runs/${initial.id}/correction-baseline`), correcting, {files: revisions.map(item => item.file)});
@@ -312,11 +330,17 @@ async function prepareSharedEpisode(data: Dataset, config: ExperimentConfig, api
           if (current !== afterText) await collaboration.replace(correcting, file, current, afterText);
           correctionFiles.push({file, beforeText: current, afterText});
         }
+        const baselineRoot = pair.ta.workspaceSource ?? path.join(benchRoot, "repos", pair.ta.repository);
+        for (const change of await agentTestChanges(project.workspacePath, baselineRoot)) {
+          if (change.afterText === null) await api.request(route(`workspace/path?path=${encodeURIComponent(change.file)}`), correcting, undefined, "DELETE");
+          else await collaboration.replace(correcting, change.file, change.beforeText, change.afterText);
+          revertedTests.push({file: change.file, removed: change.afterText === null});
+        }
         await api.request(route("chat"), correcting, {text: pair.correction.text});
       } finally { await collaboration.close(); }
     }
     await writeJson(path.join(raw, "ta/run.json"), ta);
-    await writeJson(correctionFile, {at: Date.now(), memberId: correcting, text: pair.correction.text, interruptedStatus: ta.status, correctionFiles});
+    await writeJson(correctionFile, {at: Date.now(), memberId: correcting, text: pair.correction.text, interruptedStatus: ta.status, correctionFiles, revertedTests});
   }
   const correctionJudgeFile = path.join(raw, "correction-judge.json");
   if (!await exists(correctionJudgeFile)) await writeJson(correctionJudgeFile, await judge(pair.ta, project.workspacePath, path.join(raw, "correction")));
