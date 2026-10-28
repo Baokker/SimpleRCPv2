@@ -1,0 +1,260 @@
+{
+  "pairs": {
+    "P01": {
+      "crossOwner": false,
+      "episodes": 3,
+      "trapped": 2,
+      "all": {
+        "T0": 0,
+        "T2": 1,
+        "T3": 3
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 1,
+        "T3": 2
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 1,
+        "T3": 3
+      }
+    },
+    "P02": {
+      "crossOwner": false,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 2
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 2
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      }
+    },
+    "P03": {
+      "crossOwner": true,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      }
+    },
+    "P04": {
+      "crossOwner": true,
+      "episodes": 3,
+      "trapped": 2,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 1
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 2,
+        "T3": 3
+      }
+    },
+    "P05": {
+      "crossOwner": true,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      }
+    },
+    "P06": {
+      "crossOwner": false,
+      "episodes": 3,
+      "trapped": 0,
+      "all": {
+        "T0": 3,
+        "T2": 3,
+        "T3": 3
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 3,
+        "T3": 3
+      }
+    },
+    "P07": {
+      "crossOwner": false,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 3
+      }
+    },
+    "P12": {
+      "crossOwner": false,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      }
+    },
+    "P13": {
+      "crossOwner": true,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 2,
+        "T3": 3
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 2,
+        "T3": 3
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 2,
+        "T3": 3
+      }
+    },
+    "P15": {
+      "crossOwner": false,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 2
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 2
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 2
+      }
+    },
+    "P16": {
+      "crossOwner": true,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 1
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 1
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 1
+      }
+    },
+    "P18": {
+      "crossOwner": true,
+      "episodes": 3,
+      "trapped": 3,
+      "all": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "trappedOnly": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      },
+      "delivered": {
+        "T0": 0,
+        "T2": 0,
+        "T3": 0
+      }
+    }
+  },
+  "pairLevelT3vsT0": {
+    "all": {
+      "pairs": 12,
+      "T3Better": 8,
+      "T0Better": 0,
+      "ties": 4,
+      "signTestTwoSided": 0.0078125
+    },
+    "trappedOnly": {
+      "pairs": 11,
+      "T3Better": 7,
+      "T0Better": 0,
+      "ties": 4,
+      "signTestTwoSided": 0.015625
+    }
+  }
+}
