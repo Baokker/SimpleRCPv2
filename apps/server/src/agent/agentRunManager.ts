@@ -154,6 +154,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let snapshot: Awaited<ReturnType<typeof createAgentWorkspaceSnapshot>> | undefined;
     let runtimeSessionId: string | undefined;
     let stopEvents: (() => Promise<void>) | undefined;
+    // Snapshots taken before a tool call, sealed once that call finishes so undo can detect later edits.
+    const unsealedSnapshots = new Map<string, string>();
     let questionManager: ReturnType<typeof createAgentQuestions> | undefined;
     let lastPublished = 0;
     const runtime = options.runtimeManager.get(projectId);
@@ -295,7 +297,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             timeoutMs: Math.min(projectRuntime.guard.approvalTimeoutMs(), Math.max(1, Math.floor(options.runTimeoutMs / 2)))
           });
           if (permissionResult.approved && permissionResult.decision.action === "allow_snapshot") {
-            await projectRuntime.guard.createSnapshot(request);
+            const manifest = await projectRuntime.guard.createSnapshot(request);
+            unsealedSnapshots.set(callId ?? `permission:${requestId}`, manifest.id);
           }
           if (permissionResult.approved) {
             await replyPermission(requestId, "once");
@@ -339,6 +342,11 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           const callId = typeof record.callID === "string" ? record.callID : undefined;
           const state = record.state && typeof record.state === "object" ? record.state as Record<string, unknown> : undefined;
           if (callId && state?.input && typeof state.input === "object") toolInputs.set(callId, state.input);
+          const snapshotId = callId ? unsealedSnapshots.get(callId) : undefined;
+          if (snapshotId && (state?.status === "completed" || state?.status === "error")) {
+            unsealedSnapshots.delete(callId!);
+            await runtime.guard.sealSnapshot(snapshotId).catch(() => undefined);
+          }
         }
         const stored = await appendTrace(projectId, runId, { type: `opencode.${event.type}`, data: event.data });
         sequence = stored.sequence; progress.event(event, stored.timestamp); phase = progress.phase();
@@ -400,6 +408,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       } finally {
         try {
           await stopEvents?.();
+          for (const snapshotId of unsealedSnapshots.values()) await runtime.guard.sealSnapshot(snapshotId).catch(() => undefined);
+          unsealedSnapshots.clear();
         } finally {
           try {
             await questionManager?.dispose();

@@ -598,12 +598,25 @@ async function handleTerminalMessage(
       return;
     }
     runtime.terminal.write(`${message.text}\r`, memberId, false);
+    if (snapshotId) void sealWhenTerminalIdle(runtime, snapshotId);
     const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "withdrawn" | "timeout" | "allowed" | "denied" | "busy";
     sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome, reason: describeGuardRules(decision.matchedRules) || "Request was allowed", approverName: decision.approverName, snapshotId, command: message.text });
   } finally {
     pendingListener();
     activeCommands.delete(memberId);
   }
+}
+
+// Seal the snapshot once the command returns to the shell, so undo can tell the command's edits from later ones.
+async function sealWhenTerminalIdle(runtime: ProjectRuntime, snapshotId: string) {
+  const deadline = Date.now() + 30 * 60_000;
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  while (Date.now() < deadline) {
+    const foreground = runtime.terminal.foregroundProcess();
+    if (!foreground || runtime.terminal.isShellProcess(foreground)) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  await runtime.guard.sealSnapshot(snapshotId).catch(() => undefined);
 }
 
 function describeGuardRules(rules: string[], blocked = false) {

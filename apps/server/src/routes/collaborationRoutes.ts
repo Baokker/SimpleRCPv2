@@ -260,8 +260,8 @@ export function registerCollaborationRoutes(
     try {
       const identity = requireIdentity(req, res);
       if (!identity) return;
-      const manifest = await runtimeManager.get(req.params.projectId).guard.restoreSnapshot(req.params.snapshotId, identity.memberId);
-      res.json({ manifest });
+      const result = await runtimeManager.get(req.params.projectId).guard.restoreSnapshot(req.params.snapshotId, identity.memberId, { force: req.body?.force === true });
+      res.json(result);
     } catch (error) { next(error); }
   });
 }

@@ -351,14 +351,17 @@ export function createGuardService(options: {
       });
       return manifest;
     },
-    async restoreSnapshot(id: string, memberId: string) {
+    sealSnapshot: (id: string) => snapshots.seal(id),
+    async restoreSnapshot(id: string, memberId: string, options: { force?: boolean } = {}) {
       const current = await currentMember(memberId);
       const snapshot = (await snapshots.list()).find((candidate) => candidate.id === id);
       if (!snapshot) throw new Error("Snapshot not found");
       if (current.level !== "owner" && (snapshot.scope === "workspace" || snapshot.memberId !== memberId)) throw new Error("Snapshot belongs to another member");
-      const manifest = await snapshots.restore(id);
-      publishActivity({ type: "guard_snapshot_restored", memberId, payload: { snapshotId: id, command: snapshot.command, fileCount: manifest.files.length } });
-      return manifest;
+      const result = await snapshots.restore(id, { memberId, force: options.force });
+      publishActivity(result.restored
+        ? { type: "guard_snapshot_restored", memberId, payload: { snapshotId: id, command: snapshot.command, fileCount: result.manifest.files.length, backupId: result.backupId, forced: Boolean(options.force && result.conflicts.length) } }
+        : { type: "guard_snapshot_conflict", memberId, payload: { snapshotId: id, command: snapshot.command, conflicts: result.conflicts } });
+      return result;
     },
     listSnapshots: () => snapshots.list(),
     async getPolicy() { return policy(); },

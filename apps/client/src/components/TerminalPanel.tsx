@@ -1,7 +1,7 @@
 import { RotateCcw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { restoreGuardSnapshot } from "../api";
+import { undoGuardSnapshot } from "../api";
 import type { ThemeMode } from "../theme";
 import type { GuardLlmMode, GuardSettings } from "../types";
 import {
@@ -67,7 +67,10 @@ export function TerminalPanel({
   async function undoSnapshot() {
     if (!snapshotId) return;
     try {
-      await restoreGuardSnapshot(projectId, snapshotId);
+      if (!await undoGuardSnapshot(projectId, snapshotId)) {
+        setStatus("Undo cancelled: files changed after the command");
+        return;
+      }
       setStatus("✓ Snapshot restored");
       setSnapshotId(undefined);
     } catch (error) {

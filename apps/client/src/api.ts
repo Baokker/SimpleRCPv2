@@ -73,8 +73,21 @@ export async function listGuardApprovals(projectId: string) {
   return request<{ approvals: import("@simplercp/shared").GuardApproval[] }>(`${projectPath(projectId)}/guard/approvals`);
 }
 
-export async function restoreGuardSnapshot(projectId: string, snapshotId: string) {
-  return request<{ manifest: { id: string } }>(`${projectPath(projectId)}/guard/snapshots/${encodeURIComponent(snapshotId)}/restore`, { method: "POST" });
+export interface GuardRestoreResult { restored: boolean; conflicts: Array<{ path: string; reason: string }>; backupId?: string }
+
+export async function restoreGuardSnapshot(projectId: string, snapshotId: string, force = false) {
+  return request<GuardRestoreResult>(`${projectPath(projectId)}/guard/snapshots/${encodeURIComponent(snapshotId)}/restore`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ force })
+  });
+}
+
+// Undo refuses to overwrite files that changed after the command ran; the person decides whether to force it.
+export async function undoGuardSnapshot(projectId: string, snapshotId: string) {
+  const result = await restoreGuardSnapshot(projectId, snapshotId);
+  if (result.restored) return true;
+  const files = result.conflicts.map((conflict) => conflict.path).join(", ");
+  if (!window.confirm(`These files changed after the command ran: ${files}. Undo would overwrite those later edits. The current files are saved in a new snapshot first. Overwrite anyway?`)) return false;
+  return (await restoreGuardSnapshot(projectId, snapshotId, true)).restored;
 }
 
 export async function getGuardSettings(projectId: string) {
