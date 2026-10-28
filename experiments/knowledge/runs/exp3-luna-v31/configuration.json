@@ -1,0 +1,19 @@
+{
+  "experiment": "k3",
+  "commit": "7f91f7cc9b2666017a01228a201457be91b0540d",
+  "configHash": "9e0e49546dcaa82328b9d2d468833abb9a9d378d6d0ba1071cc0f07ca851d508",
+  "manifestHash": "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137",
+  "provider": "minimax",
+  "model": "gpt-6-luna",
+  "config": {
+    "origin": "http://127.0.0.1:4213",
+    "provider": "minimax",
+    "model": "gpt-6-luna",
+    "concurrency": 2,
+    "timeoutMs": 600000,
+    "delayMs": 60000,
+    "speed": 1,
+    "repetitions": 1,
+    "seed": 20261007
+  }
+}

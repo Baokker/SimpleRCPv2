@@ -1,0 +1,1 @@
+{"origin":"http://127.0.0.1:4213","provider":"minimax","model":"gpt-6-luna","concurrency":2,"timeoutMs":600000,"delayMs":60000,"speed":1,"repetitions":1,"seed":20261007}

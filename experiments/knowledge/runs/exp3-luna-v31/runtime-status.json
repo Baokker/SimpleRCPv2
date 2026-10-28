@@ -1,0 +1,12 @@
+{
+  "runtime": "opencode",
+  "state": "ready",
+  "version": "1.18.31",
+  "model": "gpt-6-luna",
+  "provider": "minimax",
+  "apiKeyConfigured": true,
+  "activityConfig": {
+    "waitingMs": 20000,
+    "stalledMs": 60000
+  }
+}
