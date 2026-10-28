@@ -39,7 +39,7 @@ export async function judgeGuardRequest(input: {
 }): Promise<JudgeResult | undefined> {
   if (input.mode === "off" || !input.baseUrl || !input.apiKey) return undefined;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), input.timeoutMs ?? 5_000);
+  const timer = setTimeout(() => controller.abort(), input.timeoutMs ?? 15_000);
   try {
     const { memberId: _memberId, cwd: _cwd, ...safeRequest } = input.request;
     const minimax = input.provider === "minimax";

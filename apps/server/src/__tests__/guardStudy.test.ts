@@ -53,7 +53,7 @@ describe("study configuration", () => {
   it("selects MiniMax for the Agent and the guard through one provider switch", () => {
     const config = loadConfig({ SIMPLERCP_LLM_PROVIDER: "minimax", MINIMAX_API_KEY: "test-key" }, "/srv/simplercp");
     expect(config.agent).toMatchObject({ provider: "minimax", apiKey: "test-key", baseUrl: "https://api.minimaxi.com/v1", model: "MiniMax-M3" });
-    expect(config.guardLlmTimeoutMs).toBe(5_000);
+    expect(config.guardLlmTimeoutMs).toBe(15_000);
     expect(() => loadConfig({ SIMPLERCP_LLM_PROVIDER: "other" }, "/srv/simplercp")).toThrow(/SIMPLERCP_LLM_PROVIDER/);
   });
 

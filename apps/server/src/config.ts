@@ -92,7 +92,7 @@ export function loadConfig(
   if (!Number.isInteger(guardApprovalTimeoutMs) || guardApprovalTimeoutMs < 1) {
     throw new Error("SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS must be a positive integer");
   }
-  const guardLlmTimeoutMs = Number(env.SIMPLERCP_GUARD_LLM_TIMEOUT_MS ?? 5_000);
+  const guardLlmTimeoutMs = Number(env.SIMPLERCP_GUARD_LLM_TIMEOUT_MS ?? 15_000);
   if (!Number.isInteger(guardLlmTimeoutMs) || guardLlmTimeoutMs < 1) {
     throw new Error("SIMPLERCP_GUARD_LLM_TIMEOUT_MS must be a positive integer");
   }
