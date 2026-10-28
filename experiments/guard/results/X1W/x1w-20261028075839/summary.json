@@ -1,0 +1,218 @@
+{
+  "W1": {
+    "attack": {
+      "total": 175,
+      "intercepted": 72
+    },
+    "benign": {
+      "total": 289,
+      "intercepted": 7
+    },
+    "maliciousAll": {
+      "total": 185,
+      "intercepted": 76
+    },
+    "attackBySourceLevel": {
+      "terminal/student": {
+        "total": 66,
+        "intercepted": 0
+      },
+      "agent/collaborator": {
+        "total": 11,
+        "intercepted": 11
+      },
+      "terminal/collaborator": {
+        "total": 25,
+        "intercepted": 0
+      },
+      "agent/student": {
+        "total": 37,
+        "intercepted": 35
+      },
+      "agent/owner": {
+        "total": 10,
+        "intercepted": 10
+      },
+      "terminal/owner": {
+        "total": 6,
+        "intercepted": 0
+      },
+      "agent/trusted": {
+        "total": 8,
+        "intercepted": 8
+      },
+      "terminal/observer": {
+        "total": 4,
+        "intercepted": 0
+      },
+      "agent/observer": {
+        "total": 8,
+        "intercepted": 8
+      }
+    },
+    "benignBySourceLevel": {
+      "terminal/collaborator": {
+        "total": 170,
+        "intercepted": 0
+      },
+      "terminal/student": {
+        "total": 42,
+        "intercepted": 0
+      },
+      "terminal/trusted": {
+        "total": 33,
+        "intercepted": 0
+      },
+      "agent/student": {
+        "total": 11,
+        "intercepted": 0
+      },
+      "agent/collaborator": {
+        "total": 8,
+        "intercepted": 1
+      },
+      "agent/owner": {
+        "total": 6,
+        "intercepted": 5
+      },
+      "agent/trusted": {
+        "total": 7,
+        "intercepted": 1
+      },
+      "terminal/owner": {
+        "total": 2,
+        "intercepted": 0
+      },
+      "terminal/observer": {
+        "total": 8,
+        "intercepted": 0
+      },
+      "agent/observer": {
+        "total": 2,
+        "intercepted": 0
+      }
+    },
+    "actions": {
+      "allow": {
+        "total": 612,
+        "intercepted": 0
+      },
+      "ask": {
+        "total": 51,
+        "intercepted": 51
+      },
+      "deny": {
+        "total": 54,
+        "intercepted": 54
+      }
+    }
+  },
+  "W2": {
+    "attack": {
+      "total": 175,
+      "intercepted": 171
+    },
+    "benign": {
+      "total": 289,
+      "intercepted": 26
+    },
+    "maliciousAll": {
+      "total": 185,
+      "intercepted": 178
+    },
+    "attackBySourceLevel": {
+      "terminal/student": {
+        "total": 66,
+        "intercepted": 66
+      },
+      "agent/collaborator": {
+        "total": 11,
+        "intercepted": 11
+      },
+      "terminal/collaborator": {
+        "total": 25,
+        "intercepted": 23
+      },
+      "agent/student": {
+        "total": 37,
+        "intercepted": 35
+      },
+      "agent/owner": {
+        "total": 10,
+        "intercepted": 10
+      },
+      "terminal/owner": {
+        "total": 6,
+        "intercepted": 6
+      },
+      "agent/trusted": {
+        "total": 8,
+        "intercepted": 8
+      },
+      "terminal/observer": {
+        "total": 4,
+        "intercepted": 4
+      },
+      "agent/observer": {
+        "total": 8,
+        "intercepted": 8
+      }
+    },
+    "benignBySourceLevel": {
+      "terminal/collaborator": {
+        "total": 170,
+        "intercepted": 15
+      },
+      "terminal/student": {
+        "total": 42,
+        "intercepted": 2
+      },
+      "terminal/trusted": {
+        "total": 33,
+        "intercepted": 2
+      },
+      "agent/student": {
+        "total": 11,
+        "intercepted": 0
+      },
+      "agent/collaborator": {
+        "total": 8,
+        "intercepted": 1
+      },
+      "agent/owner": {
+        "total": 6,
+        "intercepted": 5
+      },
+      "agent/trusted": {
+        "total": 7,
+        "intercepted": 1
+      },
+      "terminal/owner": {
+        "total": 2,
+        "intercepted": 0
+      },
+      "terminal/observer": {
+        "total": 8,
+        "intercepted": 0
+      },
+      "agent/observer": {
+        "total": 2,
+        "intercepted": 0
+      }
+    },
+    "actions": {
+      "allow": {
+        "total": 285,
+        "intercepted": 0
+      },
+      "ask": {
+        "total": 217,
+        "intercepted": 217
+      },
+      "deny": {
+        "total": 215,
+        "intercepted": 215
+      }
+    }
+  }
+}
