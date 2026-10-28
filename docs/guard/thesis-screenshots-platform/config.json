@@ -1,0 +1,26 @@
+{
+  "PORT": "4031",
+  "SIMPLERCP_HOST": "127.0.0.1",
+  "SIMPLERCP_PUBLIC_URL": "http://127.0.0.1:5191",
+  "SIMPLERCP_DATA_DIR": "/Users/baokker/Documents/SimpleRCPv2-shots/.test-workspaces/thesis-screenshots-platform/data",
+  "SIMPLERCP_WORKSPACES_DIR": "/Users/baokker/Documents/SimpleRCPv2-shots/.test-workspaces/thesis-screenshots-platform/data/workspaces",
+  "SIMPLERCP_OPENCODE_PORT": "4111",
+  "SIMPLERCP_FAKE_AGENT_RUNTIME": "false",
+  "SIMPLERCP_TERMINAL_ENABLED": "true",
+  "SIMPLERCP_SHELL": "/bin/sh",
+  "SIMPLERCP_TERMINAL_HOME": "/Users/baokker/Documents/SimpleRCPv2-shots/.test-workspaces/thesis-screenshots-platform/home",
+  "SIMPLERCP_GUARD_MODE": "full",
+  "SIMPLERCP_GUARD_LLM_MODE": "suggest",
+  "SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS": "20000",
+  "VITE_SIMPLERCP_API_ORIGIN": "http://127.0.0.1:4031",
+  "VITE_SIMPLERCP_CLIENT_PORT": "5191",
+  "SIMPLERCP_TERMINAL_ENV_ALLOW": "PS1",
+  "PS1": "demo $ ",
+  "codeCommit": "d4a54a6acfbbae8e899efe942944b855e6955114",
+  "viewport": {
+    "width": 1000,
+    "height": 900
+  },
+  "scale": 2,
+  "startedAt": "2026-10-28T06:20:05.644Z"
+}

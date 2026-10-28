@@ -9,6 +9,7 @@ import { spawn, execFileSync } from "node:child_process";
 // Usage: node scripts/capture-guard-thesis-screenshots.mjs serve   (keep running)
 //        node scripts/capture-guard-thesis-screenshots.mjs capture
 //        node scripts/capture-guard-thesis-screenshots.mjs compose
+//        node scripts/capture-guard-thesis-screenshots.mjs platform   (figure 2-1, use a separate CAPTURE_TAG)
 const root = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(import.meta.url);
 const batch = process.env.CAPTURE_TAG ? `thesis-screenshots-${process.env.CAPTURE_TAG}` : "thesis-screenshots";
@@ -49,6 +50,7 @@ if (action === "serve") {
   const browser = await chromium.launch({ headless: true });
   try {
     if (action === "capture") await capture(browser);
+    else if (action === "platform") await platform(browser);
     else if (action === "compose") await compose(browser);
     else throw new Error("请指定 serve、capture 或 compose");
   } finally { await browser.close(); }
@@ -127,6 +129,18 @@ async function capture(browser) {
     await alice.context.close();
     await bob.context.close();
   }
+}
+
+// Figure 2-1 shows the base platform: one member, the Chat tab with the team Agent, and an idle terminal.
+async function platform(browser) {
+  const bob = await open(browser, "light", "Bob", "developer");
+  try {
+    await bob.page.getByTestId("collab-tab-chat").click();
+    await commandBox(bob.page).waitFor();
+    await run(bob.page, "ls", "Ran");
+    await bob.page.waitForTimeout(800);
+    await shot(bob.page, "02-1-platform-bob-light");
+  } finally { await bob.context.close(); }
 }
 
 async function compose(browser) {
