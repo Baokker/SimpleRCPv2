@@ -1,8 +1,159 @@
 {
-  "P01": {"requiredTokens": ["transaction", "全部", "失败"], "files": ["src/services/inventory-bulk-transfer.ts", "src/services/inventory-bulk-release.ts", "src/storage/inventory-store.ts"], "scope": "team"},
-  "P02": {"requiredTokens": ["递归", "大小写", "原始"], "files": ["src/services/event-topic-export.ts", "src/services/audit-actor-summary.ts", "src/security/redaction.ts"], "scope": "team"},
-  "P03": {"requiredTokens": ["logicalId", "requestId", "收件人"], "files": ["src/services/refund-notices.ts", "src/services/invite-notices.ts", "src/services/notification-outbox.ts"], "scope": "team"},
-  "P04": {"requiredTokens": ["serverMember", "actorId", "伪造"], "files": ["src/services/inventory-adjustment.ts", "src/services/member-rename.ts", "src/security/identity.ts"], "scope": "team"},
-  "P05": {"requiredTokens": ["durableEventTypes", "短暂", "过滤"], "files": ["src/extracted/eventLog.ts", "src/extracted/activitySummary.ts", "src/extracted/memberActivityExport.ts"], "scope": "team"},
-  "P06": {"requiredTokens": ["UTC", "秒", "月份"], "files": ["src/services/settlement-months.ts", "src/services/refund-months.ts", "src/http/settlement-month-routes.ts", "src/http/refund-month-routes.ts"], "scope": "team"}
+  "P01": {
+    "requiredTokens": [
+      "transaction",
+      "全部",
+      "失败"
+    ],
+    "files": [
+      "src/services/inventory-bulk-transfer.ts",
+      "src/services/inventory-bulk-release.ts",
+      "src/storage/inventory-store.ts"
+    ],
+    "scope": "team"
+  },
+  "P02": {
+    "requiredTokens": [
+      "递归",
+      "大小写",
+      "原始"
+    ],
+    "files": [
+      "src/services/event-topic-export.ts",
+      "src/services/audit-actor-summary.ts",
+      "src/security/redaction.ts"
+    ],
+    "scope": "team"
+  },
+  "P03": {
+    "requiredTokens": [
+      "logicalId",
+      "requestId",
+      "收件人"
+    ],
+    "files": [
+      "src/services/refund-notices.ts",
+      "src/services/invite-notices.ts",
+      "src/services/notification-outbox.ts"
+    ],
+    "scope": "team"
+  },
+  "P04": {
+    "requiredTokens": [
+      "serverMember",
+      "actorId",
+      "伪造"
+    ],
+    "files": [
+      "src/services/inventory-adjustment.ts",
+      "src/services/member-rename.ts",
+      "src/security/identity.ts"
+    ],
+    "scope": "team"
+  },
+  "P05": {
+    "requiredTokens": [
+      "durableEventTypes",
+      "短暂",
+      "过滤"
+    ],
+    "files": [
+      "src/extracted/eventLog.ts",
+      "src/extracted/activitySummary.ts",
+      "src/extracted/memberActivityExport.ts"
+    ],
+    "scope": "team"
+  },
+  "P06": {
+    "requiredTokens": [
+      "UTC",
+      "秒",
+      "月份"
+    ],
+    "files": [
+      "src/services/settlement-months.ts",
+      "src/services/refund-months.ts",
+      "src/http/settlement-month-routes.ts",
+      "src/http/refund-month-routes.ts"
+    ],
+    "scope": "team"
+  },
+  "P07": {
+    "requiredTokens": [
+      "createdAt",
+      "id",
+      "升序"
+    ],
+    "files": [
+      "src/storage/order-store.ts",
+      "src/services/refund-history.ts",
+      "src/services/audit-timeline.ts"
+    ],
+    "scope": "team"
+  },
+  "P12": {
+    "requiredTokens": [
+      "50",
+      "limit",
+      "分页"
+    ],
+    "files": [
+      "src/utils/pagination.ts",
+      "src/services/order-page.ts",
+      "src/services/member-page.ts"
+    ],
+    "scope": "team"
+  },
+  "P13": {
+    "requiredTokens": [
+      "issued",
+      "void",
+      "未结"
+    ],
+    "files": [
+      "src/domain/invoice.ts",
+      "src/services/customer-outstanding.ts",
+      "src/services/outstanding-report.ts"
+    ],
+    "scope": "team"
+  },
+  "P15": {
+    "requiredTokens": [
+      "SKU",
+      "大写",
+      "空格"
+    ],
+    "files": [
+      "src/domain/inventory.ts",
+      "src/services/sku-quantities.ts",
+      "src/services/line-stock-check.ts"
+    ],
+    "scope": "team"
+  },
+  "P16": {
+    "requiredTokens": [
+      "北京时间",
+      "UTC",
+      "日期"
+    ],
+    "files": [
+      "src/utils/time.ts",
+      "src/services/daily-orders.ts",
+      "src/services/daily-refunds.ts"
+    ],
+    "scope": "team"
+  },
+  "P18": {
+    "requiredTokens": [
+      "internal",
+      "测试账号",
+      "排除"
+    ],
+    "files": [
+      "src/domain/customer.ts",
+      "src/services/customer-domains.ts",
+      "src/services/tag-usage.ts"
+    ],
+    "scope": "team"
+  }
 }
