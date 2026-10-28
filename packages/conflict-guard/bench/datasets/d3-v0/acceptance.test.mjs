@@ -32,6 +32,12 @@ test(`D3 acceptance ${task}`, async () => {
   } else if (task === "d3-14") {
     const pricing = await load("pricing"); const cart = await load("cart"); const result = pricing.quote(100, 0.1, "CNY");
     assert.equal(result.net, 90); assert.equal("amount" in result, false); assert.equal(result.currency, "CNY"); assert.equal(cart.invoiceNet(100), 90); assert.equal(cart.grossLabel(100), "101.70");
+  } else if (task === "d3-16") {
+    const pricing = await load("pricing"); const cart = await load("cart"); const result = pricing.quote(100, 0.1, "CNY");
+    assert.ok(Math.abs(result.amount - 101.7) < 1e-9); assert.equal(result.net, 90); assert.ok(Math.abs(result.tax - 11.7) < 1e-9); assert.equal(cart.invoiceNet(100), 90); assert.equal(cart.grossLabel(100), "101.70");
+  } else if (task === "d3-17") {
+    const pricing = await load("pricing"); const cart = await load("cart");
+    assert.equal(pricing.totalTax(100), 1053); assert.equal(cart.taxLabel(100), "10.53");
   } else if (task === "d3-15") {
     const retry = await load("retry"); const delivery = await load("delivery");
     assert.equal(retry.retryDelay(1, 2, "standard"), 0.1); assert.equal(delivery.estimatedWait(1), 100); assert.equal(delivery.waitLabel(1), "100ms");

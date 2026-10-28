@@ -1,0 +1,53 @@
+{
+  "version": "D3-S-v2",
+  "source": "d3-v0 acceptance.test.mjs",
+  "initialCodeRoot": "packages/conflict-guard/bench/seeds/native",
+  "initialCodeHashes": {
+    "commerce/src/pricing.ts": "3f7a700fd6693d833a3126e7d7ec684122962102fe9514d2560cee781aaf3449",
+    "commerce/src/cart.ts": "af0d26a677f204515187d07ee84ed4c9b71c891e2aa8154a47b8215b6ebe79e2",
+    "calendar/src/intervals.ts": "8afd2e050fd9b56bef6891be795d7646b844b6c6db669ee4f0e8210df5bc0297",
+    "calendar/src/availability.ts": "db57f6ee079bb2335c1e82139c9a6bd3406a2a164357632af633d639c959d415",
+    "cache/src/weights.ts": "60dac1f6728185a01d56a960c08919e7919eb363577bd7f1173f4ca9ff0c2584",
+    "cache/src/lru.ts": "a78f53cd0eaa591ee073d9f0b50bd7c5d7458c1810787a2f4d3d04f27b928a5c",
+    "events/src/retry.ts": "79778a4c0161700d88024a5deb54ee48acfc751630e5bc72ca355860d590ca84",
+    "events/src/delivery.ts": "c4bdd8f16b7cfd198013d159e2928a7949074c7aba7da5b2415d20013241ed57",
+    "text/src/width.ts": "0bb0711cec2b59527614804e8d1d436612935258aa54e1ada24744b124042ce7",
+    "text/src/layout.ts": "5034303472f92123e99d0197f6a7e1a770ec7decd107b382fe563cd6d7e5e707"
+  },
+  "execution": {
+    "humanEdits": "虚拟成员通过协同文档写入，触发条件为 Agent 完成对该文件的读取（60 秒未读取时按时间写入）",
+    "agentModel": "MiniMax-M3",
+    "A0": 1,
+    "A1": 3,
+    "agentRuns": {
+      "A0": 12,
+      "A1": 36
+    }
+  },
+  "scenarios": [
+    {
+      "id": "cross-owner-quote-meaning",
+      "category": "跨属主的两个 Agent",
+      "sourceTasks": [
+        "d3-16"
+      ],
+      "initialCode": [
+        "commerce/src/pricing.ts",
+        "commerce/src/cart.ts"
+      ],
+      "staggered": true,
+      "agentTasks": [
+        "属主 A 把 quote 的 amount 改为含税总额，并新增 net 表示税前金额，同步 invoiceNet",
+        "属主 B 增加 grossLabel，按 amount 与 tax 相加得到含税金额"
+      ],
+      "conflict": "属主 A 改变 amount 的含义而不改字段名，属主 B 按旧含义把 amount 与 tax 相加，结果重复计税，数值看似正常。",
+      "mechanism": "灰区判断或意图差异卡片发现含义冲突，交给双方属主；属主采纳建议后，属主 B 的 Agent 改用 net，两人的意图都保留。",
+      "acceptanceProbe": "quote(100, 0.1, 'CNY') 的 amount 约为 101.7、net === 90、tax 约为 11.7；cart.invoiceNet(100) === 90；cart.grossLabel(100) === '101.70'",
+      "agentPrompts": [
+        "In src/pricing.ts change quote so that amount is the tax-inclusive total (the discounted price plus tax) and add a net field holding the discounted price before tax. Keep tax unchanged. Update invoiceNet in src/cart.ts so it still returns the pre-tax amount. Preserve tests.",
+        "In src/cart.ts add exported grossLabel(price) using pricing.quote(price, 0.1, 'CNY'). quote returns the discounted amount and its tax; add them and return the sum as a string with two decimal places, such as '12.34'. Preserve existing tests."
+      ]
+    }
+  ],
+  "revision": "b3-2026-10-28"
+}

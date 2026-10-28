@@ -1,0 +1,14 @@
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/experiment-budget.ts:88
+        if (state.totals[category] + amount > limit) throw new Error(`彩排 ${category} 预算即将超过上限，实验已经停止`);
+                                                           ^
+
+
+Error: 彩排 agentBaseRuns 预算即将超过上限，实验已经停止
+    at <anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/experiment-budget.ts:88:60)
+    at async createRun (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/apps/server/scripts/bench-agents.ts:80:3)
+    at async staggeredRuns (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/apps/server/scripts/bench-agents.ts:93:20)
+    at async execute (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/apps/server/scripts/bench-agents.ts:98:103)
+    at async <anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/apps/server/scripts/bench-agents.ts:180:85)
+
+Node.js v22.19.0

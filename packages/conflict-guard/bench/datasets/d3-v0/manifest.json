@@ -197,6 +197,32 @@
         "Return retryDelay in seconds",
         "Add waitLabel in milliseconds"
       ]
+    },
+    {
+      "id": "d3-16",
+      "project": "commerce",
+      "ownership": "cross",
+      "files": [
+        "src/pricing.ts",
+        "src/cart.ts"
+      ],
+      "tasks": [
+        "Make quote amount tax-inclusive and add net",
+        "Add grossLabel from amount and tax"
+      ]
+    },
+    {
+      "id": "d3-17",
+      "project": "commerce",
+      "ownership": "cross",
+      "files": [
+        "src/pricing.ts",
+        "src/cart.ts"
+      ],
+      "tasks": [
+        "Return totalTax in cents",
+        "Add taxLabel in yuan"
+      ]
     }
   ]
 }

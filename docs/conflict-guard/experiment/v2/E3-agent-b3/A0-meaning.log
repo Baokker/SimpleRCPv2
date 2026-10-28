@@ -1,0 +1,13 @@
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+{"name":"cross-owner-quote-meaning-P0-off-owner-1","taskId":"cross-owner-quote-meaning","ownership":"cross","round":1,"success":true,"statuses":["completed","completed"],"rejected":[0,0],"interruptions":null}
+{"name":"cross-owner-quote-meaning-P0-off-owner-2","taskId":"cross-owner-quote-meaning","ownership":"cross","round":2,"success":true,"statuses":["completed","completed"],"rejected":[0,0],"interruptions":null}
+/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/experiment-budget.ts:88
+        if (state.totals[category] + amount > limit) throw new Error(`彩排 ${category} 预算即将超过上限，实验已经停止`);
+                                                           ^
+
+
+Error: 彩排 agentExecutionsIncludingFollowups 预算即将超过上限，实验已经停止
+    at <anonymous> (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/experiment-budget.ts:88:60)
+    at async forward (/Users/baokker/Work/Master/CSCW/智能语义冲突预防-update/SimpleRCPv2-e3b3/apps/server/scripts/agent-benchmark-proxy.ts:30:33)
+
+Node.js v22.19.0
