@@ -1,0 +1,170 @@
+{
+  "version": "D3-S-v2",
+  "source": "d3-v0 acceptance.test.mjs",
+  "initialCodeRoot": "packages/conflict-guard/bench/seeds/native",
+  "initialCodeHashes": {
+    "commerce/src/pricing.ts": "3f7a700fd6693d833a3126e7d7ec684122962102fe9514d2560cee781aaf3449",
+    "commerce/src/cart.ts": "af0d26a677f204515187d07ee84ed4c9b71c891e2aa8154a47b8215b6ebe79e2",
+    "calendar/src/intervals.ts": "8afd2e050fd9b56bef6891be795d7646b844b6c6db669ee4f0e8210df5bc0297",
+    "calendar/src/availability.ts": "db57f6ee079bb2335c1e82139c9a6bd3406a2a164357632af633d639c959d415",
+    "cache/src/weights.ts": "60dac1f6728185a01d56a960c08919e7919eb363577bd7f1173f4ca9ff0c2584",
+    "cache/src/lru.ts": "a78f53cd0eaa591ee073d9f0b50bd7c5d7458c1810787a2f4d3d04f27b928a5c",
+    "events/src/retry.ts": "79778a4c0161700d88024a5deb54ee48acfc751630e5bc72ca355860d590ca84",
+    "events/src/delivery.ts": "c4bdd8f16b7cfd198013d159e2928a7949074c7aba7da5b2415d20013241ed57",
+    "text/src/width.ts": "0bb0711cec2b59527614804e8d1d436612935258aa54e1ada24744b124042ce7",
+    "text/src/layout.ts": "5034303472f92123e99d0197f6a7e1a770ec7decd107b382fe563cd6d7e5e707"
+  },
+  "execution": {
+    "humanEdits": "虚拟成员通过协同文档写入，触发条件为 Agent 完成对该文件的读取（60 秒未读取时按时间写入）",
+    "agentModel": "MiniMax-M3",
+    "A0": 1,
+    "A1": 3,
+    "agentRuns": {
+      "A0": 12,
+      "A1": 36
+    }
+  },
+  "scenarios": [
+    {
+      "id": "human-agent-pricing-signature",
+      "category": "人与 Agent",
+      "sourceTasks": [
+        "d3-01"
+      ],
+      "initialCode": [
+        "commerce/src/pricing.ts",
+        "commerce/src/cart.ts"
+      ],
+      "humanTask": "将 quote 的 amount 改为 net 并增加 currency，保持新签名。",
+      "agentTask": "在 cart.ts 增加 invoiceLabel，并按原有 amount 字段调用 quote。",
+      "humanEdits": [
+        {
+          "file": "src/pricing.ts",
+          "find": "return { amount, tax };",
+          "replace": "return { net: amount, tax, currency: currency ?? \"CNY\" };"
+        }
+      ],
+      "conflict": "Agent 依据旧返回字段写入调用方。",
+      "mechanism": "Agent 写入前检查拒绝旧接口调用，Agent 重新读取签名后调整。",
+      "acceptanceProbe": "pricing.quote(100, 0.1, 'USD').net === 90 且 cart.invoiceLabel(100, 'USD') === 'USD 90.00'",
+      "agentPrompt": "In src/cart.ts add exported invoiceLabel(price, currency) using pricing.quote(price, 0.1, currency). Format its price as currency followed by a space and two decimal places. Update invoiceNet to consume quote's current price property. Preserve existing tests."
+    },
+    {
+      "id": "human-agent-capacity-field",
+      "category": "人与 Agent",
+      "sourceTasks": [
+        "d3-02"
+      ],
+      "initialCode": [
+        "calendar/src/intervals.ts",
+        "calendar/src/availability.ts"
+      ],
+      "humanTask": "将 capacity 返回的 occupied 改为 used，保持 available。",
+      "agentTask": "在 availability.ts 增加 roomSummary，并读取 capacity.occupied。",
+      "humanEdits": [
+        {
+          "file": "src/intervals.ts",
+          "find": "return { occupied, available };",
+          "replace": "return { used: occupied, available };"
+        }
+      ],
+      "conflict": "Agent 依据旧字段生成调用方。",
+      "mechanism": "Agent 写入前检查拒绝旧字段访问，Agent 按新接口调整。",
+      "acceptanceProbe": "intervals.capacity(100, 0.1, 'room').used === 116 且 availability.roomSummary(100) === '116/364'",
+      "agentPrompt": "In src/availability.ts add exported roomSummary(minutes) using intervals.capacity(minutes, 0.1, 'room'). Return the occupied minutes followed by '/' and available minutes. Update roomPressure to use the current capacity interface. Preserve existing tests."
+    },
+    {
+      "id": "human-agent-layout-metrics",
+      "category": "人与 Agent",
+      "sourceTasks": [
+        "d3-04"
+      ],
+      "initialCode": [
+        "text/src/width.ts",
+        "text/src/layout.ts"
+      ],
+      "humanTask": "在 lineMetrics 中增加 total，并把 usable 改名为 content，同步 usableColumns。",
+      "agentTask": "在 layout.ts 增加 layoutSummary，读取 lineMetrics 的可用列数与总列数。",
+      "agentPrompt": "In src/layout.ts add exported layoutSummary(columns) using width.lineMetrics(columns, 0.1, 'letter'), returning usable + '/' + total. Preserve existing exports and tests.",
+      "humanEdits": [
+        {
+          "file": "src/width.ts",
+          "find": "  return { padding, usable };\n}\nexport function usableColumns(columns: number): number {\n  return lineMetrics(columns, 0.1, 'letter').usable;",
+          "replace": "  return { padding, content: usable, total: columns };\n}\nexport function usableColumns(columns: number): number {\n  return lineMetrics(columns, 0.1, 'letter').content;"
+        }
+      ],
+      "conflict": "Agent 依据旧字段 usable 写入调用方。",
+      "mechanism": "Agent 写入前检查拒绝旧字段访问，Agent 按新字段调整。",
+      "acceptanceProbe": "width.lineMetrics(100, 0.1, 'letter').total === 100 且 layout.layoutSummary(100) === '80/100'"
+    },
+    {
+      "id": "human-agent-retry-delay",
+      "category": "人与 Agent",
+      "sourceTasks": [
+        "d3-05"
+      ],
+      "initialCode": [
+        "events/src/retry.ts",
+        "events/src/delivery.ts"
+      ],
+      "humanTask": "在 retryBudget 中增加 exhausted，并把 wait 改名为 delay，同步 retryCost。",
+      "agentTask": "在 delivery.ts 增加 retrySummary，读取 retryBudget 的等待时间与耗尽标记。",
+      "agentPrompt": "In src/delivery.ts add exported retrySummary(attempt) using retry.retryBudget(attempt, 2, 'standard'). Return 'stop' when exhausted, otherwise String(wait). Preserve tests.",
+      "humanEdits": [
+        {
+          "file": "src/retry.ts",
+          "find": "  return { wait, remaining };\n}\n\nexport function retryCost(attempt: number): number {\n  return retryBudget(attempt, 2, \"standard\").wait / delayUnit;",
+          "replace": "  return { delay: wait, remaining, exhausted: remaining === 0 };\n}\n\nexport function retryCost(attempt: number): number {\n  return retryBudget(attempt, 2, \"standard\").delay / delayUnit;"
+        }
+      ],
+      "conflict": "Agent 依据旧字段 wait 写入调用方。",
+      "mechanism": "Agent 写入前检查拒绝旧字段访问，Agent 按新字段调整。",
+      "acceptanceProbe": "retry.retryBudget(6).exhausted === true 且 delivery.retrySummary(6) === 'stop' 且 delivery.retrySummary(1) === '100'"
+    },
+    {
+      "id": "same-owner-budget-field",
+      "category": "同属主的两个 Agent",
+      "sourceTasks": [
+        "d3-09"
+      ],
+      "initialCode": [
+        "cache/src/weights.ts",
+        "cache/src/lru.ts"
+      ],
+      "agentTasks": [
+        "Agent A 扩展 memoryBudget 增加 overBudget",
+        "Agent B 增加 fitsBudget 并读取 overBudget"
+      ],
+      "conflict": "两个 Agent 同时修改有调用关系的返回结构。",
+      "mechanism": "按属主自动排队或拒绝后重新读取调整，不产生人工卡片。",
+      "acceptanceProbe": "weights.memoryBudget(2000000, 0.1, 'image').overBudget === true 且 lru.fitsBudget(10) === true 且 lru.fitsBudget(2000000) === false",
+      "agentPrompts": [
+        "In src/weights.ts extend memoryBudget with overBudget: allocated / byteUnit > 1048576. Preserve its existing fields.",
+        "In src/lru.ts add exported fitsBudget(bytes) using weights.memoryBudget(bytes, 0.1, 'image').overBudget, returning true when within budget. Preserve tests."
+      ]
+    },
+    {
+      "id": "same-owner-retry-helper",
+      "category": "同属主的两个 Agent",
+      "sourceTasks": [
+        "d3-10"
+      ],
+      "initialCode": [
+        "events/src/retry.ts",
+        "events/src/delivery.ts"
+      ],
+      "agentTasks": [
+        "Agent A 增加 retryWindow 并重构 retryBudget",
+        "Agent B 增加 retryWindowLabel 并调用 retryWindow"
+      ],
+      "conflict": "两个 Agent 在同一属主下先后改动同一辅助函数接口。",
+      "mechanism": "自动等待并重试，任务完成后复检保持调用关系正确。",
+      "acceptanceProbe": "retry.retryWindow(1) 深度相等于 { delay: 100, attemptsLeft: 5 } 且 delivery.retryWindowLabel(1) === '100:5'",
+      "agentPrompts": [
+        "In src/retry.ts add retryWindow(attempt) returning { delay: retryDelay(attempt, 2, 'standard'), attemptsLeft: Math.max(0, 6 - Math.floor(attempt)) }. Refactor retryBudget to call this helper while preserving its existing returned fields.",
+        "In src/delivery.ts add exported retryWindowLabel(attempt) using retry.retryWindow(attempt). Return delay + ':' + attemptsLeft. Preserve tests."
+      ]
+    }
+  ],
+  "revision": "b3-2026-10-28"
+}

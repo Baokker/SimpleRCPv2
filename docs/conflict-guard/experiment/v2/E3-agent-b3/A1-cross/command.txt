@@ -1,0 +1,1 @@
+pnpm --filter @simplercp/server bench:agents --experiment E3 --policy P5 --injection on --repeat 3 --config ../../docs/conflict-guard/experiment/v2/E3-agent-b3/runtime-config.json --scenarios ../../docs/conflict-guard/experiment/v2/E3-agent-b3/scenarios-cross.json --out ../../docs/conflict-guard/experiment/v2/E3-agent-b3/A1-cross --rehearsal b3-supplement
