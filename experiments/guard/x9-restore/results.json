@@ -1,0 +1,68 @@
+{
+  "base": "10-line TypeScript module",
+  "results": [
+    {
+      "id": "different-line",
+      "note": "其他成员改同一文件的另一行",
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": false,
+      "correct": false
+    },
+    {
+      "id": "same-line",
+      "note": "其他成员改同一行",
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": false,
+      "correct": false
+    },
+    {
+      "id": "adjacent-line",
+      "note": "其他成员改相邻行",
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": false,
+      "correct": false
+    },
+    {
+      "id": "shifted",
+      "note": "其他成员在文件开头插入两行",
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": false,
+      "correct": false
+    },
+    {
+      "id": "renamed",
+      "note": "其他成员把文件改名",
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": true,
+      "correct": false
+    },
+    {
+      "id": "new-file",
+      "note": "其他成员在同一目录新建文件",
+      "withdrawnUndone": true,
+      "otherKept": true,
+      "handedToPerson": false,
+      "duplicate": false,
+      "correct": true
+    },
+    {
+      "id": "two-agents",
+      "note": "两个 Agent 运行重叠，各改一个位置",
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": false,
+      "correct": false
+    }
+  ]
+}
