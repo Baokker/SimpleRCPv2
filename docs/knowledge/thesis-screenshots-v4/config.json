@@ -1,0 +1,19 @@
+{
+  "PORT": "4180",
+  "SIMPLERCP_OPENCODE_PORT": "4196",
+  "KNOWLEDGE": "full",
+  "SIMPLERCP_TERMINAL_ENABLED": "false",
+  "SIMPLERCP_FAKE_AGENT_RUNTIME": "false",
+  "SIMPLERCP_PUBLIC_URL": "http://127.0.0.1:5180",
+  "SIMPLERCP_DATA_DIR": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/.test-workspaces/thesis-screenshots-v4/data",
+  "TMPDIR": "/Users/baokker/Work/Master/CSCW/过程性知识管理/code/SimpleRCPv2/.test-workspaces/thesis-screenshots-v4/tmp",
+  "VITE_SIMPLERCP_API_ORIGIN": "http://127.0.0.1:4180",
+  "VITE_SIMPLERCP_CLIENT_PORT": "5180",
+  "codeCommit": "dbe67a9ac06664b34d5c1f10c978509317a57ae7",
+  "viewport": {
+    "width": 1060,
+    "height": 900
+  },
+  "scale": 2,
+  "startedAt": "2026-10-28T07:00:42.324Z"
+}

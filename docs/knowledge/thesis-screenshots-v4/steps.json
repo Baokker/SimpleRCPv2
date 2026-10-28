@@ -1,0 +1,1276 @@
+[
+  {
+    "name": "01-setup",
+    "attempt": 1,
+    "ok": true,
+    "ms": 2792,
+    "result": {
+      "prepared": [
+        {
+          "path": "src/retryPolicy.js",
+          "status": 200
+        },
+        {
+          "path": "src/requestPolicy.js",
+          "status": 200
+        },
+        {
+          "path": "AGENTS.md",
+          "status": 200
+        },
+        {
+          "path": "README.md",
+          "status": 200
+        }
+      ],
+      "identities": [
+        "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+        "8a37d064-1d83-4e22-9a84-ffece11ae927"
+      ],
+      "themes": [
+        "dark",
+        "light"
+      ]
+    }
+  },
+  {
+    "name": "02-manual",
+    "attempt": 1,
+    "ok": true,
+    "ms": 960,
+    "result": {
+      "cardId": "be02c6aa-18b9-4382-8f63-ad396856e0f6",
+      "status": "reviewed",
+      "scope": "team",
+      "origin": "manual",
+      "anchors": [
+        {
+          "anchorId": "0ccdf466-965e-4cf8-8102-786855734513",
+          "file": {
+            "workspaceRelativePath": "README.md"
+          },
+          "associationLevel": "file",
+          "snapshot": {
+            "text": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "03-discussion-import",
+    "attempt": 1,
+    "ok": false,
+    "ms": 30734,
+    "error": "page.waitForFunction: Timeout 30000ms exceeded."
+  },
+  {
+    "name": "03b-import",
+    "attempt": 1,
+    "ok": true,
+    "ms": 21277,
+    "result": {
+      "synced": true,
+      "imported": {
+        "drafts": [
+          {
+            "suggestionId": "c85f57dd-6cf0-466c-a3b5-e7c8541ff859",
+            "file": "AGENTS.md",
+            "startLine": 5,
+            "endLine": 5,
+            "suggestion": {
+              "id": "c85f57dd-6cf0-466c-a3b5-e7c8541ff859",
+              "triggerType": "preset.imported",
+              "createdAt": 1793170905143,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "README 散文使用英文",
+              "suggestedSummary": "所有 README 散文必须使用英文，以方便外部贡献者使用项目。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "score": 1,
+                  "reasons": [
+                    "规范文档原文"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 5,
+                  "end": 5
+                },
+                "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "README 散文使用英文",
+                  "summary": "所有 README 散文必须使用英文，以方便外部贡献者使用项目。",
+                  "content": "所有 README 散文必须使用英文，因为外部贡献者会使用该项目。",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "files": [
+                    "**/README*"
+                  ],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "be02c6aa-18b9-4382-8f63-ad396856e0f6",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "3a11ed45-8cf4-4252-9d55-de042995a17b",
+            "file": "AGENTS.md",
+            "startLine": 5,
+            "endLine": 5,
+            "suggestion": {
+              "id": "3a11ed45-8cf4-4252-9d55-de042995a17b",
+              "triggerType": "preset.imported",
+              "createdAt": 1793170905163,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "保持代码标识符不变",
+              "suggestedSummary": "文档中的代码标识符必须保持不变。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "score": 1,
+                  "reasons": [
+                    "规范文档原文"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 5,
+                  "end": 5
+                },
+                "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "保持代码标识符不变",
+                  "summary": "文档中的代码标识符必须保持不变。",
+                  "content": "保持代码标识符不变。",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "be02c6aa-18b9-4382-8f63-ad396856e0f6",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "73d3874c-e28a-4507-8e8d-f09476a14fa4",
+            "file": "AGENTS.md",
+            "startLine": 9,
+            "endLine": 9,
+            "suggestion": {
+              "id": "73d3874c-e28a-4507-8e8d-f09476a14fa4",
+              "triggerType": "preset.imported",
+              "createdAt": 1793170905182,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "保持导出 API 兼容",
+              "suggestedSummary": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 9,
+                  "endLine": 9,
+                  "score": 1,
+                  "reasons": [
+                    "规范文档原文"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 9,
+                  "end": 9
+                },
+                "sourceText": "Keep existing exported functions and their public parameters compatible when adding a feature.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "保持导出 API 兼容",
+                  "summary": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+                  "content": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+                  "startLine": 9,
+                  "endLine": 9,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "Keep existing exported functions and their public parameters compatible when adding a feature."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "be02c6aa-18b9-4382-8f63-ad396856e0f6",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "d654835c-dcbb-4527-9929-d1a29b919be9",
+            "file": "AGENTS.md",
+            "startLine": 13,
+            "endLine": 13,
+            "suggestion": {
+              "id": "d654835c-dcbb-4527-9929-d1a29b919be9",
+              "triggerType": "preset.imported",
+              "createdAt": 1793170905199,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "修改 JavaScript 后执行测试",
+              "suggestedSummary": "修改 JavaScript 源文件后，必须从 workspace root 运行 npm test。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 13,
+                  "endLine": 13,
+                  "score": 1,
+                  "reasons": [
+                    "规范文档原文"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 13,
+                  "end": 13
+                },
+                "sourceText": "After modifying JavaScript source files, run npm test from the workspace root.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "修改 JavaScript 后执行测试",
+                  "summary": "修改 JavaScript 源文件后，必须从 workspace root 运行 npm test。",
+                  "content": "修改 JavaScript 源文件后，必须从 workspace root 运行 npm test。",
+                  "startLine": 13,
+                  "endLine": 13,
+                  "files": [
+                    "**/*.js"
+                  ],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "After modifying JavaScript source files, run npm test from the workspace root."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "be02c6aa-18b9-4382-8f63-ad396856e0f6",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "d6743978-b8c9-4676-b252-aab36304dfc9",
+            "file": "AGENTS.md",
+            "startLine": 17,
+            "endLine": 17,
+            "suggestion": {
+              "id": "d6743978-b8c9-4676-b252-aab36304dfc9",
+              "triggerType": "preset.imported",
+              "createdAt": 1793170905219,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "请求策略统一使用毫秒",
+              "suggestedSummary": "时长名称使用 Ms 后缀，请求策略代码 throughout 使用毫秒。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 17,
+                  "endLine": 17,
+                  "score": 1,
+                  "reasons": [
+                    "规范文档原文"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 17,
+                  "end": 17
+                },
+                "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "请求策略统一使用毫秒",
+                  "summary": "时长名称使用 Ms 后缀，请求策略代码 throughout 使用毫秒。",
+                  "content": "时长名称必须使用 Ms 后缀，并且请求策略代码 throughout 使用毫秒。",
+                  "startLine": 17,
+                  "endLine": 17,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "be02c6aa-18b9-4382-8f63-ad396856e0f6",
+                "score": 1
+              }
+            }
+          }
+        ]
+      },
+      "draftCount": 5
+    }
+  },
+  {
+    "name": "03c-magic",
+    "attempt": 1,
+    "ok": true,
+    "ms": 297,
+    "result": {
+      "member": "Bob",
+      "file": "src/backoffPolicy.js",
+      "before": 50,
+      "after": 1500,
+      "synced": true
+    }
+  },
+  {
+    "name": "04-capture-agent-start",
+    "attempt": 1,
+    "ok": false,
+    "ms": 39226,
+    "error": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
+  },
+  {
+    "name": "04b-agent-progress",
+    "attempt": 1,
+    "ok": true,
+    "ms": 455,
+    "result": [
+      "Connected\nRoom pAttd1X3X9\nAlice\nDemo",
+      "Connected\nRoom pAttd1X3X9\nBob\nDemo"
+    ]
+  },
+  {
+    "name": "05-correct-agent",
+    "attempt": 1,
+    "ok": true,
+    "ms": 26464,
+    "result": {
+      "beforeCorrection": "export async function waitForRetry(delayMs) {\n  await new Promise(resolve => setTimeout(resolve, delayMs));\n}\n\nexport async function retryNotification(send, delayMs = 1000, onAttempt) {\n  await new Promise(resolve => setTimeout(resolve, delayMs));\n  onAttempt?.();\n  return send();\n}\n",
+      "run": {
+        "run": {
+          "projectId": "demo",
+          "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+          "initiatorMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+          "initiatorRole": "Developer",
+          "participantId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+          "memberName": "Alice",
+          "prompt": "不要在 retryNotification 内重复实现 setTimeout 等待，改为复用已有的 waitForRetry(delayMs)。这是对上一条任务的纠正：保留 onAttempt?.()、send 和可配置 delayMs 的兼容性，保留 waitForRetry 的导出。只调整 src/retryPolicy.js，运行 npm test。",
+          "sessionId": "PL9agDSCfYcI",
+          "sessionScope": "personal",
+          "runtimeSessionId": "ses_e7eaf3afdffeRAaT0SPQIxayRB",
+          "status": "queued",
+          "runtime": "opencode",
+          "provider": "minimax",
+          "model": "MiniMax-M3",
+          "source": "agent-panel",
+          "knowledge": {
+            "excludeCardIds": []
+          },
+          "id": "AaSo12cDACqJ",
+          "createdAt": "2026-10-28T07:02:52.237Z"
+        }
+      }
+    }
+  },
+  {
+    "name": "06-human-drafts",
+    "attempt": 1,
+    "ok": false,
+    "ms": 180256,
+    "error": "page.waitForResponse: Timeout 180000ms exceeded while waiting for event \"response\""
+  },
+  {
+    "name": "06b-confirm-human-drafts",
+    "attempt": 1,
+    "ok": true,
+    "ms": 60452,
+    "result": {
+      "denseTitle": "统一请求超时与重试约定",
+      "magic": {
+        "card": {
+          "type": "constraint",
+          "title": "Backoff delay raised to 1,500 ms",
+          "summary": "The `backoffDelayMs()` function in `src/backoffPolicy.js` now returns `1500` instead of `50`, changing its returned backoff delay from 50 milliseconds to 1,500 milliseconds.",
+          "content": "## Number and usage location\n- The literal `1500` was introduced at `src/backoffPolicy.js:2` with `return 1500;`.\n- The same line previously returned `50`.\n- The separate usage report contains no direct occurrences of `1500` and provides no caller or downstream reference locations.\n\n## Likely meaning\n- Based on the function name `backoffDelayMs()`, the returned value represents a delay in milliseconds. The effective return therefore changed from 50 ms to 1,500 ms.\n- The evidence does not explain why `1500` was selected or whether it applies to a particular retry tier, caller, or operating scenario.\n\n## Refactor guidance\n- No refactoring instruction is recorded. It remains unknown whether the inline literal should be replaced by a named constant, configuration value, or documentation.\n\n## Behavioral impact\n- The directly evidenced behavior change is the longer delay returned by `backoffDelayMs()`. The downstream runtime effect cannot be established because no call sites or execution results are provided.\n\n## Unknowns\n- The reason for selecting 1500 ms.\n- The callers or downstream reference locations of backoffDelayMs().\n- The observed runtime or retry behavior after the change.\n- Whether the value should remain inline or be extracted into a constant, configuration, or documentation.\n- Whether other backoff tiers or retry strategies are involved.",
+          "tags": [
+            "backoff",
+            "delay",
+            "timeout",
+            "magic-number",
+            "milliseconds"
+          ],
+          "confidence": 0.94,
+          "evidenceCitations": [
+            "evidence.added[0].number",
+            "evidence.added[0].lineText",
+            "evidence.diff.before",
+            "evidence.diff.after",
+            "evidence.usage[0].occurrences"
+          ],
+          "unknowns": [
+            "The reason for selecting 1500 ms.",
+            "The callers or downstream reference locations of backoffDelayMs().",
+            "The observed runtime or retry behavior after the change.",
+            "Whether the value should remain inline or be extracted into a constant, configuration, or documentation.",
+            "Whether other backoff tiers or retry strategies are involved."
+          ],
+          "fallback": false,
+          "source": "ai",
+          "scope": "team",
+          "provenance": {
+            "origin": "human-human",
+            "author": {
+              "kind": "human",
+              "memberId": "8a37d064-1d83-4e22-9a84-ffece11ae927",
+              "displayName": "Bob"
+            },
+            "trigger": {
+              "type": "magicNumber.added",
+              "suggestionId": "capture-1793170906279-2"
+            },
+            "evidenceRefs": {
+              "runIds": [],
+              "chatMessageIds": [],
+              "files": [
+                {
+                  "path": "src/backoffPolicy.js",
+                  "revision": ""
+                }
+              ]
+            }
+          },
+          "schemaVersion": 3,
+          "id": "2c9004a2-8324-46ea-9160-f5318f1320aa",
+          "status": "draft",
+          "createdAt": 1793171212943,
+          "updatedAt": 1793171212943,
+          "metadata": {
+            "createdBy": {
+              "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+              "name": "Alice"
+            },
+            "roomId": "pAttd1X3X9",
+            "relatedChatMessageIds": []
+          },
+          "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+          "review": {
+            "confirmedBy": []
+          },
+          "anchors": [],
+          "evolution": [
+            {
+              "at": 1793171212943,
+              "action": "created",
+              "by": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              }
+            }
+          ]
+        },
+        "suggestion": {
+          "id": "capture-1793170906279-2",
+          "triggerType": "magicNumber.added",
+          "createdAt": 1793170906279,
+          "origin": "human-human",
+          "actors": {
+            "memberIds": [
+              "8a37d064-1d83-4e22-9a84-ffece11ae927"
+            ],
+            "runIds": []
+          },
+          "suggestedType": "constraint",
+          "suggestedTitle": "新增数字常量",
+          "suggestedSummary": "新增数字常量：src/backoffPolicy.js",
+          "suggestedAnchors": [
+            {
+              "file": "src/backoffPolicy.js",
+              "startLine": 2,
+              "endLine": 2,
+              "score": 1,
+              "reasons": [
+                "编辑范围"
+              ]
+            }
+          ],
+          "evidence": {
+            "file": "src/backoffPolicy.js",
+            "added": [
+              {
+                "number": "1500",
+                "line": 2,
+                "lineText": "  return 1500;"
+              }
+            ],
+            "diff": {
+              "startOffset": 44,
+              "endOffset": 47,
+              "startLine": 2,
+              "endLine": 2,
+              "before": "export function backoffDelayMs() {\n  return 50;\n}\n",
+              "after": "export function backoffDelayMs() {\n  return 1500;\n}\n"
+            },
+            "usage": [
+              {
+                "number": "1500",
+                "occurrences": []
+              }
+            ]
+          },
+          "confidence": 0.7,
+          "state": "accepted",
+          "seenBy": [
+            "8a37d064-1d83-4e22-9a84-ffece11ae927",
+            "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+          ],
+          "ai": {
+            "provider": "minimax",
+            "model": "MiniMax-M3",
+            "durationMs": 59600,
+            "totalTokens": 3645,
+            "fallback": false
+          },
+          "draftCardId": "2c9004a2-8324-46ea-9160-f5318f1320aa",
+          "resolvedAt": 1793171212951,
+          "resolvedBy": "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+        }
+      }
+    }
+  },
+  {
+    "name": "07-agent-recap",
+    "attempt": 1,
+    "ok": true,
+    "ms": 65570,
+    "result": {
+      "cardId": "3dd50c85-f4b8-4339-b0c7-0b275e89cda5",
+      "title": "retryNotification 必须复用 waitForRetry 完成延时等待",
+      "content": "## 发生了什么\n\n上一轮在 src/retryPolicy.js 的 retryNotification 中把原有的 waitForRetry(delayMs) 替换成了内联的 new Promise 和 setTimeout，导致已有的 waitForRetry helper 被绕过并产生重复实现。纠正轮将内联等待改回 await waitForRetry(delayMs)，同时保留 onAttempt?.() 和 send() 的执行方式。\n\n## 纠正\n\n在 src/retryPolicy.js 中，retryNotification 应通过 await waitForRetry(delayMs) 等待，随后依次执行 onAttempt?.() 和 return send()；继续保留 waitForRetry 的导出、delayMs = 1000 默认值以及第三个可选参数 onAttempt。\n\n## 规则\n\n在 src/retryPolicy.js 的 retryNotification(send, delayMs = 1000, onAttempt) 中，必须使用 await waitForRetry(delayMs) 完成延时等待，禁止在该函数体内再次内联 new Promise 或 setTimeout；等待后按顺序执行 onAttempt?.() 和 return send()，并保留 waitForRetry 导出及 delayMs 默认值 1000。\n\n## 适用范围\n\nsrc/retryPolicy.js, 修改重试通知逻辑, 重构延时等待实现, 扩展重试通知回调\n\n## 不适用的情况\n\n不用于禁止 waitForRetry 函数自身使用 new Promise 和 setTimeout，也不覆盖 src/retryPolicy.js 以外的业务文件或额外协作流程。\n\n证据中的纠正运行仍标记为 running，且未提供 npm test 的实际输出，因此无法仅凭证据确认测试结果。\n\n证据未说明 onAttempt 抛出异常时是否应继续调用 send；本规则仅约束正常执行路径中的等待及调用顺序。",
+      "ai": {
+        "provider": "minimax",
+        "model": "MiniMax-M3",
+        "durationMs": 64170,
+        "totalTokens": 8835,
+        "fallback": false
+      },
+      "provenance": {
+        "origin": "human-agent",
+        "author": {
+          "kind": "human",
+          "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+          "displayName": "Alice"
+        },
+        "trigger": {
+          "type": "agent.corrected",
+          "suggestionId": "capture-1793170972244-4"
+        },
+        "evidenceRefs": {
+          "runIds": [
+            "B2XJHipiiUb0",
+            "AaSo12cDACqJ"
+          ],
+          "chatMessageIds": [],
+          "files": []
+        }
+      }
+    }
+  },
+  {
+    "name": "08-agent-knowledge",
+    "attempt": 1,
+    "ok": true,
+    "ms": 9784,
+    "result": {
+      "preview": "将参考的知识\n2 条已选\n\n取消勾选后，这条知识不会提供给本次任务。\n\nREADME 面向外部成员，统一使用英文\n50 字符\n统一请求超时与重试约定\n800 字符",
+      "run": {
+        "run": {
+          "projectId": "demo",
+          "memberId": "8a37d064-1d83-4e22-9a84-ffece11ae927",
+          "initiatorMemberId": "8a37d064-1d83-4e22-9a84-ffece11ae927",
+          "initiatorRole": "Reviewer",
+          "participantId": "8a37d064-1d83-4e22-9a84-ffece11ae927",
+          "memberName": "Bob",
+          "prompt": "完善这个项目的 README.md，补充运行 npm test 的步骤、请求重试模块和团队协作说明；遵守项目的 README 语言约束，保持英文。只修改 README.md，最后运行 npm test。",
+          "sessionId": "_7xarw4dkL5a",
+          "sessionScope": "personal",
+          "status": "queued",
+          "runtime": "opencode",
+          "provider": "minimax",
+          "model": "MiniMax-M3",
+          "source": "agent-panel",
+          "knowledge": {
+            "excludeCardIds": []
+          },
+          "id": "BqEA89Xiv5JB",
+          "createdAt": "2026-10-28T07:08:08.564Z"
+        }
+      }
+    }
+  },
+  {
+    "name": "09-demo-reading",
+    "attempt": 1,
+    "ok": true,
+    "ms": 1084,
+    "result": {
+      "generated": {
+        "cards": [
+          {
+            "schemaVersion": 3,
+            "id": "demo-decision",
+            "type": "decision",
+            "title": "集中计算任务状态",
+            "summary": "createProjectStatus 计算任务数量、完成数量与下一项任务。",
+            "content": "createProjectStatus 从 tasks 计算 taskCount、completedCount 和 nextTask。formatProjectStatus 使用这个结果生成终端输出，任务状态规则集中在 createProjectStatus 中。",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "decision",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1793174588665,
+            "updatedAt": 1793176448665,
+            "metadata": {
+              "createdBy": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              },
+              "roomId": "pAttd1X3X9"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+              ],
+              "confirmedAt": 1793171288665
+            },
+            "scope": "team",
+            "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+            "anchors": [
+              {
+                "anchorId": "demo-decision-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1793174588665,
+                "action": "created",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793176208665,
+                "action": "updated",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793176448665,
+                "action": "reviewed",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-constraint",
+            "type": "constraint",
+            "title": "保持任务字段含义",
+            "summary": "tasks 的 completed 表示完成状态，title 用于下一项任务的显示。",
+            "content": "createProjectStatus 使用 completed 筛选已完成任务，再读取首个未完成任务的 title。调用方应提供含有 boolean completed 和文本 title 的任务对象，并保持这两个字段的含义。",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "constraint",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1793175608665,
+            "updatedAt": 1793177348665,
+            "metadata": {
+              "createdBy": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              },
+              "roomId": "pAttd1X3X9"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+              ],
+              "confirmedAt": 1793171288670
+            },
+            "scope": "team",
+            "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+            "anchors": [
+              {
+                "anchorId": "demo-constraint-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1793175608665,
+                "action": "created",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793177048665,
+                "action": "updated",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793177348665,
+                "action": "reviewed",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-risk",
+            "type": "risk",
+            "title": "注意下一项任务的顺序",
+            "summary": "nextTask 使用第一个未完成任务，任务顺序会影响显示结果。",
+            "content": "tasks.find 返回第一个未完成任务。当这个任务没有 title，或者全部任务已完成时，nextTask 显示 All tasks complete。修改任务顺序或字段时需要核对这个显示结果。",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "risk",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1793178368665,
+            "updatedAt": 1793180168665,
+            "metadata": {
+              "createdBy": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              },
+              "roomId": "pAttd1X3X9"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+              ],
+              "confirmedAt": 1793171288675
+            },
+            "scope": "team",
+            "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+            "anchors": [
+              {
+                "anchorId": "demo-risk-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1793178368665,
+                "action": "created",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793179868665,
+                "action": "updated",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793180168665,
+                "action": "reviewed",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-negative",
+            "type": "negative",
+            "title": "保持状态计算与文本格式的职责",
+            "summary": "formatProjectStatus 接收状态对象，重复计算任务状态会增加维护成本。",
+            "content": "formatProjectStatus 已经通过 status.taskCount、status.completedCount 和 status.nextTask 格式化输出。维护这个接口可以让任务计算规则集中在 createProjectStatus 中，减少规则重复。",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "negative",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1793177528665,
+            "updatedAt": 1793179448665,
+            "metadata": {
+              "createdBy": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              },
+              "roomId": "pAttd1X3X9"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+              ],
+              "confirmedAt": 1793171288680
+            },
+            "scope": "team",
+            "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+            "anchors": [
+              {
+                "anchorId": "demo-negative-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1793177528665,
+                "action": "created",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793179208665,
+                "action": "updated",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793179448665,
+                "action": "reviewed",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-tutorial",
+            "type": "tutorial",
+            "title": "阅读任务状态代码",
+            "summary": "从 createProjectStatus 的返回字段开始，继续阅读 formatProjectStatus。",
+            "content": "阅读 tasks.length、filter 和 find 如何生成三个状态字段，再查看 formatProjectStatus 如何把它们写入数组并通过 join 生成四行文本。可以运行 Demo 工作区的测试核对任务完成和未完成时的结果。",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "tutorial",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1793172128665,
+            "updatedAt": 1793173928665,
+            "metadata": {
+              "createdBy": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              },
+              "roomId": "pAttd1X3X9"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+              ],
+              "confirmedAt": 1793171288684
+            },
+            "scope": "team",
+            "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+            "anchors": [
+              {
+                "anchorId": "demo-tutorial-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "file",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1793172128665,
+                "action": "created",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793173628665,
+                "action": "updated",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793173928665,
+                "action": "reviewed",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-context",
+            "type": "context",
+            "title": "任务状态模块的用途",
+            "summary": "projectStatus.js 将任务列表转换为状态对象和四行终端文本。",
+            "content": "Demo 工作区使用 createProjectStatus 生成任务数量、完成数量和下一项任务，再由 formatProjectStatus 输出工作区名称、Tasks、Completed 和 Next 四行文本。",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "context",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1793171288665,
+            "updatedAt": 1793171768665,
+            "metadata": {
+              "createdBy": {
+                "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "name": "Alice"
+              },
+              "roomId": "pAttd1X3X9"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "ba04cba1-d38f-44a7-82fb-39f25496b88f"
+              ],
+              "confirmedAt": 1793171288691
+            },
+            "scope": "team",
+            "ownerMemberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+            "anchors": [
+              {
+                "anchorId": "demo-context-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "file",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1793171288665,
+                "action": "created",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1793171768665,
+                "action": "reviewed",
+                "note": "示例知识：任务状态导览。",
+                "by": {
+                  "peerId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+                  "name": "Alice"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hover": "注意下一项任务的顺序\n\nnextTask 使用第一个未完成任务，任务顺序会影响显示结果。\n\n类型：风险\n\n作用域：团队\n\n状态：有效\n\n作者：Alice\n\n打开卡片\n\n保持状态计算与文本格式的职责\n\nformatProjectStatus 接收状态对象，重复计算任务状态会增加维护成本。\n\n类型：负向经验\n\n作用域：团队\n\n状态：有效\n\n作者：Alice\n\n打开卡片\n\n保持任务字段含义\n\ntasks 的 completed 表示完成状态，title 用于下一项任务的显示。\n\n类型：约束\n\n作用域：团队\n\n状态：有效\n\n作者：Alice\n\n打开卡片\n\n集中计算任务状态\n\ncreateProjectStatus 计算任务数量、完成数量与下一项任务。\n\n类型：决策\n\n作用域：团队\n\n状态：有效\n\n作者：Alice\n\n打开卡片\n\n阅读任务状态代码\n\n从 createProjectStatus 的返回字段开始，继续阅读 formatProjectStatus。\n\n类型：教程\n\n作用域：团队\n\n状态：有效\n\n作者：Alice\n\n打开卡片\n\n任务状态模块的用途\n\nprojectStatus.js 将任务列表转换为状态对象和四行终端文本。\n\n类型：上下文\n\n作用域：团队\n\n状态：有效\n\n作者：Alice\n\n打开卡片"
+    }
+  },
+  {
+    "name": "10-post-check",
+    "attempt": 1,
+    "ok": true,
+    "ms": 97432,
+    "result": {
+      "reference": "本次参考的知识\n2 条\nREADME 面向外部成员，统一使用英文\n统一请求超时与重试约定",
+      "postCheck": "任务后核对\n\n这些修改涉及已知问题，共 2 处。\n\nREADME 面向外部成员，统一使用英文\nREADME.md\n第 3–10 行\n请人工核对\nREADME 面向外部成员，统一使用英文\nREADME.md\n第 12–166 行\n请人工核对"
+    }
+  },
+  {
+    "name": "11-review-human-cards",
+    "attempt": 1,
+    "ok": false,
+    "ms": 30176,
+    "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.knowledge-card').filter({ hasText: 'requestPolicy.js 请求超时' }).first().getByRole('button', { name: '编辑', exact: true })\n"
+  },
+  {
+    "name": "12-final-collaboration",
+    "attempt": 1,
+    "ok": true,
+    "ms": 507,
+    "result": [
+      {
+        "memberId": "ba04cba1-d38f-44a7-82fb-39f25496b88f",
+        "theme": "dark",
+        "code": "export function requestTimeoutMs() {\n  return 5000;\n}\n\nexport function canRetry(attempt) {\n  return attempt < 4;\n}\n"
+      },
+      {
+        "memberId": "8a37d064-1d83-4e22-9a84-ffece11ae927",
+        "theme": "light",
+        "code": "export function requestTimeoutMs() {\n  return 5000;\n}\n\nexport function canRetry(attempt) {\n  return attempt < 4;\n}\n"
+      }
+    ]
+  }
+]
