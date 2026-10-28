@@ -49,6 +49,14 @@ export async function updateMyRole(projectId: string, role: string) {
   });
 }
 
+export async function updateMemberRole(projectId: string, memberId: string, role: string) {
+  return request<{ member: { role: string } }>(`${projectPath(projectId)}/members/${encodeURIComponent(memberId)}/role`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role })
+  });
+}
+
 export async function replyGuardApproval(projectId: string, approvalId: string, approve: boolean) {
   return request<{ accepted: boolean }>(`${projectPath(projectId)}/guard/approvals/${encodeURIComponent(approvalId)}`, {
     method: "POST",

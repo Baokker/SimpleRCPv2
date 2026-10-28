@@ -1,7 +1,8 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import type { ProjectRuntimeManager } from "../projectRuntimeManager.js";
 import type { MemberStore } from "../auth/identity.js";
 import { requireIdentity } from "../auth/permissions.js";
+import { RoleChangeError } from "../auth/rolePolicy.js";
 import { SCENARIOS, roleLevel } from "../guard/roles.js";
 import type { ChatAgentBridge } from "../agent/chatAgentBridge.js";
 
@@ -145,16 +146,39 @@ export function registerCollaborationRoutes(
     try {
       const identity = requireIdentity(req, res);
       if (!identity) return;
+      if (req.body?.role !== undefined) {
+        await members.changeRole(req.params.projectId, { actorId: identity.memberId, targetId: identity.memberId, role: String(req.body.role) });
+      }
       const member = await members.join(req.params.projectId, {
         memberId: identity.memberId,
-        displayName: String(req.body?.name ?? identity.displayName),
-        role: String(req.body?.role ?? identity.role)
+        displayName: String(req.body?.name ?? identity.displayName)
       });
-      const runtime = runtimeManager.get(req.params.projectId);
-      runtime.updateMemberRole(identity.memberId, member.role || undefined);
+      syncRoomRole(req.params.projectId, member.memberId, member.role);
       res.json({ member });
-    } catch (error) { next(error); }
+    } catch (error) { sendRoleError(res, error) || next(error); }
   });
+
+  app.patch("/api/projects/:projectId/members/:memberId/role", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      if (typeof req.body?.role !== "string") { res.status(400).json({ error: "role must be a string" }); return; }
+      const member = await members.changeRole(req.params.projectId, { actorId: identity.memberId, targetId: req.params.memberId, role: req.body.role });
+      syncRoomRole(req.params.projectId, member.memberId, member.role);
+      res.json({ member });
+    } catch (error) { sendRoleError(res, error) || next(error); }
+  });
+
+  function syncRoomRole(projectId: string, memberId: string, role: string) {
+    const runtime = runtimeManager.get(projectId);
+    if (runtime.rooms.getMember(runtime.room.id, memberId)) runtime.updateMemberRole(memberId, role || undefined);
+  }
+
+  function sendRoleError(res: Response, error: unknown) {
+    if (!(error instanceof RoleChangeError)) return false;
+    res.status(error.status).json({ error: error.message });
+    return true;
+  }
 
   app.get("/api/projects/:projectId/guard/approvals", async (req, res, next) => {
     try {

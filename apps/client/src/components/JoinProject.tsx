@@ -102,7 +102,7 @@ export function JoinProject({
           />
         </label>
         <label>
-          <span>Role <small>Optional</small></span>
+          <span>Role <small>Optional. Once the project has an owner, roles above collaborator are granted by an owner.</small></span>
           <select
             value={role}
             onChange={(event) => setRole(event.target.value)}

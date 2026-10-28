@@ -177,6 +177,39 @@ describe("member identity API", () => {
       ownerTerminal.terminate();
     }
   });
+  it("lets only an owner raise a member's role once the project has an owner", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("role-escalation-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off" });
+    const patchRole = (memberId: string, endpoint: string, role: string) => fetch(`${running.origin}/api/projects/demo${endpoint}`, {
+      method: "PATCH", headers: memberHeaders(memberId), body: JSON.stringify({ role })
+    });
+    const storedRole = async (memberId: string) => (await running.app.locals.members.getMember("demo", memberId))?.role;
+
+    const lead = await joinMember(running.origin, "demo", { name: "Lead", role: "lead" });
+    const newcomer = await joinMember(running.origin, "demo", { name: "Newcomer", role: "newcomer" });
+    const latecomer = await joinMember(running.origin, "demo", { name: "Latecomer", role: "teacher" });
+    expect(lead.member.profileRole).toBe("lead");
+    expect(latecomer.member.profileRole).toBeUndefined();
+
+    const selfRaise = await patchRole(newcomer.member.id, "/me", "lead");
+    expect(selfRaise.status).toBe(403);
+    expect(await storedRole(newcomer.member.id)).toBe("newcomer");
+    const rejoin = await joinMember(running.origin, "demo", { name: "Newcomer", memberId: newcomer.member.id, role: "maintainer" });
+    expect(rejoin.member.profileRole).toBe("newcomer");
+    const peerGrant = await patchRole(newcomer.member.id, `/members/${latecomer.member.id}/role`, "maintainer");
+    expect(peerGrant.status).toBe(403);
+
+    expect((await patchRole(newcomer.member.id, "/me", "viewer")).status).toBe(200);
+    expect(await storedRole(newcomer.member.id)).toBe("viewer");
+    const grant = await patchRole(lead.member.id, `/members/${newcomer.member.id}/role`, "maintainer");
+    expect(grant.status).toBe(200);
+    expect(await storedRole(newcomer.member.id)).toBe("maintainer");
+    const room = running.app.locals.runtimeManager.get("demo").room;
+    expect(room.members.find((member: { id: string }) => member.id === newcomer.member.id)?.profileRole).toBe("maintainer");
+    expect((await patchRole(lead.member.id, "/members/unknown/role", "viewer")).status).toBe(404);
+  });
 });
 
 function opened(socket: WebSocket) {

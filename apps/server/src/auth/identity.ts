@@ -4,6 +4,7 @@ import type { NextFunction, Request, Response } from "express";
 import { getProjectMetadataPath, type ProjectRecord } from "../projects.js";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { normalizeStoredRole } from "../guard/roles.js";
+import { checkGrantRole, checkSelfRoleChange, resolveJoinRole, RoleChangeError } from "./rolePolicy.js";
 
 export interface MemberRecord {
   memberId: string;
@@ -90,7 +91,8 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
           const index = file.members.findIndex((member) => member.memberId === input.memberId);
           if (index >= 0) {
             const current = file.members[index]!;
-            const member = { ...current, displayName, role: input.role === undefined ? current.role : normalizeRole(input.role), updatedAt: now };
+            const role = input.role === undefined ? current.role : resolveJoinRole(file.members, current, normalizeRole(input.role));
+            const member = { ...current, displayName, role, updatedAt: now };
             file.members[index] = member;
             await save(projectId, file);
             return member;
@@ -100,11 +102,28 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
           memberId: crypto.randomUUID(),
           projectId,
           displayName,
-          role: normalizeRole(input.role),
+          role: resolveJoinRole(file.members, undefined, normalizeRole(input.role)),
           createdAt: now,
           updatedAt: now
         };
         await save(projectId, { version: 1, members: [...file.members, member] });
+        return member;
+      });
+    },
+    async changeRole(projectId: string, input: { actorId: string; targetId: string; role: string }) {
+      return enqueue(async () => {
+        const file = await load(projectId);
+        const index = file.members.findIndex((member) => member.memberId === input.targetId);
+        const role = normalizeRole(input.role);
+        if (input.actorId === input.targetId) {
+          if (index < 0) throw new RoleChangeError("Member not found", 404);
+          checkSelfRoleChange(file.members, file.members[index]!, role);
+        } else {
+          checkGrantRole(file.members, input.actorId, input.targetId);
+        }
+        const member = { ...file.members[index]!, role, updatedAt: new Date().toISOString() };
+        file.members[index] = member;
+        await save(projectId, file);
         return member;
       });
     },
