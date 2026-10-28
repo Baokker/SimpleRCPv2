@@ -1,0 +1,725 @@
+{
+  "source": "runs/E2-k7-final",
+  "productThreshold": {
+    "minSimilarity": 0.65,
+    "maxChanged": 0.5,
+    "three-members": {
+      "total": 240,
+      "correct": 47,
+      "wrong": 1,
+      "review": 192
+    },
+    "non-delete": {
+      "total": 1200,
+      "correct": 1001,
+      "wrong": 3,
+      "review": 196
+    },
+    "delete": {
+      "total": 240,
+      "correct": 0,
+      "wrong": 0,
+      "review": 240
+    }
+  },
+  "replayMatchesRecorded": true,
+  "curve": [
+    {
+      "minSimilarity": 0.65,
+      "maxChanged": 0.5,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.65,
+      "maxChanged": 0.6,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.65,
+      "maxChanged": 0.7,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.65,
+      "maxChanged": 0.8,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.65,
+      "maxChanged": 0.9,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.65,
+      "maxChanged": 1,
+      "three-members": {
+        "total": 240,
+        "correct": 235,
+        "wrong": 5,
+        "review": 0
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1193,
+        "wrong": 7,
+        "review": 0
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.5,
+      "maxChanged": 0.5,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.5,
+      "maxChanged": 0.6,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.5,
+      "maxChanged": 0.7,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.5,
+      "maxChanged": 0.8,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.5,
+      "maxChanged": 0.9,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.5,
+      "maxChanged": 1,
+      "three-members": {
+        "total": 240,
+        "correct": 235,
+        "wrong": 5,
+        "review": 0
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1193,
+        "wrong": 7,
+        "review": 0
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.35,
+      "maxChanged": 0.5,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.35,
+      "maxChanged": 0.6,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.35,
+      "maxChanged": 0.7,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.35,
+      "maxChanged": 0.8,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.35,
+      "maxChanged": 0.9,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.35,
+      "maxChanged": 1,
+      "three-members": {
+        "total": 240,
+        "correct": 235,
+        "wrong": 5,
+        "review": 0
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1193,
+        "wrong": 7,
+        "review": 0
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.2,
+      "maxChanged": 0.5,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.2,
+      "maxChanged": 0.6,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.2,
+      "maxChanged": 0.7,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.2,
+      "maxChanged": 0.8,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.2,
+      "maxChanged": 0.9,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0.2,
+      "maxChanged": 1,
+      "three-members": {
+        "total": 240,
+        "correct": 235,
+        "wrong": 5,
+        "review": 0
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1193,
+        "wrong": 7,
+        "review": 0
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0,
+      "maxChanged": 0.5,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0,
+      "maxChanged": 0.6,
+      "three-members": {
+        "total": 240,
+        "correct": 47,
+        "wrong": 1,
+        "review": 192
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1001,
+        "wrong": 3,
+        "review": 196
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0,
+      "maxChanged": 0.7,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0,
+      "maxChanged": 0.8,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0,
+      "maxChanged": 0.9,
+      "three-members": {
+        "total": 240,
+        "correct": 208,
+        "wrong": 5,
+        "review": 27
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 1164,
+        "wrong": 7,
+        "review": 29
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    },
+    {
+      "minSimilarity": 0,
+      "maxChanged": 1,
+      "three-members": {
+        "total": 240,
+        "correct": 235,
+        "wrong": 5,
+        "review": 0
+      },
+      "non-delete": {
+        "total": 1200,
+        "correct": 959,
+        "wrong": 241,
+        "review": 0
+      },
+      "delete": {
+        "total": 240,
+        "correct": 0,
+        "wrong": 0,
+        "review": 240
+      }
+    }
+  ],
+  "contentDrift": {
+    "insert-around": {
+      "located": 240,
+      "changedAtMostHalf": 240,
+      "changedOverHalf": 0,
+      "similarityBelow035": 0,
+      "medianSimilarity": 1
+    },
+    "interleaved": {
+      "located": 240,
+      "changedAtMostHalf": 236,
+      "changedOverHalf": 4,
+      "similarityBelow035": 0,
+      "medianSimilarity": 0.991304347826087
+    },
+    "move-and-edit": {
+      "located": 240,
+      "changedAtMostHalf": 240,
+      "changedOverHalf": 0,
+      "similarityBelow035": 0,
+      "medianSimilarity": 1
+    },
+    "duplicate-before": {
+      "located": 240,
+      "changedAtMostHalf": 240,
+      "changedOverHalf": 0,
+      "similarityBelow035": 0,
+      "medianSimilarity": 1
+    },
+    "three-members": {
+      "located": 240,
+      "changedAtMostHalf": 48,
+      "changedOverHalf": 192,
+      "similarityBelow035": 0,
+      "medianSimilarity": 0.9734513274336283
+    }
+  }
+}
