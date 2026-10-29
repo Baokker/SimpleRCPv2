@@ -1,0 +1,122 @@
+{
+ "M3-G1": {
+  "balancedAccuracy": [
+   70.6,
+   72.5,
+   70.2
+  ],
+  "mean": 71.1,
+  "conflictBlocked": [
+   22,
+   26,
+   28
+  ],
+  "falseBlocks": [
+   5,
+   7,
+   10
+  ],
+  "unstable": 24
+ },
+ "M3-G3a": {
+  "balancedAccuracy": [
+   69.6,
+   72.2,
+   68.6
+  ],
+  "mean": 70.1,
+  "conflictBlocked": [
+   25,
+   27,
+   23
+  ],
+  "falseBlocks": [
+   8,
+   8,
+   7
+  ],
+  "unstable": 6
+ },
+ "DeepSeek-G1": {
+  "balancedAccuracy": [
+   64.7,
+   63.1,
+   61.8
+  ],
+  "mean": 63.2,
+  "conflictBlocked": [
+   15,
+   15,
+   14
+  ],
+  "falseBlocks": [
+   3,
+   4,
+   4
+  ],
+  "unstable": 5
+ },
+ "DeepSeek-G3a": {
+  "balancedAccuracy": [
+   66.9,
+   69.6,
+   68.6
+  ],
+  "mean": 68.4,
+  "conflictBlocked": [
+   23,
+   25,
+   23
+  ],
+  "falseBlocks": [
+   8,
+   8,
+   7
+  ],
+  "unstable": 4
+ },
+ "sameDecision-G1": [
+  75.0,
+  67.6,
+  64.7
+ ],
+ "decisionMix-DeepSeek-G1": [
+  {
+   "lock": 18,
+   "allow": 5,
+   "warn": 45
+  },
+  {
+   "lock": 19,
+   "allow": 4,
+   "warn": 45
+  },
+  {
+   "lock": 18,
+   "allow": 3,
+   "warn": 47
+  }
+ ],
+ "sameDecision-G3a": [
+  97.1,
+  97.1,
+  100.0
+ ],
+ "decisionMix-DeepSeek-G3a": [
+  {
+   "lock": 31,
+   "allow": 14,
+   "warn": 23
+  },
+  {
+   "lock": 33,
+   "allow": 12,
+   "warn": 23
+  },
+  {
+   "lock": 30,
+   "allow": 12,
+   "warn": 26
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "cross-owner-quote-meaning-P0-off-owner-1",
+    "taskId": "cross-owner-quote-meaning",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "cross-owner-quote-meaning-P0-off-owner-2",
+    "taskId": "cross-owner-quote-meaning",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": null
+  }
+]

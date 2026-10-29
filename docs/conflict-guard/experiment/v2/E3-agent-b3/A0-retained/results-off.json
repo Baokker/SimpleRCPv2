@@ -1,0 +1,178 @@
+[
+  {
+    "name": "human-agent-pricing-signature-P0-off-owner-1",
+    "taskId": "human-agent-pricing-signature",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-capacity-field-P0-off-owner-1",
+    "taskId": "human-agent-capacity-field",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-layout-metrics-P0-off-owner-1",
+    "taskId": "human-agent-layout-metrics",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-retry-delay-P0-off-owner-1",
+    "taskId": "human-agent-retry-delay",
+    "ownership": "cross",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "same-owner-budget-field-P0-off-owner-1",
+    "taskId": "same-owner-budget-field",
+    "ownership": "same",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "same-owner-retry-helper-P0-off-owner-1",
+    "taskId": "same-owner-retry-helper",
+    "ownership": "same",
+    "round": 1,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-pricing-signature-P0-off-owner-2",
+    "taskId": "human-agent-pricing-signature",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-capacity-field-P0-off-owner-2",
+    "taskId": "human-agent-capacity-field",
+    "ownership": "cross",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-layout-metrics-P0-off-owner-2",
+    "taskId": "human-agent-layout-metrics",
+    "ownership": "cross",
+    "round": 2,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "human-agent-retry-delay-P0-off-owner-2",
+    "taskId": "human-agent-retry-delay",
+    "ownership": "cross",
+    "round": 2,
+    "success": false,
+    "statuses": [
+      "completed"
+    ],
+    "rejected": [
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "same-owner-budget-field-P0-off-owner-2",
+    "taskId": "same-owner-budget-field",
+    "ownership": "same",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": null
+  },
+  {
+    "name": "same-owner-retry-helper-P0-off-owner-2",
+    "taskId": "same-owner-retry-helper",
+    "ownership": "same",
+    "round": 2,
+    "success": true,
+    "statuses": [
+      "completed",
+      "completed"
+    ],
+    "rejected": [
+      0,
+      0
+    ],
+    "interruptions": null
+  }
+]

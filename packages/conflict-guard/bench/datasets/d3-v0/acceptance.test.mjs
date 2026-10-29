@@ -29,6 +29,18 @@ test(`D3 acceptance ${task}`, async () => {
     const retry = await load("retry"); const delivery = await load("delivery");
     if (task === "d3-05") { assert.equal(retry.retryBudget(6).exhausted, true); assert.equal(delivery.retrySummary(6), "stop"); assert.equal(delivery.retrySummary(1), "100"); }
     if (task === "d3-10") { assert.deepEqual(retry.retryWindow(1), { delay: 100, attemptsLeft: 5 }); assert.equal(delivery.retryWindowLabel(1), "100:5"); }
+  } else if (task === "d3-14") {
+    const pricing = await load("pricing"); const cart = await load("cart"); const result = pricing.quote(100, 0.1, "CNY");
+    assert.equal(result.net, 90); assert.equal("amount" in result, false); assert.equal(result.currency, "CNY"); assert.equal(cart.invoiceNet(100), 90); assert.equal(cart.grossLabel(100), "101.70");
+  } else if (task === "d3-16") {
+    const pricing = await load("pricing"); const cart = await load("cart"); const result = pricing.quote(100, 0.1, "CNY");
+    assert.ok(Math.abs(result.amount - 101.7) < 1e-9); assert.equal(result.net, 90); assert.ok(Math.abs(result.tax - 11.7) < 1e-9); assert.equal(cart.invoiceNet(100), 90); assert.equal(cart.grossLabel(100), "101.70");
+  } else if (task === "d3-17") {
+    const pricing = await load("pricing"); const cart = await load("cart");
+    assert.equal(pricing.totalTax(100), 1053); assert.equal(cart.taxLabel(100), "10.53");
+  } else if (task === "d3-15") {
+    const retry = await load("retry"); const delivery = await load("delivery");
+    assert.equal(retry.retryDelay(1, 2, "standard"), 0.1); assert.equal(delivery.estimatedWait(1), 100); assert.equal(delivery.waitLabel(1), "100ms");
   } else if (task === "d3-06") {
     const tariffs = await load("tariffs"); const invoices = await load("invoices"); assert.equal(tariffs.chargeBreakdown(100).total, 19.08); assert.equal(invoices.chargeLabel(100), "19.08");
   } else throw new Error(`Unknown task ${task}`);

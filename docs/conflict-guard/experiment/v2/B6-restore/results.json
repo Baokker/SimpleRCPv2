@@ -1,0 +1,82 @@
+{
+  "base": "10-line TypeScript module",
+  "results": [
+    {
+      "id": "different-line",
+      "note": "其他成员改同一文件的另一行",
+      "reverted": 1,
+      "skipped": 0,
+      "withdrawnUndone": true,
+      "otherKept": true,
+      "handedToPerson": false,
+      "lostOther": false,
+      "correct": true
+    },
+    {
+      "id": "same-line",
+      "note": "其他成员改同一行",
+      "reverted": 0,
+      "skipped": 1,
+      "withdrawnUndone": false,
+      "otherKept": true,
+      "handedToPerson": true,
+      "lostOther": false,
+      "correct": true
+    },
+    {
+      "id": "adjacent-line",
+      "note": "其他成员改相邻行",
+      "reverted": 1,
+      "skipped": 0,
+      "withdrawnUndone": true,
+      "otherKept": true,
+      "handedToPerson": false,
+      "lostOther": false,
+      "correct": true
+    },
+    {
+      "id": "shifted",
+      "note": "其他成员在文件开头插入两行",
+      "reverted": 1,
+      "skipped": 0,
+      "withdrawnUndone": true,
+      "otherKept": true,
+      "handedToPerson": false,
+      "lostOther": false,
+      "correct": true
+    },
+    {
+      "id": "renamed",
+      "note": "其他成员把文件改名，原路径不存在",
+      "reverted": 0,
+      "skipped": 1,
+      "withdrawnUndone": false,
+      "otherKept": true,
+      "handedToPerson": true,
+      "lostOther": false,
+      "correct": true
+    },
+    {
+      "id": "two-agents",
+      "note": "两个 Agent 运行重叠，各改一个位置",
+      "reverted": 1,
+      "skipped": 0,
+      "withdrawnUndone": true,
+      "otherKept": true,
+      "handedToPerson": false,
+      "lostOther": false,
+      "correct": true
+    },
+    {
+      "id": "inside-agent-block",
+      "note": "另一个 Agent 在被撤回的修改内部继续修改",
+      "reverted": 0,
+      "skipped": 1,
+      "withdrawnUndone": false,
+      "otherKept": true,
+      "handedToPerson": true,
+      "lostOther": false,
+      "correct": true
+    }
+  ]
+}

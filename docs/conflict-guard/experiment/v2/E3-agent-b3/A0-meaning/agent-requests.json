@@ -1,0 +1,441 @@
+[
+  {
+    "sequence": 1,
+    "startedAt": "2026-10-28T12:30:53.700Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:30:58.334Z"
+  },
+  {
+    "sequence": 2,
+    "startedAt": "2026-10-28T12:30:58.327Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:00.453Z"
+  },
+  {
+    "sequence": 3,
+    "startedAt": "2026-10-28T12:30:58.521Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:00.215Z"
+  },
+  {
+    "sequence": 4,
+    "startedAt": "2026-10-28T12:31:00.430Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:01.990Z"
+  },
+  {
+    "sequence": 5,
+    "startedAt": "2026-10-28T12:31:00.636Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:02.574Z"
+  },
+  {
+    "sequence": 6,
+    "startedAt": "2026-10-28T12:31:02.164Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:03.463Z"
+  },
+  {
+    "sequence": 7,
+    "startedAt": "2026-10-28T12:31:02.794Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:04.459Z"
+  },
+  {
+    "sequence": 8,
+    "startedAt": "2026-10-28T12:31:03.637Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:04.750Z"
+  },
+  {
+    "sequence": 9,
+    "startedAt": "2026-10-28T12:31:04.658Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:06.900Z"
+  },
+  {
+    "sequence": 10,
+    "startedAt": "2026-10-28T12:31:05.218Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:06.406Z"
+  },
+  {
+    "sequence": 11,
+    "startedAt": "2026-10-28T12:31:06.676Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:08.030Z"
+  },
+  {
+    "sequence": 12,
+    "startedAt": "2026-10-28T12:31:07.096Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:09.002Z"
+  },
+  {
+    "sequence": 13,
+    "startedAt": "2026-10-28T12:31:08.302Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:11.321Z"
+  },
+  {
+    "sequence": 14,
+    "startedAt": "2026-10-28T12:31:09.204Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:11.269Z"
+  },
+  {
+    "sequence": 15,
+    "startedAt": "2026-10-28T12:31:11.449Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:13.190Z"
+  },
+  {
+    "sequence": 16,
+    "startedAt": "2026-10-28T12:31:11.619Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:13.724Z"
+  },
+  {
+    "sequence": 17,
+    "startedAt": "2026-10-28T12:31:13.550Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:15.760Z"
+  },
+  {
+    "sequence": 18,
+    "startedAt": "2026-10-28T12:31:14.005Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:15.883Z"
+  },
+  {
+    "sequence": 19,
+    "startedAt": "2026-10-28T12:31:15.938Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:17.442Z"
+  },
+  {
+    "sequence": 20,
+    "startedAt": "2026-10-28T12:31:16.162Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:17.906Z"
+  },
+  {
+    "sequence": 21,
+    "startedAt": "2026-10-28T12:31:17.633Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:19.468Z"
+  },
+  {
+    "sequence": 22,
+    "startedAt": "2026-10-28T12:31:18.141Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "7c759fd2df8971138c17b58675b604fae2073cc8cb1bedc85c793f60fe03fca7",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:20.340Z"
+  },
+  {
+    "sequence": 23,
+    "startedAt": "2026-10-28T12:31:19.632Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:21.007Z"
+  },
+  {
+    "sequence": 24,
+    "startedAt": "2026-10-28T12:31:21.187Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:23.006Z"
+  },
+  {
+    "sequence": 25,
+    "startedAt": "2026-10-28T12:31:23.188Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:24.934Z"
+  },
+  {
+    "sequence": 26,
+    "startedAt": "2026-10-28T12:31:25.127Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:26.469Z"
+  },
+  {
+    "sequence": 27,
+    "startedAt": "2026-10-28T12:31:26.666Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:27.887Z"
+  },
+  {
+    "sequence": 28,
+    "startedAt": "2026-10-28T12:31:28.061Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:30.304Z"
+  },
+  {
+    "sequence": 29,
+    "startedAt": "2026-10-28T12:31:30.466Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "24b237090cc3e55e45fd864325e66275fdc3027003a8df771b9ccf0af0daa154",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:35.023Z"
+  },
+  {
+    "sequence": 30,
+    "startedAt": "2026-10-28T12:31:40.692Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:42.891Z"
+  },
+  {
+    "sequence": 31,
+    "startedAt": "2026-10-28T12:31:42.748Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:45.181Z"
+  },
+  {
+    "sequence": 32,
+    "startedAt": "2026-10-28T12:31:43.086Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:45.020Z"
+  },
+  {
+    "sequence": 33,
+    "startedAt": "2026-10-28T12:31:45.233Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:46.319Z"
+  },
+  {
+    "sequence": 34,
+    "startedAt": "2026-10-28T12:31:45.432Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:46.973Z"
+  },
+  {
+    "sequence": 35,
+    "startedAt": "2026-10-28T12:31:46.477Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:47.608Z"
+  },
+  {
+    "sequence": 36,
+    "startedAt": "2026-10-28T12:31:47.144Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:49.891Z"
+  },
+  {
+    "sequence": 37,
+    "startedAt": "2026-10-28T12:31:47.774Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:49.803Z"
+  },
+  {
+    "sequence": 38,
+    "startedAt": "2026-10-28T12:31:50.002Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:51.345Z"
+  },
+  {
+    "sequence": 39,
+    "startedAt": "2026-10-28T12:31:50.174Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:51.467Z"
+  },
+  {
+    "sequence": 40,
+    "startedAt": "2026-10-28T12:31:51.507Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:52.688Z"
+  },
+  {
+    "sequence": 41,
+    "startedAt": "2026-10-28T12:31:51.700Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:52.873Z"
+  },
+  {
+    "sequence": 42,
+    "startedAt": "2026-10-28T12:31:52.862Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:54.757Z"
+  },
+  {
+    "sequence": 43,
+    "startedAt": "2026-10-28T12:31:53.063Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:54.658Z"
+  },
+  {
+    "sequence": 44,
+    "startedAt": "2026-10-28T12:31:54.835Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:57.777Z"
+  },
+  {
+    "sequence": 45,
+    "startedAt": "2026-10-28T12:31:54.994Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "839593ccc65cf21bab2bd440df578a46700d0fafb17685fe5d78a19c7342b73d",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:31:56.782Z"
+  },
+  {
+    "sequence": 46,
+    "startedAt": "2026-10-28T12:31:57.959Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:00.320Z"
+  },
+  {
+    "sequence": 47,
+    "startedAt": "2026-10-28T12:32:00.499Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:02.065Z"
+  },
+  {
+    "sequence": 48,
+    "startedAt": "2026-10-28T12:32:02.240Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:03.732Z"
+  },
+  {
+    "sequence": 49,
+    "startedAt": "2026-10-28T12:32:03.911Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:06.499Z"
+  },
+  {
+    "sequence": 50,
+    "startedAt": "2026-10-28T12:32:07.034Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:08.213Z"
+  },
+  {
+    "sequence": 51,
+    "startedAt": "2026-10-28T12:32:08.425Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:10.674Z"
+  },
+  {
+    "sequence": 52,
+    "startedAt": "2026-10-28T12:32:10.851Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:13.207Z"
+  },
+  {
+    "sequence": 53,
+    "startedAt": "2026-10-28T12:32:13.401Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "45d9bb8d3b4a99aa591ea90c28d326f56a3bd4a0011dc3f7a37ffcbf11835294",
+    "httpStatus": 200,
+    "finishedAt": "2026-10-28T12:32:17.215Z"
+  },
+  {
+    "sequence": 54,
+    "startedAt": "2026-10-28T12:32:22.828Z",
+    "model": "MiniMax-M3",
+    "lastUserSha256": "407a495858a41e1d49a52dd04c71e27ec59a802bd59b404fce9f90aae754d422",
+    "httpStatus": 200
+  },
+  {
+    "errorType": "Error",
+    "message": "彩排 agentExecutionsIncludingFollowups 预算即将超过上限，实验已经停止"
+  },
+  {
+    "errorType": "Error",
+    "message": "Premature close"
+  }
+]

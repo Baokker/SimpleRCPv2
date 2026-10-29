@@ -1,0 +1,13 @@
+{
+  "jev": {
+    "baseUrl": "https://api.typesafe.ai"
+  },
+  "minimax": {
+    "baseUrl": "https://api.minimaxi.com/v1",
+    "jsonMode": true,
+    "temperature": 0
+  },
+  "openai-compatible": {
+    "baseUrl": "https://api.sudocode.chat/v1"
+  }
+}

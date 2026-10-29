@@ -1,0 +1,928 @@
+{
+  "scope": "b3-taxcents",
+  "totals": {
+    "fast": 0,
+    "deep": 14,
+    "agentBaseRuns": 12,
+    "agentExecutionsIncludingFollowups": 15,
+    "agentHttpRequests": 136,
+    "usd": 0.36088217999999994
+  },
+  "events": [
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:34:21.435Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:24.832Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:34:24.832Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:34:26.553Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:26.671Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:34:26.678Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:27.174Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:28.380Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:29.014Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:29.908Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:31.381Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:32.733Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:33.987Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:34.570Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:35.177Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:36.088Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:36.300Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:37.523Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:38.876Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:40.313Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:40.497Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:42.734Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:44.009Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:45.228Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:46.892Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:48.529Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:50.627Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:34:52.159Z"
+    },
+    {
+      "category": "usd",
+      "amount": 0.06187626,
+      "time": "2026-10-28T12:34:56.266Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:34:59.757Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:00.554Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:35:00.555Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:35:03.237Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:03.342Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:35:03.344Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:03.505Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:07.521Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:09.710Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:11.473Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:11.993Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:13.399Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:14.709Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:15.217Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:17.787Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:17.937Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:20.520Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:21.571Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:22.404Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:24.930Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:25.570Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:28.344Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:30.282Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:34.294Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:36.915Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:39.920Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:42.309Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:44.259Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:48.118Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:35:52.638Z"
+    },
+    {
+      "category": "usd",
+      "amount": 0.06796637999999999,
+      "time": "2026-10-28T12:35:57.343Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:36:01.519Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:02.301Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:36:02.302Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:36:07.339Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:07.452Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:36:07.454Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:09.204Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:09.398Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:11.173Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:12.814Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:13.019Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:14.200Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:15.815Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:16.252Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:17.248Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:19.098Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:20.522Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:20.962Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:25.502Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:29.392Z"
+    },
+    {
+      "category": "usd",
+      "amount": 0.04166628,
+      "time": "2026-10-28T12:36:32.483Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:36:35.474Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:38.365Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:36:38.366Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:36:43.434Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:43.675Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:36:43.676Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:43.857Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:46.180Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:48.361Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:49.565Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:50.176Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:51.809Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:51.996Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:52.946Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:53.766Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:57.167Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:36:58.679Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:37:00.316Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:37:02.675Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:37:05.882Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:38:05.447Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:38:28.490Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:38:28.491Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:38:30.708Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:38:33.501Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:38:35.681Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:38:37.777Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:38:40.642Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:39:08.499Z"
+    },
+    {
+      "category": "usd",
+      "amount": 0.05854031999999999,
+      "time": "2026-10-28T12:39:39.265Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:39:42.376Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:43.483Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:39:43.483Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:39:45.127Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:45.258Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:39:45.266Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:46.145Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:47.242Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:47.515Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:48.777Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:48.947Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:50.399Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:50.559Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:51.908Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:52.063Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:53.433Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:55.431Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:56.953Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:39:58.398Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:40:00.504Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:40:44.330Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:41:00.183Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:41:17.506Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:41:17.507Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:41:20.630Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:41:22.580Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:41:24.755Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:41:26.374Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:41:28.385Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:42:27.047Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:42:28.051Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:42:47.318Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:42:47.319Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:42:49.066Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:42:50.674Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:42:52.365Z"
+    },
+    {
+      "category": "usd",
+      "amount": 0.06118734,
+      "time": "2026-10-28T12:42:52.707Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:42:55.580Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:42:56.472Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:42:56.472Z"
+    },
+    {
+      "category": "agentBaseRuns",
+      "amount": 1,
+      "time": "2026-10-28T12:42:58.553Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:42:58.977Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:00.472Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:01.391Z"
+    },
+    {
+      "category": "agentExecutionsIncludingFollowups",
+      "amount": 1,
+      "time": "2026-10-28T12:43:01.397Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:01.710Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:03.262Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:04.136Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:05.223Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:05.848Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:07.241Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:07.440Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:08.882Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:09.050Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:10.415Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:10.577Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:12.421Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:12.929Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:13.735Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:14.729Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:15.727Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:19.428Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:21.191Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:23.820Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:27.811Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:29.684Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:30.930Z"
+    },
+    {
+      "category": "agentHttpRequests",
+      "amount": 1,
+      "time": "2026-10-28T12:43:32.568Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:43:36.779Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:44:19.975Z"
+    },
+    {
+      "category": "deep",
+      "amount": 1,
+      "time": "2026-10-28T12:44:36.425Z"
+    },
+    {
+      "category": "usd",
+      "amount": 0.06964559999999999,
+      "time": "2026-10-28T12:45:07.077Z"
+    }
+  ]
+}

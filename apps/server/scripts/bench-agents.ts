@@ -25,7 +25,7 @@ if (!["P0", "P3", "P5"].includes(values.policy!) || !["E3", "X5", "X6"].includes
 if (!["on", "off"].includes(values.injection!) || !["accept", "yield"].includes(values["card-action"]!)) throw new Error("Invalid benchmark configuration");
 const repeat = Number(values.repeat); if (!Number.isInteger(repeat) || repeat < 1) throw new Error("repeat must be a positive integer");
 const dataset = values.dataset === "d3" ? path.join(repository, "packages/conflict-guard/bench/datasets/d3-v0") : path.resolve(values.dataset!);
-interface TaskPair { id: string; project: string; ownership: "same" | "cross"; files: string[]; tasks: [string, string]; humanSide?: boolean; humanEdits?: Array<{ file: string; find: string; replace: string }>; acceptanceTask?: string }
+interface TaskPair { id: string; project: string; ownership: "same" | "cross"; files: string[]; tasks: [string, string]; humanSide?: boolean; humanEdits?: Array<{ file: string; find: string; replace: string }>; acceptanceTask?: string; staggered?: boolean }
 const manifest = JSON.parse(await fs.readFile(path.join(dataset, "manifest.json"), "utf8")) as { version: string; seedRoot: string; acceptance: string; tasks: TaskPair[] };
 const scenarioTasks = values.scenarios ? await loadScenarioTasks(values.scenarios, manifest.tasks) : undefined;
 const selected = scenarioTasks ?? (values.tasks ? manifest.tasks.filter((task) => values.tasks!.split(",").includes(task.id)) : manifest.tasks);
@@ -86,7 +86,16 @@ async function execute(task: TaskPair, round: number) {
   const project = await app.locals.registry.importDirectory(name, path.join(seedRoot, task.project));
   const runtime = app.locals.runtimeManager.get(project.id);
   const alice = await join(project.id, "Alice"); const bob = task.ownership === "same" ? alice : await join(project.id, "Bob");
-  const runs = task.humanSide ? [await createRun(project.id, bob, task, 1, round)] : [await createRun(project.id, alice, task, 0, round), await createRun(project.id, bob, task, 1, round)];
+  // staggered：第二个 Agent 先启动，第一个 Agent 在它完成第一次工具调用后再启动，使第二个 Agent 依据旧内容继续工作。60 秒内没有工具调用时按时间启动。
+  const completedTool = async (runId: string) => (await app.locals.agentRuns.listTrace(project.id, runId)).some((event: { type?: string; data?: { part?: { type?: string; state?: { status?: string } } } }) =>
+    event.type === "opencode.message.part.updated" && event.data?.part?.type === "tool" && event.data.part.state?.status === "completed");
+  const staggeredRuns = async () => {
+    const second = await createRun(project.id, bob, task, 1, round);
+    const started = performance.now();
+    while (performance.now() - started < 60_000 && !await completedTool(second.id)) await new Promise((resolve) => setTimeout(resolve, 100));
+    return [await createRun(project.id, alice, task, 0, round), second];
+  };
+  const runs = task.humanSide ? [await createRun(project.id, bob, task, 1, round)] : task.staggered ? await staggeredRuns() : [await createRun(project.id, alice, task, 0, round), await createRun(project.id, bob, task, 1, round)];
   const humanDocuments: Array<{ document: Y.Doc; provider: WebsocketProvider }> = [];
   // Agent 启动时已通过上下文获得两个文件的旧内容；人的修改在 Agent 完成第一次工具调用之后写入，使 Agent 依据过时内容继续工作。60 秒内没有工具调用时按时间写入。
   const humanTrigger: { kind: "after-first-agent-tool" | "timeout" | "anchor-missing"; atMs: number }[] = [];
@@ -155,7 +164,7 @@ async function execute(task: TaskPair, round: number) {
 }
 async function loadScenarioTasks(file: string, sourceTasks: TaskPair[]): Promise<TaskPair[]> {
   const scenarioFile = path.resolve(file);
-  const definition = JSON.parse(await fs.readFile(scenarioFile, "utf8")) as { scenarios: Array<{ id: string; category: string; sourceTasks: string[]; initialCode: string[]; humanTask?: string; agentTask?: string; agentTasks?: string[]; agentPrompt?: string; agentPrompts?: string[]; humanEdits?: Array<{ file: string; find: string; replace: string }> }> };
+  const definition = JSON.parse(await fs.readFile(scenarioFile, "utf8")) as { scenarios: Array<{ id: string; category: string; sourceTasks: string[]; initialCode: string[]; humanTask?: string; agentTask?: string; agentTasks?: string[]; agentPrompt?: string; agentPrompts?: string[]; humanEdits?: Array<{ file: string; find: string; replace: string }>; staggered?: boolean }> };
   return definition.scenarios.map((scenario) => {
     const source = sourceTasks.find((task) => task.id === scenario.sourceTasks[0]);
     if (!source) throw new Error(`场景引用的任务不存在：${scenario.id}`);
@@ -163,7 +172,7 @@ async function loadScenarioTasks(file: string, sourceTasks: TaskPair[]): Promise
     const tasks: [string, string] = scenario.category === "人与 Agent" ? [scenario.humanTask!, scenario.agentPrompt ?? scenario.agentTask!] : [scenario.agentPrompts?.[0] ?? scenario.agentTasks![0]!, scenario.agentPrompts?.[1] ?? scenario.agentTasks![1]!];
     // 场景类别决定属主关系，来源任务的 ownership 只描述 d3-v0 原任务。
     const ownership: TaskPair["ownership"] = scenario.category === "同属主的两个 Agent" ? "same" : "cross";
-    return { ...source, id: scenario.id, ownership, tasks, humanSide: scenario.category === "人与 Agent", humanEdits: scenario.humanEdits, acceptanceTask: scenario.sourceTasks[0] };
+    return { ...source, id: scenario.id, ownership, tasks, humanSide: scenario.category === "人与 Agent", humanEdits: scenario.humanEdits, acceptanceTask: scenario.sourceTasks[0], staggered: scenario.staggered === true };
   });
 }
 await fs.writeFile(path.join(evidence, "command.txt"), `pnpm --filter @simplercp/server bench:agents ${process.argv.slice(2).join(" ")}\n`);

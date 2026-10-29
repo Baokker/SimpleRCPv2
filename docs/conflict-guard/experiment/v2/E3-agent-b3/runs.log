@@ -1,0 +1,7 @@
+exit 0 A0-cross
+exit 0 A1-cross
+exit 0 A0-retained
+exit 1 A0-meaning
+exit 1 A1-meaning
+exit 0 A0-taxcents
+exit 0 A1-taxcents

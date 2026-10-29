@@ -1,0 +1,12 @@
+file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/experiment-budget.ts:56
+            throw new Error(`阶段八 ${category} 预算即将超过上限，实验已经停止`);
+                  ^
+
+Error: 阶段八 deep 预算即将超过上限，实验已经停止
+    at file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/experiment-budget.ts:56:19
+    at async Object.wrappedFetch [as fetch] (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2-e3b3/packages/conflict-guard/scripts/model-runtime.ts:31:13)
+    at async request (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2-e3b3/packages/conflict-guard/dist/adjudication/adapters.js:22:26)
+    at async Object.judge (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2-e3b3/packages/conflict-guard/dist/adjudication/adapters.js:74:25)
+    at async execute (file:///Users/baokker/Work/Master/CSCW/%E6%99%BA%E8%83%BD%E8%AF%AD%E4%B9%89%E5%86%B2%E7%AA%81%E9%A2%84%E9%98%B2-update/SimpleRCPv2-e3b3/packages/conflict-guard/dist/adjudication/service.js:96:45)
+
+Node.js v22.19.0
