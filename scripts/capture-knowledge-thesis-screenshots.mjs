@@ -80,7 +80,13 @@ async function capture(browser) {
       const screenshot = page.screenshot.bind(page);
       page.screenshot = async (options) => {
         await page.evaluate(() => { for (const element of document.querySelectorAll("*")) if (element.scrollLeft) element.scrollLeft = 0; }).catch(() => undefined);
-        return screenshot(options);
+        const result = await screenshot(options);
+        // Vector copy for the thesis: print the same screen layout to a one-page PDF of the viewport size.
+        if (options?.path?.endsWith(".png") && !options.clip && !path.basename(options.path).startsWith("failed-")) {
+          await page.emulateMedia({ media: "screen" });
+          await page.pdf({ path: options.path.replace(/\.png$/, ".pdf"), width: `${viewport.width}px`, height: `${viewport.height}px`, printBackground: true, margin: { top: "0", right: "0", bottom: "0", left: "0" }, pageRanges: "1" });
+        }
+        return result;
       };
     });
     return context;
