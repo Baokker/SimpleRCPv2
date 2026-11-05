@@ -48,6 +48,11 @@ export function roleLevel(raw: string | undefined | null): Level {
   return roleMap.get(normalized) ?? "collaborator";
 }
 
+// A newer trigger may stop a running task only when its level is not below that of the task's trigger.
+export function canInterruptRun(newRole: string | undefined | null, activeRole: string | undefined | null): boolean {
+  return LEVELS.indexOf(roleLevel(newRole)) >= LEVELS.indexOf(roleLevel(activeRole));
+}
+
 export function normalizeStoredRole(raw: string | undefined | null): string {
   const normalized = raw?.trim().toLowerCase() ?? "";
   return roleMap.has(normalized) ? normalized : "";

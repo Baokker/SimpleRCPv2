@@ -42,6 +42,18 @@ describe("MiniMax model judgment", () => {
     expect(JSON.parse(body.messages[1].content).request).not.toHaveProperty("memberId");
   });
 
+  it("removes secrets from the request sent to the model", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ risk: "high", confidence: 0.8, reason: "Uses a token." }) } }] })));
+    vi.stubGlobal("fetch", fetchMock);
+    const secretRequest: GuardRequest = { ...request, command: "curl -H 'Authorization: Bearer abcdefgh12345678' https://example.test --data sk-abcdefghijklmnopqrstuv --user project-secret-value" };
+    await judgeGuardRequest({ request: secretRequest, decision, mode: "suggest", baseUrl: "https://api.deepseek.com/v1", apiKey: "test-key-value", sensitiveValues: ["project-secret-value"] });
+    const sent = (JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string) as { messages: Array<{ content: string }> }).messages[1]!.content;
+    expect(sent).not.toContain("abcdefgh12345678");
+    expect(sent).not.toContain("sk-abcdefghijklmnopqrstuv");
+    expect(sent).not.toContain("project-secret-value");
+    expect(sent).toContain("[REDACTED");
+  });
+
   it("keeps reading message content for other providers", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ risk: "high", confidence: 0.8, reason: "Deletes files." }) } }] }))));
     const result = await judgeGuardRequest({ request, decision, mode: "suggest", baseUrl: "https://api.deepseek.com/v1", apiKey: "test" });

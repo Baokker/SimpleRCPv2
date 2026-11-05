@@ -52,6 +52,19 @@ export function createChatAgentBridge(options: {
         interrupt: true,
         runId: nextRunId
       });
+      const stillActive = agentRuns.filter((candidate) => candidate.id !== run.id && (candidate.status === "queued" || candidate.status === "running"));
+      if (!run.interruptsRunId && stillActive.length > 0) {
+        const blocking = stillActive[stillActive.length - 1]!;
+        await runtime.chat.createMessage({
+          roomId: runtime.room.id,
+          authorId: "agent",
+          authorName: "System",
+          kind: "system",
+          agentSessionId: agent.id,
+          runId: run.id,
+          text: `${message.authorName}'s request to @${handle} is queued until the task started by ${blocking.memberName ?? blocking.memberId} finishes`
+        });
+      }
       if (run.interruptsRunId) {
         const previous = await options.agentRuns.getRun(projectId, run.interruptsRunId);
         await runtime.chat.createMessage({

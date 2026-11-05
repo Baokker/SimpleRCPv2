@@ -18,6 +18,7 @@ import { createAgentProgress } from "./agentProgress.js";
 import { createAgentQuestions } from "./agentQuestions.js";
 import { diagnoseAgentFailure } from "./agentRunFailure.js";
 import { canReadAgentRun } from "./agentVisibility.js";
+import { canInterruptRun } from "../guard/roles.js";
 import { createAgentScheduler, getCompletedOverlapGroup, type AgentSchedulerQueue } from "./agentScheduler.js";
 import { selectRunnableAgentRun } from "./agentRunSelection.js";
 import { createAgentWriteLedger } from "./agentWriteLedger.js";
@@ -439,8 +440,16 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         if ((await getSessionStore(input.projectId).get(session.id))?.deletedAt) throw new Error("Agent session has been deleted");
         const runId = input.runId ?? nanoid(12);
         const active = (await getStore(input.projectId).list()).filter((run) => run.sessionId === session.id && ["queued", "running"].includes(run.status));
-        for (const previous of active) await manager.cancelRun(input.projectId, previous.id, input.memberId, { runId, memberId: input.memberId });
-        const run = await getStore(input.projectId).create({ projectId: input.projectId, memberId: input.memberId, initiatorMemberId: input.memberId, initiatorRole: input.initiatorRole, participantId: member.participantId, memberName: member.displayName, prompt, contexts: normalizeAgentContexts(input.contexts), sessionId: session.id, sessionScope: session.scope ?? "personal", runtimeSessionId: session.runtimeSessionId, status: "queued", runtime: "opencode", provider: "deepseek", model: settings.model, source: input.source ?? "agent-panel", chatMessageId: input.chatMessageId, extraPrompt: input.extraPrompt, interruptsRunId: active.at(-1)?.id ?? input.interruptsRunId }, runId);
+        // Tasks whose trigger outranks the new one keep running; the new task waits in the queue.
+        const newRole = (await options.members.getMember(input.projectId, input.memberId))?.role;
+        const interrupted: AgentRun[] = [];
+        for (const previous of active) {
+          const activeMember = await options.members.getMember(input.projectId, previous.memberId);
+          if (activeMember && !canInterruptRun(newRole, activeMember.role)) continue;
+          await manager.cancelRun(input.projectId, previous.id, input.memberId, { runId, memberId: input.memberId });
+          interrupted.push(previous);
+        }
+        const run = await getStore(input.projectId).create({ projectId: input.projectId, memberId: input.memberId, initiatorMemberId: input.memberId, initiatorRole: input.initiatorRole, participantId: member.participantId, memberName: member.displayName, prompt, contexts: normalizeAgentContexts(input.contexts), sessionId: session.id, sessionScope: session.scope ?? "personal", runtimeSessionId: session.runtimeSessionId, status: "queued", runtime: "opencode", provider: "deepseek", model: settings.model, source: input.source ?? "agent-panel", chatMessageId: input.chatMessageId, extraPrompt: input.extraPrompt, interruptsRunId: interrupted.at(-1)?.id ?? input.interruptsRunId }, runId);
         emit({ type: "run_updated", projectId: input.projectId, run });
         await appendTrace(input.projectId, run.id, { type: "run_queued", summary: "Agent run queued" });
         getQueue(input.projectId).runIds.push(run.id); void scheduler.processQueue(input.projectId);

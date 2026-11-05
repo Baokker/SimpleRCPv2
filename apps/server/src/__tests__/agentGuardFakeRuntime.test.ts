@@ -69,6 +69,32 @@ describe("Agent Guard fake runtime permissions", () => {
     await expect(waitForRun(running.origin, memberId, run.id, "completed")).resolves.toMatchObject({ output: expect.stringContaining("team-student-done") });
   }, 30_000);
 
+  it("queues a lower-level trigger behind a running team task and lets a higher level interrupt", async () => {
+    running = await startServer();
+    const studentId = await joinMember(running.origin, "student", "queue-student");
+    const ownerId = await joinMember(running.origin, "teacher", "queue-owner");
+    const agents = (await (await fetch(`${running.origin}/api/projects/demo/team-agents`, { headers: headers(ownerId) })).json() as { agents: Array<{ id: string; handle?: string }> }).agents;
+    const teamAgent = agents.find((agent) => agent.handle === "agent")!;
+    const startTeamRun = async (memberId: string, prompt: string) => {
+      const response = await fetch(`${running!.origin}/api/projects/demo/agent/sessions/${teamAgent.id}/runs`, { method: "POST", headers: headers(memberId), body: JSON.stringify({ prompt }) });
+      expect(response.status).toBe(202);
+      return (await response.json() as { run: { id: string; status: string; interruptsRunId?: string } }).run;
+    };
+
+    const ownerRun = await startTeamRun(ownerId, "fake-delay=1500 fake-reply=owner-done");
+    await waitForRun(running.origin, ownerId, ownerRun.id, "running");
+    const studentRun = await startTeamRun(studentId, "fake-delay=5000 fake-reply=student-done");
+    expect(studentRun.interruptsRunId).toBeUndefined();
+    expect(studentRun.status).toBe("queued");
+    await expect(waitForRun(running.origin, ownerId, ownerRun.id, "completed")).resolves.toMatchObject({ output: expect.stringContaining("owner-done") });
+
+    await waitForRun(running.origin, studentId, studentRun.id, "running");
+    const interrupting = await startTeamRun(ownerId, "fake-reply=owner-again");
+    expect(interrupting.interruptsRunId).toBe(studentRun.id);
+    await waitForRun(running.origin, studentId, studentRun.id, "cancelled");
+    await waitForRun(running.origin, ownerId, interrupting.id, "completed");
+  }, 30_000);
+
   it("keeps a run alive when the permission reply endpoint returns 404", async () => {
     running = await startServer();
     const memberId = await joinMember(running.origin, "student", "student");
