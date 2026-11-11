@@ -91,6 +91,10 @@ export function loadConfig(
   );
   const knowledge = readKnowledgeMode(env.KNOWLEDGE);
   const knowledgeLlm = knowledge === "off" ? undefined : readKnowledgeLlm(env);
+  // Extra wording that marks a follow-up prompt as a correction; the engine default applies when unset.
+  const correctionTerms = !env.KNOWLEDGE_CORRECTION_TERMS?.trim()
+    ? undefined
+    : [...new Set(env.KNOWLEDGE_CORRECTION_TERMS.split(",").map((value) => value.trim()).filter(Boolean))];
   const importRoots = !env.SIMPLERCP_IMPORT_ROOTS?.trim()
     ? undefined
     : env.SIMPLERCP_IMPORT_ROOTS.split(",").map((value) => value.trim()).filter(Boolean);
@@ -113,6 +117,7 @@ export function loadConfig(
     knowledge,
     ...(knowledge !== "off" ? { knowledgeRecordEvents: readBoolean(env.KNOWLEDGE_RECORD_EVENTS, "KNOWLEDGE_RECORD_EVENTS", true) } : {}),
     ...(knowledgeLlm ? { knowledgeLlm } : {}),
+    ...(knowledge !== "off" && correctionTerms ? { captureConfig: { correctionTerms } } : {}),
     agent: {
       provider: agentProvider,
       apiKey: agentApiKey,

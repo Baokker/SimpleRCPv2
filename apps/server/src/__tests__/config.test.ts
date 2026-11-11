@@ -109,6 +109,12 @@ describe("server config", () => {
     expect(() => loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE: "invalid" })).toThrow("KNOWLEDGE must be one of off, capture, inject, full");
   });
 
+  it("reads extra correction terms for knowledge capture", () => {
+    expect(loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE: "full" }).captureConfig).toBeUndefined();
+    expect(loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE: "full", KNOWLEDGE_CORRECTION_TERMS: " 改, 不对 ,don't,改,, " }).captureConfig).toEqual({ correctionTerms: ["改", "不对", "don't"] });
+    expect(loadConfig({ SIMPLERCP_FAKE_AGENT_RUNTIME: "true", KNOWLEDGE_CORRECTION_TERMS: "改" }).captureConfig).toBeUndefined();
+  });
+
   it("selects MiniMax for knowledge calls when its key is configured", () => {
     expect(loadConfig({ KNOWLEDGE: "full", MINIMAX_API_KEY: "configured", MINIMAX_BASE_URL: "https://api.minimaxi.com/v1" }).knowledgeLlm).toEqual({
       provider: "minimax", apiKey: "configured", baseUrl: "https://api.minimaxi.com/v1", model: "MiniMax-M3", recapTimeoutMs: 120_000
