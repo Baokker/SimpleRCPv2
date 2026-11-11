@@ -1,0 +1,69 @@
+Demo
+package.json
+README.md
+src
+index.js
+projectStatus.js
+test
+src/index.js
+Saved
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+import { createProjectStatus, 
+formatProjectStatus } from "./
+projectStatus.js";
+const status = createProjectStatus([
+  { title: "Open the workspace", 
+  completed: true },
+  { title: "Edit a file together", 
+  completed: false },
+  { title: "Run the shared terminal", 
+  completed: false }
+]);
+console.log(formatProjectStatus
+(status));
+Collaboration
+Chat
+My Agent
+Project
+Team
+Team Agents
+@agent · Idle
+ Agent
+Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.
+Create a shared Agent with /agent new reviewer code reviews, then mention @reviewer in Chat.
+Enter to send / Shift + Enter for new line
+Send
+Terminal
+Shared · Connected
+demo $ ls
+README.md       src
+package.json    test
+demo $ 
+ 
+ 
+ 
+demo $ demo $ ls README.md src package.json test demo $ demo $
+demo $ ls
+README.md       src
+package.json    test
+demo $  
+Send
+✓ Ran: ls
+Request review
+Manual review
+Model suggestion
+Model auto review
+The model advises; a person approves or rejects · Only an owner can change this project setting
+Connected
+Room zYLIBJO9_s
+Bob
+Demo

@@ -1,0 +1,93 @@
+Demo
+package.json
+README.md
+src
+index.js
+projectStatus.js
+test
+src/index.js
+Saved
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+import { createProjectStatus, 
+formatProjectStatus } from "./
+projectStatus.js";
+const status = createProjectStatus([
+  { title: "Open the workspace", 
+  completed: true },
+  { title: "Edit a file together", 
+  completed: false },
+  { title: "Run the shared terminal", 
+  completed: false }
+]);
+console.log(formatProjectStatus
+(status));
+Collaboration
+Chat
+My Agent
+Project
+Team
+PEOPLE
+Alice
+Unassigned (collaborator)
+Teacher — owner
+Teaching assistant — trusted
+Student — student
+Auditor — observer
+Lead — owner
+Maintainer — trusted
+Developer — collaborator
+Newcomer — student
+Viewer — observer
+Interviewer — owner
+Candidate — student
+Host — owner
+Mentor — trusted
+Contributor — student
+Commander — owner
+On-call — trusted
+Responder — collaborator
+Stakeholder — observer
+Take control
+src/index.js
+Bob
+Newcomer
+(student)
+Grant interactive control
+src/index.js
+ACTIVITY
+Alice joined the session
+11:51:24 PM
+Session opened for Demo
+11:51:24 PM
+Terminal
+Shared · Connected
+demo $ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+demo $ demo $ demo $
+demo $  
+Send
+Request review
+Manual review
+Model suggestion
+Model auto review
+The model advises; a person approves or rejects
+Connected
+Room BYiCMUGnHA
+Alice
+Demo

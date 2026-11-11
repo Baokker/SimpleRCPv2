@@ -1,0 +1,91 @@
+Demo
+package.json
+README.md
+src
+index.js
+projectStatus.js
+test
+src/index.js
+Saved
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+import { createProjectStatus, 
+formatProjectStatus } from "./
+projectStatus.js";
+const status = createProjectStatus([
+  { title: "Open the workspace", 
+  completed: true },
+  { title: "Edit a file together", 
+  completed: false },
+  { title: "Run the shared terminal", 
+  completed: false }
+]);
+console.log(formatProjectStatus
+(status));
+Collaboration
+Chat
+My Agent
+Project
+Team
+
+These are your own Agent sessions. To direct the shared agent together, mention @agent in Chat.
+
+OpenCode Ready
+deepseek-flash
+Run sudo ls in the shared terminal and show me the result.
+Bob
+11:51 PM
+Run sudo ls in the shared terminal and show me the result.
+
+Run sudo ls in the shared terminal and show me the result.
+
+Bob
+Completed
+deepseek-flash
+任务总时长
+7 秒
+已记录文件修改
+0 个
+token 用量
+14,738
+The `sudo ls` command was blocked by the permission system (privilege escalation is not permitted here), so I can't show its result. I can run a non-privileged `ls` in the workspace instead if you'd like.
+工作详情
+6 条操作记录
+The request involves sudo, privilege escalation. The permission system rejected it. I should not retry or work around it. Just state it was blocked and offer alternative (plain ls).
+
+Keep it short.
+已结束
+Enter to send
+Shift + Enter for a new line
+Terminal
+Shared · Connected
+demo $ ls
+README.md       src
+package.json    test
+demo $ 
+ 
+ 
+demo $ demo $ demo $ ls README.md src package.json test demo $ demo $ demo $ demo $ demo $ demo $ demo $ demo $ demo $
+demo $ ls
+README.md       src
+package.json    test
+demo $  
+Send
+⏱ No response before the approval deadline — not run: curl -s https://example.com
+Request review
+Manual review
+Model suggestion
+Model auto review
+The model advises; a person approves or rejects · Only an owner can change this project setting
+Connected
+Room BYiCMUGnHA
+Bob
+Demo

@@ -84,6 +84,9 @@ async function run(page, command, expected) {
 async function shot(page, name) {
   await page.mouse.move(0, 0);
   await page.screenshot({ path: path.join(output, `${name}.png`), animations: "disabled" });
+  // Vector copy for the thesis: print the same screen layout to a one-page PDF of the viewport size.
+  await page.emulateMedia({ media: "screen" });
+  await page.pdf({ path: path.join(output, `${name}.pdf`), width: `${viewport.width}px`, height: `${viewport.height}px`, printBackground: true, margin: { top: "0", right: "0", bottom: "0", left: "0" }, pageRanges: "1" });
   await fs.writeFile(path.join(output, `${name}.txt`), await page.locator("body").innerText());
 }
 async function pair(alice, bob, name) {

@@ -1,0 +1,122 @@
+Demo
+package.json
+README.md
+src
+index.js
+projectStatus.js
+test
+src/index.js
+Saved
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+import { createProjectStatus, 
+formatProjectStatus } from "./
+projectStatus.js";
+const status = createProjectStatus([
+  { title: "Open the workspace", 
+  completed: true },
+  { title: "Edit a file together", 
+  completed: false },
+  { title: "Run the shared terminal", 
+  completed: false }
+]);
+console.log(formatProjectStatus
+(status));
+Collaboration
+Chat
+My Agent
+Project
+Team
+PEOPLE
+Alice
+Unassigned (collaborator)
+Teacher — owner
+Teaching assistant — trusted
+Student — student
+Auditor — observer
+Lead — owner
+Maintainer — trusted
+Developer — collaborator
+Newcomer — student
+Viewer — observer
+Interviewer — owner
+Candidate — student
+Host — owner
+Mentor — trusted
+Contributor — student
+Commander — owner
+On-call — trusted
+Responder — collaborator
+Stakeholder — observer
+Take control
+src/index.js
+Bob
+Newcomer
+(student)
+Grant interactive control
+src/index.js
+ACTIVITY
+Bob's Agent task completed
+No files changed
+11:52:01 PM
+Bob's terminal or Agent request was blocked
+sudo ls
+11:51:59 PM
+Bob asked OpenCode to work on this project
+“Run sudo ls in the shared terminal and show me the result.”
+11:51:54 PM
+Bob's request was expired
+curl -s https://example.com
+11:51:53 PM
+Bob's model recommendation: approve
+curl -s https://example.com · risk low · 90% confidence · Single read-only curl GET to example.com; no file writes, no secrets, reversible, and only outbound network access. A student-network approval rule matches, but the command's intrinsic risk is low. · Human approval remains required
+11:51:33 PM
+Bob's request is being reviewed by the model
+curl -s https://example.com
+11:51:29 PM
+Bob's terminal or Agent request was blocked
+cat ../projects/demo/project.json
+11:51:29 PM
+Bob's terminal or Agent request was blocked
+sudo ls
+11:51:29 PM
+Bob joined the session
+11:51:26 PM
+Alice joined the session
+11:51:24 PM
+Session opened for Demo
+11:51:24 PM
+Terminal
+Shared · Connected
+demo $ ls
+README.md       src
+package.json    test
+demo $ 
+ 
+ 
+ 
+ 
+ 
+demo $ demo $ demo $ ls README.md src package.json test demo $ demo $ demo $ demo $ demo $ demo $ demo $ demo $ demo $
+demo $ ls
+README.md       src
+package.json    test
+demo $  
+Send
+Request review
+Manual review
+Model suggestion
+Model auto review
+The model advises; a person approves or rejects
+Connected
+Room BYiCMUGnHA
+Alice
+Demo
