@@ -11,7 +11,9 @@ export function GuardApprovalActions({ approval, memberId, disabled, onReply, on
     return <small className="guard-llm-resolved">Resolved automatically by the model</small>;
   }
   const ownRequest = approval.request.memberId === memberId;
-  if (ownRequest && (approval.decision.approvers === "self" || approval.decision.approvers === "initiator")) {
+  // An owner may answer an owners-level request raised by their own Agent; the server already accepts it.
+  const canConfirmOwn = approval.decision.approvers === "self" || approval.decision.approvers === "initiator" || (memberId !== undefined && approval.approverIds.includes(memberId));
+  if (ownRequest && canConfirmOwn) {
     return <div>
       <button type="button" disabled={disabled} onClick={() => onReply(true)}>Run anyway</button>
       <button type="button" disabled={disabled} onClick={() => onReply(false)}>Cancel</button>

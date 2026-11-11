@@ -7,12 +7,12 @@ import { createApprovalQueue } from "../../server/src/guard/approvals.ts";
 import { decide } from "../../server/src/guard/decide.ts";
 import type { GuardRequest, Level } from "../../server/src/guard/types.ts";
 
-function renderApproval(level: Level, source: GuardRequest["source"], command: string, viewer = "requester") {
+function renderApproval(level: Level, source: GuardRequest["source"], command: string, viewer = "requester", ownerApprover = "teacher") {
   const request: GuardRequest = { projectId: "demo", memberId: "requester", source, kind: "command", command, cwd: "/workspace/demo" };
   const decision = decide(request, { memberLevel: level, initiatorOnline: true, workspaceRoot: "/workspace/demo", platformDataRoot: "/data" });
   assert.equal(decision.action, "ask");
   const queue = createApprovalQueue();
-  const approver = decision.approvers === "owners" ? "teacher" : "requester";
+  const approver = decision.approvers === "owners" ? ownerApprover : "requester";
   const pending = queue.enqueue(request, decision, [approver]);
   const approval = queue.list()[0]!;
   try {
@@ -54,4 +54,12 @@ it("renders owner approval controls for another member's request", () => {
   assert.match(html, />Approve</);
   assert.match(html, />Reject</);
   assert.doesNotMatch(html, /Withdraw request|Run anyway/);
+});
+
+it("lets the only online owner confirm an owners-level request from their own Agent", () => {
+  const { html, approvers } = renderApproval("owner", "agent", "cat /etc/hosts", "requester", "requester");
+  assert.equal(approvers, "owners");
+  assert.match(html, />Run anyway</);
+  assert.match(html, />Cancel</);
+  assert.doesNotMatch(html, /Withdraw request/);
 });
