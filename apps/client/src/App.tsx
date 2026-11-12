@@ -24,6 +24,7 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
+import { createConnectionId } from "./memberIdentity";
 import type { GuardApproval, GuardSettings } from "./types";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
@@ -262,7 +263,7 @@ function WorkspacePage({
     let mounted = true;
 
     async function boot() {
-      const connectionId = window.crypto.randomUUID();
+      const connectionId = createConnectionId();
       const joined = await joinRoom(
         projectId,
         displayName,
