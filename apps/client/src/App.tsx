@@ -30,6 +30,7 @@ import {
   getPendingKnowledgeTeamCards,
   markKnowledgeWarningsRead
 } from "./api";
+import { createConnectionId } from "./memberIdentity";
 import { pendingKnowledgeSeen } from "./knowledgePresentation";
 import { CollaborationPanel } from "./components/CollaborationPanel";
 import { EditorArea, type OpenFile } from "./components/EditorArea";
@@ -280,7 +281,7 @@ function WorkspacePage({
     let mounted = true;
 
     async function boot() {
-      const connectionId = window.crypto.randomUUID();
+      const connectionId = createConnectionId();
       const joined = await joinRoom(
         projectId,
         displayName,
