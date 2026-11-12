@@ -20,6 +20,7 @@ import {
   sendChatMessage,
   sendConnectionOffline
 } from "./api";
+import { createConnectionId } from "./memberIdentity";
 import { acknowledgeConflictWarning, getConflictGuardState, getServerInfo } from "./api";
 import type { ConflictGuardState } from "./conflictGuardTypes";
 import { conflictWarning, humanConflict } from "./conflictGuardPresentation";
@@ -254,7 +255,7 @@ function WorkspacePage({
     let mounted = true;
 
     async function boot() {
-      const connectionId = window.crypto.randomUUID();
+      const connectionId = createConnectionId();
       const joined = await joinRoom(
         projectId,
         displayName,
