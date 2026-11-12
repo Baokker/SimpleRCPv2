@@ -6,6 +6,7 @@ import { knowledgeScopes, knowledgeStatuses, knowledgeTriggers, knowledgeTypes, 
 import { confirmKnowledgeTeamScope, disputeKnowledgeSuggestion, getKnowledgeInbox, getKnowledgeRelationCandidates, getKnowledgeSuggestion, getPendingKnowledgeTeamCards, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, relateKnowledgeCards, requestKnowledgeTeamScope, resolveKnowledgeSuggestion } from "../api";
 import { importKnowledgeDocuments, exportKnowledgeToWorkspace, getKnowledgeActivity, reviewKnowledgeAnchor, assistKnowledgeCreation } from "../api";
 import { KnowledgeActivity } from "./KnowledgeActivity";
+import { copyText } from "../clipboard";
 import type {
   KnowledgeCard,
   KnowledgeCardType,
@@ -485,7 +486,7 @@ export function KnowledgePanel({
       onRequestTeam={() => void requestTeam(card)}
       onConfirmTeam={() => void confirmTeam(card)}
       onDeferTeam={() => { const ids = [...new Set([...deferredTeam, card.id])]; setDeferredTeam(ids); sessionStorage.setItem(deferredKey, JSON.stringify(ids)); setDocumentNotice("已暂不确认这条申请，申请仍然保留，可随时重新查看。"); }}
-      onCopyLink={() => void navigator.clipboard.writeText(`${window.location.origin}/projects/${encodeURIComponent(projectId)}?knowledge=${encodeURIComponent(card.id)}`).then(() => setDocumentNotice("知识链接已复制")).catch(error => setFormError(String(error)))}
+      onCopyLink={() => void copyText(`${window.location.origin}/projects/${encodeURIComponent(projectId)}?knowledge=${encodeURIComponent(card.id)}`).then(() => setDocumentNotice("知识链接已复制")).catch(error => setFormError(String(error)))}
       onRelate={() => void relate(card)}
       relatedCards={cards}
       onOpenRelatedCard={revealCard}
