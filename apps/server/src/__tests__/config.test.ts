@@ -3,6 +3,14 @@ import { describe, expect, it } from "vitest";
 import { loadConfig } from "../config.js";
 
 describe("server config", () => {
+  it("仅在设置正整数时启用 OpenCode 空闲回收", () => {
+    const env = { SIMPLERCP_FAKE_AGENT_RUNTIME: "true" };
+    expect(loadConfig(env).agent?.openCodeIdleMs).toBeUndefined();
+    expect(loadConfig({ ...env, SIMPLERCP_OPENCODE_IDLE_MS: "300000" }).agent?.openCodeIdleMs).toBe(300000);
+    for (const value of ["", "0", "-1", "1.5", "abc", "Infinity"]) {
+      expect(() => loadConfig({ ...env, SIMPLERCP_OPENCODE_IDLE_MS: value })).toThrow("SIMPLERCP_OPENCODE_IDLE_MS");
+    }
+  });
   it("uses stable local defaults when no environment variables are set", () => {
     expect(loadConfig({ MINIMAX_API_KEY: "configured-key" }, "/srv/simplercp")).toEqual({
       port: 4000,

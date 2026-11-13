@@ -52,6 +52,7 @@ export async function createApp(config: ServerConfig) {
     apiKey: config.agent?.apiKey,
     baseUrl: config.agent?.baseUrl ?? "https://api.deepseek.com/v1",
     activityConfig: config.agent?.activityConfig,
+    idleMs: config.agent?.openCodeIdleMs,
     getSettings: () => agentSettings.get(),
     ...(mcpToken ? { mcp: { url: () => app.locals.knowledgeMcpUrl as string, token: mcpToken } } : {})
   });
