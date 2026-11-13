@@ -86,8 +86,7 @@ describe("OpenCode runtime model switching", () => {
     const release = runtime.acquireRun?.();
     model = "new-model";
     release?.();
-    await Promise.resolve();
-    await Promise.resolve();
+    await expect(runtime.status()).rejects.toThrow("dispose failed");
     expect(runtime.getCurrentModel?.()).toBe("old-model");
     expect(processes).toHaveLength(1);
     expect(processes[0]?.disposeCount).toBe(1);
@@ -95,8 +94,7 @@ describe("OpenCode runtime model switching", () => {
     failDispose = false;
     const retryRelease = runtime.acquireRun?.();
     retryRelease?.();
-    await Promise.resolve();
-    await Promise.resolve();
+    await expect(runtime.status()).resolves.toMatchObject({ state: "ready", model: "new-model" });
     expect(runtime.getCurrentModel?.()).toBe("new-model");
     expect(processes).toHaveLength(2);
     expect(processes[0]?.disposeCount).toBe(2);

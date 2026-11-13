@@ -3,6 +3,13 @@ import { describe, expect, it } from "vitest";
 import { loadConfig } from "../config.js";
 
 describe("server config", () => {
+  it("仅在设置正整数时启用 OpenCode 空闲回收", () => {
+    expect(loadConfig({}).agent?.openCodeIdleMs).toBeUndefined();
+    expect(loadConfig({ SIMPLERCP_OPENCODE_IDLE_MS: "300000" }).agent?.openCodeIdleMs).toBe(300000);
+    for (const value of ["", "0", "-1", "1.5", "abc", "Infinity"]) {
+      expect(() => loadConfig({ SIMPLERCP_OPENCODE_IDLE_MS: value })).toThrow("SIMPLERCP_OPENCODE_IDLE_MS");
+    }
+  });
   it("MiniMax 深判和 Agent 配置读取独立环境变量", () => {
     const config = loadConfig({ CONFLICT_GUARD: "full", SIMPLERCP_AGENT_PROVIDER: "minimax", MINIMAX_API_KEY: "minimax-credential", MINIMAX_BASE_URL: "https://api.minimax.io/v1", MINIMAX_MODEL: "MiniMax-M3", DEEPSEEK_API_KEY: "deepseek-credential" });
     expect(config.agent).toEqual({ provider: "minimax", apiKey: "minimax-credential", baseUrl: "https://api.minimax.io/v1", model: "MiniMax-M3", openCodePort: 4096, runTimeoutMs: 600000, maxConcurrentRuns: 3, activityConfig: { waitingMs: 20000, stalledMs: 60000 } });
