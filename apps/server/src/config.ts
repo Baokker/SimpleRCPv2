@@ -25,6 +25,7 @@ export interface ServerConfig {
     baseUrl: string;
     model: string;
     openCodePort?: number;
+    openCodeIdleMs?: number;
     runTimeoutMs?: number;
     maxConcurrentRuns?: number;
     activityConfig?: { waitingMs: number; stalledMs: number };
@@ -127,6 +128,7 @@ export function loadConfig(
       baseUrl: agentBaseUrl.toString().replace(/\/$/, ""),
       model: agentModel,
       openCodePort,
+      ...(env.SIMPLERCP_OPENCODE_IDLE_MS === undefined ? {} : { openCodeIdleMs: positiveInteger(env.SIMPLERCP_OPENCODE_IDLE_MS, "SIMPLERCP_OPENCODE_IDLE_MS", 1) }),
       runTimeoutMs,
       maxConcurrentRuns,
       activityConfig: {

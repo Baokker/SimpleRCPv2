@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { nanoid } from "nanoid";
 import { AgentRuntimeRequestError, safeRequestTarget } from "./agentRunFailure.js";
 import type { AgentRuntime } from "./agentRuntime.js";
+import { createOpenCodeLifecycle, type OpenCodeClock } from "./openCodeLifecycle.js";
 import {
   createOpenCodeProcess,
   OPEN_CODE_PROVIDER_ID
@@ -19,6 +20,8 @@ interface OpenCodeRuntimeOptions {
   apiKey?: string;
   baseUrl: string;
   activityConfig?: { waitingMs: number; stalledMs: number };
+  idleMs?: number;
+  clock?: OpenCodeClock;
   getSettings(): AgentSettingsResponse;
   guardMode?: "full" | "human-only" | "native" | "off";
   createProcess?: (options: {
@@ -46,12 +49,19 @@ export function createOpenCodeRuntime(
   options: OpenCodeRuntimeOptions
 ): AgentRuntime {
   const processFactory = options.createProcess ?? createOpenCodeProcess;
-  let process = createProcess();
   let processModel = options.getSettings().model;
   let activeRunCount = 0;
   let modelChangePromise: Promise<void> | undefined;
-  const subscriptions = new Map<string, { error?: unknown }>();
+  const subscriptions = new Map<string, { error?: unknown; stop(rejectPending?: boolean): Promise<void> }>();
   const pending = new Map<string, { userMessageId: string; assistantId?: string; complete(): Promise<void>; reject(error: unknown): void; controller: AbortController }>();
+  const lifecycle = createOpenCodeLifecycle({
+    createProcess: () => createProcess(processModel),
+    hasSubscriptions: () => subscriptions.size > 0,
+    idleMs: options.idleMs,
+    clock: options.clock,
+    isIdle: () => activeRunCount === 0 && pending.size === 0 && !modelChangePromise,
+    clearSubscriptions: async () => { await Promise.all([...subscriptions.values()].map((state) => state.stop(false))); }
+  });
 
   function createProcess(model = options.getSettings().model) {
     return processFactory({
@@ -66,25 +76,24 @@ export function createOpenCodeRuntime(
   async function ensureCurrentProcess() {
     if (modelChangePromise) await modelChangePromise;
     const model = options.getSettings().model;
-    if (model === processModel || activeRunCount > 0) return process;
+    if (model === processModel || activeRunCount > 0) return;
     await startModelSwitch(model);
-    return process;
   }
 
   function startModelSwitch(targetModel: string) {
     if (!modelChangePromise) {
-      modelChangePromise = (async () => {
-        await process.dispose();
-        process = createProcess(targetModel);
+      modelChangePromise = lifecycle.replace(() => {
+        const next = createProcess(targetModel);
         processModel = targetModel;
-      })().finally(() => { modelChangePromise = undefined; });
+        return next;
+      }).finally(() => { modelChangePromise = undefined; lifecycle.scheduleIdle(); });
     }
     return modelChangePromise;
   }
 
   async function getClient(workspacePath: string) {
-    const current = await ensureCurrentProcess();
-    const running = await current.start();
+    await ensureCurrentProcess();
+    const running = await lifecycle.start();
     return createOpencodeClient({
       baseUrl: running.url,
       directory: workspacePath,
@@ -111,6 +120,8 @@ export function createOpenCodeRuntime(
 
   const runtime: AgentRuntime = {
     acquireRun() {
+      lifecycle.assertAvailable();
+      lifecycle.cancelIdle();
       const wasIdle = activeRunCount === 0;
       activeRunCount += 1;
       if (wasIdle && options.getSettings().model !== processModel) void startModelSwitch(options.getSettings().model).catch((error) => console.error("Agent runtime model switch failed", error));
@@ -122,6 +133,7 @@ export function createOpenCodeRuntime(
         if (activeRunCount === 0 && options.getSettings().model !== processModel) {
           void ensureCurrentProcess().catch((error) => console.error("Agent runtime model switch failed", error));
         }
+        lifecycle.scheduleIdle();
       };
     },
     getCurrentModel() {
@@ -148,8 +160,8 @@ export function createOpenCodeRuntime(
         };
       }
       if (modelChangePromise) await modelChangePromise;
-      const current = await ensureCurrentProcess();
-      const running = await current.start();
+      await ensureCurrentProcess();
+      const running = await lifecycle.start();
       return {
         runtime: "opencode",
         state: "ready",
@@ -281,16 +293,27 @@ export function createOpenCodeRuntime(
     async subscribe(input, listener, onListenerError) {
       const client = await getClient(input.workspacePath);
       const controller = new AbortController();
-      const state: { error?: unknown } = {};
+      let completion = Promise.resolve();
+      const state: { error?: unknown; stop(rejectPending?: boolean): Promise<void> } = {
+        async stop(rejectPending = true) {
+          controller.abort();
+          if (subscriptions.get(input.sessionId) === state) {
+            subscriptions.delete(input.sessionId);
+            if (rejectPending) pending.get(input.sessionId)?.reject(new Error("OpenCode 事件连接已经关闭"));
+          }
+          await completion;
+        }
+      };
       subscriptions.set(input.sessionId, state);
-      const fail = (error: unknown) => { state.error = error; pending.get(input.sessionId)?.reject(error); };
+      const fail = (error: unknown) => { if (subscriptions.get(input.sessionId) !== state || controller.signal.aborted) return; state.error = error; pending.get(input.sessionId)?.reject(error); };
       const subscription = await client.event.subscribe(
         { directory: input.workspacePath },
         { signal: controller.signal, sseMaxRetryAttempts: 1, onSseError(error) { if (!controller.signal.aborted) fail(new AgentRuntimeRequestError({ source: "local-runtime", target: "OpenCode /event", phase: "streaming", message: error instanceof Error ? error.message : String(error) }, error)); } }
-      );
-      const completion = (async () => {
+      ).catch((error) => { controller.abort(); if (subscriptions.get(input.sessionId) === state) subscriptions.delete(input.sessionId); throw error; });
+      completion = (async () => {
         const belongsToRun = createRunSessionFilter(input.sessionId);
         for await (const event of subscription.stream) {
+          if (controller.signal.aborted) break;
           if (!belongsToRun(event)) continue;
           const properties = event.properties as Record<string, unknown>;
           const operation = pending.get(input.sessionId);
@@ -315,19 +338,24 @@ export function createOpenCodeRuntime(
         }
         if (!controller.signal.aborted) fail(new AgentRuntimeRequestError({ source: "local-runtime", target: "OpenCode /event", phase: "streaming", errorType: "EventStreamClosed", retryable: true, message: "OpenCode 事件连接提前结束" }));
       })().catch((error) => { if (!controller.signal.aborted) fail(error); });
-      return async () => {
-        controller.abort();
-        if (subscriptions.get(input.sessionId) === state) subscriptions.delete(input.sessionId);
-        pending.get(input.sessionId)?.reject(new Error("OpenCode 事件连接已经关闭"));
-        await completion.catch((error) => console.error("Agent runtime event stream failed", error));
-      };
+      return () => state.stop();
     },
     async dispose() {
       for (const operation of pending.values()) { operation.controller.abort(); operation.reject(new Error("Agent 服务已经关闭")); }
       pending.clear();
-      await process.dispose();
+      await lifecycle.dispose();
     }
   };
+  runtime.status = lifecycle.trackRequest(runtime.status);
+  runtime.getWorktree = lifecycle.trackRequest(runtime.getWorktree!);
+  runtime.createSession = lifecycle.trackRequest(runtime.createSession);
+  runtime.run = lifecycle.trackRequest(runtime.run);
+  runtime.getDiff = lifecycle.trackRequest(runtime.getDiff);
+  runtime.replyPermission = lifecycle.trackRequest(runtime.replyPermission);
+  runtime.cancel = lifecycle.trackRequest(runtime.cancel);
+  runtime.replyQuestion = lifecycle.trackRequest(runtime.replyQuestion!);
+  runtime.rejectQuestion = lifecycle.trackRequest(runtime.rejectQuestion!);
+  runtime.subscribe = lifecycle.trackRequest(runtime.subscribe);
   return runtime;
 }
 
