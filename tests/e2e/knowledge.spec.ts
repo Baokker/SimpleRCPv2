@@ -833,6 +833,10 @@ test.describe("knowledge stage 3", () => {
     }
     await first.screenshot({ path: `${screenshotDirectory}/S3-1-overwrite-inbox-ada.png` });
     const suggestion = second.getByTestId("suggestion-edit.overwritten").first();
+    await suggestion.locator("summary").filter({ hasText: "原始证据" }).click();
+    const evidence = suggestion.getByTestId("knowledge-evidence");
+    await expect(evidence).toContainText("刚写的内容");
+    await expect(evidence.locator(".evidence-raw pre")).toBeHidden();
     await suggestion.getByRole("button", { name: "接受", exact: true }).click();
     const editor = second.getByRole("dialog", { name: "知识卡片编辑器" });
     await expect(editor).toBeVisible(); await expect(editor).toContainText("原始证据");

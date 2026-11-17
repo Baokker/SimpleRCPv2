@@ -6,6 +6,7 @@ import { knowledgeScopes, knowledgeStatuses, knowledgeTriggers, knowledgeTypes, 
 import { confirmKnowledgeTeamScope, disputeKnowledgeSuggestion, getKnowledgeInbox, getKnowledgeRelationCandidates, getKnowledgeSuggestion, getPendingKnowledgeTeamCards, markKnowledgeCardViewed, markKnowledgeSuggestionsRead, markKnowledgeWarningsRead, relateKnowledgeCards, requestKnowledgeTeamScope, resolveKnowledgeSuggestion } from "../api";
 import { importKnowledgeDocuments, exportKnowledgeToWorkspace, getKnowledgeActivity, reviewKnowledgeAnchor, assistKnowledgeCreation } from "../api";
 import { KnowledgeActivity } from "./KnowledgeActivity";
+import { KnowledgeEvidence } from "./KnowledgeEvidence";
 import { copyText } from "../clipboard";
 import type {
   KnowledgeCard,
@@ -555,7 +556,7 @@ export function KnowledgePanel({
             {sort === "reading" ? <p className="knowledge-hint">适合第一次接触这段代码的成员按顺序阅读。当前文件优先，教程、决策和约束排在前面。</p> : null}
           </div> : null}
           {view === "inbox" ? <div data-testid="knowledge-inbox">
-            {focusedSuggestion ? <article className="knowledge-suggestion" data-testid="knowledge-focused-suggestion"><header><strong>{focusedSuggestion.suggestedTitle ?? knowledgeTriggers[focusedSuggestion.triggerType]}</strong><button className="knowledge-text-button" onClick={() => setFocusedSuggestion(undefined)} aria-label="关闭建议详情"><X size={16} /></button></header><p>{focusedSuggestion.suggestedSummary}</p><details open><summary>原始证据</summary><pre>{JSON.stringify(focusedSuggestion.evidence, null, 2)}</pre></details></article> : null}
+            {focusedSuggestion ? <article className="knowledge-suggestion" data-testid="knowledge-focused-suggestion"><header><strong>{focusedSuggestion.suggestedTitle ?? knowledgeTriggers[focusedSuggestion.triggerType]}</strong><button className="knowledge-text-button" onClick={() => setFocusedSuggestion(undefined)} aria-label="关闭建议详情"><X size={16} /></button></header><p>{focusedSuggestion.suggestedSummary}</p><details open><summary>原始证据</summary><KnowledgeEvidence triggerType={focusedSuggestion.triggerType} evidence={focusedSuggestion.evidence} members={members} cards={cards} dedupe={focusedSuggestion.dedupe} /></details></article> : null}
             <h3>知识建议</h3>
             {warnings.map(warning => <article className="knowledge-suggestion" key={warning.id} data-testid="knowledge-inbox-warning">
               <strong>风险提醒</strong><p>{warning.file}</p><time>{new Date(warning.createdAt).toLocaleString()}</time>
@@ -572,7 +573,7 @@ export function KnowledgePanel({
               {readDispute(suggestion.evidence) ? <p>{members.find(member => member.id === readDispute(suggestion.evidence)?.memberId)?.displayName ?? "成员"}：{readDispute(suggestion.evidence)?.reason}</p> : null}
               {suggestion.dedupe ? <p className="knowledge-hint">可能是已有卡片的补充或复现</p> : null}
               <div className="knowledge-anchor-links">{suggestion.suggestedAnchors?.map((anchor, index) => <button key={index} onClick={() => onOpenAnchor(anchor.file, { startLine: anchor.startLine, startColumn: 1, endLine: anchor.endLine, endColumn: 1 })}><FileText size={13} />{anchor.file}:{anchor.startLine}–{anchor.endLine}</button>)}</div>
-              <details><summary>原始证据</summary><pre>{JSON.stringify(suggestion.evidence, null, 2)}</pre></details>
+              <details><summary>原始证据</summary><KnowledgeEvidence triggerType={suggestion.triggerType} evidence={suggestion.evidence} members={members} cards={cards} dedupe={suggestion.dedupe} /></details>
               {actionCardId === suggestion.id ? <p className="knowledge-notice" role="status"><LoaderCircle size={14} className="loading-icon" />{actionName === "ai-draft" ? "正在根据证据生成草稿…" : "正在处理这条建议…"}{slowAction ? <span>模型整理较慢，请稍候</span> : null}</p> : null}
               {suggestionErrors[suggestion.id] ? <div role="alert" className="knowledge-error"><p>{suggestionErrors[suggestion.id]!.message}</p><div className="workspace-dialog-actions"><button disabled={Boolean(actionCardId)} onClick={() => { const failed = suggestionErrors[suggestion.id]!; void resolveSuggestion(suggestion, failed.action, failed.targetCardId); }}>重试</button></div></div> : null}
               <div className="knowledge-actions workspace-dialog-actions">
@@ -630,7 +631,7 @@ export function KnowledgePanel({
             </fieldset>
             {editingCard ? <section className="knowledge-editor-anchors"><strong>关联代码</strong>{editingCard.anchors.length ? editingCard.anchors.map(anchor => <button className="knowledge-text-button" key={anchor.anchorId} onClick={() => onOpenAnchor(anchor.file.workspaceRelativePath)}>{anchor.file.workspaceRelativePath}</button>) : <p>这张卡片没有代码锚点。</p>}<p className="knowledge-hint">需要重新关联时，请在卡片详情中使用当前选区。</p></section> : null}
             {draftEvidence ? <aside className="knowledge-draft-evidence">
-              <details><summary>原始证据</summary><pre>{JSON.stringify(draftEvidence.evidence, null, 2)}</pre></details>
+              <details><summary>原始证据</summary><KnowledgeEvidence triggerType={draftEvidence.triggerType} evidence={draftEvidence.evidence} members={members} cards={cards} dedupe={draftEvidence.dedupe} /></details>
               <strong>建议锚点</strong>{draftEvidence.suggestedAnchors?.map((anchor, index) => <label className="knowledge-check-label" key={index}><input type="checkbox" disabled={saving} checked={selectedAnchors.includes(index)} onChange={event => { anchorSelectionChangedRef.current = true; setSelectedAnchors(items => event.target.checked ? [...items, index] : items.filter(item => item !== index)); }} />{anchor.file}:{anchor.startLine}–{anchor.endLine}<span>{anchor.reasons.join("、")}</span></label>)}
               {readDispute(draftEvidence.evidence) ? <p>{members.find(member => member.id === readDispute(draftEvidence.evidence)?.memberId)?.displayName ?? "成员"}的意见：{readDispute(draftEvidence.evidence)?.reason}</p> : null}
             </aside> : null}
