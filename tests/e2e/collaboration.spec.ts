@@ -74,7 +74,10 @@ test("owner can confirm a self-approval request from the Team card", async ({ pa
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
   await command.fill("git push origin main");
   await command.press("Enter");
-  await page.getByTestId("collab-tab-team").click();
+  const banner = page.getByTestId("collab-approval-banner");
+  await expect(banner).toContainText("1 approval is waiting for you.");
+  await banner.click();
+  await expect(banner).toHaveCount(0);
   const card = page
     .locator(".guard-approval-card")
     .filter({ hasText: "Confirm your own command" });

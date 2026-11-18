@@ -1221,6 +1221,25 @@ body[data-resizing="terminal"] {
   font-weight: 750;
 }
 
+.collab-approval-banner {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 6px 8px 0;
+  padding: 7px 10px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: var(--background-control);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collab-approval-banner:hover {
+  background: var(--background-hover);
+}
+
 .tree-children {
   padding-left: 14px;
 }

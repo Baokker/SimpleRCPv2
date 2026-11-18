@@ -262,6 +262,12 @@ export function CollaborationPanel({
           {unreadApprovalCount > 0 ? <span className="collab-tab-badge" aria-label={`${unreadApprovalCount} pending approvals`}>{unreadApprovalCount > 99 ? "99+" : unreadApprovalCount}</span> : null}
         </button>
       </nav>
+      {activeTab !== "team" && visibleApprovals.length > 0 ? (
+        // Approvals expire after a timeout, so they stay visible while another tab is open.
+        <button type="button" className="collab-approval-banner" onClick={() => selectTab("team")} data-testid="collab-approval-banner">
+          {visibleApprovals.length === 1 ? "1 approval is waiting for you." : `${visibleApprovals.length} approvals are waiting for you.`} Open Team to approve or reject.
+        </button>
+      ) : null}
 
       <div className="collab-tab-body">
         {activeTab === "chat" ? (
