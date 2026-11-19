@@ -1,0 +1,15 @@
+{
+  "queriedAt": "2026-10-06T13:44:35.402Z",
+  "opencodeVersion": "1.18.31",
+  "api": "/path",
+  "worktree": "/Users/baokker/Documents/SimpleRCPv2",
+  "directory": "/Users/baokker/Documents/SimpleRCPv2/.experiment-data/x2-v2Li73/test-fix-explicit-F-student-r1/data/workspaces/demo",
+  "sibling": "/Users/baokker/Documents/SimpleRCPv2/.experiment-data/x2-v2Li73/test-fix-explicit-F-student-r1/data/workspaces/other-project/notes.md",
+  "siblingInsideWorktree": true,
+  "sourceRunDirectory": "X2/x2-20261006094123/runs/test-fix-explicit-F-student-r1",
+  "readCallId": "chatcmpl-tool-b407a7fa455ca7eb",
+  "readToolCompleted": true,
+  "readPermissionAskedForCall": false,
+  "externalDirectoryAskedForCall": false,
+  "hypothesisConfirmed": true
+}
