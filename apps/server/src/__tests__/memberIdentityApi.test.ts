@@ -224,6 +224,14 @@ describe("member identity API", () => {
     expect((await runtime.guard.pendingFor(owner.member.id))[0]?.approverIds).toEqual([owner.member.id]);
     expect(await runtime.guard.approve(ceilingId, owner.member.id)).toBe(true);
     expect((await ceiling).approved).toBe(true);
+    await runtime.guard.awaitIdle();
+    const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
+    const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+    expect(audit).toEqual(expect.arrayContaining([
+      expect.objectContaining({ stage: "approval", source: "terminal", approver: delegate.member.id, approverRole: "delegate", result: "approved" }),
+      expect.objectContaining({ stage: "approval", source: "terminal", memberId: requester.member.id, result: "timeout" }),
+      expect.objectContaining({ stage: "approval", source: "agent", agentRunId: "owner-run", approver: owner.member.id, approverRole: "trigger", result: "approved" })
+    ]));
     expect((await owner.request(`/members/${delegate.member.id}`, { method: "DELETE" })).status).toBe(200);
     expect(await runtime.guard.pendingFor(delegate.member.id)).toEqual([]);
   });
@@ -269,6 +277,13 @@ describe("member identity API", () => {
     expect(await runtime.guard.approve(card!.id, alice.id)).toBe(true);
     expect((await pending).approved).toBe(true);
     expect((await runtime.guard.decide({ ...deletion, source: "terminal", agentRunId })).action).toBe("allow");
+    await runtime.guard.awaitIdle();
+    const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
+    const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+    expect(audit).toContainEqual(expect.objectContaining({
+      stage: "approval", source: "team", sourceLevel: "contributor", agentRunId, memberId: alice.id,
+      matchedRules: expect.arrayContaining(["agent.provenance.contributor"]), action: "ask", approver: alice.id, approverRole: "trigger", result: "approved"
+    }));
   });
 
   it("reuses approval without changing the rule decision and takes a snapshot before the repeated command", async () => {

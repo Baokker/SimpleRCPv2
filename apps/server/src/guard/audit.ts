@@ -1,27 +1,36 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { redactSensitive } from "../agent/traceStore.js";
+import type { ApprovalOutcome, ApproverRole } from "./approvals.js";
+import type { Action, GuardDecision, Level } from "./types.js";
+
+type ModelAudit = NonNullable<GuardDecision["llm"]> | {
+  mode: NonNullable<GuardDecision["llm"]>["mode"];
+  unavailable: true;
+  applied: false;
+  latencyMs: number;
+};
 
 export interface GuardAuditRecord {
   timestamp: string;
   projectId: string;
   memberId: string;
-  source: string;
+  source: "terminal" | "agent" | "team";
   agentRunId?: string;
   sessionScope?: "personal" | "team";
   agentHandle?: string;
   command?: string;
   paths?: string[];
-  action: string;
+  action: Action;
   matchedRules: string[];
   approver?: string;
-  approverRole?: "owner" | "delegate" | "trigger";
+  approverRole?: ApproverRole;
   approvedAt?: string;
-  result?: string;
+  result?: ApprovalOutcome;
   durationMicros: number;
   stage?: "decision" | "llm" | "approval" | "owner-self" | "remembered";
-  model?: unknown;
-  sourceLevel?: string;
+  model?: ModelAudit;
+  sourceLevel?: Level;
 }
 
 export function createGuardAudit(storagePath: string, sensitiveValues: string[] = []) {

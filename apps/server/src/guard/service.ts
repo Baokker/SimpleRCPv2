@@ -289,7 +289,7 @@ export function createGuardService(options: {
       const latencyMs = Date.now() - llmStarted;
       const judged = model ? applyLlmJudgment(decision, llmMode, request.source, model) : undefined;
       if (judged?.llm) judged.llm.latencyMs = latencyMs;
-      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: judged?.action ?? decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "llm", model: judged?.llm ?? { mode: llmMode, unavailable: true, latencyMs } });
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: judged?.action ?? decision.action, matchedRules: decision.matchedRules, durationMicros: latencyMs * 1_000, stage: "llm", model: judged?.llm ?? { mode: llmMode, unavailable: true, applied: false, latencyMs } });
       if (judged) {
         decision = judged;
         publishActivity({
