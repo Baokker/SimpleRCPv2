@@ -5,7 +5,7 @@ import type { MemberStore } from "../auth/identity.js";
 import type { EventLog } from "../eventLog.js";
 import type { RoomStore } from "../rooms.js";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
-import { createApprovalMemory, REMEMBERED_RULE } from "./approvalMemory.js";
+import { commandClass, createApprovalMemory, REMEMBERED_RULE } from "./approvalMemory.js";
 import { createApprovalQueue, type ApprovalOutcome, type PendingApproval } from "./approvals.js";
 import { createGuardAudit } from "./audit.js";
 import { decide } from "./decide.js";
@@ -114,10 +114,7 @@ export function createGuardService(options: {
     return { member, online, level: roleLevel(member.role) as Level };
   }
 
-  async function makeDecision(request: GuardRequest) {
-    const started = process.hrtime.bigint();
-    const stored = await currentMember(request.memberId);
-    const currentPolicy = await policy();
+  async function evaluate(request: GuardRequest, stored: Awaited<ReturnType<typeof currentMember>>, currentPolicy: Awaited<ReturnType<typeof policy>>) {
     const context = {
       memberLevel: stored.level,
       initiatorOnline: stored.online,
@@ -127,12 +124,29 @@ export function createGuardService(options: {
       protectedPaths: currentPolicy.protectedPaths
     };
     await provenance.load();
-    const decision = options.scriptInspection === false
+    return options.scriptInspection === false
       ? decide(request, context)
       : applyScriptInspection(decide(request, context), inspectScripts(request, context, fileScriptSource(undefined, (file) => provenance.levelOf(file))), stored.level, request.source);
+  }
+
+  async function makeDecision(request: GuardRequest) {
+    const started = process.hrtime.bigint();
+    const stored = await currentMember(request.memberId);
+    const currentPolicy = await policy();
+    const decision = await evaluate(request, stored, currentPolicy);
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);
     audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros, stage: "decision" });
     return { decision, member: stored, policy: currentPolicy };
+  }
+
+  // True when the request asked only because a read-only output filter made it unrecognised and the
+  // command without the filter would run directly for the same member.
+  async function onlyOutputFilterAsks(request: GuardRequest, decision: GuardDecision, stored: Awaited<ReturnType<typeof currentMember>>, currentPolicy: Awaited<ReturnType<typeof policy>>) {
+    if (request.kind !== "command" || !decision.matchedRules.every((rule) => rule === "classify.unknown")) return false;
+    const core = commandClass(request.command);
+    if (!core || core === request.command?.replace(/\s+/g, " ").trim()) return false;
+    const coreDecision = await evaluate({ ...request, command: core }, stored, currentPolicy);
+    return coreDecision.action === "allow" || coreDecision.action === "allow_snapshot";
   }
 
   async function submit(request: GuardRequest, input: { timeoutMs?: number | null } = {}) {
@@ -155,10 +169,11 @@ export function createGuardService(options: {
     if (options.mode === "native") return submitNative(request, input);
     const initial = await makeDecision(request);
     let decision = initial.decision;
-    // An owner's own terminal command is the owner's decision already; asking the owner to approve it
-    // again only adds a click. Hard denials still apply because they never reach "ask". A script that
-    // someone else wrote still asks, since its content is not the owner's own decision.
-    if (decision.action === "ask" && decision.approvers === "self" && !decision.matchedRules.some((rule) => rule.startsWith("script."))) {
+    // An owner's own terminal command skips self-approval only when it asked merely because a read-only
+    // output filter made it unrecognised (npm test 2>&1 | tail -20) and the command without the filter
+    // runs directly. Protected or outside paths, external irreversible operations, dynamic syntax and
+    // scripts written by someone else still ask the owner, so a mistyped or pasted command gets a pause.
+    if (decision.action === "ask" && decision.approvers === "self" && await onlyOutputFilterAsks(request, decision, initial.member, initial.policy)) {
       decision = {
         ...decision,
         action: decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow",

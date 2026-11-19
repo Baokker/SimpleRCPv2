@@ -83,16 +83,20 @@ test("a student's request shows the approval banner and Chinese approval card", 
   await expect(card.getByRole("button", { name: "撤回请求" })).toBeVisible();
 });
 
-test("an owner's own terminal command runs without asking the owner again", async ({ page }) => {
+test("an owner's own command with only an output filter runs without asking the owner again", async ({ page }) => {
   await openAs(page, "Teacher own command", "demo", "teacher");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
-  // Shell variables used to ask the owner to confirm their own command.
-  await command.fill("echo $HOME");
+  // A read-only filter used to make a plain command unrecognised and ask the owner to confirm it.
+  await command.fill("ls 2>&1 | head -3");
   await command.press("Enter");
   await expect(page.locator(".terminal-guard-status")).toContainText("已执行");
   await page.getByTestId("collab-tab-team").click();
   await expect(page.getByTestId("activity-feed")).toContainText("以负责人身份执行了自己的命令");
   await expect(page.locator(".guard-approval-card").filter({ hasText: "请确认你自己的命令" })).toHaveCount(0);
+  // Dynamic shell syntax still pauses for the owner's own confirmation.
+  await command.fill("echo $HOME");
+  await command.press("Enter");
+  await expect(page.locator(".guard-approval-card").filter({ hasText: "请确认你自己的命令" })).toHaveCount(1);
 });
 
 test("shows a blocked privilege message for sudo", async ({ page }) => {
