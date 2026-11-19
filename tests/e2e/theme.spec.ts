@@ -5,7 +5,7 @@ test("member can switch theme and keep the choice after refresh", async ({
   page
 }) => {
   await openAs(page, "Theme User");
-  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  await expect(page.getByTestId("connection-state")).toHaveText("已连接");
   const memberId = await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"));
   expect(memberId).toBeTruthy();
 
@@ -25,7 +25,7 @@ test("member can switch theme and keep the choice after refresh", async ({
   await expect(page.getByTestId("join-project-form")).toBeVisible();
   await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();
-  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  await expect(page.getByTestId("connection-state")).toHaveText("已连接");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   expect(await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"))).toBe(memberId);
 });

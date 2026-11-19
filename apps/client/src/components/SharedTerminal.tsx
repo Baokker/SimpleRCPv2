@@ -241,7 +241,7 @@ function terminalTheme(theme: ThemeMode) {
 }
 
 function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "guard_decision" }>, command: string) {
-  if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `上一条命令还在 Team 里等待审批，处理后再发送新命令${command}`;
+  if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `上一条命令还在团队标签页里等待审批，处理后再发送新命令${command}`;
   if (message.outcome === "busy") return `终端正在运行其他程序，请等它结束${command}`;
   if (message.outcome === "timeout") return `⏱ 审批超时，命令没有执行${command}`;
   if (message.outcome === "withdrawn") return `↩ 已撤回${command}`;
@@ -262,7 +262,7 @@ function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "gu
 }
 
 function formatGuardPending(message: Extract<TerminalServerMessage, { type: "guard_pending" }>, now = Date.now()) {
-  const waiting = message.noApprover ? "没有负责人在线，正在等待负责人加入" : "正在等待审批，请到 Team 标签页处理";
+  const waiting = message.noApprover ? "没有负责人在线，正在等待负责人加入" : "正在等待审批，请到团队标签页处理";
   if (message.llmUnavailable) return `模型暂时无法判断，${waiting}`;
   const remaining = message.expiresAt ? Math.max(0, Math.ceil((Date.parse(message.expiresAt) - now) / 1000)) : undefined;
   const countdown = remaining === undefined ? "" : ` · 剩余 ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;

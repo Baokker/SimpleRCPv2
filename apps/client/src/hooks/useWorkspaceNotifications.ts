@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const WORKSPACE_NOTICE_DURATION_MS = 4_000;
-const PROJECT_DELETED_MESSAGE = "This project was deleted.";
+const PROJECT_DELETED_MESSAGE = "这个项目已被删除。";
 
 export function useWorkspaceNotifications() {
   const [workspaceNotice, setWorkspaceNotice] = useState("");
@@ -27,7 +27,7 @@ export function useWorkspaceNotifications() {
     showWorkspaceError(error: unknown) {
       if (projectDeletedRef.current) return;
       setWorkspaceError(
-        error instanceof Error ? error.message : "Workspace request failed"
+        error instanceof Error ? error.message : "工作区请求失败"
       );
     },
     clearWorkspaceError() {

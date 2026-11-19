@@ -61,7 +61,7 @@ test("an open project reports when another client deletes it", async ({
   await expect(page.getByTestId("join-project-form")).toBeVisible();
   await page.getByTestId("display-name").fill("ActiveUser");
   await page.getByTestId("join-project").click();
-  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  await expect(page.getByTestId("connection-state")).toHaveText("已连接");
 
   const deleteResponse = await request.delete(
     `/api/projects/${created.project.id}`
@@ -69,7 +69,7 @@ test("an open project reports when another client deletes it", async ({
   expect(deleteResponse.ok()).toBe(true);
 
   await expect(page.getByTestId("workspace-error")).toContainText(
-    "This project was deleted."
+    "这个项目已被删除。"
   );
   await expect(page.getByTestId("workspace-error").getByRole("link")).toHaveAttribute(
     "href",

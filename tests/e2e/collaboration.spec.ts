@@ -210,7 +210,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await replaceMonacoText(ada, "src/hello.ts", "middle");
   await expectMonacoValue(linus, "src/hello.ts", "middle");
-  await expect(ada.getByTestId("editor-save-status")).toContainText("Saved");
+  await expect(ada.getByTestId("editor-save-status")).toContainText("已保存");
   await Promise.all([
     insertMonacoText(ada, "src/hello.ts", "start", "Ada "),
     insertMonacoText(linus, "src/hello.ts", "end", " Linus")
@@ -231,11 +231,11 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await expect(ada.getByTestId("new-file")).toHaveAttribute(
     "title",
-    "Create file by path"
+    "按路径新建文件"
   );
   await expect(ada.getByTestId("new-folder")).toHaveAttribute(
     "title",
-    "Create folder by path"
+    "按路径新建文件夹"
   );
   await openWorkspaceDialog(ada, "new-file", "src/browser-created.ts", "src/");
   await expect(ada.getByTestId("file-src/browser-created.ts")).toBeVisible();
@@ -307,7 +307,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await linus.getByTestId("collab-tab-chat").click();
   const receivedMessage = linus.locator(".chat-message p").last();
   await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
-  await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · student");
+  await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · 学生");
 
   const terminalCommand = ada.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
   await expect(terminalCommand).toBeVisible();

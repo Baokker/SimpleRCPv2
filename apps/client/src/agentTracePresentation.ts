@@ -25,9 +25,9 @@ function presentTraceEvent(
   hasProviderError: boolean
 ): TraceEntry | null {
   switch (event.type) {
-    case "run_queued": return entry(event, "Waiting for Agent capacity");
-    case "run_started": return entry(event, "Started working in the project");
-    case "session_created": return entry(event, "Opened an OpenCode session");
+    case "run_queued": return entry(event, "排队等待 Agent 名额");
+    case "run_started": return entry(event, "开始在项目里工作");
+    case "session_created": return entry(event, "打开了 Agent 会话");
     case "file_changes": {
       const files = Array.isArray(event.data?.files)
         ? event.data.files
@@ -36,18 +36,18 @@ function presentTraceEvent(
         : [];
       return entry(
         event,
-        `${files.length || "Project"} ${files.length === 1 ? "file" : "files"} changed`,
+        `修改了 ${files.length || "项目中的"} 个文件`,
         files.join(", "),
         "success"
       );
     }
-    case "concurrent_change": return entry(event, "Concurrent edit detected", event.summary, "warning");
-    case "run_completed": return entry(event, "Run completed", undefined, "success");
-    case "run_cancelled": return entry(event, "Run cancelled", event.summary, "warning");
+    case "concurrent_change": return entry(event, "检测到同时编辑", event.summary, "warning");
+    case "run_completed": return entry(event, "任务完成", undefined, "success");
+    case "run_cancelled": return entry(event, "任务已取消", event.summary, "warning");
     case "run_interrupted": return entry(event, "新指令已中断任务", undefined, "warning");
     case "run_failed": return hasProviderError
       ? null
-      : entry(event, "Run failed", event.summary, "error");
+      : entry(event, "任务失败", event.summary, "error");
     case "opencode.message.part.updated": return presentToolEvent(event);
     case "opencode.session.error": return presentProviderError(event);
     default: return null;
@@ -62,7 +62,7 @@ function presentProviderError(event: AgentTraceEvent): TraceEntry {
     : undefined;
   const message = compactText(firstString(data?.message, error?.name, event.summary));
   const detail = [statusCode ? `HTTP ${statusCode}` : undefined, message].filter(Boolean).join("\n");
-  return entry(event, "Provider request failed", detail || undefined, "error");
+  return entry(event, "模型服务请求失败", detail || undefined, "error");
 }
 
 function presentToolEvent(event: AgentTraceEvent): TraceEntry | null {
@@ -76,11 +76,11 @@ function presentToolEvent(event: AgentTraceEvent): TraceEntry | null {
   const filePath = firstString(input.filePath, input.path, input.file);
   const command = firstString(input.command, input.cmd);
   const tone: TraceEntry["tone"] = status === "error" ? "error" : "neutral";
-  if (tool === "bash" && command) return entry(event, "Ran command", compactText(command), tone);
-  if (tool === "read" && filePath) return entry(event, "Read file", filePath, tone);
-  if (tool === "write" && filePath) return entry(event, "Wrote file", filePath, tone);
-  if (tool === "edit" && filePath) return entry(event, "Edited file", filePath, tone);
-  return entry(event, `Used ${tool}`, undefined, tone);
+  if (tool === "bash" && command) return entry(event, "执行命令", compactText(command), tone);
+  if (tool === "read" && filePath) return entry(event, "读取文件", filePath, tone);
+  if (tool === "write" && filePath) return entry(event, "写入文件", filePath, tone);
+  if (tool === "edit" && filePath) return entry(event, "编辑文件", filePath, tone);
+  return entry(event, `使用工具 ${tool}`, undefined, tone);
 }
 
 function entry(

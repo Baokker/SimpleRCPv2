@@ -10,12 +10,12 @@ test("team Agent bar and shared Chat controls are visible", async ({ page }) => 
     "给团队发消息，或用 @Agent 名称给共享 Agent 派任务"
   );
   await expect(page.getByTestId("chat-command-hint")).toContainText("/agent new reviewer");
-  await expect(page.getByTestId("collab-tab-agent")).toContainText("My Agent");
+  await expect(page.getByTestId("collab-tab-agent")).toContainText("我的 Agent");
   await page.getByTestId("collab-tab-agent").click();
-  await expect(page.getByTestId("my-agent-hint")).toContainText("mention @agent in Chat");
+  await expect(page.getByTestId("my-agent-hint")).toContainText("请在聊天里用 @Agent 名称");
   await expect(page.getByTestId("agent-prompt")).toHaveAttribute(
     "placeholder",
-    "Ask OpenCode about this project (only you can see this session)"
+    "给你的 Agent 发要求（这个会话只有你能看到）"
   );
 });
 
@@ -89,7 +89,7 @@ test("Chat shares a live team trace while My Agent keeps personal sessions separ
   await expect(page.getByTestId("agent-team-traces")).toHaveCount(0);
   await expect(page.getByTestId("agent-prompt")).toBeVisible();
   await page.getByTestId("collab-tab-chat").click();
-  await expect(page.getByTestId("chat-agent-card").last()).toContainText("Run completed");
+  await expect(page.getByTestId("chat-agent-card").last()).toContainText("任务完成");
 });
 
 test("team Agent replies are shared across member browser contexts", async ({ browser }) => {
@@ -125,16 +125,16 @@ test("interrupting a team run records changed files for the next run", async ({ 
   await pageA.getByTestId("chat-input").fill("@agent Write interrupted-file.txt with a short project description, then use bash to execute sleep 60. After the command finishes, reply that your task is completed.");
   await pageA.getByTestId("send-chat").click();
   const oldCard = pageA.getByTestId("chat-agent-card").nth(firstNewCardIndex);
-  await expect(oldCard).toContainText("running", { timeout: 10_000 });
+  await expect(oldCard).toContainText("运行中", { timeout: 10_000 });
   await expect(oldCard.getByTestId("agent-current-tools")).toContainText("bash", { timeout: 90_000 });
 
   await pageB.getByTestId("chat-input").fill("@agent Stop the previous requirement. Read interrupted-file.txt and reply with exactly: follow up complete. Do not write files.");
   await pageB.getByTestId("send-chat").click();
   const newCard = pageA.getByTestId("chat-agent-card").nth(firstNewCardIndex + 1);
 
-  await expect(oldCard).toContainText("Interrupted by Interrupt Bob", { timeout: 10_000 });
+  await expect(oldCard).toContainText("被 Interrupt Bob 打断", { timeout: 10_000 });
   await expect(pageA.getByTestId("chat-transcript")).toContainText("interrupted @agent's task", { timeout: 10_000 });
-  await expect(newCard).toContainText("completed", { timeout: 90_000 });
+  await expect(newCard).toContainText("已完成", { timeout: 90_000 });
 
   const runs = await pageA.evaluate(async () => {
     const response = await fetch("/api/projects/demo/agent/runs", {
@@ -185,12 +185,12 @@ test("team Agent waits when personal sessions occupy the project capacity", asyn
   await page.getByTestId("chat-input").fill("@agent Do not use tools. Reply with exactly: team work complete");
   await page.getByTestId("send-chat").click();
   const teamCard = page.getByTestId("chat-agent-card").last();
-  await expect(teamCard).toContainText("queued", { timeout: 10_000 });
+  await expect(teamCard).toContainText("排队中", { timeout: 10_000 });
   for (const id of blockers) {
     const response = await page.request.post(`/api/projects/demo/agent/runs/${id}/cancel`, { headers });
     expect(response.ok()).toBe(true);
   }
-  await expect(teamCard).toContainText("completed", { timeout: 90_000 });
+  await expect(teamCard).toContainText("已完成", { timeout: 90_000 });
   await page.getByTestId("collab-tab-agent").click();
   await expect(page.getByTestId("agent-selected-run").last()).toContainText("personal work complete", { timeout: 90_000 });
 });

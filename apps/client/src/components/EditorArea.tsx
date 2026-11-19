@@ -122,8 +122,8 @@ export function EditorArea({
             </button>
             <button
               className="tab-close"
-              aria-label={`Close ${file.path}`}
-              title="Close"
+              aria-label={`关闭 ${file.path}`}
+              title="关闭"
               onClick={() => onCloseFile(file.path)}
               data-testid={`close-tab-${file.path}`}
             >
@@ -135,7 +135,7 @@ export function EditorArea({
           className={`editor-save-state ${saveState.toLowerCase().replace(" ", "-")}`}
           data-testid="editor-save-status"
         >
-          {saveState}
+          {({ Saved: "已保存", Saving: "保存中", "Sync failed": "同步失败" } as Record<string, string>)[saveState] ?? saveState}
         </span>
       </div>
       <div className="editor-frame" data-testid="editor-frame">
@@ -173,7 +173,7 @@ export function EditorArea({
             }}
           />
         ) : (
-          <div className="empty-state">Open a file to start collaborating.</div>
+          <div className="empty-state">打开一个文件开始协作。</div>
         )}
       </div>
     </div>
@@ -347,8 +347,8 @@ function CollaborativeEditor({
         >
           <LoaderCircle size={16} aria-hidden="true" />
           {connectionStatus === "connecting"
-            ? "Connecting collaboration"
-            : "Reconnecting collaboration"}
+            ? "正在连接协同编辑"
+            : "正在重新连接协同编辑"}
         </div>
       ) : null}
     </div>

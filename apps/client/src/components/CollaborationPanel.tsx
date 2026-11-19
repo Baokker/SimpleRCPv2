@@ -158,7 +158,7 @@ export function CollaborationPanel({
   // Mirrors the server rule: without another owner, any role may be claimed; otherwise only equal or lower levels.
   const canSelfAssign = (role: string) => !otherOwnerPresent || LEVEL_ORDER.indexOf(levelOf(role)) <= LEVEL_ORDER.indexOf(levelOf(member?.profileRole));
   function roleOptions(isAllowed: (role: string) => boolean) {
-    return <><option value="" disabled={!isAllowed("")}>Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role} disabled={!isAllowed(entry.role)}>{entry.displayName} — {entry.level}</option>)}</optgroup>)}</>;
+    return <><option value="" disabled={!isAllowed("")}>未分配（协作者）</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role} disabled={!isAllowed(entry.role)}>{entry.label}（{guardLevelText(entry.level)}）</option>)}</optgroup>)}</>;
   }
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
@@ -228,15 +228,15 @@ export function CollaborationPanel({
 
   return (
     <div className="panel collab-panel">
-      <div className="panel-header">Collaboration</div>
-      <nav className="collab-tabs" aria-label="Collaboration sections">
+      <div className="panel-header">协作</div>
+      <nav className="collab-tabs" aria-label="协作分区">
         <button
           className={activeTab === "chat" ? "active" : ""}
           onClick={() => selectTab("chat")}
           data-testid="collab-tab-chat"
         >
           <MessageSquareText size={14} />
-          Chat
+          聊天
         </button>
         <button
           className={activeTab === "agent" ? "active" : ""}
@@ -244,7 +244,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-agent"
         >
           <Bot size={14} />
-          My Agent
+          我的 Agent
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
@@ -252,7 +252,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-project"
         >
           <Settings2 size={14} />
-          Project
+          项目
         </button>
         <button
           className={activeTab === "team" ? "active" : ""}
@@ -260,14 +260,14 @@ export function CollaborationPanel({
           data-testid="collab-tab-team"
         >
           <Users size={14} />
-          Team
-          {unreadApprovalCount > 0 ? <span className="collab-tab-badge" aria-label={`${unreadApprovalCount} pending approvals`}>{unreadApprovalCount > 99 ? "99+" : unreadApprovalCount}</span> : null}
+          团队
+          {unreadApprovalCount > 0 ? <span className="collab-tab-badge" aria-label={`${unreadApprovalCount} 条待处理审批`}>{unreadApprovalCount > 99 ? "99+" : unreadApprovalCount}</span> : null}
         </button>
       </nav>
       {activeTab !== "team" && visibleApprovals.length > 0 ? (
         // Approvals expire after a timeout, so they stay visible while another tab is open.
         <button type="button" className="collab-approval-banner" onClick={() => selectTab("team")} data-testid="collab-approval-banner">
-          有 {visibleApprovals.length} 条审批等你处理，点这里到 Team 标签页批准或拒绝。
+          有 {visibleApprovals.length} 条审批等你处理，点这里到团队标签页批准或拒绝。
         </button>
       ) : null}
 
@@ -335,7 +335,7 @@ export function CollaborationPanel({
               data-testid="chat-transcript"
             >
               {chatMessages.length === 0 ? (
-                <li className="empty-panel-state">Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.</li>
+                <li className="empty-panel-state">在聊天里 @ 团队 Agent 来分配任务，所有人都能看到进度并继续指挥。</li>
               ) : (
                 chatMessages.map((message) => (
                   <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}`}>
@@ -343,7 +343,7 @@ export function CollaborationPanel({
                       <strong>
                         {message.kind === "agent" ? <Bot size={13} /> : null}
                         {message.authorName}
-                        {message.authorRole ? ` · ${message.authorRole}` : ""}
+                        {message.authorRole ? ` · ${scenarioRoles.find((role) => role.role === message.authorRole)?.label ?? message.authorRole}` : ""}
                       </strong>
                       <time>{formatTime(message.timestamp)}</time>
                     </span>
@@ -432,7 +432,7 @@ export function CollaborationPanel({
                 </ul>
               ) : null}
               <small className="chat-command-hint" data-testid="chat-command-hint">
-                Create a shared Agent with <code>/agent new reviewer code reviews</code>, then mention <code>@reviewer</code> in Chat.
+                用 <code>/agent new reviewer code reviews</code> 创建共享 Agent，然后在聊天里用 <code>@reviewer</code> 指挥它。
               </small>
               <div className="chat-actions">
                 <small id="chat-keyboard-hint">
@@ -465,11 +465,11 @@ export function CollaborationPanel({
                         <i className={candidate.online ? "status-dot online" : "status-dot"} />
                         <strong>{candidate.displayName}</strong>
                         {candidate.id === member?.id ? (
-                          <label className="member-role-editor" title={otherOwnerPresent ? "Higher roles are granted by an owner" : undefined}><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => changeRole(event.target.value)}>{roleOptions(canSelfAssign)}</select></label>
+                          <label className="member-role-editor" title={otherOwnerPresent ? "更高的角色由负责人授予" : undefined}><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => changeRole(event.target.value)}>{roleOptions(canSelfAssign)}</select></label>
                         ) : owner ? (
-                          <label className="member-role-editor"><select aria-label={`Role of ${candidate.displayName}`} value={candidate.profileRole ?? ""} onChange={(event) => grantRole(candidate.id, event.target.value)}>{roleOptions(() => true)}</select></label>
-                        ) : <em>{scenarioRoles.find((role) => role.role === candidate.profileRole)?.displayName ?? candidate.profileRole ?? "未分配"}</em>}
-                        {candidate.id !== member?.id && !owner ? candidate.profileRole ? <em>({scenarioRoles.find((role) => role.role === candidate.profileRole)?.level ?? "collaborator"})</em> : <em>(collaborator)</em> : null}
+                          <label className="member-role-editor"><select aria-label={`${candidate.displayName} 的角色`} value={candidate.profileRole ?? ""} onChange={(event) => grantRole(candidate.id, event.target.value)}>{roleOptions(() => true)}</select></label>
+                        ) : <em>{scenarioRoles.find((role) => role.role === candidate.profileRole)?.label ?? candidate.profileRole ?? "未分配"}</em>}
+                        {candidate.id !== member?.id && !owner ? candidate.profileRole ? <em>（{guardLevelText(scenarioRoles.find((role) => role.role === candidate.profileRole)?.level ?? "collaborator")}）</em> : <em>（协作者）</em> : null}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>
                         ) : null}
@@ -483,7 +483,7 @@ export function CollaborationPanel({
                             aria-label={
                               followingMemberId === candidate.id
                                 ? `停止跟随 ${candidate.displayName}`
-                                : `Follow ${candidate.displayName}`
+                                : `跟随 ${candidate.displayName}`
                             }
                             title={
                               followingMemberId === candidate.id
@@ -589,7 +589,7 @@ export function CollaborationPanel({
                             void undoGuardSnapshot(projectId, snapshotId).catch(onError).finally(() => setRestoringSnapshotId(undefined));
                           }}
                         >
-                          Undo
+                          撤销
                         </button>
                       ) : null}
                     </li>

@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import type { ProjectParticipant } from "../types";
 import { rememberMember, sessionMemberId } from "../memberIdentity";
 import { getGuardRoles, type GuardScenarioRole } from "../api";
+import { guardLevelText } from "../guardText";
 
 export interface ProjectIdentity {
   memberId?: string;
@@ -69,13 +70,13 @@ export function JoinProject({
         className="join-back"
         onClick={() => window.location.assign("/")}
       >
-        <ArrowLeft size={16} /> Projects
+        <ArrowLeft size={16} /> 项目列表
       </button>
       <form onSubmit={submit} data-testid="join-project-form">
         <h1>{projectName}</h1>
         {participants.length > 0 ? (
           <label>
-            <span>Participant</span>
+            <span>参与者</span>
             <select
               value={memberId}
               onChange={(event) => selectMember(event.target.value)}
@@ -87,12 +88,12 @@ export function JoinProject({
                   {participant.profileRole ? ` · ${participant.profileRole}` : ""}
                 </option>
               ))}
-              <option value="new">Create a new participant</option>
+              <option value="new">新建参与者</option>
             </select>
           </label>
         ) : null}
         <label>
-          <span>Display name</span>
+          <span>显示名称</span>
           <input
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
@@ -102,24 +103,24 @@ export function JoinProject({
           />
         </label>
         <label>
-          <span>Role <small>Optional. Once the project has an owner, roles above collaborator are granted by an owner.</small></span>
+          <span>角色 <small>可选。项目有负责人之后，协作者以上的角色由负责人授予。</small></span>
           <select
             value={role}
             onChange={(event) => setRole(event.target.value)}
             data-testid="member-role"
           >
-            <option value="">Unassigned (collaborator)</option>
+            <option value="">未分配（协作者）</option>
             {groupRoles(scenarioRoles).map(([scenario, entries]) => (
-              <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>
+              <optgroup key={scenario} label={scenario}>
                 {entries.map((entry) => (
-                  <option key={entry.role} value={entry.role}>{entry.displayName} — {entry.level}</option>
+                  <option key={entry.role} value={entry.role}>{entry.label}（{guardLevelText(entry.level)}）</option>
                 ))}
               </optgroup>
             ))}
           </select>
         </label>
         <button type="submit" data-testid="join-project">
-          <LogIn size={16} /> Enter project
+          <LogIn size={16} /> 进入项目
         </button>
       </form>
     </main>
