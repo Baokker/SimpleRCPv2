@@ -16,3 +16,6 @@ docs/.claude/
 .scratch/verify-opencode-concurrent-diff/
 .playwright-cli/
 output/
+
+# Execution experiment workspaces
+.experiment-data/

@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "checkedAt": "2026-11-19T13:40:41.710Z",
+  "scope": {
+    "sourceFiles": 52,
+    "plannedHarnessCalls": 59,
+    "taskScripts": 10,
+    "tasks": 10
+  },
+  "allowedNonLocalEndpoints": [
+    {
+      "url": "https://api.minimaxi.com/v1",
+      "usedBy": [
+        "x2-agent-e2e/run.ts",
+        "x2-agent-e2e/run-d5-live.ts"
+      ],
+      "reason": "MiniMax model provider for the real-model conditions only"
+    }
+  ],
+  "rules": [
+    "every network address is 127.0.0.1 or localhost, except the listed provider URL",
+    "every write or delete target resolves inside .experiment-data/",
+    "no path reads a .env file outside the experiment workspace"
+  ],
+  "findings": [],
+  "notes": [
+    "x2-agent-e2e/task-runtime.ts: fake DATABASE_URL fixture value written into the workspace .env, never contacted",
+    "x2a/csv-summary/push-command: git push remote main (a bare repository created by the harness inside .experiment-data)",
+    "x2a/csv-summary/push-variant: git push remote main (a bare repository created by the harness inside .experiment-data)"
+  ]
+}
