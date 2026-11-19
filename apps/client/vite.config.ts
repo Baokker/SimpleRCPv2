@@ -7,6 +7,9 @@ const devHost = process.env.VITE_SIMPLERCP_CLIENT_HOST ?? "127.0.0.1";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "import.meta.env.VITE_SIMPLERCP_LOCALE": JSON.stringify(process.env.SIMPLERCP_LOCALE ?? "zh")
+  },
   server: {
     host: devHost,
     port: devPort,

@@ -1,5 +1,5 @@
 import { FitAddon } from "@xterm/addon-fit";
-import { guardRecommendationText, guardRiskText, guardServerReasonText } from "../guardText";
+import { englishLocale, guardRecommendationText, guardRiskText, guardServerReasonText } from "../guardText";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
@@ -241,6 +241,20 @@ function terminalTheme(theme: ThemeMode) {
 }
 
 function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "guard_decision" }>, command: string) {
+  if (englishLocale) {
+    if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `A previous command is awaiting approval${command}`;
+    if (message.outcome === "busy") return `Terminal is busy${command}`;
+    if (message.outcome === "timeout") return `Approval timed out; command was not executed${command}`;
+    if (message.outcome === "withdrawn") return `Request withdrawn${command}`;
+    if (message.outcome === "rejected") return `${message.approverName ? `${message.approverName} rejected the command` : "Request rejected"}: ${guardServerReasonText(message.reason)}${command}`;
+    if (message.outcome === "denied") return `Blocked: ${guardServerReasonText(message.reason, true)}${command}`;
+    if (message.action === "allow_snapshot") return `Snapshot created; command executed${command}`;
+    if (message.outcome === "approved") return message.reason.includes("approval.remembered")
+      ? `Matching approval reused; command executed${command}`
+      : `${message.approverName ? `${message.approverName} approved` : "Approved"}; executing${command}`;
+    if (message.action === "allow") return `Executed${command}`;
+    return `${guardServerReasonText(message.reason)}${command}`;
+  }
   if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `上一条命令还在 Team 里等待审批，处理后再发送新命令${command}`;
   if (message.outcome === "busy") return `终端正在运行其他程序，请等它结束${command}`;
   if (message.outcome === "timeout") return `⏱ 审批超时，命令没有执行${command}`;
@@ -262,6 +276,14 @@ function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "gu
 }
 
 function formatGuardPending(message: Extract<TerminalServerMessage, { type: "guard_pending" }>, now = Date.now()) {
+  if (englishLocale) {
+    const waiting = message.noApprover ? "No eligible approver is online; waiting for one to join" : "Waiting for approval in the Team tab";
+    if (message.llmUnavailable) return `Model review unavailable. ${waiting}`;
+    const remaining = message.expiresAt ? Math.max(0, Math.ceil((Date.parse(message.expiresAt) - now) / 1000)) : undefined;
+    const countdown = remaining === undefined ? "" : ` · ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")} remaining`;
+    if (!message.llm) return `${waiting}${countdown}`;
+    return `Model risk: ${guardRiskText(message.llm.risk)}; ${guardRecommendationText(message.llm.risk)} (${Math.round(message.llm.confidence * 100)}% confidence): ${message.llm.reason}. ${waiting}${countdown}`;
+  }
   const waiting = message.noApprover ? "没有负责人在线，正在等待负责人加入" : "正在等待审批，请到 Team 标签页处理";
   if (message.llmUnavailable) return `模型暂时无法判断，${waiting}`;
   const remaining = message.expiresAt ? Math.max(0, Math.ceil((Date.parse(message.expiresAt) - now) / 1000)) : undefined;
