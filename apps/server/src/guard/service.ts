@@ -137,11 +137,12 @@ export function createGuardService(options: {
     if (decision.approvers === "initiator" || decision.approvers === "provenance" && roleLevel(trigger.role) === "owner") {
       return onlineIds.has(trigger.memberId) ? [{ id: trigger.memberId, role: "trigger" as const }] : [];
     }
-    const others = records.filter((member) => member.memberId !== trigger.memberId && onlineIds.has(member.memberId));
-    const owners = others.filter((member) => roleLevel(member.role) === "owner");
+    const online = records.filter((member) => onlineIds.has(member.memberId));
+    const owners = online.filter((member) => roleLevel(member.role) === "owner" &&
+      (member.memberId !== trigger.memberId || request.source === "agent"));
     if (owners.length) return owners.map((member) => ({ id: member.memberId, role: "owner" as const }));
     const triggerRank = LEVELS.indexOf(roleLevel(trigger.role));
-    return others.filter((member) => member.delegateApprover && LEVELS.indexOf(roleLevel(member.role)) > triggerRank)
+    return online.filter((member) => member.memberId !== trigger.memberId && member.delegateApprover && LEVELS.indexOf(roleLevel(member.role)) > triggerRank)
       .map((member) => ({ id: member.memberId, role: "delegate" as const }));
   }
 

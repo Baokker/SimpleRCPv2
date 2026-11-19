@@ -56,9 +56,10 @@ it("renders owner approval controls for another member's request", () => {
   assert.doesNotMatch(html, /撤回请求|仍然执行/);
 });
 
-it("offers no approval controls to the owner who raised an owners-level Agent request", () => {
-  const { html, approvers } = renderApproval("owner", "agent", "cat /etc/hosts", "requester", null);
+it("renders confirmation controls for an owner who can approve their own Agent request", () => {
+  const { html, approvers } = renderApproval("owner", "agent", "git push", "requester", "requester");
   assert.equal(approvers, "owners");
-  assert.match(html, />撤回请求</);
-  assert.doesNotMatch(html, /仍然执行|批准|拒绝/);
+  assert.match(html, />仍然执行</);
+  assert.match(html, />取消</);
+  assert.doesNotMatch(html, /撤回请求/);
 });

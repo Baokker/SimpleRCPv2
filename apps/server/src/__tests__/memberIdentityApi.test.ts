@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventRecord, ProjectParticipant } from "@simplercp/shared";
 import WebSocket from "ws";
 import { createApp } from "../createApp.js";
+import type { GuardRequest } from "../guard/types.js";
 import { getProjectMetadataPath } from "../projects.js";
 import { attachRealtimeServer } from "../realtime.js";
 import { createTestWorkspace } from "./testWorkspace.js";
@@ -165,11 +166,96 @@ describe("member identity API", () => {
     await fs.writeFile(path.join(runtime.project.workspacePath, "own.sh"), "rm -rf src\n");
     expect(await runtime.guard.submit(request(owner.member.id, "bash own.sh"))).toMatchObject({ approved: true, decision: { action: "allow" } });
     expect(await runtime.guard.submit(request(owner.member.id, "touch .env"))).toMatchObject({ approved: true, decision: { action: "allow_snapshot", matchedRules: expect.arrayContaining(["owner.self-command"]) } });
-    expect(await runtime.guard.submit({ ...request(owner.member.id, "touch .env"), source: "agent" })).toMatchObject({ approved: false });
+    expect(await runtime.guard.decide({ ...request(owner.member.id, "touch .env"), source: "agent" })).toMatchObject({ action: "ask", approvers: "owners" });
     expect(await runtime.guard.submit(request(owner.member.id, "ls $SIMPLERCP_DATA_DIR"))).toMatchObject({ approved: false, decision: { action: "deny" } });
     await runtime.guard.awaitIdle();
     const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
     expect(await fs.readFile(auditPath, "utf8")).toContain('"stage":"owner-self"');
+  });
+
+  describe("owner approval of Agent requests", () => {
+    let ownerId: string;
+    let contributorId: string;
+    let runtime: ReturnType<typeof running.app.locals.runtimeManager.get>;
+
+    beforeEach(async () => {
+      await running.close();
+      await fs.rm(root, { recursive: true, force: true });
+      root = await createTestWorkspace("owner-agent-routing-");
+      running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 2_000 });
+      ownerId = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member.id;
+      contributorId = (await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" })).member.id;
+      runtime = running.app.locals.runtimeManager.get("demo");
+    });
+
+    function pushRequest(memberId: string, sessionScope: GuardRequest["sessionScope"]): GuardRequest {
+      return {
+        projectId: "demo", memberId, source: "agent", agentRunId: "push-run", sessionScope,
+        kind: "command", command: "git push", cwd: runtime.project.workspacePath
+      };
+    }
+
+    async function pendingPush() {
+      await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
+      const pending = runtime.guard.pending()[0]!;
+      expect(pending.decision).toMatchObject({ action: "ask", approvers: "owners" });
+      return pending;
+    }
+
+    it.each(["personal", "team"] as const)("lets the sole online owner approve a %s Agent push", async (sessionScope) => {
+      const result = runtime.guard.submit(pushRequest(ownerId, sessionScope));
+      const { id, approverIds } = await pendingPush();
+      expect(approverIds).toEqual([ownerId]);
+      expect(await runtime.guard.approve(id, "team-agent")).toBe(false);
+      expect(await runtime.guard.approve(id, ownerId)).toBe(true);
+      expect(await result).toMatchObject({ approved: true, decision: { outcome: "approved" } });
+      await runtime.guard.awaitIdle();
+      const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
+      const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+      expect(audit).toContainEqual(expect.objectContaining({
+        stage: "approval", source: sessionScope === "team" ? "team" : "agent", approver: ownerId, approverRole: "owner", result: "approved"
+      }));
+    });
+
+    it("times out after the sole owner goes offline while approval is pending", async () => {
+      const result = runtime.guard.submit(pushRequest(ownerId, "personal"), { timeoutMs: 500 });
+      const { id } = await pendingPush();
+      runtime.rooms.markOffline(runtime.room.id, ownerId);
+      expect(await runtime.guard.pendingFor(ownerId)).toEqual([]);
+      expect(await runtime.guard.approve(id, ownerId)).toBe(false);
+      expect(await result).toMatchObject({ approved: false, decision: { outcome: "timeout" } });
+    });
+
+    it.each(["triggering", "other"] as const)("lets the %s owner approve when both are online", async (approver) => {
+      await running.app.locals.members.changeRole("demo", { actorId: ownerId, targetId: contributorId, role: "owner" });
+      const result = runtime.guard.submit(pushRequest(ownerId, "personal"));
+      const { id, approverIds } = await pendingPush();
+      expect(approverIds).toHaveLength(2);
+      expect(approverIds).toEqual(expect.arrayContaining([ownerId, contributorId]));
+      expect(await runtime.guard.approve(id, approver === "triggering" ? ownerId : contributorId)).toBe(true);
+      expect(await result).toMatchObject({ approved: true });
+    });
+
+    it("lets an owner approve a contributor's push and excludes the contributor", async () => {
+      const result = runtime.guard.submit(pushRequest(contributorId, "personal"));
+      const { id, approverIds } = await pendingPush();
+      expect(approverIds).toEqual([ownerId]);
+      expect(await runtime.guard.approve(id, contributorId)).toBe(false);
+      expect(await runtime.guard.approve(id, ownerId)).toBe(true);
+      expect(await result).toMatchObject({ approved: true });
+    });
+
+    it("removes the triggering owner from eligibility after a demotion", async () => {
+      const members = running.app.locals.members;
+      await members.changeRole("demo", { actorId: ownerId, targetId: contributorId, role: "owner" });
+      const result = runtime.guard.submit(pushRequest(ownerId, "personal"));
+      const { id } = await pendingPush();
+      await members.changeRole("demo", { actorId: contributorId, targetId: ownerId, role: "contributor" });
+      expect(await runtime.guard.pendingFor(ownerId)).toEqual([]);
+      expect(await runtime.guard.approve(id, ownerId)).toBe(false);
+      expect(await runtime.guard.approve(id, contributorId)).toBe(true);
+      expect(await result).toMatchObject({ approved: true });
+    });
   });
 
   it("routes pending approvals using current online membership and delegate levels", async () => {
