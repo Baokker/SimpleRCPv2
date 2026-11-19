@@ -357,7 +357,7 @@ function WorkspacePage({
             setLlmJudging(false);
             if (message.approval.decision.approvers !== "self" && (message.approval.noApprover || message.approval.approverIds.includes(joined.member.id))) {
               setUnseenApprovalIds((current) => new Set(current).add(message.approval.id));
-              setGuardNotice({ title: message.approval.noApprover ? "No owner is online" : "Approval required in Team", detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "A guarded request is waiting", tone: "approval" });
+              setGuardNotice({ title: message.approval.noApprover ? "没有负责人在线" : `${membersRef.current.find((candidate) => candidate.id === message.approval.request.memberId)?.displayName ?? "协作者"} 的${message.approval.request.source === "agent" ? " Agent " : "命令"}请求需要你在 Team 里审批`, detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "有一条请求在等待审批", tone: "approval" });
             }
           }
           if (message.type === "guard_approval_resolved") {
@@ -412,7 +412,7 @@ function WorkspacePage({
             }
             if (message.event.type === "guard_llm_judging") {
               setLlmJudging(true);
-              setGuardNotice({ title: "The model is reviewing a guarded request", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "Review in progress"), tone: "model" });
+              setGuardNotice({ title: "模型正在判断一条需要审批的请求", detail: String(message.event.payload?.command ?? message.event.payload?.paths ?? "判断中"), tone: "model" });
             }
             if (message.event.type === "guard_llm_result") {
               setLlmJudging(false);
@@ -420,14 +420,14 @@ function WorkspacePage({
               if (model && typeof model === "object") {
                 const judgment = model as Record<string, unknown>;
                 const risk = String(judgment.risk ?? "unknown");
-                const recommendation = risk === "high" ? "reject" : risk === "low" ? "approve" : "manual review";
-                const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : "confidence unavailable";
-                setGuardNotice({ title: `Model recommendation: ${recommendation}`, detail: `${confidence} · ${String(judgment.reason ?? "No reason provided")}`, tone: "model" });
+                const recommendation = risk === "high" ? "建议拒绝" : risk === "low" ? "建议批准" : "建议人工判断";
+                const confidence = typeof judgment.confidence === "number" ? `置信度 ${Math.round(judgment.confidence * 100)}%` : "置信度未知";
+                setGuardNotice({ title: `模型${recommendation}`, detail: `${confidence} · ${String(judgment.reason ?? "没有给出理由")}`, tone: "model" });
               }
             }
             if (message.event.type === "guard_llm_unavailable") {
               setLlmJudging(false);
-              setGuardNotice({ title: "Model judgment unavailable", detail: String(message.event.payload?.reason ?? "Human approval is still required"), tone: "model" });
+              setGuardNotice({ title: "模型无法判断", detail: "仍需由人审批", tone: "model" });
             }
             if (message.event.type === "guard_action") {
               setLlmJudging(false);
@@ -446,9 +446,9 @@ function WorkspacePage({
                   return next;
                 });
                 const model = llm as Record<string, unknown>;
-                const action = message.event.payload?.action === "deny" ? "rejected" : "approved";
-                const confidence = typeof model.confidence === "number" ? `${Math.round(model.confidence * 100)}% confidence` : "confidence unavailable";
-                setGuardNotice({ title: `The model automatically ${action} a request`, detail: `${confidence} · ${String(model.reason ?? "No reason provided")}`, tone: "model" });
+                const action = message.event.payload?.action === "deny" ? "拒绝" : "批准";
+                const confidence = typeof model.confidence === "number" ? `置信度 ${Math.round(model.confidence * 100)}%` : "置信度未知";
+                setGuardNotice({ title: `模型已自动${action}一条请求`, detail: `${confidence} · ${String(model.reason ?? "没有给出理由")}`, tone: "model" });
               }
             }
           }
@@ -630,14 +630,14 @@ function WorkspacePage({
   function applyWorkspaceChange(change: WorkspaceChange) {
     if (change.type === "rename") {
       remapOpenPath(change.fromPath, change.path);
-      showWorkspaceNotice(`${change.fromPath} was renamed to ${change.path}`);
+      showWorkspaceNotice(`${change.fromPath} 已重命名为 ${change.path}`);
       return;
     }
     if (change.type === "unlink" || change.type === "unlinkDir") {
       closePath(change.path, false);
       pendingSavePathsRef.current.delete(change.path);
       if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
-      showWorkspaceNotice(`${change.path} was deleted`);
+      showWorkspaceNotice(`${change.path} 已被删除`);
     }
   }
 
@@ -1024,7 +1024,7 @@ function WorkspacePage({
             onLlmModeChange={async (mode) => {
               const settings = await updateGuardLlmMode(projectId, mode);
               setGuardSettings(settings);
-              showWorkspaceNotice("Review mode updated for new project requests");
+              showWorkspaceNotice("审批方式已更新，对之后的新请求生效");
             }}
             onError={showWorkspaceError}
             onControlState={(holderMemberId, expiresAt, mode) => setTerminalControl({ holderMemberId, expiresAt, mode })}
@@ -1055,8 +1055,8 @@ function WorkspacePage({
             className="status-tool"
             type="button"
             onClick={() => setTerminalVisible((visible) => !visible)}
-            aria-label={`${terminalVisible ? "Hide" : "Show"} terminal`}
-            title={`${terminalVisible ? "Hide" : "Show"} terminal`}
+            aria-label={`${terminalVisible ? "隐藏" : "显示"}终端`}
+            title={`${terminalVisible ? "隐藏" : "显示"}终端`}
             data-testid="toggle-terminal"
           >
             <PanelBottom size={14} />
@@ -1066,8 +1066,8 @@ function WorkspacePage({
           className="status-tool"
           type="button"
           onClick={() => setCollaborationVisible((visible) => !visible)}
-          aria-label={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
-          title={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
+          aria-label={`${collaborationVisible ? "隐藏" : "显示"}协作面板`}
+          title={`${collaborationVisible ? "隐藏" : "显示"}协作面板`}
           data-testid="toggle-collaboration"
         >
           {collaborationVisible ? (

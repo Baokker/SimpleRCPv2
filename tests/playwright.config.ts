@@ -24,7 +24,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_DATA_DIR='${dataDir}' SIMPLERCP_IMPORT_ROOTS='${importRoot}' SIMPLERCP_SHELL=/bin/sh SIMPLERCP_TERMINAL_ENABLED=${terminalEnabled} SIMPLERCP_FAKE_AGENT_RUNTIME=${fakeAgentRuntime} SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS='${maxConcurrentRuns}' pnpm --filter @simplercp/server dev:once`,
+      command: `node e2e/prepareWorkspace.mjs && PORT=${serverPort} SIMPLERCP_DATA_DIR='${dataDir}' SIMPLERCP_IMPORT_ROOTS='${importRoot}' SIMPLERCP_SHELL=/bin/bash SIMPLERCP_TERMINAL_ENABLED=${terminalEnabled} SIMPLERCP_FAKE_AGENT_RUNTIME=${fakeAgentRuntime} SIMPLERCP_AGENT_MAX_CONCURRENT_RUNS='${maxConcurrentRuns}' pnpm --filter @simplercp/server dev:once`,
       url: `http://127.0.0.1:${serverPort}/api/health`,
       reuseExistingServer: false,
       timeout: 30_000

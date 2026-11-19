@@ -293,7 +293,7 @@ export function createGuardService(options: {
     publishActivity({
       type: "guard_approval",
       memberId: request.memberId,
-      payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules }
+      payload: { source: request.source, runId: request.agentRunId, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules, approverId, approverName }
     });
     return { request, decision: { ...decision, outcome: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", approverName }, approved };
   }
@@ -309,7 +309,8 @@ export function createGuardService(options: {
     const resolution = await pending.outcome;
     const outcome = resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected";
     audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: request.memberId, result: outcome, durationMicros: 0, stage: "approval" });
-    publishActivity({ type: "guard_approval", memberId: request.memberId, payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules } });
+    const nativeApproverName = resolution === "approved" || resolution === "rejected" ? (await options.members.getMember(options.project.id, request.memberId))?.displayName : undefined;
+    publishActivity({ type: "guard_approval", memberId: request.memberId, payload: { source: request.source, runId: request.agentRunId, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules, approverId: nativeApproverName ? request.memberId : undefined, approverName: nativeApproverName } });
     return { request, decision: { ...decision, outcome: outcome as GuardDecision["outcome"] }, approved };
   }
 

@@ -60,7 +60,7 @@ test("opening Team with a visible approval does not produce an update loop", asy
     if (message.type() === "error") consoleErrors.push(message.text());
   });
   await openAs(page, "Student approval", "demo", "student");
-  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  const command = page.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
   await command.fill("rm a.txt");
   await command.press("Enter");
   await page.getByTestId("collab-tab-team").click();
@@ -71,7 +71,7 @@ test("opening Team with a visible approval does not produce an update loop", asy
 
 test("a student's request shows the approval banner and Chinese approval card", async ({ page }) => {
   await openAs(page, "Student banner", "demo", "student");
-  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  const command = page.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
   await command.fill("rm a.txt");
   await command.press("Enter");
   const banner = page.getByTestId("collab-approval-banner");
@@ -85,7 +85,7 @@ test("a student's request shows the approval banner and Chinese approval card", 
 
 test("an owner's own command with only an output filter runs without asking the owner again", async ({ page }) => {
   await openAs(page, "Teacher own command", "demo", "teacher");
-  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  const command = page.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
   // A read-only filter used to make a plain command unrecognised and ask the owner to confirm it.
   await command.fill("ls 2>&1 | head -3");
   await command.press("Enter");
@@ -101,7 +101,7 @@ test("an owner's own command with only an output filter runs without asking the 
 
 test("shows a blocked privilege message for sudo", async ({ page }) => {
   await openAs(page, "Student sudo", "demo", "student");
-  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  const command = page.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
   await expect(command).toBeEnabled();
   await page.waitForTimeout(500);
   await command.fill("ls");
@@ -145,7 +145,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(ada.getByTestId("member-list")).toContainText("Ada");
   await expect(ada.getByTestId("member-list")).toContainText("Linus");
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Linus joined the session"
+    "Linus 加入了会话"
   );
 
   await expect(ada.getByTestId("dir-src")).toHaveAttribute(
@@ -258,7 +258,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(ada.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
   await expect(linus.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
   await expect(linus.getByTestId("workspace-notice")).toContainText(
-    "src/browser-renamed.ts was deleted"
+    "src/browser-renamed.ts 已被删除"
   );
   await expect(linus.getByTestId("workspace-notice")).toHaveCount(0, {
     timeout: 6_000
@@ -309,7 +309,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
   await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · student");
 
-  const terminalCommand = ada.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  const terminalCommand = ada.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
   await expect(terminalCommand).toBeVisible();
   await terminalCommand.fill("ls");
   await terminalCommand.press("Enter");
@@ -320,19 +320,22 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(linus.getByTestId("terminal-output")).toContainText(
     "src"
   );
+  await expect(linus.getByTestId("terminal-output")).toContainText("Ada 的命令 · 规则允许，直接执行");
+  await expect(linus.getByTestId("terminal-output")).toContainText("Ada 的命令已完成，退出码 0");
 
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Ada edited src/hello.ts"
+    "Ada 编辑了 src/hello.ts"
   );
-  await expect(ada.getByTestId("activity-feed")).toContainText("Lines 1-2");
+  await expect(ada.getByTestId("activity-feed")).toContainText("第 1-2 行");
+  await expect(ada.getByTestId("activity-feed")).toContainText("Ada 的终端命令已完成");
   await expect(ada.getByTestId("activity-feed")).not.toContainText("opened src/hello.ts");
   await expect(ada.getByTestId("activity-feed")).not.toContainText(
     "Linus, I updated the greeting."
   );
   await ada.getByTestId("file-src/sample.py").click();
   await expect(ada.locator(".tab.active")).toContainText("src/sample.py");
-  await ada.getByTitle("Open src/hello.ts").first().click();
+  await ada.getByTitle("打开 src/hello.ts").first().click();
   await expect(ada.locator(".tab.active")).toContainText("src/hello.ts");
 
   await ada.getByTestId("collab-tab-team").click();
@@ -354,7 +357,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   );
   await contextB.close();
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Linus left the session"
+    "Linus 离开了会话"
   );
 
   await contextA.close();
@@ -588,3 +591,34 @@ async function openDeleteDialog(
   await page.getByTestId("workspace-dialog-submit").click();
   await expect(page.getByTestId("workspace-dialog")).toHaveCount(0);
 }
+
+test("an owner's approval is recorded with the approver and the command's exit status", async ({ browser }) => {
+  const ownerContext = await browser.newContext();
+  const studentContext = await browser.newContext();
+  const owner = await ownerContext.newPage();
+  const student = await studentContext.newPage();
+  try {
+    // A fresh project, because Demo already has an owner and later members cannot make themselves owner.
+    await owner.goto("/");
+    await owner.getByTestId("new-project").click();
+    await owner.getByTestId("project-name").fill("Approval Record");
+    await owner.getByTestId("create-project-submit").click();
+    await expect(owner).toHaveURL(/\/projects\/[^/]+$/);
+    const projectId = decodeURIComponent(new URL(owner.url()).pathname.split("/").at(-1) ?? "");
+    await openAs(owner, "Grace", projectId, "teacher");
+    await openAs(student, "Kim", projectId, "student");
+    const command = student.locator('.terminal-command-box input[placeholder="输入要在共享终端执行的命令"]');
+    await command.fill("rm missing-approval-record.txt");
+    await command.press("Enter");
+    await owner.getByTestId("collab-tab-team").click();
+    const card = owner.locator(".guard-approval-card").filter({ hasText: "rm missing-approval-record.txt" });
+    await card.getByRole("button", { name: "批准" }).click();
+    await expect(student.getByTestId("terminal-output")).toContainText("Kim 的命令 · Grace 已批准");
+    await expect(student.getByTestId("terminal-output")).toContainText("Kim 的命令执行失败，退出码 1");
+    await expect(owner.getByTestId("activity-feed")).toContainText("Grace 批准了Kim 的终端命令");
+    await expect(owner.getByTestId("activity-feed")).toContainText("Kim 的终端命令执行失败");
+  } finally {
+    await ownerContext.close();
+    await studentContext.close();
+  }
+});

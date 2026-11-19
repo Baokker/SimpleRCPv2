@@ -92,11 +92,11 @@ export function TerminalPanel({
   return (
     <div className="panel terminal-panel">
       <div className="panel-header terminal-header">
-        <span>Terminal</span>
+        <span>共享终端</span>
         <div className="terminal-controls">
-          {controlHolder ? <span className="terminal-control-badge">{controlHolderName ?? (controlled ? "You" : "Collaborator")} has control · {formatControlRemaining(controlExpiresAt, controlClock)}</span> : null}
+          {controlHolder ? <span className="terminal-control-badge">{controlHolderName ?? (controlled ? "你" : "协作者")} 持有控制权 · {formatControlRemaining(controlExpiresAt, controlClock)}</span> : null}
           <span className="terminal-state" data-testid="terminal-state">
-            Shared · {connectionState}
+            共享 · {CONNECTION_TEXT[connectionState] ?? connectionState}
           </span>
           {connectionState === "Offline" ? (
             <button
@@ -104,15 +104,15 @@ export function TerminalPanel({
               type="button"
               onClick={() => terminalRef.current?.reconnect()}
             >
-              Reconnect
+              重新连接
             </button>
           ) : null}
           <button
             className="terminal-restart"
             onClick={() => terminalRef.current?.restart()}
             disabled={!isOwner && guardMode !== "off"}
-            title="Restart shared terminal"
-            aria-label="Restart shared terminal"
+            title="重启共享终端"
+            aria-label="重启共享终端"
             data-testid="terminal-restart"
           >
             <RotateCcw size={14} />
@@ -132,47 +132,49 @@ export function TerminalPanel({
           onSnapshot={setSnapshotId}
         />
       </div>
-      {controlled ? <div className="terminal-control-state">Interactive control until {controlExpiresAt ? new Date(controlExpiresAt).toLocaleTimeString() : "soon"}</div> : null}
+      {controlled ? <div className="terminal-control-state">交互控制权有效至 {controlExpiresAt ? new Date(controlExpiresAt).toLocaleTimeString() : "稍后"}</div> : null}
       {!controlled && guardMode !== "off" ? (
         <form className="terminal-command-box" onSubmit={(event) => { event.preventDefault(); const text = command.trim(); if (!text) return; setHistory((current) => [...current.filter((item) => item !== text), text].slice(-50)); setHistoryIndex(-1); setStatus(""); setSnapshotId(undefined); terminalRef.current?.submitCommand(text); setCommand(""); }}>
-          <input ref={commandInputRef} aria-label="Terminal command" value={command} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return; event.preventDefault(); const next = event.key === "ArrowUp" ? Math.min(history.length, historyIndex + 1) : Math.max(-1, historyIndex - 1); setHistoryIndex(next); setCommand(next < 0 ? "" : history[history.length - 1 - next] ?? ""); }} placeholder="Submit a terminal command" disabled={!canRun || connectionState !== "Connected"} />
-          <button type="submit" disabled={!command.trim() || !canRun || connectionState !== "Connected"}><Send size={14} /> Send</button>
+          <input ref={commandInputRef} aria-label="终端命令" value={command} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return; event.preventDefault(); const next = event.key === "ArrowUp" ? Math.min(history.length, historyIndex + 1) : Math.max(-1, historyIndex - 1); setHistoryIndex(next); setCommand(next < 0 ? "" : history[history.length - 1 - next] ?? ""); }} placeholder="输入要在共享终端执行的命令" disabled={!canRun || connectionState !== "Connected"} />
+          <button type="submit" disabled={!command.trim() || !canRun || connectionState !== "Connected"}><Send size={14} /> 发送</button>
         </form>
       ) : null}
-      {status ? <small className="terminal-guard-status" role="status" aria-live="polite">{status}{snapshotId ? <button type="button" onClick={() => void undoSnapshot()}>Undo</button> : null}</small> : null}
+      {status ? <small className="terminal-guard-status" role="status" aria-live="polite">{status}{snapshotId ? <button type="button" onClick={() => void undoSnapshot()}>撤销</button> : null}</small> : null}
       <div className="terminal-review-bar" data-testid="terminal-review-bar">
         <label className="terminal-review-choice">
           <ShieldCheck size={14} aria-hidden="true" />
-          <span>Request review</span>
+          <span>审批方式</span>
           <select
-            aria-label="Request review mode"
+            aria-label="审批方式"
             data-testid="guard-llm-mode"
             value={guardSettings && !guardSettings.llmConfigured ? "off" : guardSettings?.llmMode ?? "suggest"}
             disabled={!guardSettings || !rolesLoaded || !isOwner || savingReviewMode || connectionState !== "Connected" || guardMode === "off"}
             onChange={(event) => void changeReviewMode(event.target.value as GuardLlmMode)}
           >
-            <option value="off">{guardSettings && !guardSettings.llmConfigured ? "Manual (model unavailable)" : "Manual review"}</option>
-            <option value="suggest" disabled={Boolean(guardSettings && !guardSettings.llmConfigured)}>Model suggestion</option>
-            <option value="auto" disabled={Boolean(guardSettings && !guardSettings.llmConfigured)}>Model auto review</option>
+            <option value="off">{guardSettings && !guardSettings.llmConfigured ? "人工审批（模型不可用）" : "人工审批"}</option>
+            <option value="suggest" disabled={Boolean(guardSettings && !guardSettings.llmConfigured)}>模型建议，人决定</option>
+            <option value="auto" disabled={Boolean(guardSettings && !guardSettings.llmConfigured)}>模型自动审批</option>
           </select>
         </label>
         <span className="terminal-review-description" role="status">
-          {!guardSettings ? "Loading review settings…"
-            : guardMode === "off" ? "Guard is disabled"
-            : savingReviewMode ? "Saving…"
-            : guardSettings.llmMode !== "off" && !guardSettings.llmConfigured ? "Configure DEEPSEEK_API_KEY to enable model review; requests require human approval"
-            : guardSettings.llmMode === "off" ? "Requests needing approval go directly to human review"
-            : guardSettings.llmMode === "suggest" ? "The model advises; a person approves or rejects"
-            : "Eligible requests are approved or rejected by the model; others need human review"}
-          {guardSettings && !isOwner && guardMode !== "off" ? " · Only an owner can change this project setting" : ""}
+          {!guardSettings ? "正在读取审批设置…"
+            : guardMode === "off" ? "权限管控未开启"
+            : savingReviewMode ? "正在保存…"
+            : guardSettings.llmMode !== "off" && !guardSettings.llmConfigured ? "模型未配置，需要审批的请求都由人审批"
+            : guardSettings.llmMode === "off" ? "需要审批的请求直接交给人审批"
+            : guardSettings.llmMode === "suggest" ? "模型给出建议，由人批准或拒绝"
+            : "符合条件的请求由模型自动批准或拒绝，其余由人审批"}
+          {guardSettings && !isOwner && guardMode !== "off" ? " · 只有负责人可以修改这项设置" : ""}
         </span>
       </div>
     </div>
   );
 }
 
+const CONNECTION_TEXT: Record<string, string> = { Connecting: "连接中", Connected: "已连接", Reconnecting: "重新连接中", Offline: "已断开" };
+
 function formatControlRemaining(expiresAt: string | undefined, now: number) {
-  if (!expiresAt) return "soon";
+  if (!expiresAt) return "稍后";
   const seconds = Math.max(0, Math.ceil((Date.parse(expiresAt) - now) / 1_000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }

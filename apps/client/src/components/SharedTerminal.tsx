@@ -63,7 +63,7 @@ export const SharedTerminal = forwardRef<
         socketRef.current.send(JSON.stringify({ type: "command", text } satisfies TerminalClientMessage));
         return true;
       }
-      callbacksRef.current.onStatus("Not connected");
+      callbacksRef.current.onStatus("未连接");
       return false;
     }
   }));
@@ -249,7 +249,7 @@ function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "gu
   if (message.outcome === "denied") {
     const reason = guardServerReasonText(message.reason, true);
     const controlHint = message.reason.startsWith("Interactive control is required")
-      ? "。请在 Team → People 里选择 Take control 后重试"
+      ? "。请在 Team → 成员 里选择获取控制权后重试"
       : "";
     return `✕ 已拦下：${reason}${controlHint}${command}`;
   }

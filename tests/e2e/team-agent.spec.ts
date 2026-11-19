@@ -4,10 +4,10 @@ import { openAs } from "./helpers";
 test("team Agent bar and shared Chat controls are visible", async ({ page }) => {
   await openAs(page, "Team Member", "demo", "Developer");
   await expect(page.getByTestId("team-agent-bar")).toContainText("@agent");
-  await expect(page.getByTestId("team-agent-bar")).toContainText("Idle");
+  await expect(page.getByTestId("team-agent-bar")).toContainText("空闲");
   await expect(page.getByTestId("chat-input")).toHaveAttribute(
     "placeholder",
-    "Message the team, or @agent to give the shared agent a task"
+    "给团队发消息，或用 @Agent 名称给共享 Agent 派任务"
   );
   await expect(page.getByTestId("chat-command-hint")).toContainText("/agent new reviewer");
   await expect(page.getByTestId("collab-tab-agent")).toContainText("My Agent");
@@ -24,7 +24,7 @@ test("members can create team Agents from the bar and slash command", async ({ p
   await page.getByTestId("team-agent-create").click();
   await page.getByTestId("team-agent-name").fill("Reviewer");
   await page.getByTestId("team-agent-description").fill("reviews source changes");
-  await page.locator(".team-agent-create").getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator(".team-agent-create").getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByTestId("team-agent-bar")).toContainText("@reviewer");
 
   await page.getByTestId("chat-input").fill("/agent new planner plans release work");
@@ -172,7 +172,7 @@ test("team Agent waits when personal sessions occupy the project capacity", asyn
   }
   await page.getByTestId("agent-new-session").click();
   await page.getByTestId("agent-session-title").fill("Queue capacity");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { name: "创建", exact: true }).click();
   await page.getByTestId("agent-prompt").fill("Use bash to execute sleep 60, then reply with exactly: personal work complete");
   await page.getByTestId("agent-run-submit").click();
   await expect(page.getByTestId("agent-selected-run").last()).toContainText("Running", { timeout: 90_000 });

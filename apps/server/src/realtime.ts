@@ -18,6 +18,7 @@ import type {
 import type { MemberStore, Identity } from "./auth/identity.js";
 import { can } from "./auth/permissions.js";
 import { interactiveCommandName } from "./sharedTerminal.js";
+import { REMEMBERED_RULE } from "./guard/approvalMemory.js";
 import { canReadAgentRun } from "./agent/agentVisibility.js";
 
 const yWebsocketDocs = (yWebsocketUtils as unknown as { docs: Map<string, unknown> }).docs;
@@ -597,15 +598,39 @@ async function handleTerminalMessage(
       sendTerminalMessage(socket, { type: "guard_decision", action: "deny", outcome: "busy", reason: "Terminal became busy while the request was waiting", command: message.text });
       return;
     }
+    const attributed = (runtime.guard.mode() === "full" || runtime.guard.mode() === "human-only") && runtime.terminal.reportsStatus;
+    if (attributed) runtime.terminal.annotate(`── ${identity.displayName} 的命令 · ${terminalDecisionText(decision)} ──`);
+    const finished = attributed ? runtime.terminal.nextCommandStatus(COMMAND_RESULT_TIMEOUT_MS) : undefined;
     runtime.terminal.write(`${message.text}\r`, memberId, false);
     runtime.guard.noteTerminalCommand(request);
     if (snapshotId) void sealWhenTerminalIdle(runtime, snapshotId);
+    if (finished) void finished.then((exitCode) => {
+      if (exitCode === undefined) return;
+      runtime.terminal.annotate(`── ${identity.displayName} 的命令${exitCode === 0 ? "已完成" : "执行失败"}，退出码 ${exitCode} ──`);
+      runtime.guard.publishActivity({
+        type: "guard_command_finished",
+        memberId,
+        payload: { source: "terminal", command: message.text, exitCode, approverName: decision.approverName, outcome: decision.outcome }
+      });
+    });
     const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "withdrawn" | "timeout" | "allowed" | "denied" | "busy";
     sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome, reason: describeGuardRules(decision.matchedRules) || "Request was allowed", approverName: decision.approverName, snapshotId, command: message.text });
   } finally {
     pendingListener();
     activeCommands.delete(memberId);
   }
+}
+
+const COMMAND_RESULT_TIMEOUT_MS = 30 * 60_000;
+
+// One line in the shared terminal saying how the guard handled the command, so the echo below it has an owner.
+function terminalDecisionText(decision: { action: string; outcome?: string; approverName?: string; matchedRules: string[]; llm?: { applied?: boolean } }) {
+  const snapshot = decision.action === "allow_snapshot" ? "，已先保存快照" : "";
+  if (decision.matchedRules.includes(REMEMBERED_RULE)) return `同一类命令此前已批准${snapshot}`;
+  if (decision.llm?.applied) return `模型已自动批准${snapshot}`;
+  if (decision.outcome === "approved") return `${decision.approverName ? `${decision.approverName} 已批准` : "已批准"}${snapshot}`;
+  if (decision.matchedRules.includes("owner.self-command")) return `负责人本人命令，直接执行${snapshot}`;
+  return `规则允许，直接执行${snapshot}`;
 }
 
 // Seal the snapshot once the command returns to the shell, so undo can tell the command's edits from later ones.

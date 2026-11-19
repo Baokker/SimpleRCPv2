@@ -94,4 +94,24 @@ describe("shared terminal", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+  it("reports each bash command's exit status without showing the marker", async () => {
+    const root = await createTestWorkspace("status-terminal-");
+    const terminal = createSharedTerminal({ workspaceRoot: root, shell: "/bin/bash" });
+    try {
+      expect(terminal.reportsStatus).toBe(true);
+      await terminal.nextCommandStatus(10_000);
+      const failed = terminal.nextCommandStatus(10_000);
+      terminal.write("(exit 3)\r", "member-status", false);
+      expect(await failed).toBe(3);
+      const passed = terminal.nextCommandStatus(10_000);
+      terminal.write("true\r", "member-status", false);
+      expect(await passed).toBe(0);
+      terminal.annotate("── Bob 的命令 · 规则允许，直接执行 ──");
+      expect(terminal.getScrollback()).toContain("Bob 的命令");
+      expect(terminal.getScrollback()).not.toContain("]6973;");
+    } finally {
+      terminal.dispose();
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });
