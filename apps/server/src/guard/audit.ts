@@ -15,11 +15,13 @@ export interface GuardAuditRecord {
   action: string;
   matchedRules: string[];
   approver?: string;
+  approverRole?: "owner" | "delegate" | "trigger";
   approvedAt?: string;
   result?: string;
   durationMicros: number;
   stage?: "decision" | "llm" | "approval" | "owner-self" | "remembered";
   model?: unknown;
+  sourceLevel?: string;
 }
 
 export function createGuardAudit(storagePath: string, sensitiveValues: string[] = []) {

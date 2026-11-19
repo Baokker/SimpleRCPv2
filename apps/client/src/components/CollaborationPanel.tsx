@@ -19,13 +19,13 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AgentPanel, type AgentDraft } from "./AgentPanel";
-import { downloadAgentTrace, retryAgentRun, undoGuardSnapshot } from "../api";
+import { downloadAgentTrace, retryAgentRun, setDelegateApprover, undoGuardSnapshot } from "../api";
 import { AgentRunProgress } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
 import { AgentWorkDetails } from "./AgentWorkDetails";
 import { GuardApprovalActions } from "./GuardApprovalActions";
-import { guardActionWord, guardLevelText, guardReasonText, guardRecommendationText, guardRiskText } from "../guardText";
+import { englishLocale, guardActionWord, guardLevelText, guardReasonText, guardRecommendationText, guardRiskText } from "../guardText";
 import type {
   AgentRun,
   AgentSession,
@@ -163,8 +163,8 @@ export function CollaborationPanel({
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
   const previousMessageCountRef = useRef(chatMessages.length);
-  const owner = scenarioRoles.some((role) => role.role === member?.profileRole && role.level === "owner");
-  const visibleApprovals = useMemo(() => guardApprovals.filter((approval) => approval.noApprover && approval.request.memberId === member?.id || approval.approverIds.includes(member?.id ?? "") || (owner && approval.decision.approvers === "owners")), [guardApprovals, member?.id, owner]);
+  const owner = levelOf(member?.profileRole) === "owner";
+  const visibleApprovals = useMemo(() => guardApprovals.filter((approval) => approval.approverIds.includes(member?.id ?? "")), [guardApprovals, member?.id]);
   useEffect(() => {
     if (activeTab !== "team") return;
     for (const approval of visibleApprovals) onApprovalSeen?.(approval.id);
@@ -267,7 +267,7 @@ export function CollaborationPanel({
       {activeTab !== "team" && visibleApprovals.length > 0 ? (
         // Approvals expire after a timeout, so they stay visible while another tab is open.
         <button type="button" className="collab-approval-banner" onClick={() => selectTab("team")} data-testid="collab-approval-banner">
-          有 {visibleApprovals.length} 条审批等你处理，点这里到 Team 标签页批准或拒绝。
+          {englishLocale ? `${visibleApprovals.length} approval${visibleApprovals.length === 1 ? "" : "s"} need your review. Open the Team tab.` : `有 ${visibleApprovals.length} 条审批等你处理，点这里到 Team 标签页批准或拒绝。`}
         </button>
       ) : null}
 
@@ -470,6 +470,10 @@ export function CollaborationPanel({
                           <label className="member-role-editor"><select aria-label={`Role of ${candidate.displayName}`} value={candidate.profileRole ?? ""} onChange={(event) => grantRole(candidate.id, event.target.value)}>{roleOptions(() => true)}</select></label>
                         ) : <em>{scenarioRoles.find((role) => role.role === candidate.profileRole)?.displayName ?? candidate.profileRole ?? "Unassigned"}</em>}
                         {candidate.id !== member?.id && !owner ? <em>({levelOf(candidate.profileRole)})</em> : null}
+                        {owner && candidate.id !== member?.id ? <label className="member-role-editor">
+                          <input type="checkbox" checked={candidate.delegateApprover === true} aria-label={`Delegate approvals to ${candidate.displayName}`} onChange={(event) => { void setDelegateApprover(projectId, candidate.id, event.target.checked).catch(onError); }} />
+                          Delegate approver
+                        </label> : null}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>
                         ) : null}
@@ -515,7 +519,7 @@ export function CollaborationPanel({
                   );
                 })}
               </ul>
-              {llmJudging ? <div className="guard-llm-status" role="status"><span className="guard-llm-spinner" />模型正在判断一条需要审批的请求……</div> : null}
+              {llmJudging ? <div className="guard-llm-status" role="status"><span className="guard-llm-spinner" />{englishLocale ? "Model is reviewing a request..." : "模型正在判断一条需要审批的请求……"}</div> : null}
               {visibleApprovals.map((approval) => {
                 const llm = approval.decision.llm;
                 const requester = members.find((candidate) => candidate.id === approval.request.memberId);
@@ -524,19 +528,23 @@ export function CollaborationPanel({
                 const reason = humanGuardReason(approval.decision.matchedRules, approval.decision.action);
                 return (
                   <div key={approval.id} className="guard-approval-card">
-                    <strong>{approval.request.memberId === member?.id ? (approval.decision.approvers === "owners" && !approval.approverIds.includes(member?.id ?? "") ? "你的请求正在等待负责人审批" : approval.request.source === "agent" ? "请确认你的 Agent 要执行的操作" : "请确认你自己的命令") : `${requester?.displayName ?? approval.request.memberId}（${guardLevelText(requesterRole)}）请求执行：`}</strong>
-                    {approval.request.agentHandle ? <span>通过 @{approval.request.agentHandle}</span> : approval.request.source === "agent" ? <span>由 {requester?.displayName ?? "成员"} 的 Agent 发起</span> : <span>在共享终端中输入</span>}
+                    <strong>{englishLocale
+                      ? approval.request.memberId === member?.id
+                        ? approval.decision.approvers === "owners" && !approval.approverIds.includes(member?.id ?? "") ? "Your request is waiting for an owner" : approval.request.source === "agent" ? "Review the operation requested by your Agent" : "Review your terminal command"
+                        : `${requester?.displayName ?? approval.request.memberId} (${guardLevelText(requesterRole)}) requests permission to proceed:`
+                      : approval.request.memberId === member?.id ? (approval.decision.approvers === "owners" && !approval.approverIds.includes(member?.id ?? "") ? "你的请求正在等待负责人审批" : approval.request.source === "agent" ? "请确认你的 Agent 要执行的操作" : "请确认你自己的命令") : `${requester?.displayName ?? approval.request.memberId}（${guardLevelText(requesterRole)}）请求执行：`}</strong>
+                    {approval.request.agentHandle ? <span>{englishLocale ? "via" : "通过"} @{approval.request.agentHandle}</span> : approval.request.source === "agent" ? <span>{englishLocale ? `Requested by ${requester?.displayName ?? "member"}'s Agent` : `由 ${requester?.displayName ?? "成员"} 的 Agent 发起`}</span> : <span>{englishLocale ? "Entered in the shared terminal" : "在共享终端中输入"}</span>}
                     <code>{approval.request.command ?? approval.request.paths?.join(", ")}</code>
-                    <small title={approval.decision.matchedRules.join(", ")}>{reason}{remaining !== undefined ? ` · 剩余 ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
+                    <small title={approval.decision.matchedRules.join(", ")}>{reason}{remaining !== undefined ? ` · ${englishLocale ? "Time left" : "剩余"} ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
                     {llm ? (
                       <div className="guard-llm-result">
-                        <strong>模型判断风险{guardRiskText(llm.risk)} · {guardRecommendationText(llm.risk)}</strong>
-                        <span>置信度 {Math.round(llm.confidence * 100)}%</span>
+                      <strong>{englishLocale ? `Model risk: ${guardRiskText(llm.risk)} · ${guardRecommendationText(llm.risk)}` : `模型判断风险${guardRiskText(llm.risk)} · ${guardRecommendationText(llm.risk)}`}</strong>
+                      <span>{englishLocale ? `${Math.round(llm.confidence * 100)}% confidence` : `置信度 ${Math.round(llm.confidence * 100)}%`}</span>
                         <p>{llm.reason}</p>
-                        <small>{llm.applied ? `已自动${approval.decision.action === "deny" ? "拒绝" : "批准"}` : "仅供参考，仍需由人决定"}</small>
+                      <small>{englishLocale ? llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : "Suggestion only; human approval is required" : llm.applied ? `已自动${approval.decision.action === "deny" ? "拒绝" : "批准"}` : "仅供参考，仍需由人决定"}</small>
                       </div>
-                    ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">模型暂时无法判断，这条请求等待人工审批。</div> : null}
-                    {approval.noApprover ? <small>没有负责人在线，请让负责人加入。</small> : null}
+                    ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">{englishLocale ? "Model review is unavailable; this request is awaiting human approval." : "模型暂时无法判断，这条请求等待人工审批。"}</div> : null}
+                    {approval.noApprover ? <small>{englishLocale ? "No eligible approver is online." : "没有负责人在线，请让负责人加入。"}</small> : null}
                     <GuardApprovalActions
                       approval={approval}
                       memberId={member?.id}
@@ -780,20 +788,20 @@ function formatActivity(
       });
     case "guard_snapshot":
       return {
-        ...item(event, "general", `${actor} 的${payload.source === "agent" ? " Agent 修改" : "命令"}已先保存快照再执行，可以撤销`, {
+        ...item(event, "general", englishLocale ? `${actor}'s ${payload.source === "agent" ? "Agent operation" : "command"} was snapshotted before execution` : `${actor} 的${payload.source === "agent" ? " Agent 修改" : "命令"}已先保存快照再执行，可以撤销`, {
           detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
         }),
         snapshotId: stringValue(payload.snapshotId),
         snapshotMemberId: event.memberId
       };
     case "guard_snapshot_restored":
-      return item(event, "general", `${actor} 撤销了一次快照前的修改`, { detail: stringValue(payload.command) });
+      return item(event, "general", englishLocale ? `${actor} restored a snapshot` : `${actor} 撤销了一次快照前的修改`, { detail: stringValue(payload.command) });
     case "guard_snapshot_conflict":
-      return item(event, "general", `${actor} 的撤销没有执行，因为命令之后这些文件又被改过`, {
+      return item(event, "general", englishLocale ? `${actor}'s snapshot restore was blocked by later file changes` : `${actor} 的撤销没有执行，因为命令之后这些文件又被改过`, {
         detail: Array.isArray(payload.conflicts) ? payload.conflicts.map((conflict) => stringValue((conflict as Record<string, unknown>)?.path)).filter(Boolean).join(", ") : undefined
       });
     case "guard_llm_judging":
-      return item(event, "general", `模型正在判断 ${actor} 的请求`, {
+      return item(event, "general", englishLocale ? `Model is reviewing ${actor}'s request` : `模型正在判断 ${actor} 的请求`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
     case "guard_llm_result": {
@@ -801,22 +809,22 @@ function formatActivity(
       if (!model || typeof model !== "object") return null;
       const judgment = model as Record<string, unknown>;
       const risk = stringValue(judgment.risk) ?? "unknown";
-      const confidence = typeof judgment.confidence === "number" ? `置信度 ${Math.round(judgment.confidence * 100)}%` : undefined;
+      const confidence = typeof judgment.confidence === "number" ? englishLocale ? `${Math.round(judgment.confidence * 100)}% confidence` : `置信度 ${Math.round(judgment.confidence * 100)}%` : undefined;
       const reason = stringValue(judgment.reason);
       const applied = judgment.applied === true;
       const followup = applied
-        ? `已自动${payload.action === "deny" ? "拒绝" : "批准"}`
-        : "仍需由人决定";
-      return item(event, "general", `模型对 ${actor} 的请求${guardRecommendationText(risk)}`, {
-        detail: [stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined), `风险${guardRiskText(risk)}`, confidence, reason, followup].filter(Boolean).join(" · ")
+        ? englishLocale ? `Automatically ${payload.action === "deny" ? "rejected" : "approved"}` : `已自动${payload.action === "deny" ? "拒绝" : "批准"}`
+        : englishLocale ? "Human review is still required" : "仍需由人决定";
+      return item(event, "general", englishLocale ? `Model reviewed ${actor}'s request: ${guardRecommendationText(risk)}` : `模型对 ${actor} 的请求${guardRecommendationText(risk)}`, {
+        detail: [stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined), englishLocale ? `Risk: ${guardRiskText(risk)}` : `风险${guardRiskText(risk)}`, confidence, reason, followup].filter(Boolean).join(" · ")
       });
     }
     case "guard_llm_unavailable":
-      return item(event, "general", `模型无法判断 ${actor} 的请求`, {
-        detail: "仍需由人审批"
+      return item(event, "general", englishLocale ? `Model could not review ${actor}'s request` : `模型无法判断 ${actor} 的请求`, {
+        detail: englishLocale ? "Human approval is required" : "仍需由人审批"
       });
     case "guard_approval":
-      return item(event, "general", `${actor} 的请求${payload.outcome === "timeout" ? "审批超时" : payload.outcome === "withdrawn" ? "已撤回" : payload.approved ? "已批准" : "已拒绝"}`, {
+      return item(event, "general", englishLocale ? `${actor}'s request ${payload.outcome === "timeout" ? "timed out" : payload.outcome === "withdrawn" ? "was withdrawn" : payload.approved ? "was approved" : "was rejected"}` : `${actor} 的请求${payload.outcome === "timeout" ? "审批超时" : payload.outcome === "withdrawn" ? "已撤回" : payload.approved ? "已批准" : "已拒绝"}`, {
         detail: formatGuardApprovalDetail(payload)
       });
     case "terminal_control_granted":
@@ -946,11 +954,12 @@ function humanGuardReason(rules: string[], action?: GuardApproval["decision"]["a
 function guardActionText(actor: string, payload: Record<string, unknown>) {
   const llm = payload.llm;
   if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
-    return `模型已自动${payload.action === "deny" ? "拒绝" : "批准"} ${actor} 的请求`;
+    return englishLocale ? `Model automatically ${payload.action === "deny" ? "rejected" : "approved"} ${actor}'s request` : `模型已自动${payload.action === "deny" ? "拒绝" : "批准"} ${actor} 的请求`;
   }
-  if (payload.remembered === true) return `${actor} 的同一类命令此前已批准，这次直接执行`;
+  if (payload.remembered === true) return englishLocale ? `Reused a recent approval for ${actor}'s matching command` : `${actor} 的同一类命令此前已批准，这次直接执行`;
   const rules = Array.isArray(payload.matchedRules) ? payload.matchedRules.filter((rule): rule is string => typeof rule === "string") : [];
-  if (rules.includes("owner.self-command")) return `${actor} 以负责人身份执行了自己的命令${payload.action === "allow_snapshot" ? "，已先保存快照" : ""}`;
+  if (rules.includes("owner.self-command")) return englishLocale ? `${actor} ran an owner terminal command${payload.action === "allow_snapshot" ? " after creating a snapshot" : ""}` : `${actor} 以负责人身份执行了自己的命令${payload.action === "allow_snapshot" ? "，已先保存快照" : ""}`;
+  if (englishLocale) return `${actor}'s ${payload.source === "agent" ? "Agent request" : "terminal command"}: ${guardActionWord(stringValue(payload.action))}`;
   const where = payload.source === "agent" ? "的 Agent 请求" : "的终端命令";
   return `${actor}${where}${guardActionWord(stringValue(payload.action))}`;
 }
@@ -961,9 +970,9 @@ function formatGuardActionDetail(payload: Record<string, unknown>) {
   if (!llm || typeof llm !== "object") return command;
   const model = llm as Record<string, unknown>;
   const risk = stringValue(model.risk);
-  const confidence = typeof model.confidence === "number" ? `置信度 ${Math.round(model.confidence * 100)}%` : undefined;
+  const confidence = typeof model.confidence === "number" ? englishLocale ? `${Math.round(model.confidence * 100)}% confidence` : `置信度 ${Math.round(model.confidence * 100)}%` : undefined;
   const reason = stringValue(model.reason);
-  return [command, risk ? `风险${guardRiskText(risk)}` : undefined, confidence, reason].filter(Boolean).join(" · ");
+  return [command, risk ? englishLocale ? `Risk: ${guardRiskText(risk)}` : `风险${guardRiskText(risk)}` : undefined, confidence, reason].filter(Boolean).join(" · ");
 }
 
 function formatGuardApprovalDetail(payload: Record<string, unknown>) {
@@ -972,9 +981,9 @@ function formatGuardApprovalDetail(payload: Record<string, unknown>) {
   if (!model || typeof model !== "object") return command;
   const judgment = model as Record<string, unknown>;
   const risk = stringValue(judgment.risk);
-  const confidence = typeof judgment.confidence === "number" ? `置信度 ${Math.round(judgment.confidence * 100)}%` : undefined;
+  const confidence = typeof judgment.confidence === "number" ? englishLocale ? `${Math.round(judgment.confidence * 100)}% confidence` : `置信度 ${Math.round(judgment.confidence * 100)}%` : undefined;
   const reason = stringValue(judgment.reason);
-  return [command, risk ? `模型${guardRecommendationText(risk)}（风险${guardRiskText(risk)}）` : undefined, confidence, reason].filter(Boolean).join(" · ");
+  return [command, risk ? englishLocale ? `${guardRecommendationText(risk)} (risk: ${guardRiskText(risk)})` : `模型${guardRecommendationText(risk)}（风险${guardRiskText(risk)}）` : undefined, confidence, reason].filter(Boolean).join(" · ");
 }
 
 function numberValue(value: unknown) {

@@ -45,12 +45,13 @@ export interface GuardDecision {
   matchedRules: string[];
   unknown: boolean;
   autoEligible: boolean;
-  approvers: "owners" | "initiator" | "self" | null;
+  approvers: "owners" | "initiator" | "self" | "provenance" | null;
   outcome?: "allowed" | "approved" | "rejected" | "withdrawn" | "timeout" | "denied" | "busy";
   approverName?: string;
   snapshotId?: string;
   command?: string;
   noApprover?: boolean;
+  sourceLevel?: Level;
   llmUnavailable?: boolean;
   llm?: {
     mode: "off" | "suggest" | "auto";

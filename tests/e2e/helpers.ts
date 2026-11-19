@@ -1,12 +1,15 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
-export async function openAs(page: Page, name: string, projectId = "demo", role = "") {
+export async function openAs(page: Page, name: string, projectId = "demo", role = "", existingName?: string) {
   await page.goto(`/projects/${projectId}`);
+  if (existingName) {
+    const participants = page.getByTestId("participant-select");
+    const existing = await participants.locator("option").allTextContents();
+    const label = existing.find((option) => option.startsWith(`${existingName} ·`) || option === existingName);
+    if (label) await participants.selectOption({ label });
+  }
   await page.getByTestId("display-name").fill(name);
   const selectedRole = role.trim().toLowerCase();
-  if (selectedRole) {
-    await expect(page.getByTestId("member-role").locator(`option[value="${selectedRole}"]`)).toHaveCount(1);
-  }
   await page.getByTestId("member-role").selectOption(selectedRole);
   await page.getByTestId("join-project").click();
   await page.getByTestId("status-bar").waitFor();

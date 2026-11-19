@@ -160,7 +160,7 @@ describe("member identity API", () => {
     expect(written).toMatchObject({ approved: true, decision: { action: "allow_snapshot" } });
     await fs.writeFile(path.join(runtime.project.workspacePath, "fix.sh"), "rm -rf src\n");
     const byOwner = await runtime.guard.submit(request(owner.member.id, "bash fix.sh"));
-    expect(byOwner).toMatchObject({ approved: false, decision: { action: "ask", approvers: "self" } });
+    expect(byOwner).toMatchObject({ approved: false, decision: { action: "ask", approvers: "owners", outcome: "timeout" } });
     expect(byOwner.decision.matchedRules).toEqual(expect.arrayContaining(["script.writer.contributor", "script.role.contributor.delete"]));
     await fs.writeFile(path.join(runtime.project.workspacePath, "own.sh"), "rm -rf src\n");
     expect(await runtime.guard.submit(request(owner.member.id, "bash own.sh"))).toMatchObject({ approved: true, decision: { action: "allow" } });
@@ -170,6 +170,98 @@ describe("member identity API", () => {
     await runtime.guard.awaitIdle();
     const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
     expect(await fs.readFile(auditPath, "utf8")).toContain('"stage":"owner-self"');
+  });
+
+  it("routes pending approvals using current online membership and delegate levels", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("delegate-routing-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 2_000 });
+    const owner = await joinMember(running.origin, "demo", { name: "Alice", role: "owner" });
+    const requester = await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" });
+    const delegate = await joinMember(running.origin, "demo", { name: "Carol", role: "contributor", connectionId: "delegate-tab" });
+    const memberStore = running.app.locals.members;
+    const runtime = running.app.locals.runtimeManager.get("demo");
+    const route = `/members/${delegate.member.id}/delegate-approver`;
+    const designate = (actor: typeof owner, endpoint: string) => actor.request(endpoint, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ enabled: true }) });
+    expect((await designate(requester, route)).status).toBe(403);
+    expect((await designate(owner, route)).status).toBe(200);
+    expect((await designate(owner, `/members/${requester.member.id}/delegate-approver`)).status).toBe(200);
+    expect((await requester.request(`/members/${delegate.member.id}`, { method: "DELETE" })).status).toBe(403);
+    await memberStore.changeRole("demo", { actorId: owner.member.id, targetId: delegate.member.id, role: "maintainer" });
+    const request = { projectId: "demo", memberId: requester.member.id, source: "terminal" as const, kind: "command" as const, command: "rm note.txt", cwd: runtime.project.workspacePath };
+    const pending = runtime.guard.submit(request);
+    await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
+    const id = runtime.guard.pending()[0]!.id;
+    expect((await runtime.guard.pendingFor(owner.member.id))[0]?.approverIds).toEqual([owner.member.id]);
+    expect(await runtime.guard.pendingFor(delegate.member.id)).toEqual([]);
+    expect(await runtime.guard.approve(id, delegate.member.id)).toBe(false);
+    runtime.rooms.markOffline(runtime.room.id, owner.member.id);
+    expect(await runtime.guard.approve(id, requester.member.id)).toBe(false);
+    expect(await runtime.guard.approve(id, "team-agent")).toBe(false);
+    expect((await runtime.guard.pendingFor(delegate.member.id))[0]?.approverIds).toEqual([delegate.member.id]);
+    await memberStore.changeRole("demo", { actorId: owner.member.id, targetId: delegate.member.id, role: "contributor" });
+    expect(await runtime.guard.approve(id, delegate.member.id)).toBe(false);
+    expect(await runtime.guard.pendingFor(delegate.member.id)).toEqual([]);
+    runtime.rooms.markConnectionOffline(runtime.room.id, "delegate-tab");
+    await memberStore.changeRole("demo", { actorId: owner.member.id, targetId: delegate.member.id, role: "maintainer" });
+    expect(await runtime.guard.approve(id, delegate.member.id)).toBe(false);
+    runtime.rooms.markConnectionOnline(runtime.room.id, "delegate-tab");
+    expect(await runtime.guard.approve(id, delegate.member.id)).toBe(true);
+    expect((await pending).approved).toBe(true);
+    runtime.rooms.markConnectionOffline(runtime.room.id, "delegate-tab");
+    const noOnlineApprover = await runtime.guard.submit(request, { timeoutMs: 30 });
+    expect(noOnlineApprover).toMatchObject({ approved: false, decision: { outcome: "timeout" } });
+    const waitingForDelegate = runtime.guard.submit(request);
+    await vi.waitFor(() => expect(runtime.guard.pending()[0]?.noApprover).toBe(true));
+    runtime.rooms.markConnectionOnline(runtime.room.id, "delegate-tab");
+    expect(await runtime.guard.approve(runtime.guard.pending()[0]!.id, delegate.member.id)).toBe(true);
+    expect((await waitingForDelegate).approved).toBe(true);
+    const ceiling = runtime.guard.submit({ ...request, memberId: owner.member.id, source: "agent", command: "kill 123", agentRunId: "owner-run" });
+    runtime.rooms.markOnline(runtime.room.id, owner.member.id);
+    await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
+    const ceilingId = runtime.guard.pending()[0]!.id;
+    expect((await runtime.guard.pendingFor(owner.member.id))[0]?.approverIds).toEqual([owner.member.id]);
+    expect(await runtime.guard.approve(ceilingId, owner.member.id)).toBe(true);
+    expect((await ceiling).approved).toBe(true);
+    expect((await owner.request(`/members/${delegate.member.id}`, { method: "DELETE" })).status).toBe(200);
+    expect(await runtime.guard.pendingFor(delegate.member.id)).toEqual([]);
+  });
+
+  it("requires owner review after an agent reads a contributor's file or discussion message", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("agent-source-level-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off" });
+    const alice = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member;
+    const bob = (await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" })).member;
+    const runtime = running.app.locals.runtimeManager.get("demo");
+    const cwd = runtime.project.workspacePath;
+    const base = { projectId: "demo", cwd, memberId: alice.id };
+    const deletion = { ...base, source: "agent" as const, kind: "command" as const, command: "rm note.txt" };
+    await fs.writeFile(path.join(cwd, "note.txt"), "Project note\n");
+    await fs.writeFile(path.join(cwd, "alice.txt"), "Alice's note\n");
+    await fs.writeFile(path.join(cwd, "bob.txt"), "Bob's note\n");
+    await fs.writeFile(path.join(cwd, "editor-note.txt"), "Edited collaboratively\n");
+    await runtime.guard.recordWorkspaceWrite(bob.id, "editor-note.txt");
+    const edit = { ...base, source: "terminal" as const, kind: "edit" as const };
+    expect((await runtime.guard.submit({ ...edit, paths: ["alice.txt"] })).approved).toBe(true);
+    expect((await runtime.guard.submit({ ...edit, memberId: bob.id, paths: ["bob.txt"] })).approved).toBe(true);
+    for (const [filename, expected] of [["alice.txt", "allow"], ["bob.txt", "ask"], ["editor-note.txt", "ask"]] as const) {
+      const agentRunId = `read-${filename}`;
+      const read = { ...base, source: "agent" as const, agentRunId, kind: "read" as const, paths: [filename] };
+      expect((await runtime.guard.submit(read)).approved).toBe(true);
+      expect((await runtime.guard.decide({ ...deletion, agentRunId })).action).toBe(expected);
+    }
+    const agentRunId = "team-discussion";
+    await runtime.guard.recordPromptSources(agentRunId, alice.id, [], [{ id: bob.id, role: "contributor" }]);
+    const pending = runtime.guard.submit({ ...deletion, agentRunId, sessionScope: "team" });
+    await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
+    const [card] = await runtime.guard.pendingFor(alice.id);
+    expect(card).toMatchObject({ decision: { action: "ask", sourceLevel: "contributor", matchedRules: expect.arrayContaining(["agent.provenance.contributor"]) } });
+    expect(await runtime.guard.approve(card!.id, alice.id)).toBe(true);
+    expect((await pending).approved).toBe(true);
+    expect((await runtime.guard.decide({ ...deletion, source: "terminal", agentRunId })).action).toBe("allow");
   });
 
   it("reuses approval without changing the rule decision and takes a snapshot before the repeated command", async () => {
@@ -211,7 +303,8 @@ describe("member identity API", () => {
     await runtime.guard.awaitIdle();
     const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
     const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
-    expect(audit.find((record) => record.stage === "remembered")).toMatchObject({ approver: owner.id, approvedAt: expect.any(String) });
+    expect(audit.find((record) => record.stage === "remembered")).toMatchObject({ approver: owner.id, approverRole: "owner", approvedAt: expect.any(String), source: "terminal" });
+    expect(audit.find((record) => record.stage === "approval")).toMatchObject({ approver: owner.id, approverRole: "owner", approvedAt: expect.any(String), result: "approved" });
     await memberStore.changeRole("demo", { actorId: owner.id, targetId: requester.id, role: "contributor" });
     const afterDemotion = runtime.guard.submit(request);
     await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));

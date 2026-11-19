@@ -261,12 +261,9 @@ export function attachRealtimeServer(
         members: runtime.room.members
       });
     });
-    const removeApprovalListener = runtime.guard.onPending((approval) => {
-      broadcastToProject(projectSockets, runtime.project.id, {
-        type: "guard_approval",
-        approval
-      });
-    });
+    const broadcastApprovalChange = () => broadcastToProject(projectSockets, runtime.project.id, { type: "guard_approvals_changed" });
+    const removeApprovalListener = runtime.guard.onPending(broadcastApprovalChange);
+    const removeRoutingListener = runtime.guard.onRoutingChanged(broadcastApprovalChange);
     const removeControlListener = runtime.guard.onControl((holderMemberId, expiresAt) => {
       const payload = JSON.stringify({ type: "control", holderMemberId, expiresAt, mode: runtime.guard.mode() } satisfies TerminalServerMessage);
       for (const socket of terminalWss.clients) {
@@ -292,6 +289,7 @@ export function attachRealtimeServer(
       removeTerminalListener,
       removeMemberRoleListener,
       removeApprovalListener,
+      removeRoutingListener,
       removeControlListener,
       removeGuardActivityListener,
       removeGuardResolutionListener,
@@ -411,6 +409,7 @@ export function attachRealtimeServer(
       if (!runtime.rooms.getMember(identity.roomId, identity.memberId)?.online) {
         runtime.guard.memberOffline(identity.memberId);
       }
+      runtime.guard.routingChanged();
       runtime.rooms.cleanupStaleMembers(identity.roomId);
       broadcastToProject(projectSockets, projectId, {
         type: "presence",
@@ -435,6 +434,7 @@ export function attachRealtimeServer(
         } else {
           runtime.rooms.markOnline(identity.roomId, identity.memberId);
         }
+        if (!wasOnline) runtime.guard.routingChanged();
         const { broadcast } = handleRealtimeMessage({
           events: runtime.events,
           rooms: runtime.rooms,

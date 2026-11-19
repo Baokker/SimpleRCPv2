@@ -8,10 +8,10 @@ import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { createApprovalMemory, REMEMBERED_RULE } from "./approvalMemory.js";
 import { createApprovalQueue, type ApprovalOutcome, type PendingApproval } from "./approvals.js";
 import { createGuardAudit } from "./audit.js";
-import { decide } from "./decide.js";
+import { applyAgentProvenance, decide } from "./decide.js";
 import { judgeGuardRequest, type JudgeResult } from "./llmJudge.js";
-import { roleLevel } from "./roles.js";
-import { applyScriptInspection, fileScriptSource, inspectScripts } from "./scriptInspection.js";
+import { LEVELS, roleLevel } from "./roles.js";
+import { applyScriptInspection, fileScriptSource, inspectScripts, lowerLevel, simpleCommands } from "./scriptInspection.js";
 import { createSnapshotStore } from "./snapshots.js";
 import { createWriteProvenance } from "./writeProvenance.js";
 import { parseCommandPaths } from "./legacy/parser.js";
@@ -67,16 +67,23 @@ export function createGuardService(options: {
   approvalMemoryTtlMs?: number;
   otherWorkspaceRoots?: (currentProjectId: string) => string[];
   scriptInspection?: boolean;
+  agentProvenance?: boolean;
 }) {
   const policyPath = path.join(options.metadataRoot, "guard-policy.json");
   const audit = createGuardAudit(path.join(options.metadataRoot, "guard-audit.jsonl"), options.llm?.apiKey ? [options.llm.apiKey] : []);
   const approvals = createApprovalQueue(options.approvalTimeoutMs ?? 120_000);
   const approvalMemory = createApprovalMemory(options.approvalMemoryTtlMs);
   const membershipRevisions = new Map<string, number>();
+  const runSourceLevels = new Map<string, Map<string, Level>>();
+  const routingListeners = new Set<() => void>();
+  function routingChanged() {
+    for (const listener of routingListeners) listener();
+  }
   const stopMembershipChanges = options.members.onMembershipChanged((projectId, memberId) => {
     if (projectId !== options.project.id) return;
     membershipRevisions.set(memberId, (membershipRevisions.get(memberId) ?? 0) + 1);
     approvalMemory.clearMember(memberId);
+    routingChanged();
   });
   const snapshots = createSnapshotStore(options.metadataRoot, options.project.workspacePath);
   const provenance = createWriteProvenance(path.join(options.metadataRoot, "guard-provenance.json"), options.project.workspacePath);
@@ -121,7 +128,24 @@ export function createGuardService(options: {
     return { member, online, level: roleLevel(member.role) as Level };
   }
 
-  async function makeDecision(request: GuardRequest) {
+  async function routeApprovers(request: GuardRequest, decision: GuardDecision) {
+    if (decision.action !== "ask") return [];
+    const records = await options.members.listMembers(options.project.id);
+    const onlineIds = new Set(options.rooms.getRoom(options.roomId)?.members.filter((member) => member.online).map((member) => member.id));
+    const trigger = records.find((member) => member.memberId === request.memberId);
+    if (!trigger) return [];
+    if (decision.approvers === "initiator" || decision.approvers === "provenance" && roleLevel(trigger.role) === "owner") {
+      return onlineIds.has(trigger.memberId) ? [{ id: trigger.memberId, role: "trigger" as const }] : [];
+    }
+    const others = records.filter((member) => member.memberId !== trigger.memberId && onlineIds.has(member.memberId));
+    const owners = others.filter((member) => roleLevel(member.role) === "owner");
+    if (owners.length) return owners.map((member) => ({ id: member.memberId, role: "owner" as const }));
+    const triggerRank = LEVELS.indexOf(roleLevel(trigger.role));
+    return others.filter((member) => member.delegateApprover && LEVELS.indexOf(roleLevel(member.role)) > triggerRank)
+      .map((member) => ({ id: member.memberId, role: "delegate" as const }));
+  }
+
+  async function makeDecision(request: GuardRequest, recordAudit = true) {
     const started = process.hrtime.bigint();
     const stored = await currentMember(request.memberId);
     const currentPolicy = await policy();
@@ -134,11 +158,36 @@ export function createGuardService(options: {
       protectedPaths: currentPolicy.protectedPaths
     };
     await provenance.load();
-    const decision = options.scriptInspection === false
-      ? decide(request, context)
-      : applyScriptInspection(decide(request, context), inspectScripts(request, context, fileScriptSource(undefined, provenance.levelOf, provenance.writerOf)), stored.level, request.source);
+    const source = fileScriptSource(undefined, provenance.levelOf, provenance.writerOf);
+    function evaluate(candidate: GuardRequest, memberLevel: Level) {
+      const evaluationContext = { ...context, memberLevel };
+      const base = decide(candidate, evaluationContext);
+      if (options.scriptInspection === false) return base;
+      return applyScriptInspection(base, inspectScripts(candidate, evaluationContext, source), memberLevel, candidate.source);
+    }
+    let decision = evaluate(request, stored.level);
+    if (options.agentProvenance !== false && request.source === "agent" && request.agentRunId) {
+      const authors = runSourceLevels.get(request.agentRunId);
+      if (authors?.size) {
+        const members = await options.members.listMembers(options.project.id);
+        const sourceLevel = [...authors].filter(([author]) => author !== request.memberId).reduce<Level>((lowest, [author, recordedLevel]) => {
+          const member = members.find((candidate) => candidate.memberId === author);
+          return lowerLevel(lowest, member ? lowerLevel(recordedLevel, roleLevel(member.role)) : recordedLevel);
+        }, "owner");
+        if (LEVELS.indexOf(sourceLevel) < LEVELS.indexOf(stored.level)) {
+          decision = { ...applyAgentProvenance(decision, evaluate({ ...request, source: "terminal" }, sourceLevel), sourceLevel), sourceLevel };
+        }
+      }
+    }
+    if (decision.approvers === "initiator") {
+      const terminalRequest = { ...request, source: "terminal" as const };
+      const terminalDecision = evaluate(terminalRequest, stored.level);
+      if (terminalDecision.action === "deny" || terminalDecision.action === "ask" && (terminalDecision.approvers !== "self" || terminalDecision.matchedRules.includes("script.foreign-writer"))) {
+        decision = { ...decision, approvers: "owners" };
+      }
+    }
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros, stage: "decision" });
+    if (recordAudit) audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros, stage: "decision" });
     return { decision, member: stored, policy: currentPolicy };
   }
 
@@ -148,7 +197,43 @@ export function createGuardService(options: {
       const member = await options.members.getMember(options.project.id, request.memberId);
       if (member) await provenance.record(request, roleLevel(member.role) as Level);
     }
+    if (result.approved && options.mode === "full" && options.agentProvenance !== false && request.source === "agent" && request.agentRunId) recordReadSources(request, request.agentRunId);
     return result;
+  }
+
+  function recordReadSources(request: GuardRequest, runId: string) {
+    const paths = new Set<string>();
+    if (request.kind === "read") for (const target of request.paths ?? []) paths.add(path.resolve(request.cwd, target));
+    if (request.kind === "command" && request.command) {
+      let cwd = request.cwd;
+      for (const command of simpleCommands(request.command)) {
+        const parsed = parseCommandPaths(command, cwd);
+        if (parsed?.commandName === "cd" && /^cd\s+[^~$`*?]+$/i.test(command)) {
+          cwd = parsed.targets[0]?.resolvedPath ?? cwd;
+        }
+        if (parsed?.action === "read") for (const target of parsed.targets) paths.add(target.resolvedPath);
+      }
+    }
+    recordFileSources(runId, request.memberId, paths);
+  }
+
+  function recordFileSources(runId: string, memberId: string, paths: Iterable<string>) {
+    for (const target of paths) {
+      const writer = provenance.writerOf(target);
+      const level = provenance.levelOf(target);
+      if (writer && writer !== memberId && level) recordSource(runId, writer, level);
+    }
+  }
+
+  function recordSource(runId: string, authorId: string, level: Level) {
+    if (cancelledRunIds.has(runId)) return;
+    const levels = runSourceLevels.get(runId) ?? new Map<string, Level>();
+    levels.set(authorId, lowerLevel(level, levels.get(authorId)));
+    runSourceLevels.set(runId, levels);
+  }
+
+  function auditSource(request: GuardRequest) {
+    return request.source === "agent" && request.sessionScope === "team" ? "team" : request.source;
   }
 
   async function submitDecision(request: GuardRequest, input: { timeoutMs?: number | null } = {}) {
@@ -170,7 +255,7 @@ export function createGuardService(options: {
         approvers: null,
         matchedRules: [...decision.matchedRules, "owner.self-command"]
       };
-      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "owner-self" });
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "owner-self" });
     }
     const remembered = approvalMemory.recall(request, decision);
     if (remembered) {
@@ -182,7 +267,7 @@ export function createGuardService(options: {
         outcome: "approved",
         command: request.command
       };
-      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: remembered.approverId, approvedAt: new Date(remembered.at).toISOString(), result: "approved", durationMicros: 0, stage: "remembered" });
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: remembered.approverId, approverRole: remembered.approverRole, approvedAt: new Date(remembered.at).toISOString(), result: "approved", durationMicros: 0, stage: "remembered" });
       publishActivity({
         type: "guard_action",
         memberId: request.memberId,
@@ -204,7 +289,7 @@ export function createGuardService(options: {
       const latencyMs = Date.now() - llmStarted;
       const judged = model ? applyLlmJudgment(decision, llmMode, request.source, model) : undefined;
       if (judged?.llm) judged.llm.latencyMs = latencyMs;
-      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: judged?.action ?? decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "llm", model: judged?.llm ?? { mode: llmMode, unavailable: true, latencyMs } });
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: judged?.action ?? decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "llm", model: judged?.llm ?? { mode: llmMode, unavailable: true, latencyMs } });
       if (judged) {
         decision = judged;
         publishActivity({
@@ -255,34 +340,29 @@ export function createGuardService(options: {
       const cancelledDecision = { ...decision, action: "deny" as const, outcome: "denied" as const, matchedRules: [...decision.matchedRules, "guard.run-cancelled"] };
       return { request, decision: cancelledDecision, approved: false };
     }
-    const room = options.rooms.getRoom(options.roomId);
-    const onlineOwners = await Promise.all((room?.members ?? []).filter((member) => member.online).map(async (member) => {
-      const record = await options.members.getMember(options.project.id, member.id);
-      return record && roleLevel(record.role) === "owner" ? { id: member.id, name: record.displayName } : undefined;
-    }));
-    const owners = onlineOwners.filter((member): member is { id: string; name: string } => Boolean(member));
-    const approverIds = decision.approvers === "initiator" || decision.approvers === "self" ? [request.memberId] : owners.map((member) => member.id);
-    const noApprover = decision.approvers === "owners" && owners.length === 0;
+    if (decision.approvers === "self") decision = { ...decision, approvers: "owners" };
+    const approverIds = (await routeApprovers(request, decision)).map((candidate) => candidate.id);
+    const noApprover = approverIds.length === 0;
     decision.noApprover = noApprover;
     if (request.agentRunId && cancelledRunIds.has(request.agentRunId)) {
       const cancelledDecision = { ...decision, action: "deny" as const, outcome: "denied" as const, matchedRules: [...decision.matchedRules, "guard.run-cancelled"] };
       return { request, decision: cancelledDecision, approved: false };
     }
-    const pendingTimeout = approvalTimeoutForMode(initial.policy.llmMode, input.timeoutMs, options.approvalTimeoutMs ?? 120_000);
+    const pendingTimeout = approvalTimeoutForMode(initial.policy.llmMode, input.timeoutMs ?? undefined, options.approvalTimeoutMs ?? 120_000);
     const pending = approvals.enqueue(request, decision, approverIds, pendingTimeout, noApprover);
     const pendingItem = approvals.list().find((item) => item.id === pending.id);
     if (!pendingItem) throw new Error("Approval was not enqueued");
     for (const listener of pendingListeners) listener(pendingItem as Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">);
     const approved = await pending.result;
     const resolution = await pending.outcome;
-    const approverId = await pending.approver;
-    if (approved && approverId && membershipRevisions.get(request.memberId) === membershipRevision) {
-      approvalMemory.remember(request, decision, approverId);
+    const actor = await pending.approver;
+    if (approved && actor?.role && membershipRevisions.get(request.memberId) === membershipRevision) {
+      approvalMemory.remember(request, decision, actor.id, actor.role, actor.at);
     }
-    const approverName = approverId
-      ? (await options.members.getMember(options.project.id, approverId))?.displayName
+    const approverName = actor
+      ? (await options.members.getMember(options.project.id, actor.id))?.displayName
       : undefined;
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: approverIds.join(","), result: resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected", durationMicros: 0, stage: "approval", model: decision.llm });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), sourceLevel: decision.sourceLevel, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: actor?.id, approverRole: actor?.role, approvedAt: approved && actor ? new Date(actor.at).toISOString() : undefined, result: resolution, durationMicros: 0, stage: "approval", model: decision.llm });
     publishActivity({
       type: "guard_approval",
       memberId: request.memberId,
@@ -294,14 +374,15 @@ export function createGuardService(options: {
   // Agent platform's native permissions: whatever OpenCode asks is confirmed by the Agent's initiator alone.
   async function submitNative(request: GuardRequest, input: { timeoutMs?: number | null }) {
     const decision: GuardDecision = { action: "ask", segments: [], legacyRisk: "unknown", matchedRules: ["native.platform-ask"], unknown: false, autoEligible: false, approvers: "initiator", command: request.command };
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "decision" });
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "decision" });
     const pending = approvals.enqueue(request, decision, [request.memberId], approvalTimeoutForMode("off", input.timeoutMs, options.approvalTimeoutMs ?? 120_000));
     const pendingItem = approvals.list().find((item) => item.id === pending.id);
     if (pendingItem) for (const listener of pendingListeners) listener(pendingItem as Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">);
     const approved = await pending.result;
     const resolution = await pending.outcome;
     const outcome = resolution === "timeout" ? "timeout" : resolution === "withdrawn" ? "withdrawn" : approved ? "approved" : "rejected";
-    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: request.memberId, result: outcome, durationMicros: 0, stage: "approval" });
+    const actor = await pending.approver;
+    audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: auditSource(request), agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: actor?.id, approverRole: actor?.role, approvedAt: approved && actor ? new Date(actor.at).toISOString() : undefined, result: resolution, durationMicros: 0, stage: "approval" });
     publishActivity({ type: "guard_approval", memberId: request.memberId, payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, approved, outcome: resolution, matchedRules: decision.matchedRules } });
     return { request, decision: { ...decision, outcome: outcome as GuardDecision["outcome"] }, approved };
   }
@@ -330,6 +411,26 @@ export function createGuardService(options: {
     for (const listener of controlListeners) listener(memberId, new Date(expiresAt).toISOString());
   }
 
+  async function currentRouting(item: ReturnType<typeof approvals.list>[number]) {
+    if (options.mode === "native") return routeApprovers(item.request, item.decision);
+    const member = await options.members.getMember(options.project.id, item.request.memberId);
+    if (!member) return [];
+    const { decision } = await makeDecision(item.request, false);
+    if (decision.action === "deny") return [];
+    const approvers = decision.approvers === "provenance" || decision.approvers === "initiator" && item.decision.approvers === "initiator" ? decision.approvers : "owners";
+    return routeApprovers(item.request, { ...decision, action: "ask", approvers });
+  }
+
+  async function resolveApproval(id: string, memberId: string, approve: boolean) {
+    const item = approvals.list().find((candidate) => candidate.id === id);
+    if (!item) return false;
+    const eligible = await currentRouting(item);
+    const actor = eligible.find((candidate) => candidate.id === memberId);
+    if (!actor) return false;
+    approvals.updateRouting(id, eligible.map((candidate) => candidate.id));
+    return approve ? approvals.approve(id, memberId, actor.role) : approvals.reject(id, memberId, actor.role);
+  }
+
   return {
     mode: () => options.mode,
     approvalTimeoutMs: () => options.approvalTimeoutMs ?? 120_000,
@@ -339,29 +440,26 @@ export function createGuardService(options: {
     isController(memberId: string) { return control?.memberId === memberId && control.expiresAt > Date.now(); },
     async decide(request: GuardRequest) { return (await makeDecision(request)).decision; },
     submit,
-    async approve(id: string, memberId: string) {
-      const item = approvals.list().find((candidate) => candidate.id === id);
-      if (!item) return false;
-      const current = await currentMember(memberId);
-      const authorized = item.decision.approvers === "initiator" || item.decision.approvers === "self"
-        ? item.request.memberId === memberId && current.online
-        : current.online && current.level === "owner";
-      if (!authorized) return false;
-      if (options.mode !== "native") {
-        const refreshed = await makeDecision(item.request);
-        if (refreshed.decision.action === "deny") return approvals.reject(id, memberId);
+    async recordPromptSources(runId: string, memberId: string, files: string[], authors: { id: string; role?: string }[]) {
+      if (options.mode !== "full" || options.agentProvenance === false) return;
+      await provenance.load();
+      recordFileSources(runId, memberId, files.map((file) => path.resolve(options.project.workspacePath, file)));
+      const members = await options.members.listMembers(options.project.id);
+      for (const author of authors) {
+        if (author.id === memberId) continue;
+        const current = members.find((member) => member.memberId === author.id);
+        const level = author.role ? roleLevel(author.role) : roleLevel(current?.role);
+        recordSource(runId, author.id, level);
       }
-      return approvals.approve(id, memberId);
     },
-    async reject(id: string, memberId: string) {
-      const item = approvals.list().find((candidate) => candidate.id === id);
-      if (!item) return false;
-      const current = await currentMember(memberId);
-      const authorized = item.decision.approvers === "initiator" || item.decision.approvers === "self"
-        ? item.request.memberId === memberId && current.online
-        : current.online && current.level === "owner";
-      return authorized && approvals.reject(id, memberId);
+    async recordWorkspaceWrite(memberId: string, filePath: string) {
+      if (options.mode !== "full" || options.agentProvenance === false) return;
+      const member = await options.members.getMember(options.project.id, memberId);
+      if (!member) throw new Error("Project membership is required");
+      await provenance.record({ projectId: options.project.id, memberId, source: "terminal", kind: "edit", paths: [filePath], cwd: options.project.workspacePath }, roleLevel(member.role));
     },
+    approve: (id: string, memberId: string) => resolveApproval(id, memberId, true),
+    reject: (id: string, memberId: string) => resolveApproval(id, memberId, false),
     async withdraw(id: string, memberId: string) {
       const item = approvals.list().find((candidate) => candidate.id === id);
       return Boolean(item && item.request.memberId === memberId && approvals.withdraw(id));
@@ -381,8 +479,18 @@ export function createGuardService(options: {
       const recent = terminalChanges.filter((entry) => entry.at >= since).flatMap((entry) => entry.paths);
       return new Set(files.filter((file) => recent.some((target) => file === target || file.startsWith(`${target.replace(/\/+$/, "")}/`))));
     },
-    cancelRun(runId: string) { cancelledRunIds.add(runId); approvals.cancelForRun(runId); },
+    cancelRun(runId: string) { cancelledRunIds.add(runId); approvals.cancelForRun(runId); runSourceLevels.delete(runId); },
     pending() { return approvals.list(); },
+    routingChanged,
+    onRoutingChanged(listener: () => void) { routingListeners.add(listener); return () => routingListeners.delete(listener); },
+    async pendingFor(memberId: string) {
+      const routed = await Promise.all(approvals.list().map(async (item) => ({
+        ...item,
+        approverIds: (await currentRouting(item)).map((candidate) => candidate.id)
+      })));
+      return routed.filter((item) => item.approverIds.includes(memberId) && approvals.list().some((active) => active.id === item.id))
+        .map((item) => ({ ...item, noApprover: false }));
+    },
     onPending(listener: (approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void) { pendingListeners.add(listener); return () => pendingListeners.delete(listener); },
     onActivity(listener: (event: ReturnType<EventLog["append"]>) => void) { activityListeners.add(listener); return () => activityListeners.delete(listener); },
     publishActivity,
@@ -434,7 +542,7 @@ export function createGuardService(options: {
       return updated;
     },
     async awaitIdle() { await audit.awaitIdle(); },
-    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); }
+    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); runSourceLevels.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); routingListeners.clear(); }
   };
 }
 

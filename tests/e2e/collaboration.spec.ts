@@ -59,32 +59,37 @@ test("opening Team with a visible approval does not produce an update loop", asy
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
-  await openAs(page, "Student approval", "demo", "student");
+  await openAs(page, "Contributor approval", "demo", "contributor");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
   await command.fill("rm a.txt");
   await command.press("Enter");
-  await page.getByTestId("collab-tab-team").click();
-  await expect(page.locator(".guard-approval-card")).toBeVisible();
+  const owner = await page.context().newPage();
+  const ownerErrors: string[] = [];
+  owner.on("console", (message) => { if (message.type() === "error") ownerErrors.push(message.text()); });
+  await openAs(owner, "Approval owner", "demo", "teacher");
+  await owner.getByTestId("collab-tab-team").click();
+  await expect(owner.locator(".guard-approval-card")).toBeVisible();
+  await owner.locator(".guard-approval-card").first().getByRole("button", { name: "批准" }).click();
   await page.waitForTimeout(500);
-  expect(consoleErrors.filter((message) => message.includes("Maximum update depth exceeded"))).toEqual([]);
+  await owner.waitForTimeout(500);
+  expect([...consoleErrors, ...ownerErrors].filter((message) => message.includes("Maximum update depth exceeded"))).toEqual([]);
 });
 
-test("a student's request shows the approval banner and Chinese approval card", async ({ page }) => {
-  await openAs(page, "Student banner", "demo", "student");
+test("a contributor request shows an approval card to the online owner", async ({ page }) => {
+  await openAs(page, "Contributor banner", "demo", "contributor");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
   await command.fill("rm a.txt");
   await command.press("Enter");
-  const banner = page.getByTestId("collab-approval-banner");
-  await expect(banner).toContainText("有 1 条审批等你处理");
-  await banner.click();
-  await expect(banner).toHaveCount(0);
-  const card = page.locator(".guard-approval-card").first();
-  await expect(card).toContainText("你的请求正在等待负责人审批");
-  await expect(card.getByRole("button", { name: "撤回请求" })).toBeVisible();
+  const owner = await page.context().newPage();
+  await openAs(owner, "Approval owner", "demo", "teacher", "Approval owner");
+  await owner.getByTestId("collab-tab-team").click();
+  const card = owner.locator(".guard-approval-card").first();
+  await expect(card).toContainText("Contributor banner（贡献者）");
+  await expect(card.getByRole("button", { name: "批准" })).toBeVisible();
 });
 
 test("an owner's own terminal command runs without asking the owner again", async ({ page }) => {
-  await openAs(page, "Teacher own command", "demo", "teacher");
+  await openAs(page, "Teacher own command", "demo", "teacher", "Approval owner");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
   // Shell variables used to ask the owner to confirm their own command.
   await command.fill("echo $HOME");
@@ -96,7 +101,7 @@ test("an owner's own terminal command runs without asking the owner again", asyn
 });
 
 test("shows a blocked privilege message for sudo", async ({ page }) => {
-  await openAs(page, "Student sudo", "demo", "student");
+  await openAs(page, "Contributor sudo", "demo", "contributor");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
   await expect(command).toBeEnabled();
   await page.waitForTimeout(500);
@@ -105,9 +110,9 @@ test("shows a blocked privilege message for sudo", async ({ page }) => {
   await expect(page.locator(".terminal-guard-status")).toContainText("已执行");
   await command.fill("sudo ls");
   await command.press("Enter");
-  await expect(page.locator(".terminal-guard-status")).toContainText("已拦下：新成员不能使用管理员权限（sudo）");
+  await expect(page.locator(".terminal-guard-status")).toContainText("贡献者不能使用管理员权限（sudo）");
   await page.screenshot({
-    path: "docs/guard/screenshots-sudo.png",
+    path: test.info().outputPath("screenshots-sudo.png"),
     fullPage: true
   });
 });
@@ -120,7 +125,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   const ada = await contextA.newPage();
   const linus = await contextB.newPage();
 
-  await openAs(ada, "Ada", "demo", "student");
+  await openAs(ada, "Ada", "demo", "contributor");
   await openAs(linus, "Linus");
 
   await expect(ada.getByTestId("projects-link")).toBeVisible();
@@ -135,7 +140,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(ada.locator(".terminal-pane")).toBeVisible();
 
   await ada.getByTestId("collab-tab-project").click();
-  await expect(ada.getByTestId("project-panel")).toContainText("student");
+  await expect(ada.getByTestId("project-panel")).toContainText("contributor");
 
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("member-list")).toContainText("Ada");
@@ -303,7 +308,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await linus.getByTestId("collab-tab-chat").click();
   const receivedMessage = linus.locator(".chat-message p").last();
   await expect(receivedMessage).toHaveText("Linus, I updated\nthe greeting.");
-  await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · student");
+  await expect(linus.locator(".chat-message strong").last()).toHaveText("Ada · contributor");
 
   const terminalCommand = ada.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
   await expect(terminalCommand).toBeVisible();

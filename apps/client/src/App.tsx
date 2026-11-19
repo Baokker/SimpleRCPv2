@@ -293,11 +293,17 @@ function WorkspacePage({
       setEvents(eventRecords);
       setChatMessages(messages);
       setGuardSettings(settings);
-      void listGuardApprovals(projectId).then((result) => {
-        guardApprovalsRef.current = result.approvals;
-        setGuardApprovals(result.approvals);
-        setUnseenApprovalIds(new Set(result.approvals.filter((approval) => approval.approverIds.includes(joined.member.id)).map((approval) => approval.id)));
-      });
+      let approvalsVersion = 0;
+      async function refreshApprovals() {
+        const version = ++approvalsVersion;
+        const { approvals } = await listGuardApprovals(projectId);
+        if (!mounted || version !== approvalsVersion) return;
+        const previousIds = new Set(guardApprovalsRef.current.map((approval) => approval.id));
+        guardApprovalsRef.current = approvals;
+        setGuardApprovals(approvals);
+        setUnseenApprovalIds((current) => new Set(approvals.filter((approval) => current.has(approval.id) || !previousIds.has(approval.id)).map((approval) => approval.id)));
+      }
+      void refreshApprovals().catch(showWorkspaceError);
       setTeamAgents(agents);
       setAgentRuns(runs);
       setAgentTraces(traceEntries);
@@ -315,6 +321,7 @@ function WorkspacePage({
           }
           if (state === "Connected") {
             clearWorkspaceError();
+            void refreshApprovals().catch(showWorkspaceError);
             void getGuardSettings(projectId).then(setGuardSettings).catch(showWorkspaceError);
             void refreshSharedState().catch(showWorkspaceError);
             void refreshWorkspaceTree().catch(showWorkspaceError);
@@ -360,7 +367,9 @@ function WorkspacePage({
               setGuardNotice({ title: message.approval.noApprover ? "No owner is online" : "Approval required in Team", detail: message.approval.request.command ?? message.approval.request.paths?.join(", ") ?? "A guarded request is waiting", tone: "approval" });
             }
           }
+          if (message.type === "guard_approvals_changed") void refreshApprovals().catch(showWorkspaceError);
           if (message.type === "guard_approval_resolved") {
+            void refreshApprovals().catch(showWorkspaceError);
             guardApprovalsRef.current = guardApprovalsRef.current.filter((approval) => approval.id !== message.approvalId);
             setGuardApprovals(guardApprovalsRef.current);
             setUnseenApprovalIds((current) => {
@@ -369,6 +378,11 @@ function WorkspacePage({
               return next;
             });
             setGuardNotice(undefined);
+          }
+          if (message.type === "member_role_updated") {
+            membersRef.current = membersRef.current.map((candidate) => candidate.id === message.member.id ? message.member : candidate);
+            setMembers(membersRef.current);
+            if (message.member.id === joined.member.id) setMember(message.member);
           }
           if (
             message.type === "cursor_change" &&

@@ -59,9 +59,9 @@ describe("approval memory reuse", () => {
     const firstDecision = evaluate(first, "maintainer");
     expect(isReusable(first, firstDecision)).toBe(true);
     expect(memory.recall(first, firstDecision)).toBeUndefined();
-    memory.remember(first, firstDecision, "alice");
+    memory.remember(first, firstDecision, "alice", "owner");
     expect(evaluate(first, "maintainer")).toEqual(firstDecision);
-    expect(memory.recall(first, firstDecision)).toMatchObject({ approverId: "alice", commandClass: "node check.js" });
+    expect(memory.recall(first, firstDecision)).toMatchObject({ approverId: "alice", approverRole: "owner", commandClass: "node check.js" });
     expect(memory.recall({ ...first, memberId: "carol" }, firstDecision)).toBeUndefined();
     expect(memory.recall({ ...first, source: "terminal" }, firstDecision)).toBeUndefined();
     expect(memory.recall({ ...first, sessionScope: "team" }, firstDecision)).toBeUndefined();
@@ -77,7 +77,7 @@ describe("approval memory reuse", () => {
     const envDecision = decide(envRead, context("maintainer"));
     expect(envDecision.action).toBe("ask");
     expect(isReusable(envRead, envDecision)).toBe(false);
-    memory.remember(envRead, envDecision, "alice");
+    memory.remember(envRead, envDecision, "alice", "owner");
     expect(memory.recall(envRead, envDecision)).toBeUndefined();
     const forcePush = request("git push --force origin main");
     const pushDecision = decide(forcePush, context("maintainer"));
@@ -94,7 +94,7 @@ describe("approval memory reuse", () => {
     const memory = createApprovalMemory(1000, () => now);
     const item = request("node check.js");
     const itemDecision = evaluate(item, "maintainer");
-    memory.remember(item, itemDecision, "alice");
+    memory.remember(item, itemDecision, "alice", "owner");
     now = 500;
     expect(memory.recall(item, itemDecision)).toBeDefined();
     now = 1000;

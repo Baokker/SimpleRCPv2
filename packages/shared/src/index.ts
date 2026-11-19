@@ -48,6 +48,7 @@ export interface RoomMember {
   lastSeenAt: string;
   connectionCount: number;
   profileRole?: string;
+  delegateApprover?: boolean;
   currentFile?: string;
 }
 
@@ -183,6 +184,7 @@ export interface AgentRun {
   source?: "agent-panel" | "chat";
   chatMessageId?: string;
   extraPrompt?: string;
+  discussionAuthors?: { id: string; role?: string }[];
   interruptsRunId?: string;
   interruptedByRunId?: string;
   interruptedByMemberId?: string;
@@ -352,6 +354,7 @@ export type ServerMessage =
       type: "guard_approval";
       approval: GuardApproval;
     }
+  | { type: "guard_approvals_changed" }
   | {
       type: "guard_approval_resolved";
       approvalId: string;
@@ -391,7 +394,8 @@ export interface GuardApproval {
     action: "allow" | "allow_snapshot" | "ask" | "deny";
     segments: Array<{ text: string; capabilities: string[]; zone: string; reversibility: string }>;
     matchedRules: string[];
-    approvers?: "owners" | "initiator" | "self" | null;
+    sourceLevel?: string;
+    approvers?: "owners" | "initiator" | "self" | "provenance" | null;
     outcome?: "allowed" | "approved" | "rejected" | "withdrawn" | "timeout" | "denied" | "busy";
     command?: string;
     approverName?: string;

@@ -10,6 +10,7 @@ export interface JoinRoomInput {
   participantId?: string;
   connectionId?: string;
   profileRole?: string;
+  delegateApprover?: boolean;
 }
 
 export function createRoomStore(events: EventLog, options: { normalizeRoles?: boolean } = {}) {
@@ -47,6 +48,7 @@ export function createRoomStore(events: EventLog, options: { normalizeRoles?: bo
         existing.name = normalized.name;
         existing.participantId = normalized.participantId;
         existing.profileRole = normalized.profileRole;
+        existing.delegateApprover = normalized.delegateApprover;
         upsertConnection(room, {
           id: normalized.connectionId,
           participantId: existing.participantId,
@@ -78,7 +80,8 @@ export function createRoomStore(events: EventLog, options: { normalizeRoles?: bo
         online: true,
         lastSeenAt: now,
         connectionCount: 1,
-        profileRole: normalized.profileRole
+        profileRole: normalized.profileRole,
+        delegateApprover: normalized.delegateApprover
       };
       room.members.push(member);
       upsertConnection(room, {
@@ -256,6 +259,20 @@ export function createRoomStore(events: EventLog, options: { normalizeRoles?: bo
       member.profileRole = profileRole;
       return member;
     },
+    updateMemberDelegate(roomId: string, memberId: string, enabled: boolean) {
+      const member = findMember(rooms, roomId, memberId);
+      member.delegateApprover = enabled;
+      return member;
+    },
+    removeMember(roomId: string, memberId: string) {
+      const room = findRoom(rooms, roomId);
+      const member = room.members.find((candidate) => candidate.id === memberId);
+      if (!member) return;
+      room.members = room.members.filter((candidate) => candidate.id !== memberId);
+      room.connections = room.connections.filter((connection) => connection.participantId !== member.participantId);
+      member.online = false;
+      member.connectionCount = 0;
+    },
     listRooms() {
       return [...rooms.values()];
     }
@@ -268,6 +285,7 @@ type NormalizedJoinInput = Required<Pick<JoinRoomInput, "name">> & {
   participantId: string;
   connectionId: string;
   profileRole?: string;
+  delegateApprover?: boolean;
 };
 
 function normalizeJoinInput(input: JoinRoomInput, normalizeRoles: boolean): NormalizedJoinInput {
@@ -277,7 +295,8 @@ function normalizeJoinInput(input: JoinRoomInput, normalizeRoles: boolean): Norm
     name: input.name,
     participantId,
     connectionId: input.connectionId ?? participantId,
-    profileRole: normalizeRoles ? normalizeStoredRole(input.profileRole) || undefined : input.profileRole?.trim() || undefined
+    profileRole: normalizeRoles ? normalizeStoredRole(input.profileRole) || undefined : input.profileRole?.trim() || undefined,
+    delegateApprover: input.delegateApprover
   };
 }
 

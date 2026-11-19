@@ -55,8 +55,10 @@ export function registerCollaborationRoutes(
         participantId: member.memberId,
         name: member.displayName,
         profileRole: member.role || undefined,
+        delegateApprover: member.delegateApprover,
         connectionId: req.body?.connectionId
       });
+      runtime.guard.routingChanged();
       res.json({ member: roomMember, participant });
     } catch (error) { next(error); }
   });
@@ -74,6 +76,7 @@ export function registerCollaborationRoutes(
       runtime.rooms.markConnectionOffline(runtime.room.id, req.params.connectionId);
       const member = runtime.rooms.getMember(runtime.room.id, identity.memberId);
       if (member && !member.online) runtime.guard.memberOffline(identity.memberId);
+      runtime.guard.routingChanged();
       runtime.rooms.cleanupStaleMembers(runtime.room.id);
       res.json({ ok: true });
     } catch (error) { next(error); }
@@ -174,6 +177,28 @@ export function registerCollaborationRoutes(
     if (runtime.rooms.getMember(runtime.room.id, memberId)) runtime.updateMemberRole(memberId, role || undefined);
   }
 
+  app.patch("/api/projects/:projectId/members/:memberId/delegate-approver", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      const enabled = req.body?.enabled;
+      if (typeof enabled !== "boolean") { res.status(400).json({ error: "enabled must be a boolean" }); return; }
+      const member = await members.setDelegateApprover(req.params.projectId, identity.memberId, req.params.memberId, enabled);
+      runtimeManager.get(req.params.projectId).updateMemberDelegate(member.memberId, enabled);
+      res.json({ member });
+    } catch (error) { sendRoleError(res, error) || next(error); }
+  });
+
+  app.delete("/api/projects/:projectId/members/:memberId", async (req, res, next) => {
+    try {
+      const identity = requireIdentity(req, res);
+      if (!identity) return;
+      await members.removeMember(req.params.projectId, identity.memberId, req.params.memberId);
+      runtimeManager.get(req.params.projectId).removeMember(req.params.memberId);
+      res.json({ removed: true });
+    } catch (error) { sendRoleError(res, error) || next(error); }
+  });
+
   function sendRoleError(res: Response, error: unknown) {
     if (!(error instanceof RoleChangeError)) return false;
     res.status(error.status).json({ error: error.message });
@@ -185,9 +210,7 @@ export function registerCollaborationRoutes(
       const identity = requireIdentity(req, res);
       if (!identity) return;
       const runtime = runtimeManager.get(req.params.projectId);
-      const member = await members.getMember(req.params.projectId, identity.memberId);
-      const isOwner = roleLevel(member?.role) === "owner";
-      res.json({ approvals: runtime.guard.pending().filter((approval) => approval.approverIds.includes(identity.memberId) || (approval.decision.approvers === "owners" && isOwner)) });
+      res.json({ approvals: await runtime.guard.pendingFor(identity.memberId) });
     } catch (error) { next(error); }
   });
 

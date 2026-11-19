@@ -49,6 +49,14 @@ export async function updateMyRole(projectId: string, role: string) {
   });
 }
 
+export async function setDelegateApprover(projectId: string, memberId: string, enabled: boolean) {
+  return request(`${projectPath(projectId)}/members/${encodeURIComponent(memberId)}/delegate-approver`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled })
+  });
+}
+
 export async function updateMemberRole(projectId: string, memberId: string, role: string) {
   return request<{ member: { role: string } }>(`${projectPath(projectId)}/members/${encodeURIComponent(memberId)}/role`, {
     method: "PATCH",

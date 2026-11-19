@@ -11,6 +11,7 @@ export interface MemberRecord {
   projectId: string;
   displayName: string;
   role: string;
+  delegateApprover?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,12 +63,13 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
     const legacy = stored === undefined
       ? await readJsonFile<{ version: 1; participants: Array<{ id: string; displayName: string; profileRole?: string; createdAt: string; updatedAt: string }> }>(path.join(projectDataPath(project), "participants.json"))
       : undefined;
-    const records = stored?.members ?? legacy?.participants.map((member) => ({
+    const records: MemberRecord[] = stored?.members ?? legacy?.participants.map((member) => ({
       memberId: member.id, projectId, displayName: member.displayName, role: member.profileRole ?? "", createdAt: member.createdAt, updatedAt: member.updatedAt
     })) ?? [];
     const file: MemberFile = { version: 1, members: records.map((member) => ({
       memberId: member.memberId, projectId: member.projectId, displayName: member.displayName,
-      role: normalizeRole(member.role), createdAt: member.createdAt, updatedAt: member.updatedAt ?? member.createdAt
+      role: normalizeRole(member.role), createdAt: member.createdAt, updatedAt: member.updatedAt ?? member.createdAt,
+      ...(member.delegateApprover === true ? { delegateApprover: true } : {})
     })) };
     if (file.members.some((member) => !member.memberId || member.projectId !== projectId || typeof member.displayName !== "string" || typeof member.role !== "string")) throw new Error("Invalid member record");
     if (legacy || (stored && JSON.stringify(stored) !== JSON.stringify(file))) await save(projectId, file);
@@ -129,6 +131,16 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
     onMembershipChanged(listener: (projectId: string, memberId: string) => void) {
       membershipListeners.add(listener);
       return () => membershipListeners.delete(listener);
+    },
+    async setDelegateApprover(projectId: string, actorId: string, targetId: string, enabled: boolean) {
+      return enqueue(async () => {
+        const file = await load(projectId);
+        checkGrantRole(file.members, actorId, targetId);
+        const index = file.members.findIndex((member) => member.memberId === targetId);
+        const member = { ...file.members[index]!, delegateApprover: enabled || undefined, updatedAt: new Date().toISOString() };
+        await updateMember(file, index, member);
+        return member;
+      });
     },
     async removeMember(projectId: string, actorId: string, targetId: string) {
       return enqueue(async () => {

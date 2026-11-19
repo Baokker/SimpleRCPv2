@@ -44,11 +44,58 @@ const CAPABILITY_TEXT: Record<string, string> = {
   read: "读文件"
 };
 
+const EN_RULE_TEXT: Record<string, string> = {
+  "hard.control-character": "Command contains control characters",
+  "hard.cwd": "Directory changes are blocked in the shared terminal",
+  "hard.metadata": "Platform project data is protected",
+  "hard.outside": "Request targets a path outside the project",
+  "hard.protected": "Request targets a protected file or secret",
+  "hard.dynamic": "Dynamic command syntax requires human review",
+  "hard.git-context": "Git state changes require human review",
+  "hard.interactive-control": "Interactive terminal control is required",
+  "hard.nonowner.irreversible": "Irreversible operations require owner approval",
+  "hard.owner.irreversible-external": "Irreversible operations affecting external systems require approval",
+  "hard.owner.git-clean": "git clean would remove untracked files",
+  "hard.legacy-dangerous": "Command is classified as dangerous",
+  "classify.unknown": "Command is not recognized and requires review",
+  "agent.default": "This Agent operation requires approval",
+  "agent.unknown-tool": "Agent used an unrecognized tool",
+  "agent.initiator-offline": "The Agent run initiator is offline",
+  "agent.run-cancelled": "Agent run was cancelled",
+  "guard.run-cancelled": "Agent run was cancelled",
+  "native.platform-ask": "Agent requests approval for this operation",
+  "approval.remembered": "A matching request was approved recently",
+  "owner.self-command": "Owner's own terminal command"
+};
+
+const EN_LEVEL_TEXT: Record<string, string> = { viewer: "Viewer", contributor: "Contributor", maintainer: "Maintainer", owner: "Owner" };
+const EN_CAPABILITY_TEXT: Record<string, string> = {
+  privilege: "privilege escalation", network: "network access", delete: "file deletion", process: "process control",
+  install: "dependency installation", history: "project history changes", write: "file writes", exec: "command execution",
+  exec_uninspectable: "execution of uninspectable code", read: "file reads"
+};
+
+export const englishLocale = typeof import.meta.env !== "undefined" && import.meta.env.VITE_SIMPLERCP_LOCALE === "en";
+
 export function guardLevelText(level: string) {
+  if (englishLocale) return EN_LEVEL_TEXT[level] ?? level;
   return LEVEL_TEXT[level] ?? level;
 }
 
 export function guardRuleText(rule: string, denied = false): string {
+  if (englishLocale) {
+    const inner = rule.replace(/^script\./, "");
+    if (EN_RULE_TEXT[inner]) return EN_RULE_TEXT[inner];
+    const roleRule = inner.match(/^role\.(viewer|contributor|maintainer)\.(.+)$/);
+    if (roleRule) {
+      const capability = EN_CAPABILITY_TEXT[roleRule[2]!] ?? roleRule[2]!;
+      return `${EN_LEVEL_TEXT[roleRule[1]!]} ${denied ? "cannot perform" : "requires approval for"} ${capability}`;
+    }
+    const writer = inner.match(/^writer\.(.+)$/);
+    if (writer) return `File was last edited by a ${EN_LEVEL_TEXT[writer[1]!] ?? writer[1]}`;
+    if (inner === "dynamic-code") return "Script contains dynamically generated code";
+    return "Additional guard rule";
+  }
   const inner = rule.replace(/^script\./, "");
   const prefix = inner === rule ? "" : "package.json 里的脚本";
   if (RULE_TEXT[inner]) return prefix ? `${prefix}${RULE_TEXT[inner]}` : RULE_TEXT[inner];
@@ -70,16 +117,25 @@ export function guardReasonText(rules: string[], denied = false) {
 }
 
 export function guardRiskText(risk: string) {
+  if (englishLocale) return risk === "high" ? "high" : risk === "low" ? "low" : risk === "medium" ? "medium" : risk;
   return risk === "high" ? "高" : risk === "low" ? "低" : risk === "medium" ? "中" : risk;
 }
 
 export function guardRecommendationText(risk: string) {
+  if (englishLocale) return risk === "high" ? "Recommend rejection" : risk === "low" ? "Recommend approval" : "Recommend human review";
   if (risk === "high") return "建议拒绝";
   if (risk === "low") return "建议批准";
   return "建议人工判断";
 }
 
 export function guardActionWord(action: string | undefined) {
+  if (englishLocale) {
+    if (action === "deny") return "Blocked";
+    if (action === "allow_snapshot") return "Snapshotted and executed";
+    if (action === "ask") return "Submitted for approval";
+    if (action === "allow") return "Allowed";
+    return "Checked";
+  }
   if (action === "deny") return "已拦下";
   if (action === "allow_snapshot") return "已先保存快照再执行";
   if (action === "ask") return "已提交审批";
@@ -89,6 +145,17 @@ export function guardActionWord(action: string | undefined) {
 
 // Server reasons are either rule ids joined by ", " or fixed sentences; both become Chinese here.
 export function guardServerReasonText(reason: string, denied = false) {
+  if (englishLocale) {
+    const fixed: Record<string, string> = {
+      "Approval timed out": "Approval timed out", "Request was rejected": "Request was rejected",
+      "Request was allowed": "Request was allowed", "Another command from this member is waiting": "Another command from this member is waiting",
+      "Interactive control is required": "Interactive terminal control is required", "No approver is online": "No eligible approver is online"
+    };
+    if (fixed[reason]) return fixed[reason]!;
+    const parts = reason.split(", ");
+    if (parts.every((part) => /^[a-z][a-z-]*(?:\.[a-z0-9-]+)+$/.test(part))) return guardReasonText(parts, denied);
+    return reason;
+  }
   const fixed: Record<string, string> = {
     "Approval timed out": "审批超时",
     "Request was rejected": "请求被拒绝",

@@ -181,12 +181,11 @@ describe("Agent Guard fake runtime permissions", () => {
       headers: headers(ownerId),
       body: JSON.stringify({ approve: true })
     });
-    expect(approvalResponse.status).toBe(200);
-    const origin = running.origin;
-    await vi.waitFor(async () => {
-      const response = await fetch(`${origin}/api/projects/demo/agent/runs/${run.id}`, { headers: headers(memberId) });
-      expect((await response.json() as { run: { status: string } }).run.status).toBe("failed");
-    }, { timeout: 5_000 });
+    expect(approvalResponse.status).toBe(403);
+    const pending = await fetch(`${running.origin}/api/projects/demo/guard/approvals`, { headers: headers(ownerId) }).then((response) => response.json()) as { approvals: { id: string }[] };
+    expect(pending.approvals.some((candidate) => candidate.id === approval.id)).toBe(false);
+    const cancelResponse = await fetch(`${running.origin}/api/projects/demo/agent/runs/${run.id}/cancel`, { method: "POST", headers: headers(memberId), body: JSON.stringify({ memberId }) });
+    expect(cancelResponse.status).toBe(200);
   }, 30_000);
 
   it("lets an owner who joins after enqueue approve the pending request", async () => {

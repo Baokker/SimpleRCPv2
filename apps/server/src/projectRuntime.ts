@@ -23,6 +23,7 @@ export function createProjectRuntime(
     guardLlmMode?: GuardLlmMode;
     guardApprovalTimeoutMs?: number;
     guardApprovalMemoryTtlMs?: number;
+    guardAgentProvenance?: boolean;
     guardLlm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
     otherWorkspaceRoots?: (currentProjectId: string) => string[];
   } = {}
@@ -68,6 +69,7 @@ export function createProjectRuntime(
     llmMode: options.guardLlmMode,
     approvalTimeoutMs: options.guardApprovalTimeoutMs,
     approvalMemoryTtlMs: options.guardApprovalMemoryTtlMs,
+    agentProvenance: options.guardAgentProvenance,
     llm: options.guardLlm,
     otherWorkspaceRoots: options.otherWorkspaceRoots
   });
@@ -189,6 +191,20 @@ export function createProjectRuntime(
       const member = rooms.updateMemberRole(room.id, memberId, profileRole);
       for (const listener of memberRoleListeners) listener(member);
       return member;
+    },
+    updateMemberDelegate(memberId: string, enabled: boolean) {
+      if (rooms.getMember(room.id, memberId)) {
+        const member = rooms.updateMemberDelegate(room.id, memberId, enabled);
+        for (const listener of memberRoleListeners) listener(member);
+      }
+      guard.routingChanged();
+    },
+    removeMember(memberId: string) {
+      const member = rooms.getMember(room.id, memberId);
+      if (!member) return;
+      rooms.removeMember(room.id, memberId);
+      for (const listener of memberRoleListeners) listener(member);
+      guard.routingChanged();
     },
     onMemberRoleChanged(listener: (member: import("./types.js").RoomMember) => void) {
       memberRoleListeners.add(listener);

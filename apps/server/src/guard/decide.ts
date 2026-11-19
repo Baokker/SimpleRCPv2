@@ -55,8 +55,7 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
     const agentCap = characterization.segments.some((segment) => segment.reversibility === "irreversible") ||
       Boolean(request.command && /\|/.test(request.command) && /\b(curl|wget|ssh|scp)\b/i.test(request.command));
     if (agentCap) {
-      const plainPipeOnlyApproval = characterization.plainDownloadToShell && [...matchedRules].every((rule) => rule === "hard.dynamic" || rule === "hard.outside" || rule === "hard.nonowner.irreversible" || rule === "hard.owner.irreversible-external");
-      agentOnlyAsk = humanAction !== "ask" || plainPipeOnlyApproval;
+      agentOnlyAsk = humanAction === "allow" || humanAction === "allow_snapshot";
       action = stricter(action, "ask");
       matchedRules.add("agent.default");
     }
@@ -81,5 +80,16 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
     unknown: characterization.unknown,
     autoEligible,
     approvers
+  };
+}
+
+export function applyAgentProvenance(decision: GuardDecision, sourceDecision: GuardDecision, sourceLevel: Level): GuardDecision {
+  if (!(sourceDecision.action === "ask" || sourceDecision.action === "deny") || decision.action === "deny") return decision;
+  return {
+    ...decision,
+    action: stricter(decision.action, "ask"),
+    approvers: decision.action === "ask" && decision.approvers === "owners" ? "owners" : "provenance",
+    autoEligible: false,
+    matchedRules: [...decision.matchedRules, `agent.provenance.${sourceLevel}`]
   };
 }
