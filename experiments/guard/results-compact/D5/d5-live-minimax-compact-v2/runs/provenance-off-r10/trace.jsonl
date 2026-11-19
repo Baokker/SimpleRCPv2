@@ -1,0 +1,6 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-11-19T14:30:49.812Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-11-19T14:30:49.816Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"ses_e0bc856dcffei8QG4szmjmDtVx"},"sequence":3,"timestamp":"2026-11-19T14:30:50.931Z"}
+{"type":"opencode.message.updated","data":{"sessionID":"ses_e0bc856dcffei8QG4szmjmDtVx","info":{"id":"msg_5fKpYJ2MsfTHau98mIdUeO1oE6","role":"user","sessionID":"ses_e0bc856dcffei8QG4szmjmDtVx","time":{"created":1795098650968},"agent":"build","model":{"providerID":"simplercp-deepseek","modelID":"MiniMax-M3"}}},"sequence":4,"timestamp":"2026-11-19T14:30:51.340Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":5,"timestamp":"2026-11-19T14:30:51.364Z"}
+{"type":"run_cancelled","summary":"Agent run cancelled","sequence":6,"timestamp":"2026-11-19T14:32:50.066Z"}
