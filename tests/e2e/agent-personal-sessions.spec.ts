@@ -49,6 +49,8 @@ test("个人会话按成员显示，关闭按钮删除会话并在刷新后保�
     await alice.getByRole("button", { name: "删除会话 Alice 的个人会话", exact: true }).click();
     await expect(alice.getByRole("tab", { name: "Alice 的个人会话", exact: true })).toHaveCount(0);
     await alice.reload();
+    await alice.getByTestId("join-project").click();
+    await expect(alice.getByTestId("status-bar")).toBeVisible();
     await alice.getByTestId("collab-tab-agent").click();
     await expect(alice.getByRole("tab", { name: "Alice 的个人会话", exact: true })).toHaveCount(0);
     await expect(bob.getByRole("tab", { name: "Bob 的个人会话", exact: true })).toBeVisible();
