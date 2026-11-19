@@ -45,7 +45,7 @@ export function splitShellCommands(command: string) {
   return parts.length > 1 ? parts : [];
 }
 
-function stripHereDocument(command: string) {
+export function stripHereDocument(command: string) {
   let normalized = command;
   const markerPattern = /<<(-?)[ \t]*(['"]?)([A-Za-z_][A-Za-z0-9_-]*)\2[^\n]*(?:\n|$)/g;
   let match: RegExpExecArray | null;

