@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { createSnapshotStore } from "../../../apps/server/src/guard/snapshots.js";
+import { assertFrozenServer, resultsRoot, runtimeRoot, writeRun } from "../lib/common.js";
 
 // B6: restore a snapshot after another member edited the same files.
 // The snapshot is taken before the restored actor's command, as the guard does for snapshot-backed requests.
@@ -28,29 +28,39 @@ const cases: Case[] = [
 ];
 
 const results = [];
+assertFrozenServer();
+await fs.mkdir(runtimeRoot, { recursive: true });
 for (const item of cases) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "x9-restore-"));
+  const root = await fs.mkdtemp(path.join(runtimeRoot, "x9-restore-"));
   await write(root, base);
   const store = createSnapshotStore(path.join(root, ".guard-snapshots"), root);
   const snapshot = await store.create({ memberId: "alice", command: "sed -i 's/= 3;/= 30;/' src/config.ts", paths: ["src"] });
   await write(root, replace(base, 3, restoredLine));
+  await store.seal(snapshot.id);
   const otherLine = await item.act(root);
-  await store.restore(snapshot.id);
+  const beforeRestore = await read(root);
+  const restore = await store.restore(snapshot.id);
   const restored = await read(root);
   const renamed = await read(root, "src/settings.ts");
   const extra = await read(root, "src/extra.ts");
   const otherKept = item.id === "renamed" ? renamed !== undefined && restored === undefined
     : item.id === "new-file" ? extra !== undefined
     : Boolean(otherLine && restored?.includes(otherLine));
+  const withdrawnUndone = restored !== undefined && !restored.includes(restoredLine);
+  const handedToPerson = !restore.restored && restore.conflicts.length > 0 && restored === beforeRestore;
   results.push({
     id: item.id, note: item.note,
-    withdrawnUndone: restored !== undefined && !restored.includes(restoredLine),
-    otherKept, handedToPerson: false,
+    withdrawnUndone,
+    otherKept, handedToPerson, conflicts: restore.conflicts,
     duplicate: item.id === "renamed" && restored !== undefined && renamed !== undefined,
-    correct: otherKept && restored !== undefined && !restored.includes(restoredLine)
+    correct: otherKept && withdrawnUndone || handedToPerson
   });
   await fs.rm(root, { recursive: true, force: true });
 }
-const out = path.join(import.meta.dirname, "results.json");
-await fs.writeFile(out, JSON.stringify({ base: "10-line TypeScript module", results }, null, 2) + "\n");
-console.table(results.map(({ note, ...rest }) => rest));
+await writeRun(path.join(resultsRoot, "X9", "x9-restore-compact-v2"), results, {
+  cases: results.length,
+  correct: results.filter((row) => row.correct).length,
+    restored: results.filter((row) => row.correct && row.withdrawnUndone && !row.handedToPerson).length,
+  handedToPerson: results.filter((row) => row.handedToPerson).length,
+  results
+});

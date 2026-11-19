@@ -127,7 +127,7 @@ async function main() {
       }
     }
   }
-  const runDirectory = path.join(resultsRoot, "X1W", "x1w-compact-v1");
+  const runDirectory = path.join(resultsRoot, "X1W", "x1w-compact-v2");
   const summary = summarize(rows);
   await writeRun(runDirectory, rows, summary, { experiment: "X1W", conditions: ["W1", "W2"], config: path.relative(projectRoot, configPath), startedAt, endedAt: new Date().toISOString() });
   process.stdout.write(`${runDirectory}\n${JSON.stringify(summary, null, 2)}\n`);

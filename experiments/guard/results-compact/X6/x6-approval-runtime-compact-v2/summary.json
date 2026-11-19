@@ -1,0 +1,30 @@
+{
+  "cases": 500,
+  "failed": 0,
+  "staleOrDuplicateResolutionsAccepted": 0,
+  "leftoverApprovals": 0,
+  "revocations": [
+    {
+      "event": "demotion",
+      "approved": false,
+      "pendingOutcome": "timeout",
+      "nextAction": "deny",
+      "nextApproved": false
+    },
+    {
+      "event": "offline",
+      "approved": false,
+      "pendingOutcome": "timeout",
+      "nextAction": "deny",
+      "nextApproved": false
+    },
+    {
+      "event": "team-interrupted",
+      "approved": false,
+      "pendingOutcome": "rejected",
+      "nextAction": "deny",
+      "nextApproved": false
+    }
+  ],
+  "scope": "GuardService approval lifecycle. No OpenCode permission reply transport or event-stream fault injection."
+}

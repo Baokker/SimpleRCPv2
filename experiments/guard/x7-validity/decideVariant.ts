@@ -2,7 +2,7 @@
 // ablating one risk dimension or adding a stricter execution profile.
 // With all switches off it must agree with the product decide() on every
 // record; run-ablation.ts checks this before reporting any variant.
-import { characterize } from "../../../apps/server/src/guard/characterize.js";
+import { changesShellDirectory, characterize } from "../../../apps/server/src/guard/characterize.js";
 import { roleLevel } from "../../../apps/server/src/guard/roles.js";
 import { segmentAction, stricter } from "../../../apps/server/src/guard/rules.js";
 import type { GuardContext, GuardDecision, GuardRequest, GuardSegment, Level } from "../../../apps/server/src/guard/types.js";
@@ -41,21 +41,20 @@ function transform(segment: GuardSegment, options: VariantOptions): GuardSegment
 export function decideVariant(request: GuardRequest, context: GuardContext, options: VariantOptions = {}, freshWriteExecuted = false): GuardDecision {
   const level: Level = roleLevel(context.memberLevel);
   const protectedPaths = context.protectedPaths ?? [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"];
-  const raw = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
+  const raw = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots, context.workspaceRoot);
   const characterization = { ...raw, segments: raw.segments.map((segment) => transform(segment, options)) };
   let action: GuardDecision["action"] = "allow";
   const matchedRules = new Set<string>();
   const command = request.command ?? "";
   const controls = /[\u0000-\u001f\u007f-\u009f]/.test(command);
-  const changesDirectory = /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(command.trim());
   const features = (segments: GuardSegment[]) => JSON.stringify(segments.map(({ capabilities, zone, reversibility }) => [capabilities, zone, reversibility]));
-  const sameTerminalFeatures = request.source === "terminal" || Boolean(request.agentRunId && (controls || changesDirectory) &&
-    features(raw.segments) === features(characterize({ ...request, source: "terminal" }, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots).segments));
+  const sameTerminalFeatures = request.source === "terminal" || Boolean(request.agentRunId && controls &&
+    features(raw.segments) === features(characterize({ ...request, source: "terminal" }, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots, context.workspaceRoot).segments));
   if (request.kind === "command" && (sameTerminalFeatures && controls || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(command))) {
     action = "deny";
     matchedRules.add("hard.control-character");
   }
-  if (sameTerminalFeatures && request.kind === "command" && changesDirectory) {
+  if (request.source === "terminal" && request.kind === "command" && changesShellDirectory(command)) {
     action = "deny";
     matchedRules.add("hard.cwd");
   }

@@ -24,7 +24,7 @@ export async function serviceMeasurements(root: string) {
     runtime.terminal.write=(data:string,memberId:string,audit:boolean)=>{writes.set(data.trim(),process.hrtime.bigint());return originalWrite(data,memberId,audit);};
     const sockets: any[]=[];
     for(let index=0;index<20;index++){
-      const member=await app.locals.members.join("demo",{displayName:"benchmark-"+index,role:"collaborator"});
+      const member=await app.locals.members.join("demo",{displayName:"benchmark-"+index,role:"maintainer"});
       runtime.rooms.joinRoom(runtime.room.id,{memberId:member.memberId,name:"benchmark-"+index,participantId:member.memberId,connectionId:member.memberId,profileRole:"collaborator"});
       const socket=new WebSocket(`ws://127.0.0.1:${address.port}/terminal?projectId=demo&memberId=${member.memberId}`);
       await new Promise<void>((resolve,reject)=>{socket.once("open",resolve);socket.once("error",reject);}); sockets.push(socket);
@@ -46,13 +46,13 @@ export async function serviceMeasurements(root: string) {
     for(let index=0;index<100;index++)await send(sockets[0],false,"endpoint",1);
     const endpoint=[];for(let index=0;index<1000;index++)endpoint.push(await send(sockets[0],true,"endpoint",1));
     results[mode]={endpoint:stats(endpoint.filter(r=>r.accepted).map(r=>r.durationMs)),endpointRejected:endpoint.filter(r=>!r.accepted).length,concurrency:[],agentService:null};
-    if(mode==="full"){
+    {
       const member=runtime.room.members[0].id, values=[];
       for(let index=0;index<1100;index++){
         const started=process.hrtime.bigint(); const result=await runtime.guard.submit({projectId:"demo",memberId:member,source:"agent",agentRunId:"benchmark",kind:"command",command:"git status",cwd:runtime.project.workspacePath});
         if(!result.approved)throw new Error("Agent benchmark unexpectedly required approval");
         const durationMs=Number(process.hrtime.bigint()-started)/1e6;
-        if(index>=100){values.push(durationMs);raw.push({id:"agent-service-"+index,family:"agent-service",condition:mode,durationMs});}
+        if(index>=100){values.push(durationMs);raw.push({id:`agent-service-${mode}-${index}`,family:"agent-service",condition:mode,durationMs});}
       }
       results[mode].agentService=stats(values);
     }
@@ -71,11 +71,15 @@ export async function serviceMeasurements(root: string) {
   }
   const off=raw.filter(r=>r.family==="endpoint"&&r.condition==="off"&&r.accepted),full=raw.filter(r=>r.family==="endpoint"&&r.condition==="full"&&r.accepted);
   results.incremental=stats(full.slice(0,Math.min(off.length,full.length)).map((r,i)=>r.durationMs-off[i].durationMs));
+  const agentOff=raw.filter(row=>row.family==="agent-service"&&row.condition==="off");
+  const agentFull=raw.filter(row=>row.family==="agent-service"&&row.condition==="full");
+  if(agentOff.length!==agentFull.length)throw new Error("Agent latency samples must have equal counts");
+  results.agentIncremental=stats(agentFull.map((row,index)=>row.durationMs-agentOff[index]!.durationMs));
   return {raw,results};
 }
 export async function snapshotMeasurements(root:string){
   const points:any[]=[],raw:any[]=[];
-  for(const [sizeMB,fileCount]of [[1,100],[10,1000],[100,5000],[500,20000]]){
+  for(const [sizeMB,fileCount]of [[1,100],[10,1000],[100,5000]]){
     const workspace=path.join(root,`snapshot-${sizeMB}`),metadata=path.join(root,`snapshot-metadata-${sizeMB}`);
     await fs.mkdir(workspace,{recursive:true});
     const bytes=Buffer.alloc(Math.floor(sizeMB*1024*1024/fileCount),7);

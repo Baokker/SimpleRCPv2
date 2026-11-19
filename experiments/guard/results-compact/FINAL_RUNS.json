@@ -1,21 +1,22 @@
 {
-  "testedRef": "guard-compact-v1",
-  "status": "stopped_after_compositionality_failure",
+  "testedRef": "guard-compact-v2",
+  "status": "partial_execution_coverage",
+  "supersededIndex": "superseded-v1/FINAL_RUNS.json",
   "runs": {
-    "X1": "X1/x1-compact-v1",
-    "X1W": "X1W/x1w-compact-v1",
+    "X1": "X1/x1-compact-v2",
+    "X1W": "X1W/x1w-compact-v2",
     "X2a": null,
     "X2b": null,
-    "X3": null,
-    "X4": null,
-    "X5": null,
-    "X6_properties": "X6/x6-properties-compact-v1",
-    "X6_runtime": null,
-    "X7": "X7/x7a-compact-v1",
-    "X8": null,
-    "X9": null,
-    "D4": null,
-    "D5": null,
-    "Property1": "property1-path-consistency.json"
+    "X3": "X3/x3-approval-burden-compact-v2",
+    "X4": "X4/x4-minimax-compact-v2",
+    "X5": "X5/x5-performance-compact-v2",
+    "X6_properties": "X6/x6-properties-compact-v2",
+    "X6_runtime": "X6/x6-approval-runtime-compact-v2",
+    "X7": "X7/x7a-compact-v2",
+    "X8": "X8/x8-script-inspection-compact-v2",
+    "X9": "X9/x9-restore-compact-v2",
+    "D4": "D4/d4-member-binding-compact-v2",
+    "D5": "D5/d5-provenance-compact-v2",
+    "Property1": "property1-path-consistency-v2.json"
   }
 }

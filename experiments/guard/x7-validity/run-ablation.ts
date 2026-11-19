@@ -60,7 +60,7 @@ async function main() {
     };
   });
 
-  const runDirectory = path.join(resultsRoot, "X7", "x7a-compact-v1");
+  const runDirectory = path.join(resultsRoot, "X7", "x7a-compact-v2");
   await writeRun(runDirectory, rows, { sanityRecords: sanity.length, sanityMismatches: 0, summary }, { experiment: "X7" });
   const lines = [
     "# X7a 意图口径重算与三维消融", "",

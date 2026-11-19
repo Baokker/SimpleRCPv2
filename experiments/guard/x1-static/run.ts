@@ -99,7 +99,7 @@ async function main() {
       }
     }
   }
-  const runDirectory = path.join(resultsRoot, "X1", "x1-compact-v1");
+  const runDirectory = path.join(resultsRoot, "X1", "x1-compact-v2");
   const legacy = (await fs.readFile(path.join(projectRoot, "experiments/guard/datasets/D1.jsonl"), "utf8")).split("\n").filter(Boolean).map(line => JSON.parse(line));
   const summary = resultSummary(rows, legacy);
   await writeRun(runDirectory, rows, summary, { experiment: "X1", conditions: ["B0", "B1", "B2", "B3", "F"], datasets: { D1: d1.length, D2: d2.length, D3: d3.length, D4: d4.length }, startedAt, endedAt: new Date().toISOString() });

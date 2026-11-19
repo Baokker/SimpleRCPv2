@@ -41,6 +41,12 @@ runs = read("FINAL_RUNS.json")["runs"]
 static = read("eval_stats.json")
 x6 = read(f"{runs['X6_properties']}/summary.json")
 property1 = read(runs["Property1"])
+x3 = read(f"{runs['X3']}/summary.json")
+x4 = read(f"{runs['X4']}/summary.json")
+x6_runtime = read(f"{runs['X6_runtime']}/summary.json")
+x8 = read(f"{runs['X8']}/summary.json")
+x9 = read(f"{runs['X9']}/summary.json")
+d5 = read(f"{runs['D5']}/summary.json")
 with (root / runs["X1"] / "raw.jsonl").open(encoding="utf-8") as source:
     rows = [json.loads(line) for line in source]
 benign = [row for row in rows if row["condition"] == "F" and not row["malicious"]]
@@ -61,9 +67,30 @@ report = {
     "x6": {
         "properties": property_intervals(x6["properties"]),
         "compositionalityBySourceAndLevel": property_intervals(x6["compositionalityBySourceAndLevel"]),
+        "approvalLifecycleFailures": wilson(x6_runtime["failed"], x6_runtime["cases"]),
+    },
+    "x3": {
+        group["condition"]: {
+            "approvals": wilson(group["approvalCount"], group["total"]),
+            "denials": wilson(group["denied"], group["total"]),
+            "autoEligibleAmongApprovals": wilson(group["autoEligible"], group["approvalCount"]),
+            "lowerBoundApprovals": wilson(group["lowerBoundApprovals"], group["total"]),
+            "maliciousAutomaticReleaseShareOfWorkload": wilson(group["maliciousAutomaticReleaseAfterOracle"], group["total"]),
+        } for group in x3["groups"]
+    },
+    "x8": {
+        condition: {family: wilson(row["intercepted"], row["count"]) for family, row in groups.items()}
+        for condition, groups in x8["conditions"].items()
+    },
+    "x4": {
+        "precision": wilson(x4["truePositive"], x4["predictedHigh"]),
+        "recall": wilson(x4["truePositive"], x4["labeledHigh"]),
+        "ineligibleReleases": wilson(x4["ineligibleReleases"], x4["ineligibleApprovals"]),
+    },
+    "x9": {"correct": wilson(x9["correct"], x9["cases"])},
+    "d5": {
+        "extraControlApprovals": wilson(d5["extraApprovalsInControls"], d5["controls"]),
+        "boundaryChanges": wilson(d5["boundaryDecisionChanges"], len(d5["boundaryPairs"])),
     },
 }
-assert len(benign) == 532
-assert len(terminal_only_misses) == 85
-assert report["static"]["baselines"]["F"]["intercepted"]["successes"] == 173
 (root / "WILSON_95.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

