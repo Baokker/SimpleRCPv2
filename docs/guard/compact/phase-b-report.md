@@ -44,7 +44,7 @@ Paper sections IV-A and IV-D define the routing function and approval lifecycle.
 
 The changes cover `apps/server/src/auth/identity.ts`, `apps/server/src/rooms.ts`, `apps/server/src/projectRuntime.ts`, `apps/server/src/projectRuntimeManager.ts`, `apps/server/src/realtime.ts`, `apps/server/src/routes/collaborationRoutes.ts`, client member controls, and approval tests.
 
-Owner-selected delegates are stored with project membership. Owner authorization applies to delegate changes and member removal. Routing prefers other online owners, then online delegates whose level is above the requester. The server returns cards only to eligible members and recalculates eligibility at approval time. A ceiling-only request routes to its online human trigger. Ordinary requests require a different human approver. An empty route leaves the request pending until timeout. `SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS` defaults to 120,000 ms and Agent calls can use a shorter deadline within their run budget. The audit outcome is `timeout`.
+Owner-selected delegates are stored with project membership. Owner authorization applies to delegate changes and member removal. A ceiling-only request routes to its online human trigger. For ordinary requests, routing prefers online owners, including an online owner who triggered a personal or team Agent request. The delegate route requires an online human member other than the requester whose level is higher than the requester's. The server returns cards only to eligible members and recalculates eligibility at approval time. An empty route leaves the request pending until timeout. `SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS` defaults to 120,000 ms and Agent calls can use a shorter deadline within their run budget. The audit outcome is `timeout`.
 
 Tests cover owner and delegate routes, offline members, lower-level delegates, self-approval attempts, timeout, a delegate joining before timeout, a delegate level change while pending, trigger approval, and an agent identity attempting approval. The browser suite assigns a delegate through the member panel and verifies approval after the owner disconnects.
 
@@ -115,6 +115,26 @@ SIMPLERCP_LOCALE=en SIMPLERCP_CAPTURE_COMPACT=1 SIMPLERCP_GUARD_MODE=full \
 
 ## Verification
 
-- `pnpm build` succeeds.
-- `pnpm test` passes 237 server, 7 client, and 2 demo tests. The server configuration skips 9 integration tests.
-- `pnpm test:e2e` passes 28 tests and skips 9 tests under its default configuration. `pnpm test:collab` passes all 7 collaboration tests. The English capture runs separately and passes with live model review.
+- `pnpm build` builds all 3 workspace packages.
+- `pnpm test` passes 244 server, 7 client, and 2 demo tests. The server configuration skips 9 integration tests. The client and demo suites skip none.
+- `pnpm test:e2e` passes 28 tests and skips 9 tests under its default configuration. `pnpm test:collab` passes 7 tests and skips none. The separate English capture passes its single live-model test.
+
+## Phase B fixes
+
+### F1 Owner approval of Agent requests
+
+`apps/server/src/guard/service.ts` evaluates the human trigger route for ceiling-only requests and owner provenance requests first. The ordinary owner route includes every eligible online owner, including the trigger for personal and team Agent requests. When that route is empty, an online designated delegate must be a different human member and have a higher level than the requester. Empty routes resolve through the approval timeout. The server rechecks membership, level, and presence at approval time. The owner terminal self-command path still resolves before routing when its conditions apply. The audit records `owner` for an owner approving through the ordinary owner route and `trigger` for approval through the human trigger route.
+
+Seven cases in `apps/server/src/__tests__/memberIdentityApi.test.ts` pass for personal and team requests, timeout after the sole owner goes offline, either of two owners approving, contributor self-approval rejection, and owner demotion while pending. The personal and team cases also verify rejection of Agent identity approval and the audit role. `apps/client/tests/guardApproval.test.ts` confirms that an eligible owner sees the confirmation controls.
+
+### F2 Approval-memory terminal test
+
+`apps/server/src/__tests__/memberIdentityApi.test.ts` starts the demo runtime and its PTY with `/bin/sh` and places the directory containing `process.execPath` first on `PATH`. The zsh reproduction showed user startup output and a missing `result.txt`. The test waits for the shell prompt and checks the rule decision, approval reuse, snapshot ID, and workspace file contents. The isolated case passed three consecutive runs with `SHELL=/bin/zsh`.
+
+### F3 Screenshot member layout
+
+`apps/client/src/components/CollaborationPanel.tsx` renders direct permission levels once and moves the delegate control onto its own row. `apps/client/src/styles.css` styles the second row. `tests/e2e/compact-screenshots.spec.ts` checks Alice's single owner label and Bob's full name above the checkbox. The English live-model capture passed and regenerated both PNGs and both PDFs in `docs/guard/compact/screenshots/`. PDF text extraction confirmed the member labels, the two blocked commands and pending review in Bob's view, and the approval card in Alice's view.
+
+### F4 Property 1 report
+
+`apps/server/src/__tests__/compactPathConsistency.test.ts` classifies feature differences and compares the whole Agent command with the strictest terminal action across its nonblank lines. It reuses the compound-command and heredoc handling in `apps/server/src/guard/characterize.ts`. The test passed and regenerated `docs/guard/compact/path-consistency.json` with the B6 totals, rule counts, exclusions, and representative cases. The 1,358 less strict Agent actions in the multiline comparison and the zero violations among pairs with equal features are reported separately.
