@@ -45,14 +45,17 @@ export function decideVariant(request: GuardRequest, context: GuardContext, opti
   const characterization = { ...raw, segments: raw.segments.map((segment) => transform(segment, options)) };
   let action: GuardDecision["action"] = "allow";
   const matchedRules = new Set<string>();
-  const controlCharacterPattern = request.source === "terminal"
-    ? /[\u0000-\u001f\u007f-\u009f]/
-    : /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/;
-  if (request.kind === "command" && controlCharacterPattern.test(request.command ?? "")) {
+  const command = request.command ?? "";
+  const controls = /[\u0000-\u001f\u007f-\u009f]/.test(command);
+  const changesDirectory = /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(command.trim());
+  const features = (segments: GuardSegment[]) => JSON.stringify(segments.map(({ capabilities, zone, reversibility }) => [capabilities, zone, reversibility]));
+  const sameTerminalFeatures = request.source === "terminal" || Boolean(request.agentRunId && (controls || changesDirectory) &&
+    features(raw.segments) === features(characterize({ ...request, source: "terminal" }, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots).segments));
+  if (request.kind === "command" && (sameTerminalFeatures && controls || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(command))) {
     action = "deny";
     matchedRules.add("hard.control-character");
   }
-  if (request.source === "terminal" && request.kind === "command" && /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(request.command?.trim() ?? "")) {
+  if (sameTerminalFeatures && request.kind === "command" && changesDirectory) {
     action = "deny";
     matchedRules.add("hard.cwd");
   }
@@ -100,8 +103,7 @@ export function decideVariant(request: GuardRequest, context: GuardContext, opti
     const agentCap = characterization.segments.some((segment) => segment.reversibility === "irreversible") ||
       Boolean(request.command && /\|/.test(request.command) && /\b(curl|wget|ssh|scp)\b/i.test(request.command));
     if (agentCap) {
-      const plainPipeOnlyApproval = characterization.plainDownloadToShell && [...matchedRules].every((rule) => rule === "hard.dynamic" || rule === "hard.outside" || rule === "hard.nonowner.irreversible" || rule === "hard.owner.irreversible-external");
-      agentOnlyAsk = humanAction !== "ask" || plainPipeOnlyApproval;
+      agentOnlyAsk = humanAction === "allow" || humanAction === "allow_snapshot";
       action = stricter(action, "ask");
       matchedRules.add("agent.default");
     }

@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { actionMeetsExpected, ensureRuntimeDirectory, evaluate, loadDataset, makeRunId, projectRoot, toRequest, context, type DatasetRecord, type RawRow, writeRun } from "../lib/common.js";
+import { actionMeetsExpected, ensureRuntimeDirectory, evaluate, loadDataset, projectRoot, resultsRoot, toRequest, context, type DatasetRecord, type RawRow, writeRun } from "../lib/common.js";
 import { characterize } from "../../../apps/server/src/guard/characterize.js";
 import type { Action, Level } from "../../../apps/server/src/guard/types.js";
 
@@ -18,7 +18,7 @@ function simulate(condition: Condition, item: DatasetRecord): { action: Action; 
     return { action: external ? "ask" : "allow", rules: [external ? "opencode.default.external-directory-static" : "opencode.default.allow"], autoEligible: false, legacyRisk: "unknown" };
   }
   if (condition === "B2" && source === "agent") return { action: "allow", rules: ["baseline.human-only"], autoEligible: false, legacyRisk: "unknown" };
-  const level: Level = condition === "B3" && source === "agent" ? "collaborator" : item.actor.level;
+  const level: Level = condition === "B3" && source === "agent" ? "maintainer" : item.actor.level;
   const decision = evaluate(item, level, source);
   return { action: decision.action, rules: decision.matchedRules, autoEligible: decision.autoEligible, legacyRisk: decision.legacyRisk };
 }
@@ -99,7 +99,7 @@ async function main() {
       }
     }
   }
-  const runDirectory = path.join(projectRoot, "experiments/guard/results/X1", makeRunId("x1"));
+  const runDirectory = path.join(resultsRoot, "X1", "x1-compact-v1");
   const legacy = (await fs.readFile(path.join(projectRoot, "experiments/guard/datasets/D1.jsonl"), "utf8")).split("\n").filter(Boolean).map(line => JSON.parse(line));
   const summary = resultSummary(rows, legacy);
   await writeRun(runDirectory, rows, summary, { experiment: "X1", conditions: ["B0", "B1", "B2", "B3", "F"], datasets: { D1: d1.length, D2: d2.length, D3: d3.length, D4: d4.length }, startedAt, endedAt: new Date().toISOString() });

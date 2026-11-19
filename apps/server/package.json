@@ -8,7 +8,13 @@
     "dev:once": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "exp:compact:labels": "tsx ../../experiments/guard/lib/compact-labels.ts",
+    "exp:compact:environment": "tsx ../../experiments/guard/lib/compact-environment.ts",
+    "exp:x1": "tsx ../../experiments/guard/x1-static/run.ts",
+    "exp:x1w": "tsx ../../experiments/guard/x1-static/whitelist.ts",
+    "exp:x6": "tsx ../../experiments/guard/x6-robustness/run.ts",
+    "exp:x7": "tsx ../../experiments/guard/x7-validity/run-ablation.ts"
   },
   "dependencies": {
     "@opencode-ai/sdk": "1.18.31",

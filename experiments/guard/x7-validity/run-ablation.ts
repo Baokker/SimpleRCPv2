@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { Action } from "../../../apps/server/src/guard/types.js";
-import { context, ensureRuntimeDirectory, loadDataset, makeRunId, projectRoot, toRequest, type DatasetRecord } from "../lib/common.js";
+import { context, ensureRuntimeDirectory, loadDataset, resultsRoot, toRequest, writeRun, type DatasetRecord } from "../lib/common.js";
 import { decideVariant, VARIANTS } from "./decideVariant.js";
 
 const intercepted = (action: Action) => action === "ask" || action === "deny";
@@ -60,10 +60,8 @@ async function main() {
     };
   });
 
-  const runDirectory = path.join(projectRoot, "experiments/guard/results/X7", makeRunId("x7a"));
-  await fs.mkdir(runDirectory, { recursive: true });
-  await fs.writeFile(path.join(runDirectory, "raw.jsonl"), rows.map((row) => JSON.stringify(row)).join("\n") + "\n");
-  await fs.writeFile(path.join(runDirectory, "summary.json"), JSON.stringify({ sanityRecords: sanity.length, sanityMismatches: 0, summary }, null, 2));
+  const runDirectory = path.join(resultsRoot, "X7", "x7a-compact-v1");
+  await writeRun(runDirectory, rows, { sanityRecords: sanity.length, sanityMismatches: 0, summary }, { experiment: "X7" });
   const lines = [
     "# X7a 意图口径重算与三维消融", "",
     `判定副本与产品 decide() 在 D1-D6 的 ${sanity.length} 条记录上逐条一致。`, "",

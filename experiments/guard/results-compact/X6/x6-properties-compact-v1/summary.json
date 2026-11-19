@@ -1,0 +1,64 @@
+{
+  "rowCount": 40000,
+  "properties": {
+    "monotonic": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "metadataDeny": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "llmFloor": {
+      "cases": 10000,
+      "failures": 0
+    },
+    "strictestSubcommand": {
+      "cases": 10000,
+      "failures": 461
+    }
+  },
+  "llmFloorCoverage": {
+    "initialDeny": 4195,
+    "initialIneligibleAsk": 5805,
+    "terminal": 5000,
+    "agent": 5000,
+    "lowRiskCertain": 2500
+  },
+  "compositionalityBySourceAndLevel": {
+    "terminal/viewer": {
+      "cases": 1250,
+      "failures": 0
+    },
+    "terminal/contributor": {
+      "cases": 1250,
+      "failures": 60
+    },
+    "terminal/maintainer": {
+      "cases": 1250,
+      "failures": 54
+    },
+    "terminal/owner": {
+      "cases": 1250,
+      "failures": 70
+    },
+    "agent/viewer": {
+      "cases": 1250,
+      "failures": 0
+    },
+    "agent/contributor": {
+      "cases": 1250,
+      "failures": 75
+    },
+    "agent/maintainer": {
+      "cases": 1250,
+      "failures": 85
+    },
+    "agent/owner": {
+      "cases": 1250,
+      "failures": 117
+    }
+  },
+  "compositionalityFailuresWithCd": 461,
+  "allRequiredPropertiesPass": false
+}
