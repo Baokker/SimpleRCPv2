@@ -459,6 +459,8 @@ export function CollaborationPanel({
                   const cursor = remoteCursors.find(
                     (remoteCursor) => remoteCursor.memberId === candidate.id
                   );
+                  const level = levelOf(candidate.profileRole);
+                  const roleLabel = scenarioRoles.find((role) => role.role === candidate.profileRole)?.displayName ?? candidate.profileRole ?? "Unassigned";
                   return (
                     <li key={candidate.id}>
                       <span>
@@ -468,12 +470,7 @@ export function CollaborationPanel({
                           <label className="member-role-editor" title={otherOwnerPresent ? "Higher roles are granted by an owner" : undefined}><select aria-label="Your role" value={candidate.profileRole ?? ""} onChange={(event) => changeRole(event.target.value)}>{roleOptions(canSelfAssign)}</select></label>
                         ) : owner ? (
                           <label className="member-role-editor"><select aria-label={`Role of ${candidate.displayName}`} value={candidate.profileRole ?? ""} onChange={(event) => grantRole(candidate.id, event.target.value)}>{roleOptions(() => true)}</select></label>
-                        ) : <em>{scenarioRoles.find((role) => role.role === candidate.profileRole)?.displayName ?? candidate.profileRole ?? "Unassigned"}</em>}
-                        {candidate.id !== member?.id && !owner ? <em>({levelOf(candidate.profileRole)})</em> : null}
-                        {owner && candidate.id !== member?.id ? <label className="member-role-editor">
-                          <input type="checkbox" checked={candidate.delegateApprover === true} aria-label={`Delegate approvals to ${candidate.displayName}`} onChange={(event) => { void setDelegateApprover(projectId, candidate.id, event.target.checked).catch(onError); }} />
-                          Delegate approver
-                        </label> : null}
+                        ) : <em>{roleLabel}{roleLabel.toLowerCase() === level ? "" : ` (${level})`}</em>}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>
                         ) : null}
@@ -510,6 +507,10 @@ export function CollaborationPanel({
                           </button>
                         ) : null}
                       </span>
+                      {owner && candidate.id !== member?.id ? <label className="member-delegate-editor">
+                        <input type="checkbox" checked={candidate.delegateApprover === true} aria-label={`Delegate approvals to ${candidate.displayName}`} onChange={(event) => { void setDelegateApprover(projectId, candidate.id, event.target.checked).catch(onError); }} />
+                        Delegate approver
+                      </label> : null}
                       <small>
                         {cursor
                           ? `${cursor.path} · Ln ${cursor.position.lineNumber}, Col ${cursor.position.column}`

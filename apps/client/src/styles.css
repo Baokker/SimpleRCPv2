@@ -2974,6 +2974,16 @@ button.activity-entry:hover strong {
   font-size: 11px;
 }
 
+.member-delegate-editor {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 4px;
+  margin-left: 13px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
 .member-control {
   min-height: 24px;
   font-size: 11px;

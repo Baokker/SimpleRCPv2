@@ -34,6 +34,8 @@ test("captures the ComPACT contributor and owner views", async ({ browser }) => 
   await command.fill(metadataCommand);
   await command.press("Enter");
   await bobPage.getByTestId("collab-tab-team").click();
+  const aliceRow = bobPage.getByTestId("member-list").getByRole("listitem").filter({ hasText: "Alice" });
+  await expect(aliceRow.locator("em")).toHaveText([/^owner$/i]);
   const activity = bobPage.getByTestId("activity-feed");
   await expect(activity.getByRole("listitem").filter({ hasText: "sudo ls" })).toContainText("Blocked");
   await expect(activity.getByRole("listitem").filter({ hasText: metadataCommand })).toContainText("Blocked");
@@ -45,6 +47,13 @@ test("captures the ComPACT contributor and owner views", async ({ browser }) => 
   await bobPage.screenshot({ path: path.join(output, "bob-contributor.png") });
 
   await alicePage.getByTestId("collab-tab-team").click();
+  const bobRow = alicePage.getByTestId("member-list").getByRole("listitem").filter({ hasText: "Bob" });
+  const bobName = bobRow.locator("strong");
+  const delegate = bobRow.getByRole("checkbox", { name: "Delegate approvals to Bob" });
+  await expect(bobName).toHaveText("Bob");
+  await expect(delegate).toBeVisible();
+  await expect.poll(() => bobName.evaluate((name) => name.clientWidth >= name.scrollWidth)).toBe(true);
+  expect((await delegate.boundingBox())!.y).toBeGreaterThan((await bobName.boundingBox())!.y);
   await expect(alicePage.locator(".guard-approval-card")).toContainText("Bob (Contributor)");
   await expect(alicePage.locator(".guard-approval-card")).toContainText(/\d+% confidence/);
   await expect(alicePage.locator(".guard-approval-card").getByRole("button", { name: "Approve" })).toBeVisible();
