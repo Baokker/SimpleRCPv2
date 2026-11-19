@@ -5,10 +5,8 @@ import { createSnapshotStore } from "../../../apps/server/src/guard/snapshots.js
 
 // B6: restore a snapshot after another member edited the same files.
 // The snapshot is taken before the restored actor's command, as the guard does for snapshot-backed requests.
-// The snapshot is sealed when the command finishes, before the other member's edit.
 // A case is correct when the restored change is undone and the later change is kept,
 // or when the overlapping file is left untouched and handed to a person.
-// results-before.json holds the outcome of the whole-file restore used before the conflict check.
 
 const base = Array.from({ length: 10 }, (_, index) => `export const v${index + 1} = ${index + 1};`).join("\n") + "\n";
 const replace = (text: string, line: number, value: string) => text.split("\n").map((row, index) => index === line - 1 ? value : row).join("\n");
@@ -36,24 +34,20 @@ for (const item of cases) {
   const store = createSnapshotStore(path.join(root, ".guard-snapshots"), root);
   const snapshot = await store.create({ memberId: "alice", command: "sed -i 's/= 3;/= 30;/' src/config.ts", paths: ["src"] });
   await write(root, replace(base, 3, restoredLine));
-  await store.seal(snapshot.id);
   const otherLine = await item.act(root);
-  const beforeRestore = { main: await read(root), renamed: await read(root, "src/settings.ts") };
-  const outcome = await store.restore(snapshot.id);
+  await store.restore(snapshot.id);
   const restored = await read(root);
   const renamed = await read(root, "src/settings.ts");
   const extra = await read(root, "src/extra.ts");
   const otherKept = item.id === "renamed" ? renamed !== undefined && restored === undefined
     : item.id === "new-file" ? extra !== undefined
     : Boolean(otherLine && restored?.includes(otherLine));
-  const untouched = restored === beforeRestore.main && renamed === beforeRestore.renamed;
-  const handedToPerson = !outcome.restored && untouched;
   results.push({
     id: item.id, note: item.note,
     withdrawnUndone: restored !== undefined && !restored.includes(restoredLine),
-    otherKept, handedToPerson, conflicts: outcome.conflicts.map((conflict) => conflict.path),
+    otherKept, handedToPerson: false,
     duplicate: item.id === "renamed" && restored !== undefined && renamed !== undefined,
-    correct: handedToPerson || (otherKept && restored !== undefined && !restored.includes(restoredLine))
+    correct: otherKept && restored !== undefined && !restored.includes(restoredLine)
   });
   await fs.rm(root, { recursive: true, force: true });
 }

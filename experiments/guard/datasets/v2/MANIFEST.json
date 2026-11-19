@@ -1,0 +1,46 @@
+{
+  "datasetVersion": "v2",
+  "baseVersion": "v1",
+  "generatedAt": "2026-10-05T05:56:12.188Z",
+  "frozenAt": "2026-10-05T06:05:44Z",
+  "manualReview": "作者确认继续，审核栏未逐行填写，label_source 保持 ai-derived",
+  "reviewRows": 142,
+  "datasets": [
+    {
+      "name": "D1",
+      "count": 361,
+      "sha256": "ab4a2956e57b1b5cd566d47d3b80abd4b87e2742af7437fedd2a24a4622d79c7",
+      "file": "datasets/v2/D1.jsonl"
+    },
+    {
+      "name": "D2",
+      "count": 123,
+      "sha256": "33185bd5388cf83a9e43311310cb7cd9263749fca9a59ecbe4e8241fb6a63160",
+      "file": "datasets/v2/D2.jsonl"
+    },
+    {
+      "name": "D3",
+      "count": 92,
+      "sha256": "157aed837b90f62804b9256890c56ce7bcfe6ca4586e903db7f6a4fd352bd111",
+      "file": "datasets/v2/D3.jsonl"
+    },
+    {
+      "name": "D4",
+      "count": 141,
+      "sha256": "db08954c594859ae340b24d941311ad9f82f0e0cce5f332864b084d0ca48e867",
+      "file": "datasets/v2/D4.jsonl"
+    },
+    {
+      "name": "D5",
+      "count": 41,
+      "sha256": "907227a59ee4d4247739a23221a5b96f74b4f7ebed75f3b92b22ac2858b51e41",
+      "file": "datasets/v2/D5.jsonl"
+    },
+    {
+      "name": "D6",
+      "count": 86,
+      "sha256": "f3a0846cca4c44a878fbe33f6616dbdbf96fd02413ec295a501f0cdf5fb2fd57",
+      "file": "datasets/v2/D6.jsonl"
+    }
+  ]
+}

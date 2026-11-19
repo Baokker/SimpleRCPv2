@@ -4,62 +4,47 @@
     {
       "id": "different-line",
       "note": "其他成员改同一文件的另一行",
-      "withdrawnUndone": false,
-      "otherKept": true,
-      "handedToPerson": true,
-      "conflicts": [
-        "src/config.ts"
-      ],
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
       "duplicate": false,
-      "correct": true
+      "correct": false
     },
     {
       "id": "same-line",
       "note": "其他成员改同一行",
       "withdrawnUndone": true,
-      "otherKept": true,
-      "handedToPerson": true,
-      "conflicts": [
-        "src/config.ts"
-      ],
+      "otherKept": false,
+      "handedToPerson": false,
       "duplicate": false,
-      "correct": true
+      "correct": false
     },
     {
       "id": "adjacent-line",
       "note": "其他成员改相邻行",
-      "withdrawnUndone": false,
-      "otherKept": true,
-      "handedToPerson": true,
-      "conflicts": [
-        "src/config.ts"
-      ],
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
       "duplicate": false,
-      "correct": true
+      "correct": false
     },
     {
       "id": "shifted",
       "note": "其他成员在文件开头插入两行",
-      "withdrawnUndone": false,
-      "otherKept": true,
-      "handedToPerson": true,
-      "conflicts": [
-        "src/config.ts"
-      ],
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
       "duplicate": false,
-      "correct": true
+      "correct": false
     },
     {
       "id": "renamed",
       "note": "其他成员把文件改名",
-      "withdrawnUndone": false,
-      "otherKept": true,
-      "handedToPerson": true,
-      "conflicts": [
-        "src/config.ts"
-      ],
-      "duplicate": false,
-      "correct": true
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
+      "duplicate": true,
+      "correct": false
     },
     {
       "id": "new-file",
@@ -67,21 +52,17 @@
       "withdrawnUndone": true,
       "otherKept": true,
       "handedToPerson": false,
-      "conflicts": [],
       "duplicate": false,
       "correct": true
     },
     {
       "id": "two-agents",
       "note": "两个 Agent 运行重叠，各改一个位置",
-      "withdrawnUndone": false,
-      "otherKept": true,
-      "handedToPerson": true,
-      "conflicts": [
-        "src/config.ts"
-      ],
+      "withdrawnUndone": true,
+      "otherKept": false,
+      "handedToPerson": false,
       "duplicate": false,
-      "correct": true
+      "correct": false
     }
   ]
 }
