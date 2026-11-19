@@ -1,0 +1,23 @@
+{
+  "testedRef": "guard-compact-v1",
+  "status": "superseded",
+  "stopReason": "compositionality_failure",
+  "pathsRelativeTo": "..",
+  "runs": {
+    "X1": "X1/x1-compact-v1",
+    "X1W": "X1W/x1w-compact-v1",
+    "X2a": null,
+    "X2b": null,
+    "X3": null,
+    "X4": null,
+    "X5": null,
+    "X6_properties": "X6/x6-properties-compact-v1",
+    "X6_runtime": null,
+    "X7": "X7/x7a-compact-v1",
+    "X8": null,
+    "X9": null,
+    "D4": null,
+    "D5": null,
+    "Property1": "property1-path-consistency.json"
+  }
+}

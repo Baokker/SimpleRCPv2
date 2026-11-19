@@ -1,0 +1,25 @@
+{
+  "testedRef": "guard-compact-v1",
+  "commit": "bfb8621aad2c276e5d3eb8d600f378b05febc614",
+  "harnessCommit": "75e62a7648a2c07476a39d5267c44e8876773d35",
+  "branch": "paper/compact",
+  "node": "v22.19.0",
+  "pnpm": "9.0.0",
+  "openCode": "1.18.31",
+  "os": "darwin 27.2.0 arm64",
+  "cpu": "Apple M1 Pro",
+  "cpuCount": 8,
+  "memoryBytes": 17179869184,
+  "model": null,
+  "dataDir": "/Users/baokker/.codex/worktrees/compact/SimpleRCPv2/.test-workspaces/guard-95499",
+  "pathAliases": {
+    "/platform/data": "/Users/baokker/.codex/worktrees/compact/SimpleRCPv2/.test-workspaces/guard-95499/data"
+  },
+  "modelPlanned": "MiniMax-M3",
+  "seeds": {
+    "annotation": "compact-annotation-v1",
+    "property1": "0x434f4d50",
+    "property3To5AndMetadata": "0x6a09e667",
+    "runtimeFaults": "0xbb67ae85"
+  }
+}
