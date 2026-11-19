@@ -100,6 +100,35 @@ test("an owner's own terminal command runs without asking the owner again", asyn
   await expect(page.locator(".guard-approval-card").filter({ hasText: "请确认你自己的命令" })).toHaveCount(0);
 });
 
+test("an eligible delegate receives the pending approval when the owner goes offline", async ({ page }) => {
+  const response = await page.request.post("/api/projects", { data: { name: "Delegate Approval Test" } });
+  expect(response.ok()).toBe(true);
+  const { project } = await response.json() as { project: { id: string } };
+  const owner = await page.context().newPage();
+  const delegate = await page.context().newPage();
+  await openAs(owner, "Delegate Test Owner", project.id, "owner");
+  await openAs(delegate, "Delegate Test Maintainer", project.id, "contributor");
+  await openAs(page, "Delegate Test Requester", project.id, "contributor");
+  await owner.getByTestId("collab-tab-team").click();
+  await delegate.getByTestId("collab-tab-team").click();
+  await owner.getByRole("combobox", { name: "Role of Delegate Test Maintainer" }).selectOption("maintainer");
+  await expect(delegate.getByRole("combobox", { name: "Your role" })).toHaveValue("maintainer");
+  const delegation = owner.getByRole("checkbox", { name: "Delegate approvals to Delegate Test Maintainer" });
+  await delegation.click();
+  await expect(delegation).toBeChecked();
+
+  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  await command.fill("rm -f delegate-test.txt");
+  await command.press("Enter");
+  await expect(owner.locator(".guard-approval-card")).toContainText("Delegate Test Requester");
+  await expect(delegate.locator(".guard-approval-card")).toHaveCount(0);
+  await owner.close();
+  const card = delegate.locator(".guard-approval-card");
+  await expect(card).toContainText("Delegate Test Requester");
+  await card.getByRole("button", { name: "批准" }).click();
+  await expect(page.locator(".terminal-guard-status")).toContainText("已批准");
+});
+
 test("shows a blocked privilege message for sudo", async ({ page }) => {
   await openAs(page, "Contributor sudo", "demo", "contributor");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
