@@ -68,6 +68,24 @@ describe("guard decisions", () => {
     expect(result.matchedRules).not.toContain("hard.dynamic");
   });
 
+  it("is at least as restrictive as each segment at its effective working directory", () => {
+    const scenarios = [
+      { source: "terminal", text: "pwd && cd src", components: [["pwd", workspace], ["cd src", workspace]] },
+      { source: "agent", text: "pwd; cd src && cat ../.env", components: [["pwd", workspace], ["cd src", workspace], ["cat ../.env", path.join(workspace, "src")]] },
+      { source: "agent", text: "pwd || cd /tmp; cat .env", components: [["pwd", workspace], ["cd /tmp", workspace], ["cat .env", "/tmp"], ["cat .env", workspace]] }
+    ] as const;
+    for (const { source, text, components } of scenarios) {
+      for (const level of LEVELS) {
+        const request = { projectId: "project", memberId: "member", source, kind: "command", command: text, cwd: workspace } as const;
+        const chained = decide(request, context(level));
+        for (const [segment, cwd] of components) {
+          const component = decide({ ...request, command: segment, cwd }, context(level));
+          expect(ACTION_ORDER[chained.action], `${source}/${level}: ${text} vs ${segment} from ${cwd}`).toBeGreaterThanOrEqual(ACTION_ORDER[component.action]);
+        }
+      }
+    }
+  });
+
   it("splits terminal compound commands and keeps benign pipelines readable", () => {
     expect(command("student", "git status && git log").action).toBe("allow");
     expect(command("student", "pwd; sudo ls").action).toBe("deny");
@@ -147,11 +165,8 @@ describe("guard decisions", () => {
     expect(result.autoEligible).toBe(false);
   });
 
-  it("applies terminal syntax denials to Agent commands with matching features", () => {
+  it("preserves Agent multiline and heredoc handling", () => {
     const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("owner"));
-    const changedDirectory = agent("cd src && ls");
-    expect(changedDirectory.action).toBe("deny");
-    expect(changedDirectory.matchedRules).toContain("hard.cwd");
     const multiline = agent("ls\nls");
     expect(multiline.action).toBe("allow");
     expect(multiline.matchedRules).not.toContain("hard.control-character");
@@ -169,11 +184,22 @@ describe("guard decisions", () => {
     expect(result.matchedRules).not.toContain("classify.unknown");
   });
 
-  it("denies unsafe Agent directory prefixes with matching terminal features", () => {
-    const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("collaborator"));
-    for (const text of ["cd ~ && rm -rf Documents", "cd $HOME && rm -rf Documents", "cd ..'' && rm -rf p2", "cd - && rm -rf x"]) {
-      expect(agent(text)).toMatchObject({ action: "deny", matchedRules: expect.arrayContaining(["hard.cwd"]) });
-    }
+  it("resolves Agent navigation and subsequent arguments against their execution directory", () => {
+    const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("maintainer", { otherWorkspaceRoots: ["/workspace/peer"] }));
+    expect(agent("cd src && npm test").action).toBe("allow");
+    expect(agent("ls; cd ..; rm -rf drafts").segments).toEqual(expect.arrayContaining([
+      expect.objectContaining({ text: "rm -rf drafts", zone: "outside" })
+    ]));
+    expect(agent("cd src && cat ../.env").matchedRules).toContain("hard.protected");
+    expect(agent("cd \"$X\" && rm a")).toMatchObject({ action: "ask", matchedRules: expect.arrayContaining(["hard.dynamic"]) });
+    expect(agent("false || cd /tmp; rm x").segments.filter((segment) => segment.text === "rm x").map((segment) => segment.zone).sort()).toEqual(["outside", "workspace"]);
+    expect(agent("cd /platform/data && pwd").action).toBe("deny");
+    expect(agent("pwd; cd ../peer").action).toBe("deny");
+    expect(agent("cd src && echo ok > ../.env").matchedRules).toContain("hard.protected");
+    expect(agent("cd src && cat < ../.env").matchedRules).toContain("hard.protected");
+    expect(agent("cd src\ncat ../.env").matchedRules).toContain("hard.protected");
+    expect(agent("cd src | pwd; cat .env").matchedRules).toContain("hard.protected");
+    expect(agent("cd src && pwd; cat .env").matchedRules).toContain("hard.protected");
   });
 
   it("does not let auto judging lower hard limits", () => {
@@ -253,7 +279,7 @@ describe("guard decisions", () => {
   });
 
   it("denies commands that can change the terminal working directory", () => {
-    for (const text of ["cd ..''", "pushd ../p2", "popd"]) {
+    for (const text of ["cd ..''", "pushd ../p2", "popd", "pwd && cd examples", "ls; cd ..", "ls | cd /tmp", "false || pushd src", "pwd && popd"]) {
       const result = command("owner", text);
       expect(result.action).toBe("deny");
       expect(result.matchedRules).toContain("hard.cwd");

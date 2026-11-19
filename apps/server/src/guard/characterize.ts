@@ -16,8 +16,10 @@ export interface Characterization {
 
 const plainDownloadToShellPattern = /^\s*(curl|wget)\s+[^;&|<>`$()]*\|\s*(sh|bash|zsh)\s*$/i;
 
-export function splitShellCommands(command: string) {
-  const parts: string[] = [];
+const directoryCommands = new Set(["cd", "chdir", "pushd", "popd", "set-location", "sl"]);
+
+function shellSegments(command: string, multiline: boolean) {
+  const parts: { command: string; next: string }[] = [];
   let start = 0;
   let quote: "single" | "double" | undefined;
   for (let index = 0; index < command.length; index += 1) {
@@ -34,15 +36,30 @@ export function splitShellCommands(command: string) {
       quote = quote === "double" ? undefined : "double";
       continue;
     }
-    if (quote || !["|", ";", "&"].includes(character)) continue;
+    if (quote || !("|;&".includes(character) || multiline && character === "\n")) continue;
+    if ((character === "&" && (command[index + 1] === ">" || /[<>]/.test(command[index - 1] ?? ""))) ||
+        (character === "|" && command[index - 1] === ">")) continue;
     const part = command.slice(start, index).trim();
-    if (part) parts.push(part);
-    if (character === "&" && command[index + 1] === "&") index += 1;
+    let next = character;
+    if (command[index + 1] === character && (character === "&" || character === "|")) {
+      next += character;
+      index += 1;
+    }
+    if (part) parts.push({ command: part, next });
     start = index + 1;
   }
   const finalPart = command.slice(start).trim();
-  if (finalPart) parts.push(finalPart);
-  return parts.length > 1 ? parts : [];
+  if (finalPart) parts.push({ command: finalPart, next: "" });
+  return parts;
+}
+
+export function changesShellDirectory(command: string) {
+  return shellSegments(command, true).some((part) => directoryCommands.has(commandName(part.command)));
+}
+
+export function splitShellCommands(command: string) {
+  const parts = shellSegments(command, false);
+  return parts.length > 1 ? parts.map((part) => part.command) : [];
 }
 
 export function stripHereDocument(command: string) {
@@ -64,9 +81,9 @@ export function stripHereDocument(command: string) {
   return normalized;
 }
 
-function zoneFor(target: string, request: GuardRequest, platformDataRoot: string, protectedPaths: string[], otherWorkspaceRoots: string[]): PathZone {
+function zoneFor(target: string, workspaceRoot: string, platformDataRoot: string, protectedPaths: string[], otherWorkspaceRoots: string[]): PathZone {
   const resolved = resolveExistingPrefix(target);
-  const workspace = resolveExistingPrefix(request.cwd);
+  const workspace = resolveExistingPrefix(workspaceRoot);
   const metadata = resolveExistingPrefix(platformDataRoot);
   const inWorkspace = resolved === workspace || resolved.startsWith(`${workspace}${path.sep}`);
   const protectedMatch = protectedPaths.some((pattern) => {
@@ -239,56 +256,41 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   return "reversible";
 }
 
-export function characterize(request: GuardRequest, platformDataRoot: string, protectedPaths: string[] = [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], otherWorkspaceRoots: string[] = []): Characterization {
+export function characterize(request: GuardRequest, platformDataRoot: string, protectedPaths: string[] = [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"], otherWorkspaceRoots: string[] = [], workspaceRoot = request.cwd): Characterization {
   const rawCommand = request.command ?? request.url ?? request.paths?.join(" ") ?? request.kind;
   const command = request.source === "agent" && request.kind === "command"
     ? stripHereDocument(rawCommand)
     : rawCommand;
-  if (request.source === "agent" && request.kind === "command" && /\r?\n/.test(command)) {
-    const results = command.split(/\r?\n/).filter((line) => line.trim()).map((line) => characterize({ ...request, command: line }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
-    return {
-      segments: results.flatMap((result) => result.segments),
-      legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
-      unknown: results.some((result) => result.unknown),
-      dynamic: results.some((result) => result.dynamic),
-      gitContext: results.some((result) => result.gitContext),
-      plainDownloadToShell: false,
-      downloadExecute: results.some((result) => result.downloadExecute)
-    };
-  }
-  if (request.source === "agent" && request.kind === "command") {
-    const prefix = command.match(/^\s*cd\s+([^;&]+?)\s*&&\s*(.+)$/i);
-    const rawDirectory = prefix?.[1]?.trim();
-    const unsafePrefix = rawDirectory !== undefined && (/["'\\$`]/.test(rawDirectory) || /^[~-]/.test(rawDirectory));
-    if (prefix && !unsafePrefix) {
-      const directory = path.resolve(request.cwd, rawDirectory!.replace(/^['"]|['"]$/g, ""));
-      const directoryZone = zoneFor(directory, request, platformDataRoot, protectedPaths, otherWorkspaceRoots);
-      if (directoryZone !== "workspace") {
-        return {
-          segments: [{ text: directory, capabilities: ["exec"], zone: directoryZone, reversibility: "reversible" }],
-          legacyRisk: "risky",
-          unknown: false,
-          dynamic: /["'\\$`]/.test(prefix[1]!),
-          gitContext: false,
-          plainDownloadToShell: false,
-          downloadExecute: false
-        };
-      }
-      const rest = characterize({ ...request, command: prefix[2], cwd: directory }, platformDataRoot, protectedPaths, otherWorkspaceRoots);
-      return {
-        ...rest,
-        segments: [{ text: prefix[1]!, capabilities: ["exec"], zone: "workspace", reversibility: "reversible" }, ...rest.segments],
-        plainDownloadToShell: false,
-        downloadExecute: rest.downloadExecute
-      };
-    }
-  }
-  const plainDownloadToShell = request.source === "agent" && request.kind === "command" && plainDownloadToShellPattern.test(command);
+  const agentShell = request.source === "agent" && request.kind === "command";
+  const plainDownloadToShell = agentShell && plainDownloadToShellPattern.test(command);
+  const zone = (target: string) => zoneFor(target, workspaceRoot, platformDataRoot, protectedPaths, otherWorkspaceRoots);
   if (request.kind === "command" && !plainDownloadToShell) {
-    const parts = splitShellCommands(command);
+    const parts = shellSegments(command, agentShell);
     if (parts.length > 1) {
-      const results = parts.map((part) => characterize({ ...request, command: part }, platformDataRoot, protectedPaths, otherWorkspaceRoots));
-      const downloadExecute = hasDownloadExecute(command, parts);
+      let directories = new Set<string | undefined>([request.cwd]);
+      const skippedDirectories = new Set<string | undefined>();
+      const results: Characterization[] = [];
+      for (const [index, part] of parts.entries()) {
+        const previous = parts[index - 1]?.next;
+        const nextDirectories = new Set<string | undefined>();
+        for (const directory of directories) {
+          const cwd = directory ?? request.cwd;
+          results.push(characterizeSegment({ ...request, cwd }, part.command, zone, directory === undefined));
+          if (!agentShell || !directoryCommands.has(commandName(part.command)) || previous === "|" || part.next === "|" || part.next === "&") {
+            nextDirectories.add(directory);
+            continue;
+          }
+          nextDirectories.add(directory === undefined ? undefined : directoryTarget(part.command, cwd));
+          if (part.next === "&&") skippedDirectories.add(directory);
+          if (previous === "||" || part.next !== "&&") nextDirectories.add(directory);
+        }
+        if (part.next !== "&&" && part.next !== "|") {
+          for (const skipped of skippedDirectories) nextDirectories.add(skipped);
+          skippedDirectories.clear();
+        }
+        directories = nextDirectories;
+      }
+      const downloadExecute = hasDownloadExecute(command, parts.map((part) => part.command));
       return {
         segments: [...results.flatMap((result) => result.segments), ...(downloadExecute ? [{ text: command, capabilities: ["network", "exec"] as Capability[], zone: "workspace" as PathZone, reversibility: "irreversible" as Reversibility }] : [])],
         legacyRisk: results.some((result) => result.legacyRisk === "dangerous") ? "dangerous" : results.some((result) => result.legacyRisk === "risky") ? "risky" : results.every((result) => result.legacyRisk === "safe") ? "safe" : "unknown",
@@ -300,9 +302,20 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
       };
     }
   }
+  return characterizeSegment(request, command, zone, false, plainDownloadToShell);
+}
+
+function directoryTarget(command: string, cwd: string) {
+  const target = parseCommandPaths(command, cwd)?.targets.find((item) => item.role === "location");
+  if (!target || !/^(?:[\w./][\w./-]*|'[\w./][\w ./-]*'|"[\w./][\w ./-]*")$/.test(target.raw)) return undefined;
+  return resolveExistingPrefix(target.resolvedPath);
+}
+
+function characterizeSegment(request: GuardRequest, command: string, zone: (target: string) => PathZone, unknownDirectory: boolean, plainDownloadToShell = false): Characterization {
   const name = request.kind === "command" ? commandName(command) : request.kind;
   const parsed = request.kind === "command" ? parseCommandPaths(command, request.cwd) : undefined;
-  const dynamic = request.kind === "command" && (hasDynamicSyntax(command) || parsed?.dynamic === true);
+  const changesDirectory = request.source === "agent" && directoryCommands.has(name);
+  const dynamic = unknownDirectory || request.kind === "command" && (parsed?.dynamic === true || (changesDirectory ? directoryTarget(command, request.cwd) === undefined : hasDynamicSyntax(command)));
   const targetItems = parsed?.targets ?? request.paths?.map((target) => ({ raw: target, resolvedPath: path.resolve(request.cwd, unquote(target)), role: "target" as const })) ?? [];
   const metadataReference = request.kind === "command" && command.includes("$SIMPLERCP_DATA_DIR");
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
@@ -310,11 +323,12 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   const isSedPrint = parsed?.commandName === "sed" && parsed.action === "read";
   if (isSedPrint) capabilities = ["read"];
   if (parsed?.action === "delete") capabilities = ["delete"];
-  if ((parsed?.action === "write" || parsed?.targets.some((target) => target.role === "destination"))
-    && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
-    capabilities = [...baseCapabilities.filter((capability) => capability !== "exec"), "write"];
+  if (parsed?.targets.some((target) => target.role === "destination") || parsed?.action === "write" && parsed.targets.some((target) => target.role === "target")) {
+    if (!["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
+      capabilities = [...baseCapabilities.filter((capability) => capability !== "exec"), "write"];
+    }
   }
-  const legacy = isSedPrint ? "safe" : request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
+  const legacy = changesDirectory ? "risky" : isSedPrint ? "safe" : request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
     const segmentCapabilities = capabilities;
     const segmentReversibility = legacy === "unknown" || legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
@@ -323,7 +337,7 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     return {
       text: index === 0 ? command : item.resolvedPath,
       capabilities: segmentCapabilities,
-      zone: zoneFor(item.resolvedPath, request, platformDataRoot, protectedPaths, otherWorkspaceRoots),
+      zone: unknownDirectory && !path.isAbsolute(item.raw) ? "outside" : zone(item.resolvedPath),
       reversibility: segmentReversibility
     };
   });

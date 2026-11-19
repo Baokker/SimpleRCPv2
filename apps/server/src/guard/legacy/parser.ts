@@ -183,8 +183,8 @@ function extractRedirections(command: string, cwd: string) {
       continue;
     }
     if (!quote) {
-      const operator = command.slice(index).match(/^(?:\d+)?(?:&>|>>|2>|>\|?|>)/)?.[0];
-      if (operator) {
+      const operator = command.slice(index).match(/^(?:\d+)?(?:&>|>>|>\|?|<(?![<&]))/)?.[0];
+      if (operator && !(operator === "<" && command[index - 1] === "<")) {
         let targetStart = index + operator.length;
         while (/\s/.test(command[targetStart] ?? "")) targetStart += 1;
         let targetEnd = targetStart;
@@ -198,7 +198,7 @@ function extractRedirections(command: string, cwd: string) {
         }
         const raw = command.slice(targetStart, targetEnd);
         if (raw) {
-          targets.push(target(cwd, raw, "destination"));
+          targets.push(target(cwd, raw, operator.endsWith("<") ? "source" : "destination"));
           dynamic ||= /["'\\$`]/.test(raw);
         }
         stripped += " ".repeat(Math.max(1, targetEnd - index));

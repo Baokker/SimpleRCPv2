@@ -1,4 +1,4 @@
-import { characterize } from "./characterize.js";
+import { changesShellDirectory, characterize } from "./characterize.js";
 import { roleLevel } from "./roles.js";
 import { segmentAction, stricter } from "./rules.js";
 import type { GuardContext, GuardDecision, GuardRequest, Level } from "./types.js";
@@ -6,16 +6,15 @@ import type { GuardContext, GuardDecision, GuardRequest, Level } from "./types.j
 export function decide(request: GuardRequest, context: GuardContext): GuardDecision {
   const level: Level = roleLevel(context.memberLevel);
   const protectedPaths = context.protectedPaths ?? [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"];
-  const characterization = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
+  const characterization = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots, context.workspaceRoot);
   const command = request.command ?? "";
   let action: GuardDecision["action"] = "allow";
   const matchedRules = new Set<string>();
   if (request.kind === "command") {
     const controls = /[\u0000-\u001f\u007f-\u009f]/.test(command);
-    const changesDirectory = /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(command.trim());
     let sameTerminalFeatures = request.source === "terminal";
-    if (request.source === "agent" && request.agentRunId && (controls || changesDirectory)) {
-      const terminal = characterize({ ...request, source: "terminal" }, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
+    if (request.source === "agent" && request.agentRunId && controls) {
+      const terminal = characterize({ ...request, source: "terminal" }, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots, context.workspaceRoot);
       sameTerminalFeatures = terminal.segments.length === characterization.segments.length && terminal.segments.every((segment, index) => {
         const agent = characterization.segments[index]!;
         return agent.zone === segment.zone && agent.reversibility === segment.reversibility &&
@@ -26,7 +25,7 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
       action = "deny";
       matchedRules.add("hard.control-character");
     }
-    if (sameTerminalFeatures && changesDirectory) {
+    if (request.source === "terminal" && changesShellDirectory(command)) {
       action = "deny";
       matchedRules.add("hard.cwd");
     }

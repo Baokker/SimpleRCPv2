@@ -8,6 +8,7 @@ import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { createApprovalMemory, REMEMBERED_RULE } from "./approvalMemory.js";
 import { createApprovalQueue, type ApprovalOutcome, type PendingApproval } from "./approvals.js";
 import { createGuardAudit } from "./audit.js";
+import { changesShellDirectory } from "./characterize.js";
 import { applyAgentProvenance, decide } from "./decide.js";
 import { judgeGuardRequest, type JudgeResult } from "./llmJudge.js";
 import { LEVELS, roleLevel } from "./roles.js";
@@ -508,7 +509,9 @@ export function createGuardService(options: {
     },
     async createSnapshot(request: GuardRequest) {
       const parsed = request.kind === "command" && request.command ? parseCommandPaths(request.command, request.cwd) : undefined;
-      const paths = request.paths ?? parsed?.targets.map((target) => target.resolvedPath);
+      const paths = request.paths ?? (request.source === "agent" && request.command && changesShellDirectory(request.command)
+        ? undefined
+        : parsed?.targets.map((target) => target.resolvedPath));
       const manifest = await snapshots.create({ memberId: request.memberId, command: request.command, paths });
       publishActivity({
         type: "guard_snapshot",
