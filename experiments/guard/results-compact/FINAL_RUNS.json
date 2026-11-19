@@ -5,7 +5,7 @@
   "runs": {
     "X1": "X1/x1-compact-v2",
     "X1W": "X1W/x1w-compact-v2",
-    "X2a": null,
+    "X2a": "X2a/x2a-compact-v2",
     "X2b": null,
     "X3": "X3/x3-approval-burden-compact-v2",
     "X4": "X4/x4-minimax-compact-v2",
@@ -17,6 +17,7 @@
     "X9": "X9/x9-restore-compact-v2",
     "D4": "D4/d4-member-binding-compact-v2",
     "D5": "D5/d5-provenance-compact-v2",
-    "Property1": "property1-path-consistency-v2.json"
+    "Property1": "property1-path-consistency-v2.json",
+    "Preflight": "PREFLIGHT.json"
   }
 }
