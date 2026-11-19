@@ -59,22 +59,24 @@ export function isReusable(request: GuardRequest, decision: GuardDecision) {
 
 export function createApprovalMemory(ttlMs = DEFAULT_TTL_MS, now = () => Date.now()) {
   const entries = new Map<string, { approverId?: string; at: number }>();
-  const key = (request: GuardRequest, commandKey: string) => `${request.memberId}\u0000${request.source}\u0000${commandKey}`;
+  // The matched rules are part of the key, so a changed role or a new reason asks again.
+  const key = (request: GuardRequest, decision: GuardDecision, commandKey: string) =>
+    [request.memberId, request.source, commandKey, [...decision.matchedRules].sort().join(",")].join("\u0000");
 
   return {
     // Returns the earlier approval for the same requester, channel and command class, if any.
     recall(request: GuardRequest, decision: GuardDecision) {
       const commandKey = commandClass(request.command);
       if (!commandKey || !isReusable(request, decision)) return undefined;
-      const entry = entries.get(key(request, commandKey));
+      const entry = entries.get(key(request, decision, commandKey));
       if (!entry) return undefined;
-      if (now() - entry.at > ttlMs) { entries.delete(key(request, commandKey)); return undefined; }
+      if (now() - entry.at > ttlMs) { entries.delete(key(request, decision, commandKey)); return undefined; }
       return { ...entry, commandClass: commandKey };
     },
     remember(request: GuardRequest, decision: GuardDecision, approverId?: string) {
       const commandKey = commandClass(request.command);
       if (!commandKey || !isReusable(request, decision)) return;
-      entries.set(key(request, commandKey), { approverId, at: now() });
+      entries.set(key(request, decision, commandKey), { approverId, at: now() });
     },
     clear() { entries.clear(); }
   };
