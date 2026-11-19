@@ -198,6 +198,7 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   if (kind === "read") return ["read"];
   if (kind === "edit") return ["write"];
   if (kind === "fetch") return ["network"];
+  if (name === "eval") return ["exec_uninspectable"];
   if (name === "find") {
     if (/(?:^|\s)-(?:delete|exec|execdir|ok|fprint\S*)\b/i.test(command)) return command.includes("-delete") || /-fprint/i.test(command) ? ["delete"] : ["exec"];
     return ["read"];
@@ -323,7 +324,7 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
       reversibility: segmentReversibility
     };
   });
-  if (dynamic) segments.push({ text: command, capabilities: ["exec"], zone: "outside", reversibility: "irreversible" });
+  if (dynamic) segments.push({ text: command, capabilities: ["exec_uninspectable"], zone: "outside", reversibility: "irreversible" });
   if (hasDownloadExecute(command, [command])) segments.push({ text: command, capabilities: ["network", "exec"], zone: "workspace", reversibility: "irreversible" });
   if (metadataReference) segments.push({ text: "$SIMPLERCP_DATA_DIR", capabilities: ["read"], zone: "metadata", reversibility: "reversible" });
   return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command), plainDownloadToShell, downloadExecute: hasDownloadExecute(command, [command]) };

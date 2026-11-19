@@ -64,7 +64,7 @@ describe("Agent Guard fake runtime permissions", () => {
     expect(runResponse.status).toBe(202);
     const run = (await runResponse.json() as { run: { id: string } }).run;
     const approval = await waitForApproval(running.origin, ownerId, run.id);
-    expect(approval).toMatchObject({ request: { memberId }, decision: { matchedRules: expect.arrayContaining(["role.student.delete"]) } });
+    expect(approval).toMatchObject({ request: { memberId }, decision: { matchedRules: expect.arrayContaining(["role.contributor.delete"]) } });
     await approve(running.origin, ownerId, approval.id);
     await expect(waitForRun(running.origin, memberId, run.id, "completed")).resolves.toMatchObject({ output: expect.stringContaining("team-student-done") });
   }, 30_000);

@@ -1,10 +1,9 @@
 import type { Action, Capability, GuardSegment, Level, PathZone, Reversibility } from "./types.js";
 
 export const ROLE_MATRIX: Record<Exclude<Level, "owner">, Record<Capability, Action>> = {
-  observer: { read: "allow", write: "deny", delete: "deny", exec: "deny", network: "deny", history: "deny", process: "deny", privilege: "deny", install: "deny" },
-  student: { read: "allow", write: "allow_snapshot", delete: "ask", exec: "allow", network: "ask", history: "ask", process: "ask", privilege: "deny", install: "ask" },
-  collaborator: { read: "allow", write: "allow_snapshot", delete: "allow_snapshot", exec: "allow", network: "allow", history: "ask", process: "ask", privilege: "deny", install: "ask" },
-  trusted: { read: "allow", write: "allow", delete: "allow_snapshot", exec: "allow", network: "allow", history: "ask", process: "ask", privilege: "ask", install: "ask" }
+  viewer: { read: "allow", write: "deny", delete: "deny", exec: "deny", exec_uninspectable: "deny", network: "deny", history: "deny", process: "deny", privilege: "deny", install: "deny" },
+  contributor: { read: "allow", write: "allow_snapshot", delete: "ask", exec: "allow", exec_uninspectable: "ask", network: "ask", history: "ask", process: "ask", privilege: "deny", install: "ask" },
+  maintainer: { read: "allow", write: "allow_snapshot", delete: "allow_snapshot", exec: "allow", exec_uninspectable: "ask", network: "allow", history: "ask", process: "ask", privilege: "ask", install: "ask" }
 };
 
 export const ACTION_ORDER: Record<Action, number> = { allow: 0, allow_snapshot: 1, ask: 2, deny: 3 };

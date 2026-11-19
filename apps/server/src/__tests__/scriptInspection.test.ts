@@ -1,6 +1,7 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { decide } from "../guard/decide.js";
+import { roleLevel } from "../guard/roles.js";
 import { applyScriptInspection, inspectScripts, type ScriptSource } from "../guard/scriptInspection.js";
 import { writtenPaths } from "../guard/writeProvenance.js";
 import type { GuardContext, GuardRequest, Level } from "../guard/types.js";
@@ -16,7 +17,8 @@ function files(entries: Record<string, string>, writers: Record<string, Level> =
   return { read: (file) => contents.get(file), writerLevel: (file) => levels.get(file) };
 }
 
-function judge(level: Level, text: string, source: ScriptSource, origin: GuardRequest["source"] = "terminal") {
+function judge(role: string, text: string, source: ScriptSource, origin: GuardRequest["source"] = "terminal") {
+  const level = roleLevel(role);
   const base = decide(request(text, origin), context(level));
   return { base, final: applyScriptInspection(base, inspectScripts(request(text, origin), context(level), source), level, origin) };
 }
@@ -65,13 +67,13 @@ describe("script inspection", () => {
   });
 
   it("judges a script at the level of its last writer", () => {
-    const source = files({ "fix.sh": "rm -rf src\n" }, { "fix.sh": "student" });
+    const source = files({ "fix.sh": "rm -rf src\n" }, { "fix.sh": "contributor" });
     expect(judge("owner", "bash fix.sh", files({ "fix.sh": "rm -rf src\n" })).final.action).toBe("allow");
     const trojan = judge("owner", "bash fix.sh", source).final;
     expect(trojan.action).toBe("ask");
     expect(trojan.approvers).toBe("self");
-    expect(trojan.matchedRules).toContain("script.writer.student");
-    const packaged = files({ "package.json": JSON.stringify({ scripts: { fix: "rm -rf src" } }) }, { "package.json": "student" });
+    expect(trojan.matchedRules).toContain("script.writer.contributor");
+    const packaged = files({ "package.json": JSON.stringify({ scripts: { fix: "rm -rf src" } }) }, { "package.json": "contributor" });
     expect(judge("owner", "npm run fix", packaged).final.action).toBe("ask");
   });
 

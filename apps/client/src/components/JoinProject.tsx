@@ -102,13 +102,19 @@ export function JoinProject({
           />
         </label>
         <label>
-          <span>Role <small>Optional. Once the project has an owner, roles above collaborator are granted by an owner.</small></span>
+          <span>Role <small>Optional. Once the project has an owner, maintainer and owner roles are granted by an owner.</small></span>
           <select
             value={role}
             onChange={(event) => setRole(event.target.value)}
             data-testid="member-role"
           >
-            <option value="">Unassigned (collaborator)</option>
+            <option value="">Unassigned (contributor)</option>
+            <optgroup label="Permission levels">
+              <option value="viewer">Viewer</option>
+              <option value="contributor">Contributor</option>
+              <option value="maintainer">Maintainer</option>
+              <option value="owner">Owner</option>
+            </optgroup>
             {groupRoles(scenarioRoles).map(([scenario, entries]) => (
               <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>
                 {entries.map((entry) => (

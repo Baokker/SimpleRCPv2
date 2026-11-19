@@ -39,7 +39,7 @@ describe("legacy guard fixture replay", () => {
       if (record.expectedPathDecision !== "block") continue;
       const command = String(record.command).replace(/\{OUTSIDE_FILE\}|\{OUTSIDE\}|\{PROTECTED_FILE\}/g, (value) => replacements[value]!);
       const result = decide({ projectId: "project", memberId: "member", source: "terminal", kind: "command", command, cwd: workspace }, {
-        memberLevel: "student",
+        memberLevel: "contributor",
         initiatorOnline: true,
         workspaceRoot: workspace,
         platformDataRoot: "/platform/data"

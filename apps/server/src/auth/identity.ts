@@ -67,7 +67,7 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
     })) ?? [];
     const file: MemberFile = { version: 1, members: records.map((member) => ({
       memberId: member.memberId, projectId: member.projectId, displayName: member.displayName,
-      role: member.role ?? "", createdAt: member.createdAt, updatedAt: member.updatedAt ?? member.createdAt
+      role: normalizeRole(member.role), createdAt: member.createdAt, updatedAt: member.updatedAt ?? member.createdAt
     })) };
     if (file.members.some((member) => !member.memberId || member.projectId !== projectId || typeof member.displayName !== "string" || typeof member.role !== "string")) throw new Error("Invalid member record");
     if (legacy || (stored && JSON.stringify(stored) !== JSON.stringify(file))) await save(projectId, file);

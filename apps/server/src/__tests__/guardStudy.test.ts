@@ -19,7 +19,7 @@ describe("process termination is irreversible", () => {
 
   it("keeps owner terminal process control direct and collaborator process control under approval", () => {
     expect(run("owner", "terminal", "pkill node").action).toBe("allow");
-    expect(run("collaborator", "terminal", "pkill -f \"node server.js\"")).toMatchObject({ action: "ask", approvers: "owners" });
+    expect(run("maintainer", "terminal", "pkill -f \"node server.js\"")).toMatchObject({ action: "ask", approvers: "owners" });
   });
 
   it("does not treat words containing kill as process control", () => {

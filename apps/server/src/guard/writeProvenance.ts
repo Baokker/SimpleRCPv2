@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { parseCommandPaths } from "./legacy/parser.js";
+import { roleLevel } from "./roles.js";
 import { simpleCommands } from "./scriptInspection.js";
 import type { GuardRequest, Level } from "./types.js";
 
@@ -36,7 +37,8 @@ export function createWriteProvenance(filePath: string, workspaceRoot: string) {
     },
     levelOf(absolutePath: string): Level | undefined {
       const relative = key(absolutePath);
-      return relative === undefined ? undefined : entries?.[relative]?.level;
+      const entry = relative === undefined ? undefined : entries?.[relative];
+      return entry ? roleLevel(entry.level) : undefined;
     },
     writerOf(absolutePath: string) {
       const relative = key(absolutePath);

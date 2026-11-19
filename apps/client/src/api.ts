@@ -34,7 +34,7 @@ export interface GuardScenarioRole {
   role: string;
   label: string;
   displayName: string;
-  level: "observer" | "student" | "collaborator" | "trusted" | "owner";
+  level: "viewer" | "contributor" | "maintainer" | "owner";
 }
 
 export async function getGuardRoles() {

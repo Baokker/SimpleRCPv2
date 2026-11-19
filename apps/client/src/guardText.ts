@@ -25,10 +25,9 @@ const RULE_TEXT: Record<string, string> = {
 };
 
 const LEVEL_TEXT: Record<string, string> = {
-  observer: "查看者",
-  student: "新成员",
-  collaborator: "开发者",
-  trusted: "维护者",
+  viewer: "查看者",
+  contributor: "贡献者",
+  maintainer: "维护者",
   owner: "负责人"
 };
 
@@ -41,6 +40,7 @@ const CAPABILITY_TEXT: Record<string, string> = {
   history: "改写项目历史",
   write: "写文件",
   exec: "运行命令",
+  exec_uninspectable: "运行无法检查的代码",
   read: "读文件"
 };
 
@@ -52,7 +52,7 @@ export function guardRuleText(rule: string, denied = false): string {
   const inner = rule.replace(/^script\./, "");
   const prefix = inner === rule ? "" : "package.json 里的脚本";
   if (RULE_TEXT[inner]) return prefix ? `${prefix}${RULE_TEXT[inner]}` : RULE_TEXT[inner];
-  const roleRule = inner.match(/^role\.(observer|student|collaborator|trusted)\.(.+)$/);
+  const roleRule = inner.match(/^role\.(viewer|contributor|maintainer)\.(.+)$/);
   if (roleRule) {
     const level = guardLevelText(roleRule[1]!);
     const capability = CAPABILITY_TEXT[roleRule[2]!] ?? roleRule[2]!;

@@ -153,12 +153,12 @@ export function CollaborationPanel({
   function grantRole(memberId: string, role: string) {
     void updateMemberRole(projectId, memberId, role).catch(onError);
   }
-  const levelOf = (role: string | undefined) => scenarioRoles.find((entry) => entry.role === role)?.level ?? (LEVEL_ORDER.includes(role as GuardScenarioRole["level"]) ? role as GuardScenarioRole["level"] : "collaborator");
+  const levelOf = (role: string | undefined) => scenarioRoles.find((entry) => entry.role === role)?.level ?? (LEVEL_ORDER.includes(role as GuardScenarioRole["level"]) ? role as GuardScenarioRole["level"] : "contributor");
   const otherOwnerPresent = members.some((candidate) => candidate.id !== member?.id && levelOf(candidate.profileRole) === "owner");
   // Mirrors the server rule: without another owner, any role may be claimed; otherwise only equal or lower levels.
   const canSelfAssign = (role: string) => !otherOwnerPresent || LEVEL_ORDER.indexOf(levelOf(role)) <= LEVEL_ORDER.indexOf(levelOf(member?.profileRole));
   function roleOptions(isAllowed: (role: string) => boolean) {
-    return <><option value="" disabled={!isAllowed("")}>Unassigned (collaborator)</option>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>{entries.map((entry) => <option key={entry.role} value={entry.role} disabled={!isAllowed(entry.role)}>{entry.displayName} — {entry.level}</option>)}</optgroup>)}</>;
+    return <><option value="" disabled={!isAllowed("")}>Unassigned (contributor)</option><optgroup label="Permission levels">{LEVEL_ORDER.map((level) => <option key={level} value={level} disabled={!isAllowed(level)}>{level}</option>)}</optgroup>{groupRoles(scenarioRoles).map(([scenario, entries]) => <optgroup key={scenario} label={entries[0]?.scenarioDisplayName ?? scenario}>{entries.filter((entry) => !LEVEL_ORDER.includes(entry.role as GuardScenarioRole["level"])).map((entry) => <option key={entry.role} value={entry.role} disabled={!isAllowed(entry.role)}>{entry.displayName} — {entry.level}</option>)}</optgroup>)}</>;
   }
   const chatTranscriptRef = useRef<HTMLOListElement>(null);
   const stickToLatestRef = useRef(true);
@@ -469,7 +469,7 @@ export function CollaborationPanel({
                         ) : owner ? (
                           <label className="member-role-editor"><select aria-label={`Role of ${candidate.displayName}`} value={candidate.profileRole ?? ""} onChange={(event) => grantRole(candidate.id, event.target.value)}>{roleOptions(() => true)}</select></label>
                         ) : <em>{scenarioRoles.find((role) => role.role === candidate.profileRole)?.displayName ?? candidate.profileRole ?? "Unassigned"}</em>}
-                        {candidate.id !== member?.id && !owner ? candidate.profileRole ? <em>({scenarioRoles.find((role) => role.role === candidate.profileRole)?.level ?? "collaborator"})</em> : <em>(collaborator)</em> : null}
+                        {candidate.id !== member?.id && !owner ? <em>({levelOf(candidate.profileRole)})</em> : null}
                         {candidate.connectionCount > 1 ? (
                           <em>{candidate.connectionCount} tabs</em>
                         ) : null}
@@ -519,7 +519,7 @@ export function CollaborationPanel({
               {visibleApprovals.map((approval) => {
                 const llm = approval.decision.llm;
                 const requester = members.find((candidate) => candidate.id === approval.request.memberId);
-                const requesterRole = scenarioRoles.find((role) => role.role === requester?.profileRole)?.level ?? "collaborator";
+                const requesterRole = levelOf(requester?.profileRole);
                 const remaining = approval.expiresAt ? Math.max(0, Math.ceil((Date.parse(approval.expiresAt) - clock) / 1000)) : undefined;
                 const reason = humanGuardReason(approval.decision.matchedRules, approval.decision.action);
                 return (
@@ -1044,7 +1044,7 @@ function formatEditDetail(payload: Record<string, unknown>) {
   return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
 }
 
-const LEVEL_ORDER: GuardScenarioRole["level"][] = ["observer", "student", "collaborator", "trusted", "owner"];
+const LEVEL_ORDER: GuardScenarioRole["level"][] = ["viewer", "contributor", "maintainer", "owner"];
 
 function groupRoles(entries: GuardScenarioRole[]) {
   const groups = new Map<string, GuardScenarioRole[]>();

@@ -161,7 +161,7 @@ describe("member identity API", () => {
     await fs.writeFile(path.join(runtime.project.workspacePath, "fix.sh"), "rm -rf src\n");
     const byOwner = await runtime.guard.submit(request(owner.member.id, "bash fix.sh"));
     expect(byOwner).toMatchObject({ approved: false, decision: { action: "ask", approvers: "self" } });
-    expect(byOwner.decision.matchedRules).toEqual(expect.arrayContaining(["script.writer.student", "script.role.student.delete"]));
+    expect(byOwner.decision.matchedRules).toEqual(expect.arrayContaining(["script.writer.contributor", "script.role.contributor.delete"]));
     await fs.writeFile(path.join(runtime.project.workspacePath, "own.sh"), "rm -rf src\n");
     expect(await runtime.guard.submit(request(owner.member.id, "bash own.sh"))).toMatchObject({ approved: true, decision: { action: "allow" } });
     expect(await runtime.guard.submit(request(owner.member.id, "touch .env"))).toMatchObject({ approved: true, decision: { action: "allow_snapshot", matchedRules: expect.arrayContaining(["owner.self-command"]) } });
@@ -178,8 +178,9 @@ describe("member identity API", () => {
     root = await createTestWorkspace("remembered-command-");
     running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 2_000 });
     const owner = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member;
-    const requester = (await joinMember(running.origin, "demo", { name: "Bob", role: "collaborator" })).member;
+    const requester = (await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" })).member;
     const memberStore = running.app.locals.members;
+    await memberStore.changeRole("demo", { actorId: owner.id, targetId: requester.id, role: "maintainer" });
     const runtime = running.app.locals.runtimeManager.get("demo");
     const cwd = runtime.project.workspacePath;
     await fs.writeFile(path.join(cwd, "check.js"), "console.log(eval('1'));\n");
@@ -211,7 +212,7 @@ describe("member identity API", () => {
     const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
     const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
     expect(audit.find((record) => record.stage === "remembered")).toMatchObject({ approver: owner.id, approvedAt: expect.any(String) });
-    await memberStore.changeRole("demo", { actorId: owner.id, targetId: requester.id, role: "student" });
+    await memberStore.changeRole("demo", { actorId: owner.id, targetId: requester.id, role: "contributor" });
     const afterDemotion = runtime.guard.submit(request);
     await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
     expect(await runtime.guard.reject(runtime.guard.pending()[0]!.id, owner.id)).toBe(true);

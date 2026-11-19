@@ -1,10 +1,11 @@
-export type Level = "observer" | "student" | "collaborator" | "trusted" | "owner";
+export type Level = "viewer" | "contributor" | "maintainer" | "owner";
 
 export type Capability =
   | "read"
   | "write"
   | "delete"
   | "exec"
+  | "exec_uninspectable"
   | "network"
   | "history"
   | "process"

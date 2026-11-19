@@ -3,7 +3,7 @@ import type { Level } from "../guard/types.js";
 
 // Once a project has an owner, members may pick at most this level for themselves;
 // anything higher must be granted by an owner.
-export const SELF_ASSIGNABLE_LEVEL: Level = "collaborator";
+export const SELF_ASSIGNABLE_LEVEL: Level = "contributor";
 
 export class RoleChangeError extends Error {
   constructor(message: string, readonly status: 403 | 404) {

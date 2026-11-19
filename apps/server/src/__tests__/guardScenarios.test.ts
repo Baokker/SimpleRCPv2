@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { decide } from "../guard/decide.js";
 import { createApprovalQueue } from "../guard/approvals.js";
-import type { GuardRequest, Level } from "../guard/types.js";
+import { roleLevel } from "../guard/roles.js";
+import type { GuardRequest } from "../guard/types.js";
 
 const workspace = "/workspace/project";
 const base = { projectId: "project", memberId: "member", cwd: workspace };
-function check(level: Level, source: GuardRequest["source"], input: Pick<GuardRequest, "kind" | "command" | "paths">) {
+function check(role: string, source: GuardRequest["source"], input: Pick<GuardRequest, "kind" | "command" | "paths">) {
   return decide({ ...base, ...input, source, agentRunId: source === "agent" ? "run" : undefined }, {
-    memberLevel: level,
+    memberLevel: roleLevel(role),
     initiatorOnline: true,
     workspaceRoot: workspace,
     platformDataRoot: "/platform/data",
@@ -91,7 +92,7 @@ describe("multi-member multi-agent scenarios", () => {
 
   it("T4 denies a non-read request after the initiator goes offline", () => {
     const result = decide({ ...base, source: "agent", agentRunId: "student-run", kind: "command", command: "rm config.js" }, {
-      memberLevel: "student",
+      memberLevel: "contributor",
       initiatorOnline: false,
       workspaceRoot: workspace,
       platformDataRoot: "/platform/data"

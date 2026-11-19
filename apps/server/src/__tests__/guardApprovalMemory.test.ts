@@ -56,16 +56,16 @@ describe("approval memory reuse", () => {
   it("asks once for the same command class from the same requester", () => {
     const memory = createApprovalMemory();
     const first = request("node check.js");
-    const firstDecision = evaluate(first, "collaborator");
+    const firstDecision = evaluate(first, "maintainer");
     expect(isReusable(first, firstDecision)).toBe(true);
     expect(memory.recall(first, firstDecision)).toBeUndefined();
     memory.remember(first, firstDecision, "alice");
-    expect(evaluate(first, "collaborator")).toEqual(firstDecision);
+    expect(evaluate(first, "maintainer")).toEqual(firstDecision);
     expect(memory.recall(first, firstDecision)).toMatchObject({ approverId: "alice", commandClass: "node check.js" });
     expect(memory.recall({ ...first, memberId: "carol" }, firstDecision)).toBeUndefined();
     expect(memory.recall({ ...first, source: "terminal" }, firstDecision)).toBeUndefined();
     expect(memory.recall({ ...first, sessionScope: "team" }, firstDecision)).toBeUndefined();
-    expect(memory.recall(first, evaluate(first, "observer"))).toBeUndefined();
+    expect(memory.recall(first, evaluate(first, "contributor"))).toBeUndefined();
     expect(createApprovalMemory().recall(first, firstDecision)).toBeUndefined();
     memory.clearMember(first.memberId);
     expect(memory.recall(first, firstDecision)).toBeUndefined();
@@ -74,18 +74,18 @@ describe("approval memory reuse", () => {
   it("never reuses approvals for protected paths or irreversible operations", () => {
     const memory = createApprovalMemory();
     const envRead = request("cat .env");
-    const envDecision = decide(envRead, context("collaborator"));
+    const envDecision = decide(envRead, context("maintainer"));
     expect(envDecision.action).toBe("ask");
     expect(isReusable(envRead, envDecision)).toBe(false);
     memory.remember(envRead, envDecision, "alice");
     expect(memory.recall(envRead, envDecision)).toBeUndefined();
     const forcePush = request("git push --force origin main");
-    const pushDecision = decide(forcePush, context("collaborator"));
+    const pushDecision = decide(forcePush, context("maintainer"));
     expect(pushDecision.action).toBe("ask");
     expect(isReusable(forcePush, pushDecision)).toBe(false);
     for (const command of ["cat ../readme", "curl https://example.test", "npm install", "node check.js | cat", "echo $(pwd)"]) {
       const item = request(command);
-      expect(isReusable(item, evaluate(item, "student")), command).toBe(false);
+      expect(isReusable(item, evaluate(item, "contributor")), command).toBe(false);
     }
   });
 
@@ -93,7 +93,7 @@ describe("approval memory reuse", () => {
     let now = 0;
     const memory = createApprovalMemory(1000, () => now);
     const item = request("node check.js");
-    const itemDecision = evaluate(item, "collaborator");
+    const itemDecision = evaluate(item, "maintainer");
     memory.remember(item, itemDecision, "alice");
     now = 500;
     expect(memory.recall(item, itemDecision)).toBeDefined();

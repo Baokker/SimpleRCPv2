@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { decide } from "./decide.js";
 import { LEVELS } from "./roles.js";
-import { stricter } from "./rules.js";
+import { ROLE_MATRIX, stricter } from "./rules.js";
 import type { Action, GuardContext, GuardDecision, GuardRequest, Level } from "./types.js";
 
 // Rules see only the command text, so `bash run.sh` hides whatever run.sh does. Before a script runs,
@@ -283,7 +283,7 @@ function inspectTarget(target: ScriptTarget, cwd: string, request: GuardRequest,
   }
   const scanned = interpreterCommands(content!, target.kind);
   for (const command of scanned.commands) judgeLine(command, path.dirname(target.file!), request, context, level, source, depth, result);
-  if (scanned.dynamic && level !== "owner") combine(result, "ask", ["script.dynamic-code"]);
+  if (scanned.dynamic && level !== "owner") combine(result, ROLE_MATRIX[level].exec_uninspectable, ["script.dynamic-code", `script.role.${level}.exec_uninspectable`]);
   if (depth < MAX_DEPTH) {
     for (const include of scanned.includes) {
       const resolved = path.resolve(path.dirname(target.file!), include);
