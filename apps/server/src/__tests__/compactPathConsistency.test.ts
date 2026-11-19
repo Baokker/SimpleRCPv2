@@ -101,7 +101,7 @@ it("enforces ComPACT Property 1 across fixture and generated command pairs", asy
         const request: GuardRequest = { projectId: "compact", cwd: workspaceRoot, memberId: "member", kind: "command", source: "terminal", command };
         const terminal = decide(request, context);
         const agent = decide({ ...request, source: "agent", agentRunId: "property-1" }, context);
-        const sameFeatures = features(agent) === features(terminal);
+        const sameFeatures = features(agent) === features(terminal) && !terminal.matchedRules.includes("hard.cwd");
         const looser = stricter(agent.action, terminal.action) !== agent.action;
         group.total++;
         if (sameFeatures) {

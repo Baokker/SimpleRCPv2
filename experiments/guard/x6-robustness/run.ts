@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { context, dataRoot, ensureRuntimeDirectory, resultsRoot, writeRun, workspaceRoot, type RawRow } from "../lib/common.js";
+import { context, dataRoot, ensureRuntimeDirectory, resultsRoot, testedRef, writeRun, workspaceRoot, type RawRow } from "../lib/common.js";
 import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { Action, Level } from "../../../apps/server/src/guard/types.js";
 import { applyLlmJudgment } from "../../../apps/server/src/guard/service.js";
@@ -18,11 +18,22 @@ function randomCommand(seed: { value: number }): string {
   return commands[Math.floor(random(seed) * commands.length)]!;
 }
 
-function randomCompoundCommand(seed: { value: number }, operators = [";", "&&", "||", "|", "\n"]): { command: string; parts: string[] } {
+function randomCompoundCommand(seed: { value: number }, operators = [";", "&&", "||", "|", "\n"]) {
   const left = randomCommand(seed);
   const right = randomCommand(seed);
   const operator = operators[Math.floor(random(seed) * operators.length)]!;
-  return { command: `${left} ${operator} ${right}`, parts: [left, right] };
+  return { command: `${left} ${operator} ${right}`, parts: [left, right] as const, operator };
+}
+
+function componentRequests(compound: ReturnType<typeof randomCompoundCommand>, source: "terminal" | "agent") {
+  const [left, right] = compound.parts;
+  const components = [{ command: left, cwd: workspaceRoot }];
+  if (source === "agent" && left === "cd examples" && compound.operator !== "|") {
+    components.push({ command: right, cwd: path.join(workspaceRoot, "examples") });
+    if (compound.operator === "&&") return components;
+  }
+  components.push({ command: right, cwd: workspaceRoot });
+  return components;
 }
 
 function raw(id: string, level: Level, command: string, decision: { action: Action; matchedRules: string[]; legacyRisk: string; autoEligible: boolean }, expected: Action | { atLeast: "ask" }, malicious = false): RawRow {
@@ -76,12 +87,13 @@ function propertyTests(): { rows: RawRow[]; results: Record<string, { cases: num
     const compound = randomCompoundCommand(seed);
     const level = levels[index % levels.length]!;
     const chained = decide({ ...request, command: compound.command }, context(level));
-    const componentDecisions = compound.parts.map((part) => decide({ ...request, command: part }, context(level)));
+    const components = componentRequests(compound, source);
+    const componentDecisions = components.map((component) => decide({ ...request, ...component }, context(level)));
     const strictest = Math.max(...componentDecisions.map((decision) => actionOrder[decision.action]));
     const strictestFailed = actionOrder[chained.action] < strictest;
     if (strictestFailed) strictestFailures += 1;
     const strictestAction = componentDecisions.reduce((strictest, decision) => actionOrder[decision.action] > actionOrder[strictest] ? decision.action : strictest, "allow" as Action);
-    rows.push({ ...raw(`property-strictest-${index + 1}`, level, compound.command, chained, strictestAction), source, propertyEvidence: { failed: strictestFailed, parts: compound.parts, componentActions: componentDecisions.map(decision => decision.action) } });
+    rows.push({ ...raw(`property-strictest-${index + 1}`, level, compound.command, chained, strictestAction), source, propertyEvidence: { failed: strictestFailed, parts: compound.parts, components, componentActions: componentDecisions.map(decision => decision.action) } });
   }
   return { rows, llmFloorCoverage, results: { monotonic: { cases: 10_000, failures: monotonicFailures }, metadataDeny: { cases: 10_000, failures: metadataFailures }, llmFloor: { cases: 10_000, failures: llmFailures }, strictestSubcommand: { cases: 10_000, failures: strictestFailures } } };
 }
@@ -89,7 +101,7 @@ function propertyTests(): { rows: RawRow[]; results: Record<string, { cases: num
 async function main() {
   const startedAt = new Date().toISOString();
   await ensureRuntimeDirectory();
-  const runDirectory = path.join(resultsRoot, "X6", "x6-properties-compact-v1");
+  const runDirectory = path.join(resultsRoot, "X6", `x6-properties-compact-${testedRef.endsWith("v1") ? "v1-cwd-oracle" : "v2"}`);
   await fs.mkdir(runDirectory,{recursive:true});
   const properties = propertyTests();
   const { rows } = properties;
