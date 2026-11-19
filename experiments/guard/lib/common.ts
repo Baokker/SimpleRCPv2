@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -7,11 +7,22 @@ import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { GuardContext, GuardDecision, GuardRequest, Level, Action } from "../../../apps/server/src/guard/types.js";
 
 export const projectRoot = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
-const defaultRuntimeRoot = path.join(projectRoot, ".experiment-data", `guard-${process.pid}`);
-mkdirSync(defaultRuntimeRoot, { recursive: true });
+const defaultRuntimeRoot = path.join(projectRoot, ".test-workspaces", `guard-${process.pid}`);
 export const runtimeRoot = process.env.SIMPLERCP_DATA_DIR ?? defaultRuntimeRoot;
 export const workspaceRoot = path.join(runtimeRoot, "workspace");
 export const dataRoot = path.join(runtimeRoot, "data");
+export const resultsRoot = path.join(projectRoot, "experiments/guard/results-compact");
+export const testedRef = "guard-compact-v1";
+
+const git = (...args: string[]) => execFileSync("git", args, { cwd: projectRoot, encoding: "utf8" }).trim();
+
+export function assertFrozenServer() {
+  const commit = git("rev-parse", `${testedRef}^{commit}`);
+  const changed = git("diff", "--name-only", commit, "--", "apps/server/src", "packages/shared/src");
+  const untracked = git("ls-files", "--others", "--exclude-standard", "--", "apps/server/src", "packages/shared/src");
+  if (changed || untracked) throw new Error(`Server sources differ from ${testedRef}`);
+  return commit;
+}
 
 export interface DatasetRecord {
   id: string;
@@ -92,7 +103,7 @@ export function standardDeviation(values: number[]): number {
 }
 
 export async function loadDataset(name: string): Promise<DatasetRecord[]> {
-  const datasetVersion = process.env.GUARD_DATASET_VERSION ?? "v2";
+  const datasetVersion = process.env.GUARD_DATASET_VERSION ?? "compact";
   const datasetDirectory = datasetVersion === "v1"
     ? path.join(projectRoot, "experiments/guard/datasets")
     : path.join(projectRoot, "experiments/guard/datasets", datasetVersion);
@@ -102,6 +113,7 @@ export async function loadDataset(name: string): Promise<DatasetRecord[]> {
 }
 
 export async function ensureRuntimeDirectory() {
+  assertFrozenServer();
   await fs.mkdir(workspaceRoot, { recursive: true });
   await fs.mkdir(dataRoot, { recursive: true });
   const otherProjectRoot = path.join(runtimeRoot, "other-project");
@@ -122,35 +134,31 @@ export async function ensureRuntimeDirectory() {
 }
 
 export async function environmentRecord(extra: Record<string, unknown> = {}) {
-  const packageManager = await fs.readFile(path.join(projectRoot, "package.json"), "utf8").then((text) => JSON.parse(text) as { packageManager?: string });
+  const commit = assertFrozenServer();
   return {
-    testedRef: "guard-v1.5",
-    commit: (await runCommand("git rev-parse guard-v1.5^{commit}")).trim(),
-    harnessCommit: (await runCommand("git rev-parse HEAD")).trim(),
-    branch: (await runCommand("git branch --show-current")).trim(),
+    testedRef,
+    commit,
+    harnessCommit: git("rev-parse", "HEAD"),
+    branch: git("branch", "--show-current"),
     node: process.version,
-    pnpm: packageManager.packageManager ?? "unknown",
+    pnpm: execFileSync("pnpm", ["--version"], { cwd: projectRoot, encoding: "utf8" }).trim(),
+    openCode: execFileSync(path.join(projectRoot, "apps/server/node_modules/.bin/opencode"), ["--version"], { cwd: projectRoot, encoding: "utf8" }).trim(),
     os: `${os.platform()} ${os.release()} ${os.arch()}`,
     cpu: os.cpus()[0]?.model ?? "unknown",
     cpuCount: os.cpus().length,
     memoryBytes: os.totalmem(),
-    model: process.env.EXPERIMENT_MODEL ?? process.env.MINIMAX_MODEL ?? process.env.DEEPSEEK_MODEL ?? "unconfigured",
+    model: null,
     dataDir: runtimeRoot,
     pathAliases: { "/platform/data": dataRoot },
     ...extra
   };
 }
 
-export async function runCommand(command: string): Promise<string> {
-  const { execFile } = await import("node:child_process");
-  return await new Promise((resolve, reject) => execFile("/bin/zsh", ["-lc", command], { cwd: projectRoot }, (error, stdout, stderr) => error ? reject(new Error(`${command}: ${stderr || error.message}`)) : resolve(stdout)));
-}
-
 export function sha256(text: string): string {
   return crypto.createHash("sha256").update(text).digest("hex");
 }
 
-export async function writeRun(runDirectory: string, rows: RawRow[], summary: unknown, extraEnv: Record<string, unknown> = {}) {
+export async function writeRun(runDirectory: string, rows: unknown[], summary: unknown, extraEnv: Record<string, unknown> = {}) {
   await fs.mkdir(runDirectory, { recursive: true });
   await fs.writeFile(path.join(runDirectory, "raw.jsonl"), `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`);
   await fs.writeFile(path.join(runDirectory, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
