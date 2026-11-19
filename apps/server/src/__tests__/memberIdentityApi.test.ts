@@ -376,12 +376,25 @@ describe("member identity API", () => {
     await running.close();
     await fs.rm(root, { recursive: true, force: true });
     root = await createTestWorkspace("remembered-command-");
-    running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 2_000 });
+    const terminalShell = process.env.SIMPLERCP_SHELL;
+    const terminalPath = process.env.PATH;
+    process.env.SIMPLERCP_SHELL = "/bin/sh";
+    process.env.PATH = [path.dirname(process.execPath), terminalPath].filter(Boolean).join(path.delimiter);
+    let runtime: ReturnType<typeof running.app.locals.runtimeManager.get>;
+    try {
+      running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 2_000 });
+      runtime = running.app.locals.runtimeManager.get("demo");
+    } finally {
+      if (terminalShell === undefined) delete process.env.SIMPLERCP_SHELL;
+      else process.env.SIMPLERCP_SHELL = terminalShell;
+      if (terminalPath === undefined) delete process.env.PATH;
+      else process.env.PATH = terminalPath;
+    }
     const owner = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member;
     const requester = (await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" })).member;
     const memberStore = running.app.locals.members;
     await memberStore.changeRole("demo", { actorId: owner.id, targetId: requester.id, role: "maintainer" });
-    const runtime = running.app.locals.runtimeManager.get("demo");
+    expect(runtime.terminal.shellName).toBe("sh");
     const cwd = runtime.project.workspacePath;
     await fs.writeFile(path.join(cwd, "check.js"), "console.log(eval('1'));\n");
     const command = "node check.js > result.txt";
@@ -398,6 +411,7 @@ describe("member identity API", () => {
     try {
       await opened(terminal);
       await vi.waitFor(() => {
+        expect(runtime.terminal.getScrollback()).toMatch(/[$#] $/);
         const foreground = runtime.terminal.foregroundProcess();
         expect(foreground && runtime.terminal.isShellProcess(foreground)).toBe(true);
       }, { timeout: 2_000 });
