@@ -1,0 +1,79 @@
+{
+  "seed": 1129270608,
+  "inputs": {
+    "existing": 361,
+    "archived": 1682,
+    "generated": 10000
+  },
+  "total": 96344,
+  "compared": 62632,
+  "violations": 0,
+  "differentFeatures": 33712,
+  "differentFeatureLooserDecisions": 11725,
+  "byLevel": {
+    "viewer": {
+      "online": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 118
+      },
+      "offline": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 0
+      }
+    },
+    "contributor": {
+      "online": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 3243
+      },
+      "offline": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 0
+      }
+    },
+    "maintainer": {
+      "online": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 4182
+      },
+      "offline": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 0
+      }
+    },
+    "owner": {
+      "online": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 4182
+      },
+      "offline": {
+        "total": 12043,
+        "compared": 7829,
+        "violations": 0,
+        "differentFeatures": 4214,
+        "differentFeatureLooserDecisions": 0
+      }
+    }
+  }
+}

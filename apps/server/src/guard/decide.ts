@@ -7,18 +7,29 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
   const level: Level = roleLevel(context.memberLevel);
   const protectedPaths = context.protectedPaths ?? [".env*", "*.pem", "*.key", ".git/hooks/**", ".git/config"];
   const characterization = characterize(request, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
+  const command = request.command ?? "";
   let action: GuardDecision["action"] = "allow";
   const matchedRules = new Set<string>();
-  const controlCharacterPattern = request.source === "terminal"
-    ? /[\u0000-\u001f\u007f-\u009f]/
-    : /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/;
-  if (request.kind === "command" && controlCharacterPattern.test(request.command ?? "")) {
-    action = "deny";
-    matchedRules.add("hard.control-character");
-  }
-  if (request.source === "terminal" && request.kind === "command" && /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(request.command?.trim() ?? "")) {
-    action = "deny";
-    matchedRules.add("hard.cwd");
+  if (request.kind === "command") {
+    const controls = /[\u0000-\u001f\u007f-\u009f]/.test(command);
+    const changesDirectory = /^(?:cd|chdir|pushd|popd|set-location|sl)(?:\s|$)/i.test(command.trim());
+    let sameTerminalFeatures = request.source === "terminal";
+    if (request.source === "agent" && request.agentRunId && (controls || changesDirectory)) {
+      const terminal = characterize({ ...request, source: "terminal" }, context.platformDataRoot, protectedPaths, context.otherWorkspaceRoots);
+      sameTerminalFeatures = terminal.segments.length === characterization.segments.length && terminal.segments.every((segment, index) => {
+        const agent = characterization.segments[index]!;
+        return agent.zone === segment.zone && agent.reversibility === segment.reversibility &&
+          agent.capabilities.length === segment.capabilities.length && agent.capabilities.every((capability, position) => capability === segment.capabilities[position]);
+      });
+    }
+    if ((sameTerminalFeatures && controls) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(command)) {
+      action = "deny";
+      matchedRules.add("hard.control-character");
+    }
+    if (sameTerminalFeatures && changesDirectory) {
+      action = "deny";
+      matchedRules.add("hard.cwd");
+    }
   }
   for (const segment of characterization.segments) {
     const result = segmentAction(segment, level);

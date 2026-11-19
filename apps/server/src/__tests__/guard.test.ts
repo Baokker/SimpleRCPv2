@@ -147,11 +147,11 @@ describe("guard decisions", () => {
     expect(result.autoEligible).toBe(false);
   });
 
-  it("applies terminal-only hard rules to Agent commands", () => {
+  it("applies terminal syntax denials to Agent commands with matching features", () => {
     const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("owner"));
     const changedDirectory = agent("cd src && ls");
-    expect(changedDirectory.action).toBe("allow");
-    expect(changedDirectory.matchedRules).not.toContain("hard.cwd");
+    expect(changedDirectory.action).toBe("deny");
+    expect(changedDirectory.matchedRules).toContain("hard.cwd");
     const multiline = agent("ls\nls");
     expect(multiline.action).toBe("allow");
     expect(multiline.matchedRules).not.toContain("hard.control-character");
@@ -169,10 +169,10 @@ describe("guard decisions", () => {
     expect(result.matchedRules).not.toContain("classify.unknown");
   });
 
-  it("reviews unsafe Agent cd prefixes before applying the chained command", () => {
+  it("denies unsafe Agent directory prefixes with matching terminal features", () => {
     const agent = (text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("collaborator"));
     for (const text of ["cd ~ && rm -rf Documents", "cd $HOME && rm -rf Documents", "cd ..'' && rm -rf p2", "cd - && rm -rf x"]) {
-      expect(agent(text).action).toBe("ask");
+      expect(agent(text)).toMatchObject({ action: "deny", matchedRules: expect.arrayContaining(["hard.cwd"]) });
     }
   });
 

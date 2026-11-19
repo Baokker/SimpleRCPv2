@@ -239,7 +239,7 @@ function judgeLine(line: string, cwd: string, request: GuardRequest, context: Gu
   // Script lines run unattended, like Agent tool calls, so they are judged with the Agent's `cd x && ...` handling.
   const relative = path.relative(context.workspaceRoot, cwd);
   const command = relative ? `cd ${/^[\w./-]+$/.test(relative) ? relative : quote(relative)} && ${line}` : line;
-  const inner = { ...request, source: "agent" as const, kind: "command" as const, command, cwd: context.workspaceRoot, paths: undefined };
+  const inner = { ...request, source: "agent" as const, kind: "command" as const, command, cwd: context.workspaceRoot, paths: undefined, agentRunId: undefined };
   let decision = decide(inner, { ...context, memberLevel: level, initiatorOnline: true });
   // npm, pnpm and yarn put node_modules/.bin on PATH, so a package script runs local tools as npx would.
   if (packageScript && decision.matchedRules.includes("classify.unknown")) {
