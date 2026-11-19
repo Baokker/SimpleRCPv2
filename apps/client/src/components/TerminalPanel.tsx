@@ -6,6 +6,9 @@ import {
   type SharedTerminalHandle
 } from "./SharedTerminal";
 
+
+const CONNECTION_TEXT: Record<string, string> = { Connecting: "连接中", Connected: "已连接", Reconnecting: "重新连接中", Offline: "已断开" };
+
 export function TerminalPanel({
   projectId,
   theme,
@@ -23,10 +26,10 @@ export function TerminalPanel({
   return (
     <div className="panel terminal-panel">
       <div className="panel-header terminal-header">
-        <span>Terminal</span>
+        <span>共享终端</span>
         <div className="terminal-controls">
           <span className="terminal-state" data-testid="terminal-state">
-            Shared · {connectionState}
+            共享 · {CONNECTION_TEXT[connectionState] ?? connectionState}
           </span>
           {connectionState === "Offline" ? (
             <button
@@ -34,14 +37,14 @@ export function TerminalPanel({
               type="button"
               onClick={() => terminalRef.current?.reconnect()}
             >
-              Reconnect
+              重新连接
             </button>
           ) : null}
           <button
             className="terminal-restart"
             onClick={() => terminalRef.current?.restart()}
-            title="Restart shared terminal"
-            aria-label="Restart shared terminal"
+            title="重启共享终端"
+            aria-label="重启共享终端"
             data-testid="terminal-restart"
           >
             <RotateCcw size={14} />

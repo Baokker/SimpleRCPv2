@@ -81,7 +81,7 @@ for (const variant of ["personal", "team"] as const) {
     await expect(details.getByTestId("agent-trace-summary")).toContainText("工作详情");
     await expect(details.getByTestId("agent-work-details-status")).toHaveText("实时更新");
     await expect(details.getByTestId("agent-reasoning")).toContainText("sleep 30");
-    await expect(trace).toContainText("Started working in the project");
+    await expect(trace).toContainText("开始在项目里工作");
     await expect(details.locator("details")).toHaveCount(0);
     await expect(container.getByTestId("agent-run-progress").getByTestId("agent-reasoning")).toHaveCount(0);
     await details.getByTestId("agent-trace-summary").click();
@@ -96,9 +96,9 @@ for (const variant of ["personal", "team"] as const) {
     await expect(details.getByTestId("agent-work-details-status")).toHaveText("已结束");
     await details.getByTestId("agent-trace-summary").click();
     await expect(details.getByTestId("agent-reasoning").locator("pre")).toHaveText(complete.run.activity!.reasoning.filter((part) => part.text.trim()).map((part) => part.text).join("\n\n"));
-    await expect(trace).toContainText("Ran command");
+    await expect(trace).toContainText("执行命令");
     await expect(trace).toContainText("sleep 30");
-    await expect(trace).toContainText("Run completed");
+    await expect(trace).toContainText("任务完成");
     await expect(container.getByTestId("agent-reasoning")).toHaveCount(1);
     await expect(container.getByTestId("agent-response")).toContainText("STREAMING_DONE_20261009");
   });

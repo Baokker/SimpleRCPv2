@@ -203,15 +203,15 @@ export function CollaborationPanel({
 
   return (
     <div className="panel collab-panel">
-      <div className="panel-header">Collaboration</div>
-      <nav className="collab-tabs" aria-label="Collaboration sections">
+      <div className="panel-header">协作</div>
+      <nav className="collab-tabs" aria-label="协作分区">
         <button
           className={activeTab === "chat" ? "active" : ""}
           onClick={() => setActiveTab("chat")}
           data-testid="collab-tab-chat"
         >
           <MessageSquareText size={14} />
-          Chat
+          聊天
         </button>
         <button
           className={activeTab === "agent" ? "active" : ""}
@@ -219,7 +219,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-agent"
         >
           <Bot size={14} />
-          My Agent
+          我的 Agent
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
@@ -227,7 +227,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-project"
         >
           <Settings2 size={14} />
-          Project
+          项目
         </button>
         <button
           className={activeTab === "team" ? "active" : ""}
@@ -235,7 +235,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-team"
         >
           <Users size={14} />
-          Team
+          团队
         </button>
         {conflictState ? <button className={activeTab === "conflict" ? "active" : ""} onClick={() => setActiveTab("conflict")} data-testid="collab-tab-conflict"><ShieldAlert size={14} aria-hidden="true" />冲突预防{conflictCount > 0 ? <span className="collab-tab-count" data-testid="conflict-tab-count" aria-label={`${conflictCount} 个待处理冲突`}>{conflictCount}</span> : null}</button> : null}
       </nav>
@@ -245,14 +245,14 @@ export function CollaborationPanel({
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
             <div className="team-agent-bar" data-testid="team-agent-bar">
-              <strong>Team Agents</strong>
+              <strong>团队 Agent</strong>
               {teamAgents.map((agent) => {
                 const active = agentRuns.some(
                   (run) => run.sessionId === agent.id && (run.status === "queued" || run.status === "running")
                 );
                 return (
                   <span key={agent.id} className="team-agent-status">
-                    <Bot size={13} /> @{agent.handle ?? agent.title} · {active ? "Running" : "Idle"}
+                    <Bot size={13} /> @{agent.handle ?? agent.title} · {active ? "运行中" : "空闲"}
                   </span>
                 );
               })}
@@ -273,13 +273,13 @@ export function CollaborationPanel({
                       setTeamAgentFormOpen(false);
                     }).catch(onError);
                   }}
-                  placeholder="Agent name"
+                  placeholder="Agent 名称"
                   data-testid="team-agent-name"
                 />
                 <input
                   value={teamAgentDescription}
                   onChange={(event) => setTeamAgentDescription(event.target.value)}
-                  placeholder="Description (optional)"
+                  placeholder="说明（可选）"
                   data-testid="team-agent-description"
                 />
                 <button
@@ -290,7 +290,7 @@ export function CollaborationPanel({
                     setTeamAgentDescription("");
                     setTeamAgentFormOpen(false);
                   }).catch(onError)}
-                >Create</button>
+                >创建</button>
               </div>
             ) : null}
             <ol
@@ -305,7 +305,7 @@ export function CollaborationPanel({
               data-testid="chat-transcript"
             >
               {chatMessages.length === 0 ? (
-                <li className="empty-panel-state">Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.</li>
+                <li className="empty-panel-state">在聊天里 @ 团队 Agent 来分配任务，所有人都能看到进度并继续指挥。</li>
               ) : (
                 chatMessages.map((message) => (
                   <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}`}>
@@ -380,7 +380,7 @@ export function CollaborationPanel({
                     onSendChat();
                   }
                 }}
-                placeholder="Message the team, or @agent to give the shared agent a task"
+                placeholder="给团队发消息，或用 @Agent 名称给共享 Agent 派任务"
                 aria-describedby="chat-keyboard-hint"
                 data-testid="chat-input"
               />
@@ -402,7 +402,7 @@ export function CollaborationPanel({
                 </ul>
               ) : null}
               <small className="chat-command-hint" data-testid="chat-command-hint">
-                Create a shared Agent with <code>/agent new reviewer code reviews</code>, then mention <code>@reviewer</code> in Chat.
+                用 <code>/agent new reviewer code reviews</code> 创建共享 Agent，然后在聊天里用 <code>@reviewer</code> 指挥它。
               </small>
               <div className="chat-actions">
                 <small id="chat-keyboard-hint">
@@ -413,7 +413,7 @@ export function CollaborationPanel({
                   disabled={chatSending || chatText.trim().length === 0}
                   data-testid="send-chat"
                 >
-                  {chatSending ? "Sending" : "Send"}
+                  {chatSending ? "发送中" : "发送"}
                 </button>
               </div>
             </div>
@@ -423,7 +423,7 @@ export function CollaborationPanel({
         {activeTab === "team" ? (
           <section className="collab-section team-section">
             <div className="team-block">
-              <h2>People</h2>
+              <h2>成员</h2>
               <ul className="member-list" data-testid="member-list">
                 {members.map((candidate) => {
                   const cursor = remoteCursors.find(
@@ -447,13 +447,13 @@ export function CollaborationPanel({
                             }
                             aria-label={
                               followingMemberId === candidate.id
-                                ? `Stop following ${candidate.displayName}`
-                                : `Follow ${candidate.displayName}`
+                                ? `停止跟随 ${candidate.displayName}`
+                                : `跟随 ${candidate.displayName}`
                             }
                             title={
                               followingMemberId === candidate.id
-                                ? "Stop following"
-                                : "Follow collaborator"
+                                ? "停止跟随"
+                                : "跟随这位协作者"
                             }
                             onClick={() => onFollowMember(candidate.id)}
                             data-testid={`follow-member-${candidate.displayName}`}
@@ -468,8 +468,8 @@ export function CollaborationPanel({
                       </span>
                       <small>
                         {cursor
-                          ? `${cursor.path} · Ln ${cursor.position.lineNumber}, Col ${cursor.position.column}`
-                          : candidate.currentFile ?? (candidate.online ? "Browsing" : "Offline")}
+                          ? `${cursor.path} · 第 ${cursor.position.lineNumber} 行，第 ${cursor.position.column} 列`
+                          : candidate.currentFile ?? (candidate.online ? "浏览中" : "离线")}
                       </small>
                     </li>
                   );
@@ -478,10 +478,10 @@ export function CollaborationPanel({
             </div>
 
             <div className="team-block activity-block">
-              <h2>Activity</h2>
+              <h2>动态</h2>
               <ol className="event-list" data-testid="activity-feed">
                 {activityItems.length === 0 ? (
-                  <li className="empty-panel-state">No activity yet.</li>
+                  <li className="empty-panel-state">暂无动态。</li>
                 ) : (
                   activityItems.map((item) => (
                     <li key={item.id}>
@@ -490,7 +490,7 @@ export function CollaborationPanel({
                         <button
                           className="activity-entry"
                           onClick={() => onOpenFile(item.path ?? "")}
-                          title={`Open ${item.path}`}
+                          title={`打开 ${item.path}`}
                         >
                           <ActivityText item={item} />
                         </button>
@@ -527,11 +527,11 @@ export function CollaborationPanel({
 
         {activeTab === "project" ? (
           <section className="collab-section project-details" data-testid="project-panel">
-            <h2>Project</h2>
+            <h2>项目</h2>
             <dl className="session-facts">
-              <div><dt>Room</dt><dd>{roomId}</dd></div>
-              <div><dt>Workspace</dt><dd title={workspaceRoot}>{workspaceRoot}</dd></div>
-              {member?.profileRole ? <div><dt>Your role</dt><dd>{member.profileRole}</dd></div> : null}
+              <div><dt>房间</dt><dd>{roomId}</dd></div>
+              <div><dt>工作区</dt><dd title={workspaceRoot}>{workspaceRoot}</dd></div>
+              {member?.profileRole ? <div><dt>你的角色</dt><dd>{member.profileRole}</dd></div> : null}
             </dl>
           </section>
         ) : null}
@@ -577,7 +577,7 @@ function ChatAgentMessage({
       {showText ? <p>{visibleText}</p> : null}
       {showText && canExpand ? (
         <button type="button" className="chat-output-toggle" onClick={() => setExpanded((current) => !current)}>
-          {expanded ? "Collapse" : "Show full response"}
+          {expanded ? "收起" : "显示完整回复"}
         </button>
       ) : null}
       {run && showCard ? (
@@ -585,7 +585,7 @@ function ChatAgentMessage({
           {!showText && run.status !== "completed" ? <AgentResponse run={run} /> : null}
           <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
           <AgentRunProgress run={run} memberId={memberId} onCancel={active ? () => void onCancelAgentRun(run.id).catch(onError) : undefined} />
-          <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
+          <div><strong>发起人 {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `被 ${interruptedByName ?? run.interruptedByMemberId} 打断` : agentRunStatusText(run.status)}</span></div>
           {run.fileChanges?.length ? (
             <ul>
               {run.fileChanges.map((change) => (
@@ -594,20 +594,20 @@ function ChatAgentMessage({
                 </li>
               ))}
             </ul>
-          ) : <small>No file changes recorded.</small>}
+          ) : <small>这个 Agent 没有记录到文件修改。</small>}
           <AgentWorkDetails run={run} trace={trace} variant="team" onLoadTrace={() => onLoadAgentTrace(run.id)} />
           <div className="chat-agent-card-actions">
             <button
               type="button"
               className="chat-trace-download"
               onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
-              title="Download complete trace"
-              aria-label="Download complete trace"
+              title="下载完整轨迹"
+              aria-label="下载完整轨迹"
             >
               <Download size={13} />
             </button>
             {run.status === "queued" || run.status === "running" ? (
-              <button type="button" onClick={() => void onCancelAgentRun(run.id).catch(onError)}>Stop</button>
+              <button type="button" onClick={() => void onCancelAgentRun(run.id).catch(onError)}>停止</button>
             ) : null}
           </div>
         </article>
@@ -628,34 +628,34 @@ function formatActivity(
   const actor =
     members.find((member) => member.id === event.memberId)?.displayName ??
     stringValue(payload.name) ??
-    "A collaborator";
+    "一位协作者";
 
   switch (event.type) {
     case "room_created":
-      return item(event, "general", `Session opened for ${stringValue(payload.workspaceName) ?? "workspace"}`);
+      return item(event, "general", `打开了会话 ${stringValue(payload.workspaceName) ?? "工作区"}`);
     case "member_joined":
-      return item(event, "join", `${stringValue(payload.name) ?? actor} joined the session`);
+      return item(event, "join", `${stringValue(payload.name) ?? actor} 加入了会话`);
     case "member_rejoined":
       return item(
         event,
         "join",
         numberValue(payload.connectionCount) > 1
-          ? `${stringValue(payload.name) ?? actor} opened another tab`
-          : `${stringValue(payload.name) ?? actor} rejoined the session`
+          ? `${stringValue(payload.name) ?? actor} 打开了另一个标签页`
+          : `${stringValue(payload.name) ?? actor} 重新加入了会话`
       );
     case "member_online":
-      return item(event, "join", `${actor} came online`);
+      return item(event, "join", `${actor} 上线了`);
     case "member_offline":
-      return item(event, "leave", `${actor} left the session`);
+      return item(event, "leave", `${actor} 离开了会话`);
     case "file_opened":
       return null;
     case "chat_message_created":
-      return item(event, "general", `${stringValue(payload.authorName) ?? actor} sent a chat message`);
+      return item(event, "general", `${stringValue(payload.authorName) ?? actor} 发送了一条消息`);
     case "terminal_input":
-      return item(event, "general", `${actor} used the terminal`, { detail: `${numberValue(payload.count)} inputs` });
+      return item(event, "general", `${actor} 在终端中输入`, { detail: `${numberValue(payload.count)} 次输入` });
     case "file_changed": {
       const path = stringValue(payload.path);
-      return item(event, "edit", `${actor} edited ${path ?? "a file"}`, {
+      return item(event, "edit", `${actor} 编辑了 ${path ?? "一个文件"}`, {
         detail: formatEditDetail(payload),
         path,
         startedAt: stringValue(payload.startedAt),
@@ -663,29 +663,29 @@ function formatActivity(
       });
     }
     case "session_settings_updated":
-      return item(event, "general", `${actor} updated session settings`);
+      return item(event, "general", `${actor} 更新了会话设置`);
     case "workspace_file_created": {
       const path = stringValue(payload.path);
-      return item(event, "create", `${actor} created ${path ?? "a file"}`);
+      return item(event, "create", `${actor} 新建了 ${path ?? "一个文件"}`);
     }
     case "workspace_directory_created":
-      return item(event, "create", `${actor} created folder ${stringValue(payload.path) ?? ""}`.trim());
+      return item(event, "create", `${actor} 新建了文件夹 ${stringValue(payload.path) ?? ""}`.trim());
     case "workspace_path_renamed": {
       const toPath = stringValue(payload.toPath);
       return item(
         event,
         "rename",
-        `${actor} renamed ${stringValue(payload.fromPath) ?? "a path"} to ${toPath ?? "a new path"}`
+        `${actor} 把 ${stringValue(payload.fromPath) ?? "一个路径"} 重命名为 ${toPath ?? "新路径"}`
       );
     }
     case "workspace_path_deleted":
-      return item(event, "delete", `${actor} deleted ${stringValue(payload.path) ?? "a path"}`);
+      return item(event, "delete", `${actor} 删除了 ${stringValue(payload.path) ?? "一个路径"}`);
     case "agent_task_started": {
       const prompt = stringValue(payload.promptPreview);
       return item(
         event,
         "agent",
-        `${actor} asked OpenCode to work on this project`,
+        `${actor} 给 Agent 派发了任务`,
         { detail: prompt ? `“${prompt}”` : stringValue(payload.sessionTitle) }
       );
     }
@@ -694,19 +694,19 @@ function formatActivity(
       return item(
         event,
         "agent",
-        `${actor}'s Agent task completed`,
+        `${actor} 的 Agent 任务已完成`,
         {
-          detail: files.length ? formatAgentFiles(files) : "No files changed",
+          detail: files.length ? formatAgentFiles(files) : "没有修改文件",
           path: files[0]?.file
         }
       );
     }
     case "agent_task_failed":
-      return item(event, "agent", `${actor}'s Agent task failed`, {
+      return item(event, "agent", `${actor} 的 Agent 任务失败`, {
         detail: stringValue(payload.error)
       });
     case "agent_task_cancelled":
-      return item(event, "agent", `${actor}'s Agent task was cancelled`, {
+      return item(event, "agent", `${actor} 的 Agent 任务已取消`, {
         detail: stringValue(payload.reason)
       });
     default:
@@ -767,6 +767,10 @@ function stringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
 }
 
+function agentRunStatusText(status: string) {
+  return ({ queued: "排队中", running: "运行中", completed: "已完成", failed: "失败", cancelled: "已取消", interrupted: "已打断" } as Record<string, string>)[status] ?? status;
+}
+
 function numberValue(value: unknown) {
   return typeof value === "number" ? value : 0;
 }
@@ -795,7 +799,7 @@ function fileChanges(value: unknown): AgentActivityFile[] {
 function formatAgentFiles(files: AgentActivityFile[]) {
   const additions = files.reduce((total, file) => total + file.additions, 0);
   const deletions = files.reduce((total, file) => total + file.deletions, 0);
-  const summary = `${files.length} ${files.length === 1 ? "file" : "files"} changed · +${additions} / -${deletions}`;
+  const summary = `修改 ${files.length} 个文件 · +${additions} / -${deletions}`;
   return files.length === 1 ? `${summary} · ${files[0]?.file}` : summary;
 }
 
@@ -818,16 +822,16 @@ function formatEditDetail(payload: Record<string, unknown>) {
     )
     .join(", ");
   const prefix = ranges.length === 1 && ranges[0]?.startLine === ranges[0]?.endLine
-    ? "Line"
-    : "Lines";
+    ? "第"
+    : "第";
   const addedLines = numberValue(payload.addedLines);
   const removedLines = numberValue(payload.removedLines);
   if (addedLines > 0 || removedLines > 0) {
-    return `${prefix} ${label} · +${addedLines} / -${removedLines}`;
+    return `${prefix} ${label} 行 · +${addedLines} / -${removedLines}`;
   }
   const changedLines = ranges.reduce(
     (count, range) => count + range.endLine - range.startLine + 1,
     0
   );
-  return `${prefix} ${label} · ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed`;
+  return `${prefix} ${label} 行 · 改动 ${changedLines} 行`;
 }

@@ -44,26 +44,26 @@ export function WorkspaceExplorer({
         <div className="explorer-title">
           <a
             href="/"
-            aria-label="Back to projects"
-            title="Projects"
+            aria-label="返回项目列表"
+            title="项目列表"
             data-testid="projects-link"
           >
             <ArrowLeft size={15} />
           </a>
-          <span title={workspaceName}>{workspaceName || "Workspace"}</span>
+          <span title={workspaceName}>{workspaceName || "工作区"}</span>
         </div>
         {canManageFiles ? <div className="icon-actions">
           <button
-            aria-label="Create file by path"
-            title="Create file by path"
+            aria-label="按路径新建文件"
+            title="按路径新建文件"
             onClick={onCreateFile}
             data-testid="new-file"
           >
             <FilePlus2 size={15} />
           </button>
           <button
-            aria-label="Create folder by path"
-            title="Create folder by path"
+            aria-label="按路径新建文件夹"
+            title="按路径新建文件夹"
             onClick={onCreateFolder}
             data-testid="new-folder"
           >
@@ -204,16 +204,16 @@ function TreeActions({
   return (
     <span className="tree-actions">
       <button
-        aria-label={`Rename ${path}`}
-        title="Rename"
+        aria-label={`重命名 ${path}`}
+        title="重命名"
         onClick={() => onRenamePath(path)}
         data-testid={`rename-${path}`}
       >
         <Pencil size={13} />
       </button>
       <button
-        aria-label={`Delete ${path}`}
-        title="Delete"
+        aria-label={`删除 ${path}`}
+        title="删除"
         onClick={() => onDeletePath(path)}
         data-testid={`delete-${path}`}
       >

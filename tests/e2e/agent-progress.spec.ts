@@ -29,7 +29,7 @@ test("普通任务的 reasoning 增量进入工作详情并可收起或展开阅
   const details = page.getByTestId("agent-trace-disclosure").last();
   await expect(details).toHaveAttribute("open", "");
   await expect(details.getByTestId("agent-reasoning")).toHaveCount(1);
-  await expect(details.getByTestId("agent-trace")).toContainText("Started working in the project");
+  await expect(details.getByTestId("agent-trace")).toContainText("开始在项目里工作");
   await details.locator("summary").click();
   await expect(reasoning.locator("pre")).toBeHidden();
   await details.locator("summary").click();

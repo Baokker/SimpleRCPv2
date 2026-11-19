@@ -4,18 +4,18 @@ import { openAs } from "./helpers";
 test("team Agent bar and shared Chat controls are visible", async ({ page }) => {
   await openAs(page, "Team Member", "demo", "Developer");
   await expect(page.getByTestId("team-agent-bar")).toContainText("@agent");
-  await expect(page.getByTestId("team-agent-bar")).toContainText("Idle");
+  await expect(page.getByTestId("team-agent-bar")).toContainText("空闲");
   await expect(page.getByTestId("chat-input")).toHaveAttribute(
     "placeholder",
-    "Message the team, or @agent to give the shared agent a task"
+    "给团队发消息，或用 @Agent 名称给共享 Agent 派任务"
   );
   await expect(page.getByTestId("chat-command-hint")).toContainText("/agent new reviewer");
-  await expect(page.getByTestId("collab-tab-agent")).toContainText("My Agent");
+  await expect(page.getByTestId("collab-tab-agent")).toContainText("我的 Agent");
   await page.getByTestId("collab-tab-agent").click();
-  await expect(page.getByTestId("my-agent-hint")).toContainText("mention @agent in Chat");
+  await expect(page.getByTestId("my-agent-hint")).toContainText("请在聊天里用 @Agent 名称");
   await expect(page.getByTestId("agent-prompt")).toHaveAttribute(
     "placeholder",
-    "Ask OpenCode about this project (only you can see this session)"
+    "给你的 Agent 发要求（这个会话只有你能看到）"
   );
 });
 
@@ -24,7 +24,7 @@ test("members can create team Agents from the bar and slash command", async ({ p
   await page.getByTestId("team-agent-create").click();
   await page.getByTestId("team-agent-name").fill("Reviewer");
   await page.getByTestId("team-agent-description").fill("reviews source changes");
-  await page.locator(".team-agent-create").getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator(".team-agent-create").getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByTestId("team-agent-bar")).toContainText("@reviewer");
 
   await page.getByTestId("chat-input").fill("/agent new planner plans release work");
@@ -86,7 +86,7 @@ test("Chat and My Agent share a live team trace and download", async ({ page }) 
   await expect(page.getByTestId("agent-team-traces")).toHaveCount(0);
   await expect(page.getByTestId("agent-prompt")).toBeVisible();
   await page.getByTestId("collab-tab-chat").click();
-  await expect(page.getByTestId("chat-agent-card").last()).toContainText("Run completed");
+  await expect(page.getByTestId("chat-agent-card").last()).toContainText("任务完成");
 });
 
 test("team Agent replies are shared across member browser contexts", async ({ browser }) => {
@@ -119,15 +119,15 @@ test("interrupting a team run records changed files for the next run", async ({ 
   await pageA.getByTestId("chat-input").fill("@agent fake-write=interrupted-file.txt fake-delay=5000 fake-reply=old work");
   await pageA.getByTestId("send-chat").click();
   const oldCard = pageA.getByTestId("chat-agent-card").nth(firstNewCardIndex);
-  await expect(oldCard).toContainText("running", { timeout: 10_000 });
+  await expect(oldCard).toContainText("运行中", { timeout: 10_000 });
 
   await pageB.getByTestId("chat-input").fill("@agent fake-delay=100 fake-reply=follow up complete");
   await pageB.getByTestId("send-chat").click();
   const newCard = pageA.getByTestId("chat-agent-card").nth(firstNewCardIndex + 1);
 
-  await expect(oldCard).toContainText("Interrupted by Interrupt Bob", { timeout: 10_000 });
+  await expect(oldCard).toContainText("被 Interrupt Bob 打断", { timeout: 10_000 });
   await expect(pageA.getByTestId("chat-transcript")).toContainText("interrupted @agent's task", { timeout: 10_000 });
-  await expect(newCard).toContainText("completed", { timeout: 20_000 });
+  await expect(newCard).toContainText("已完成", { timeout: 20_000 });
 
   const runs = await pageA.evaluate(async () => {
     const response = await fetch("/api/projects/demo/agent/runs", {
@@ -163,7 +163,7 @@ test("team Agent waits for a personal Agent run in the project queue", async ({ 
   }
   await page.getByTestId("agent-new-session").click();
   await page.getByTestId("agent-session-title").fill("Queue capacity");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { name: "创建", exact: true }).click();
   await page.getByTestId("agent-prompt").fill("fake-delay=5000 fake-reply=personal work complete");
   await page.getByTestId("agent-run-submit").click();
   await expect(page.getByTestId("agent-selected-run")).toContainText("Running", { timeout: 10_000 });
@@ -176,12 +176,12 @@ test("team Agent waits for a personal Agent run in the project queue", async ({ 
   await page.getByTestId("chat-input").fill("@agent fake-reply=team work complete");
   await page.getByTestId("send-chat").click();
   const teamCard = page.getByTestId("chat-agent-card").last();
-  await expect(teamCard).toContainText("queued", { timeout: 10_000 });
+  await expect(teamCard).toContainText("排队中", { timeout: 10_000 });
   for (const id of blockers) {
     const response = await page.request.post(`/api/projects/demo/agent/runs/${id}/cancel`, { headers });
     expect(response.ok()).toBe(true);
   }
-  await expect(teamCard).toContainText("completed", { timeout: 30_000 });
+  await expect(teamCard).toContainText("已完成", { timeout: 30_000 });
   await page.getByTestId("collab-tab-agent").click();
   await expect(page.getByTestId("agent-selected-run")).toContainText("personal work complete");
 });
