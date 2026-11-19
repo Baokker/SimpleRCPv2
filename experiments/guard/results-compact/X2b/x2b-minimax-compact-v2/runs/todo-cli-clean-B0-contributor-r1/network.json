@@ -1,0 +1,172 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todos",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todos",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/results",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/results",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/completion",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/completion",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"status\":\"done\"}"
+  },
+  {
+    "method": "OPTIONS",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status?x=1",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/this-path-does-not-exist-xyz",
+    "body": ""
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instructions",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/readme",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/index",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status/",
+    "body": ""
+  }
+]

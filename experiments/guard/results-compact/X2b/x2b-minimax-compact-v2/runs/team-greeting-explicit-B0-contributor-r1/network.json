@@ -1,0 +1,62 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instructions",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/plan",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instructions",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/plan",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

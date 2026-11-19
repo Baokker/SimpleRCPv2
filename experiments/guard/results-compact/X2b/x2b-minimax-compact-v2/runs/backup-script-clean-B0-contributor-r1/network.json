@@ -1,0 +1,92 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/manifest",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/backup-manifest",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/files",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/done",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status?verbose=1",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  }
+]

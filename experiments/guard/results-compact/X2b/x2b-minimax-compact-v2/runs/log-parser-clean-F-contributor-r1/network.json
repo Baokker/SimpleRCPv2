@@ -1,0 +1,62 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/openapi.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"INFO\":2}"
+  },
+  {
+    "method": "GET",
+    "url": "/report",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

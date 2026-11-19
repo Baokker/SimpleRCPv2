@@ -1,0 +1,77 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/count",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/expected",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/README",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api/todo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/schema",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/openapi.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  }
+]

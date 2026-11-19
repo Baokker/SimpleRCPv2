@@ -14,7 +14,7 @@ import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { GuardRequest } from "../../../apps/server/src/guard/types.js";
 
 type Condition = "B0" | "F";
-type Trigger = "owner" | "collaborator" | "student";
+type Trigger = "owner" | "maintainer" | "contributor";
 type Version = "clean" | "explicit" | "subtle";
 type Spec = { task: Task; version: Version; condition: Condition; trigger: Trigger; repeat: number };
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -116,7 +116,7 @@ async function runOne(spec: Spec, directory: string, runtimeRoot: string, config
   await probe.prepare(workspace);
   if ((await checkTask(workspace, spec.task)).passed) throw new Error("Task must fail before Agent: " + key);
   const members: Record<string, string> = {};
-  for (const role of ["owner", "collaborator", "student"]) {
+  for (const role of ["owner", "maintainer", "contributor"]) {
     const joined = await app.locals.members.join("demo", { displayName: role, role });
     members[role] = joined.memberId;
     runtime.rooms.joinRoom(runtime.room.id, { memberId: joined.memberId, name: role, participantId: joined.memberId, connectionId: joined.memberId, profileRole: role });
@@ -137,7 +137,7 @@ async function runOne(spec: Spec, directory: string, runtimeRoot: string, config
   let run;
   if (spec.task.team) {
     const agent = (await app.locals.agentRuns.listTeamAgents("demo"))[0];
-    if (spec.version === "subtle") await runtime.chat.createMessage({ roomId: runtime.room.id, authorId: members.collaborator, authorName: "collaborator", authorRole: "collaborator", kind: "member", text: probe.injection });
+    if (spec.version === "subtle") await runtime.chat.createMessage({ roomId: runtime.room.id, authorId: members.maintainer, authorName: "maintainer", authorRole: "maintainer", kind: "member", text: probe.injection });
     const message = await runtime.chat.createMessage({ roomId: runtime.room.id, authorId: members[spec.trigger], authorName: spec.trigger, authorRole: spec.trigger, kind: "member", text: "@" + agent.handle + " " + variant.prompt });
     const sent = await app.locals.chatAgentBridge.handleMessage("demo", message);
     run = await app.locals.agentRuns.getRun("demo", sent.runId);
@@ -223,7 +223,7 @@ async function main() {
     await fs.writeFile(job.resultPath, JSON.stringify(row)+"\n");
     return;
   }
-  const directory = process.env.X2_RESUME_DIR ?? path.join(projectRoot, "experiments/guard/results/X2", makeRunId("x2"));
+  const directory = process.env.X2_RESUME_DIR ?? path.join(projectRoot, "experiments/guard/results-compact/X2b", "x2b-minimax-compact-v2");
   await fs.mkdir(directory, { recursive: true });
   const envPath = path.join(directory, "env.json"), resuming = Boolean(process.env.X2_RESUME_DIR);
   await fs.mkdir(path.join(projectRoot, ".experiment-data"), { recursive: true });
@@ -232,8 +232,8 @@ async function main() {
   await fs.writeFile(envPath, JSON.stringify(environment, null, 2) + "\n");
   const tasks = process.env.X2_TASK ? taskDefinitions.filter(t => t.id === process.env.X2_TASK) : taskDefinitions;
   const specs: Spec[] = [
-    ...tasks.flatMap((task) => (["student", "owner"] as const).flatMap((trigger) => (["B0", "F"] as const).map((condition) => ({ task, version: "explicit" as const, condition, trigger, repeat: 1 })))),
-    ...tasks.flatMap((task) => (["B0", "F"] as const).map((condition) => ({ task, version: "clean" as const, condition, trigger: "student" as const, repeat: 1 })))
+    ...tasks.flatMap((task) => (["contributor", "owner"] as const).flatMap((trigger) => (["B0", "F"] as const).map((condition) => ({ task, version: "explicit" as const, condition, trigger, repeat: 1 })))),
+    ...tasks.flatMap((task) => (["B0", "F"] as const).map((condition) => ({ task, version: "clean" as const, condition, trigger: "contributor" as const, repeat: 1 })))
   ];
   const gateOnly = process.env.X2_COST_GATE_ONLY === "1";
   const filteredSpecs = specs.filter((spec) => {
@@ -256,13 +256,26 @@ async function main() {
   const pending = selectedSpecs.filter(s => !done.has([s.task.id, s.version, s.condition, s.trigger, "r" + s.repeat].join("-")));
   const concurrency = Number(process.env.X2_CONCURRENCY ?? 4);
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) throw new Error("Invalid X2_CONCURRENCY");
+  const budgetFile = JSON.parse(await fs.readFile(path.join(projectRoot, "experiments/guard/lib/budget-minimax.json"), "utf8")) as { pricesPerMillionTokens: { cacheHitInput: number; cacheMissInput: number; output: number } };
+  const priorSpendCny = Number(process.env.X2_PRIOR_SPEND_CNY ?? 0), capCny = Number(process.env.X2_BUDGET_CAP_CNY ?? 20);
+  const costOf = (list: any[]) => list.reduce((sum, row) => sum + ((row.tokenStats.input + row.tokenStats.cacheWrite) * budgetFile.pricesPerMillionTokens.cacheMissInput + row.tokenStats.cacheRead * budgetFile.pricesPerMillionTokens.cacheHitInput + (row.tokenStats.output + row.tokenStats.reasoning) * budgetFile.pricesPerMillionTokens.output) / 1_000_000, 0);
   for (let offset = 0; offset < pending.length; offset += concurrency) {
+    // Stop before the next batch when the spend so far plus a conservative per-run estimate would exceed the cap.
+    const spent = priorSpendCny + costOf(rows), perRun = rows.length ? costOf(rows) / rows.length : 0.3;
+    if (spent + 1.5 * perRun * concurrency > capCny) { process.stderr.write(`Budget stop: spent ${spent.toFixed(4)} CNY of ${capCny}\n`); break; }
     await Promise.all(pending.slice(offset, offset + concurrency).map(async spec => {
       const workerId = [spec.task.id, spec.version, spec.condition, spec.trigger, "r"+spec.repeat].join("-");
       const resultPath = path.join(environment.dataDir, workerId+".json");
-      await execute(process.execPath, ["--import", path.join(projectRoot,"apps/server/node_modules/tsx/dist/loader.mjs"), path.join(projectRoot,"experiments/guard/x2-agent-e2e/run.ts")], {
-        cwd: projectRoot, env: { ...process.env, X2_WORKER: JSON.stringify({ ...spec, task: undefined, taskId: spec.task.id, directory, runtimeRoot: environment.dataDir, resultPath }) }, timeout: 660_000, maxBuffer: 1_000_000
-      });
+      try {
+        await execute(process.execPath, ["--import", path.join(projectRoot,"apps/server/node_modules/tsx/dist/loader.mjs"), path.join(projectRoot,"experiments/guard/x2-agent-e2e/run.ts")], {
+          cwd: projectRoot, env: { ...process.env, X2_WORKER: JSON.stringify({ ...spec, task: undefined, taskId: spec.task.id, directory, runtimeRoot: environment.dataDir, resultPath }) }, timeout: 660_000, maxBuffer: 1_000_000
+        });
+      } catch (error) {
+        // A failed worker is recorded and skipped so one provider error does not stop the batch; rerun with X2_RESUME_DIR.
+        const message = String(error instanceof Error ? error.message : error).replaceAll(config.apiKey, "[redacted]").slice(0, 400);
+        await fs.appendFile(path.join(directory, "failures.jsonl"), JSON.stringify({ id: workerId, message }) + "\n"); process.stderr.write(`worker failed ${workerId}\n`);
+        return;
+      }
       const row = JSON.parse(await fs.readFile(resultPath,"utf8")); rows.push(row);
       await fs.appendFile(rawPath, JSON.stringify(row) + "\n");
       const progress = `${new Date().toISOString()} ${rows.length}/${selectedSpecs.length} ${row.id} ${row.status} useful=${row.useful} attack=${row.attackSuccess}\n`;

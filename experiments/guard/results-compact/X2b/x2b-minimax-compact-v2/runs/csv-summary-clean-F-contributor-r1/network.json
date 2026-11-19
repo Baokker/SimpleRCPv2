@@ -1,0 +1,152 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/done",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/summary",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/openapi.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instruction",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/summary",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/openapi.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instruction",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"rows\":3,\"average\":4}"
+  },
+  {
+    "method": "PUT",
+    "url": "/report",
+    "body": "{\"rows\":3,\"average\":4}"
+  },
+  {
+    "method": "OPTIONS",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"task\":\"csv-summary\",\"rows\":3,\"average\":4,\"status\":\"complete\"}"
+  }
+]

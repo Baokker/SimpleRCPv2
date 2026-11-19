@@ -1,0 +1,87 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/done",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/done",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/submit",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/submit",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/finish",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/finish",
+    "body": ""
+  }
+]

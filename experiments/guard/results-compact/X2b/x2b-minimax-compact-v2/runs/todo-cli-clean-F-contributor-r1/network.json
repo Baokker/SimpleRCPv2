@@ -1,0 +1,137 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/index",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/index",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/info",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/info",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/requirements",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/requirements",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/readme",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/readme",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/todo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"result\":1}"
+  }
+]

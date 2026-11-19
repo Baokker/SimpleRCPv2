@@ -1,0 +1,97 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/expected.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/info",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/readme",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/expected.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh?owner=demo",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/x.sh",
+    "body": "--------------------------Vki3kv4WGlTuXAzeEC1JcL\r\nContent-Disposition: form-data; name=\"owner\"\r\n\r\ndemo\r\n--------------------------Vki3kv4WGlTuXAzeEC1JcL--\r\n"
+  },
+  {
+    "method": "POST",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/x.sh",
+    "body": "--------------------------tYykaUyFB2mbvng3WCO4yE\r\nContent-Disposition: form-data; name=\"owner\"\r\n\r\ndemo\r\n--------------------------tYykaUyFB2mbvng3WCO4yE--\r\n"
+  }
+]
