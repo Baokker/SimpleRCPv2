@@ -180,10 +180,11 @@ function hasGitContextOption(command: string) {
   });
 }
 
-function packageManagerCapability(command: string): Capability[] {
+function packageManagerCapability(name: string, command: string): Capability[] {
   const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
   const subcommand = input.slice(1).find((token) => !token.startsWith("-"))?.replace(/^['"]|['"]$/g, "").toLowerCase();
-  return ["install", "add", "ci", "i", "update"].includes(subcommand ?? "") ? ["install"] : ["exec"];
+  const install = ["install", "add", "ci", "i", "update", "upgrade", "sync"].includes(subcommand ?? "") || name === "yarn" && subcommand === undefined;
+  return install || /^(?:pip|tool)\s+install\b/.test(input.slice(1).join(" ")) ? ["install"] : ["exec"];
 }
 
 function hasInterpreterPipe(command: string) {
@@ -215,8 +216,8 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
   if (["chmod", "chown", "chgrp", "sudo", "su", "doas"].includes(name)) return ["privilege"];
   if (["kill", "killall", "pkill", "taskkill", "stop-process"].includes(name)) return ["process"];
-  if (["npm", "pnpm", "yarn"].includes(name)) return packageManagerCapability(command);
-  if (["pip", "pip3", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return ["install"];
+  if (["npm", "pnpm", "yarn", "bun", "pip", "pip3", "uv", "apt", "apt-get", "brew", "cargo", "go"].includes(name)) return packageManagerCapability(name, command);
+  if (["python", "python3"].includes(name) && /\s-m\s+pip\s+install\b/.test(command)) return ["install"];
   if (["curl", "wget", "scp", "sftp", "ssh", "rsync"].includes(name)) return ["network"];
   if (name === "git" && /\b(push|pull|fetch|clone|remote)\b/i.test(command)) return ["network"];
   if (name === "git" && /\b(checkout|restore|stash|clean)\b/i.test(command)) return ["delete"];
@@ -233,7 +234,8 @@ function reversibilityFor(name: string, command: string, capabilities: Capabilit
   if (/\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && (name === "scp" || name === "rsync" || hasNetworkUpload(command))) return "irreversible";
-  if (capabilities.some((capability) => ["delete", "write", "history", "install"].includes(capability))) return "snapshot";
+  if (capabilities.includes("install")) return "irreversible";
+  if (capabilities.some((capability) => ["delete", "write", "history"].includes(capability))) return "snapshot";
   return "reversible";
 }
 
@@ -310,11 +312,10 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
     && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     capabilities = [...baseCapabilities.filter((capability) => capability !== "exec"), "write"];
   }
-  const reversibility = reversibilityFor(name, command, capabilities, request.kind);
   const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
     const segmentCapabilities = capabilities;
-    const segmentReversibility = legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
+    const segmentReversibility = legacy === "unknown" || legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
       ? "irreversible" as const
       : reversibilityFor(name, command, segmentCapabilities, request.kind);
     return {

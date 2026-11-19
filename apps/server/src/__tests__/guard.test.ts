@@ -184,7 +184,7 @@ describe("guard decisions", () => {
     }
     const unknown = command("owner", "unrecognised-tool --version");
     expect(unknown.action).toBe("ask");
-    expect(unknown.autoEligible).toBe(true);
+    expect(unknown.autoEligible).toBe(false);
   });
 
   it("applies the agent ceiling and offline rule", () => {
@@ -285,8 +285,10 @@ describe("guard decisions", () => {
     for (const text of ["npm test", "npm run build", "pnpm test", "yarn exec lint"]) {
       expect(command("student", text).action).toBe("allow");
     }
-    for (const text of ["npm install", "pnpm add zod", "yarn update"]) {
-      expect(command("student", text).action).toBe("ask");
+    for (const text of ["npm install", "pnpm add zod", "yarn", "pip install requests", "python3 -m pip install requests", "uv pip install requests", "uv sync", "cargo install ripgrep", "go install example.org/tool"]){
+      const result = command("contributor", text);
+      expect(result).toMatchObject({ action: "ask", autoEligible: false, matchedRules: expect.arrayContaining(["hard.nonowner.irreversible"]) });
+      expect(result.segments.some((segment) => segment.capabilities.includes("install") && segment.reversibility === "irreversible")).toBe(true);
     }
   });
 
