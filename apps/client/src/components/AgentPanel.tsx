@@ -218,7 +218,7 @@ export function AgentPanel({
     setSessionCreating(true);
     try {
       const response = await createAgentSession(projectId, {
-        title: sessionTitle.trim() || "New Agent session"
+        title: sessionTitle.trim() || "新的 Agent 会话"
       });
       setSessions((current) => [response.session, ...current]);
       setSelectedSessionId(response.session.id);
@@ -314,7 +314,7 @@ export function AgentPanel({
     }
   }
 
-  const runtimeLabel = runtime ? `OpenCode ${titleCase(runtime.state)}` : "Checking OpenCode";
+  const runtimeLabel = runtime ? `OpenCode ${({ ready: "已就绪", starting: "启动中", stopped: "已停止", error: "出错", unavailable: "不可用" } as Record<string, string>)[runtime.state] ?? titleCase(runtime.state)}` : "正在检查 OpenCode";
 
   async function retryRun(run: AgentRun) {
     if (!run.sessionId || !run.failure?.retryable) return;
@@ -335,20 +335,20 @@ export function AgentPanel({
 
   return (
     <section className="collab-section agent-section">
-      <p className="my-agent-hint" data-testid="my-agent-hint">These are your own Agent sessions. To direct the shared agent together, mention @agent in Chat.</p>
+      <p className="my-agent-hint" data-testid="my-agent-hint">这里是你自己的 Agent 会话。要和团队一起指挥共享 Agent，请在聊天里用 @Agent 名称。</p>
       <header className="agent-runtime">
         <span className={`agent-runtime-dot ${runtime?.state ?? "checking"}`} aria-hidden="true" />
         <div>
           <strong data-testid="agent-runtime-status">{runtimeLabel}</strong>
-          <small>{runtime?.model ?? "Loading model"}</small>
+          <small>{runtime?.model ?? "正在读取模型"}</small>
           {runtime?.modelChangePending ? <small>模型变更将在当前任务完成后生效</small> : null}
         </div>
       </header>
 
       {runningRuns.filter((run) => run.sessionId === selectedSessionId).map((run) => <div key={run.id}><AgentQuestions projectId={projectId} run={run} memberId={member?.id} onError={onError} /><AgentRunProgress run={run} memberId={member?.id} config={runtime?.activityConfig} onCancel={() => void cancelRun(run)} /></div>)}
-      {runningRuns.length ? <div className="agent-active-runs" data-testid="agent-active-runs"><strong>运行中任务</strong><ul>{runningRuns.map((run) => <li key={run.id}><span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span><AgentRunStatus run={run} memberId={member?.id} /></span><time>{formatTime(run.startedAt ?? run.createdAt)}</time></li>)}</ul></div> : null}
+      {runningRuns.length ? <div className="agent-active-runs" data-testid="agent-active-runs"><strong>运行中任务</strong><ul>{runningRuns.map((run) => <li key={run.id}><span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent 会话"}</span><AgentRunStatus run={run} memberId={member?.id} /></span><time>{formatTime(run.startedAt ?? run.createdAt)}</time></li>)}</ul></div> : null}
 
-      <div className="agent-session-tabs" role="tablist" aria-label="Agent sessions">
+      <div className="agent-session-tabs" role="tablist" aria-label="Agent 会话">
         {sessions.map((session) => (
           <div key={session.id} className="agent-session-tab">
           <button
@@ -367,8 +367,8 @@ export function AgentPanel({
         <button
           type="button"
           className="agent-session-add"
-          aria-label="New session"
-          title="New session"
+          aria-label="新建会话"
+          title="新建会话"
           onClick={() => setSessionFormOpen((current) => !current)}
           data-testid="agent-new-session"
         >
@@ -384,19 +384,19 @@ export function AgentPanel({
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.nativeEvent.isComposing) void createSession();
             }}
-            placeholder="Session title"
+            placeholder="会话标题"
             data-testid="agent-session-title"
             autoFocus
           />
           <button type="button" onClick={() => void createSession()} disabled={!member || sessionCreating}>
-            {sessionCreating ? "Creating" : "Create"}
+            {sessionCreating ? "创建中" : "创建"}
           </button>
         </div>
       ) : null}
 
       <ol className="agent-message-list" ref={transcriptRef} onScroll={(event) => { const list = event.currentTarget; followTranscriptRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 80; }} data-testid="agent-message-list">
         {sessionRuns.length === 0 ? (
-          <li className="empty-panel-state">Ask OpenCode to work on this project.</li>
+          <li className="empty-panel-state">让 Agent 在这个项目里开始工作。</li>
         ) : sessionRuns.map((run) => (
           <li key={run.id} className="agent-turn">
             <article className="agent-user-message">
@@ -404,7 +404,7 @@ export function AgentPanel({
                 <strong>{runMemberName(run, members)}</strong>
                 <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
               </header>
-              <small>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</small>
+              <small>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent 会话"}</small>
               <p>{run.prompt}</p>
               {run.contexts?.length ? (
                 <ul className="agent-message-contexts">
@@ -470,7 +470,7 @@ export function AgentPanel({
                 <span title={context.path}>{context.path}</span>
                 <button
                   type="button"
-                  aria-label={`Remove ${context.path}`}
+                  aria-label={`移除 ${context.path}`}
                   data-testid={`agent-context-remove-${context.path}`}
                   onClick={() => toggleContext(context.path)}
                 >
@@ -489,7 +489,7 @@ export function AgentPanel({
               void submitRun();
             }
           }}
-          placeholder="Ask OpenCode about this project (only you can see this session)"
+          placeholder="给你的 Agent 发要求（这个会话只有你能看到）"
           data-testid="agent-prompt"
         />
         {runningRuns.some((run) => run.sessionId === selectedSessionId) ? <small className="agent-interrupt-hint">发送新要求将立即中断当前任务，并按新要求继续。</small> : null}
@@ -497,8 +497,8 @@ export function AgentPanel({
           <div className="agent-context-picker">
             <button
               type="button"
-              aria-label="Add project file"
-              title="Add project file"
+              aria-label="添加项目文件"
+              title="添加项目文件"
               onClick={() => void toggleContextMenu()}
               data-testid="agent-add-context"
             >
@@ -506,9 +506,9 @@ export function AgentPanel({
             </button>
             {contextMenuOpen ? (
               <div className="agent-context-menu">
-                <strong>Add project file</strong>
+                <strong>添加项目文件</strong>
                 <ul>
-                  {contextLoading ? <li className="agent-context-loading">Loading files</li> : null}
+                  {contextLoading ? <li className="agent-context-loading">正在读取文件</li> : null}
                   {projectFiles.map((path) => (
                     <li key={path}>
                       <button
@@ -529,8 +529,8 @@ export function AgentPanel({
           <button
             type="button"
             className="agent-send-button"
-            aria-label="Send to Agent"
-            title="Send to Agent"
+            aria-label="发给 Agent"
+            title="发给 Agent"
             onClick={() => void submitRun()}
             disabled={submitting || !member || !prompt.trim() || runtime?.state !== "ready" || !runtime.apiKeyConfigured}
             data-testid="agent-run-submit"
@@ -584,7 +584,7 @@ function AgentMessage({
           <div className="agent-run-metadata"><span className={`ui-badge run-status-${run.status}`}>{runStatusLabel(run, queuedRuns, activeSessionIds)}</span><span className="agent-run-model">模型 <strong>{run.model}</strong></span></div>
         </div>
         {ACTIVE_STATUSES.has(run.status) && canCancel ? (
-          <button type="button" className="agent-cancel-button" onClick={onCancel} title="Cancel run">
+          <button type="button" className="agent-cancel-button" onClick={onCancel} title="取消任务">
             <CircleStop size={14} />
           </button>
         ) : null}
@@ -626,11 +626,11 @@ async function listProjectFiles(projectId: string, directoryPath: string): Promi
 }
 
 function runMemberName(run: AgentRun, members: RoomMember[]) {
-  return run.memberName ?? members.find((member) => member.id === run.memberId)?.displayName ?? "Member";
+  return run.memberName ?? members.find((member) => member.id === run.memberId)?.displayName ?? "成员";
 }
 
 function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds: Set<string | undefined>) {
-  if (run.interruptedByRunId) return "Interrupted";
+  if (run.interruptedByRunId) return "已打断";
   if (run.status !== "queued") return titleCase(run.status);
   if (activeSessionIds.has(run.sessionId) || queuedRuns.some((candidate) => candidate.id !== run.id && candidate.sessionId === run.sessionId && candidate.createdAt < run.createdAt)) return "等待本会话的前一个任务结束";
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;

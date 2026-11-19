@@ -40,13 +40,13 @@ test("member keeps multiple Agent sessions separate", async ({ page }) => {
 
   await page.getByTestId("agent-new-session").click();
   await page.getByTestId("agent-session-title").fill("Login work");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByTestId("agent-message-list")).toBeVisible();
   await expect(page.getByRole("tab", { name: /Login work/ })).toBeVisible();
 
   await page.getByTestId("agent-new-session").click();
   await page.getByTestId("agent-session-title").fill("Test work");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByRole("tab", { name: /Login work/ })).toBeVisible();
   await expect(page.getByRole("tab", { name: /Test work/ })).toBeVisible();
 });
@@ -95,7 +95,7 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
   await expect(page.getByTestId("agent-trace")).toBeHidden();
   await traceDisclosure.getByTestId("agent-trace-summary").click();
   await expect(page.getByTestId("agent-trace")).toBeVisible();
-  await expect(page.getByTestId("agent-trace")).toContainText("Run completed");
+  await expect(page.getByTestId("agent-trace")).toContainText("任务完成");
   await expect(page.getByTestId("agent-trace")).not.toContainText(
     "opencode.message.updated"
   );
@@ -142,7 +142,7 @@ test("member sees a concurrent change warning when editing an Agent file", async
   await expect(page.getByTestId("agent-selected-run").last()).toContainText("Completed", {
     timeout: 90_000
   });
-  await expect(page.getByTestId("agent-trace").last()).toContainText("Ran command");
+  await expect(page.getByTestId("agent-trace").last()).toContainText("执行命令");
   await expect(page.getByTestId("agent-trace").last()).toContainText(/Wrote file|Edited file/);
   await expect(page.getByTestId("agent-trace").last()).toContainText(
     "Concurrent edit detected"

@@ -36,7 +36,7 @@ export function WorkspaceDialog({
       onClose();
     } catch (nextError) {
       setError(
-        nextError instanceof Error ? nextError.message : "Workspace operation failed"
+        nextError instanceof Error ? nextError.message : "工作区操作失败"
       );
     } finally {
       setSubmitting(false);
@@ -61,8 +61,8 @@ export function WorkspaceDialog({
             className="icon-button"
             onClick={onClose}
             disabled={submitting}
-            aria-label="Close dialog"
-            title="Close"
+            aria-label="关闭对话框"
+            title="关闭"
           >
             <X size={16} />
           </button>
@@ -72,7 +72,7 @@ export function WorkspaceDialog({
           <strong className="workspace-delete-path">{action.path}</strong>
         ) : (
           <label>
-            <span>Path from project root</span>
+            <span>从项目根目录开始的路径</span>
             <input
               value={path}
               onChange={(event) => setPath(event.target.value)}
@@ -86,7 +86,7 @@ export function WorkspaceDialog({
         {error ? <p className="workspace-dialog-error">{error}</p> : null}
         <div className="workspace-dialog-actions">
           <button type="button" onClick={onClose} disabled={submitting}>
-            Cancel
+            取消
           </button>
           <button
             type="submit"
@@ -94,7 +94,7 @@ export function WorkspaceDialog({
             disabled={submitting}
             data-testid="workspace-dialog-submit"
           >
-            {submitting ? "Working" : content.submitLabel}
+            {submitting ? "处理中" : content.submitLabel}
           </button>
         </div>
       </form>
@@ -111,32 +111,32 @@ function initialValue(action: WorkspaceDialogAction) {
 function dialogContent(action: WorkspaceDialogAction) {
   if (action.type === "create-file") {
     return {
-      title: "Create file",
-      description: "Enter a path including the file name and extension.",
+      title: "新建文件",
+      description: "输入包含文件名和扩展名的路径。",
       placeholder: "src/components/Button.tsx",
-      submitLabel: "Create file"
+      submitLabel: "新建文件"
     };
   }
   if (action.type === "create-folder") {
     return {
-      title: "Create folder",
-      description: "Enter the folder path from the project root.",
+      title: "新建文件夹",
+      description: "输入从项目根目录开始的文件夹路径。",
       placeholder: "src/components",
-      submitLabel: "Create folder"
+      submitLabel: "新建文件夹"
     };
   }
   if (action.type === "rename") {
     return {
-      title: "Rename path",
-      description: "Enter the new path from the project root.",
+      title: "重命名",
+      description: "输入从项目根目录开始的新路径。",
       placeholder: action.path,
-      submitLabel: "Rename"
+      submitLabel: "重命名"
     };
   }
   return {
-    title: "Delete path",
-    description: "This removes the selected file or folder for every collaborator.",
+    title: "删除",
+    description: "选中的文件或文件夹会对所有协作者删除。",
     placeholder: "",
-    submitLabel: "Delete"
+    submitLabel: "删除"
   };
 }
