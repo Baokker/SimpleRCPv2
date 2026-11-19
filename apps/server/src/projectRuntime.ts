@@ -22,6 +22,7 @@ export function createProjectRuntime(
     guardMode?: "full" | "human-only" | "native" | "off";
     guardLlmMode?: GuardLlmMode;
     guardApprovalTimeoutMs?: number;
+    guardApprovalMemoryTtlMs?: number;
     guardLlm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
     otherWorkspaceRoots?: (currentProjectId: string) => string[];
   } = {}
@@ -66,6 +67,7 @@ export function createProjectRuntime(
     mode: guardMode,
     llmMode: options.guardLlmMode,
     approvalTimeoutMs: options.guardApprovalTimeoutMs,
+    approvalMemoryTtlMs: options.guardApprovalMemoryTtlMs,
     llm: options.guardLlm,
     otherWorkspaceRoots: options.otherWorkspaceRoots
   });

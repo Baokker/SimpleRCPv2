@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventRecord, ProjectParticipant } from "@simplercp/shared";
 import WebSocket from "ws";
 import { createApp } from "../createApp.js";
+import { getProjectMetadataPath } from "../projects.js";
 import { attachRealtimeServer } from "../realtime.js";
 import { createTestWorkspace } from "./testWorkspace.js";
 import { joinMember, memberHeaders } from "./memberTestHelper.js";
@@ -163,6 +164,58 @@ describe("member identity API", () => {
     expect(byOwner.decision.matchedRules).toEqual(expect.arrayContaining(["script.writer.student", "script.role.student.delete"]));
     await fs.writeFile(path.join(runtime.project.workspacePath, "own.sh"), "rm -rf src\n");
     expect(await runtime.guard.submit(request(owner.member.id, "bash own.sh"))).toMatchObject({ approved: true, decision: { action: "allow" } });
+    expect(await runtime.guard.submit(request(owner.member.id, "touch .env"))).toMatchObject({ approved: true, decision: { action: "allow_snapshot", matchedRules: expect.arrayContaining(["owner.self-command"]) } });
+    expect(await runtime.guard.submit({ ...request(owner.member.id, "touch .env"), source: "agent" })).toMatchObject({ approved: false });
+    expect(await runtime.guard.submit(request(owner.member.id, "ls $SIMPLERCP_DATA_DIR"))).toMatchObject({ approved: false, decision: { action: "deny" } });
+    await runtime.guard.awaitIdle();
+    const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
+    expect(await fs.readFile(auditPath, "utf8")).toContain('"stage":"owner-self"');
+  });
+
+  it("reuses approval without changing the rule decision and takes a snapshot before the repeated command", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("remembered-command-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off", guardApprovalTimeoutMs: 2_000 });
+    const owner = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member;
+    const requester = (await joinMember(running.origin, "demo", { name: "Bob", role: "collaborator" })).member;
+    const memberStore = running.app.locals.members;
+    const runtime = running.app.locals.runtimeManager.get("demo");
+    const cwd = runtime.project.workspacePath;
+    await fs.writeFile(path.join(cwd, "check.js"), "console.log(eval('1'));\n");
+    const command = "node check.js > result.txt";
+    const request = { projectId: "demo", memberId: requester.id, source: "terminal" as const, kind: "command" as const, command, cwd };
+    const decideBeforeApproval = await runtime.guard.decide(request);
+    expect(decideBeforeApproval.action).toBe("ask");
+    const pending = runtime.guard.submit(request);
+    await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
+    expect(await runtime.guard.approve(runtime.guard.pending()[0]!.id, owner.id)).toBe(true);
+    expect((await pending).approved).toBe(true);
+    expect(await runtime.guard.decide(request)).toEqual(decideBeforeApproval);
+    await runtime.guard.setControl(requester.id, owner.id);
+    const terminal = new WebSocket(`${running.origin.replace("http", "ws")}/terminal?projectId=demo&memberId=${requester.id}`);
+    try {
+      await opened(terminal);
+      await vi.waitFor(() => {
+        const foreground = runtime.terminal.foregroundProcess();
+        expect(foreground && runtime.terminal.isShellProcess(foreground)).toBe(true);
+      }, { timeout: 2_000 });
+      const reply = nextMessageMatching(terminal, (message) => message.type === "guard_decision" && message.command === command);
+      terminal.send(JSON.stringify({ type: "command", text: command }));
+      await expect(reply).resolves.toMatchObject({ action: "allow_snapshot", outcome: "approved", snapshotId: expect.any(String) });
+      await vi.waitFor(async () => expect(await fs.readFile(path.join(cwd, "result.txt"), "utf8")).toBe("1\n"));
+    } finally {
+      terminal.terminate();
+    }
+    await runtime.guard.awaitIdle();
+    const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
+    const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+    expect(audit.find((record) => record.stage === "remembered")).toMatchObject({ approver: owner.id, approvedAt: expect.any(String) });
+    await memberStore.changeRole("demo", { actorId: owner.id, targetId: requester.id, role: "student" });
+    const afterDemotion = runtime.guard.submit(request);
+    await vi.waitFor(() => expect(runtime.guard.pending()).toHaveLength(1));
+    expect(await runtime.guard.reject(runtime.guard.pending()[0]!.id, owner.id)).toBe(true);
+    expect((await afterDemotion).approved).toBe(false);
   });
 
   it("keeps ordinary commands available and lets controlled users reach normal review", async () => {
@@ -190,6 +243,11 @@ describe("member identity API", () => {
     const ownerTerminal = new WebSocket(`${running.origin.replace("http", "ws")}/terminal?projectId=demo&memberId=${owner.member.id}`);
     try {
       await opened(ownerTerminal);
+      await vi.waitFor(() => {
+        const terminal = running.app.locals.runtimeManager.get("demo").terminal;
+        const foreground = terminal.foregroundProcess();
+        expect(foreground && terminal.isShellProcess(foreground)).toBe(true);
+      }, { timeout: 2_000 });
       ownerTerminal.send(JSON.stringify({ type: "command", text: "vim" }));
       await expect(nextMessageMatching(ownerTerminal, (message) => message.type === "guard_decision" && message.command === "vim")).resolves.toMatchObject({ type: "guard_decision", action: "allow", outcome: "allowed", command: "vim" });
     } finally {

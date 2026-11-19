@@ -15,6 +15,7 @@ export interface GuardAuditRecord {
   action: string;
   matchedRules: string[];
   approver?: string;
+  approvedAt?: string;
   result?: string;
   durationMicros: number;
   stage?: "decision" | "llm" | "approval" | "owner-self" | "remembered";

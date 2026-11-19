@@ -33,6 +33,7 @@ export async function createApp(config: ServerConfig) {
     guardMode,
     guardLlmMode: config.guardLlmMode,
     guardApprovalTimeoutMs: config.guardApprovalTimeoutMs,
+    guardApprovalMemoryTtlMs: config.guardApprovalMemoryTtlMs,
     otherWorkspaceRoots: (currentProjectId) => registry.listProjectsSync().filter((project) => project.id !== currentProjectId).map((project) => project.workspacePath),
     guardLlm: {
       provider: config.agent?.provider,

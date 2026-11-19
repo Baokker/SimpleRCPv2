@@ -13,6 +13,7 @@ import type { Action, GuardContext, GuardDecision, GuardRequest, Level } from ".
 export interface ScriptSource {
   read(absolutePath: string): string | undefined;
   writerLevel?(absolutePath: string): Level | undefined;
+  writerId?(absolutePath: string): string | undefined;
 }
 
 export interface ScriptInspection {
@@ -29,7 +30,7 @@ const SHELLS = new Set(["sh", "bash", "zsh", "dash", "fish", "source", "."]);
 const INTERPRETERS: Record<string, ScriptKind> = { node: "node", tsx: "node", "ts-node": "node", python: "python", python3: "python", perl: "perl", ruby: "ruby", php: "php" };
 const INLINE_FLAGS = new Set(["-c", "-e", "-p", "--eval", "--print", "-m", "-r"]);
 
-export function fileScriptSource(maxBytes = MAX_BYTES, writerLevel?: (absolutePath: string) => Level | undefined): ScriptSource {
+export function fileScriptSource(maxBytes = MAX_BYTES, writerLevel?: (absolutePath: string) => Level | undefined, writerId?: (absolutePath: string) => string | undefined): ScriptSource {
   return {
     read(absolutePath) {
       try {
@@ -41,7 +42,8 @@ export function fileScriptSource(maxBytes = MAX_BYTES, writerLevel?: (absolutePa
         return undefined;
       }
     },
-    writerLevel
+    writerLevel,
+    writerId
   };
 }
 
@@ -253,6 +255,10 @@ function judgeLine(line: string, cwd: string, request: GuardRequest, context: Gu
 function inspectTarget(target: ScriptTarget, cwd: string, request: GuardRequest, context: GuardContext, source: ScriptSource, depth: number, result: ScriptInspection) {
   const definedIn = target.file ?? target.definedIn;
   const writer = definedIn ? source.writerLevel?.(definedIn) : undefined;
+  const writerId = definedIn ? source.writerId?.(definedIn) : undefined;
+  if (context.memberLevel === "owner" && request.source === "terminal" && writerId && writerId !== request.memberId) {
+    combine(result, "ask", ["script.foreign-writer"]);
+  }
   const level = lowerLevel(context.memberLevel, writer);
   if (writer && level !== context.memberLevel) combine(result, "allow", [`script.writer.${writer}`]);
   result.scripts.push(target.label);

@@ -38,6 +38,10 @@ export function createWriteProvenance(filePath: string, workspaceRoot: string) {
       const relative = key(absolutePath);
       return relative === undefined ? undefined : entries?.[relative]?.level;
     },
+    writerOf(absolutePath: string) {
+      const relative = key(absolutePath);
+      return relative === undefined ? undefined : entries?.[relative]?.memberId;
+    },
     async record(request: GuardRequest, level: Level) {
       await this.load();
       const keys = writtenPaths(request).map(key).filter((value): value is string => value !== undefined);

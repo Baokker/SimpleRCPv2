@@ -3,7 +3,7 @@ import path from "node:path";
 import type { NextFunction, Request, Response } from "express";
 import { getProjectMetadataPath, type ProjectRecord } from "../projects.js";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
-import { normalizeStoredRole } from "../guard/roles.js";
+import { normalizeStoredRole, roleLevel } from "../guard/roles.js";
 import { checkGrantRole, checkSelfRoleChange, resolveJoinRole, RoleChangeError } from "./rolePolicy.js";
 
 export interface MemberRecord {
@@ -25,6 +25,7 @@ interface MemberFile {
 export function createMemberStore(options: { projects: () => ProjectRecord[]; normalizeRoles?: boolean }) {
   const cache = new Map<string, MemberFile>();
   const loading = new Map<string, Promise<MemberFile>>();
+  const membershipListeners = new Set<(projectId: string, memberId: string) => void>();
   let operations = Promise.resolve();
 
   function enqueue<T>(operation: () => Promise<T>) {
@@ -93,8 +94,7 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
             const current = file.members[index]!;
             const role = input.role === undefined ? current.role : resolveJoinRole(file.members, current, normalizeRole(input.role));
             const member = { ...current, displayName, role, updatedAt: now };
-            file.members[index] = member;
-            await save(projectId, file);
+            await updateMember(file, index, member);
             return member;
           }
         }
@@ -122,9 +122,20 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
           checkGrantRole(file.members, input.actorId, input.targetId);
         }
         const member = { ...file.members[index]!, role, updatedAt: new Date().toISOString() };
-        file.members[index] = member;
-        await save(projectId, file);
+        await updateMember(file, index, member);
         return member;
+      });
+    },
+    onMembershipChanged(listener: (projectId: string, memberId: string) => void) {
+      membershipListeners.add(listener);
+      return () => membershipListeners.delete(listener);
+    },
+    async removeMember(projectId: string, actorId: string, targetId: string) {
+      return enqueue(async () => {
+        const file = await load(projectId);
+        checkGrantRole(file.members, actorId, targetId);
+        await save(projectId, { ...file, members: file.members.filter((member) => member.memberId !== targetId) });
+        for (const listener of membershipListeners) listener(projectId, targetId);
       });
     },
     async getMember(projectId: string, memberId: string) {
@@ -143,6 +154,14 @@ export function createMemberStore(options: { projects: () => ProjectRecord[]; no
       }
     }
   };
+
+  async function updateMember(file: MemberFile, index: number, member: MemberRecord) {
+    const previous = file.members[index]!;
+    await save(member.projectId, { ...file, members: file.members.map((entry, memberIndex) => memberIndex === index ? member : entry) });
+    if (roleLevel(previous.role) !== roleLevel(member.role)) {
+      for (const listener of membershipListeners) listener(member.projectId, member.memberId);
+    }
+  }
 
   function normalizeRole(raw: string | undefined) {
     return options.normalizeRoles ? normalizeStoredRole(raw) : raw?.trim() ?? "";

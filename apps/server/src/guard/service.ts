@@ -64,13 +64,20 @@ export function createGuardService(options: {
   llmMode?: GuardLlmMode;
   llm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
   approvalTimeoutMs?: number;
+  approvalMemoryTtlMs?: number;
   otherWorkspaceRoots?: (currentProjectId: string) => string[];
   scriptInspection?: boolean;
 }) {
   const policyPath = path.join(options.metadataRoot, "guard-policy.json");
   const audit = createGuardAudit(path.join(options.metadataRoot, "guard-audit.jsonl"), options.llm?.apiKey ? [options.llm.apiKey] : []);
   const approvals = createApprovalQueue(options.approvalTimeoutMs ?? 120_000);
-  const approvalMemory = createApprovalMemory();
+  const approvalMemory = createApprovalMemory(options.approvalMemoryTtlMs);
+  const membershipRevisions = new Map<string, number>();
+  const stopMembershipChanges = options.members.onMembershipChanged((projectId, memberId) => {
+    if (projectId !== options.project.id) return;
+    membershipRevisions.set(memberId, (membershipRevisions.get(memberId) ?? 0) + 1);
+    approvalMemory.clearMember(memberId);
+  });
   const snapshots = createSnapshotStore(options.metadataRoot, options.project.workspacePath);
   const provenance = createWriteProvenance(path.join(options.metadataRoot, "guard-provenance.json"), options.project.workspacePath);
   const pendingListeners = new Set<(approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void>();
@@ -129,7 +136,7 @@ export function createGuardService(options: {
     await provenance.load();
     const decision = options.scriptInspection === false
       ? decide(request, context)
-      : applyScriptInspection(decide(request, context), inspectScripts(request, context, fileScriptSource(undefined, (file) => provenance.levelOf(file))), stored.level, request.source);
+      : applyScriptInspection(decide(request, context), inspectScripts(request, context, fileScriptSource(undefined, provenance.levelOf, provenance.writerOf)), stored.level, request.source);
     const durationMicros = Number((process.hrtime.bigint() - started) / 1_000n);
     audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros, stage: "decision" });
     return { decision, member: stored, policy: currentPolicy };
@@ -153,12 +160,10 @@ export function createGuardService(options: {
       return { request, decision: { action: "allow", segments: [], legacyRisk: "unknown", matchedRules: [], unknown: false, autoEligible: false, approvers: null } satisfies GuardDecision, approved: true };
     }
     if (options.mode === "native") return submitNative(request, input);
+    const membershipRevision = membershipRevisions.get(request.memberId);
     const initial = await makeDecision(request);
     let decision = initial.decision;
-    // An owner's own terminal command is the owner's decision already; asking the owner to approve it
-    // again only adds a click. Hard denials still apply because they never reach "ask". A script that
-    // someone else wrote still asks, since its content is not the owner's own decision.
-    if (decision.action === "ask" && decision.approvers === "self" && !decision.matchedRules.some((rule) => rule.startsWith("script."))) {
+    if (decision.action === "ask" && decision.approvers === "self" && !decision.matchedRules.includes("script.foreign-writer")) {
       decision = {
         ...decision,
         action: decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow",
@@ -172,11 +177,12 @@ export function createGuardService(options: {
       decision = {
         ...decision,
         action: decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow",
+        approvers: null,
         matchedRules: [...decision.matchedRules, REMEMBERED_RULE],
         outcome: "approved",
         command: request.command
       };
-      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: remembered.approverId, result: "approved", durationMicros: 0, stage: "remembered" });
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: remembered.approverId, approvedAt: new Date(remembered.at).toISOString(), result: "approved", durationMicros: 0, stage: "remembered" });
       publishActivity({
         type: "guard_action",
         memberId: request.memberId,
@@ -270,7 +276,9 @@ export function createGuardService(options: {
     const approved = await pending.result;
     const resolution = await pending.outcome;
     const approverId = await pending.approver;
-    if (approved) approvalMemory.remember(request, decision, approverId);
+    if (approved && approverId && membershipRevisions.get(request.memberId) === membershipRevision) {
+      approvalMemory.remember(request, decision, approverId);
+    }
     const approverName = approverId
       ? (await options.members.getMember(options.project.id, approverId))?.displayName
       : undefined;
@@ -426,7 +434,7 @@ export function createGuardService(options: {
       return updated;
     },
     async awaitIdle() { await audit.awaitIdle(); },
-    dispose() { approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); }
+    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); }
   };
 }
 

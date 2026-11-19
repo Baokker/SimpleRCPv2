@@ -1,6 +1,7 @@
 import path from "node:path";
 import type { GuardLlmMode } from "@simplercp/shared";
 import { fileURLToPath } from "node:url";
+import { DEFAULT_APPROVAL_MEMORY_TTL_MS } from "./guard/approvalMemory.js";
 
 const defaultRepositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -15,6 +16,7 @@ export interface ServerConfig {
   guardMode?: "full" | "human-only" | "native" | "off";
   guardLlmMode?: GuardLlmMode;
   guardApprovalTimeoutMs?: number;
+  guardApprovalMemoryTtlMs?: number;
   guardLlmTimeoutMs?: number;
   fakeAgentRuntime?: boolean;
   sensitiveValues?: string[];
@@ -140,6 +142,7 @@ export function loadConfig(
   Object.defineProperties(config, {
     guardMode: { value: guardMode, enumerable: env.SIMPLERCP_GUARD_MODE !== undefined },
     guardApprovalTimeoutMs: { value: guardApprovalTimeoutMs, enumerable: env.SIMPLERCP_GUARD_APPROVAL_TIMEOUT_MS !== undefined },
+    guardApprovalMemoryTtlMs: { value: positiveInteger(env.SIMPLERCP_GUARD_APPROVAL_MEMORY_TTL_MS, "SIMPLERCP_GUARD_APPROVAL_MEMORY_TTL_MS", DEFAULT_APPROVAL_MEMORY_TTL_MS), enumerable: env.SIMPLERCP_GUARD_APPROVAL_MEMORY_TTL_MS !== undefined },
     guardLlmTimeoutMs: { value: guardLlmTimeoutMs, enumerable: env.SIMPLERCP_GUARD_LLM_TIMEOUT_MS !== undefined }
   });
   if (config.agent!.activityConfig!.stalledMs <= config.agent!.activityConfig!.waitingMs) throw new Error("SIMPLERCP_AGENT_STALLED_MS 必须大于 SIMPLERCP_AGENT_WAITING_MS");
