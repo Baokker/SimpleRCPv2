@@ -372,6 +372,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const previous = current.interruptsRunId ? await store.get(current.interruptsRunId) : undefined;
       const interruption = previous ? `The previous task was interrupted. Continue from the current workspace files. Follow the latest user request. Files already changed: ${(previous.fileChanges ?? []).map((change) => change.file).join(", ") || "none"}.` : undefined;
       const prompt = await buildRuntimePrompt(runtime.project.workspacePath, current.prompt, current.contexts, runtime.project.name, [interruption, current.extraPrompt].filter(Boolean).join("\n\n"));
+      await runtime.guard.recordPromptSources(runId, current.memberId, current.contexts?.map((context) => context.path) ?? [], current.discussionAuthors ?? []);
       await options.runtime.prepareRun?.({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId, runPrompt: current.prompt });
       if ((await store.get(runId))?.status === "cancelled") return;
       phase = "first-request";
@@ -441,7 +442,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         await ensureDefaultTeamAgent(project.id);
       }
     },
-    async createRun(input: { projectId: string; memberId: string; prompt: string; contexts?: AgentPromptContext[]; sessionId?: string; source?: AgentRun["source"]; chatMessageId?: string; extraPrompt?: string; interruptsRunId?: string; runId?: string; initiatorRole?: string; interrupt?: boolean }) {
+    async createRun(input: { projectId: string; memberId: string; prompt: string; contexts?: AgentPromptContext[]; sessionId?: string; source?: AgentRun["source"]; chatMessageId?: string; extraPrompt?: string; discussionAuthors?: AgentRun["discussionAuthors"]; interruptsRunId?: string; runId?: string; initiatorRole?: string; interrupt?: boolean }) {
       if (disposing) throw new Error("Agent manager is closing");
       const settings = options.getSettings();
       if (!settings.enabled) throw new Error("Agent is disabled");
@@ -462,7 +463,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           await manager.cancelRun(input.projectId, previous.id, input.memberId, { runId, memberId: input.memberId });
           interrupted.push(previous);
         }
-        const run = await getStore(input.projectId).create({ projectId: input.projectId, memberId: input.memberId, initiatorMemberId: input.memberId, initiatorRole: input.initiatorRole, participantId: member.participantId, memberName: member.displayName, prompt, contexts: normalizeAgentContexts(input.contexts), sessionId: session.id, sessionScope: session.scope ?? "personal", runtimeSessionId: session.runtimeSessionId, status: "queued", runtime: "opencode", provider: "deepseek", model: settings.model, source: input.source ?? "agent-panel", chatMessageId: input.chatMessageId, extraPrompt: input.extraPrompt, interruptsRunId: interrupted.at(-1)?.id ?? input.interruptsRunId }, runId);
+        const run = await getStore(input.projectId).create({ projectId: input.projectId, memberId: input.memberId, initiatorMemberId: input.memberId, initiatorRole: input.initiatorRole, participantId: member.participantId, memberName: member.displayName, prompt, contexts: normalizeAgentContexts(input.contexts), sessionId: session.id, sessionScope: session.scope ?? "personal", runtimeSessionId: session.runtimeSessionId, status: "queued", runtime: "opencode", provider: "deepseek", model: settings.model, source: input.source ?? "agent-panel", chatMessageId: input.chatMessageId, extraPrompt: input.extraPrompt, discussionAuthors: input.discussionAuthors, interruptsRunId: interrupted.at(-1)?.id ?? input.interruptsRunId }, runId);
         emit({ type: "run_updated", projectId: input.projectId, run });
         await appendTrace(input.projectId, run.id, { type: "run_queued", summary: "Agent run queued" });
         getQueue(input.projectId).runIds.push(run.id); void scheduler.processQueue(input.projectId);
@@ -516,7 +517,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
       const runtime = options.runtimeManager.get(projectId);
       const member = requireMember(projectId, memberId);
       const message = previous.source === "chat" ? await runtime.chat.createMessage({ roomId: runtime.room.id, authorId: memberId, authorName: member.displayName, authorRole: member.profileRole, text: previous.prompt }) : undefined;
-      const run = await manager.createRun({ projectId, memberId, prompt: previous.prompt, contexts: previous.contexts, sessionId: previous.sessionId, source: previous.source, chatMessageId: message?.id, extraPrompt: previous.extraPrompt });
+      const run = await manager.createRun({ projectId, memberId, prompt: previous.prompt, contexts: previous.contexts, sessionId: previous.sessionId, source: previous.source, chatMessageId: message?.id, extraPrompt: previous.extraPrompt, discussionAuthors: previous.discussionAuthors });
       if (message) await runtime.chat.updateMessage(message.id, { runId: run.id, agentSessionId: run.sessionId });
       await appendTrace(projectId, run.id, { type: "run_retried", data: { previousRunId: previous.id } });
       return run;

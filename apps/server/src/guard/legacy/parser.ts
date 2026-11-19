@@ -115,6 +115,11 @@ export function parseCommandPaths(command: string, cwd: string): ParsedOperation
     operation = values.length ? { commandName: name, action: "delete", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
   } else if (["cat", "type", "gc", "get-content", "head", "tail", "less", "more", "grep", "rg", "find", "ls", "dir", "get-childitem", "gci"].includes(name)) {
     operation = values.length ? { commandName: name, action: "read", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
+  } else if (/^sed[ \t]+-n[ \t]+(?:'(?:\d+(?:,\d+)?)?p'|"(?:\d+(?:,\d+)?)?p"|(?:\d+(?:,\d+)?)?p)[ \t]+(?:--[ \t]+)?(?:[\w./~%-]+|'[\w ./~%-]+'|"[\w ./~%-]+")(?:[ \t]+(?:[\w./~%-]+|'[\w ./~%-]+'|"[\w ./~%-]+"))*[ \t]*$/.test(redirections.command.trim())) {
+    const files = input.slice(input[3] === "--" ? 4 : 3);
+    if (files.length && files.every((file) => !unquote(file).startsWith("-"))) {
+      operation = { commandName: name, action: "read", targets: files.map((file) => target(cwd, file, "target")) };
+    }
   } else if (["mkdir", "md", "touch", "tee", "new-item", "ni", "set-content", "add-content"].includes(name)) {
     operation = values.length ? { commandName: name, action: "write", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
   } else if (["mv", "move", "move-item", "mi", "ren", "rename-item", "cp", "copy", "copy-item", "ci"].includes(name)) {

@@ -307,12 +307,14 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
   const metadataReference = request.kind === "command" && command.includes("$SIMPLERCP_DATA_DIR");
   const baseCapabilities = capabilitiesFor(name, request.kind, command);
   let capabilities: Capability[] = baseCapabilities;
+  const isSedPrint = parsed?.commandName === "sed" && parsed.action === "read";
+  if (isSedPrint) capabilities = ["read"];
   if (parsed?.action === "delete") capabilities = ["delete"];
   if ((parsed?.action === "write" || parsed?.targets.some((target) => target.role === "destination"))
     && !["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     capabilities = [...baseCapabilities.filter((capability) => capability !== "exec"), "write"];
   }
-  const legacy = request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
+  const legacy = isSedPrint ? "safe" : request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
     const segmentCapabilities = capabilities;
     const segmentReversibility = legacy === "unknown" || legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")

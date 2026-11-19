@@ -13,6 +13,7 @@ export function createProjectRuntimeManager(
     guardLlmMode?: GuardLlmMode;
     guardApprovalTimeoutMs?: number;
     guardApprovalMemoryTtlMs?: number;
+    guardAgentProvenance?: boolean;
     guardLlm?: { provider?: "deepseek" | "minimax"; baseUrl?: string; apiKey?: string; model?: string; timeoutMs?: number };
     otherWorkspaceRoots?: (currentProjectId: string) => string[];
   } = {}

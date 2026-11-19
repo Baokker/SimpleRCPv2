@@ -253,6 +253,13 @@ describe("member identity API", () => {
       expect((await runtime.guard.submit(read)).approved).toBe(true);
       expect((await runtime.guard.decide({ ...deletion, agentRunId })).action).toBe(expected);
     }
+    for (const command of ["cat bob.txt", "head bob.txt", "sed -n '1,2p' -- 'bob.txt' alice.txt"]) {
+      const agentRunId = `read-${command}`;
+      expect((await runtime.guard.submit({ ...deletion, agentRunId, command })).approved).toBe(true);
+      expect(await runtime.guard.decide({ ...deletion, agentRunId })).toMatchObject({ action: "ask", sourceLevel: "contributor" });
+    }
+    await runtime.guard.recordPromptSources("attached-file", alice.id, ["bob.txt"], []);
+    expect(await runtime.guard.decide({ ...deletion, agentRunId: "attached-file" })).toMatchObject({ action: "ask", sourceLevel: "contributor" });
     const agentRunId = "team-discussion";
     await runtime.guard.recordPromptSources(agentRunId, alice.id, [], [{ id: bob.id, role: "contributor" }]);
     const pending = runtime.guard.submit({ ...deletion, agentRunId, sessionScope: "team" });

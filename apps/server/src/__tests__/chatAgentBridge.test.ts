@@ -49,7 +49,8 @@ describe("chat Agent bridge", () => {
     expect(fixture.createdRuns[0]).toMatchObject({
       source: "chat",
       chatMessageId: message.id,
-      extraPrompt: expect.stringContaining("Requested by Alice (Role: Developer)")
+      extraPrompt: expect.stringContaining("Requested by Alice (Role: Developer)"),
+      discussionAuthors: [{ id: "member-b" }]
     });
     expect(fixture.createdRuns[0]?.extraPrompt).toContain("[Bob] Please check the README");
   });

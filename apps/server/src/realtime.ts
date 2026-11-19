@@ -418,7 +418,7 @@ export function attachRealtimeServer(
       });
     });
 
-    socket.on("message", (data: RawData) => {
+    socket.on("message", async (data: RawData) => {
       const runtime = runtimeManager.get(projectId);
       try {
         const parsed = JSON.parse(data.toString()) as ClientMessage;
@@ -428,6 +428,8 @@ export function attachRealtimeServer(
           throw new Error("Connection belongs to another member");
         }
         const bound = { ...parsed, roomId: identity.roomId, memberId: identity.memberId };
+        if (bound.type === "file_edited") await runtime.guard.recordWorkspaceWrite(identity.memberId, bound.path);
+        const wasOnline = runtime.rooms.getMember(identity.roomId, identity.memberId)?.online;
         identities.set(socket, { ...identity, connectionId: parsed.connectionId });
         if (parsed.connectionId) {
           runtime.rooms.markConnectionOnline(identity.roomId, parsed.connectionId);
