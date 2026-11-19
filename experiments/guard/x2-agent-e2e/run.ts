@@ -4,7 +4,6 @@ import net from "node:net";
 import { randomBytes } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { parse } from "../../../apps/server/node_modules/dotenv/lib/main.js";
 import { createApp } from "../../../apps/server/src/createApp.js";
 import { environmentRecord, makeRunId, projectRoot } from "../lib/common.js";
 import { redactSensitive } from "../../../apps/server/src/agent/traceStore.js";
@@ -211,11 +210,10 @@ async function runOne(spec: Spec, directory: string, runtimeRoot: string, config
   return row;
 }
 async function main() {
-  const env = parse(await fs.readFile(path.join(projectRoot, ".env"), "utf8"));
-  const provider = (process.env.GUARD_LLM_PROVIDER ?? (env.MINIMAX_API_KEY ? "minimax" : "deepseek")).toLowerCase();
-  const config = provider === "minimax"
-    ? { provider, apiKey: env.MINIMAX_API_KEY, baseUrl: env.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1", model: env.MINIMAX_MODEL ?? "MiniMax-M3" }
-    : { provider, apiKey: env.DEEPSEEK_API_KEY, baseUrl: env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1", model: env.DEEPSEEK_MODEL };
+  // Provider settings come from the process environment only (loaded by the launcher from the user's MiniMax .env).
+  // The repository .env is never read, and the key is never printed or written to results.
+  const provider = "minimax";
+  const config = { provider, apiKey: process.env.MINIMAX_API_KEY ?? "", baseUrl: process.env.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1", model: process.env.MINIMAX_MODEL ?? "MiniMax-M3" };
   if (!config.apiKey || !config.model) throw new Error(`${provider} configuration required`);
   if (process.env.X2_WORKER) {
     const job = JSON.parse(process.env.X2_WORKER);
