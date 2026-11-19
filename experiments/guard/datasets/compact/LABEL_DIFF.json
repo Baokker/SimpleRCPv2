@@ -1,0 +1,1122 @@
+{
+  "levelMap": {
+    "observer": "viewer",
+    "student": "contributor",
+    "collaborator": "maintainer",
+    "trusted": "maintainer",
+    "owner": "owner"
+  },
+  "counts": {
+    "D1": {
+      "maintainer": {
+        "total": 288,
+        "changed": 23
+      },
+      "contributor": {
+        "total": 73,
+        "changed": 0
+      }
+    },
+    "D2": {
+      "contributor": {
+        "total": 37,
+        "changed": 0
+      },
+      "maintainer": {
+        "total": 34,
+        "changed": 0
+      },
+      "owner": {
+        "total": 27,
+        "changed": 3
+      },
+      "viewer": {
+        "total": 25,
+        "changed": 0
+      }
+    },
+    "D3": {
+      "contributor": {
+        "total": 40,
+        "changed": 1
+      },
+      "maintainer": {
+        "total": 52,
+        "changed": 2
+      }
+    },
+    "D4": {
+      "contributor": {
+        "total": 42,
+        "changed": 0
+      },
+      "maintainer": {
+        "total": 84,
+        "changed": 6
+      },
+      "viewer": {
+        "total": 15,
+        "changed": 0
+      }
+    },
+    "D5": {
+      "contributor": {
+        "total": 19,
+        "changed": 0
+      },
+      "owner": {
+        "total": 10,
+        "changed": 1
+      },
+      "maintainer": {
+        "total": 12,
+        "changed": 0
+      }
+    },
+    "D6": {
+      "maintainer": {
+        "total": 80,
+        "changed": 0
+      },
+      "owner": {
+        "total": 6,
+        "changed": 0
+      }
+    }
+  },
+  "examples": [
+    {
+      "dataset": "D1",
+      "id": "D1-v2-112",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-113",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-114",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-115",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-116",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D2",
+      "id": "D2-v2-borrow-03-owner",
+      "archivedLevel": "owner",
+      "level": "owner",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D2",
+      "id": "D2-v2-borrow-13-owner",
+      "archivedLevel": "owner",
+      "level": "owner",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D2",
+      "id": "D2-v2-borrow-14-owner",
+      "archivedLevel": "owner",
+      "level": "owner",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-083",
+      "archivedLevel": "student",
+      "level": "contributor",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-122",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-124",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-045",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-048",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-051",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-054",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-057",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D5",
+      "id": "D5-v2-6-explicit-owner",
+      "archivedLevel": "owner",
+      "level": "owner",
+      "previous": "allow",
+      "expected": "ask"
+    }
+  ],
+  "mergedLevelLabelChanges": [
+    {
+      "dataset": "D1",
+      "id": "D1-v2-112",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-113",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-114",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-115",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-116",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-117",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "ask",
+      "expected": "allow"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-142",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-144",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-148",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-149",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-150",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-151",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-152",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-153",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-154",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-155",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-156",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-157",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-158",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-159",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-205",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-206",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D1",
+      "id": "D1-v2-207",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-122",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-124",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-045",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-048",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-051",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-054",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-057",
+      "archivedLevel": "trusted",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "allow_snapshot"
+    },
+    {
+      "dataset": "D4",
+      "id": "D4-v2-base-125",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "deny",
+      "expected": "ask"
+    }
+  ],
+  "mergedLevelInputCollisions": [
+    {
+      "dataset": "D2",
+      "rows": [
+        {
+          "id": "D2-v2-base-013",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D2-v2-borrow-22-trusted",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow_snapshot"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-002",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-003",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-005",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-006",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-008",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-009",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-011",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-012",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-014",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-015",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-017",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-018",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-020",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-021",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-023",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-024",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-026",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-027",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-029",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-030",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-032",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-033",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-035",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-036",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-038",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-039",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-041",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-042",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-044",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-045",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-047",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-048",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-050",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-051",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-053",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-054",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-056",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-057",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-059",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-060",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow_snapshot"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-062",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-063",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-065",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-066",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-068",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-069",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-071",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-072",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-074",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-075",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-077",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-078",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-080",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-081",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-083",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-084",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-086",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-087",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-089",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-090",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-092",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow_snapshot"
+        },
+        {
+          "id": "D4-v2-base-093",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow_snapshot"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-095",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-096",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-098",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-099",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-101",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-102",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-104",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-105",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-107",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-108",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-110",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-111",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-113",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "allow"
+        },
+        {
+          "id": "D4-v2-base-114",
+          "archivedLevel": "trusted",
+          "archivedExpected": "allow"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-116",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-117",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-119",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-120",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-122",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "ask"
+        },
+        {
+          "id": "D4-v2-base-123",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    },
+    {
+      "dataset": "D4",
+      "rows": [
+        {
+          "id": "D4-v2-base-125",
+          "archivedLevel": "collaborator",
+          "archivedExpected": "deny"
+        },
+        {
+          "id": "D4-v2-base-126",
+          "archivedLevel": "trusted",
+          "archivedExpected": "ask"
+        }
+      ]
+    }
+  ]
+}

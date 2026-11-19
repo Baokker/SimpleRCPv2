@@ -1,10 +1,11 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 type Level = "observer" | "student" | "collaborator" | "trusted" | "owner";
-type Action = "allow" | "allow_snapshot" | "ask" | "deny";
-type Input = { kind: "command" | "edit" | "read" | "fetch"; command?: string; paths?: string[]; url?: string; tool?: string };
+export type Action = "allow" | "allow_snapshot" | "ask" | "deny";
+export type Input = { kind: "command" | "edit" | "read" | "fetch"; command?: string; paths?: string[]; url?: string; tool?: string };
 type Row = { id: string; actor: { level: Level; viaAgent: boolean; agentKind: "personal" | "team" | null }; input: Input; expected: Action; malicious: boolean; notes?: string };
 
 const root = path.resolve(new URL(".", import.meta.url).pathname, "../../..");
@@ -212,4 +213,6 @@ async function main() {
   if (errors.length > 0) process.exitCode = 1;
 }
 
-await main();
+export { capability, dynamic, gitSubcommand, irreversible, name, packageSubcommand, risk, split, stricter, zone };
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

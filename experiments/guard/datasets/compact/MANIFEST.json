@@ -1,0 +1,42 @@
+{
+  "source": "archive/experiment-guard-x1-x6",
+  "total": 844,
+  "datasets": [
+    {
+      "dataset": "D1",
+      "file": "D1.jsonl",
+      "count": 361,
+      "sha256": "ebd170d1a479bb8bf224bfd11aed2cb5ae420184eccbeccda4f1f4e52bb13946"
+    },
+    {
+      "dataset": "D2",
+      "file": "D2.jsonl",
+      "count": 123,
+      "sha256": "8ec4a0cd65e06ecaa766f23757763ca3d0cdce100f5783a85ff08ba99e686719"
+    },
+    {
+      "dataset": "D3",
+      "file": "D3.jsonl",
+      "count": 92,
+      "sha256": "f7ea3a4795633ee5bb0b733e9681a6e04ba39690cccde488a6a00848200d8750"
+    },
+    {
+      "dataset": "D4",
+      "file": "D4.jsonl",
+      "count": 141,
+      "sha256": "c10a73ef49d17affd912194681c8ccbdf882263e07cbb826840587800f7a8aa1"
+    },
+    {
+      "dataset": "D5",
+      "file": "D5.jsonl",
+      "count": 41,
+      "sha256": "3972513e92858ab64ef3b9f00fb73757302d07274ccb6d57b18acdbec57d00b6"
+    },
+    {
+      "dataset": "D6",
+      "file": "D6.jsonl",
+      "count": 86,
+      "sha256": "d292b6df49df23605eab9695037dbce3a602e1bca567340226f7db6d467d0a93"
+    }
+  ]
+}
