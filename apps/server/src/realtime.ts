@@ -598,6 +598,7 @@ async function handleTerminalMessage(
       return;
     }
     runtime.terminal.write(`${message.text}\r`, memberId, false);
+    runtime.guard.noteTerminalCommand(request);
     const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "withdrawn" | "timeout" | "allowed" | "denied" | "busy";
     sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome, reason: describeGuardRules(decision.matchedRules) || "Request was allowed", approverName: decision.approverName, snapshotId, command: message.text });
   } finally {
@@ -606,22 +607,9 @@ async function handleTerminalMessage(
   }
 }
 
+// The client turns these rule ids into plain Chinese; keeping ids here avoids two diverging label tables.
 function describeGuardRules(rules: string[], blocked = false) {
-  const labels: Record<string, string> = {
-    "hard.control-character": "Command contains control characters",
-    "hard.cwd": "Changing the terminal directory is blocked",
-    "hard.metadata": "Project metadata is protected",
-    "hard.outside": "The path is outside this workspace",
-    "hard.protected": "The path is protected",
-    "hard.dynamic": "Dynamic shell syntax needs review",
-    "hard.interactive-control": "Interactive control is required before starting this command",
-    "hard.nonowner.irreversible": "This irreversible operation requires approval",
-    "hard.legacy-dangerous": "This dangerous command requires approval",
-    "agent.default": "Agent request requires approval",
-    "agent.run-cancelled": "The Agent run was cancelled",
-    "guard.run-cancelled": "The Agent run was cancelled"
-  };
-  return rules.filter((rule) => !(blocked && rule === "hard.nonowner.irreversible")).map((rule) => labels[rule] ?? rule).join(", ");
+  return rules.filter((rule) => !(blocked && rule === "hard.nonowner.irreversible")).join(", ");
 }
 
 function sendTerminalMessage(socket: WebSocket, message: TerminalServerMessage) {

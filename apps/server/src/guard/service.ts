@@ -5,6 +5,7 @@ import type { MemberStore } from "../auth/identity.js";
 import type { EventLog } from "../eventLog.js";
 import type { RoomStore } from "../rooms.js";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
+import { createApprovalMemory, REMEMBERED_RULE } from "./approvalMemory.js";
 import { createApprovalQueue, type ApprovalOutcome, type PendingApproval } from "./approvals.js";
 import { createGuardAudit } from "./audit.js";
 import { decide } from "./decide.js";
@@ -69,6 +70,7 @@ export function createGuardService(options: {
   const policyPath = path.join(options.metadataRoot, "guard-policy.json");
   const audit = createGuardAudit(path.join(options.metadataRoot, "guard-audit.jsonl"), options.llm?.apiKey ? [options.llm.apiKey] : []);
   const approvals = createApprovalQueue(options.approvalTimeoutMs ?? 120_000);
+  const approvalMemory = createApprovalMemory();
   const snapshots = createSnapshotStore(options.metadataRoot, options.project.workspacePath);
   const provenance = createWriteProvenance(path.join(options.metadataRoot, "guard-provenance.json"), options.project.workspacePath);
   const pendingListeners = new Set<(approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void>();
@@ -78,6 +80,8 @@ export function createGuardService(options: {
   let control: { memberId: string; expiresAt: number; timer: ReturnType<typeof setTimeout> } | undefined;
   let selectedLlmMode = options.llmMode;
   const cancelledRunIds = new Set<string>();
+  // Paths that people changed from the shared terminal, so an Agent's change list does not claim them.
+  const terminalChanges: Array<{ memberId: string; paths: string[]; at: number }> = [];
 
   async function policy(): Promise<GuardPolicy> {
     const stored = await readJsonFile<GuardPolicy>(policyPath);
@@ -151,6 +155,35 @@ export function createGuardService(options: {
     if (options.mode === "native") return submitNative(request, input);
     const initial = await makeDecision(request);
     let decision = initial.decision;
+    // An owner's own terminal command is the owner's decision already; asking the owner to approve it
+    // again only adds a click. Hard denials still apply because they never reach "ask". A script that
+    // someone else wrote still asks, since its content is not the owner's own decision.
+    if (decision.action === "ask" && decision.approvers === "self" && !decision.matchedRules.some((rule) => rule.startsWith("script."))) {
+      decision = {
+        ...decision,
+        action: decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow",
+        approvers: null,
+        matchedRules: [...decision.matchedRules, "owner.self-command"]
+      };
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, durationMicros: 0, stage: "owner-self" });
+    }
+    const remembered = approvalMemory.recall(request, decision);
+    if (remembered) {
+      decision = {
+        ...decision,
+        action: decision.segments.some((segment) => segment.reversibility === "snapshot") ? "allow_snapshot" : "allow",
+        matchedRules: [...decision.matchedRules, REMEMBERED_RULE],
+        outcome: "approved",
+        command: request.command
+      };
+      audit.append({ timestamp: new Date().toISOString(), projectId: request.projectId, memberId: request.memberId, source: request.source, agentRunId: request.agentRunId, sessionScope: request.sessionScope, agentHandle: request.agentHandle, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, approver: remembered.approverId, result: "approved", durationMicros: 0, stage: "remembered" });
+      publishActivity({
+        type: "guard_action",
+        memberId: request.memberId,
+        payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, remembered: true, commandClass: remembered.commandClass }
+      });
+      return { request, decision, approved: true };
+    }
     const llmMode = effectiveGuardLlmMode(initial.policy.llmMode, Boolean(options.llm?.baseUrl && options.llm.apiKey));
     if (decision.action === "ask" && llmMode !== "off") {
       if (options.llm?.baseUrl && options.llm.apiKey) {
@@ -205,7 +238,7 @@ export function createGuardService(options: {
         ? "denied"
         : decision.llm?.applied ? "approved" : "allowed";
       decision = { ...decision, command: request.command, outcome };
-      if (decision.action !== "allow" || decision.llm?.applied) publishActivity({
+      if (decision.action !== "allow" || decision.llm?.applied || decision.matchedRules.includes("owner.self-command")) publishActivity({
         type: "guard_action",
         memberId: request.memberId,
         payload: { source: request.source, runId: request.agentRunId, command: request.command, paths: request.paths, action: decision.action, matchedRules: decision.matchedRules, llm: decision.llm }
@@ -237,6 +270,7 @@ export function createGuardService(options: {
     const approved = await pending.result;
     const resolution = await pending.outcome;
     const approverId = await pending.approver;
+    if (approved) approvalMemory.remember(request, decision, approverId);
     const approverName = approverId
       ? (await options.members.getMember(options.project.id, approverId))?.displayName
       : undefined;
@@ -324,6 +358,21 @@ export function createGuardService(options: {
       const item = approvals.list().find((candidate) => candidate.id === id);
       return Boolean(item && item.request.memberId === memberId && approvals.withdraw(id));
     },
+    noteTerminalCommand(request: GuardRequest) {
+      if (request.source !== "terminal" || request.kind !== "command" || !request.command) return;
+      const parsed = parseCommandPaths(request.command, request.cwd);
+      if (!parsed || !["delete", "write", "move"].includes(parsed.action)) return;
+      const paths = parsed.targets
+        .map((target) => path.relative(options.project.workspacePath, target.resolvedPath).split(path.sep).join("/"))
+        .filter((relative) => relative && !relative.startsWith(".."));
+      if (!paths.length) return;
+      terminalChanges.push({ memberId: request.memberId, paths, at: Date.now() });
+      if (terminalChanges.length > 200) terminalChanges.splice(0, terminalChanges.length - 200);
+    },
+    terminalChangedFiles(files: string[], since: number) {
+      const recent = terminalChanges.filter((entry) => entry.at >= since).flatMap((entry) => entry.paths);
+      return new Set(files.filter((file) => recent.some((target) => file === target || file.startsWith(`${target.replace(/\/+$/, "")}/`))));
+    },
     cancelRun(runId: string) { cancelledRunIds.add(runId); approvals.cancelForRun(runId); },
     pending() { return approvals.list(); },
     onPending(listener: (approval: Omit<PendingApproval, "resolve" | "resolveOutcome" | "resolveApprover" | "timer">) => void) { pendingListeners.add(listener); return () => pendingListeners.delete(listener); },
@@ -374,7 +423,7 @@ export function createGuardService(options: {
       return updated;
     },
     async awaitIdle() { await audit.awaitIdle(); },
-    dispose() { approvals.clear(); cancelledRunIds.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); }
+    dispose() { approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); }
   };
 }
 

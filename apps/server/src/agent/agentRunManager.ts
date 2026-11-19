@@ -161,10 +161,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     const revisions = runtime.documents.getRevisions();
     const recordedConcurrentFiles = new Set<string>();
     let guardRejected = false;
+    const runStartedAt = Date.now();
     async function collectChanges(messageId?: string) {
       if (!snapshot) return [];
       const changes = compareAgentWorkspaceSnapshots(snapshot, await createAgentWorkspaceSnapshot(runtime.project.workspacePath));
       const memberFiles = new Set(changes.filter((change) => runtime.documents.getRevision(change.file) > (revisions.get(change.file) ?? 0)).map((change) => change.file));
+      // Files that a person deleted or wrote from the shared terminal during the run are not the Agent's.
+      for (const file of runtime.guard.terminalChangedFiles(changes.map((change) => change.file), runStartedAt)) memberFiles.add(file);
       let sessionChanges: AgentRun["fileChanges"] = [];
       if (runtimeSessionId) {
         try {

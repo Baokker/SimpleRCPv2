@@ -1,3 +1,4 @@
+import { OTHERS_CHANGED_NOTE, splitAgentChanges } from "../agentFiles";
 import {
   Activity,
   Bot,
@@ -24,6 +25,7 @@ import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
 import { AgentWorkDetails } from "./AgentWorkDetails";
 import { GuardApprovalActions } from "./GuardApprovalActions";
+import { guardActionWord, guardLevelText, guardReasonText, guardRecommendationText, guardRiskText } from "../guardText";
 import type {
   AgentRun,
   AgentSession,
@@ -265,7 +267,7 @@ export function CollaborationPanel({
       {activeTab !== "team" && visibleApprovals.length > 0 ? (
         // Approvals expire after a timeout, so they stay visible while another tab is open.
         <button type="button" className="collab-approval-banner" onClick={() => selectTab("team")} data-testid="collab-approval-banner">
-          {visibleApprovals.length === 1 ? "1 approval is waiting for you." : `${visibleApprovals.length} approvals are waiting for you.`} Open Team to approve or reject.
+          有 {visibleApprovals.length} 条审批等你处理，点这里到 Team 标签页批准或拒绝。
         </button>
       ) : null}
 
@@ -513,7 +515,7 @@ export function CollaborationPanel({
                   );
                 })}
               </ul>
-              {llmJudging ? <div className="guard-llm-status" role="status"><span className="guard-llm-spinner" />The model is reviewing a guarded request…</div> : null}
+              {llmJudging ? <div className="guard-llm-status" role="status"><span className="guard-llm-spinner" />模型正在判断一条需要审批的请求……</div> : null}
               {visibleApprovals.map((approval) => {
                 const llm = approval.decision.llm;
                 const requester = members.find((candidate) => candidate.id === approval.request.memberId);
@@ -522,19 +524,19 @@ export function CollaborationPanel({
                 const reason = humanGuardReason(approval.decision.matchedRules, approval.decision.action);
                 return (
                   <div key={approval.id} className="guard-approval-card">
-                    <strong>{approval.request.memberId === member?.id ? "Confirm your own command" : `${requester?.displayName ?? approval.request.memberId} (${requesterRole}) wants to run:`}</strong>
-                    {approval.request.agentHandle ? <span>via @{approval.request.agentHandle}</span> : approval.request.source === "agent" ? <span>via {requester?.displayName ?? "member"}'s agent</span> : null}
+                    <strong>{approval.request.memberId === member?.id ? (approval.decision.approvers === "owners" && !approval.approverIds.includes(member?.id ?? "") ? "你的请求正在等待负责人审批" : approval.request.source === "agent" ? "请确认你的 Agent 要执行的操作" : "请确认你自己的命令") : `${requester?.displayName ?? approval.request.memberId}（${guardLevelText(requesterRole)}）请求执行：`}</strong>
+                    {approval.request.agentHandle ? <span>通过 @{approval.request.agentHandle}</span> : approval.request.source === "agent" ? <span>由 {requester?.displayName ?? "成员"} 的 Agent 发起</span> : <span>在共享终端中输入</span>}
                     <code>{approval.request.command ?? approval.request.paths?.join(", ")}</code>
-                    <small title={approval.decision.matchedRules.join(", ")}>{reason}{remaining !== undefined ? ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
+                    <small title={approval.decision.matchedRules.join(", ")}>{reason}{remaining !== undefined ? ` · 剩余 ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : ""}</small>
                     {llm ? (
                       <div className="guard-llm-result">
-                        <strong>Model judgment: {llm.risk} · Recommendation: {llmRecommendation(llm.risk)}</strong>
-                        <span>Confidence {Math.round(llm.confidence * 100)}%</span>
+                        <strong>模型判断风险{guardRiskText(llm.risk)} · {guardRecommendationText(llm.risk)}</strong>
+                        <span>置信度 {Math.round(llm.confidence * 100)}%</span>
                         <p>{llm.reason}</p>
-                        <small>{llm.applied ? `Automatically ${approval.decision.action === "deny" ? "rejected" : "approved"}` : "Recommendation only; human approval remains required"}</small>
+                        <small>{llm.applied ? `已自动${approval.decision.action === "deny" ? "拒绝" : "批准"}` : "仅供参考，仍需由人决定"}</small>
                       </div>
-                    ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">Model judgment unavailable. This request is waiting for human approval.</div> : null}
-                    {approval.noApprover ? <small>No owner online — ask a teacher or lead to join.</small> : null}
+                    ) : approval.decision.llmUnavailable ? <div className="guard-llm-status">模型暂时无法判断，这条请求等待人工审批。</div> : null}
+                    {approval.noApprover ? <small>没有负责人在线，请让负责人加入。</small> : null}
                     <GuardApprovalActions
                       approval={approval}
                       memberId={member?.id}
@@ -693,15 +695,27 @@ function ChatAgentMessage({
           <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
           <AgentRunProgress run={run} memberId={memberId} onCancel={active && !stopping ? () => void stopRun() : undefined} onRetry={run.memberId === memberId && !retrying ? () => void retryRun() : undefined} />
           <div><strong>Requested by {run.memberName ?? run.memberId}</strong><span>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></div>
-          {run.fileChanges?.length ? (
+          {splitAgentChanges(run.fileChanges).own.length ? (
             <ul>
-              {run.fileChanges.map((change) => (
+              {splitAgentChanges(run.fileChanges).own.map((change) => (
                 <li key={change.file}>
                   <button type="button" onClick={() => onOpenFile(change.file)}>{change.file}</button>
                 </li>
               ))}
             </ul>
-          ) : <small>No file changes recorded.</small>}
+          ) : <small>这个 Agent 没有记录到文件修改。</small>}
+          {splitAgentChanges(run.fileChanges).others.length ? (
+            <>
+              <small className="agent-file-others">{OTHERS_CHANGED_NOTE}</small>
+              <ul>
+                {splitAgentChanges(run.fileChanges).others.map((change) => (
+                  <li key={change.file}>
+                    <button type="button" onClick={() => onOpenFile(change.file)}>{change.file}</button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
           <AgentWorkDetails run={run} trace={trace} variant="team" onLoadTrace={() => onLoadAgentTrace(run.id)} />
           <div className="chat-agent-card-actions">
             <button
@@ -766,16 +780,16 @@ function formatActivity(
       });
     case "guard_snapshot":
       return {
-        ...item(event, "general", `${actor}'s ${payload.source === "agent" ? "Agent change" : "command"} ran after a snapshot`, {
+        ...item(event, "general", `${actor} 的${payload.source === "agent" ? " Agent 修改" : "命令"}已先保存快照再执行，可以撤销`, {
           detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
         }),
         snapshotId: stringValue(payload.snapshotId),
         snapshotMemberId: event.memberId
       };
     case "guard_snapshot_restored":
-      return item(event, "general", `${actor} restored a snapshot`, { detail: stringValue(payload.command) });
+      return item(event, "general", `${actor} 撤销了一次快照前的修改`, { detail: stringValue(payload.command) });
     case "guard_llm_judging":
-      return item(event, "general", `${actor}'s request is being reviewed by the model`, {
+      return item(event, "general", `模型正在判断 ${actor} 的请求`, {
         detail: stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined)
       });
     case "guard_llm_result": {
@@ -783,22 +797,22 @@ function formatActivity(
       if (!model || typeof model !== "object") return null;
       const judgment = model as Record<string, unknown>;
       const risk = stringValue(judgment.risk) ?? "unknown";
-      const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : undefined;
+      const confidence = typeof judgment.confidence === "number" ? `置信度 ${Math.round(judgment.confidence * 100)}%` : undefined;
       const reason = stringValue(judgment.reason);
       const applied = judgment.applied === true;
       const followup = applied
-        ? `Automatically ${payload.action === "deny" ? "rejected" : "approved"}`
-        : "Human approval remains required";
-      return item(event, "general", `${actor}'s model recommendation: ${llmRecommendation(risk)}`, {
-        detail: [stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined), `risk ${risk}`, confidence, reason, followup].filter(Boolean).join(" · ")
+        ? `已自动${payload.action === "deny" ? "拒绝" : "批准"}`
+        : "仍需由人决定";
+      return item(event, "general", `模型对 ${actor} 的请求${guardRecommendationText(risk)}`, {
+        detail: [stringValue(payload.command) ?? (Array.isArray(payload.paths) ? payload.paths.join(", ") : undefined), `风险${guardRiskText(risk)}`, confidence, reason, followup].filter(Boolean).join(" · ")
       });
     }
     case "guard_llm_unavailable":
-      return item(event, "general", `${actor}'s request could not be judged by the model`, {
-        detail: stringValue(payload.reason) ?? "Human approval is still required"
+      return item(event, "general", `模型无法判断 ${actor} 的请求`, {
+        detail: "仍需由人审批"
       });
     case "guard_approval":
-      return item(event, "general", `${actor}'s request was ${payload.outcome === "timeout" ? "expired" : payload.outcome === "withdrawn" ? "withdrawn" : payload.approved ? "approved" : "rejected"}`, {
+      return item(event, "general", `${actor} 的请求${payload.outcome === "timeout" ? "审批超时" : payload.outcome === "withdrawn" ? "已撤回" : payload.approved ? "已批准" : "已拒绝"}`, {
         detail: formatGuardApprovalDetail(payload)
       });
     case "terminal_control_granted":
@@ -843,14 +857,15 @@ function formatActivity(
       );
     }
     case "agent_task_completed": {
-      const files = fileChanges(payload.files);
+      const { own, others } = splitAgentChanges(fileChanges(payload.files));
+      const othersNote = others.length ? ` · 另有 ${others.length} 个文件同期他人也改过` : "";
       return item(
         event,
         "agent",
         `${actor}'s Agent task completed`,
         {
-          detail: files.length ? formatAgentFiles(files) : "No files changed",
-          path: files[0]?.file
+          detail: `${own.length ? formatAgentFiles(own) : "No files changed"}${othersNote}`,
+          path: own[0]?.file ?? others[0]?.file
         }
       );
     }
@@ -921,61 +936,19 @@ function stringValue(value: unknown) {
 }
 
 function humanGuardReason(rules: string[], action?: GuardApproval["decision"]["action"]) {
-  const labels: Record<string, string> = {
-    "hard.outside": "The path is outside this workspace",
-    "hard.metadata": "Project metadata is protected",
-    "hard.protected": "The path is protected",
-    "hard.dynamic": "Dynamic shell syntax needs review",
-    "hard.cwd": "Changing the terminal directory is blocked",
-    "hard.control-character": "Control characters are blocked",
-    "agent.default": "Agent requests require owner approval",
-    "native.platform-ask": "The Agent asks you to confirm this operation"
-  };
-  return rules.map((rule) => {
-    if (labels[rule]) return labels[rule];
-    const roleRule = rule.match(/^role\.(observer|student|collaborator|trusted)\.(.+)$/);
-    if (roleRule) {
-      const level = roleRule[1]![0]!.toUpperCase() + roleRule[1]!.slice(1);
-      const capability = roleRule[2]!.replaceAll("-", " ");
-      return action === "deny"
-        ? `${level}s cannot ${guardCapabilityText(capability)}`
-        : `${level}s need approval to use ${guardCapabilityText(capability)}`;
-    }
-    if (rule === "hard.owner.irreversible-external") return "Owner operations affecting external systems require approval";
-    if (rule === "hard.git-context") return "Git commands that change the project context require review";
-    return rule;
-  }).join("; ");
-}
-
-function guardCapabilityText(capability: string) {
-  const labels: Record<string, string> = {
-    privilege: "run privileged commands (sudo)",
-    network: "access the network",
-    delete: "delete files",
-    process: "control processes",
-    install: "install packages",
-    history: "change project history",
-    write: "write files",
-    exec: "run commands",
-    read: "read files"
-  };
-  return labels[capability] ?? capability;
-}
-
-function llmRecommendation(risk: string) {
-  if (risk === "high") return "reject";
-  if (risk === "low") return "approve";
-  return "manual review";
+  return guardReasonText(rules, action === "deny");
 }
 
 function guardActionText(actor: string, payload: Record<string, unknown>) {
   const llm = payload.llm;
   if (llm && typeof llm === "object" && "applied" in llm && llm.applied === true) {
-    return `${actor}'s request was automatically ${payload.action === "deny" ? "rejected" : "approved"} by the model`;
+    return `模型已自动${payload.action === "deny" ? "拒绝" : "批准"} ${actor} 的请求`;
   }
-  const action = stringValue(payload.action);
-  const text = action === "deny" ? "blocked" : action === "allow_snapshot" ? "allowed with snapshot" : action === "ask" ? "sent for approval" : action === "allow" ? "allowed" : "checked";
-  return `${actor}'s terminal or Agent request was ${text}`;
+  if (payload.remembered === true) return `${actor} 的同一类命令此前已批准，这次直接执行`;
+  const rules = Array.isArray(payload.matchedRules) ? payload.matchedRules.filter((rule): rule is string => typeof rule === "string") : [];
+  if (rules.includes("owner.self-command")) return `${actor} 以负责人身份执行了自己的命令${payload.action === "allow_snapshot" ? "，已先保存快照" : ""}`;
+  const where = payload.source === "agent" ? "的 Agent 请求" : "的终端命令";
+  return `${actor}${where}${guardActionWord(stringValue(payload.action))}`;
 }
 
 function formatGuardActionDetail(payload: Record<string, unknown>) {
@@ -984,9 +957,9 @@ function formatGuardActionDetail(payload: Record<string, unknown>) {
   if (!llm || typeof llm !== "object") return command;
   const model = llm as Record<string, unknown>;
   const risk = stringValue(model.risk);
-  const confidence = typeof model.confidence === "number" ? `${Math.round(model.confidence * 100)}% confidence` : undefined;
+  const confidence = typeof model.confidence === "number" ? `置信度 ${Math.round(model.confidence * 100)}%` : undefined;
   const reason = stringValue(model.reason);
-  return [command, risk ? `risk ${risk}` : undefined, confidence, reason].filter(Boolean).join(" · ");
+  return [command, risk ? `风险${guardRiskText(risk)}` : undefined, confidence, reason].filter(Boolean).join(" · ");
 }
 
 function formatGuardApprovalDetail(payload: Record<string, unknown>) {
@@ -995,9 +968,9 @@ function formatGuardApprovalDetail(payload: Record<string, unknown>) {
   if (!model || typeof model !== "object") return command;
   const judgment = model as Record<string, unknown>;
   const risk = stringValue(judgment.risk);
-  const confidence = typeof judgment.confidence === "number" ? `${Math.round(judgment.confidence * 100)}% confidence` : undefined;
+  const confidence = typeof judgment.confidence === "number" ? `置信度 ${Math.round(judgment.confidence * 100)}%` : undefined;
   const reason = stringValue(judgment.reason);
-  return [command, risk ? `Model recommendation: ${llmRecommendation(risk)} (risk ${risk})` : undefined, confidence, reason].filter(Boolean).join(" · ");
+  return [command, risk ? `模型${guardRecommendationText(risk)}（风险${guardRiskText(risk)}）` : undefined, confidence, reason].filter(Boolean).join(" · ");
 }
 
 function numberValue(value: unknown) {
@@ -1008,6 +981,7 @@ interface AgentActivityFile {
   file: string;
   additions: number;
   deletions: number;
+  attribution?: string;
 }
 
 function fileChanges(value: unknown): AgentActivityFile[] {
@@ -1020,7 +994,8 @@ function fileChanges(value: unknown): AgentActivityFile[] {
     return [{
       file: path,
       additions: numberValue(file.additions),
-      deletions: numberValue(file.deletions)
+      deletions: numberValue(file.deletions),
+      attribution: stringValue(file.attribution)
     }];
   });
 }

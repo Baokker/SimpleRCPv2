@@ -1,3 +1,4 @@
+import { OTHERS_CHANGED_NOTE, splitAgentChanges } from "../agentFiles";
 import {
   Bot,
   CircleStop,
@@ -555,19 +556,22 @@ function AgentMessage({
 
       <AgentWorkDetails run={run} trace={trace} onLoadTrace={onLoadTrace} onDownload={() => void downloadAgentTrace(projectId, run.id).catch(onError)} />
 
-      {run.fileChanges?.length ? (
-        <ul className="agent-file-changes">
-          {run.fileChanges.map((change) => (
-            <li key={change.file}>
-              <button type="button" onClick={() => onOpenFile(change.file)}>
-                <FileCode2 size={13} />
-                <span>{change.file}</span>
-                <small>+{change.additions} / -{change.deletions}</small>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {[splitAgentChanges(run.fileChanges).own, splitAgentChanges(run.fileChanges).others].map((changes, index) => changes.length ? (
+        <div key={index}>
+          {index === 1 ? <p className="agent-file-others">{OTHERS_CHANGED_NOTE}</p> : null}
+          <ul className="agent-file-changes">
+            {changes.map((change) => (
+              <li key={change.file}>
+                <button type="button" onClick={() => onOpenFile(change.file)}>
+                  <FileCode2 size={13} />
+                  <span>{change.file}</span>
+                  <small>+{change.additions} / -{change.deletions}</small>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null)}
     </article>
   );
 }

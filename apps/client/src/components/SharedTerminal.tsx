@@ -1,4 +1,5 @@
 import { FitAddon } from "@xterm/addon-fit";
+import { guardRecommendationText, guardRiskText, guardServerReasonText } from "../guardText";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
@@ -240,44 +241,31 @@ function terminalTheme(theme: ThemeMode) {
 }
 
 function formatGuardDecision(message: Extract<TerminalServerMessage, { type: "guard_decision" }>, command: string) {
-  if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `Previous command is waiting for approval in Team — approve or reject it before sending another command${command}`;
-  if (message.outcome === "busy") return `Terminal busy — wait for the running program to finish${command}`;
-  if (message.outcome === "timeout") return `⏱ No response before the approval deadline — not run${command}`;
-  if (message.outcome === "withdrawn") return `↩ Withdrawn${command}`;
-  if (message.outcome === "rejected") return `✕ Rejected${message.approverName ? ` by ${message.approverName}` : ""}: ${friendlyGuardReason(message.reason)}${command}`;
+  if (message.outcome === "busy" && message.reason === "Another command from this member is waiting") return `上一条命令还在 Team 里等待审批，处理后再发送新命令${command}`;
+  if (message.outcome === "busy") return `终端正在运行其他程序，请等它结束${command}`;
+  if (message.outcome === "timeout") return `⏱ 审批超时，命令没有执行${command}`;
+  if (message.outcome === "withdrawn") return `↩ 已撤回${command}`;
+  if (message.outcome === "rejected") return `✕ ${message.approverName ? `${message.approverName} 拒绝了这条命令` : "这条命令被拒绝"}：${guardServerReasonText(message.reason)}${command}`;
   if (message.outcome === "denied") {
-    const reason = friendlyGuardReason(message.reason, true);
+    const reason = guardServerReasonText(message.reason, true);
     const controlHint = message.reason.startsWith("Interactive control is required")
-      ? ". Open Team → People and choose Take control before retrying"
+      ? "。请在 Team → People 里选择 Take control 后重试"
       : "";
-    return `✕ Blocked: ${reason}${controlHint}${command}`;
+    return `✕ 已拦下：${reason}${controlHint}${command}`;
   }
-  if (message.action === "allow_snapshot") return `✓ Ran with snapshot${command}`;
-  if (message.outcome === "approved") return `✓ Approved${message.approverName ? ` by ${message.approverName}` : ""} — running${command}`;
-  if (message.action === "allow") return `✓ Ran${command}`;
-  return `${message.reason}${command}`;
+  if (message.action === "allow_snapshot") return `✓ 已保存快照并执行${command}`;
+  if (message.outcome === "approved") return message.reason.includes("approval.remembered")
+    ? `✓ 同一类命令此前已批准，直接执行${command}`
+    : `✓ ${message.approverName ? `${message.approverName} 已批准` : "已批准"}，正在执行${command}`;
+  if (message.action === "allow") return `✓ 已执行${command}`;
+  return `${guardServerReasonText(message.reason)}${command}`;
 }
 
 function formatGuardPending(message: Extract<TerminalServerMessage, { type: "guard_pending" }>, now = Date.now()) {
-  const waiting = message.noApprover ? "No owner online — waiting for an owner to join" : "Waiting for human approval";
-  if (message.llmUnavailable) return `Model judgment unavailable — ${waiting}`;
+  const waiting = message.noApprover ? "没有负责人在线，正在等待负责人加入" : "正在等待审批，请到 Team 标签页处理";
+  if (message.llmUnavailable) return `模型暂时无法判断，${waiting}`;
   const remaining = message.expiresAt ? Math.max(0, Math.ceil((Date.parse(message.expiresAt) - now) / 1000)) : undefined;
-  const countdown = remaining === undefined ? "" : ` · expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
+  const countdown = remaining === undefined ? "" : ` · 剩余 ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
   if (!message.llm) return `${waiting}${countdown}`;
-  return `Model suggestion: ${message.llm.risk} (${Math.round(message.llm.confidence * 100)}% confidence) — ${message.llm.reason}. ${waiting}${countdown}`;
-}
-
-function friendlyGuardReason(reason: string, denied = false) {
-  const labels: Record<string, string> = { "hard.control-character": "command contains control characters", "hard.cwd": "changing the terminal directory is blocked", "hard.metadata": "project metadata is protected", "hard.outside": "the path is outside this workspace", "hard.protected": "the path is protected", "hard.dynamic": "dynamic shell syntax needs review", "hard.owner.irreversible-external": "owner operations affecting external systems require approval", "hard.git-context": "git commands that change the project context require review" };
-  return reason.split(", ").map((rule) => {
-    if (labels[rule]) return labels[rule];
-    const roleRule = rule.match(/^role\.(observer|student|collaborator|trusted)\.(.+)$/);
-    if (roleRule) {
-      const level = `${roleRule[1]![0]!.toUpperCase()}${roleRule[1]!.slice(1)}s`;
-      const capability = roleRule[2]!.replaceAll("-", " ");
-      const labels: Record<string, string> = { privilege: "run privileged commands (sudo)", network: "access the network", delete: "delete files", process: "control processes", install: "install packages", history: "change project history", write: "write files", exec: "run commands", read: "read files" };
-      return denied ? `${level} cannot ${labels[capability] ?? capability}` : `${level} need approval to use ${labels[capability] ?? capability}`;
-    }
-    return rule;
-  }).join(", ");
+  return `模型判断风险${guardRiskText(message.llm.risk)}，${guardRecommendationText(message.llm.risk)}（置信度 ${Math.round(message.llm.confidence * 100)}%）：${message.llm.reason}。${waiting}${countdown}`;
 }

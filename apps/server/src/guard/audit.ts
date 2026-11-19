@@ -17,7 +17,7 @@ export interface GuardAuditRecord {
   approver?: string;
   result?: string;
   durationMicros: number;
-  stage?: "decision" | "llm" | "approval";
+  stage?: "decision" | "llm" | "approval" | "owner-self" | "remembered";
   model?: unknown;
 }
 

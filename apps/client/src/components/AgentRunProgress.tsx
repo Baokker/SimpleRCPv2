@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { splitAgentChanges } from "../agentFiles";
 import { CircleStop, RotateCcw } from "lucide-react";
 import type { AgentRun, AgentRuntimeStatus } from "../types";
 import { AgentBadge, AgentMetrics } from "./AgentPresentation";
@@ -23,7 +24,7 @@ export function AgentRunProgress({ run, memberId, config, onCancel, onRetry }: {
     {active ? <div className="agent-progress-heading"><strong>实时活动</strong><AgentBadge tone="info">{activityLabel(run, memberId)}</AgentBadge></div> : null}
     <AgentMetrics items={[
       { id: "run-duration", label: "任务总时长", value: `${elapsed} 秒` },
-      { id: "changed-files", label: "已记录文件修改", value: `${run.fileChanges?.length ?? 0} 个` },
+      { id: "changed-files", label: "已记录文件修改", value: `${splitAgentChanges(run.fileChanges).own.length} 个${splitAgentChanges(run.fileChanges).others.length ? `，另有 ${splitAgentChanges(run.fileChanges).others.length} 个同期他人也改过` : ""}` },
       ...(run.activity?.tokens ? [{ id: "token-usage", label: "token 用量", value: run.activity.tokens.total.toLocaleString() }] : [])
     ]} />
     {active && run.activity?.tools.length ? <ul className="agent-current-tools" data-testid="agent-current-tools">{run.activity.tools.map((tool) => <li key={tool.id}><code>{tool.name}</code><span>{tool.summary}</span><small>已持续 {Math.max(0, Math.floor((now - Date.parse(tool.startedAt)) / 1000))} 秒</small></li>)}</ul> : null}

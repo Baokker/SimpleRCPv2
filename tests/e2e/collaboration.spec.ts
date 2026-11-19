@@ -69,29 +69,30 @@ test("opening Team with a visible approval does not produce an update loop", asy
   expect(consoleErrors.filter((message) => message.includes("Maximum update depth exceeded"))).toEqual([]);
 });
 
-test("owner can confirm a self-approval request from the Team card", async ({ page }) => {
-  await openAs(page, "Teacher self approval", "demo", "teacher");
+test("a student's request shows the approval banner and Chinese approval card", async ({ page }) => {
+  await openAs(page, "Student banner", "demo", "student");
   const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
-  await command.fill("git push origin main");
+  await command.fill("rm a.txt");
   await command.press("Enter");
   const banner = page.getByTestId("collab-approval-banner");
-  await expect(banner).toContainText("1 approval is waiting for you.");
+  await expect(banner).toContainText("有 1 条审批等你处理");
   await banner.click();
   await expect(banner).toHaveCount(0);
-  const card = page
-    .locator(".guard-approval-card")
-    .filter({ hasText: "Confirm your own command" });
-  await expect(card).toContainText("Confirm your own command");
-  await expect(card.getByRole("button", { name: "Run anyway" })).toBeVisible();
-  await expect(card.getByRole("button", { name: "Cancel" })).toBeVisible();
-  await expect(page.getByTestId("guard-notification")).toHaveCount(0);
-  await page.screenshot({
-    path: "docs/guard/screenshots-self-approval.png",
-    fullPage: true
-  });
-  await card.getByRole("button", { name: "Run anyway" }).click();
-  await expect(page.getByTestId("guard-notification")).toHaveCount(0);
-  await page.getByTestId("terminal-restart").click();
+  const card = page.locator(".guard-approval-card").first();
+  await expect(card).toContainText("你的请求正在等待负责人审批");
+  await expect(card.getByRole("button", { name: "撤回请求" })).toBeVisible();
+});
+
+test("an owner's own terminal command runs without asking the owner again", async ({ page }) => {
+  await openAs(page, "Teacher own command", "demo", "teacher");
+  const command = page.locator('.terminal-command-box input[placeholder="Submit a terminal command"]');
+  // Shell variables used to ask the owner to confirm their own command.
+  await command.fill("echo $HOME");
+  await command.press("Enter");
+  await expect(page.locator(".terminal-guard-status")).toContainText("已执行");
+  await page.getByTestId("collab-tab-team").click();
+  await expect(page.getByTestId("activity-feed")).toContainText("以负责人身份执行了自己的命令");
+  await expect(page.locator(".guard-approval-card").filter({ hasText: "请确认你自己的命令" })).toHaveCount(0);
 });
 
 test("shows a blocked privilege message for sudo", async ({ page }) => {
@@ -101,10 +102,10 @@ test("shows a blocked privilege message for sudo", async ({ page }) => {
   await page.waitForTimeout(500);
   await command.fill("ls");
   await command.press("Enter");
-  await expect(page.locator(".terminal-guard-status")).toContainText("Ran");
+  await expect(page.locator(".terminal-guard-status")).toContainText("已执行");
   await command.fill("sudo ls");
   await command.press("Enter");
-  await expect(page.locator(".terminal-guard-status")).toContainText("Blocked: Students cannot run privileged commands (sudo)");
+  await expect(page.locator(".terminal-guard-status")).toContainText("已拦下：新成员不能使用管理员权限（sudo）");
   await page.screenshot({
     path: "docs/guard/screenshots-sudo.png",
     fullPage: true
@@ -308,7 +309,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(terminalCommand).toBeVisible();
   await terminalCommand.fill("ls");
   await terminalCommand.press("Enter");
-  await expect(ada.locator(".terminal-guard-status")).toContainText("Ran");
+  await expect(ada.locator(".terminal-guard-status")).toContainText("已执行");
   await expect(ada.getByTestId("terminal-output")).toContainText(
     "src"
   );

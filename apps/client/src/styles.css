@@ -3045,3 +3045,10 @@ button.activity-entry:hover strong {
 @keyframes guard-llm-spin {
   to { transform: rotate(360deg); }
 }
+
+.agent-file-others {
+  display: block;
+  margin: 6px 0 2px;
+  color: var(--muted, #64748b);
+  font-size: 12px;
+}
