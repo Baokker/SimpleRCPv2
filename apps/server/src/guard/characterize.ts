@@ -329,8 +329,9 @@ function characterizeSegment(request: GuardRequest, command: string, zone: (targ
     }
   }
   const legacy = changesDirectory ? "risky" : isSedPrint ? "safe" : request.kind === "command" ? legacyRisk(command) : request.kind === "read" ? "safe" : "risky";
+  const moveRemovesSource = parsed?.action === "move" && parsed.targets.length >= 2;
   const segments: GuardSegment[] = (targetItems.length ? targetItems : [{ raw: request.cwd, resolvedPath: request.cwd, role: "location" as const }]).map((item, index) => {
-    const segmentCapabilities = capabilities;
+    const segmentCapabilities: Capability[] = moveRemovesSource && item.role === "source" ? ["delete"] : capabilities;
     const segmentReversibility = legacy === "unknown" || legacy === "dangerous" && segmentCapabilities.every((capability) => capability === "exec")
       ? "irreversible" as const
       : reversibilityFor(name, command, segmentCapabilities, request.kind);

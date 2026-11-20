@@ -71,6 +71,73 @@ function positional(input: string[]) {
   return values;
 }
 
+// Renames and copies take every leading operand as a source and the last one as the destination.
+// A rename removes its source, so the caller treats the source as a deletion.
+function moveTargets(name: string, values: string[], cwd: string): ParsedOperation | undefined {
+  if (values.length < 2) return undefined;
+  const destination = values[values.length - 1]!;
+  return {
+    commandName: name,
+    action: name.startsWith("c") ? "write" : "move",
+    targets: [
+      ...values.slice(0, -1).map((value) => target(cwd, value, "source")),
+      target(cwd, destination, "destination")
+    ]
+  };
+}
+
+function gitMoveTargets(input: string[], cwd: string): ParsedTarget[] | undefined {
+  let index = 1;
+  while (index < input.length) {
+    const token = unquote(input[index]!).toLowerCase();
+    if (!token.startsWith("-")) break;
+    if (["-c", "--git-dir", "--work-tree", "-C"].includes(token)) index += 1;
+    index += 1;
+  }
+  if (unquote(input[index] ?? "").toLowerCase() !== "mv") return undefined;
+  return moveTargets("git", input.slice(index + 1).filter((value) => !unquote(value).startsWith("-")), cwd)?.targets;
+}
+
+const descriptorDuplication = /^(?:\d+)?>&(?:\d+|-)/;
+
+// `2>&1` and friends duplicate or close a file descriptor. They name no path, so they are removed
+// before redirection targets and dynamic syntax are inspected.
+export function stripDescriptorDuplication(command: string) {
+  let result = "";
+  let quote: "single" | "double" | undefined;
+  for (let index = 0; index < command.length;) {
+    const character = command[index]!;
+    if (character === "\\" && quote !== "single") {
+      result += command.slice(index, index + 2);
+      index += 2;
+      continue;
+    }
+    if (character === "'" && quote !== "double") {
+      quote = quote === "single" ? undefined : "single";
+      result += character;
+      index += 1;
+      continue;
+    }
+    if (character === '"' && quote !== "single") {
+      quote = quote === "double" ? undefined : "double";
+      result += character;
+      index += 1;
+      continue;
+    }
+    if (!quote) {
+      const match = command.slice(index).match(descriptorDuplication);
+      if (match) {
+        result += " ".repeat(match[0].length);
+        index += match[0].length;
+        continue;
+      }
+    }
+    result += character;
+    index += 1;
+  }
+  return result;
+}
+
 const uploadFileOptions = new Set(["-t", "--upload-file", "--post-file", "--body-file"]);
 
 function uploadOptionValue(token: string) {
@@ -123,9 +190,10 @@ export function parseCommandPaths(command: string, cwd: string): ParsedOperation
   } else if (["mkdir", "md", "touch", "tee", "new-item", "ni", "set-content", "add-content"].includes(name)) {
     operation = values.length ? { commandName: name, action: "write", targets: values.map((value) => target(cwd, value, "target")) } : undefined;
   } else if (["mv", "move", "move-item", "mi", "ren", "rename-item", "cp", "copy", "copy-item", "ci"].includes(name)) {
-    operation = values.length >= 2
-      ? { commandName: name, action: name.startsWith("c") ? "write" : "move", targets: [target(cwd, values[0]!, "source"), target(cwd, values[1]!, "destination")] }
-      : undefined;
+    operation = moveTargets(name, values, cwd);
+  } else if (name === "git") {
+    const moved = gitMoveTargets(input, cwd);
+    if (moved) operation = { commandName: "git", action: "move", targets: moved };
   } else if (["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     const uploadTargets: ParsedTarget[] = [];
     for (let index = 1; index < input.length; index += 1) {
@@ -183,7 +251,13 @@ function extractRedirections(command: string, cwd: string) {
       continue;
     }
     if (!quote) {
-      const operator = command.slice(index).match(/^(?:\d+)?(?:&>|>>|>\|?|<(?![<&]))/)?.[0];
+      const duplication = command.slice(index).match(descriptorDuplication);
+      if (duplication) {
+        stripped += " ".repeat(duplication[0].length);
+        index += duplication[0].length;
+        continue;
+      }
+      const operator = command.slice(index).match(/^(?:\d+)?(?:&>|>>|>&|>\|?|<(?![<&]))/)?.[0];
       if (operator && !(operator === "<" && command[index - 1] === "<")) {
         let targetStart = index + operator.length;
         while (/\s/.test(command[targetStart] ?? "")) targetStart += 1;
@@ -197,7 +271,7 @@ function extractRedirections(command: string, cwd: string) {
           while (targetEnd < command.length && !/\s/.test(command[targetEnd]!)) targetEnd += 1;
         }
         const raw = command.slice(targetStart, targetEnd);
-        if (raw) {
+        if (raw && !/^&(?:\d+|-)$/.test(raw)) {
           targets.push(target(cwd, raw, operator.endsWith("<") ? "source" : "destination"));
           dynamic ||= /["'\\$`]/.test(raw);
         }
@@ -212,7 +286,8 @@ function extractRedirections(command: string, cwd: string) {
   return { command: stripped, targets, dynamic };
 }
 
-export function hasDynamicSyntax(command: string) {
+export function hasDynamicSyntax(rawCommand: string) {
+  const command = stripDescriptorDuplication(rawCommand);
   let quote: "single" | "double" | undefined;
   for (let index = 0; index < command.length; index += 1) {
     const character = command[index];

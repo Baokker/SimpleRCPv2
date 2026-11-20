@@ -94,11 +94,15 @@ export function decide(request: GuardRequest, context: GuardContext): GuardDecis
 }
 
 export function applyAgentProvenance(decision: GuardDecision, sourceDecision: GuardDecision, sourceLevel: Level): GuardDecision {
-  if (!(sourceDecision.action === "ask" || sourceDecision.action === "deny") || decision.action === "deny") return decision;
+  if (decision.action === "deny" || sourceDecision.action === "allow") return decision;
+  // The source level decides as it would for the same request from a person. Inherit that whole
+  // decision, including a snapshot, but never inherit a denial: approval stays the ceiling.
+  const inherited = sourceDecision.action === "deny" ? "ask" : sourceDecision.action;
+  const action = stricter(decision.action, inherited);
   return {
     ...decision,
-    action: stricter(decision.action, "ask"),
-    approvers: decision.action === "ask" && decision.approvers === "owners" ? "owners" : "provenance",
+    action,
+    approvers: action !== "ask" ? null : decision.action === "ask" && decision.approvers === "owners" ? "owners" : "provenance",
     autoEligible: false,
     matchedRules: [...decision.matchedRules, `agent.provenance.${sourceLevel}`]
   };

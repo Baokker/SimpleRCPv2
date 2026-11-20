@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { decide } from "../guard/decide.js";
+import { applyAgentProvenance, decide } from "../guard/decide.js";
 import { LEVELS, roleLevel, SCENARIOS } from "../guard/roles.js";
 import { ACTION_ORDER, ROLE_MATRIX } from "../guard/rules.js";
 import { openCodeConfig } from "../agent/openCodeProcess.js";
@@ -374,5 +374,50 @@ describe("guard decisions", () => {
     const result = command("student", "echo hi > note.txt");
     expect(result.action).toBe("allow_snapshot");
     expect(result.matchedRules).not.toContain("hard.dynamic");
+  });
+
+  it("treats a rename as a deletion of its source and a write of its destination", () => {
+    const terminal = (level: string, text: string) => command(level, text);
+    const agent = (level: string, text: string) => decide({ projectId: "project", memberId: "member", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context(level));
+    for (const request of [terminal, agent]) {
+      const contributor = request("contributor", "mv peer.txt x.bak");
+      expect(contributor.action).toBe("ask");
+      expect(contributor.segments.some((segment) => segment.capabilities.includes("delete"))).toBe(true);
+      expect(contributor.segments.some((segment) => segment.capabilities.includes("write"))).toBe(true);
+      expect(request("maintainer", "mv peer.txt x.bak").action).toBe("allow_snapshot");
+    }
+    expect(command("contributor", "move peer.txt x.bak").action).toBe("ask");
+    expect(command("contributor", "git mv peer.txt x.bak").action).toBe("ask");
+    expect(command("maintainer", "git mv peer.txt x.bak").action).toBe("allow_snapshot");
+    expect(command("contributor", "cp peer.txt x.bak").action).toBe("allow_snapshot");
+    expect(command("contributor", "mv peer.txt ../outside/x.bak").action).toBe("ask");
+  });
+
+  it("inherits the source level's snapshot and approval for Agent requests", () => {
+    const agent = (text: string) => decide({ projectId: "project", memberId: "owner", source: "agent", agentRunId: "run", kind: "command", command: text, cwd: workspace }, context("owner"));
+    const source = (text: string) => decide({ projectId: "project", memberId: "owner", source: "terminal", kind: "command", command: text, cwd: workspace }, context("contributor"));
+    const inherit = (text: string) => applyAgentProvenance(agent(text), source(text), "contributor");
+    expect(agent("mv alice-draft.txt .bak").action).toBe("allow");
+    expect(inherit("mv alice-draft.txt .bak")).toMatchObject({ action: "ask", matchedRules: expect.arrayContaining(["agent.provenance.contributor"]) });
+    expect(inherit("echo x > notes.md")).toMatchObject({ action: "allow_snapshot", approvers: null });
+    expect(inherit("cat README.md").action).toBe("allow");
+    expect(applyAgentProvenance(agent("git push origin main"), { ...agent("git push origin main"), action: "deny" }, "contributor").action).toBe("ask");
+    expect(applyAgentProvenance(agent("cat README.md"), { ...agent("cat README.md"), action: "allow" }, "contributor").action).toBe("allow");
+  });
+
+  it("does not treat file-descriptor duplication as a path or dynamic syntax", () => {
+    for (const text of ["npm test 2>&1 | tail -5", "npm test >&2", "npm test 1>&2", "npm test 2>&1"]) {
+      const result = command("contributor", text);
+      expect(result.matchedRules, text).not.toContain("hard.outside");
+      expect(result.matchedRules, text).not.toContain("hard.dynamic");
+      expect(result.segments.every((segment) => segment.zone === "workspace"), text).toBe(true);
+    }
+    expect(command("contributor", "npm test 2>&1 | tail -5").action).toBe("allow");
+    expect(command("contributor", "ls > ../out.txt").matchedRules).toContain("hard.outside");
+    for (const text of ["ls > out.log", "npm test 2> err.txt"]) {
+      const result = command("contributor", text);
+      expect(result.action, text).toBe("allow_snapshot");
+      expect(result.segments.some((segment) => segment.capabilities.includes("write")), text).toBe(true);
+    }
   });
 });
