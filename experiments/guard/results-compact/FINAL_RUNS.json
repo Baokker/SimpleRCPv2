@@ -5,7 +5,7 @@
   "runs": {
     "X1": "X1/x1-compact-v2",
     "X1W": "X1W/x1w-compact-v2",
-    "X2a": "X2a/x2a-compact-v2",
+    "X2a": "X2a/x2a-compact-v2r",
     "X2b": "X2b/x2b-minimax-compact-v2",
     "X3": "X3/x3-approval-burden-compact-v2",
     "X4": "X4/x4-minimax-compact-v2",
@@ -20,5 +20,8 @@
     "Property1": "property1-path-consistency-v2.json",
     "Preflight": "PREFLIGHT.json",
     "D5_live": "D5/d5-live-minimax-compact-v2"
+  },
+  "superseded": {
+    "X2a/x2a-compact-v2": "maintainer trigger evaluated as contributor; see phase-d-report.md"
   }
 }
