@@ -1,0 +1,5 @@
+{"scenario":"contributor-delete","compact":"ask","fixedMaintainer":"allow_snapshot","terminalOnly":"allow"}
+{"scenario":"contributor-edit","compact":"allow_snapshot","fixedMaintainer":"allow_snapshot","terminalOnly":"allow"}
+{"scenario":"before-demotion","compact":"allow_snapshot","fixedMaintainer":"allow_snapshot","terminalOnly":"allow"}
+{"scenario":"after-demotion","compact":"ask","fixedMaintainer":"allow_snapshot","terminalOnly":"allow"}
+{"scenario":"owner-executes-contributor-script","compact":"ask","fixedMaintainer":"allow","terminalOnly":"allow"}

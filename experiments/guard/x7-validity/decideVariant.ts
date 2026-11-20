@@ -67,6 +67,10 @@ export function decideVariant(request: GuardRequest, context: GuardContext, opti
     action = stricter(action, "ask");
     matchedRules.add("hard.dynamic");
   }
+  if (characterization.unboundedWrite) {
+    action = stricter(action, "ask");
+    matchedRules.add("hard.unbounded-write");
+  }
   if (characterization.gitContext) {
     action = stricter(action, "ask");
     matchedRules.add("hard.git-context");

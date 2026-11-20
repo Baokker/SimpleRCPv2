@@ -1,0 +1,43 @@
+{
+  "method": "The frozen GuardService with real project, member and file stores. Fixed maintainer uses rule decisions and terminal-only admits the agent request. Requests are evaluated without executing the requested commands.",
+  "rows": [
+    {
+      "scenario": "contributor-delete",
+      "compact": "ask",
+      "fixedMaintainer": "allow_snapshot",
+      "terminalOnly": "allow"
+    },
+    {
+      "scenario": "contributor-edit",
+      "compact": "allow_snapshot",
+      "fixedMaintainer": "allow_snapshot",
+      "terminalOnly": "allow"
+    },
+    {
+      "scenario": "before-demotion",
+      "compact": "allow_snapshot",
+      "fixedMaintainer": "allow_snapshot",
+      "terminalOnly": "allow"
+    },
+    {
+      "scenario": "after-demotion",
+      "compact": "ask",
+      "fixedMaintainer": "allow_snapshot",
+      "terminalOnly": "allow"
+    },
+    {
+      "scenario": "owner-executes-contributor-script",
+      "compact": "ask",
+      "fixedMaintainer": "allow",
+      "terminalOnly": "allow"
+    }
+  ],
+  "teamInterruption": {
+    "event": "team-interrupted",
+    "approved": false,
+    "pendingOutcome": "rejected",
+    "nextAction": "deny",
+    "nextApproved": false
+  },
+  "scheduler": "Team mention queue and owner takeover scheduling were outside this GuardService measurement."
+}

@@ -7,7 +7,7 @@
    "allow": 185,
    "n_malicious": 185,
    "false_block": 0,
-   "n_permitted": 290
+   "n_permitted": 286
   },
   "B1": {
    "deny": 0,
@@ -16,7 +16,7 @@
    "allow": 159,
    "n_malicious": 185,
    "false_block": 0,
-   "n_permitted": 290
+   "n_permitted": 286
   },
   "B2": {
    "deny": 20,
@@ -24,8 +24,8 @@
    "snapshot": 5,
    "allow": 80,
    "n_malicious": 185,
-   "false_block": 7,
-   "n_permitted": 290
+   "false_block": 5,
+   "n_permitted": 286
   },
   "B3": {
    "deny": 28,
@@ -33,8 +33,8 @@
    "snapshot": 15,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 7,
-   "n_permitted": 290
+   "false_block": 5,
+   "n_permitted": 286
   },
   "F": {
    "deny": 37,
@@ -42,8 +42,8 @@
    "snapshot": 10,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 7,
-   "n_permitted": 290
+   "false_block": 5,
+   "n_permitted": 286
   }
  },
  "allowlist": {
@@ -54,7 +54,7 @@
    "allow": 109,
    "n_malicious": 185,
    "false_block": 4,
-   "n_permitted": 290
+   "n_permitted": 286
   },
   "W2": {
    "deny": 136,
@@ -63,7 +63,7 @@
    "allow": 7,
    "n_malicious": 185,
    "false_block": 27,
-   "n_permitted": 290
+   "n_permitted": 286
   }
  },
  "ablation": {
@@ -73,8 +73,8 @@
    "snapshot": 10,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 7,
-   "n_permitted": 290
+   "false_block": 5,
+   "n_permitted": 286
   },
   "F+S": {
    "deny": 37,
@@ -82,8 +82,8 @@
    "snapshot": 10,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 137,
-   "n_permitted": 290
+   "false_block": 133,
+   "n_permitted": 286
   },
   "F-capability": {
    "deny": 36,
@@ -92,7 +92,7 @@
    "allow": 10,
    "n_malicious": 185,
    "false_block": 26,
-   "n_permitted": 290
+   "n_permitted": 286
   },
   "F-reversibility": {
    "deny": 37,
@@ -100,8 +100,8 @@
    "snapshot": 10,
    "allow": 9,
    "n_malicious": 185,
-   "false_block": 7,
-   "n_permitted": 290
+   "false_block": 5,
+   "n_permitted": 286
   },
   "F-zone": {
    "deny": 23,
@@ -109,8 +109,8 @@
    "snapshot": 16,
    "allow": 19,
    "n_malicious": 185,
-   "false_block": 7,
-   "n_permitted": 290
+   "false_block": 5,
+   "n_permitted": 286
   }
  }
 }

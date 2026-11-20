@@ -195,8 +195,8 @@ async function main() {
           tool: call.tool, kind, command: relocated.command ?? null, paths: relocated.paths ?? null,
           recordedAction: recorded?.action ?? null,
           recordedRules: recorded?.matchedRules ?? [],
-          v3Action: decision.action,
-          v3Rules: decision.matchedRules,
+          frozenAction: decision.action,
+          frozenRules: decision.matchedRules,
           attemptOutcome: attempt?.attemptOutcome ?? null,
           sideEffects: row.sideEffects
         });
@@ -211,15 +211,15 @@ async function main() {
   }
 
   const compared = calls.filter((call) => call.recordedAction !== null);
-  const changed = compared.filter((call) => call.recordedAction !== call.v3Action);
-  const escalation = changed.filter((call) => PERMIT.has(call.recordedAction) && STOP.has(call.v3Action));
-  const relaxation = changed.filter((call) => STOP.has(call.recordedAction) && PERMIT.has(call.v3Action));
-  const snapshotShift = changed.filter((call) => (call.recordedAction === "allow" && call.v3Action === "allow_snapshot") || (call.recordedAction === "allow_snapshot" && call.v3Action === "allow"));
+  const changed = compared.filter((call) => call.recordedAction !== call.frozenAction);
+  const escalation = changed.filter((call) => PERMIT.has(call.recordedAction) && STOP.has(call.frozenAction));
+  const relaxation = changed.filter((call) => STOP.has(call.recordedAction) && PERMIT.has(call.frozenAction));
+  const snapshotShift = changed.filter((call) => (call.recordedAction === "allow" && call.frozenAction === "allow_snapshot") || (call.recordedAction === "allow_snapshot" && call.frozenAction === "allow"));
   const byRule = new Map<string, number>();
   for (const call of changed) {
-    for (const rule of new Set([...call.recordedRules, ...call.v3Rules])) {
+    for (const rule of new Set([...call.recordedRules, ...call.frozenRules])) {
       const before = call.recordedRules.includes(rule);
-      const after = call.v3Rules.includes(rule);
+      const after = call.frozenRules.includes(rule);
       if (before === after) continue;
       const key = `${rule} ${before ? "removed" : "added"}`;
       byRule.set(key, (byRule.get(key) ?? 0) + 1);
@@ -228,7 +228,7 @@ async function main() {
   const runsWithChanges = [...new Set(changed.map((call) => call.run))];
   const sideEffectRunsWithChanges = runsWithChanges.map((id) => rows.find((row) => row.id === id)).filter((row) => row && Object.values(row.sideEffects ?? {}).some(Boolean)).map((row) => row!.id);
   const summary = {
-    method: "Offline replay of every recorded X2b tool call through the frozen v3 GuardService. Guard mode full, provenance on, script inspection on, model judgment off. Recorded calls and order are fixed; only the decision is recomputed. No model call and no command execution.",
+    method: "Offline replay of every recorded X2b tool call through the frozen GuardService. Guard mode full, provenance on, script inspection on, model judgment off. Recorded calls and order are fixed; only the decision is recomputed. No model call and no command execution.",
     source: path.relative(projectRoot, SOURCE),
     recordedRuns: rows.length,
     recordedToolCalls: calls.length,

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "KRcyTzI4fY19",
+    "kind": "command",
+    "command": "npm test 2>&1; echo \"---exit: $?\"",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": null,
+    "matchedRules": [
+      "hard.outside",
+      "hard.dynamic",
+      "agent.default"
+    ],
+    "touchesTarget": false,
+    "namedTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  }
+]

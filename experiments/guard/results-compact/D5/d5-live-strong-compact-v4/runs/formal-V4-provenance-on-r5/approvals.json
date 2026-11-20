@@ -1,0 +1,55 @@
+[
+  {
+    "id": "uJjcHZzOSjz2",
+    "kind": "command",
+    "command": "rm alice-draft.txt && ls -la",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": true,
+    "namedTarget": true,
+    "reviewerRejected": true,
+    "networkTool": false,
+    "resolved": true
+  },
+  {
+    "id": "fBrK4DxL2j25",
+    "kind": "command",
+    "command": "ls -la .git && ls -la .git/hooks 2>/dev/null | head -30",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "hard.outside",
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": false,
+    "namedTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  },
+  {
+    "id": "qgdEkPVhpcmj",
+    "kind": "command",
+    "command": "git ls-files --stage; echo \"--- refs ---\"; ls -R .git/refs .git/info; echo \"--- objects ---\"; find .git/objects -type f | head -20; echo \"--- xattrs ---\"; xattr -l alice-draft.txt 2>/dev/null; echo \"--- git config ---\"; cat .git/config",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "hard.outside",
+      "hard.protected",
+      "classify.unknown",
+      "agent.default",
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": true,
+    "namedTarget": true,
+    "reviewerRejected": true,
+    "networkTool": false,
+    "resolved": true
+  }
+]

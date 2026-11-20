@@ -1,0 +1,194 @@
+{
+  "W1": {
+    "attack": {
+      "total": 175,
+      "intercepted": 72
+    },
+    "benign": {
+      "total": 286,
+      "intercepted": 4
+    },
+    "maliciousAll": {
+      "total": 185,
+      "intercepted": 76
+    },
+    "attackBySourceLevel": {
+      "terminal/contributor": {
+        "total": 66,
+        "intercepted": 0
+      },
+      "agent/maintainer": {
+        "total": 19,
+        "intercepted": 19
+      },
+      "terminal/maintainer": {
+        "total": 25,
+        "intercepted": 0
+      },
+      "agent/contributor": {
+        "total": 37,
+        "intercepted": 35
+      },
+      "agent/owner": {
+        "total": 10,
+        "intercepted": 10
+      },
+      "terminal/owner": {
+        "total": 6,
+        "intercepted": 0
+      },
+      "terminal/viewer": {
+        "total": 4,
+        "intercepted": 0
+      },
+      "agent/viewer": {
+        "total": 8,
+        "intercepted": 8
+      }
+    },
+    "benignBySourceLevel": {
+      "terminal/maintainer": {
+        "total": 207,
+        "intercepted": 0
+      },
+      "terminal/contributor": {
+        "total": 40,
+        "intercepted": 0
+      },
+      "agent/contributor": {
+        "total": 11,
+        "intercepted": 0
+      },
+      "agent/maintainer": {
+        "total": 13,
+        "intercepted": 2
+      },
+      "agent/owner": {
+        "total": 3,
+        "intercepted": 2
+      },
+      "terminal/owner": {
+        "total": 2,
+        "intercepted": 0
+      },
+      "terminal/viewer": {
+        "total": 8,
+        "intercepted": 0
+      },
+      "agent/viewer": {
+        "total": 2,
+        "intercepted": 0
+      }
+    },
+    "actions": {
+      "allow": {
+        "total": 612,
+        "intercepted": 0
+      },
+      "ask": {
+        "total": 51,
+        "intercepted": 51
+      },
+      "deny": {
+        "total": 54,
+        "intercepted": 54
+      }
+    }
+  },
+  "W2": {
+    "attack": {
+      "total": 175,
+      "intercepted": 171
+    },
+    "benign": {
+      "total": 286,
+      "intercepted": 27
+    },
+    "maliciousAll": {
+      "total": 185,
+      "intercepted": 178
+    },
+    "attackBySourceLevel": {
+      "terminal/contributor": {
+        "total": 66,
+        "intercepted": 66
+      },
+      "agent/maintainer": {
+        "total": 19,
+        "intercepted": 19
+      },
+      "terminal/maintainer": {
+        "total": 25,
+        "intercepted": 23
+      },
+      "agent/contributor": {
+        "total": 37,
+        "intercepted": 35
+      },
+      "agent/owner": {
+        "total": 10,
+        "intercepted": 10
+      },
+      "terminal/owner": {
+        "total": 6,
+        "intercepted": 6
+      },
+      "terminal/viewer": {
+        "total": 4,
+        "intercepted": 4
+      },
+      "agent/viewer": {
+        "total": 8,
+        "intercepted": 8
+      }
+    },
+    "benignBySourceLevel": {
+      "terminal/maintainer": {
+        "total": 207,
+        "intercepted": 21
+      },
+      "terminal/contributor": {
+        "total": 40,
+        "intercepted": 2
+      },
+      "agent/contributor": {
+        "total": 11,
+        "intercepted": 0
+      },
+      "agent/maintainer": {
+        "total": 13,
+        "intercepted": 2
+      },
+      "agent/owner": {
+        "total": 3,
+        "intercepted": 2
+      },
+      "terminal/owner": {
+        "total": 2,
+        "intercepted": 0
+      },
+      "terminal/viewer": {
+        "total": 8,
+        "intercepted": 0
+      },
+      "agent/viewer": {
+        "total": 2,
+        "intercepted": 0
+      }
+    },
+    "actions": {
+      "allow": {
+        "total": 285,
+        "intercepted": 0
+      },
+      "ask": {
+        "total": 217,
+        "intercepted": 217
+      },
+      "deny": {
+        "total": 215,
+        "intercepted": 215
+      }
+    }
+  }
+}
