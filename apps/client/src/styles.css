@@ -785,6 +785,36 @@ body {
   padding: 24px;
 }
 
+.join-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.language-switcher {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+}
+
+.language-switcher button {
+  padding: 2px 6px;
+  border: 1px solid var(--border-icon);
+  border-radius: 4px;
+  background: var(--background-control-alt);
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.language-switcher button[aria-pressed="true"] {
+  border-color: currentColor;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
 .join-back {
   justify-self: start;
   background: transparent;

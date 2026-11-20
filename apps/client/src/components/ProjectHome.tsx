@@ -20,8 +20,13 @@ import {
 import type { ThemeMode } from "../theme";
 import type { ProjectRecord } from "../types";
 import { AgentSettingsDialog } from "./AgentSettingsDialog";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { formatDate } from "../format";
+import { useI18n } from "../i18n";
+import { errorText, messageError } from "../i18n/messages";
 
 type ProjectAction = "blank" | "directory" | "zip";
+const actionTitles = { blank: "newEmptyProject", directory: "addExistingDirectory", zip: "importZipArchive" } as const;
 
 export function ProjectHome({
   theme,
@@ -30,6 +35,8 @@ export function ProjectHome({
   theme: ThemeMode;
   onToggleTheme(): void;
 }) {
+  const { locale, t } = useI18n();
+  const themeLabel = t(theme === "dark" ? "lightMode" : "darkMode");
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [action, setAction] = useState<ProjectAction>();
   const [name, setName] = useState("");
@@ -38,19 +45,15 @@ export function ProjectHome({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deletingProjectId, setDeletingProjectId] = useState<string>();
-  const [error, setError] = useState("");
-  const [projectListError, setProjectListError] = useState("");
+  const [error, setError] = useState<unknown>();
+  const [projectListError, setProjectListError] = useState<unknown>();
   const [agentSettingsOpen, setAgentSettingsOpen] = useState(false);
   const archiveInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void refreshProjects()
       .catch((nextError) => {
-        setProjectListError(
-          nextError instanceof Error
-            ? nextError.message
-            : "Project list loading failed"
-        );
+        setProjectListError(nextError ?? messageError("projectListLoadFailed"));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -80,12 +83,12 @@ export function ProjectHome({
       } else if (action === "directory") {
         project = (await importExistingProject(name, directoryPath)).project;
       } else {
-        if (!archive) throw new Error("Choose a ZIP archive");
+        if (!archive) throw messageError("chooseZip");
         project = (await importZipProject(name, archive)).project;
       }
       window.location.assign(`/projects/${encodeURIComponent(project.id)}`);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Project creation failed");
+      setError(nextError ?? messageError("projectCreateFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -93,7 +96,7 @@ export function ProjectHome({
 
   async function removeProject(project: ProjectRecord) {
     const confirmed = window.confirm(
-      `Delete "${project.name}" and all stored code? This action cannot be undone.`
+      t("confirmDeleteProject", { name: project.name })
     );
     if (!confirmed) return;
     setDeletingProjectId(project.id);
@@ -102,9 +105,7 @@ export function ProjectHome({
       await deleteProject(project.id);
       await refreshProjects();
     } catch (nextError) {
-      setProjectListError(
-        nextError instanceof Error ? nextError.message : "Project deletion failed"
-      );
+      setProjectListError(nextError ?? messageError("projectDeleteFailed"));
     } finally {
       setDeletingProjectId(undefined);
     }
@@ -115,15 +116,16 @@ export function ProjectHome({
       <header className="project-home-header">
         <div>
           <h1>SimpleRCP</h1>
-          <span>Projects</span>
+          <span>{t("projects")}</span>
         </div>
         <div className="project-home-actions">
+          <LanguageSwitcher />
           <button
             className="home-theme-toggle"
             type="button"
             onClick={() => setAgentSettingsOpen(true)}
-            aria-label="Open Agent settings"
-            title="Agent settings"
+            aria-label={t("openAgentSettings")}
+            title={t("agentSettings")}
             data-testid="agent-settings-open"
           >
             <Bot size={17} />
@@ -132,8 +134,8 @@ export function ProjectHome({
             className="home-theme-toggle"
             type="button"
             onClick={onToggleTheme}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label={themeLabel}
+            title={themeLabel}
             data-testid="theme-toggle"
           >
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
@@ -141,34 +143,34 @@ export function ProjectHome({
         </div>
       </header>
 
-      <section className="project-toolbar" aria-label="Project actions">
+      <section className="project-toolbar" aria-label={t("projectActions")}>
         <button type="button" onClick={() => selectAction("blank")} data-testid="new-project">
-          <Plus size={16} /> New project
+          <Plus size={16} /> {t("newProject")}
         </button>
         <button type="button" onClick={() => selectAction("directory")} data-testid="import-directory">
-          <FolderInput size={16} /> Add directory
+          <FolderInput size={16} /> {t("addDirectory")}
         </button>
         <button type="button" onClick={() => selectAction("zip")} data-testid="import-zip">
-          <Archive size={16} /> Import ZIP
+          <Archive size={16} /> {t("importZip")}
         </button>
       </section>
 
       {action ? (
         <form className="project-create-form" onSubmit={submit} data-testid="project-form">
           <div className="project-form-heading">
-            <h2>{actionTitle(action)}</h2>
+            <h2>{t(actionTitles[action])}</h2>
             <button
               type="button"
               className="icon-button"
               onClick={() => setAction(undefined)}
-              aria-label="Close project form"
-              title="Close"
+              aria-label={t("closeProjectForm")}
+              title={t("close")}
             >
               <X size={16} />
             </button>
           </div>
           <label>
-            <span>Project name</span>
+            <span>{t("projectName")}</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -180,7 +182,7 @@ export function ProjectHome({
           </label>
           {action === "directory" ? (
             <label>
-              <span>Absolute server path</span>
+              <span>{t("serverPath")}</span>
               <input
                 value={directoryPath}
                 onChange={(event) => setDirectoryPath(event.target.value)}
@@ -192,7 +194,7 @@ export function ProjectHome({
           ) : null}
           {action === "zip" ? (
             <label>
-              <span>ZIP archive</span>
+              <span>{t("zipArchive")}</span>
               <input
                 ref={archiveInputRef}
                 type="file"
@@ -205,24 +207,24 @@ export function ProjectHome({
           ) : null}
           <div className="project-form-actions">
             <button type="submit" disabled={submitting} data-testid="create-project-submit">
-              {submitting ? "Working" : "Create"}
+              {t(submitting ? "working" : "create")}
             </button>
           </div>
-          {error ? <p className="project-form-error">{error}</p> : null}
+          {error ? <p className="project-form-error">{errorText(t, error, t("projectCreateFailed"))}</p> : null}
         </form>
       ) : null}
 
       <section className="project-list-section">
         <div className="project-list-heading">
-          <h2>Available projects</h2>
+          <h2>{t("availableProjects")}</h2>
           <span>{projects.length}</span>
         </div>
         {projectListError ? (
-          <p className="project-list-error">{projectListError}</p>
+          <p className="project-list-error">{errorText(t, projectListError, t("projectListLoadFailed"))}</p>
         ) : null}
-        {loading ? <p className="project-list-empty">Loading projects</p> : null}
+        {loading ? <p className="project-list-empty">{t("loadingProjects")}</p> : null}
         {!loading && !projectListError && projects.length === 0 ? (
-          <p className="project-list-empty">No projects</p>
+          <p className="project-list-empty">{t("noProjects")}</p>
         ) : null}
         <ul className="project-list" data-testid="project-list">
           {projects.map((project) => (
@@ -233,7 +235,7 @@ export function ProjectHome({
                 <span title={project.workspacePath}>{project.workspacePath}</span>
               </div>
               <time dateTime={project.lastOpenedAt}>
-                {formatDate(project.lastOpenedAt)}
+                {formatDate(locale, project.lastOpenedAt)}
               </time>
               <div className="project-list-actions">
                 <button
@@ -242,7 +244,7 @@ export function ProjectHome({
                   onClick={() => window.location.assign(`/projects/${encodeURIComponent(project.id)}`)}
                   data-testid={`open-project-${project.id}`}
                 >
-                  Open
+                  {t("open")}
                 </button>
                 {project.source !== "demo" ? (
                   <button
@@ -250,8 +252,8 @@ export function ProjectHome({
                     type="button"
                     onClick={() => void removeProject(project)}
                     disabled={Boolean(deletingProjectId)}
-                    aria-label={`Delete ${project.name}`}
-                    title="Delete project"
+                    aria-label={t("deleteNamed", { name: project.name })}
+                    title={t("deleteProject")}
                     data-testid={`delete-project-${project.id}`}
                   >
                     <Trash2 size={15} />
@@ -267,17 +269,4 @@ export function ProjectHome({
       ) : null}
     </main>
   );
-}
-
-function actionTitle(action: ProjectAction) {
-  if (action === "blank") return "New empty project";
-  if (action === "directory") return "Add existing directory";
-  return "Import ZIP archive";
-}
-
-function formatDate(timestamp: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(timestamp));
 }

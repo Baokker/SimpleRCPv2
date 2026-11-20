@@ -2,6 +2,9 @@ import { ArrowLeft, LogIn } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { ProjectParticipant } from "../types";
 import { rememberMember, storedMemberId } from "../memberIdentity";
+import { useI18n } from "../i18n";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { readLocalStorage, writeLocalStorage } from "../localStorage";
 
 export interface ProjectIdentity {
   memberId?: string;
@@ -20,12 +23,13 @@ export function JoinProject({
   participants: ProjectParticipant[];
   onJoin(identity: ProjectIdentity): void | Promise<void>;
 }) {
+  const { t } = useI18n();
   const storedId = storedMemberId(projectId);
   const storedMember = participants.find((participant) => participant.id === storedId);
   const [memberId, setMemberId] = useState(storedMember?.id ?? "new");
   const [displayName, setDisplayName] = useState(
     storedMember?.displayName ??
-      window.localStorage.getItem("simplercp.displayName") ??
+      readLocalStorage("simplercp.displayName") ??
       ""
   );
   const [role, setRole] = useState(storedMember?.profileRole ?? "");
@@ -46,7 +50,7 @@ export function JoinProject({
     event.preventDefault();
     const name = displayName.trim();
     if (!name) return;
-    window.localStorage.setItem("simplercp.displayName", name);
+    writeLocalStorage("simplercp.displayName", name);
     const selectedMemberId = memberId === "new" ? undefined : memberId;
     if (selectedMemberId) rememberMember(projectId, selectedMemberId);
     void onJoin({
@@ -58,18 +62,21 @@ export function JoinProject({
 
   return (
     <main className="join-project">
-      <button
-        type="button"
-        className="join-back"
-        onClick={() => window.location.assign("/")}
-      >
-        <ArrowLeft size={16} /> Projects
-      </button>
+      <header className="join-header">
+        <button
+          type="button"
+          className="join-back"
+          onClick={() => window.location.assign("/")}
+        >
+          <ArrowLeft size={16} /> {t("projects")}
+        </button>
+        <LanguageSwitcher />
+      </header>
       <form onSubmit={submit} data-testid="join-project-form">
         <h1>{projectName}</h1>
         {participants.length > 0 ? (
           <label>
-            <span>Participant</span>
+            <span>{t("participant")}</span>
             <select
               value={memberId}
               onChange={(event) => selectMember(event.target.value)}
@@ -81,12 +88,12 @@ export function JoinProject({
                   {participant.profileRole ? ` · ${participant.profileRole}` : ""}
                 </option>
               ))}
-              <option value="new">Create a new participant</option>
+              <option value="new">{t("newParticipant")}</option>
             </select>
           </label>
         ) : null}
         <label>
-          <span>Display name</span>
+          <span>{t("displayName")}</span>
           <input
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
@@ -96,16 +103,16 @@ export function JoinProject({
           />
         </label>
         <label>
-          <span>Role <small>Optional</small></span>
+          <span>{t("role")} <small>{t("optional")}</small></span>
           <input
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            placeholder="Designer, developer, reviewer"
+            placeholder={t("exampleRoles")}
             data-testid="member-role"
           />
         </label>
         <button type="submit" data-testid="join-project">
-          <LogIn size={16} /> Enter project
+          <LogIn size={16} /> {t("enterProject")}
         </button>
       </form>
     </main>

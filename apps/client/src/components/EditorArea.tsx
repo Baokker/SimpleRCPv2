@@ -9,6 +9,8 @@ import type { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { summarizeTextChange } from "../editActivity";
+import { saveStateText, type SaveState } from "../format";
+import { useI18n } from "../i18n";
 import type {
   CursorPosition,
   EditorSelection,
@@ -61,7 +63,7 @@ export function EditorArea({
   canEdit: boolean;
   theme: ThemeMode;
   remoteCursors: RemoteCursor[];
-  saveState: "Saved" | "Saving" | "Sync failed";
+  saveState: SaveState;
   navigationTarget?: { path: string; lineNumber: number; sequence: number };
   onSelectFile(path: string): void;
   onCloseFile(path: string): void;
@@ -72,6 +74,7 @@ export function EditorArea({
     selection: EditorSelection
   ): void;
 }) {
+  const { t } = useI18n();
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const decorationIdsRef = useRef<string[]>([]);
@@ -98,12 +101,12 @@ export function EditorArea({
 
     const decorations = remoteCursors
       .filter((cursor) => cursor.path === activeFile.path)
-      .flatMap((cursor) => createCursorDecorations(monaco, cursor));
+      .flatMap((cursor) => createCursorDecorations(monaco, cursor, cursor.displayName || t("collaborator")));
     decorationIdsRef.current = editor.deltaDecorations(
       decorationIdsRef.current,
       decorations
     );
-  }, [activeFile, editorVersion, remoteCursors]);
+  }, [activeFile, editorVersion, remoteCursors, t]);
 
   return (
     <div className="editor-area">
@@ -122,8 +125,8 @@ export function EditorArea({
             </button>
             <button
               className="tab-close"
-              aria-label={`Close ${file.path}`}
-              title="Close"
+              aria-label={t("closeFile", { path: file.path })}
+              title={t("close")}
               onClick={() => onCloseFile(file.path)}
               data-testid={`close-tab-${file.path}`}
             >
@@ -135,7 +138,7 @@ export function EditorArea({
           className={`editor-save-state ${saveState.toLowerCase().replace(" ", "-")}`}
           data-testid="editor-save-status"
         >
-          {saveState}
+          {saveStateText(t, saveState)}
         </span>
       </div>
       <div className="editor-frame" data-testid="editor-frame">
@@ -173,7 +176,7 @@ export function EditorArea({
             }}
           />
         ) : (
-          <div className="empty-state">Open a file to start collaborating.</div>
+          <div className="empty-state">{t("openFileToCollaborate")}</div>
         )}
       </div>
     </div>
@@ -204,6 +207,7 @@ function CollaborativeEditor({
     monaco: typeof Monaco
   ): void;
 }) {
+  const { t } = useI18n();
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "reconnecting" | "ready"
@@ -346,9 +350,7 @@ function CollaborativeEditor({
           data-testid="editor-collaboration-status"
         >
           <LoaderCircle size={16} aria-hidden="true" />
-          {connectionStatus === "connecting"
-            ? "Connecting collaboration"
-            : "Reconnecting collaboration"}
+          {t(connectionStatus === "connecting" ? "connectingEditor" : "reconnectingEditor")}
         </div>
       ) : null}
     </div>
@@ -362,7 +364,8 @@ function collaborativeServerUrl(projectId: string) {
 
 function createCursorDecorations(
   monaco: typeof Monaco,
-  cursor: RemoteCursor
+  cursor: RemoteCursor,
+  displayName: string
 ): Monaco.editor.IModelDeltaDecoration[] {
   const color = colorIndex(cursor.memberId);
   const decorations: Monaco.editor.IModelDeltaDecoration[] = [];
@@ -395,7 +398,7 @@ function createCursorDecorations(
     options: {
       afterContentClassName: `remote-cursor remote-color-${color}`,
       after: {
-        content: ` ${cursor.displayName}`,
+        content: ` ${displayName}`,
         inlineClassName: `remote-cursor-label remote-color-${color}`
       }
     }

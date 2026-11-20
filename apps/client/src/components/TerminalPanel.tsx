@@ -1,6 +1,9 @@
 import { RotateCcw } from "lucide-react";
 import { useRef, useState } from "react";
 import type { ThemeMode } from "../theme";
+import { useI18n } from "../i18n";
+import { connectionText } from "../format";
+import type { ConnectionState } from "../socket";
 import {
   SharedTerminal,
   type SharedTerminalHandle
@@ -17,16 +20,17 @@ export function TerminalPanel({
   canRun: boolean;
   memberId: string;
 }) {
+  const { t } = useI18n();
   const terminalRef = useRef<SharedTerminalHandle>(null);
-  const [connectionState, setConnectionState] = useState("Connecting");
+  const [connectionState, setConnectionState] = useState<ConnectionState>("Connecting");
 
   return (
     <div className="panel terminal-panel">
       <div className="panel-header terminal-header">
-        <span>Terminal</span>
+        <span>{t("sharedTerminal")}</span>
         <div className="terminal-controls">
           <span className="terminal-state" data-testid="terminal-state">
-            Shared · {connectionState}
+            {t("sharedTerminalState", { state: connectionText(t, connectionState) })}
           </span>
           {connectionState === "Offline" ? (
             <button
@@ -34,14 +38,14 @@ export function TerminalPanel({
               type="button"
               onClick={() => terminalRef.current?.reconnect()}
             >
-              Reconnect
+              {t("reconnect")}
             </button>
           ) : null}
           <button
             className="terminal-restart"
             onClick={() => terminalRef.current?.restart()}
-            title="Restart shared terminal"
-            aria-label="Restart shared terminal"
+            title={t("restartTerminal")}
+            aria-label={t("restartTerminal")}
             data-testid="terminal-restart"
           >
             <RotateCcw size={14} />

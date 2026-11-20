@@ -1,4 +1,5 @@
 import type * as Y from "yjs";
+import { messageError } from "./i18n/messages";
 import type { EditRange, FileEditChange } from "./types";
 
 export function summarizeTextChange(
@@ -34,7 +35,7 @@ export function summarizeTextChange(
     }
     if (operation.insert !== undefined) {
       if (typeof operation.insert !== "string") {
-        throw new Error("Collaborative editor received non-text content");
+        throw messageError("nonTextContent");
       }
       ranges.push({
         startLine: lineNumberAt(nextText, nextOffset),

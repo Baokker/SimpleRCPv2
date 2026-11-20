@@ -3,6 +3,7 @@ import { getParticipants, getProject, getServerInfo } from "../api";
 import { sessionMemberId } from "../memberIdentity";
 import type { ProjectIdentity } from "../components/JoinProject";
 import type { ProjectParticipant, ProjectRecord } from "../types";
+import { captureError, messageError } from "../i18n/messages";
 
 interface ProjectRouteState {
   project?: ProjectRecord;
@@ -11,7 +12,7 @@ interface ProjectRouteState {
   terminalEnabled: boolean;
   identity?: ProjectIdentity;
   loading: boolean;
-  error: string;
+  error?: Error;
 }
 
 export function useProjectRoute(projectId: string) {
@@ -19,8 +20,7 @@ export function useProjectRoute(projectId: string) {
     roomId: "",
     participants: [],
     terminalEnabled: true,
-    loading: true,
-    error: ""
+    loading: true
   });
   const [loadAttempt, setLoadAttempt] = useState(0);
 
@@ -29,7 +29,7 @@ export function useProjectRoute(projectId: string) {
     const params = new URLSearchParams(window.location.search);
     const queryName = params.get("name")?.trim();
 
-    setState((current) => ({ ...current, loading: true, error: "" }));
+    setState((current) => ({ ...current, loading: true, error: undefined }));
     void Promise.all([getProject(projectId), getParticipants(projectId), getServerInfo()])
       .then(([result, participants, serverInfo]) => {
         if (!active) return;
@@ -47,8 +47,7 @@ export function useProjectRoute(projectId: string) {
                 role: params.get("role")?.trim() ?? member?.profileRole ?? ""
               }
             : member ? { memberId, displayName: member.displayName, role: member.profileRole ?? "" } : undefined,
-          loading: false,
-          error: ""
+          loading: false
         });
       })
       .catch((error) => {
@@ -56,7 +55,7 @@ export function useProjectRoute(projectId: string) {
         setState((current) => ({
           ...current,
           loading: false,
-          error: error instanceof Error ? error.message : "Project loading failed"
+          error: captureError(error, messageError("projectLoadFailed"))
         }));
       });
 

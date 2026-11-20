@@ -30,7 +30,9 @@ import type {
   RoomMember,
   WorkspaceNode
 } from "../types";
-import { formatTime, titleCase } from "../format";
+import { formatTime, runStatusText, runtimeText } from "../format";
+import { useI18n } from "../i18n";
+import { messageError, type Translate } from "../i18n/messages";
 import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
@@ -72,6 +74,7 @@ export function AgentPanel({
   onOpenFile(path: string): void;
   onError(error: unknown): void;
 }) {
+  const { locale, t } = useI18n();
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [sessions, setSessions] = useState<AgentSession[]>([]);
@@ -190,7 +193,7 @@ export function AgentPanel({
     setSessionCreating(true);
     try {
       const response = await createAgentSession(projectId, {
-        title: sessionTitle.trim() || "New Agent session"
+        title: sessionTitle.trim() || t("newAgentSession")
       });
       setSessions((current) => [response.session, ...current]);
       setSelectedSessionId(response.session.id);
@@ -264,7 +267,7 @@ export function AgentPanel({
     try {
       const result = await readWorkspaceFile(projectId, path);
       if (result.status !== "text") {
-        throw new Error("Agent context accepts text files smaller than 1 MB");
+        throw messageError("contextTextOnly");
       }
       toggleContext(path);
       setContextMenuOpen(false);
@@ -292,7 +295,7 @@ export function AgentPanel({
   }
 
   async function deleteSession(session: AgentSession) {
-    if (!window.confirm(`删除会话“${session.title}”？运行中的任务将取消，已经写入的文件继续保留。`)) return;
+    if (!window.confirm(t("confirmDeleteSession", { name: session.title }))) return;
     try {
       await deleteAgentSession(projectId, session.id);
       setSessions((current) => current.filter((entry) => entry.id !== session.id));
@@ -306,17 +309,17 @@ export function AgentPanel({
     } catch (error) { onErrorRef.current(error); }
   }
 
-  const runtimeLabel = runtime ? `OpenCode ${titleCase(runtime.state)}` : "Checking OpenCode";
+  const runtimeLabel = runtime ? runtimeText(t, runtime.state) : t("checkingOpenCode");
 
   return (
     <section className="collab-section agent-section">
-      <p className="my-agent-hint" data-testid="my-agent-hint">These are your own Agent sessions. To direct the shared agent together, mention @agent in Chat.</p>
+      <p className="my-agent-hint" data-testid="my-agent-hint">{t("personalAgentHint")}</p>
       <header className="agent-runtime">
         <span className={`agent-runtime-dot ${runtime?.state ?? "checking"}`} aria-hidden="true" />
         <div>
           <strong data-testid="agent-runtime-status">{runtimeLabel}</strong>
-          <small>{runtime?.model ?? "Loading model"}</small>
-          {runtime?.modelChangePending ? <small>Model change will apply after current tasks finish</small> : null}
+          <small>{runtime?.model ?? t("loadingModel")}</small>
+          {runtime?.modelChangePending ? <small>{t("modelChangePending")}</small> : null}
         </div>
       </header>
 
@@ -324,19 +327,19 @@ export function AgentPanel({
 
       {runningRuns.length > 0 ? (
         <div className="agent-active-runs" data-testid="agent-active-runs">
-          <strong>运行中任务</strong>
+          <strong>{t("activeTasks")}</strong>
           <ul>
             {runningRuns.map((run) => (
               <li key={run.id}>
-                <span className="agent-active-run-label"><strong>{runMemberName(run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</span><AgentRunStatus run={run} memberId={member?.id} /></span>
-                <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
+                <span className="agent-active-run-label"><strong>{runMemberName(t, run, members)}</strong><span>{sessions.find((session) => session.id === run.sessionId)?.title ?? t("agentSession")}</span><AgentRunStatus run={run} memberId={member?.id} /></span>
+                <time>{formatTime(locale, run.startedAt ?? run.createdAt)}</time>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
 
-      <div className="agent-session-tabs" role="tablist" aria-label="Agent sessions">
+      <div className="agent-session-tabs" role="tablist" aria-label={t("agentSessions")}>
         {sessions.map((session) => (
           <div key={session.id} className="agent-session-tab">
           <button
@@ -349,14 +352,14 @@ export function AgentPanel({
           >
             {session.title}
           </button>
-          <button type="button" className="agent-session-close" aria-label={`删除会话 ${session.title}`} title="删除会话" onClick={() => void deleteSession(session)}><X size={12} /></button>
+          <button type="button" className="agent-session-close" aria-label={t("deleteNamedSession", { name: session.title })} title={t("deleteSession")} onClick={() => void deleteSession(session)}><X size={12} /></button>
           </div>
         ))}
         <button
           type="button"
           className="agent-session-add"
-          aria-label="New session"
-          title="New session"
+          aria-label={t("newSession")}
+          title={t("newSession")}
           onClick={() => setSessionFormOpen((current) => !current)}
           data-testid="agent-new-session"
         >
@@ -372,12 +375,12 @@ export function AgentPanel({
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.nativeEvent.isComposing) void createSession();
             }}
-            placeholder="Session title"
+            placeholder={t("sessionTitle")}
             data-testid="agent-session-title"
             autoFocus
           />
           <button type="button" onClick={() => void createSession()} disabled={!member || sessionCreating}>
-            {sessionCreating ? "Creating" : "Create"}
+            {t(sessionCreating ? "creating" : "create")}
           </button>
         </div>
       ) : null}
@@ -387,15 +390,15 @@ export function AgentPanel({
         followTranscriptRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
       }} data-testid="agent-message-list">
         {sessionRuns.length === 0 ? (
-          <li className="empty-panel-state">Ask OpenCode to work on this project.</li>
+          <li className="empty-panel-state">{t("askAgentToWork")}</li>
         ) : sessionRuns.map((run) => (
           <li key={run.id} className="agent-turn">
             <article className="agent-user-message">
               <header>
-                <strong>{runMemberName(run, members)}</strong>
-                <time>{formatTime(run.startedAt ?? run.createdAt)}</time>
+                <strong>{runMemberName(t, run, members)}</strong>
+                <time>{formatTime(locale, run.startedAt ?? run.createdAt)}</time>
               </header>
-              <small>{sessions.find((session) => session.id === run.sessionId)?.title ?? "Agent session"}</small>
+              <small>{sessions.find((session) => session.id === run.sessionId)?.title ?? t("agentSession")}</small>
               <p>{run.prompt}</p>
               {run.contexts?.length ? (
                 <ul className="agent-message-contexts">
@@ -432,7 +435,7 @@ export function AgentPanel({
                 <span title={context.path}>{context.path}</span>
                 <button
                   type="button"
-                  aria-label={`Remove ${context.path}`}
+                  aria-label={t("removePath", { path: context.path })}
                   data-testid={`agent-context-remove-${context.path}`}
                   onClick={() => toggleContext(context.path)}
                 >
@@ -454,16 +457,16 @@ export function AgentPanel({
               void submitRun();
             }
           }}
-          placeholder="Ask OpenCode about this project (only you can see this session)"
+          placeholder={t("personalAgentPlaceholder")}
           data-testid="agent-prompt"
         />
-        {runningRuns.some((run) => run.sessionId === selectedSessionId) ? <small className="agent-interrupt-hint">发送新要求将立即中断当前任务，并按新要求继续。</small> : null}
+        {runningRuns.some((run) => run.sessionId === selectedSessionId) ? <small className="agent-interrupt-hint">{t("interruptHint")}</small> : null}
         <div className="agent-composer-toolbar">
           <div className="agent-context-picker">
             <button
               type="button"
-              aria-label="Add project file"
-              title="Add project file"
+              aria-label={t("addProjectFile")}
+              title={t("addProjectFile")}
               onClick={() => void toggleContextMenu()}
               data-testid="agent-add-context"
             >
@@ -471,9 +474,9 @@ export function AgentPanel({
             </button>
             {contextMenuOpen ? (
               <div className="agent-context-menu">
-                <strong>Add project file</strong>
+                <strong>{t("addProjectFile")}</strong>
                 <ul>
-                  {contextLoading ? <li className="agent-context-loading">Loading files</li> : null}
+                  {contextLoading ? <li className="agent-context-loading">{t("loadingFiles")}</li> : null}
                   {projectFiles.map((path) => (
                     <li key={path}>
                       <button
@@ -490,12 +493,12 @@ export function AgentPanel({
               </div>
             ) : null}
           </div>
-          <small className="agent-keyboard-hints"><span>Enter to send</span><span>Shift + Enter for a new line</span></small>
+          <small className="agent-keyboard-hints"><span>{t("enterToSend")}</span><span>{t("shiftEnterForNewLine")}</span></small>
           <button
             type="button"
             className="agent-send-button"
-            aria-label="Send to Agent"
-            title="Send to Agent"
+            aria-label={t("sendToAgent")}
+            title={t("sendToAgent")}
             onClick={() => void submitRun()}
             disabled={submitting || !member || !prompt.trim() || runtime?.state !== "ready" || !runtime.apiKeyConfigured}
             data-testid="agent-run-submit"
@@ -535,16 +538,17 @@ function AgentMessage({
   activityConfig?: AgentRuntimeStatus["activityConfig"];
   onRetry(): void;
 }) {
+  const { t } = useI18n();
   return (
     <article className="agent-assistant-message" data-testid="agent-selected-run">
       <header>
         <span className="agent-avatar"><Bot size={14} /></span>
         <div>
           <strong>{run.memberName ?? "OpenCode"}</strong>
-          <small className="agent-run-metadata"><span>{runStatusLabel(run, queuedRuns, activeSessionIds)}</span><code>{run.model}</code></small>
+          <small className="agent-run-metadata"><span>{runStatusLabel(t, run, queuedRuns, activeSessionIds)}</span><code>{run.model}</code></small>
         </div>
         {ACTIVE_STATUSES.has(run.status) && canCancel ? (
-          <button type="button" className="agent-cancel-button" onClick={onCancel} title="Cancel run">
+          <button type="button" className="agent-cancel-button" onClick={onCancel} title={t("cancelRun")} aria-label={t("cancelRun")}>
             <CircleStop size={14} />
           </button>
         ) : null}
@@ -586,16 +590,16 @@ async function listProjectFiles(projectId: string, directoryPath: string): Promi
   return nested.flat();
 }
 
-function runMemberName(run: AgentRun, members: RoomMember[]) {
-  return run.memberName ?? members.find((member) => member.id === run.memberId)?.displayName ?? "Member";
+function runMemberName(t: Translate, run: AgentRun, members: RoomMember[]) {
+  return run.memberName ?? members.find((member) => member.id === run.memberId)?.displayName ?? t("member");
 }
 
-function runStatusLabel(run: AgentRun, queuedRuns: AgentRun[], activeSessionIds: Set<string | undefined>) {
-  if (run.interruptedByRunId) return "Interrupted";
-  if (run.status !== "queued") return titleCase(run.status);
+function runStatusLabel(t: Translate, run: AgentRun, queuedRuns: AgentRun[], activeSessionIds: Set<string | undefined>) {
+  if (run.interruptedByRunId) return t("interrupted");
+  if (run.status !== "queued") return runStatusText(t, run.status);
   if (activeSessionIds.has(run.sessionId) || queuedRuns.some((candidate) => candidate.id !== run.id && candidate.sessionId === run.sessionId && candidate.createdAt < run.createdAt)) {
-    return "Waiting for the previous task in this session";
+    return t("waitingPreviousTask");
   }
   const position = queuedRuns.findIndex((candidate) => candidate.id === run.id) + 1;
-  return position > 0 ? `Waiting for a concurrent slot (#${position})` : "Waiting for a concurrent slot";
+  return position > 0 ? t("waitingSlotPosition", { position }) : t("waitingSlot");
 }

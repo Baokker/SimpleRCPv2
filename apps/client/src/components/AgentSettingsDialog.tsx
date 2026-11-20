@@ -6,15 +6,18 @@ import {
   updateAgentSettings
 } from "../api";
 import type { AgentRuntimeStatus, AgentSettingsResponse } from "../types";
-import { titleCase } from "../format";
+import { runtimeText } from "../format";
+import { useI18n } from "../i18n";
+import { errorText, messageError } from "../i18n/messages";
 
 export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<AgentSettingsResponse>();
   const [runtime, setRuntime] = useState<AgentRuntimeStatus>();
   const [model, setModel] = useState("");
   const [enabled, setEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>();
 
   useEffect(() => {
     let active = true;
@@ -28,11 +31,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
       })
       .catch((nextError) => {
         if (!active) return;
-        setError(
-          nextError instanceof Error
-            ? nextError.message
-            : "Agent settings could not be loaded"
-        );
+        setError(nextError instanceof Error ? nextError : messageError("agentSettingsLoadFailed"));
       });
     return () => {
       active = false;
@@ -51,11 +50,7 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
       });
       onClose();
     } catch (nextError) {
-      setError(
-        nextError instanceof Error
-          ? nextError.message
-          : "Agent settings could not be saved"
-      );
+      setError(nextError ?? messageError("agentSettingsSaveFailed"));
     } finally {
       setSaving(false);
     }
@@ -71,14 +66,14 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
         <div className="workspace-dialog-heading">
           <div className="agent-settings-title">
             <Bot size={17} />
-            <h2>Agent settings</h2>
+            <h2>{t("agentSettings")}</h2>
           </div>
           <button
             type="button"
             className="icon-button"
             onClick={onClose}
-            aria-label="Close Agent settings"
-            title="Close"
+            aria-label={t("closeAgentSettings")}
+            title={t("close")}
           >
             <X size={16} />
           </button>
@@ -87,27 +82,27 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
         {runtime ? (
           <dl className="agent-settings-facts">
             <div>
-              <dt>Runtime</dt>
+              <dt>{t("runtime")}</dt>
               <dd>
-                OpenCode {titleCase(runtime.state)}
-                {runtime.version ? ` · v${runtime.version}` : ""}
+                {runtimeText(t, runtime.state)}
+                {runtime.version ? t("runtimeVersion", { version: runtime.version }) : ""}
               </dd>
             </div>
             {runtime.modelChangePending ? (
-              <div><dt>Model</dt><dd>Change will apply after current tasks finish</dd></div>
+              <div><dt>{t("model")}</dt><dd>{t("modelChangePending")}</dd></div>
             ) : null}
-            <div><dt>Provider</dt><dd>DeepSeek</dd></div>
+            <div><dt>{t("provider")}</dt><dd>DeepSeek</dd></div>
             <div>
               <dt>API Key</dt>
-              <dd>{settings?.apiKeyConfigured ? "Configured" : "Missing"}</dd>
+              <dd>{t(settings?.apiKeyConfigured ? "configured" : "missing")}</dd>
             </div>
           </dl>
         ) : (
-          <p>Checking OpenCode</p>
+          <p>{t("checkingOpenCode")}</p>
         )}
 
         <label>
-          <span>Model</span>
+          <span>{t("model")}</span>
           <input
             value={model}
             onChange={(event) => setModel(event.target.value)}
@@ -123,19 +118,19 @@ export function AgentSettingsDialog({ onClose }: { onClose(): void }) {
             onChange={(event) => setEnabled(event.target.checked)}
             disabled={!settings}
           />
-          <span>Enable Agent</span>
+          <span>{t("enableAgent")}</span>
         </label>
 
-        {error ? <p className="workspace-dialog-error">{error}</p> : null}
+        {error ? <p className="workspace-dialog-error">{errorText(t, error, t("agentSettingsSaveFailed"))}</p> : null}
         <div className="workspace-dialog-actions">
-          <button type="button" onClick={onClose}>Cancel</button>
+          <button type="button" onClick={onClose}>{t("cancel")}</button>
           <button
             className="primary"
             type="submit"
             disabled={!settings || saving || !model.trim()}
             data-testid="agent-settings-save"
           >
-            {saving ? "Saving" : "Save"}
+            {t(saving ? "saving" : "save")}
           </button>
         </div>
       </form>

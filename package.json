@@ -12,6 +12,8 @@
     "build": "pnpm -r build",
     "test": "pnpm --filter @simplercp/server test && pnpm test:demo",
     "test:demo": "node --test tests/demo-workspace.test.mjs tests/demo-startup.test.mjs",
+    "test:client": "playwright test --config tests/playwright.client.config.ts",
+    "check:i18n": "node scripts/check-client-jsx-i18n.mjs",
     "test:e2e": "playwright test --config tests/playwright.config.ts",
     "test:e2e:terminal-disabled": "SIMPLERCP_TERMINAL_ENABLED=false playwright test --config tests/playwright.config.ts tests/e2e/terminal-disabled.spec.ts",
     "test:collab": "playwright test --config tests/playwright.config.ts tests/e2e/collaboration.spec.ts",

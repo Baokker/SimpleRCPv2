@@ -16,6 +16,7 @@ import type {
   WorkspaceNode
 } from "./types";
 import { activeMemberId, rememberMember, storedMemberId } from "./memberIdentity";
+import { messageError } from "./i18n/messages";
 
 export interface ServerInfo {
   ok: boolean;
@@ -361,16 +362,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(path, { ...init, headers });
   } catch {
-    throw new Error("Cannot reach the SimpleRCP server");
+    throw messageError("serverUnreachable");
   }
   if (!response.ok) {
-    if (response.status === 500) throw new Error("服务端可能正在重启，请稍后刷新");
+    if (response.status === 500) throw messageError("serverRestarting");
     const contentType = response.headers.get("content-type") ?? "";
     const body = await response.text();
     const message = contentType.includes("application/json") && body.trim()
       ? (JSON.parse(body) as { error?: string }).error
       : undefined;
-    throw new Error(message ?? `Request failed with status ${response.status}`);
+    throw message ? new Error(message) : messageError("requestStatus", { status: response.status });
   }
   if (response.status === 204) return undefined as T;
   const body = await response.text();
