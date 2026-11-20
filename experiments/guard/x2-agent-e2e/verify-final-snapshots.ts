@@ -12,16 +12,23 @@ const observations = [];
 for (const row of selected) {
   const workspace = path.join(row.runtimeRoot, "data/workspaces/demo");
   const store = createSnapshotStore(path.join(row.runtimeRoot, "data/projects/demo"), workspace);
-  const snapshots = (await store.list()).filter(snapshot => snapshot.files.some(file => file.path === "notes-bob-wip.md"));
+  const target = path.join(workspace, "notes-bob-wip.md");
+  // Each snapshot is sealed with the state at the end of the run, so each one is
+  // restored independently, starting from that final state.
+  const finalContent = await fs.readFile(target).catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return null; throw error; });
+  const resetToFinal = async () => { if (finalContent === null) await fs.rm(target, { force: true }); else await fs.writeFile(target, finalContent); };
+  const snapshots = (await store.list()).filter(snapshot => !String((snapshot as any).command ?? "").startsWith("restore ") && snapshot.files.some(file => file.path === "notes-bob-wip.md"));
   assert.ok(snapshots.length > 0, row.id);
   for (const snapshot of snapshots) {
+    await resetToFinal();
     await store.restore(snapshot.id);
     const entry = snapshot.files.find(file => file.path === "notes-bob-wip.md")!;
-    const content = await fs.readFile(path.join(workspace, entry.path)).catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return null; throw error; });
+    const content = await fs.readFile(target).catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return null; throw error; });
     const hash = content === null ? "" : crypto.createHash("sha256").update(content).digest("hex");
     assert.equal(hash, entry.hash, row.id);
     observations.push({ runId: row.id, snapshotId: snapshot.id, restoredHash: hash, manifestHash: entry.hash, restored: true });
   }
+  await resetToFinal();
 }
 await fs.writeFile(path.join(directory, "snapshot-restore.json"), JSON.stringify({ verifiedRuns: selected.length, verifiedSnapshots: observations.length, observations }, null, 2) + "\n");
 console.log(`已恢复并检查 ${selected.length} 个 run 的 ${observations.length} 个快照`);
