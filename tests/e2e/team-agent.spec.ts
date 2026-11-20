@@ -131,7 +131,7 @@ test("interrupting a team run records changed files for the next run", async ({ 
   const newCard = pageA.getByTestId("chat-agent-card").nth(firstNewCardIndex + 1);
 
   await expect(oldCard).toContainText("被 Interrupt Bob 打断", { timeout: 10_000 });
-  await expect(pageA.getByTestId("chat-transcript")).toContainText("interrupted @agent's task", { timeout: 10_000 });
+  await expect(pageA.getByTestId("chat-transcript")).toContainText("Interrupt Bob 中断了由 Interrupt Alice 发起的 @agent 任务", { timeout: 10_000 });
   await expect(newCard).toContainText("已完成", { timeout: 90_000 });
 
   const runs = await pageA.evaluate(async () => {

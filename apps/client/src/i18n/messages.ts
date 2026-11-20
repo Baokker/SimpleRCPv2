@@ -54,6 +54,19 @@ const fixedServerText = new Map<string, PlainMessageKey>([
   ["Project not found", "projectNotFound"],
   ["A ZIP archive is required", "chooseZip"],
   ["Demo project cannot be deleted", "demoDeleteForbidden"],
+  ["Existing project path must be absolute", "importAbsolutePathRequired"],
+  ["Directory import path is outside SIMPLERCP_IMPORT_ROOTS", "importPathOutsideRoots"],
+  ["Existing project path must be a directory", "importDirectoryRequired"],
+  ["Project name is required", "projectNameRequired"],
+  ["Project name must be at most 100 characters", "projectNameTooLong"],
+  ["A project with this name already exists", "projectNameExists"],
+  ["Invalid project id", "invalidProjectId"],
+  ["ZIP archive exceeds the 200 MiB limit", "zipArchiveTooLarge"],
+  ["ZIP archive exceeds the 1 GiB extracted size limit", "zipExtractedSizeTooLarge"],
+  ["ZIP entry exceeds the 128 MiB file limit", "zipEntryTooLarge"],
+  ["ZIP archive exceeds the 50000 entry limit", "zipTooManyEntries"],
+  ["ZIP archive contains an invalid path", "zipInvalidPath"],
+  ["ZIP archive contains an unsupported entry type", "zipUnsupportedEntry"],
   ["Target path already exists", "pathExists"],
   ["Cannot rename workspace root", "renameRootForbidden"],
   ["Cannot delete workspace root", "deleteRootForbidden"],
@@ -65,6 +78,8 @@ const fixedServerText = new Map<string, PlainMessageKey>([
   ["Agent session has been deleted", "sessionDeleted"],
   ["Agent run not found", "runNotFound"],
   ["Team Agent not found", "teamAgentNotFound"],
+  ["Team Agent handle must use 1-32 lowercase letters, numbers, or hyphens", "teamAgentInvalidHandle"],
+  ["Unable to start the team Agent", "teamAgentStartFailed"],
   ["Project membership is required", "membershipRequired"],
   ["Member identity is required", "identityRequired"],
   ["Only the task initiator can retry", "initiatorRetryOnly"],
@@ -72,6 +87,9 @@ const fixedServerText = new Map<string, PlainMessageKey>([
   ["This task cannot be retried", "taskCannotRetry"],
   ["当前任务无法重试", "taskCannotRetry"],
   ["OpenCode returned an empty response", "openCodeEmptyResponse"],
+  ["OpenCode health check failed", "openCodeHealthCheckFailed"],
+  ["OpenCode did not start within 15 seconds", "openCodeStartupTimeout"],
+  ["Agent run cancelled", "traceCancelled"],
   ["Invalid terminal message", "invalidTerminalMessage"],
   ["Terminal input exceeds the 10000 character limit", "terminalInputLimit"],
   ["正在准备工具参数", "preparingToolArguments"],
@@ -90,5 +108,37 @@ const fixedServerText = new Map<string, PlainMessageKey>([
 
 export function serverText(t: Translate, message: string): string {
   const key = fixedServerText.get(message);
-  return key ? t(key) : message;
+  if (key) return t(key);
+
+  const [, handle] = /^Team Agent handle already exists: ([a-z0-9][a-z0-9-]{0,31})$/.exec(message) ?? [];
+  if (handle) return t("teamAgentHandleExists", { handle });
+
+  const [, required, received] = /^OpenCode version (\S+) is required, received (\S+)$/.exec(message) ?? [];
+  if (required && received) return t("openCodeVersionMismatch", { required, received });
+
+  const [, code] = /^OpenCode exited during startup with code (-?\d+|null)$/.exec(message) ?? [];
+  if (code === "null") return t("openCodeStartupExitWithoutCode");
+  if (code) return t("openCodeStartupExit", { code });
+
+  const startupPrefix = "OpenCode could not start: ";
+  if (message.startsWith(startupPrefix)) {
+    return t("openCodeStartupError", { detail: message.slice(startupPrefix.length) });
+  }
+  return message;
+}
+
+export function systemMessageText(t: Translate, message: string): string {
+  const startFailurePrefix = "Unable to start the team Agent: ";
+  if (message.startsWith(startFailurePrefix)) {
+    const detail = message.slice(startFailurePrefix.length);
+    return detail && detail !== "Unable to start the team Agent"
+      ? t("teamAgentStartError", { detail: serverText(t, detail) })
+      : t("teamAgentStartFailed");
+  }
+
+  const [, actor, handle, initiator] = /^(.+?) interrupted @([a-z0-9][a-z0-9-]{0,31})'s task started by (.+)$/s.exec(message) ?? [];
+  if (actor && handle && initiator) {
+    return t("teamAgentTaskInterrupted", { actor, handle, initiator });
+  }
+  return serverText(t, message);
 }

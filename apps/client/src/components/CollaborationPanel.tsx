@@ -35,7 +35,7 @@ import type {
 } from "../types";
 import { formatTime, runStatusText } from "../format";
 import { useI18n } from "../i18n";
-import { richParts, serverText, type Translate } from "../i18n/messages";
+import { richParts, serverText, systemMessageText, type Translate } from "../i18n/messages";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project";
 type ActivityKind =
@@ -285,7 +285,7 @@ export function CollaborationPanel({
                       <time>{formatTime(locale, message.timestamp)}</time>
                     </span>
                     {message.kind === "system" ? (
-                      <p className="chat-system-message">{serverText(t, message.text)}</p>
+                      <p className="chat-system-message">{systemMessageText(t, message.text)}</p>
                     ) : message.kind === "agent" ? (
                       <ChatAgentMessage
                         message={message}
