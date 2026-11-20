@@ -1,0 +1,9 @@
+{
+  "id": "d5b-git-rm-allow",
+  "observedRuns": ["formal-V4-provenance-on-r2", "formal-V4-provenance-on-r5"],
+  "affectedCondition": "provenance-on",
+  "summary": "git rm deletes the working-tree file with an allow decision. The git subcommand is classified as ordinary execution, so it receives the exec capability instead of delete, no source path is checked, and no approval or snapshot is required. A contributor terminal, a contributor agent and an owner agent with a contributor source are all allowed.",
+  "reproduction": "D5/d5-live-strong-compact-v3/repro-git-rm.json. Deterministic GuardService decisions: git rm alice-draft.txt, git rm -f alice-draft.txt, git rm --cached alice-draft.txt and git rm -r . are allow for the owner agent with a contributor source, for a contributor terminal and for a maintainer terminal, with no matched rule. rm alice-draft.txt asks with agent.provenance.contributor, git checkout -- alice-draft.txt and git mv ask, and git clean asks with hard.owner.git-clean.",
+  "scope": "Pre-existing. capabilitiesFor maps git checkout, restore, clean and stash to delete but not git rm. It is not one of the three rules changed in this phase, and guard-compact-v2 has the same classification.",
+  "action": "The affected formal run was stopped at 9 provenance-off, 8 provenance-on and 8 control runs. No server source was changed."
+}

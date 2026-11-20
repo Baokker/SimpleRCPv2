@@ -161,12 +161,12 @@
           ]
         },
         "falseBlock": {
-          "successes": 5,
+          "successes": 7,
           "total": 290,
-          "proportion": 0.017241379310344827,
+          "proportion": 0.02413793103448276,
           "wilson95": [
-            0.00738640140450696,
-            0.039718792247354
+            0.011740571540586473,
+            0.04897740505910504
           ]
         }
       },
@@ -217,12 +217,12 @@
           ]
         },
         "falseBlock": {
-          "successes": 5,
+          "successes": 7,
           "total": 290,
-          "proportion": 0.017241379310344827,
+          "proportion": 0.02413793103448276,
           "wilson95": [
-            0.00738640140450696,
-            0.039718792247354
+            0.011740571540586473,
+            0.04897740505910504
           ]
         }
       },
@@ -273,12 +273,12 @@
           ]
         },
         "falseBlock": {
-          "successes": 5,
+          "successes": 7,
           "total": 290,
-          "proportion": 0.017241379310344827,
+          "proportion": 0.02413793103448276,
           "wilson95": [
-            0.00738640140450696,
-            0.039718792247354
+            0.011740571540586473,
+            0.04897740505910504
           ]
         }
       }
@@ -445,12 +445,12 @@
           ]
         },
         "falseBlock": {
-          "successes": 5,
+          "successes": 7,
           "total": 290,
-          "proportion": 0.017241379310344827,
+          "proportion": 0.02413793103448276,
           "wilson95": [
-            0.00738640140450696,
-            0.039718792247354
+            0.011740571540586473,
+            0.04897740505910504
           ]
         }
       },
@@ -501,12 +501,12 @@
           ]
         },
         "falseBlock": {
-          "successes": 135,
+          "successes": 137,
           "total": 290,
-          "proportion": 0.46551724137931033,
+          "proportion": 0.4724137931034483,
           "wilson95": [
-            0.40893325130432945,
-            0.5230028339565177
+            0.4156912455525707,
+            0.529857622656107
           ]
         }
       },
@@ -613,12 +613,12 @@
           ]
         },
         "falseBlock": {
-          "successes": 5,
+          "successes": 7,
           "total": 290,
-          "proportion": 0.017241379310344827,
+          "proportion": 0.02413793103448276,
           "wilson95": [
-            0.00738640140450696,
-            0.039718792247354
+            0.011740571540586473,
+            0.04897740505910504
           ]
         }
       },
@@ -669,24 +669,24 @@
           ]
         },
         "falseBlock": {
-          "successes": 5,
+          "successes": 7,
           "total": 290,
-          "proportion": 0.017241379310344827,
+          "proportion": 0.02413793103448276,
           "wilson95": [
-            0.00738640140450696,
-            0.039718792247354
+            0.011740571540586473,
+            0.04897740505910504
           ]
         }
       }
     }
   },
   "compactAllBenignInterception": {
-    "successes": 246,
+    "successes": 248,
     "total": 532,
-    "proportion": 0.462406015037594,
+    "proportion": 0.46616541353383456,
     "wilson95": [
-      0.4204594647270602,
-      0.504891589504477
+      0.4241692811372884,
+      0.508646667671095
     ]
   },
   "terminalOnlyAgentShareOfMisses": {
@@ -926,12 +926,12 @@
   "x3": {
     "no-snapshots|ceiling-on": {
       "approvals": {
-        "successes": 791,
+        "successes": 789,
         "total": 1650,
-        "proportion": 0.4793939393939394,
+        "proportion": 0.4781818181818182,
         "wilson95": [
-          0.4553647733598566,
-          0.5035188308469887
+          0.4541579424117787,
+          0.5023070502778223
         ]
       },
       "denials": {
@@ -944,21 +944,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 791,
-        "proportion": 0.1415929203539823,
+        "successes": 114,
+        "total": 789,
+        "proportion": 0.1444866920152091,
         "wilson95": [
-          0.11902647936532462,
-          0.16762371520145397
+          0.12167595306945585,
+          0.17074248221966848
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 679,
+        "successes": 675,
         "total": 1650,
-        "proportion": 0.4115151515151515,
+        "proportion": 0.4090909090909091,
         "wilson95": [
-          0.3880026821775857,
-          0.43543867706357353
+          0.38560532574402484,
+          0.43299881046264566
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -973,12 +973,12 @@
     },
     "snapshots|ceiling-on": {
       "approvals": {
-        "successes": 478,
+        "successes": 477,
         "total": 1650,
-        "proportion": 0.2896969696969697,
+        "proportion": 0.28909090909090907,
         "wilson95": [
-          0.2683177389457002,
-          0.3120531628123975
+          0.2677266164568975,
+          0.311434979542578
         ]
       },
       "denials": {
@@ -991,21 +991,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 478,
-        "proportion": 0.23430962343096234,
+        "successes": 114,
+        "total": 477,
+        "proportion": 0.2389937106918239,
         "wilson95": [
-          0.19854889196833808,
-          0.27430676345478716
+          0.2029035230380176,
+          0.2792542746471188
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 366,
+        "successes": 363,
         "total": 1650,
-        "proportion": 0.22181818181818183,
+        "proportion": 0.22,
         "wilson95": [
-          0.20243039319401618,
-          0.24249826359839555
+          0.2006752168758016,
+          0.24062552264074355
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -1020,12 +1020,12 @@
     },
     "snapshots-memory|ceiling-on": {
       "approvals": {
-        "successes": 478,
+        "successes": 477,
         "total": 1650,
-        "proportion": 0.2896969696969697,
+        "proportion": 0.28909090909090907,
         "wilson95": [
-          0.2683177389457002,
-          0.3120531628123975
+          0.2677266164568975,
+          0.311434979542578
         ]
       },
       "denials": {
@@ -1038,21 +1038,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 478,
-        "proportion": 0.23430962343096234,
+        "successes": 114,
+        "total": 477,
+        "proportion": 0.2389937106918239,
         "wilson95": [
-          0.19854889196833808,
-          0.27430676345478716
+          0.2029035230380176,
+          0.2792542746471188
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 366,
+        "successes": 363,
         "total": 1650,
-        "proportion": 0.22181818181818183,
+        "proportion": 0.22,
         "wilson95": [
-          0.20243039319401618,
-          0.24249826359839555
+          0.2006752168758016,
+          0.24062552264074355
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -1067,12 +1067,12 @@
     },
     "snapshots-memory-owner-self|ceiling-on": {
       "approvals": {
-        "successes": 473,
+        "successes": 472,
         "total": 1650,
-        "proportion": 0.2866666666666667,
+        "proportion": 0.28606060606060607,
         "wilson95": [
-          0.2653626009355896,
-          0.3089617720293971
+          0.2647717161095937,
+          0.3083433510967709
         ]
       },
       "denials": {
@@ -1085,21 +1085,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 473,
-        "proportion": 0.23678646934460887,
+        "successes": 114,
+        "total": 472,
+        "proportion": 0.24152542372881355,
         "wilson95": [
-          0.20069208022499843,
-          0.27712178139723304
+          0.20509909052374614,
+          0.28212507736460984
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 361,
+        "successes": 358,
         "total": 1650,
-        "proportion": 0.21878787878787878,
+        "proportion": 0.21696969696969698,
         "wilson95": [
-          0.19950540910330614,
-          0.23937671889599457
+          0.19775116579756777,
+          0.23750304492586635
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -1114,12 +1114,12 @@
     },
     "no-snapshots|ceiling-off": {
       "approvals": {
-        "successes": 777,
+        "successes": 775,
         "total": 1650,
-        "proportion": 0.4709090909090909,
+        "proportion": 0.4696969696969697,
         "wilson95": [
-          0.44691993401156416,
-          0.4950333895745703
+          0.44571409598323797,
+          0.4938206160856522
         ]
       },
       "denials": {
@@ -1132,21 +1132,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 777,
-        "proportion": 0.14414414414414414,
+        "successes": 115,
+        "total": 775,
+        "proportion": 0.14838709677419354,
         "wilson95": [
-          0.1211969688212716,
-          0.1705926848234047
+          0.12509554243617033,
+          0.17514715288050187
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 665,
+        "successes": 660,
         "total": 1650,
-        "proportion": 0.403030303030303,
+        "proportion": 0.4,
         "wilson95": [
-          0.37961453844851833,
-          0.42689654017193013
+          0.3766205459545144,
+          0.4238440038728232
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -1161,12 +1161,12 @@
     },
     "snapshots|ceiling-off": {
       "approvals": {
-        "successes": 464,
+        "successes": 463,
         "total": 1650,
-        "proportion": 0.2812121212121212,
+        "proportion": 0.2806060606060606,
         "wilson95": [
-          0.26004636609042564,
-          0.30339425504696127
+          0.25945591480666025,
+          0.30277540057210445
         ]
       },
       "denials": {
@@ -1179,21 +1179,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 464,
-        "proportion": 0.2413793103448276,
+        "successes": 115,
+        "total": 463,
+        "proportion": 0.24838012958963282,
         "wilson95": [
-          0.2046689180704106,
-          0.28233678551777247
+          0.2112018413852484,
+          0.28969938407876644
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 352,
+        "successes": 348,
         "total": 1650,
-        "proportion": 0.21333333333333335,
+        "proportion": 0.2109090909090909,
         "wilson95": [
-          0.19424438400342206,
-          0.23375399216827894
+          0.191907809162567,
+          0.23125334397464514
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -1208,12 +1208,12 @@
     },
     "snapshots-memory|ceiling-off": {
       "approvals": {
-        "successes": 464,
+        "successes": 463,
         "total": 1650,
-        "proportion": 0.2812121212121212,
+        "proportion": 0.2806060606060606,
         "wilson95": [
-          0.26004636609042564,
-          0.30339425504696127
+          0.25945591480666025,
+          0.30277540057210445
         ]
       },
       "denials": {
@@ -1226,21 +1226,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 464,
-        "proportion": 0.2413793103448276,
+        "successes": 115,
+        "total": 463,
+        "proportion": 0.24838012958963282,
         "wilson95": [
-          0.2046689180704106,
-          0.28233678551777247
+          0.2112018413852484,
+          0.28969938407876644
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 352,
+        "successes": 348,
         "total": 1650,
-        "proportion": 0.21333333333333335,
+        "proportion": 0.2109090909090909,
         "wilson95": [
-          0.19424438400342206,
-          0.23375399216827894
+          0.191907809162567,
+          0.23125334397464514
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {
@@ -1255,12 +1255,12 @@
     },
     "snapshots-memory-owner-self|ceiling-off": {
       "approvals": {
-        "successes": 459,
+        "successes": 458,
         "total": 1650,
-        "proportion": 0.2781818181818182,
+        "proportion": 0.2775757575757576,
         "wilson95": [
-          0.2570945970512777,
-          0.3002994952929984
+          0.2565043899424096,
+          0.29968039664324425
         ]
       },
       "denials": {
@@ -1273,21 +1273,21 @@
         ]
       },
       "autoEligibleAmongApprovals": {
-        "successes": 112,
-        "total": 459,
-        "proportion": 0.2440087145969499,
+        "successes": 115,
+        "total": 458,
+        "proportion": 0.25109170305676853,
         "wilson95": [
-          0.20694724695710495,
-          0.28531949898485803
+          0.21355920128479178,
+          0.29276489403961914
         ]
       },
       "lowerBoundApprovals": {
-        "successes": 347,
+        "successes": 343,
         "total": 1650,
-        "proportion": 0.2103030303030303,
+        "proportion": 0.20787878787878789,
         "wilson95": [
-          0.19132382724257466,
-          0.23062802013601527
+          0.18898855287599697,
+          0.2281260714681042
         ]
       },
       "maliciousAutomaticReleaseShareOfWorkload": {

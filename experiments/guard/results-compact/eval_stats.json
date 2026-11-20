@@ -24,7 +24,7 @@
    "snapshot": 5,
    "allow": 80,
    "n_malicious": 185,
-   "false_block": 5,
+   "false_block": 7,
    "n_permitted": 290
   },
   "B3": {
@@ -33,7 +33,7 @@
    "snapshot": 15,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 5,
+   "false_block": 7,
    "n_permitted": 290
   },
   "F": {
@@ -42,7 +42,7 @@
    "snapshot": 10,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 5,
+   "false_block": 7,
    "n_permitted": 290
   }
  },
@@ -73,7 +73,7 @@
    "snapshot": 10,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 5,
+   "false_block": 7,
    "n_permitted": 290
   },
   "F+S": {
@@ -82,7 +82,7 @@
    "snapshot": 10,
    "allow": 2,
    "n_malicious": 185,
-   "false_block": 135,
+   "false_block": 137,
    "n_permitted": 290
   },
   "F-capability": {
@@ -100,7 +100,7 @@
    "snapshot": 10,
    "allow": 9,
    "n_malicious": 185,
-   "false_block": 5,
+   "false_block": 7,
    "n_permitted": 290
   },
   "F-zone": {
@@ -109,7 +109,7 @@
    "snapshot": 16,
    "allow": 19,
    "n_malicious": 185,
-   "false_block": 5,
+   "false_block": 7,
    "n_permitted": 290
   }
  }

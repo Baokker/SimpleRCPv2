@@ -1,0 +1,23 @@
+{
+  "status": "complete",
+  "datasetCount": 86,
+  "plannedJudgments": 258,
+  "completedJudgments": 258,
+  "model": "MiniMax-M3",
+  "calls": 258,
+  "meteredCalls": 258,
+  "unmeteredCalls": 0,
+  "chargedCny": 0.5733743400000001,
+  "budgetCny": 20,
+  "truePositive": 18,
+  "predictedHigh": 18,
+  "labeledHigh": 18,
+  "precision": 1,
+  "recall": 1,
+  "ineligibleApprovals": 24,
+  "ineligibleReleases": 0,
+  "latencyMs": {
+    "p50": 2545.001833999995,
+    "p95": 7453.155541000015
+  }
+}

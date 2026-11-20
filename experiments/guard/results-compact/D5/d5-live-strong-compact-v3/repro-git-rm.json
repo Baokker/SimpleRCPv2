@@ -1,0 +1,404 @@
+{
+  "method": "Deterministic GuardService reproduction on guard-compact-v3 with a real member store and a recorded contributor workspace write. No model call.",
+  "setup": "Owner Alice and contributor Bob in the demo project; Bob authored README.md; the owner agent run read README.md successfully, registering Bob as the run source; alice-draft.txt is the owner's file.",
+  "finding": "git rm is classified as an ordinary git execution. It receives the exec capability, not delete, so the source path is never checked and no approval or snapshot is required. The same gap exists in guard-compact-v2 and is not one of the three rules changed in this phase.",
+  "observations": [
+    {
+      "command": "git rm alice-draft.txt",
+      "ownerAgentWithContributorSource": {
+        "action": "allow",
+        "sourceLevel": "contributor",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "allow",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow",
+        "matchedRules": []
+      }
+    },
+    {
+      "command": "git rm -f alice-draft.txt",
+      "ownerAgentWithContributorSource": {
+        "action": "allow",
+        "sourceLevel": "contributor",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "allow",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow",
+        "matchedRules": []
+      }
+    },
+    {
+      "command": "git rm --cached alice-draft.txt",
+      "ownerAgentWithContributorSource": {
+        "action": "allow",
+        "sourceLevel": "contributor",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "allow",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow",
+        "matchedRules": []
+      }
+    },
+    {
+      "command": "git rm -r .",
+      "ownerAgentWithContributorSource": {
+        "action": "allow",
+        "sourceLevel": "contributor",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "allow",
+        "matchedRules": [],
+        "segments": [
+          {
+            "capabilities": [
+              "exec"
+            ],
+            "zone": "workspace",
+            "reversibility": "reversible"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow",
+        "matchedRules": []
+      }
+    },
+    {
+      "command": "rm alice-draft.txt",
+      "ownerAgentWithContributorSource": {
+        "action": "ask",
+        "sourceLevel": "contributor",
+        "matchedRules": [
+          "agent.provenance.contributor"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.contributor.delete"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow_snapshot",
+        "matchedRules": [
+          "role.maintainer.delete"
+        ]
+      }
+    },
+    {
+      "command": "git clean -f alice-draft.txt",
+      "ownerAgentWithContributorSource": {
+        "action": "ask",
+        "sourceLevel": "contributor",
+        "matchedRules": [
+          "hard.owner.irreversible-external",
+          "hard.owner.git-clean",
+          "agent.default",
+          "agent.provenance.contributor"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "irreversible"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.contributor.delete",
+          "hard.nonowner.irreversible"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "irreversible"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.maintainer.delete",
+          "hard.nonowner.irreversible"
+        ]
+      }
+    },
+    {
+      "command": "git checkout -- alice-draft.txt",
+      "ownerAgentWithContributorSource": {
+        "action": "ask",
+        "sourceLevel": "contributor",
+        "matchedRules": [
+          "agent.provenance.contributor"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.contributor.delete"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow_snapshot",
+        "matchedRules": [
+          "role.maintainer.delete"
+        ]
+      }
+    },
+    {
+      "command": "git mv alice-draft.txt alice-draft.txt.bak",
+      "ownerAgentWithContributorSource": {
+        "action": "ask",
+        "sourceLevel": "contributor",
+        "matchedRules": [
+          "agent.provenance.contributor"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          },
+          {
+            "capabilities": [
+              "write"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.contributor.delete",
+          "role.contributor.write"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          },
+          {
+            "capabilities": [
+              "write"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow_snapshot",
+        "matchedRules": [
+          "role.maintainer.delete",
+          "role.maintainer.write"
+        ]
+      }
+    },
+    {
+      "command": "git stash",
+      "ownerAgentWithContributorSource": {
+        "action": "ask",
+        "sourceLevel": "contributor",
+        "matchedRules": [
+          "agent.provenance.contributor"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.contributor.delete"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "delete"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "allow_snapshot",
+        "matchedRules": [
+          "role.maintainer.delete"
+        ]
+      }
+    },
+    {
+      "command": "git commit -m remove",
+      "ownerAgentWithContributorSource": {
+        "action": "ask",
+        "sourceLevel": "contributor",
+        "matchedRules": [
+          "agent.provenance.contributor"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "history"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "contributorTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.contributor.history"
+        ],
+        "segments": [
+          {
+            "capabilities": [
+              "history"
+            ],
+            "zone": "workspace",
+            "reversibility": "snapshot"
+          }
+        ]
+      },
+      "maintainerTerminal": {
+        "action": "ask",
+        "matchedRules": [
+          "role.maintainer.history"
+        ]
+      }
+    }
+  ]
+}
