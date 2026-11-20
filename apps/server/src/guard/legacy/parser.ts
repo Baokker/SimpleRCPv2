@@ -86,6 +86,23 @@ function moveTargets(name: string, values: string[], cwd: string): ParsedOperati
   };
 }
 
+function gitRmTargets(input: string[], cwd: string): ParsedOperation | undefined {
+  let index = 1;
+  while (index < input.length) {
+    const token = unquote(input[index]!).toLowerCase();
+    if (!token.startsWith("-")) break;
+    if (["-c", "--git-dir", "--work-tree", "-C"].includes(token)) index += 1;
+    index += 1;
+  }
+  if (unquote(input[index] ?? "").toLowerCase() !== "rm") return undefined;
+  const rest = input.slice(index + 1);
+  const cached = rest.some((value) => unquote(value) === "--cached");
+  const values = rest.filter((value) => !unquote(value).startsWith("-"));
+  if (!values.length) return undefined;
+  // A rename or removal decides its file operands, so the paths reach the path zone and the snapshot.
+  return { commandName: "git", action: cached ? "write" : "delete", targets: values.map((value) => target(cwd, value, "target")) };
+}
+
 function gitMoveTargets(input: string[], cwd: string): ParsedTarget[] | undefined {
   let index = 1;
   while (index < input.length) {
@@ -194,6 +211,10 @@ export function parseCommandPaths(command: string, cwd: string): ParsedOperation
   } else if (name === "git") {
     const moved = gitMoveTargets(input, cwd);
     if (moved) operation = { commandName: "git", action: "move", targets: moved };
+    else {
+      const removed = gitRmTargets(input, cwd);
+      if (removed) operation = removed;
+    }
   } else if (["curl", "wget", "scp", "sftp", "rsync"].includes(name)) {
     const uploadTargets: ParsedTarget[] = [];
     for (let index = 1; index < input.length; index += 1) {

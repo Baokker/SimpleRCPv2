@@ -12,6 +12,9 @@ export interface Characterization {
   gitContext: boolean;
   plainDownloadToShell: boolean;
   downloadExecute: boolean;
+  // The command writes a set of paths it does not name, so the target set cannot be bounded
+  // statically and the decision is at least an approval.
+  unboundedWrite: boolean;
 }
 
 const plainDownloadToShellPattern = /^\s*(curl|wget)\s+[^;&|<>`$()]*\|\s*(sh|bash|zsh)\s*$/i;
@@ -200,8 +203,52 @@ function hasGitContextOption(command: string) {
 function packageManagerCapability(name: string, command: string): Capability[] {
   const input = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
   const subcommand = input.slice(1).find((token) => !token.startsWith("-"))?.replace(/^['"]|['"]$/g, "").toLowerCase();
-  const install = ["install", "add", "ci", "i", "update", "upgrade", "sync"].includes(subcommand ?? "") || name === "yarn" && subcommand === undefined;
+  // Removing a dependency rewrites the manifest and the lock file. Like installation it is not
+  // recoverable from a snapshot of the tracked files, so it takes the same capability.
+  const removal = ["npm", "pnpm", "yarn"].includes(name)
+    ? ["uninstall", "remove", "rm"].includes(subcommand ?? "")
+    : ["pip", "pip3"].includes(name) && subcommand === "uninstall";
+  const install = ["install", "add", "ci", "i", "update", "upgrade", "sync"].includes(subcommand ?? "") || name === "yarn" && subcommand === undefined || removal;
   return install || /^(?:pip|tool)\s+install\b/.test(input.slice(1).join(" ")) ? ["install"] : ["exec"];
+}
+
+// Git subcommands that remove tracked content or rewrite references. The four-level matrix decides
+// them as deletions or history changes instead of ordinary execution.
+function gitSubcommandCapability(command: string): Capability[] | undefined {
+  const subcommand = gitSubcommand(command);
+  const flag = (pattern: RegExp) => pattern.test(command);
+  if (subcommand === "rm") return flag(/(?:^|\s)--cached(?:\s|$)/) ? ["write"] : ["delete"];
+  if (subcommand === "branch" && flag(/(?:^|\s)(?:-d|-D|--delete|-m|-M|--move|-f|--force)(?:\s|$)/)) return ["history"];
+  if (subcommand === "tag" && flag(/(?:^|\s)(?:-d|--delete)(?:\s|$)/)) return ["history"];
+  if (subcommand === "update-ref" || subcommand === "reflog" || subcommand === "gc") return ["history"];
+  if (subcommand === "worktree" && flag(/(?:^|\s)(?:remove|prune)(?:\s|$)/)) return ["history"];
+  return undefined;
+}
+
+// A forced or pruned reference deletion cannot be restored from a working-tree snapshot.
+function gitIrreversible(name: string, command: string) {
+  if (name !== "git") return false;
+  const subcommand = gitSubcommand(command);
+  if (subcommand === "push" || subcommand === "clean") return true;
+  if (subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/.test(command)) return true;
+  if (/(?:^|\s)-D(?:\s|$)/.test(command)) return true;
+  if (["branch", "tag", "worktree"].includes(subcommand) && /(?:^|\s)(?:--force|-f)(?:\s|$)/.test(command)) return true;
+  return /(?:^|\s)--prune(?:=\S*)?(?:\s|$)/.test(command);
+}
+
+const archivePrograms = new Set(["tar", "unzip", "7z", "7za", "7zr", "gunzip", "bunzip2"]);
+
+// Extraction writes files whose names come from the archive, so the write target set is not known
+// statically. Listing or testing an archive writes nothing.
+function extractsArchive(name: string, command: string) {
+  if (!archivePrograms.has(name)) return false;
+  const input = (command.match(/"[^"]*"|'[^']*'|\S+/g) ?? []).map(unquote);
+  const flags = input.slice(1).filter((token) => token.startsWith("-"));
+  if (name === "tar") return flags.some((token) => /^-[A-Za-z]*x/.test(token) || token === "--extract" || token === "--get");
+  if (name === "unzip") return !flags.some((token) => /^-[A-Za-z]*[lvtzp]/.test(token));
+  if (name === "gunzip" || name === "bunzip2") return !flags.some((token) => /^-[A-Za-z]*[ltc]/.test(token) || /^--(?:list|test|stdout)$/.test(token));
+  const subcommand = input.slice(1).find((token) => !token.startsWith("-"))?.toLowerCase();
+  return subcommand === "x" || subcommand === "e";
 }
 
 function hasInterpreterPipe(command: string) {
@@ -223,6 +270,8 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
   }
   if (["cat", "ls", "dir", "pwd", "grep", "rg", "head", "tail", "less", "more"].includes(name)) return ["read"];
   if (name === "git") {
+    const destructive = gitSubcommandCapability(command);
+    if (destructive) return destructive;
     const subcommand = gitSubcommand(command);
     if (["status", "diff", "log", "show", "branch", "rev-parse"].includes(subcommand)) return ["read"];
     if (subcommand === "stash") return ["list", "show"].includes(gitStashSubcommand(command)) ? ["read"] : ["delete"];
@@ -230,6 +279,7 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
     if (["checkout", "restore", "clean"].includes(subcommand)) return ["delete"];
     if (["reset", "rebase", "commit", "merge"].includes(subcommand)) return ["history"];
   }
+  if (extractsArchive(name, command)) return ["write"];
   if (["rm", "del", "erase", "rmdir", "rd", "remove-item"].includes(name)) return ["delete"];
   if (["chmod", "chown", "chgrp", "sudo", "su", "doas"].includes(name)) return ["privilege"];
   if (["kill", "killall", "pkill", "taskkill", "stop-process"].includes(name)) return ["process"];
@@ -245,8 +295,7 @@ function capabilitiesFor(name: string, kind: GuardRequest["kind"], command: stri
 
 function reversibilityFor(name: string, command: string, capabilities: Capability[], kind: GuardRequest["kind"]): Reversibility {
   if (kind === "read" || kind === "fetch" && !/\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "reversible";
-  const subcommand = name === "git" ? gitSubcommand(command) : "";
-  if (name === "git" && (subcommand === "push" || subcommand === "clean" || subcommand === "reset" && /(?:^|\s)--hard(?:\s|$)/i.test(command))) return "irreversible";
+  if (gitIrreversible(name, command)) return "irreversible";
   if (capabilities.includes("process") || /(?:^|[\s|;&(])(?:kill|pkill|killall|taskkill|stop-process)(?=\s|$)/i.test(command)) return "irreversible";
   if (/\bshutdown\b|\breboot\b|\bsudo\b|\b(curl|wget)\b.*\|.*\b(sh|bash|zsh)\b/i.test(command)) return "irreversible";
   if (capabilities.includes("network") && /\b(-X|--request)\s*(POST|PUT|PATCH|DELETE)\b/i.test(command)) return "irreversible";
@@ -298,7 +347,8 @@ export function characterize(request: GuardRequest, platformDataRoot: string, pr
         dynamic: results.some((result) => result.dynamic) || hasInterpreterPipe(command) || hasEvalCommand(command),
         gitContext: results.some((result) => result.gitContext),
         plainDownloadToShell: false,
-        downloadExecute
+        downloadExecute,
+        unboundedWrite: results.some((result) => result.unboundedWrite)
       };
     }
   }
@@ -345,5 +395,5 @@ function characterizeSegment(request: GuardRequest, command: string, zone: (targ
   if (dynamic) segments.push({ text: command, capabilities: ["exec_uninspectable"], zone: "outside", reversibility: "irreversible" });
   if (hasDownloadExecute(command, [command])) segments.push({ text: command, capabilities: ["network", "exec"], zone: "workspace", reversibility: "irreversible" });
   if (metadataReference) segments.push({ text: "$SIMPLERCP_DATA_DIR", capabilities: ["read"], zone: "metadata", reversibility: "reversible" });
-  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command), plainDownloadToShell, downloadExecute: hasDownloadExecute(command, [command]) };
+  return { segments, legacyRisk: legacy, unknown: legacy === "unknown", dynamic, gitContext: hasGitContextOption(command), plainDownloadToShell, downloadExecute: hasDownloadExecute(command, [command]), unboundedWrite: request.kind === "command" && extractsArchive(name, command) };
 }
