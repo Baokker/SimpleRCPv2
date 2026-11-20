@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 import { createApp } from "../../../apps/server/src/createApp.js";
 import type { AgentRuntime, AgentRuntimeEvent } from "../../../apps/server/src/agent/agentRuntime.js";
 import { taskDefinitions, prepareTask, checkTask, createProbe, type Task } from "./task-runtime.js";
-import { projectRoot, environmentRecord } from "../lib/common.js";
+import { projectRoot, environmentRecord, runVersion } from "../lib/common.js";
 import { summarizeX2a } from "../lib/round3-metrics.js";
 import { openCodeConfig } from "../../../apps/server/src/agent/openCodeProcess.js";
 import { pathToFileURL } from "node:url";
@@ -336,7 +336,7 @@ async function main() {
     await runOne(job.directory, task, job.condition, job.trigger, job.source, job.repeat, job.seed);
     return;
   }
-  const directory = process.env.X2A_DIR ? path.resolve(process.env.X2A_DIR) : path.join(projectRoot, "experiments/guard/results-compact/X2a", "x2a-compact-v2");
+  const directory = process.env.X2A_DIR ? path.resolve(process.env.X2A_DIR) : path.join(projectRoot, "experiments/guard/results-compact/X2a", `x2a-compact-${runVersion}`);
   await fs.mkdir(path.join(directory, "runs"), { recursive: true });
   const jobs: Array<{ task: Task; condition: Condition; trigger: Trigger; source: Source; repeat: number; seed: number }> = [];
   let seed = 0x1234abcd;

@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createSnapshotStore } from "../../../apps/server/src/guard/snapshots.js";
-import { assertFrozenServer, resultsRoot, runtimeRoot, writeRun } from "../lib/common.js";
+import { assertFrozenServer, resultsRoot, runVersion, runtimeRoot, writeRun } from "../lib/common.js";
 
 // B6: restore a snapshot after another member edited the same files.
 // The snapshot is taken before the restored actor's command, as the guard does for snapshot-backed requests.
@@ -57,7 +57,7 @@ for (const item of cases) {
   });
   await fs.rm(root, { recursive: true, force: true });
 }
-await writeRun(path.join(resultsRoot, "X9", "x9-restore-compact-v2"), results, {
+await writeRun(path.join(resultsRoot, "X9", `x9-restore-compact-${runVersion}`), results, {
   cases: results.length,
   correct: results.filter((row) => row.correct).length,
     restored: results.filter((row) => row.correct && row.withdrawnUndone && !row.handedToPerson).length,

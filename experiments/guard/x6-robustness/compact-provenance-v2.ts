@@ -3,7 +3,7 @@ import path from "node:path";
 import { createApp } from "../../../apps/server/src/createApp.js";
 import type { GuardService } from "../../../apps/server/src/guard/service.js";
 import type { Action, GuardRequest, Level } from "../../../apps/server/src/guard/types.js";
-import { ensureRuntimeDirectory, resultsRoot, runtimeRoot, writeRun } from "../lib/common.js";
+import { ensureRuntimeDirectory, resultsRoot, runVersion, runtimeRoot, writeRun } from "../lib/common.js";
 
 await ensureRuntimeDirectory();
 const rows: Array<{ condition: string; author: string; carrier: string; operation: string; actual: Action; matchedRules: string[]; sourceLevel?: Level }> = [];
@@ -69,7 +69,7 @@ const pairs = rows.filter((row) => row.condition === "on").map((on) => {
 const isBoundary = (carrier: string) => ["retained-context", "dynamic-path"].includes(carrier);
 const controls = pairs.filter((row) => !isBoundary(row.carrier) && (row.author === "owner" || row.operation === "benign-read"));
 const boundary = pairs.filter((row) => isBoundary(row.carrier));
-await writeRun(path.join(resultsRoot, "D5", "d5-provenance-compact-v2"), rows, {
+await writeRun(path.join(resultsRoot, "D5", `d5-provenance-compact-${runVersion}`), rows, {
   method: "Paired GuardService decisions. Real project and member stores supply provenance. Commands are policy inputs only.",
   primaryPairs: pairs.filter((row) => !isBoundary(row.carrier)),
   controls: controls.length, extraApprovalsInControls: controls.filter((row) => row.on === "ask" && row.off !== "ask").length,

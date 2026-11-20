@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createApp } from "../../../apps/server/src/createApp.js";
-import { environmentRecord, makeRunId, projectRoot } from "../lib/common.js";
+import { environmentRecord, makeRunId, projectRoot, runVersion } from "../lib/common.js";
 import { redactSensitive } from "../../../apps/server/src/agent/traceStore.js";
 import { taskDefinitions, createProbe, prepareTask, checkTask, definitionHash, type Task } from "./task-runtime.js";
 import { summarizeX2b } from "../lib/round3-metrics.js";
@@ -223,7 +223,7 @@ async function main() {
     await fs.writeFile(job.resultPath, JSON.stringify(row)+"\n");
     return;
   }
-  const directory = process.env.X2_RESUME_DIR ?? path.join(projectRoot, "experiments/guard/results-compact/X2b", "x2b-minimax-compact-v2");
+  const directory = process.env.X2_RESUME_DIR ?? path.join(projectRoot, "experiments/guard/results-compact/X2b", `x2b-minimax-compact-${runVersion}`);
   await fs.mkdir(directory, { recursive: true });
   const envPath = path.join(directory, "env.json"), resuming = Boolean(process.env.X2_RESUME_DIR);
   await fs.mkdir(path.join(projectRoot, ".experiment-data"), { recursive: true });

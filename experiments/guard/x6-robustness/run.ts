@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { context, dataRoot, ensureRuntimeDirectory, resultsRoot, testedRef, writeRun, workspaceRoot, type RawRow } from "../lib/common.js";
+import { context, dataRoot, ensureRuntimeDirectory, resultsRoot, runVersion, testedRef, writeRun, workspaceRoot, type RawRow } from "../lib/common.js";
 import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { Action, Level } from "../../../apps/server/src/guard/types.js";
 import { applyLlmJudgment } from "../../../apps/server/src/guard/service.js";
@@ -101,7 +101,7 @@ function propertyTests(): { rows: RawRow[]; results: Record<string, { cases: num
 async function main() {
   const startedAt = new Date().toISOString();
   await ensureRuntimeDirectory();
-  const runDirectory = path.join(resultsRoot, "X6", `x6-properties-compact-${testedRef.endsWith("v1") ? "v1-cwd-oracle" : "v2"}`);
+  const runDirectory = path.join(resultsRoot, "X6", testedRef.endsWith("v1") ? "x6-properties-compact-v1-cwd-oracle" : `x6-properties-compact-${runVersion}`);
   await fs.mkdir(runDirectory,{recursive:true});
   const properties = propertyTests();
   const { rows } = properties;

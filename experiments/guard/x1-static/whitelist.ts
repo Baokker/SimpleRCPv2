@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { context, ensureRuntimeDirectory, loadDataset, projectRoot, resultsRoot, toRequest, writeRun, type DatasetRecord, type RawRow } from "../lib/common.js";
+import { context, ensureRuntimeDirectory, loadDataset, projectRoot, resultsRoot, runVersion, toRequest, writeRun, type DatasetRecord, type RawRow } from "../lib/common.js";
 import { characterize } from "../../../apps/server/src/guard/characterize.js";
 import type { Action } from "../../../apps/server/src/guard/types.js";
 
@@ -127,7 +127,7 @@ async function main() {
       }
     }
   }
-  const runDirectory = path.join(resultsRoot, "X1W", "x1w-compact-v2");
+  const runDirectory = path.join(resultsRoot, "X1W", `x1w-compact-${runVersion}`);
   const summary = summarize(rows);
   await writeRun(runDirectory, rows, summary, { experiment: "X1W", conditions: ["W1", "W2"], config: path.relative(projectRoot, configPath), startedAt, endedAt: new Date().toISOString() });
   process.stdout.write(`${runDirectory}\n${JSON.stringify(summary, null, 2)}\n`);

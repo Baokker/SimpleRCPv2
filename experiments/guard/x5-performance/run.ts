@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { ensureRuntimeDirectory, evaluate, loadDataset, mean, percentile, resultsRoot, runtimeRoot, standardDeviation, writeRun, type RawRow } from "../lib/common.js";
+import { ensureRuntimeDirectory, evaluate, loadDataset, mean, percentile, resultsRoot, runVersion, runtimeRoot, standardDeviation, writeRun, type RawRow } from "../lib/common.js";
 import { serviceMeasurements, snapshotMeasurements } from "./service-benchmark.js";
 
 async function measureDecide() {
@@ -37,7 +37,7 @@ async function main() {
   const snapshotStats = await snapshotMeasurements(temporaryRoot);
   const services = await serviceMeasurements(temporaryRoot);
   const rows = [...decideStats.rows,...snapshotStats.raw,...services.raw];
-  const runDirectory = path.join(resultsRoot, "X5", "x5-performance-compact-v2");
+  const runDirectory = path.join(resultsRoot, "X5", `x5-performance-compact-${runVersion}`);
   const summary = { rowCount: rows.length, decide: { terminal: decideStats.terminal, agent: decideStats.agent }, snapshots: snapshotStats.points, services: services.results, endpointLatency: { status: "已完成", boundary: "真实 WebSocket 发送到真实 SharedTerminal.write 调用" }, concurrency: { status: "已完成", members: [2,5,10,20] }, agentPermissionLatency: { status: "部分完成", boundary: "GuardService.submit 的真实 Agent source 请求，不包含 OpenCode 网络回复；真实 asked 到 replied 分布由 X2 trace 补充" }, oldE3Comparison: { status: "描述性对照", reason: "硬件与平台不同，不能解释为性能改善的因果证据" } };
   await writeRun(runDirectory, rows as RawRow[], summary, { experiment: "X5", decideSamples: 1000, snapshotRepeats: 5, dataDir: temporaryRoot, startedAt, endedAt: new Date().toISOString(), server: "createApp + attachRealtimeServer，同 pnpm dev:demo 服务端入口" });
   await fs.writeFile(path.join(runDirectory, "summary.md"), `# X5 性能实验\n\n真实 WebSocket 端到端与并发测试、真实 SnapshotStore 目录快照已完成，全部样本见 raw.jsonl。\n`);

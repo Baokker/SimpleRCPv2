@@ -4,7 +4,7 @@ import { commandClass, createApprovalMemory } from "../../../apps/server/src/gua
 import { decide } from "../../../apps/server/src/guard/decide.js";
 import { roleLevel } from "../../../apps/server/src/guard/roles.js";
 import type { GuardRequest, Level } from "../../../apps/server/src/guard/types.js";
-import { context, dataRoot, ensureRuntimeDirectory, loadDataset, projectRoot, resultsRoot, toRequest, workspaceRoot, writeRun, type RawRow } from "../lib/common.js";
+import { context, dataRoot, ensureRuntimeDirectory, loadDataset, projectRoot, resultsRoot, runVersion, toRequest, workspaceRoot, writeRun, type RawRow } from "../lib/common.js";
 
 const archive = "archive/experiment-guard-x1-x6:experiments/guard/results/X3/x3-20261006093725/raw.jsonl";
 const source = execFileSync("git", ["show", archive], { cwd: projectRoot, encoding: "utf8", maxBuffer: 48 * 1024 * 1024 });
@@ -81,7 +81,7 @@ for (const ceiling of [true, false]) {
       maliciousAutomaticReleaseAfterOracle: rows.filter((row) => row.automaticRelease).length });
   }
 }
-await writeRun(path.join(resultsRoot, "X3", "x3-approval-burden-compact-v2"), allRows, {
+await writeRun(path.join(resultsRoot, "X3", `x3-approval-burden-compact-${runVersion}`), allRows, {
   archive, workload: workload.length, distinctHistoricalRequests: distinct, groups: summaries,
   approver: "Approve every queued request. Historical rows supply roles but lack member IDs and timestamps. Reuse one member identity per mapped role and keep the replay within a single TTL window.",
   context: "Replay only decision inputs. Relocate archived experiment workspaces into the local fixture. Use migrated labels for D2 and D4 and preserve archived trace labels.",

@@ -5,7 +5,7 @@ import { decide } from "../../../apps/server/src/guard/decide.js";
 import type { ApprovalOutcome } from "../../../apps/server/src/guard/approvals.js";
 import type { GuardService } from "../../../apps/server/src/guard/service.js";
 import type { Action, GuardRequest } from "../../../apps/server/src/guard/types.js";
-import { context, ensureRuntimeDirectory, resultsRoot, runtimeRoot, writeRun } from "../lib/common.js";
+import { context, ensureRuntimeDirectory, resultsRoot, runVersion, runtimeRoot, writeRun } from "../lib/common.js";
 
 await ensureRuntimeDirectory();
 const root = await fs.mkdtemp(path.join(runtimeRoot, "approvals-"));
@@ -71,7 +71,7 @@ try {
     online(bob);
     await changeBob("contributor");
   }
-  await writeRun(path.join(resultsRoot, "D4", "d4-member-binding-compact-v2"), rows, {
+  await writeRun(path.join(resultsRoot, "D4", `d4-member-binding-compact-${runVersion}`), rows, {
     method: "The frozen GuardService with real project, member and file stores. Fixed maintainer uses rule decisions and terminal-only admits the agent request. Requests are evaluated without executing the requested commands.",
     rows, teamInterruption: revocations.find((row) => row.event === "team-interrupted"),
     scheduler: "Team mention queue and owner takeover scheduling were outside this GuardService measurement."
@@ -107,7 +107,7 @@ try {
   }
   stopObserving();
   await guard.awaitIdle();
-  await writeRun(path.join(resultsRoot, "X6", "x6-approval-runtime-compact-v2"), faults, {
+  await writeRun(path.join(resultsRoot, "X6", `x6-approval-runtime-compact-${runVersion}`), faults, {
     cases: faults.length, failed: faults.filter((row) => !row.passed).length, staleOrDuplicateResolutionsAccepted: faults.filter((row) => row.accepted > 1).length,
     leftoverApprovals: faults.reduce((count, row) => count + row.remaining, 0), revocations,
     scope: "GuardService approval lifecycle. No OpenCode permission reply transport or event-stream fault injection."

@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { parse } from "../../../apps/server/node_modules/dotenv/lib/main.js";
 import { applyLlmJudgment, type GuardService } from "../../../apps/server/src/guard/service.js";
-import { ensureRuntimeDirectory, evaluate, loadDataset, percentile, resultsRoot, writeRun } from "../lib/common.js";
+import { ensureRuntimeDirectory, evaluate, loadDataset, percentile, resultsRoot, runVersion, writeRun } from "../lib/common.js";
 
 const endpointFile = process.env.COMPACT_MINIMAX_ENV;
 if (!endpointFile) throw new Error("COMPACT_MINIMAX_ENV is required");
@@ -17,7 +17,7 @@ const maxTokens = 2048;
 const reservation = (512_000 * rates.cacheMissInput + maxTokens * rates.output) / 1_000_000;
 await ensureRuntimeDirectory();
 const dataset = await loadDataset("D6");
-const directory = path.join(resultsRoot, "X4", "x4-minimax-compact-v2");
+const directory = path.join(resultsRoot, "X4", `x4-minimax-compact-${runVersion}`);
 await fs.mkdir(directory, { recursive: true });
 const ledger = await fs.open(path.join(directory, "calls.jsonl"), "wx");
 const jobs = dataset.flatMap((item) => [1, 2, 3].map((repeat) => ({ item, repeat })));

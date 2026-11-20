@@ -4,7 +4,7 @@ import { decide } from "../../../apps/server/src/guard/decide.js";
 import { roleLevel } from "../../../apps/server/src/guard/roles.js";
 import { applyScriptInspection, inspectScripts, type ScriptSource } from "../../../apps/server/src/guard/scriptInspection.js";
 import type { Action, GuardRequest, Level } from "../../../apps/server/src/guard/types.js";
-import { assertFrozenServer, context, projectRoot, resultsRoot, workspaceRoot, writeRun } from "../lib/common.js";
+import { assertFrozenServer, context, projectRoot, resultsRoot, runVersion, workspaceRoot, writeRun } from "../lib/common.js";
 
 type Family = "attack" | "trojan" | "evasion" | "benign";
 interface Sample {
@@ -56,7 +56,7 @@ const summary = Object.fromEntries(conditions.map((condition) => [condition, Obj
   const group = rows.filter((row) => row.condition === condition && row.family === family);
   return [family, { count: group.length, intercepted: group.filter((row) => row.actual === "ask" || row.actual === "deny").length }];
 }))]));
-await writeRun(path.join(resultsRoot, "X8", "x8-script-inspection-compact-v2"), rows, {
+await writeRun(path.join(resultsRoot, "X8", `x8-script-inspection-compact-${runVersion}`), rows, {
   archive, counts, rowCount: rows.length, conditions: summary,
   attackPayloadCount: new Set(samples.filter((sample) => sample.family === "attack").map((sample) => sample.payload)).size,
   attackCarrierCount: new Set(samples.filter((sample) => sample.family === "attack").map((sample) => sample.carrier)).size,
