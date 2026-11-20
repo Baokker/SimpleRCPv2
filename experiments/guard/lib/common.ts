@@ -12,8 +12,8 @@ export const runtimeRoot = process.env.SIMPLERCP_DATA_DIR ?? defaultRuntimeRoot;
 export const workspaceRoot = path.join(runtimeRoot, "workspace");
 export const dataRoot = path.join(runtimeRoot, "data");
 export const resultsRoot = path.join(projectRoot, "experiments/guard/results-compact");
-export const testedRef = process.env.COMPACT_TESTED_REF ?? "guard-compact-v3";
-if (!["guard-compact-v1", "guard-compact-v2", "guard-compact-v3"].includes(testedRef)) throw new Error("Unknown ComPACT freeze tag");
+export const testedRef = process.env.COMPACT_TESTED_REF ?? "guard-compact-v4";
+if (!["guard-compact-v1", "guard-compact-v2", "guard-compact-v3", "guard-compact-v4"].includes(testedRef)) throw new Error("Unknown ComPACT freeze tag");
 export const runVersion = testedRef.replace("guard-compact-", "");
 
 const git = (...args: string[]) => execFileSync("git", args, { cwd: projectRoot, encoding: "utf8" }).trim();

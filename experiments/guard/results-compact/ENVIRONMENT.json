@@ -1,6 +1,6 @@
 {
-  "testedRef": "guard-compact-v3",
-  "commit": "c4d54e879350ef06fb5117d48c7681d9fa80f583",
+  "testedRef": "guard-compact-v4",
+  "commit": "720e8dea217b6f972c11745c9b1dc698df6f7c94",
   "harnessCommit": "ca7aeb561be9cb7d2a5fd02dcc3e5b284ab642d6",
   "branch": "paper/compact",
   "node": "v22.19.0",
@@ -11,7 +11,7 @@
   "cpuCount": 8,
   "memoryBytes": 17179869184,
   "model": "MiniMax-M3",
-  "supersededEnvironment": "superseded-v2/ENVIRONMENT.json",
+  "supersededEnvironment": "superseded-v3/ENVIRONMENT.json",
   "dataDir": "/Users/baokker/.codex/worktrees/compact/SimpleRCPv2/.test-workspaces/guard-65833",
   "pathAliases": {
     "/platform/data": "/Users/baokker/.codex/worktrees/compact/SimpleRCPv2/.test-workspaces/guard-65833/data"

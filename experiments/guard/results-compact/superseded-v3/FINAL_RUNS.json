@@ -1,0 +1,31 @@
+{
+  "testedRef": "guard-compact-v3",
+  "status": "complete_execution_coverage",
+  "supersededIndex": "superseded-v2/FINAL_RUNS.json",
+  "runs": {
+    "X1": "X1/x1-compact-v3",
+    "X1W": "X1W/x1w-compact-v3",
+    "X2a": "X2a/x2a-compact-v3",
+    "X2b": "X2b/x2b-minimax-compact-v2",
+    "X2b_replay": "X2b/x2b-replay-compact-v3",
+    "X3": "X3/x3-approval-burden-compact-v3",
+    "X4": "X4/x4-minimax-compact-v3",
+    "X5": "X5/x5-performance-compact-v3",
+    "X6_properties": "X6/x6-properties-compact-v3",
+    "X6_runtime": "X6/x6-approval-runtime-compact-v3",
+    "X7": "X7/x7a-compact-v3",
+    "X8": "X8/x8-script-inspection-compact-v3",
+    "X9": "X9/x9-restore-compact-v3",
+    "D4": "D4/d4-member-binding-compact-v3",
+    "D5": "D5/d5-provenance-compact-v3",
+    "Property1": "property1-path-consistency-v3.json",
+    "Preflight": "PREFLIGHT.json",
+    "D5_live": "D5/d5-live-minimax-compact-v2",
+    "D5b_live": "D5/d5-live-strong-compact-v3"
+  },
+  "notes": {
+    "X2b": "The v2 MiniMax run is kept as the recorded input for the v3 offline replay. It was not rerun.",
+    "D5_live": "The v2 live provenance run is kept for the pre-experiment reference; it was not rerun.",
+    "X5": "The first v3 X5 pass ran while X2a was still running and was discarded; the recorded pass ran on an idle machine."
+  }
+}

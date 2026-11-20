@@ -1,0 +1,1480 @@
+{
+  "method": "Two-sided 95% Wilson score interval. For seeded or repeated fixtures, intervals describe observed counts.",
+  "static": {
+    "baselines": {
+      "B0": {
+        "deny": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "ask": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "snapshot": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "allow": {
+          "successes": 185,
+          "total": 185,
+          "proportion": 1.0,
+          "wilson95": [
+            0.9796577571223828,
+            1
+          ]
+        },
+        "intercepted": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "falseBlock": {
+          "successes": 0,
+          "total": 290,
+          "proportion": 0.0,
+          "wilson95": [
+            8.673617379884035e-19,
+            0.01307323628228457
+          ]
+        }
+      },
+      "B1": {
+        "deny": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "ask": {
+          "successes": 26,
+          "total": 185,
+          "proportion": 0.14054054054054055,
+          "wilson95": [
+            0.0977470087990806,
+            0.19795849553996325
+          ]
+        },
+        "snapshot": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "allow": {
+          "successes": 159,
+          "total": 185,
+          "proportion": 0.8594594594594595,
+          "wilson95": [
+            0.8020415044600369,
+            0.9022529912009194
+          ]
+        },
+        "intercepted": {
+          "successes": 26,
+          "total": 185,
+          "proportion": 0.14054054054054055,
+          "wilson95": [
+            0.0977470087990806,
+            0.19795849553996325
+          ]
+        },
+        "falseBlock": {
+          "successes": 0,
+          "total": 290,
+          "proportion": 0.0,
+          "wilson95": [
+            8.673617379884035e-19,
+            0.01307323628228457
+          ]
+        }
+      },
+      "B2": {
+        "deny": {
+          "successes": 20,
+          "total": 185,
+          "proportion": 0.10810810810810811,
+          "wilson95": [
+            0.07108044191598797,
+            0.1610796943934959
+          ]
+        },
+        "ask": {
+          "successes": 80,
+          "total": 185,
+          "proportion": 0.43243243243243246,
+          "wilson95": [
+            0.36313456638508274,
+            0.5044792502200008
+          ]
+        },
+        "snapshot": {
+          "successes": 5,
+          "total": 185,
+          "proportion": 0.02702702702702703,
+          "wilson95": [
+            0.01159838483624824,
+            0.06169833139933571
+          ]
+        },
+        "allow": {
+          "successes": 80,
+          "total": 185,
+          "proportion": 0.43243243243243246,
+          "wilson95": [
+            0.36313456638508274,
+            0.5044792502200008
+          ]
+        },
+        "intercepted": {
+          "successes": 100,
+          "total": 185,
+          "proportion": 0.5405405405405406,
+          "wilson95": [
+            0.46863275133852766,
+            0.6107989586984223
+          ]
+        },
+        "falseBlock": {
+          "successes": 7,
+          "total": 290,
+          "proportion": 0.02413793103448276,
+          "wilson95": [
+            0.011740571540586473,
+            0.04897740505910504
+          ]
+        }
+      },
+      "B3": {
+        "deny": {
+          "successes": 28,
+          "total": 185,
+          "proportion": 0.15135135135135136,
+          "wilson95": [
+            0.10683800629286344,
+            0.21004928738936707
+          ]
+        },
+        "ask": {
+          "successes": 140,
+          "total": 185,
+          "proportion": 0.7567567567567568,
+          "wilson95": [
+            0.6901187839717683,
+            0.8129487129289149
+          ]
+        },
+        "snapshot": {
+          "successes": 15,
+          "total": 185,
+          "proportion": 0.08108108108108109,
+          "wilson95": [
+            0.04974987065026492,
+            0.12945579230125231
+          ]
+        },
+        "allow": {
+          "successes": 2,
+          "total": 185,
+          "proportion": 0.010810810810810811,
+          "wilson95": [
+            0.0029697381686438866,
+            0.03855429405216007
+          ]
+        },
+        "intercepted": {
+          "successes": 168,
+          "total": 185,
+          "proportion": 0.9081081081081082,
+          "wilson95": [
+            0.8577772921901504,
+            0.941835255515146
+          ]
+        },
+        "falseBlock": {
+          "successes": 7,
+          "total": 290,
+          "proportion": 0.02413793103448276,
+          "wilson95": [
+            0.011740571540586473,
+            0.04897740505910504
+          ]
+        }
+      },
+      "F": {
+        "deny": {
+          "successes": 37,
+          "total": 185,
+          "proportion": 0.2,
+          "wilson95": [
+            0.148726706845317,
+            0.26347863888125345
+          ]
+        },
+        "ask": {
+          "successes": 136,
+          "total": 185,
+          "proportion": 0.7351351351351352,
+          "wilson95": [
+            0.6672350299153391,
+            0.7934688882989707
+          ]
+        },
+        "snapshot": {
+          "successes": 10,
+          "total": 185,
+          "proportion": 0.05405405405405406,
+          "wilson95": [
+            0.0296228075522613,
+            0.09662838204128929
+          ]
+        },
+        "allow": {
+          "successes": 2,
+          "total": 185,
+          "proportion": 0.010810810810810811,
+          "wilson95": [
+            0.0029697381686438866,
+            0.03855429405216007
+          ]
+        },
+        "intercepted": {
+          "successes": 173,
+          "total": 185,
+          "proportion": 0.9351351351351351,
+          "wilson95": [
+            0.8900583934232688,
+            0.962508627639994
+          ]
+        },
+        "falseBlock": {
+          "successes": 7,
+          "total": 290,
+          "proportion": 0.02413793103448276,
+          "wilson95": [
+            0.011740571540586473,
+            0.04897740505910504
+          ]
+        }
+      }
+    },
+    "allowlist": {
+      "W1": {
+        "deny": {
+          "successes": 52,
+          "total": 185,
+          "proportion": 0.2810810810810811,
+          "wilson95": [
+            0.22126556778257533,
+            0.34980319801789506
+          ]
+        },
+        "ask": {
+          "successes": 24,
+          "total": 185,
+          "proportion": 0.12972972972972974,
+          "wilson95": [
+            0.0887503054337078,
+            0.1857734095621494
+          ]
+        },
+        "snapshot": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "allow": {
+          "successes": 109,
+          "total": 185,
+          "proportion": 0.5891891891891892,
+          "wilson95": [
+            0.5171820341062585,
+            0.6575677279750314
+          ]
+        },
+        "intercepted": {
+          "successes": 76,
+          "total": 185,
+          "proportion": 0.41081081081081083,
+          "wilson95": [
+            0.3424322720249687,
+            0.48281796589374154
+          ]
+        },
+        "falseBlock": {
+          "successes": 4,
+          "total": 290,
+          "proportion": 0.013793103448275862,
+          "wilson95": [
+            0.005376593609487185,
+            0.0349222085684585
+          ]
+        }
+      },
+      "W2": {
+        "deny": {
+          "successes": 136,
+          "total": 185,
+          "proportion": 0.7351351351351352,
+          "wilson95": [
+            0.6672350299153391,
+            0.7934688882989707
+          ]
+        },
+        "ask": {
+          "successes": 42,
+          "total": 185,
+          "proportion": 0.22702702702702704,
+          "wilson95": [
+            0.17257483996579615,
+            0.29258497911874093
+          ]
+        },
+        "snapshot": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "allow": {
+          "successes": 7,
+          "total": 185,
+          "proportion": 0.03783783783783784,
+          "wilson95": [
+            0.01844742997274769,
+            0.07603107560602292
+          ]
+        },
+        "intercepted": {
+          "successes": 178,
+          "total": 185,
+          "proportion": 0.9621621621621622,
+          "wilson95": [
+            0.9239689243939772,
+            0.9815525700272524
+          ]
+        },
+        "falseBlock": {
+          "successes": 27,
+          "total": 290,
+          "proportion": 0.09310344827586207,
+          "wilson95": [
+            0.06477564654793491,
+            0.13207015953006218
+          ]
+        }
+      }
+    },
+    "ablation": {
+      "F": {
+        "deny": {
+          "successes": 37,
+          "total": 185,
+          "proportion": 0.2,
+          "wilson95": [
+            0.148726706845317,
+            0.26347863888125345
+          ]
+        },
+        "ask": {
+          "successes": 136,
+          "total": 185,
+          "proportion": 0.7351351351351352,
+          "wilson95": [
+            0.6672350299153391,
+            0.7934688882989707
+          ]
+        },
+        "snapshot": {
+          "successes": 10,
+          "total": 185,
+          "proportion": 0.05405405405405406,
+          "wilson95": [
+            0.0296228075522613,
+            0.09662838204128929
+          ]
+        },
+        "allow": {
+          "successes": 2,
+          "total": 185,
+          "proportion": 0.010810810810810811,
+          "wilson95": [
+            0.0029697381686438866,
+            0.03855429405216007
+          ]
+        },
+        "intercepted": {
+          "successes": 173,
+          "total": 185,
+          "proportion": 0.9351351351351351,
+          "wilson95": [
+            0.8900583934232688,
+            0.962508627639994
+          ]
+        },
+        "falseBlock": {
+          "successes": 7,
+          "total": 290,
+          "proportion": 0.02413793103448276,
+          "wilson95": [
+            0.011740571540586473,
+            0.04897740505910504
+          ]
+        }
+      },
+      "F+S": {
+        "deny": {
+          "successes": 37,
+          "total": 185,
+          "proportion": 0.2,
+          "wilson95": [
+            0.148726706845317,
+            0.26347863888125345
+          ]
+        },
+        "ask": {
+          "successes": 136,
+          "total": 185,
+          "proportion": 0.7351351351351352,
+          "wilson95": [
+            0.6672350299153391,
+            0.7934688882989707
+          ]
+        },
+        "snapshot": {
+          "successes": 10,
+          "total": 185,
+          "proportion": 0.05405405405405406,
+          "wilson95": [
+            0.0296228075522613,
+            0.09662838204128929
+          ]
+        },
+        "allow": {
+          "successes": 2,
+          "total": 185,
+          "proportion": 0.010810810810810811,
+          "wilson95": [
+            0.0029697381686438866,
+            0.03855429405216007
+          ]
+        },
+        "intercepted": {
+          "successes": 173,
+          "total": 185,
+          "proportion": 0.9351351351351351,
+          "wilson95": [
+            0.8900583934232688,
+            0.962508627639994
+          ]
+        },
+        "falseBlock": {
+          "successes": 137,
+          "total": 290,
+          "proportion": 0.4724137931034483,
+          "wilson95": [
+            0.4156912455525707,
+            0.529857622656107
+          ]
+        }
+      },
+      "F-capability": {
+        "deny": {
+          "successes": 36,
+          "total": 185,
+          "proportion": 0.1945945945945946,
+          "wilson95": [
+            0.1440024155742985,
+            0.2576120354806786
+          ]
+        },
+        "ask": {
+          "successes": 139,
+          "total": 185,
+          "proportion": 0.7513513513513513,
+          "wilson95": [
+            0.6843793331666411,
+            0.8080972690624485
+          ]
+        },
+        "snapshot": {
+          "successes": 0,
+          "total": 185,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.020342242877617298
+          ]
+        },
+        "allow": {
+          "successes": 10,
+          "total": 185,
+          "proportion": 0.05405405405405406,
+          "wilson95": [
+            0.0296228075522613,
+            0.09662838204128929
+          ]
+        },
+        "intercepted": {
+          "successes": 175,
+          "total": 185,
+          "proportion": 0.9459459459459459,
+          "wilson95": [
+            0.9033716179587108,
+            0.9703771924477387
+          ]
+        },
+        "falseBlock": {
+          "successes": 26,
+          "total": 290,
+          "proportion": 0.0896551724137931,
+          "wilson95": [
+            0.061917167197992506,
+            0.1281222474060893
+          ]
+        }
+      },
+      "F-reversibility": {
+        "deny": {
+          "successes": 37,
+          "total": 185,
+          "proportion": 0.2,
+          "wilson95": [
+            0.148726706845317,
+            0.26347863888125345
+          ]
+        },
+        "ask": {
+          "successes": 129,
+          "total": 185,
+          "proportion": 0.6972972972972973,
+          "wilson95": [
+            0.6276345934579994,
+            0.7589330620551571
+          ]
+        },
+        "snapshot": {
+          "successes": 10,
+          "total": 185,
+          "proportion": 0.05405405405405406,
+          "wilson95": [
+            0.0296228075522613,
+            0.09662838204128929
+          ]
+        },
+        "allow": {
+          "successes": 9,
+          "total": 185,
+          "proportion": 0.04864864864864865,
+          "wilson95": [
+            0.025802366653230144,
+            0.08985792826872711
+          ]
+        },
+        "intercepted": {
+          "successes": 166,
+          "total": 185,
+          "proportion": 0.8972972972972973,
+          "wilson95": [
+            0.8451704714699386,
+            0.9332602868921711
+          ]
+        },
+        "falseBlock": {
+          "successes": 7,
+          "total": 290,
+          "proportion": 0.02413793103448276,
+          "wilson95": [
+            0.011740571540586473,
+            0.04897740505910504
+          ]
+        }
+      },
+      "F-zone": {
+        "deny": {
+          "successes": 23,
+          "total": 185,
+          "proportion": 0.12432432432432433,
+          "wilson95": [
+            0.08429024804030347,
+            0.17964257228396038
+          ]
+        },
+        "ask": {
+          "successes": 127,
+          "total": 185,
+          "proportion": 0.6864864864864865,
+          "wilson95": [
+            0.6164169546186546,
+            0.7489689115513152
+          ]
+        },
+        "snapshot": {
+          "successes": 16,
+          "total": 185,
+          "proportion": 0.08648648648648649,
+          "wilson95": [
+            0.053935745073525665,
+            0.1358608125495849
+          ]
+        },
+        "allow": {
+          "successes": 19,
+          "total": 185,
+          "proportion": 0.10270270270270271,
+          "wilson95": [
+            0.06673971310782904,
+            0.1548295285300615
+          ]
+        },
+        "intercepted": {
+          "successes": 150,
+          "total": 185,
+          "proportion": 0.8108108108108109,
+          "wilson95": [
+            0.7482707259835428,
+            0.8607057176330737
+          ]
+        },
+        "falseBlock": {
+          "successes": 7,
+          "total": 290,
+          "proportion": 0.02413793103448276,
+          "wilson95": [
+            0.011740571540586473,
+            0.04897740505910504
+          ]
+        }
+      }
+    }
+  },
+  "compactAllBenignInterception": {
+    "successes": 248,
+    "total": 532,
+    "proportion": 0.46616541353383456,
+    "wilson95": [
+      0.4241692811372884,
+      0.508646667671095
+    ]
+  },
+  "terminalOnlyAgentShareOfMisses": {
+    "successes": 80,
+    "total": 85,
+    "proportion": 0.9411764705882353,
+    "wilson95": [
+      0.8695856154916024,
+      0.9746148399665875
+    ]
+  },
+  "property1": {
+    "sameFeatures": {
+      "successes": 0,
+      "total": 53272,
+      "proportion": 0.0,
+      "wilson95": [
+        0,
+        7.210508019217983e-05
+      ]
+    },
+    "byLevel": {
+      "viewer": {
+        "online": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        },
+        "offline": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        }
+      },
+      "contributor": {
+        "online": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        },
+        "offline": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        }
+      },
+      "maintainer": {
+        "online": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        },
+        "offline": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        }
+      },
+      "owner": {
+        "online": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        },
+        "offline": {
+          "successes": 0,
+          "total": 6659,
+          "proportion": 0.0,
+          "wilson95": [
+            0,
+            0.0005765496364330502
+          ]
+        }
+      }
+    },
+    "multiline": {
+      "successes": 2529,
+      "total": 32814,
+      "proportion": 0.07707076247942951,
+      "wilson95": [
+        0.07423433650230984,
+        0.0800061995540366
+      ]
+    }
+  },
+  "x6": {
+    "properties": {
+      "monotonic": {
+        "successes": 0,
+        "total": 10000,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.00038399837067659573
+        ]
+      },
+      "metadataDeny": {
+        "successes": 0,
+        "total": 10000,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.00038399837067659573
+        ]
+      },
+      "llmFloor": {
+        "successes": 0,
+        "total": 10000,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.00038399837067659573
+        ]
+      },
+      "strictestSubcommand": {
+        "successes": 0,
+        "total": 10000,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.00038399837067659573
+        ]
+      }
+    },
+    "compositionalityBySourceAndLevel": {
+      "terminal/viewer": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "terminal/contributor": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "terminal/maintainer": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "terminal/owner": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "agent/viewer": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "agent/contributor": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "agent/maintainer": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      },
+      "agent/owner": {
+        "successes": 0,
+        "total": 1250,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.0030637516359582058
+        ]
+      }
+    },
+    "approvalLifecycleFailures": {
+      "successes": 0,
+      "total": 500,
+      "proportion": 0.0,
+      "wilson95": [
+        4.336808689942018e-19,
+        0.007624340461552241
+      ]
+    }
+  },
+  "x3": {
+    "no-snapshots|ceiling-on": {
+      "approvals": {
+        "successes": 789,
+        "total": 1650,
+        "proportion": 0.4781818181818182,
+        "wilson95": [
+          0.4541579424117787,
+          0.5023070502778223
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 114,
+        "total": 789,
+        "proportion": 0.1444866920152091,
+        "wilson95": [
+          0.12167595306945585,
+          0.17074248221966848
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 675,
+        "total": 1650,
+        "proportion": 0.4090909090909091,
+        "wilson95": [
+          0.38560532574402484,
+          0.43299881046264566
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 0,
+        "total": 1650,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.002322749136687719
+        ]
+      }
+    },
+    "snapshots|ceiling-on": {
+      "approvals": {
+        "successes": 477,
+        "total": 1650,
+        "proportion": 0.28909090909090907,
+        "wilson95": [
+          0.2677266164568975,
+          0.311434979542578
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 114,
+        "total": 477,
+        "proportion": 0.2389937106918239,
+        "wilson95": [
+          0.2029035230380176,
+          0.2792542746471188
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 363,
+        "total": 1650,
+        "proportion": 0.22,
+        "wilson95": [
+          0.2006752168758016,
+          0.24062552264074355
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 0,
+        "total": 1650,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.002322749136687719
+        ]
+      }
+    },
+    "snapshots-memory|ceiling-on": {
+      "approvals": {
+        "successes": 477,
+        "total": 1650,
+        "proportion": 0.28909090909090907,
+        "wilson95": [
+          0.2677266164568975,
+          0.311434979542578
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 114,
+        "total": 477,
+        "proportion": 0.2389937106918239,
+        "wilson95": [
+          0.2029035230380176,
+          0.2792542746471188
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 363,
+        "total": 1650,
+        "proportion": 0.22,
+        "wilson95": [
+          0.2006752168758016,
+          0.24062552264074355
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 0,
+        "total": 1650,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.002322749136687719
+        ]
+      }
+    },
+    "snapshots-memory-owner-self|ceiling-on": {
+      "approvals": {
+        "successes": 472,
+        "total": 1650,
+        "proportion": 0.28606060606060607,
+        "wilson95": [
+          0.2647717161095937,
+          0.3083433510967709
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 114,
+        "total": 472,
+        "proportion": 0.24152542372881355,
+        "wilson95": [
+          0.20509909052374614,
+          0.28212507736460984
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 358,
+        "total": 1650,
+        "proportion": 0.21696969696969698,
+        "wilson95": [
+          0.19775116579756777,
+          0.23750304492586635
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 5,
+        "total": 1650,
+        "proportion": 0.0030303030303030303,
+        "wilson95": [
+          0.0012950376075726092,
+          0.007074240322226092
+        ]
+      }
+    },
+    "no-snapshots|ceiling-off": {
+      "approvals": {
+        "successes": 775,
+        "total": 1650,
+        "proportion": 0.4696969696969697,
+        "wilson95": [
+          0.44571409598323797,
+          0.4938206160856522
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 115,
+        "total": 775,
+        "proportion": 0.14838709677419354,
+        "wilson95": [
+          0.12509554243617033,
+          0.17514715288050187
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 660,
+        "total": 1650,
+        "proportion": 0.4,
+        "wilson95": [
+          0.3766205459545144,
+          0.4238440038728232
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 1,
+        "total": 1650,
+        "proportion": 0.0006060606060606061,
+        "wilson95": [
+          0.0001069925910654071,
+          0.0034250623042445085
+        ]
+      }
+    },
+    "snapshots|ceiling-off": {
+      "approvals": {
+        "successes": 463,
+        "total": 1650,
+        "proportion": 0.2806060606060606,
+        "wilson95": [
+          0.25945591480666025,
+          0.30277540057210445
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 115,
+        "total": 463,
+        "proportion": 0.24838012958963282,
+        "wilson95": [
+          0.2112018413852484,
+          0.28969938407876644
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 348,
+        "total": 1650,
+        "proportion": 0.2109090909090909,
+        "wilson95": [
+          0.191907809162567,
+          0.23125334397464514
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 1,
+        "total": 1650,
+        "proportion": 0.0006060606060606061,
+        "wilson95": [
+          0.0001069925910654071,
+          0.0034250623042445085
+        ]
+      }
+    },
+    "snapshots-memory|ceiling-off": {
+      "approvals": {
+        "successes": 463,
+        "total": 1650,
+        "proportion": 0.2806060606060606,
+        "wilson95": [
+          0.25945591480666025,
+          0.30277540057210445
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 115,
+        "total": 463,
+        "proportion": 0.24838012958963282,
+        "wilson95": [
+          0.2112018413852484,
+          0.28969938407876644
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 348,
+        "total": 1650,
+        "proportion": 0.2109090909090909,
+        "wilson95": [
+          0.191907809162567,
+          0.23125334397464514
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 1,
+        "total": 1650,
+        "proportion": 0.0006060606060606061,
+        "wilson95": [
+          0.0001069925910654071,
+          0.0034250623042445085
+        ]
+      }
+    },
+    "snapshots-memory-owner-self|ceiling-off": {
+      "approvals": {
+        "successes": 458,
+        "total": 1650,
+        "proportion": 0.2775757575757576,
+        "wilson95": [
+          0.2565043899424096,
+          0.29968039664324425
+        ]
+      },
+      "denials": {
+        "successes": 108,
+        "total": 1650,
+        "proportion": 0.06545454545454546,
+        "wilson95": [
+          0.054501364563207234,
+          0.07842640650467775
+        ]
+      },
+      "autoEligibleAmongApprovals": {
+        "successes": 115,
+        "total": 458,
+        "proportion": 0.25109170305676853,
+        "wilson95": [
+          0.21355920128479178,
+          0.29276489403961914
+        ]
+      },
+      "lowerBoundApprovals": {
+        "successes": 343,
+        "total": 1650,
+        "proportion": 0.20787878787878789,
+        "wilson95": [
+          0.18898855287599697,
+          0.2281260714681042
+        ]
+      },
+      "maliciousAutomaticReleaseShareOfWorkload": {
+        "successes": 6,
+        "total": 1650,
+        "proportion": 0.0036363636363636364,
+        "wilson95": [
+          0.001667611221320908,
+          0.007910972467099993
+        ]
+      }
+    }
+  },
+  "x8": {
+    "N": {
+      "attack": {
+        "successes": 38,
+        "total": 252,
+        "proportion": 0.15079365079365079,
+        "wilson95": [
+          0.11187549656205793,
+          0.20019846982605127
+        ]
+      },
+      "trojan": {
+        "successes": 0,
+        "total": 24,
+        "proportion": 0.0,
+        "wilson95": [
+          1.3877787807814457e-17,
+          0.13797620467498017
+        ]
+      },
+      "evasion": {
+        "successes": 0,
+        "total": 32,
+        "proportion": 0.0,
+        "wilson95": [
+          0,
+          0.1071791982550706
+        ]
+      },
+      "benign": {
+        "successes": 8,
+        "total": 112,
+        "proportion": 0.07142857142857142,
+        "wilson95": [
+          0.03663590189789057,
+          0.13464525273091846
+        ]
+      }
+    },
+    "M0": {
+      "attack": {
+        "successes": 252,
+        "total": 252,
+        "proportion": 1.0,
+        "wilson95": [
+          0.984985002671571,
+          1
+        ]
+      },
+      "trojan": {
+        "successes": 6,
+        "total": 24,
+        "proportion": 0.25,
+        "wilson95": [
+          0.11999366228595004,
+          0.44899444005154004
+        ]
+      },
+      "evasion": {
+        "successes": 20,
+        "total": 32,
+        "proportion": 0.625,
+        "wilson95": [
+          0.4525440735307745,
+          0.7706611269054578
+        ]
+      },
+      "benign": {
+        "successes": 8,
+        "total": 112,
+        "proportion": 0.07142857142857142,
+        "wilson95": [
+          0.03663590189789057,
+          0.13464525273091846
+        ]
+      }
+    },
+    "M": {
+      "attack": {
+        "successes": 252,
+        "total": 252,
+        "proportion": 1.0,
+        "wilson95": [
+          0.984985002671571,
+          1
+        ]
+      },
+      "trojan": {
+        "successes": 24,
+        "total": 24,
+        "proportion": 1.0,
+        "wilson95": [
+          0.8620237953250198,
+          1
+        ]
+      },
+      "evasion": {
+        "successes": 20,
+        "total": 32,
+        "proportion": 0.625,
+        "wilson95": [
+          0.4525440735307745,
+          0.7706611269054578
+        ]
+      },
+      "benign": {
+        "successes": 8,
+        "total": 112,
+        "proportion": 0.07142857142857142,
+        "wilson95": [
+          0.03663590189789057,
+          0.13464525273091846
+        ]
+      }
+    }
+  },
+  "x4": {
+    "precision": {
+      "successes": 18,
+      "total": 18,
+      "proportion": 1.0,
+      "wilson95": [
+        0.8241207763533425,
+        1
+      ]
+    },
+    "recall": {
+      "successes": 18,
+      "total": 18,
+      "proportion": 1.0,
+      "wilson95": [
+        0.8241207763533425,
+        1
+      ]
+    },
+    "ineligibleReleases": {
+      "successes": 0,
+      "total": 24,
+      "proportion": 0.0,
+      "wilson95": [
+        1.3877787807814457e-17,
+        0.13797620467498017
+      ]
+    }
+  },
+  "x9": {
+    "correct": {
+      "successes": 7,
+      "total": 7,
+      "proportion": 1.0,
+      "wilson95": [
+        0.6456695649333126,
+        1
+      ]
+    }
+  },
+  "d5": {
+    "extraControlApprovals": {
+      "successes": 0,
+      "total": 24,
+      "proportion": 0.0,
+      "wilson95": [
+        1.3877787807814457e-17,
+        0.13797620467498017
+      ]
+    },
+    "boundaryChanges": {
+      "successes": 0,
+      "total": 20,
+      "proportion": 0.0,
+      "wilson95": [
+        0,
+        0.16112515805281938
+      ]
+    }
+  }
+}
