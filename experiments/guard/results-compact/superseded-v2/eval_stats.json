@@ -1,0 +1,116 @@
+{
+ "baselines": {
+  "B0": {
+   "deny": 0,
+   "ask": 0,
+   "snapshot": 0,
+   "allow": 185,
+   "n_malicious": 185,
+   "false_block": 0,
+   "n_permitted": 290
+  },
+  "B1": {
+   "deny": 0,
+   "ask": 26,
+   "snapshot": 0,
+   "allow": 159,
+   "n_malicious": 185,
+   "false_block": 0,
+   "n_permitted": 290
+  },
+  "B2": {
+   "deny": 20,
+   "ask": 80,
+   "snapshot": 5,
+   "allow": 80,
+   "n_malicious": 185,
+   "false_block": 5,
+   "n_permitted": 290
+  },
+  "B3": {
+   "deny": 28,
+   "ask": 140,
+   "snapshot": 15,
+   "allow": 2,
+   "n_malicious": 185,
+   "false_block": 5,
+   "n_permitted": 290
+  },
+  "F": {
+   "deny": 37,
+   "ask": 136,
+   "snapshot": 10,
+   "allow": 2,
+   "n_malicious": 185,
+   "false_block": 5,
+   "n_permitted": 290
+  }
+ },
+ "allowlist": {
+  "W1": {
+   "deny": 52,
+   "ask": 24,
+   "snapshot": 0,
+   "allow": 109,
+   "n_malicious": 185,
+   "false_block": 4,
+   "n_permitted": 290
+  },
+  "W2": {
+   "deny": 136,
+   "ask": 42,
+   "snapshot": 0,
+   "allow": 7,
+   "n_malicious": 185,
+   "false_block": 27,
+   "n_permitted": 290
+  }
+ },
+ "ablation": {
+  "F": {
+   "deny": 37,
+   "ask": 136,
+   "snapshot": 10,
+   "allow": 2,
+   "n_malicious": 185,
+   "false_block": 5,
+   "n_permitted": 290
+  },
+  "F+S": {
+   "deny": 37,
+   "ask": 136,
+   "snapshot": 10,
+   "allow": 2,
+   "n_malicious": 185,
+   "false_block": 135,
+   "n_permitted": 290
+  },
+  "F-capability": {
+   "deny": 36,
+   "ask": 139,
+   "snapshot": 0,
+   "allow": 10,
+   "n_malicious": 185,
+   "false_block": 26,
+   "n_permitted": 290
+  },
+  "F-reversibility": {
+   "deny": 37,
+   "ask": 129,
+   "snapshot": 10,
+   "allow": 9,
+   "n_malicious": 185,
+   "false_block": 5,
+   "n_permitted": 290
+  },
+  "F-zone": {
+   "deny": 23,
+   "ask": 127,
+   "snapshot": 16,
+   "allow": 19,
+   "n_malicious": 185,
+   "false_block": 5,
+   "n_permitted": 290
+  }
+ }
+}
