@@ -4,6 +4,7 @@ import { parse as parseShell } from "shell-quote";
 import { projectRoot, resultsRoot } from "./common.js";
 import { taskDefinitions } from "../x2-agent-e2e/task-runtime.js";
 import { attackCalls, normalCalls } from "../x2-agent-e2e/run-deterministic.js";
+import { DRAFT_FILE, allVariants, variantPayloads } from "../x2-agent-e2e/d5b-scenario.js";
 
 // Preflight for the execution experiments (X2a, X2b, D5 live). It inspects task definitions, payloads and
 // harness sources before anything runs. The run is blocked (exit code 1) when any of these fails:
@@ -19,7 +20,7 @@ const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost"]);
 // The only non-local endpoint: the MiniMax OpenAI-compatible base URL, supplied through MINIMAX_BASE_URL
 // (default below) and used only by the real-model runners (X2b, D5 live).
 export const ALLOWED_PROVIDER_URLS = ["https://api.minimaxi.com/v1"];
-const PROVIDER_FILES = new Set(["x2-agent-e2e/run.ts", "x2-agent-e2e/run-d5-live.ts"]);
+const PROVIDER_FILES = new Set(["x2-agent-e2e/run.ts", "x2-agent-e2e/run-d5-live.ts", "x2-agent-e2e/run-d5b-strong.ts"]);
 
 interface Finding { check: "network" | "write-target" | "env-read"; where: string; detail: string }
 const findings: Finding[] = [];
@@ -175,6 +176,28 @@ async function scanTaskPlans() {
   return planned;
 }
 
+async function scanD5bPayloads() {
+  const workspace = path.join(experimentData, "preflight-check", "d5b", "data", "workspaces", "demo");
+  const allowedFiles = new Set([DRAFT_FILE, "README.md", "notes-bob.md", "package.json", "sum.cjs", "test.cjs", "cleanup.sh", "CHECKLIST.md", "SUMMARY.md"]);
+  let count = 0;
+  for (const payload of variantPayloads()) {
+    const where = `d5b/${payload.variant}/${payload.where}`;
+    count += 1;
+    checkNetworkText(where, payload.text, false);
+    for (const match of payload.text.matchAll(/(?:^|[\s`"'(])((?:\.\.\/|\/)[^\s`"')]+|[A-Za-z0-9_.-]+\.(?:txt|md|json|cjs|sh))/g)) {
+      const target = match[1]!;
+      if (target.startsWith("../") || target.startsWith("/")) { fail("write-target", where, `payload path ${target} is outside the workspace`); continue; }
+      if (target === ".env" || target.startsWith(".env.")) { fail("env-read", where, `payload references ${target}`); continue; }
+      if (!allowedFiles.has(target)) fail("write-target", where, `payload references unexpected workspace file ${target}`);
+    }
+    for (const match of payload.text.matchAll(/\b(rm|unlink|truncate|mv|cp|shred)\s+(?:-\S+\s+)*([^\s`"';|]+)/g)) {
+      const target = match[2]!;
+      if (target !== DRAFT_FILE) fail("write-target", where, `${match[1]} operand ${target} is not ${DRAFT_FILE}`);
+    }
+  }
+  return { payloads: count, variants: allVariants.length, workspace };
+}
+
 async function scanTaskFiles() {
   let count = 0;
   for (const file of (await walk(path.join(guardRoot, "tasks/v2"))).filter((value) => value.endsWith(".sh"))) {
@@ -196,12 +219,13 @@ async function main() {
   const sources = await scanSources();
   const plans = await scanTaskPlans();
   const scripts = await scanTaskFiles();
+  const d5b = await scanD5bPayloads();
   const result = {
     status: findings.length ? "failed" : "passed",
     checkedAt: new Date().toISOString(),
-    scope: { sourceFiles: sources, plannedHarnessCalls: plans, taskScripts: scripts, tasks: taskDefinitions.length },
+    scope: { sourceFiles: sources, plannedHarnessCalls: plans, taskScripts: scripts, tasks: taskDefinitions.length, d5bVariants: d5b.variants, d5bPayloads: d5b.payloads, d5bWorkspace: d5b.workspace },
     allowedNonLocalEndpoints: ALLOWED_PROVIDER_URLS.map((url) => ({ url, usedBy: [...PROVIDER_FILES], reason: "MiniMax model provider for the real-model conditions only" })),
-    rules: ["every network address is 127.0.0.1 or localhost, except the listed provider URL", "every write or delete target resolves inside .experiment-data/", "no path reads a .env file outside the experiment workspace"],
+    rules: ["every network address is 127.0.0.1 or localhost, except the listed provider URL", "every write or delete target resolves inside .experiment-data/", "no path reads a .env file outside the experiment workspace", "every D5b payload mentions only allowed workspace files and targets alice-draft.txt for deletion"],
     findings, notes
   };
   await fs.mkdir(resultsRoot, { recursive: true });
