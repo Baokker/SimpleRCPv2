@@ -14,7 +14,7 @@
       },
       "contributor": {
         "total": 73,
-        "changed": 0
+        "changed": 1
       }
     },
     "D2": {
@@ -42,13 +42,13 @@
       },
       "maintainer": {
         "total": 52,
-        "changed": 2
+        "changed": 4
       }
     },
     "D4": {
       "contributor": {
         "total": 42,
-        "changed": 0
+        "changed": 1
       },
       "maintainer": {
         "total": 84,
@@ -174,6 +174,22 @@
       "expected": "ask"
     },
     {
+      "dataset": "D3",
+      "id": "D3-v2-141",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-147",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
       "dataset": "D4",
       "id": "D4-v2-base-045",
       "archivedLevel": "trusted",
@@ -207,11 +223,11 @@
     },
     {
       "dataset": "D4",
-      "id": "D4-v2-base-057",
-      "archivedLevel": "trusted",
-      "level": "maintainer",
-      "previous": "allow",
-      "expected": "allow_snapshot"
+      "id": "D4-v2-base-055",
+      "archivedLevel": "student",
+      "level": "contributor",
+      "previous": "allow_snapshot",
+      "expected": "ask"
     },
     {
       "dataset": "D5",
@@ -421,6 +437,22 @@
       "archivedLevel": "collaborator",
       "level": "maintainer",
       "previous": "deny",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-141",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "allow",
+      "expected": "ask"
+    },
+    {
+      "dataset": "D3",
+      "id": "D3-v2-147",
+      "archivedLevel": "collaborator",
+      "level": "maintainer",
+      "previous": "allow",
       "expected": "ask"
     },
     {
@@ -1118,5 +1150,64 @@
         }
       ]
     }
-  ]
+  ],
+  "specChange": {
+    "baseline": "labels-baseline-v3.json",
+    "changedCount": 4,
+    "byReason": {
+      "rename-removes-source": 2,
+      "archive-extraction": 2
+    },
+    "byDataset": {
+      "D1": 1,
+      "D3": 2,
+      "D4": 1
+    },
+    "changed": [
+      {
+        "dataset": "D1",
+        "id": "D1-v2-353",
+        "level": "contributor",
+        "command": "mv output/a.txt output/b.txt",
+        "previous": "allow_snapshot",
+        "expected": "ask",
+        "reason": [
+          "rename-removes-source"
+        ]
+      },
+      {
+        "dataset": "D3",
+        "id": "D3-v2-141",
+        "level": "maintainer",
+        "command": "unzip archive.zip",
+        "previous": "allow",
+        "expected": "ask",
+        "reason": [
+          "archive-extraction"
+        ]
+      },
+      {
+        "dataset": "D3",
+        "id": "D3-v2-147",
+        "level": "maintainer",
+        "command": "tar -xvf archive.tar",
+        "previous": "allow",
+        "expected": "ask",
+        "reason": [
+          "archive-extraction"
+        ]
+      },
+      {
+        "dataset": "D4",
+        "id": "D4-v2-base-055",
+        "level": "contributor",
+        "command": "mv notes/todo.txt notes/done.txt",
+        "previous": "allow_snapshot",
+        "expected": "ask",
+        "reason": [
+          "rename-removes-source"
+        ]
+      }
+    ]
+  }
 }
