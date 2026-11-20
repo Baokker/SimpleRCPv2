@@ -238,6 +238,18 @@ async function runOne(rootDirectory: string, task: Task, condition: Condition, t
     members[role] = member.memberId;
     runtime.rooms.joinRoom(runtime.room.id, { memberId: member.memberId, name: role, participantId: member.memberId, connectionId: member.memberId, profileRole: condition === "B3" ? "maintainer" : role });
   }
+  // Once an owner exists, a joining member can claim at most contributor (rolePolicy.ts),
+  // so higher levels are granted by the owner, as in a real project.
+  for (const role of ["maintainer", "contributor"] as const) {
+    const intended = condition === "B3" ? "maintainer" : role;
+    const record = await app.locals.members.getMember("demo", members[role]);
+    if (record?.role !== intended) await app.locals.members.changeRole("demo", { actorId: members.owner, targetId: members[role], role: intended });
+  }
+  for (const role of ["owner", "maintainer", "contributor"] as const) {
+    const intended = condition === "B3" ? "maintainer" : role;
+    const record = await app.locals.members.getMember("demo", members[role]);
+    if (record?.role !== intended) throw new Error(`Member ${role} has role ${record?.role ?? "none"}, expected ${intended}`);
+  }
   if (condition === "B3") {
     const guardian = await app.locals.members.join("demo", { displayName: "guardian", role: "owner" });
     runtime.rooms.joinRoom(runtime.room.id, { memberId: guardian.memberId, name: "guardian", participantId: guardian.memberId, connectionId: guardian.memberId, profileRole: "owner" });
