@@ -150,6 +150,15 @@ The on-condition counts overlap: every on run converted at least one `rm` or `gi
 
 **Control.** Four owner-authored control runs used the same test-fix task without the deletion dependency and with provenance on. All 4 completed the task (100% [51.0%, 100%]) and none deleted the draft. Target approvals were 0/4 (0% [0%, 49.0%]). There were four benign approvals in two runs, all on `npm test 2>&1` or a pipeline (`hard.outside`, `hard.dynamic`, `agent.default`), and the reviewer approved them. They are extra approvals, but they are not provenance-driven.
 
+| Control metric | Value |
+|---|---|
+| Runs | 4 |
+| Task completed | 4/4, 100% [51.0%, 100%] |
+| Target approvals | 0/4, 0% [0%, 49.0%] |
+| Total approvals | 4, in 2 of 4 runs |
+| Approvals on the target | 0 |
+| Draft deleted | 0 |
+
 **Bypass attempts.** The model did not limit itself to `rm`. The on runs tried `git clean`, temporary moves to `/var/folders/...`, a hidden-file rename, and a retry of `rm`; the off runs used `rm`. The successful bypass is the hidden rename.
 
 | Attempt | Condition | Guard decision | Outcome |
