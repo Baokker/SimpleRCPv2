@@ -46,28 +46,40 @@ async function classify(job: typeof jobs[number]) {
     ]
   });
   if (Buffer.byteLength(body) > 16_384) throw new Error("Judgment input exceeds the request size limit");
-  calls += 1;
-  await ledger.appendFile(`${JSON.stringify({ id, event: "attempt" })}\n`);
-  const start = performance.now();
-  const response = await fetch(endpoint, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, redirect: "error", signal: AbortSignal.timeout(45_000), body });
-  if (!response.ok) {
-    await ledger.appendFile(`${JSON.stringify({ id, event: "http", status: response.status })}\n`);
-    throw new Error(`MiniMax returned HTTP ${response.status}`);
+  // A transient provider or response failure must not abort the whole classification set. Each
+  // attempt is metered separately, so a retry is charged like any other call.
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    calls += 1;
+    await ledger.appendFile(`${JSON.stringify({ id, event: "attempt", attempt })}\n`);
+    const start = performance.now();
+    try {
+      const response = await fetch(endpoint, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, redirect: "error", signal: AbortSignal.timeout(45_000), body });
+      if (!response.ok) {
+        await ledger.appendFile(`${JSON.stringify({ id, event: "http", status: response.status })}\n`);
+        throw new Error(`MiniMax returned HTTP ${response.status}`);
+      }
+      const payload = await response.json() as { usage?: Usage; choices?: Array<{ message?: { tool_calls?: Array<{ function?: { name: string; arguments: string } }> } }> };
+      const inputTokens = payload.usage?.prompt_tokens;
+      const outputTokens = payload.usage?.completion_tokens;
+      const cacheReadTokens = payload.usage?.prompt_tokens_details?.cached_tokens ?? 0;
+      if (inputTokens === undefined || outputTokens === undefined || ![inputTokens, outputTokens, cacheReadTokens].every((count) => Number.isInteger(count) && count >= 0) || cacheReadTokens > inputTokens) throw new Error("Missing or invalid token usage");
+      const costCny = ((inputTokens - cacheReadTokens) * rates.cacheMissInput + cacheReadTokens * rates.cacheHitInput + outputTokens * rates.output) / 1_000_000;
+      chargedCny += costCny;
+      await ledger.appendFile(`${JSON.stringify({ id, event: "usage", inputTokens, outputTokens, cacheReadTokens, costCny })}\n`);
+      const content = payload.choices?.[0]?.message?.tool_calls?.find((call) => call.function?.name === "submit_judgment")?.function?.arguments;
+      if (!content) throw new Error("Missing judgment tool call");
+      const judgment = JSON.parse(content) as Judgment;
+      if (!["low", "medium", "high"].includes(judgment.risk) || !Number.isFinite(judgment.confidence) || judgment.confidence < 0 || judgment.confidence > 1) throw new Error("Invalid judgment");
+      const final = applyLlmJudgment(decision, "auto", "terminal", { ...judgment, reason: "X4 judgment" });
+      return { id, condition: model, model, dataset: "D6", level: item.actor.level, source: "terminal", input: item.input, malicious: item.malicious, expected: item.expected, actual: decision.action, matchedRules: decision.matchedRules, autoEligible: decision.autoEligible, finalAction: final.action, llmApplied: final.llm?.applied ?? false, risk: judgment.risk, confidence: judgment.confidence, latencyMs: performance.now() - start, inputTokens, outputTokens, cacheReadTokens, costCny };
+    } catch (error) {
+      lastError = error;
+      await ledger.appendFile(`${JSON.stringify({ id, event: "retry", attempt, message: String(error instanceof Error ? error.message : error).slice(0, 200) })}\n`);
+      await new Promise((resolve) => setTimeout(resolve, 2_000 * attempt));
+    }
   }
-  const payload = await response.json() as { usage?: Usage; choices?: Array<{ message?: { tool_calls?: Array<{ function?: { name: string; arguments: string } }> } }> };
-  const inputTokens = payload.usage?.prompt_tokens;
-  const outputTokens = payload.usage?.completion_tokens;
-  const cacheReadTokens = payload.usage?.prompt_tokens_details?.cached_tokens ?? 0;
-  if (inputTokens === undefined || outputTokens === undefined || ![inputTokens, outputTokens, cacheReadTokens].every((count) => Number.isInteger(count) && count >= 0) || cacheReadTokens > inputTokens) throw new Error("Missing or invalid token usage");
-  const costCny = ((inputTokens - cacheReadTokens) * rates.cacheMissInput + cacheReadTokens * rates.cacheHitInput + outputTokens * rates.output) / 1_000_000;
-  chargedCny += costCny;
-  await ledger.appendFile(`${JSON.stringify({ id, event: "usage", inputTokens, outputTokens, cacheReadTokens, costCny })}\n`);
-  const content = payload.choices?.[0]?.message?.tool_calls?.find((call) => call.function?.name === "submit_judgment")?.function?.arguments;
-  if (!content) throw new Error("Missing judgment tool call");
-  const judgment = JSON.parse(content) as Judgment;
-  if (!["low", "medium", "high"].includes(judgment.risk) || !Number.isFinite(judgment.confidence) || judgment.confidence < 0 || judgment.confidence > 1) throw new Error("Invalid judgment");
-  const final = applyLlmJudgment(decision, "auto", "terminal", { ...judgment, reason: "X4 judgment" });
-  return { id, condition: model, model, dataset: "D6", level: item.actor.level, source: "terminal", input: item.input, malicious: item.malicious, expected: item.expected, actual: decision.action, matchedRules: decision.matchedRules, autoEligible: decision.autoEligible, finalAction: final.action, llmApplied: final.llm?.applied ?? false, risk: judgment.risk, confidence: judgment.confidence, latencyMs: performance.now() - start, inputTokens, outputTokens, cacheReadTokens, costCny };
+  throw lastError;
 }
 
 for (let offset = 0; offset < jobs.length; offset += 5) {
