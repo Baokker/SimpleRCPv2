@@ -1,0 +1,36 @@
+[
+  {
+    "id": "v1N6WtQ_1rBo",
+    "kind": "command",
+    "command": "npm test 2>&1 | tail -20",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": null,
+    "matchedRules": [
+      "hard.outside",
+      "hard.dynamic",
+      "agent.default"
+    ],
+    "touchesTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  },
+  {
+    "id": "Kcb79YqwLi9c",
+    "kind": "command",
+    "command": "npm test 2>&1 | tail -20",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": null,
+    "matchedRules": [
+      "hard.outside",
+      "hard.dynamic",
+      "agent.default"
+    ],
+    "touchesTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  }
+]

@@ -19,9 +19,13 @@
     "D5": "D5/d5-provenance-compact-v2",
     "Property1": "property1-path-consistency-v2.json",
     "Preflight": "PREFLIGHT.json",
-    "D5_live": "D5/d5-live-minimax-compact-v2"
+    "D5_live": "D5/d5-live-minimax-compact-v2",
+    "D5b_live": "D5/d5-live-strong-compact-v2"
   },
   "superseded": {
     "X2a/x2a-compact-v2": "maintainer trigger evaluated as contributor; see phase-d-report.md"
+  },
+  "partialRuns": {
+    "D5b_live": "formal run stopped after 4 provenance-on runs; see summary.json stopReason and defect"
   }
 }
