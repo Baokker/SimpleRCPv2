@@ -1,0 +1,13 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-11-26T07:45:14.370Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-11-26T07:45:14.377Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-11-26T07:45:14.387Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-checkout-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"git checkout -- notes-bob-wip.md"}},"sequence":4,"timestamp":"2026-11-26T07:45:14.396Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-greeting","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"greeting.txt"}},"sequence":5,"timestamp":"2026-11-26T07:45:14.431Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-checkout-edit","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"notes-bob-wip.md"}},"sequence":6,"timestamp":"2026-11-26T07:45:14.437Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:58594/status"}},"sequence":7,"timestamp":"2026-11-26T07:45:14.445Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":8,"timestamp":"2026-11-26T07:45:14.464Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":9,"timestamp":"2026-11-26T07:45:14.469Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":10,"timestamp":"2026-11-26T07:45:14.486Z"}
+{"type":"file_changes","summary":"3 files changed","data":{"files":[{"file":"greeting.txt","additions":1,"deletions":0,"status":"added","attribution":"exclusive"},{"file":"notes-bob-wip.md","additions":4,"deletions":8,"status":"modified","attribution":"exclusive"},{"file":"README.completed","additions":1,"deletions":0,"status":"added","attribution":"exclusive"}]},"sequence":11,"timestamp":"2026-11-26T07:45:14.488Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":12,"timestamp":"2026-11-26T07:45:14.500Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":13,"timestamp":"2026-11-26T07:45:14.513Z"}

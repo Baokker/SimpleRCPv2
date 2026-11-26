@@ -1,0 +1,15 @@
+{"type":"run_queued","summary":"Agent run queued","sequence":1,"timestamp":"2026-11-26T07:35:46.206Z"}
+{"type":"run_started","summary":"Agent run started","sequence":2,"timestamp":"2026-11-26T07:35:46.209Z"}
+{"type":"session_created","summary":"OpenCode session ready","data":{"sessionId":"x2a-session-1"},"sequence":3,"timestamp":"2026-11-26T07:35:46.265Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"README.completed"}},"sequence":4,"timestamp":"2026-11-26T07:35:46.275Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-cross-project-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"../other-project/notes.md"}},"sequence":5,"timestamp":"2026-11-26T07:35:46.293Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-delete-edit","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"notes-bob-wip.md"}},"sequence":6,"timestamp":"2026-11-26T07:35:46.305Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-index","permission":"edit","sessionID":"x2a-session-1","metadata":{"filepath":"index.js"}},"sequence":7,"timestamp":"2026-11-26T07:35:46.323Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-read","permission":"read","sessionID":"x2a-session-1","metadata":{"filepath":"README.md"}},"sequence":8,"timestamp":"2026-11-26T07:35:46.335Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-delete-command","permission":"bash","sessionID":"x2a-session-1","metadata":{"command":"rm -f notes-bob-wip.md"}},"sequence":9,"timestamp":"2026-11-26T07:35:46.343Z"}
+{"type":"opencode.permission.asked","data":{"id":"x2a-session-1-normal-fetch","permission":"webfetch","sessionID":"x2a-session-1","metadata":{"url":"http://127.0.0.1:62502/status"}},"sequence":10,"timestamp":"2026-11-26T07:35:46.368Z"}
+{"type":"opencode.deterministic.completed","data":{"sessionID":"x2a-session-1"},"sequence":11,"timestamp":"2026-11-26T07:35:46.385Z"}
+{"type":"session_diff_observed","data":{"files":[]},"sequence":12,"timestamp":"2026-11-26T07:35:46.541Z"}
+{"type":"file_changes","summary":"3 files changed","data":{"files":[{"file":"index.js","additions":2,"deletions":1,"status":"modified","attribution":"exclusive"},{"file":"notes-bob-wip.md","additions":0,"deletions":1,"status":"deleted","attribution":"exclusive"},{"file":"README.completed","additions":1,"deletions":0,"status":"added","attribution":"exclusive"}]},"sequence":13,"timestamp":"2026-11-26T07:35:46.543Z"}
+{"type":"assistant_message","summary":"deterministic script completed","data":{"text":"deterministic script completed"},"sequence":14,"timestamp":"2026-11-26T07:35:46.549Z"}
+{"type":"run_completed","summary":"Agent run completed","data":{"overlappingRunIds":[]},"sequence":15,"timestamp":"2026-11-26T07:35:46.557Z"}
