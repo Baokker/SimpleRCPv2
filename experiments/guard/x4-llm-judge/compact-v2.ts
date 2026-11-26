@@ -1,23 +1,50 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { parse } from "../../../apps/server/node_modules/dotenv/lib/main.js";
 import { applyLlmJudgment, type GuardService } from "../../../apps/server/src/guard/service.js";
-import { ensureRuntimeDirectory, evaluate, loadDataset, percentile, resultsRoot, runVersion, writeRun } from "../lib/common.js";
+import { assertFrozenServer, ensureRuntimeDirectory, evaluate, loadDataset, percentile, resultsRoot, runVersion, writeRun } from "../lib/common.js";
 
-const endpointFile = process.env.COMPACT_MINIMAX_ENV;
-if (!endpointFile) throw new Error("COMPACT_MINIMAX_ENV is required");
-const { MINIMAX_API_KEY: token, MINIMAX_BASE_URL: baseUrl, MINIMAX_MODEL: model } = parse(await fs.readFile(endpointFile, "utf8"));
-if (!token || !baseUrl || model !== "MiniMax-M3") throw new Error("MiniMax-M3 configuration is required");
+assertFrozenServer();
+const provider = process.env.COMPACT_X4_PROVIDER ?? "minimax";
+if (provider !== "minimax" && provider !== "deepseek") throw new Error("Unsupported X4 provider");
+const endpointFile = process.env.COMPACT_X4_ENV ?? process.env.COMPACT_MINIMAX_ENV;
+if (!endpointFile) throw new Error("COMPACT_X4_ENV is required");
+const credentials = parse(await fs.readFile(endpointFile, "utf8"));
+const token = provider === "minimax" ? credentials.MINIMAX_API_KEY : credentials.DEEPSEEK_API_KEY_SCHOOL;
+const baseUrl = provider === "minimax" ? credentials.MINIMAX_BASE_URL : credentials.DEEPSEEK_BASE_URL_SCHOOL;
+if (!token || !baseUrl) throw new Error("Model provider settings are incomplete");
 const endpoint = new URL(baseUrl);
-if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error("Invalid MiniMax endpoint");
+if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error("Invalid model provider endpoint");
+const providerBase = endpoint.href.replace(/\/+$/, "");
+if (provider === "minimax" && providerBase !== "https://api.minimaxi.com/v1") throw new Error("MiniMax endpoint is outside the allowlist");
+execFileSync(process.execPath, ["--import", fileURLToPath(new URL("../../../apps/server/node_modules/tsx/dist/loader.mjs", import.meta.url)), fileURLToPath(new URL("../lib/preflight-exec.ts", import.meta.url))], {
+  env: { ...process.env, COMPACT_DEEPSEEK_BASE_URL: provider === "deepseek" ? providerBase : undefined, COMPACT_PREFLIGHT_PROVIDER: provider },
+  stdio: ["ignore", "ignore", "inherit"]
+});
+let discoveryCalls = 0;
+async function selectDeepSeekModel() {
+  discoveryCalls++;
+  const response = await fetch(`${providerBase}/models`, { headers: { Authorization: `Bearer ${token}` }, redirect: "error", signal: AbortSignal.timeout(20_000) });
+  if (!response.ok) throw new Error(`DeepSeek model list returned HTTP ${response.status}`);
+  const payload = await response.json() as { data: { id: string }[] };
+  const names = payload.data.map(({ id }) => id);
+  const byVersion = (a: string, b: string) => b.localeCompare(a, "en", { numeric: true });
+  const proModels = names.filter((id) => /(?:^|\/)deepseek-v\d+(?:\.\d+)*-pro$/i.test(id)).sort(byVersion);
+  const versionedChat = names.filter((id) => /(?:^|\/)deepseek-v\d+(?:\.\d+)*(?:-flash|-chat|-instruct)?$/i.test(id)).sort(byVersion);
+  const selected = proModels[0] ?? versionedChat[0] ?? names.find((id) => /(?:^|\/)deepseek-(?:chat|flash)$/i.test(id));
+  if (!selected) throw new Error("DeepSeek did not list a recognized chat model");
+  return selected;
+}
+const model = provider === "minimax" ? credentials.MINIMAX_MODEL : await selectDeepSeekModel();
+if (!model || provider === "minimax" && model !== "MiniMax-M3") throw new Error("MiniMax-M3 configuration is required");
 endpoint.pathname = `${endpoint.pathname.replace(/\/$/, "")}/chat/completions`;
-const rates = JSON.parse(await fs.readFile(new URL("../lib/budget-minimax.json", import.meta.url), "utf8")).pricesPerMillionTokens;
-const budgetCny = 20;
+const rates = provider === "minimax" ? JSON.parse(await fs.readFile(new URL("../lib/budget-minimax.json", import.meta.url), "utf8")).pricesPerMillionTokens : undefined;
 const maxTokens = 2048;
-const reservation = (512_000 * rates.cacheMissInput + maxTokens * rates.output) / 1_000_000;
 await ensureRuntimeDirectory();
 const dataset = await loadDataset("D6");
-const directory = path.join(resultsRoot, "X4", `x4-minimax-compact-${runVersion}`);
+const directory = path.join(resultsRoot, "X4", `x4-${provider}-compact-${runVersion}`);
 await fs.mkdir(directory, { recursive: true });
 const ledger = await fs.open(path.join(directory, "calls.jsonl"), "wx");
 const jobs = dataset.flatMap((item) => [1, 2, 3].map((repeat) => ({ item, repeat })));
@@ -34,7 +61,8 @@ async function classify(job: typeof jobs[number]) {
   const id = `${item.id}-r${repeat}`;
   const decision: RequestDecision = evaluate(item, item.actor.level, "terminal");
   const body = JSON.stringify({
-    model, temperature: 0, max_tokens: maxTokens, reasoning_split: true,
+    model, temperature: 0, max_tokens: maxTokens,
+    ...(provider === "minimax" ? { reasoning_split: true } : { thinking: { type: "disabled" } }),
     tools: [{ type: "function", function: { name: "submit_judgment", description: "Record the risk classification", parameters: {
       type: "object", properties: { risk: { enum: ["low", "medium", "high"] }, confidence: { type: "number" }, reason: { type: "string" } },
       required: ["risk", "confidence", "reason"]
@@ -57,15 +85,15 @@ async function classify(job: typeof jobs[number]) {
       const response = await fetch(endpoint, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, redirect: "error", signal: AbortSignal.timeout(45_000), body });
       if (!response.ok) {
         await ledger.appendFile(`${JSON.stringify({ id, event: "http", status: response.status })}\n`);
-        throw new Error(`MiniMax returned HTTP ${response.status}`);
+        throw new Error(`Model provider returned HTTP ${response.status}`);
       }
       const payload = await response.json() as { usage?: Usage; choices?: Array<{ message?: { tool_calls?: Array<{ function?: { name: string; arguments: string } }> } }> };
       const inputTokens = payload.usage?.prompt_tokens;
       const outputTokens = payload.usage?.completion_tokens;
       const cacheReadTokens = payload.usage?.prompt_tokens_details?.cached_tokens ?? 0;
       if (inputTokens === undefined || outputTokens === undefined || ![inputTokens, outputTokens, cacheReadTokens].every((count) => Number.isInteger(count) && count >= 0) || cacheReadTokens > inputTokens) throw new Error("Missing or invalid token usage");
-      const costCny = ((inputTokens - cacheReadTokens) * rates.cacheMissInput + cacheReadTokens * rates.cacheHitInput + outputTokens * rates.output) / 1_000_000;
-      chargedCny += costCny;
+      const costCny = rates ? ((inputTokens - cacheReadTokens) * rates.cacheMissInput + cacheReadTokens * rates.cacheHitInput + outputTokens * rates.output) / 1_000_000 : null;
+      chargedCny += costCny ?? 0;
       await ledger.appendFile(`${JSON.stringify({ id, event: "usage", inputTokens, outputTokens, cacheReadTokens, costCny })}\n`);
       const content = payload.choices?.[0]?.message?.tool_calls?.find((call) => call.function?.name === "submit_judgment")?.function?.arguments;
       if (!content) throw new Error("Missing judgment tool call");
@@ -84,7 +112,6 @@ async function classify(job: typeof jobs[number]) {
 
 for (let offset = 0; offset < jobs.length; offset += 5) {
   const batch = jobs.slice(offset, offset + 5);
-  if (chargedCny + batch.length * reservation > budgetCny) { status = "budget_limit"; break; }
   const results = await Promise.allSettled(batch.map(classify));
   for (const result of results) if (result.status === "fulfilled") rows.push(result.value);
   if (results.some((result) => result.status === "rejected")) { status = "provider_or_response_error"; break; }
@@ -99,12 +126,12 @@ const truePositive = predictedHigh.filter((row) => row.malicious).length;
 const ineligible = rows.filter((row) => row.actual === "ask" && !row.autoEligible);
 await writeRun(directory, rows, {
   status, datasetCount: dataset.length, plannedJudgments: jobs.length, completedJudgments: rows.length,
-  model, calls, meteredCalls, unmeteredCalls, chargedCny, budgetCny,
+  model, calls, discoveryCalls, meteredCalls, unmeteredCalls, chargedCny: rates ? chargedCny : null,
   truePositive, predictedHigh: predictedHigh.length, labeledHigh: labeledHigh.length,
   precision: predictedHigh.length ? truePositive / predictedHigh.length : null,
   recall: labeledHigh.length ? truePositive / labeledHigh.length : null,
   ineligibleApprovals: ineligible.length,
   ineligibleReleases: ineligible.filter((row) => row.finalAction === "allow" || row.finalAction === "allow_snapshot").length,
   latencyMs: rows.length ? { p50: percentile(rows.map((row) => row.latencyMs), 0.5), p95: percentile(rows.map((row) => row.latencyMs), 0.95) } : null
-}, { experiment: "X4", model });
+}, { experiment: "X4", provider, model });
 if (status !== "complete") process.exitCode = 1;

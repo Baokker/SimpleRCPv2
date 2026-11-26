@@ -42,7 +42,7 @@ static = read("eval_stats.json")
 x6 = read(f"{runs['X6_properties']}/summary.json")
 property1 = read(runs["Property1"])
 x3 = read(f"{runs['X3']}/summary.json")
-x4 = read(f"{runs['X4']}/summary.json")
+x4_runs = [read(f"{directory}/summary.json") for name, directory in runs.items() if name in {"X4", "X4_deepseek"}]
 x6_runtime = read(f"{runs['X6_runtime']}/summary.json")
 x8 = read(f"{runs['X8']}/summary.json")
 x9 = read(f"{runs['X9']}/summary.json")
@@ -83,9 +83,11 @@ report = {
         for condition, groups in x8["conditions"].items()
     },
     "x4": {
-        "precision": wilson(x4["truePositive"], x4["predictedHigh"]),
-        "recall": wilson(x4["truePositive"], x4["labeledHigh"]),
-        "ineligibleReleases": wilson(x4["ineligibleReleases"], x4["ineligibleApprovals"]),
+        run["model"]: {
+            "precision": wilson(run["truePositive"], run["predictedHigh"]),
+            "recall": wilson(run["truePositive"], run["labeledHigh"]),
+            "ineligibleReleases": wilson(run["ineligibleReleases"], run["ineligibleApprovals"]),
+        } for run in x4_runs
     },
     "x9": {"correct": wilson(x9["correct"], x9["cases"])},
     "d5": {

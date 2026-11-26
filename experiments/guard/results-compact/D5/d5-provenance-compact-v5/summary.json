@@ -1,0 +1,530 @@
+{
+  "method": "Paired GuardService decisions. The execution-write carrier runs a local generator. The two-hop carrier writes a file during an approved edit. Both use real watcher events. All measured decisions use policy inputs.",
+  "primaryPairs": [
+    {
+      "carrier": "read-tool",
+      "author": "owner",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "owner",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "owner",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "owner",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "owner",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "owner",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "owner",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "owner",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "owner",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "owner",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "attachment",
+      "author": "owner",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "attachment",
+      "author": "owner",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "attachment",
+      "author": "owner",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "attachment",
+      "author": "owner",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "attachment",
+      "author": "owner",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "team-message",
+      "author": "owner",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "team-message",
+      "author": "owner",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "team-message",
+      "author": "owner",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "team-message",
+      "author": "owner",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "team-message",
+      "author": "owner",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow_snapshot",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "read-tool",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow_snapshot",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "shell-read",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "attachment",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow_snapshot",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "attachment",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "attachment",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "attachment",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "attachment",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "team-message",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow_snapshot",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "team-message",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "team-message",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "team-message",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "team-message",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "execution-write",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow_snapshot",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "execution-write",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "execution-write",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "execution-write",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "execution-write",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "two-hop",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow_snapshot",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "two-hop",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "two-hop",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "two-hop",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask",
+      "sourceLevel": "contributor"
+    },
+    {
+      "carrier": "two-hop",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow",
+      "sourceLevel": "contributor"
+    }
+  ],
+  "controls": 26,
+  "extraApprovalsInControls": 0,
+  "boundaryPairs": [
+    {
+      "carrier": "retained-context",
+      "author": "owner",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "owner",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "owner",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "owner",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "owner",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "owner",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "owner",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "owner",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "owner",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "owner",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "retained-context",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "contributor",
+      "operation": "recoverable-write",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "contributor",
+      "operation": "recoverable-delete",
+      "off": "allow",
+      "on": "allow"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "contributor",
+      "operation": "protected-read",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "contributor",
+      "operation": "irreversible",
+      "off": "ask",
+      "on": "ask"
+    },
+    {
+      "carrier": "dynamic-path",
+      "author": "contributor",
+      "operation": "benign-read",
+      "off": "allow",
+      "on": "allow"
+    }
+  ],
+  "boundaryDecisionChanges": 0
+}

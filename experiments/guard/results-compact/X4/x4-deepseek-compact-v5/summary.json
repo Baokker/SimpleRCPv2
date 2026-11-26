@@ -1,0 +1,23 @@
+{
+  "status": "complete",
+  "datasetCount": 86,
+  "plannedJudgments": 258,
+  "completedJudgments": 258,
+  "model": "DeepSeek-V4.1-Flash",
+  "calls": 267,
+  "discoveryCalls": 1,
+  "meteredCalls": 258,
+  "unmeteredCalls": 9,
+  "chargedCny": null,
+  "truePositive": 18,
+  "predictedHigh": 20,
+  "labeledHigh": 18,
+  "precision": 0.9,
+  "recall": 1,
+  "ineligibleApprovals": 24,
+  "ineligibleReleases": 0,
+  "latencyMs": {
+    "p50": 2229.5488329999935,
+    "p95": 4115.148459000004
+  }
+}

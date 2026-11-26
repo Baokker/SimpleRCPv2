@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseShell } from "shell-quote";
-import { projectRoot, resultsRoot } from "./common.js";
+import { projectRoot, resultsRoot, runVersion } from "./common.js";
 import { taskDefinitions } from "../x2-agent-e2e/task-runtime.js";
 import { attackCalls, normalCalls } from "../x2-agent-e2e/run-deterministic.js";
 import { DRAFT_FILE, allVariants, variantPayloads } from "../x2-agent-e2e/d5b-scenario.js";
@@ -19,7 +19,13 @@ const guardRoot = path.join(projectRoot, "experiments/guard");
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost"]);
 // The only non-local endpoint: the MiniMax OpenAI-compatible base URL, supplied through MINIMAX_BASE_URL
 // (default below) and used only by the real-model runners (X2b, D5 live).
-export const ALLOWED_PROVIDER_URLS = ["https://api.minimaxi.com/v1"];
+const providerUrls = ["https://api.minimaxi.com/v1"];
+if (process.env.COMPACT_DEEPSEEK_BASE_URL) {
+  const endpoint = new URL(process.env.COMPACT_DEEPSEEK_BASE_URL);
+  if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error("Invalid DeepSeek endpoint");
+  providerUrls.push(endpoint.href.replace(/\/+$/, ""));
+}
+export const ALLOWED_PROVIDER_URLS = providerUrls;
 const PROVIDER_FILES = new Set(["x2-agent-e2e/run.ts", "x2-agent-e2e/run-d5-live.ts", "x2-agent-e2e/run-d5b-strong.ts"]);
 
 interface Finding { check: "network" | "write-target" | "env-read"; where: string; detail: string }
@@ -224,12 +230,15 @@ async function main() {
     status: findings.length ? "failed" : "passed",
     checkedAt: new Date().toISOString(),
     scope: { sourceFiles: sources, plannedHarnessCalls: plans, taskScripts: scripts, tasks: taskDefinitions.length, d5bVariants: d5b.variants, d5bPayloads: d5b.payloads, d5bWorkspace: d5b.workspace },
-    allowedNonLocalEndpoints: ALLOWED_PROVIDER_URLS.map((url) => ({ url, usedBy: [...PROVIDER_FILES], reason: "MiniMax model provider for the real-model conditions only" })),
+    allowedNonLocalEndpoints: ALLOWED_PROVIDER_URLS.map((url) => ({ url, usedBy: [...PROVIDER_FILES], reason: "Model provider endpoint" })),
     rules: ["every network address is 127.0.0.1 or localhost, except the listed provider URL", "every write or delete target resolves inside .experiment-data/", "no path reads a .env file outside the experiment workspace", "every D5b payload mentions only allowed workspace files and targets alice-draft.txt for deletion"],
     findings, notes
   };
   await fs.mkdir(resultsRoot, { recursive: true });
-  await fs.writeFile(path.join(resultsRoot, "PREFLIGHT.json"), JSON.stringify(result, null, 2) + "\n");
+  const provider = process.env.COMPACT_PREFLIGHT_PROVIDER;
+  if (provider && provider !== "minimax" && provider !== "deepseek") throw new Error("Unknown preflight provider");
+  const reportName = runVersion === "v5" ? `PREFLIGHT${provider ? `-X4-${provider}` : ""}-v5.json` : "PREFLIGHT.json";
+  await fs.writeFile(path.join(resultsRoot, reportName), JSON.stringify(result, null, 2) + "\n");
   console.log(JSON.stringify(result, null, 2));
   if (findings.length) { console.error(`PREFLIGHT FAILED: ${findings.length} finding(s). No experiment may run.`); process.exit(1); }
 }

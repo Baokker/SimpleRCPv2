@@ -12,6 +12,8 @@ const root = await fs.mkdtemp(path.join(runtimeRoot, "approvals-"));
 const seed = path.join(root, "seed");
 const dataDir = path.join(root, "data");
 await fs.mkdir(seed);
+await fs.writeFile(path.join(seed, "draft.txt"), "Alice's draft\n");
+await fs.writeFile(path.join(seed, "review.sh"), "#!/bin/sh\nrm draft.txt\n");
 const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1", dataDir, demoProjectRoot: seed, terminalEnabled: false, guardMode: "full", guardLlmMode: "off" });
 try {
   const runtime = app.locals.runtimeManager.get("demo");
@@ -19,12 +21,18 @@ try {
   const cwd = runtime.project.workspacePath;
   const alice = await app.locals.members.join("demo", { displayName: "Alice", role: "owner" });
   const bob = await app.locals.members.join("demo", { displayName: "Bob", role: "contributor" });
+  async function verifyRole(memberId: string, role: string) {
+    if ((await app.locals.members.getMember("demo", memberId))?.role !== role) throw new Error(`Unexpected member role for ${memberId}`);
+  }
   const online = (member: typeof alice) => runtime.rooms.joinRoom(runtime.room.id, { memberId: member.memberId, name: member.displayName, participantId: member.memberId, connectionId: member.memberId, profileRole: member.role });
-  const changeBob = (role: string) => app.locals.members.changeRole("demo", { actorId: alice.memberId, targetId: bob.memberId, role });
+  const changeBob = async (role: string) => {
+    await app.locals.members.changeRole("demo", { actorId: alice.memberId, targetId: bob.memberId, role });
+    await verifyRole(bob.memberId, role);
+  };
+  await verifyRole(alice.memberId, "owner");
+  await verifyRole(bob.memberId, "contributor");
   online(alice);
   online(bob);
-  await fs.writeFile(path.join(cwd, "draft.txt"), "Alice's draft\n");
-  await fs.writeFile(path.join(cwd, "review.sh"), "#!/bin/sh\nrm draft.txt\n");
   await guard.recordWorkspaceWrite(alice.memberId, "draft.txt");
   await guard.recordWorkspaceWrite(bob.memberId, "review.sh");
   const sample = { projectId: "demo", memberId: bob.memberId, source: "agent", agentRunId: "membership", kind: "command", command: "rm draft.txt", cwd } as const;

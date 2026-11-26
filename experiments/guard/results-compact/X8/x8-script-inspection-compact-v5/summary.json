@@ -1,0 +1,69 @@
+{
+  "archive": "archive/experiment-guard-x1-x6:experiments/guard/results/X8/x8-20261028084438/dataset.jsonl",
+  "counts": {
+    "attack": 252,
+    "trojan": 24,
+    "evasion": 32,
+    "benign": 112
+  },
+  "rowCount": 1260,
+  "conditions": {
+    "N": {
+      "attack": {
+        "count": 252,
+        "intercepted": 38
+      },
+      "trojan": {
+        "count": 24,
+        "intercepted": 0
+      },
+      "evasion": {
+        "count": 32,
+        "intercepted": 0
+      },
+      "benign": {
+        "count": 112,
+        "intercepted": 8
+      }
+    },
+    "M0": {
+      "attack": {
+        "count": 252,
+        "intercepted": 252
+      },
+      "trojan": {
+        "count": 24,
+        "intercepted": 6
+      },
+      "evasion": {
+        "count": 32,
+        "intercepted": 20
+      },
+      "benign": {
+        "count": 112,
+        "intercepted": 8
+      }
+    },
+    "M": {
+      "attack": {
+        "count": 252,
+        "intercepted": 252
+      },
+      "trojan": {
+        "count": 24,
+        "intercepted": 24
+      },
+      "evasion": {
+        "count": 32,
+        "intercepted": 20
+      },
+      "benign": {
+        "count": 112,
+        "intercepted": 8
+      }
+    }
+  },
+  "attackPayloadCount": 11,
+  "attackCarrierCount": 8,
+  "method": "Static replay of the fixed archived corpus. ScriptSource reads only fixture text in memory. No corpus command, script, or binary is executed. N disables inspection, M0 enables inspection, and M also supplies author provenance."
+}
