@@ -1,0 +1,42 @@
+async (page) => {
+  const [alice, bob] = page.context().browser().contexts().flatMap(context => context.pages());
+  const root = globalThis.CAPTURE_OUTPUT;
+  for (const member of [alice, bob]) await member.getByTestId("file-src/retryPolicy.js").click();
+  await bob.waitForFunction(() => {
+    const code = window.__simplercpEditors["src/retryPolicy.js"].getModel().getValue();
+    return code.includes("await waitForRetry(delayMs)") && code.includes("onAttempt");
+  }, { timeout: 180000 });
+  await alice.getByTestId("collab-tab-knowledge").click();
+  await alice.getByRole("button", { name: "Pending", exact: true }).click();
+  const suggestion = alice.getByTestId("suggestion-agent.corrected").last();
+  await suggestion.waitFor();
+  await suggestion.scrollIntoViewIfNeeded();
+  await bob.getByTestId("collab-tab-chat").click();
+  await bob.getByTestId("chat-input").fill("The agent now calls waitForRetry(delayMs) again after Alice's correction, and I see the change here too. When confirming the knowledge, state that it covers keeping the helper and parameter compatibility.");
+  await bob.getByTestId("send-chat").click();
+  await alice.screenshot({ path: root + "14-agent-captured-alice.png" });
+  await bob.screenshot({ path: root + "14-agent-captured-bob.png" });
+  const generated = alice.waitForResponse(r => r.url().includes("/knowledge/inbox/") && r.url().endsWith("/ai-draft") && r.request().method() === "POST", { timeout: 180000 });
+  await suggestion.getByRole("button", { name: "AI draft", exact: true }).click();
+  await alice.screenshot({ path: root + "15-agent-recap-loading-alice.png" });
+  await bob.screenshot({ path: root + "15-agent-recap-loading-bob.png" });
+  const response = await generated;
+  if (!response.ok()) throw new Error(await response.text());
+  const result = await response.json();
+  const editor = alice.getByRole("dialog", { name: "Knowledge card editor" });
+  await editor.waitFor();
+  await alice.screenshot({ path: root + "16-agent-recap-draft-alice.png" });
+  await bob.screenshot({ path: root + "16-agent-recap-draft-bob.png" });
+  await editor.getByRole("button", { name: "Confirm and save", exact: true }).click();
+  await editor.waitFor({ state: "hidden" });
+  await alice.getByRole("button", { name: "Cards", exact: true }).click();
+  await alice.getByLabel("Filter range").selectOption("all");
+  await alice.getByRole("searchbox", { name: "Search knowledge" }).fill(result.card.title);
+  const card = alice.locator(`[data-card-id="${result.card.id}"]`);
+  if (await card.locator(".knowledge-card-summary").getAttribute("aria-expanded") !== "true") await card.locator(".knowledge-card-summary").click();
+  await card.getByText("Source", { exact: true }).click();
+  await card.locator(".knowledge-card-content").scrollIntoViewIfNeeded();
+  await alice.screenshot({ path: root + "17-agent-recap-confirmed-alice.png" });
+  await bob.screenshot({ path: root + "17-agent-recap-confirmed-bob.png" });
+  return { cardId: result.card.id, title: result.card.title, content: result.card.content, ai: result.suggestion.ai, provenance: result.card.provenance };
+}

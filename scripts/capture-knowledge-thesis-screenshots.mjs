@@ -12,7 +12,9 @@ import { spawn, execFileSync } from "node:child_process";
 //        node scripts/capture-knowledge-thesis-screenshots.mjs compose
 const root = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(import.meta.url);
-const steps = path.join(root, "scripts/knowledge-thesis-screenshots");
+// CAPTURE_LANG=en replays the English copy of the steps against an English interface and server text.
+const lang = process.env.CAPTURE_LANG === "en" ? "en" : "zh";
+const steps = path.join(root, lang === "en" ? "scripts/knowledge-thesis-screenshots-en" : "scripts/knowledge-thesis-screenshots");
 const batch = process.env.CAPTURE_TAG ? `thesis-screenshots-${process.env.CAPTURE_TAG}` : "thesis-screenshots";
 const intermediate = path.join(root, ".test-workspaces", batch);
 const output = path.join(root, "docs/knowledge", batch);
@@ -33,9 +35,9 @@ await fs.mkdir(output, { recursive: true });
 
 if (action === "serve") {
   const settings = {
-    PORT: String(serverPort), SIMPLERCP_OPENCODE_PORT: "4196", KNOWLEDGE: "full",
+    PORT: String(serverPort), SIMPLERCP_OPENCODE_PORT: "4196", KNOWLEDGE: "full", KNOWLEDGE_LANG: lang,
     SIMPLERCP_TERMINAL_ENABLED: "false", SIMPLERCP_FAKE_AGENT_RUNTIME: "false",
-    SIMPLERCP_PUBLIC_URL: origin, SIMPLERCP_DATA_DIR: path.join(intermediate, "data"), TMPDIR: path.join(intermediate, "tmp"),
+    SIMPLERCP_PUBLIC_URL: origin, SIMPLERCP_DATA_DIR: path.join(intermediate, "data"), SIMPLERCP_WORKSPACES_DIR: path.join(intermediate, "workspaces"), TMPDIR: path.join(intermediate, "tmp"),
     VITE_SIMPLERCP_API_ORIGIN: `http://127.0.0.1:${serverPort}`, VITE_SIMPLERCP_CLIENT_PORT: String(clientPort)
   };
   await fs.mkdir(settings.TMPDIR, { recursive: true });
@@ -55,7 +57,7 @@ if (action === "serve") {
   try {
     if (action === "capture") await capture(browser);
     else if (action === "compose") await compose(browser);
-    else throw new Error("请指定 serve、capture 或 compose");
+    else throw new Error("Specify serve, capture, or compose");
   } finally { await browser.close(); }
 }
 
@@ -70,11 +72,12 @@ async function capture(browser) {
   browser.newContext = async (options) => {
     const context = await newContext({ ...options, viewport, deviceScaleFactor: scale });
     const theme = created++ === 0 ? "dark" : "light";
-    await context.addInitScript(({ theme, panelWidth }) => {
+    await context.addInitScript(({ theme, panelWidth, lang }) => {
       if (!localStorage.getItem("simplercp.theme")) localStorage.setItem("simplercp.theme", theme);
+      if (lang === "en") localStorage.setItem("simplercp.locale", "en");
       localStorage.setItem("simplercp.layout.workspaceWidth", "180");
       localStorage.setItem("simplercp.layout.collaborationWidth", panelWidth);
-    }, { theme, panelWidth });
+    }, { theme, panelWidth, lang });
     // Steps scroll targets into view, which can shift a slightly overflowing panel sideways; undo that before each shot.
     context.on("page", (page) => {
       const screenshot = page.screenshot.bind(page);
