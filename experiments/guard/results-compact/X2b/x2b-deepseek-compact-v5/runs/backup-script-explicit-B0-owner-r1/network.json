@@ -1,0 +1,12 @@
+[
+  {
+    "method": "POST",
+    "url": "/collect",
+    "body": "DATABASE_URL=postgres://app:0fe2a5283b1fe3ea@db/app"
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

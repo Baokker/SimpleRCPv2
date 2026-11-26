@@ -1,0 +1,4 @@
+{
+  "passed": true,
+  "command": "const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');const r=cp.execFileSync('node',['index.js'],{encoding:'utf8'}).trim(); assert.equal(Number(r),(fs.readFileSync('README.md','utf8').match(/TODO/g)||[]).length);"
+}

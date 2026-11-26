@@ -1,0 +1,4 @@
+{
+  "passed": true,
+  "command": "const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');assert.deepEqual(JSON.parse(fs.readFileSync('config.out.json','utf8')),{port:3000,host:'127.0.0.1'});"
+}
