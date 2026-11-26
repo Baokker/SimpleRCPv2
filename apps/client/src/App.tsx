@@ -1,5 +1,5 @@
 import { MessagesSquare, Moon, PanelBottom, PanelRight, Sun } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   createWorkspaceDirectory,
@@ -39,6 +39,7 @@ import {
   type ProjectIdentity
 } from "./components/JoinProject";
 import { ProjectHome } from "./components/ProjectHome";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { WorkspaceExplorer } from "./components/WorkspaceExplorer";
 import {
@@ -46,8 +47,12 @@ import {
   type WorkspaceDialogAction
 } from "./components/WorkspaceDialog";
 import { mergeFileEditChanges } from "./editActivity";
+import { connectionText, type SaveState } from "./format";
 import { useProjectRoute } from "./hooks/useProjectRoute";
 import { useWorkspaceNotifications } from "./hooks/useWorkspaceNotifications";
+import { useI18n } from "./i18n";
+import { errorText } from "./i18n/messages";
+import { readLocalStorage, writeLocalStorage } from "./localStorage";
 import {
   connectRoomSocket,
   type ClientSocket,
@@ -101,7 +106,7 @@ export function App({ initialTheme }: { initialTheme: ThemeMode }) {
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    writeLocalStorage(THEME_STORAGE_KEY, nextTheme);
     setTheme(nextTheme);
   }
 
@@ -127,6 +132,7 @@ function ProjectRoute({
   theme: ThemeMode;
   onToggleTheme(): void;
 }) {
+  const { t } = useI18n();
   const {
     project,
     roomId,
@@ -141,21 +147,22 @@ function ProjectRoute({
   } = useProjectRoute(projectId);
 
   if (loading) {
-    return <main className="route-loading">Loading project</main>;
+    return <main className="route-loading">{t("loadingProject")}</main>;
   }
   if (error || !project || (identity && !roomId)) {
     return (
       <main className="route-error" data-testid="route-error">
-        <h1>Unable to open project</h1>
-        <p>{error || "Project not found"}</p>
+        <LanguageSwitcher />
+        <h1>{t("unableToOpenProject")}</h1>
+        <p>{errorText(t, error, t("projectNotFound"))}</p>
         <div>
-          <a href="/" data-testid="route-error-projects">Projects</a>
+          <a href="/" data-testid="route-error-projects">{t("projects")}</a>
           <button
             type="button"
             onClick={retry}
             data-testid="route-error-retry"
           >
-            Retry
+            {t("retry")}
           </button>
         </div>
       </main>
@@ -201,6 +208,11 @@ function WorkspacePage({
   theme: ThemeMode;
   onToggleTheme(): void;
 }) {
+  const { t } = useI18n();
+  const translateRef = useRef(t);
+  useLayoutEffect(() => {
+    translateRef.current = t;
+  }, [t]);
   const projectId = project.id;
   const displayName = identity.displayName;
   const [member, setMember] = useState<RoomMember | null>(null);
@@ -243,10 +255,11 @@ function WorkspacePage({
     clearWorkspaceNotice,
     showWorkspaceError,
     clearWorkspaceError,
+    dismissWorkspaceError,
     showProjectDeleted,
     projectDeleted
   } = useWorkspaceNotifications();
-  const [saveState, setSaveState] = useState<"Saved" | "Saving" | "Sync failed">(
+  const [saveState, setSaveState] = useState<SaveState>(
     "Saved"
   );
   const [collaborationVisible, setCollaborationVisible] = useState(true);
@@ -372,7 +385,7 @@ function WorkspacePage({
               ...cursors,
               [message.memberId]: {
                 memberId: message.memberId,
-                displayName: collaborator?.displayName ?? "Collaborator",
+                displayName: collaborator?.displayName ?? "",
                 path: message.path,
                 position: message.position,
                 selection: message.selection
@@ -414,7 +427,7 @@ function WorkspacePage({
           if (message.type === "knowledge_suggestion") {
             setKnowledgeRefreshVersion(version => version + 1);
             scheduleKnowledgeRefresh();
-            if (message.popup) showWorkspaceNotice("有新的知识建议，请查看待处理。");
+            if (message.popup) showWorkspaceNotice((translate) => translate("knowledgeNewSuggestion"));
           }
           if (message.type === "knowledge_risk_warning") {
             setKnowledgeRefreshVersion(version => version + 1);
@@ -423,7 +436,7 @@ function WorkspacePage({
           }
           if (message.type === "knowledge_anchor_needs_review") {
             setKnowledgeRefreshVersion(version => version + 1);
-            showWorkspaceNotice(message.reason === "file-missing" ? `知识关联的文件 ${message.file} 不存在，请检查文件路径。` : "知识关联的代码需要复核，请打开卡片查看原因。");
+            showWorkspaceNotice((translate) => message.reason === "file-missing" ? translate("knowledgeAnchorFileMissing", { file: message.file }) : translate("knowledgeAnchorNeedsReview"));
             scheduleKnowledgeRefresh();
           }
           if (message.type === "knowledge_update_available") {
@@ -432,7 +445,7 @@ function WorkspacePage({
               ...current,
               [message.runId]: [...new Set([...(current[message.runId] ?? []), message.cardId])]
             }));
-            showWorkspaceNotice("有新的知识卡片可供当前 Agent 任务参考。");
+            showWorkspaceNotice((translate) => translate("knowledgeUpdateAvailable"));
           }
           if (message.type === "agent_run_updated") {
             setAgentRuns((current) => {
@@ -477,13 +490,13 @@ function WorkspacePage({
   }, [displayName, identity.role, projectId, roomId]);
 
   useEffect(() => {
-    window.localStorage.setItem(WORKSPACE_WIDTH_KEY, String(workspaceWidth));
+    writeLocalStorage(WORKSPACE_WIDTH_KEY, String(workspaceWidth));
   }, [workspaceWidth]);
   useEffect(() => {
-    window.localStorage.setItem(COLLABORATION_WIDTH_KEY, String(collaborationWidth));
+    writeLocalStorage(COLLABORATION_WIDTH_KEY, String(collaborationWidth));
   }, [collaborationWidth]);
   useEffect(() => {
-    window.localStorage.setItem(TERMINAL_HEIGHT_KEY, String(terminalHeight));
+    writeLocalStorage(TERMINAL_HEIGHT_KEY, String(terminalHeight));
   }, [terminalHeight]);
   function startResize(target: ResizeTarget, event: ReactPointerEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -607,14 +620,14 @@ function WorkspacePage({
   function applyWorkspaceChange(change: WorkspaceChange) {
     if (change.type === "rename") {
       remapOpenPath(change.fromPath, change.path);
-      showWorkspaceNotice(`${change.fromPath} was renamed to ${change.path}`);
+      showWorkspaceNotice((translate) => translate("pathRenamed", { from: change.fromPath, to: change.path }));
       return;
     }
     if (change.type === "unlink" || change.type === "unlinkDir") {
       closePath(change.path, false);
       pendingSavePathsRef.current.delete(change.path);
       if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
-      showWorkspaceNotice(`${change.path} was deleted`);
+      showWorkspaceNotice((translate) => translate("pathDeleted", { path: change.path }));
     }
   }
 
@@ -682,13 +695,13 @@ function WorkspacePage({
       let result = await readWorkspaceFile(projectId, path);
       if (result.status === "binary") {
         window.alert(
-          `${path} is a binary file (${formatBytes(result.size)}) and cannot be opened in the text editor.`
+          translateRef.current("binaryFile", { path, size: formatBytes(result.size) })
         );
         return;
       }
       if (result.status === "large") {
         const shouldLoad = window.confirm(
-          `${path} is ${formatBytes(result.size)}. Large files may slow down collaboration. Open it anyway?`
+          translateRef.current("confirmLargeFile", { path, size: formatBytes(result.size) })
         );
         if (!shouldLoad) return;
         result = await readWorkspaceFile(projectId, path, true);
@@ -967,16 +980,16 @@ function WorkspacePage({
         <div className="workspace-alert" role="alert" data-testid="workspace-error">
           <span>{workspaceError}</span>
           {projectDeleted ? (
-            <a href="/">Projects</a>
+            <a href="/">{t("projects")}</a>
           ) : (
             <button type="button" onClick={() => window.location.reload()}>
-              Retry
+              {t("retry")}
             </button>
           )}
           <button
             type="button"
-            aria-label="Dismiss error"
-            onClick={clearWorkspaceError}
+            aria-label={t("dismissError")}
+            onClick={dismissWorkspaceError}
           >
             ×
           </button>
@@ -987,7 +1000,7 @@ function WorkspacePage({
           <span>{workspaceNotice}</span>
           <button
             type="button"
-            aria-label="Dismiss notification"
+            aria-label={t("dismissNotification")}
             onClick={clearWorkspaceNotice}
           >
             ×
@@ -1112,22 +1125,22 @@ function WorkspacePage({
         </section>
       ) : null}
       <div className="status-bar" data-testid="status-bar">
-        <span data-testid="connection-state">{connectionState}</span>
+        <span data-testid="connection-state">{connectionText(t, connectionState)}</span>
         {connectionState === "Offline" && !projectDeleted ? (
           <button
             className="connection-retry"
             type="button"
             onClick={() => socketRef.current?.retry()}
           >
-            Reconnect
+            {t("reconnect")}
           </button>
         ) : null}
-        <span>Room {roomId || "..."}</span>
-        <span>{member?.displayName ?? "Joining"}</span>
+        <span>{t("roomStatus", { id: roomId || "..." })}</span>
+        <span>{member?.displayName ?? t("joining")}</span>
         <span>{project.name}</span>
         {followingMemberId ? (
           <span>
-            Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
+            {t("following", { name: members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? t("collaborator") })}
           </span>
         ) : null}
         {terminalEnabled ? (
@@ -1135,8 +1148,8 @@ function WorkspacePage({
             className="status-tool"
             type="button"
             onClick={() => setTerminalVisible((visible) => !visible)}
-            aria-label={`${terminalVisible ? "Hide" : "Show"} terminal`}
-            title={`${terminalVisible ? "Hide" : "Show"} terminal`}
+            aria-label={t(terminalVisible ? "hideTerminal" : "showTerminal")}
+            title={t(terminalVisible ? "hideTerminal" : "showTerminal")}
             data-testid="toggle-terminal"
           >
             <PanelBottom size={14} />
@@ -1146,8 +1159,8 @@ function WorkspacePage({
           className="status-tool"
           type="button"
           onClick={() => setCollaborationVisible((visible) => !visible)}
-          aria-label={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
-          title={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
+          aria-label={t(collaborationVisible ? "hideCollaboration" : "showCollaboration")}
+          title={t(collaborationVisible ? "hideCollaboration" : "showCollaboration")}
           data-testid="toggle-collaboration"
         >
           {collaborationVisible ? (
@@ -1160,19 +1173,20 @@ function WorkspacePage({
           className="theme-toggle"
           type="button"
           onClick={onToggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          aria-label={t(theme === "dark" ? "lightMode" : "darkMode")}
+          title={t(theme === "dark" ? "lightMode" : "darkMode")}
           data-testid="theme-toggle"
         >
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
+        <LanguageSwitcher />
       </div>
-      <div className="resize-handle resize-handle-workspace" role="separator" aria-orientation="vertical" aria-label="Resize workspace explorer" onPointerDown={(event) => startResize("workspace", event)} />
+      <div className="resize-handle resize-handle-workspace" role="separator" aria-orientation="vertical" aria-label={t("resizeWorkspace")} onPointerDown={(event) => startResize("workspace", event)} />
       {collaborationVisible ? (
-        <div className="resize-handle resize-handle-collaboration" role="separator" aria-orientation="vertical" aria-label="Resize collaboration panel" onPointerDown={(event) => startResize("collaboration", event)} />
+        <div className="resize-handle resize-handle-collaboration" role="separator" aria-orientation="vertical" aria-label={t("resizeCollaboration")} onPointerDown={(event) => startResize("collaboration", event)} />
       ) : null}
       {terminalVisible && terminalEnabled ? (
-        <div className={`resize-handle resize-handle-terminal${collaborationVisible ? "" : " collaboration-hidden"}`} role="separator" aria-orientation="horizontal" aria-label="Resize terminal panel" onPointerDown={(event) => startResize("terminal", event)} />
+        <div className={`resize-handle resize-handle-terminal${collaborationVisible ? "" : " collaboration-hidden"}`} role="separator" aria-orientation="horizontal" aria-label={t("resizeTerminal")} onPointerDown={(event) => startResize("terminal", event)} />
       ) : null}
       {workspaceDialog ? (
         <WorkspaceDialog
@@ -1186,7 +1200,7 @@ function WorkspacePage({
 }
 
 function readLayoutDimension(key: string, fallback: number, minimum: number, maximum: number) {
-  const stored = window.localStorage.getItem(key);
+  const stored = readLocalStorage(key);
   if (stored === null) return fallback;
   const value = Number(stored);
   return Number.isFinite(value) ? clampLayoutDimension(value, minimum, maximum) : fallback;

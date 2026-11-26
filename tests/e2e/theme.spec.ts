@@ -5,24 +5,24 @@ test("member can switch theme and keep the choice after refresh", async ({
   page
 }) => {
   await openAs(page, "Theme User");
-  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  await expect(page.getByTestId("connection-state")).toHaveText("已连接");
   const memberId = await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"));
   expect(memberId).toBeTruthy();
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   const toggle = page.getByTestId("theme-toggle");
-  await expect(toggle).toHaveAttribute("aria-label", "Switch to light mode");
+  await expect(toggle).toHaveAttribute("aria-label", "切换到日间模式");
 
   await toggle.click();
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await expect(toggle).toHaveAttribute("aria-label", "Switch to dark mode");
+  await expect(toggle).toHaveAttribute("aria-label", "切换到夜间模式");
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("simplercp.theme")))
     .toBe("light");
 
   await page.reload();
-  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  await expect(page.getByTestId("connection-state")).toHaveText("已连接");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   expect(await page.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"))).toBe(memberId);
 });

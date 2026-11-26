@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
+import { useI18n } from "../i18n";
+import { captureError, errorText, messageError, type Translate } from "../i18n/messages";
 
 export type WorkspaceDialogAction =
   | { type: "create-file"; initialPath: string }
@@ -16,13 +18,14 @@ export function WorkspaceDialog({
   onClose(): void;
   onSubmit(path: string): Promise<void>;
 }) {
+  const { t } = useI18n();
   const [path, setPath] = useState(initialValue(action));
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Error>();
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setPath(initialValue(action));
-    setError("");
+    setError(undefined);
   }, [action]);
 
   async function submit(event: FormEvent) {
@@ -30,20 +33,18 @@ export function WorkspaceDialog({
     const nextPath = path.trim();
     if (action.type !== "delete" && !nextPath) return;
     setSubmitting(true);
-    setError("");
+    setError(undefined);
     try {
       await onSubmit(nextPath);
       onClose();
     } catch (nextError) {
-      setError(
-        nextError instanceof Error ? nextError.message : "Workspace operation failed"
-      );
+      setError(captureError(nextError, messageError("workspaceOperationFailed")));
     } finally {
       setSubmitting(false);
     }
   }
 
-  const content = dialogContent(action);
+  const content = dialogContent(t, action);
   return (
     <div className="dialog-backdrop" role="presentation">
       <form
@@ -61,8 +62,8 @@ export function WorkspaceDialog({
             className="icon-button"
             onClick={onClose}
             disabled={submitting}
-            aria-label="Close dialog"
-            title="Close"
+            aria-label={t("closeDialog")}
+            title={t("close")}
           >
             <X size={16} />
           </button>
@@ -72,7 +73,7 @@ export function WorkspaceDialog({
           <strong className="workspace-delete-path">{action.path}</strong>
         ) : (
           <label>
-            <span>Path from project root</span>
+            <span>{t("pathFromRoot")}</span>
             <input
               value={path}
               onChange={(event) => setPath(event.target.value)}
@@ -83,10 +84,10 @@ export function WorkspaceDialog({
             />
           </label>
         )}
-        {error ? <p className="workspace-dialog-error">{error}</p> : null}
+        {error ? <p className="workspace-dialog-error">{errorText(t, error, t("workspaceOperationFailed"))}</p> : null}
         <div className="workspace-dialog-actions">
           <button type="button" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="submit"
@@ -94,7 +95,7 @@ export function WorkspaceDialog({
             disabled={submitting}
             data-testid="workspace-dialog-submit"
           >
-            {submitting ? "Working" : content.submitLabel}
+            {submitting ? t("working") : content.submitLabel}
           </button>
         </div>
       </form>
@@ -108,35 +109,35 @@ function initialValue(action: WorkspaceDialogAction) {
   return action.initialPath;
 }
 
-function dialogContent(action: WorkspaceDialogAction) {
+function dialogContent(t: Translate, action: WorkspaceDialogAction) {
   if (action.type === "create-file") {
     return {
-      title: "Create file",
-      description: "Enter a path including the file name and extension.",
+      title: t("createFile"),
+      description: t("createFileDescription"),
       placeholder: "src/components/Button.tsx",
-      submitLabel: "Create file"
+      submitLabel: t("createFile")
     };
   }
   if (action.type === "create-folder") {
     return {
-      title: "Create folder",
-      description: "Enter the folder path from the project root.",
+      title: t("createFolder"),
+      description: t("createFolderDescription"),
       placeholder: "src/components",
-      submitLabel: "Create folder"
+      submitLabel: t("createFolder")
     };
   }
   if (action.type === "rename") {
     return {
-      title: "Rename path",
-      description: "Enter the new path from the project root.",
+      title: t("rename"),
+      description: t("renameDescription"),
       placeholder: action.path,
-      submitLabel: "Rename"
+      submitLabel: t("rename")
     };
   }
   return {
-    title: "Delete path",
-    description: "This removes the selected file or folder for every collaborator.",
+    title: t("delete"),
+    description: t("deleteDescription"),
     placeholder: "",
-    submitLabel: "Delete"
+    submitLabel: t("delete")
   };
 }

@@ -1,7 +1,9 @@
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from "react";
+import { useI18n } from "../i18n";
+import { serverText } from "../i18n/messages";
 import type { ThemeMode } from "../theme";
 import type { TerminalClientMessage, TerminalServerMessage } from "../types";
 
@@ -23,6 +25,11 @@ export const SharedTerminal = forwardRef<
   { projectId, memberId, canInput, theme, onConnectionState },
   ref
 ) {
+  const { t } = useI18n();
+  const translateRef = useRef(t);
+  useLayoutEffect(() => {
+    translateRef.current = t;
+  }, [t]);
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket>();
   const terminalRef = useRef<Terminal>();
@@ -119,7 +126,7 @@ export const SharedTerminal = forwardRef<
         } else if (message.type === "terminal_output") {
           terminal.write(message.data);
         } else {
-          terminal.write(`\r\n\x1b[31m${message.message}\x1b[0m\r\n`);
+          terminal.write(`\r\n\x1b[31m${serverText(translateRef.current, message.message)}\x1b[0m\r\n`);
         }
       });
       socket.addEventListener("close", (event) => {
@@ -127,7 +134,7 @@ export const SharedTerminal = forwardRef<
         if (disposed) return;
         if (event.code === 1001 && event.reason === "Project deleted") {
           onConnectionState("Offline");
-          terminal.write("\r\n[project deleted]\r\n");
+          terminal.write(`\r\n[${translateRef.current("projectDeleted")}]\r\n`);
           return;
         }
         reconnectAttempt += 1;

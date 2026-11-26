@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { WorkspaceNode } from "../types";
+import { useI18n } from "../i18n";
 
 export function WorkspaceExplorer({
   tree,
@@ -36,6 +37,7 @@ export function WorkspaceExplorer({
   onRenamePath(path: string): void;
   onDeletePath(path: string): void;
 }) {
+  const { t } = useI18n();
   const activeAncestors = useMemo(() => getAncestorPaths(activePath), [activePath]);
 
   return (
@@ -44,26 +46,26 @@ export function WorkspaceExplorer({
         <div className="explorer-title">
           <a
             href="/"
-            aria-label="Back to projects"
-            title="Projects"
+            aria-label={t("backToProjects")}
+            title={t("projects")}
             data-testid="projects-link"
           >
             <ArrowLeft size={15} />
           </a>
-          <span title={workspaceName}>{workspaceName || "Workspace"}</span>
+          <span title={workspaceName}>{workspaceName || t("workspace")}</span>
         </div>
         {canManageFiles ? <div className="icon-actions">
           <button
-            aria-label="Create file by path"
-            title="Create file by path"
+            aria-label={t("createFileByPath")}
+            title={t("createFileByPath")}
             onClick={onCreateFile}
             data-testid="new-file"
           >
             <FilePlus2 size={15} />
           </button>
           <button
-            aria-label="Create folder by path"
-            title="Create folder by path"
+            aria-label={t("createFolderByPath")}
+            title={t("createFolderByPath")}
             onClick={onCreateFolder}
             data-testid="new-folder"
           >
@@ -201,19 +203,20 @@ function TreeActions({
   onRenamePath(path: string): void;
   onDeletePath(path: string): void;
 }) {
+  const { t } = useI18n();
   return (
     <span className="tree-actions">
       <button
-        aria-label={`Rename ${path}`}
-        title="Rename"
+        aria-label={t("renamePath", { path })}
+        title={t("rename")}
         onClick={() => onRenamePath(path)}
         data-testid={`rename-${path}`}
       >
         <Pencil size={13} />
       </button>
       <button
-        aria-label={`Delete ${path}`}
-        title="Delete"
+        aria-label={t("deleteNamed", { name: path })}
+        title={t("delete")}
         onClick={() => onDeletePath(path)}
         data-testid={`delete-${path}`}
       >

@@ -38,7 +38,9 @@ import type {
   KnowledgeCard,
   KnowledgeAnchorResolution
 } from "../types";
-import { formatTime } from "../format";
+import { formatTime, runStatusText } from "../format";
+import { useI18n } from "../i18n";
+import { richParts, serverText, systemMessageText, type Translate } from "../i18n/messages";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project" | "knowledge";
 type ActivityKind =
@@ -144,6 +146,7 @@ export function CollaborationPanel({
   onGenerateKnowledgeDemo(): Promise<void>;
   onRefreshKnowledge(): Promise<void>;
 }) {
+  const { locale, t } = useI18n();
   const [activeTab, setActiveTab] = useState<CollaborationTab>("chat");
   const [agentDrafts, setAgentDrafts] = useState<Record<string, AgentDraft>>({});
   const [selectedAgentSessionId, setSelectedAgentSessionId] = useState<string>();
@@ -172,12 +175,12 @@ export function CollaborationPanel({
     () =>
       events
         .flatMap((event) => {
-          const item = formatActivity(event, members);
+          const item = formatActivity(t, event, members);
           return item ? [item] : [];
         })
         .slice(-30)
         .reverse(),
-    [events, members]
+    [events, members, t]
   );
   const mentionQuery = chatText.match(/(?:^|\s)@([a-z0-9-]*)$/i)?.[1]?.toLowerCase();
   const mentionCandidates = useMemo(() => [
@@ -222,16 +225,16 @@ export function CollaborationPanel({
 
   return (
     <div className="panel collab-panel">
-      <div className="panel-header">Collaboration</div>
-      <nav className="collab-tabs" aria-label="Collaboration sections">
+      <div className="panel-header">{t("collaboration")}</div>
+      <nav className="collab-tabs" aria-label={t("collaborationSections")}>
         <button
           className={activeTab === "chat" ? "active" : ""}
           onClick={() => setActiveTab("chat")}
           data-testid="collab-tab-chat"
         >
           <MessageSquareText size={14} />
-          Chat
-          {unseenMessages ? <span className="collab-unread-badge" aria-label={`${unseenMessages} 条未读消息`}>{unseenMessages}</span> : null}
+          {t("chat")}
+          {unseenMessages ? <span className="collab-unread-badge" aria-label={t("unreadMessages", { count: unseenMessages })}>{unseenMessages}</span> : null}
         </button>
         <button
           className={activeTab === "agent" ? "active" : ""}
@@ -239,7 +242,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-agent"
         >
           <Bot size={14} />
-          My Agent
+          {t("myAgent")}
         </button>
         <button
           className={activeTab === "project" ? "active" : ""}
@@ -247,7 +250,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-project"
         >
           <Settings2 size={14} />
-          Project
+          {t("project")}
         </button>
         {knowledgeEnabled ? (
           <button
@@ -265,7 +268,7 @@ export function CollaborationPanel({
           data-testid="collab-tab-team"
         >
           <Users size={14} />
-          Team
+          {t("team")}
         </button>
       </nav>
 
@@ -300,7 +303,7 @@ export function CollaborationPanel({
               {chatSelectionMode ? <><span>已选 {selectedChatMessages.length} 条</span><button className="primary" disabled={!selectedChatMessages.length || chatKnowledgeSaving} onClick={async () => { setChatKnowledgeSaving(true); try { await captureKnowledgeFromChat(projectId, selectedChatMessages); setSelectedChatMessages([]); setChatSelectionMode(false); setChatKnowledgeVersion(version => version + 1); setActiveTab("knowledge"); } catch (error) { onError(error); } finally { setChatKnowledgeSaving(false); } }}>{chatKnowledgeSaving ? "创建中" : "从这些消息创建"}</button><button disabled={chatKnowledgeSaving} onClick={() => { setChatSelectionMode(false); setSelectedChatMessages([]); }}>取消</button></> : <button onClick={() => setChatSelectionMode(true)}><BookOpen size={14} />从中创建知识</button>}
             </div> : null}
             <div className="team-agent-bar" data-testid="team-agent-bar">
-              <strong>Team Agents</strong>
+              <strong>{t("teamAgents")}</strong>
               {teamAgents.map((agent) => {
                 const active = agentRuns.some(
                   (run) => run.sessionId === agent.id && (run.status === "queued" || run.status === "running")
@@ -309,12 +312,12 @@ export function CollaborationPanel({
                   <span key={agent.id} className="team-agent-status">
                     <Bot size={13} aria-hidden="true" />
                     <span>@{agent.handle ?? agent.title}</span>
-                    <span className={`ui-badge${active ? " success" : ""}`}>{active ? "Running" : "Idle"}</span>
+                    <span className={`ui-badge${active ? " success" : ""}`}>{t(active ? "running" : "idle")}</span>
                   </span>
                 );
               })}
               <button type="button" data-testid="team-agent-create" onClick={() => setTeamAgentFormOpen((current) => !current)}>
-                <Plus size={13} /> Agent
+                <Plus size={13} /> {t("createTeamAgent")}
               </button>
             </div>
             {teamAgentFormOpen ? (
@@ -330,13 +333,13 @@ export function CollaborationPanel({
                       setTeamAgentFormOpen(false);
                     }).catch(onError);
                   }}
-                  placeholder="Agent name"
+                  placeholder={t("agentName")}
                   data-testid="team-agent-name"
                 />
                 <input
                   value={teamAgentDescription}
                   onChange={(event) => setTeamAgentDescription(event.target.value)}
-                  placeholder="Description (optional)"
+                  placeholder={t("optionalDescription")}
                   data-testid="team-agent-description"
                 />
                 <button
@@ -347,7 +350,7 @@ export function CollaborationPanel({
                     setTeamAgentDescription("");
                     setTeamAgentFormOpen(false);
                   }).catch(onError)}
-                >Create</button>
+                >{t("create")}</button>
               </div>
             ) : null}
             <ol
@@ -362,7 +365,7 @@ export function CollaborationPanel({
               data-testid="chat-transcript"
             >
               {chatMessages.length === 0 ? (
-                <li className="empty-panel-state">Mention a team Agent in Chat to assign work. Everyone can see progress and continue directing it.</li>
+                <li className="empty-panel-state">{t("teamAgentHint")}</li>
               ) : (
                 chatMessages.map((message) => (
                   <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}${knowledgeEnabled && (message.kind ?? "member") === "member" ? " chat-knowledge-message" : ""}`}>
@@ -370,13 +373,13 @@ export function CollaborationPanel({
                     <span>
                       <strong>
                         {message.kind === "agent" ? <Bot size={13} /> : null}
-                        <span className="chat-author-name">{message.authorName}</span>{" "}
+                        <span className="chat-author-name">{message.kind === "system" && message.authorName === "System" ? t("system") : message.authorName}</span>{" "}
                         {message.authorRole ? <span className="ui-badge chat-author-role">{message.authorRole}</span> : null}
                       </strong>
-                      <time>{formatTime(message.timestamp)}</time>
+                      <time>{formatTime(locale, message.timestamp)}</time>
                     </span>
                     {message.kind === "system" ? (
-                      <p className="chat-system-message">{message.text}</p>
+                      <p className="chat-system-message">{systemMessageText(t, message.text)}</p>
                     ) : message.kind === "agent" ? (
                       <ChatAgentMessage
                         message={message}
@@ -425,7 +428,7 @@ export function CollaborationPanel({
                 type="button"
                 onClick={showLatestMessages}
               >
-                {unseenMessages} new {unseenMessages === 1 ? "message" : "messages"}
+                {unseenMessages === 1 ? t("oneNewMessage") : t("newMessages", { count: unseenMessages })}
               </button>
             ) : null}
             <div className="chat-box" data-testid="chat-composer">
@@ -442,7 +445,7 @@ export function CollaborationPanel({
                     onSendChat();
                   }
                 }}
-                placeholder="Message the team, or @agent to give the shared agent a task"
+                placeholder={t("teamChatPlaceholder")}
                 aria-describedby="chat-keyboard-hint"
                 data-testid="chat-input"
               />
@@ -465,18 +468,21 @@ export function CollaborationPanel({
                 </ul>
               ) : null}
               <small className="chat-command-hint" data-testid="chat-command-hint">
-                Create a shared Agent with <code>/agent new reviewer code reviews</code>, then mention <code>@reviewer</code> in Chat.
+                {richParts(locale, "createSharedAgentHint", {
+                  command: <code key="command">/agent new reviewer code reviews</code>,
+                  mention: <code key="mention">@reviewer</code>
+                })}
               </small>
               <div className="chat-actions">
                 <small id="chat-keyboard-hint" className="composer-keyboard-hint">
-                  <span><kbd>Enter</kbd> 发送</span><span><kbd>Shift + Enter</kbd> 换行</span>
+                  <span>{t("enterToSend")}</span><span>{t("shiftEnterForNewLine")}</span>
                 </small>
                 <button
                   onClick={onSendChat}
                   disabled={chatSending || chatText.trim().length === 0}
                   data-testid="send-chat"
                 >
-                  {chatSending ? "Sending" : "Send"}
+                  {t(chatSending ? "sending" : "send")}
                 </button>
               </div>
             </div>
@@ -486,7 +492,7 @@ export function CollaborationPanel({
         {activeTab === "team" ? (
           <section className="collab-section team-section">
             <div className="team-block">
-              <h2>People</h2>
+              <h2>{t("people")}</h2>
               <ul className="member-list" data-testid="member-list">
                 {members.map((candidate) => {
                   const cursor = remoteCursors.find(
@@ -499,7 +505,7 @@ export function CollaborationPanel({
                         <strong>{candidate.displayName}</strong>
                         {candidate.profileRole ? <em>{candidate.profileRole}</em> : null}
                         {candidate.connectionCount > 1 ? (
-                          <em>{candidate.connectionCount} tabs</em>
+                          <em>{t("openTabs", { count: candidate.connectionCount })}</em>
                         ) : null}
                         {candidate.id !== member?.id ? (
                           <button
@@ -510,13 +516,13 @@ export function CollaborationPanel({
                             }
                             aria-label={
                               followingMemberId === candidate.id
-                                ? `Stop following ${candidate.displayName}`
-                                : `Follow ${candidate.displayName}`
+                                ? t("stopFollowingName", { name: candidate.displayName })
+                                : t("followName", { name: candidate.displayName })
                             }
                             title={
                               followingMemberId === candidate.id
-                                ? "Stop following"
-                                : "Follow collaborator"
+                                ? t("stopFollowing")
+                                : t("followCollaborator")
                             }
                             onClick={() => onFollowMember(candidate.id)}
                             data-testid={`follow-member-${candidate.displayName}`}
@@ -530,8 +536,8 @@ export function CollaborationPanel({
                         ) : null}
                       </span>
                       <small className="member-location">
-                        {cursor || candidate.currentFile ? <><FilePenLine size={12} aria-hidden="true" /><span>{cursor?.path ?? candidate.currentFile}</span></> : candidate.online ? "Browsing" : "Offline"}
-                        {cursor ? <span className="ui-badge">第 {cursor.position.lineNumber} 行，第 {cursor.position.column} 列</span> : null}
+                        {cursor || candidate.currentFile ? <><FilePenLine size={12} aria-hidden="true" /><span>{cursor?.path ?? candidate.currentFile}</span></> : t(candidate.online ? "browsing" : "offline")}
+                        {cursor ? <span className="ui-badge">{t("cursorPosition", { line: cursor.position.lineNumber, column: cursor.position.column })}</span> : null}
                       </small>
                     </li>
                   );
@@ -540,10 +546,10 @@ export function CollaborationPanel({
             </div>
 
             <div className="team-block activity-block">
-              <h2>Activity</h2>
+              <h2>{t("activity")}</h2>
               <ol className="event-list" data-testid="activity-feed">
                 {activityItems.length === 0 ? (
-                  <li className="empty-panel-state">No activity yet.</li>
+                  <li className="empty-panel-state">{t("noActivity")}</li>
                 ) : (
                   activityItems.map((item) => (
                     <li key={item.id}>
@@ -552,7 +558,7 @@ export function CollaborationPanel({
                         <button
                           className="activity-entry"
                           onClick={() => onOpenFile(item.path ?? "")}
-                          title={`Open ${item.path}`}
+                          title={t("openPath", { path: item.path })}
                         >
                           <ActivityText item={item} />
                         </button>
@@ -592,11 +598,11 @@ export function CollaborationPanel({
 
         {activeTab === "project" ? (
           <section className="collab-section project-details" data-testid="project-panel">
-            <h2>Project</h2>
+            <h2>{t("project")}</h2>
             <dl className="session-facts">
-              <div><dt>Room</dt><dd>{roomId}</dd></div>
-              <div><dt>Workspace</dt><dd title={workspaceRoot}>{workspaceRoot}</dd></div>
-              {member?.profileRole ? <div><dt>Your role</dt><dd>{member.profileRole}</dd></div> : null}
+              <div><dt>{t("room")}</dt><dd>{roomId}</dd></div>
+              <div><dt>{t("workspace")}</dt><dd title={workspaceRoot}>{workspaceRoot}</dd></div>
+              {member?.profileRole ? <div><dt>{t("yourRole")}</dt><dd>{member.profileRole}</dd></div> : null}
             </dl>
           </section>
         ) : null}
@@ -636,6 +642,7 @@ function ChatAgentMessage({
   memberId?: string;
   onCancelAgentRun(runId: string): Promise<void>;
 }) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -662,7 +669,7 @@ function ChatAgentMessage({
       {showText ? <p>{visibleText}</p> : null}
       {showText && canExpand ? (
         <button type="button" className="chat-output-toggle" onClick={() => setExpanded((current) => !current)}>
-          {expanded ? "Collapse" : "Show full response"}
+          {t(expanded ? "collapse" : "showFullResponse")}
         </button>
       ) : null}
       {run && showCard ? (
@@ -670,8 +677,10 @@ function ChatAgentMessage({
           {!showText && run.status !== "completed" ? <AgentResponse run={run} /> : null}
           <AgentQuestions projectId={projectId} run={run} memberId={memberId} onError={onError} />
           <AgentRunProgress run={run} memberId={memberId} onCancel={active && !stopping ? () => void stopRun() : undefined} onRetry={run.memberId === memberId && !retrying ? () => void retryRun() : undefined} />
-          <header className="chat-agent-card-heading"><strong>Requested by {run.memberName ?? run.memberId}</strong><span className={`ui-badge run-status-${run.status}`}>{run.interruptedByRunId ? `Interrupted by ${interruptedByName ?? run.interruptedByMemberId}` : run.status}</span></header>
-          <div className="agent-run-model">模型 <strong>{run.model}</strong></div>
+          <header className="chat-agent-card-heading"><strong>{t("requestedBy", { name: run.memberName ?? run.memberId })}</strong><span className={`ui-badge run-status-${run.status}`}>{run.interruptedByRunId
+            ? t("interruptedBy", { name: interruptedByName ?? run.interruptedByMemberId ?? t("collaborator") })
+            : runStatusText(t, run.status)}</span></header>
+          <div className="agent-run-model">{t("model")} <strong>{run.model}</strong></div>
           {run.fileChanges?.length ? (
             <ul className="chat-agent-files">
               {run.fileChanges.map((change) => (
@@ -680,7 +689,7 @@ function ChatAgentMessage({
                 </li>
               ))}
             </ul>
-          ) : <small>No file changes recorded.</small>}
+          ) : <small>{t("noFileChangesRecorded")}</small>}
           <AgentKnowledgeSummary trace={trace} cards={knowledgeCards} updateCardIds={knowledgeUpdateCardIds} testIdPrefix="chat-agent" onOpenFile={onOpenFile} />
           <AgentWorkDetails run={run} trace={trace} variant="team" onLoadTrace={() => onLoadAgentTrace(run.id)} />
           <div className="chat-agent-card-actions">
@@ -688,13 +697,13 @@ function ChatAgentMessage({
               type="button"
               className="chat-trace-download"
               onClick={() => void downloadAgentTrace(projectId, run.id).catch(onError)}
-              title="Download complete trace"
-              aria-label="Download complete trace"
+              title={t("downloadCompleteTrace")}
+              aria-label={t("downloadCompleteTrace")}
             >
               <Download size={13} />
             </button>
             {run.status === "queued" || run.status === "running" ? (
-              <button type="button" disabled={stopping} onClick={() => void stopRun()}>{stopping ? "正在停止" : "停止任务"}</button>
+              <button type="button" disabled={stopping} onClick={() => void stopRun()}>{t(stopping ? "stopping" : "stopTask")}</button>
             ) : null}
           </div>
         </article>
@@ -708,6 +717,7 @@ function memberHandle(name: string) {
 }
 
 function formatActivity(
+  t: Translate,
   event: EventRecord,
   members: RoomMember[]
 ): ActivityItem | null {
@@ -715,65 +725,63 @@ function formatActivity(
   const actor =
     members.find((member) => member.id === event.memberId)?.displayName ??
     stringValue(payload.name) ??
-    "A collaborator";
+    t("anotherCollaborator");
 
   switch (event.type) {
     case "room_created":
-      return item(event, "general", `Session opened for ${stringValue(payload.workspaceName) ?? "workspace"}`);
+      return item(event, "general", t("activitySessionOpened", { workspace: stringValue(payload.workspaceName) ?? t("workspace") }));
     case "member_joined":
-      return item(event, "join", `${stringValue(payload.name) ?? actor} joined the session`);
+      return item(event, "join", t("activityJoined", { name: stringValue(payload.name) ?? actor }));
     case "member_rejoined":
       return item(
         event,
         "join",
-        numberValue(payload.connectionCount) > 1
-          ? `${stringValue(payload.name) ?? actor} opened another tab`
-          : `${stringValue(payload.name) ?? actor} rejoined the session`
+        t(numberValue(payload.connectionCount) > 1 ? "activityAnotherTab" : "activityRejoined", { name: stringValue(payload.name) ?? actor })
       );
     case "member_online":
-      return item(event, "join", `${actor} came online`);
+      return item(event, "join", t("activityOnline", { name: actor }));
     case "member_offline":
-      return item(event, "leave", `${actor} left the session`);
+      return item(event, "leave", t("activityLeft", { name: actor }));
     case "file_opened":
       return null;
     case "chat_message_created":
-      return item(event, "general", `${stringValue(payload.authorName) ?? actor} sent a chat message`);
+      return item(event, "general", t("activityChat", { name: stringValue(payload.authorName) ?? actor }));
     case "terminal_input":
-      return item(event, "general", `${actor} used the terminal`, { detail: `${numberValue(payload.count)} inputs` });
+      return item(event, "general", t("activityTerminal", { name: actor }), { detail: t("terminalInputs", { count: numberValue(payload.count) }) });
     case "file_changed": {
       const path = stringValue(payload.path);
-      return item(event, "edit", `${actor} edited ${path ?? "a file"}`, {
-        detail: formatEditDetail(payload),
+      return item(event, "edit", t("activityEdited", { name: actor, path: path ?? t("unnamedFile") }), {
+        detail: formatEditDetail(t, payload),
         path,
         startedAt: stringValue(payload.startedAt),
         finishedAt: stringValue(payload.finishedAt)
       });
     }
     case "session_settings_updated":
-      return item(event, "general", `${actor} updated session settings`);
+      return item(event, "general", t("activitySettings", { name: actor }));
     case "workspace_file_created": {
       const path = stringValue(payload.path);
-      return item(event, "create", `${actor} created ${path ?? "a file"}`);
+      return item(event, "create", t("activityCreated", { name: actor, path: path ?? t("unnamedFile") }));
     }
     case "workspace_directory_created":
-      return item(event, "create", `${actor} created folder ${stringValue(payload.path) ?? ""}`.trim());
+      return item(event, "create", t("activityFolder", { name: actor, path: stringValue(payload.path) ?? "" }).trim());
     case "workspace_path_renamed": {
       const toPath = stringValue(payload.toPath);
       return item(
         event,
         "rename",
-        `${actor} renamed ${stringValue(payload.fromPath) ?? "a path"} to ${toPath ?? "a new path"}`
+        t("activityRenamed", { name: actor, from: stringValue(payload.fromPath) ?? t("unnamedPath"), to: toPath ?? t("newPath") })
       );
     }
     case "workspace_path_deleted":
-      return item(event, "delete", `${actor} deleted ${stringValue(payload.path) ?? "a path"}`);
+      return item(event, "delete", t("activityDeleted", { name: actor, path: stringValue(payload.path) ?? t("unnamedPath") }));
     case "agent_task_started": {
       const prompt = stringValue(payload.promptPreview);
       return item(
         event,
         "agent",
-        `${actor} asked OpenCode to work on this project`,
-        { detail: prompt ? `“${prompt}”` : stringValue(payload.sessionTitle) }
+        t("activityAgentStarted", { name: actor }),
+        { detail: prompt ?? stringValue(payload.sessionTitle) }
       );
     }
     case "agent_task_completed": {
@@ -781,21 +789,23 @@ function formatActivity(
       return item(
         event,
         "agent",
-        `${actor}'s Agent task completed`,
+        t("activityAgentCompleted", { name: actor }),
         {
-          detail: files.length ? formatAgentFiles(files) : "No files changed",
+          detail: files.length ? formatAgentFiles(t, files) : t("noFilesChanged"),
           path: files[0]?.file
         }
       );
     }
     case "agent_task_failed":
-      return item(event, "agent", `${actor}'s Agent task failed`, {
-        detail: stringValue(payload.error)
+      return item(event, "agent", t("activityAgentFailed", { name: actor }), {
+        detail: serverText(t, stringValue(payload.error) ?? "")
       });
-    case "agent_task_cancelled":
-      return item(event, "agent", `${actor}'s Agent task was cancelled`, {
-        detail: stringValue(payload.reason)
+    case "agent_task_cancelled": {
+      const reason = stringValue(payload.reason);
+      return item(event, "agent", t("activityAgentCancelled", { name: actor }), {
+        detail: reason === "interrupted" || reason === "cancelled" ? t(reason) : reason
       });
+    }
     default:
       return null;
   }
@@ -824,14 +834,16 @@ function item(
 }
 
 function ActivityText({ item }: { item: ActivityItem }) {
+  const { locale, t } = useI18n();
+  const end = formatTime(locale, item.timestamp, true);
   return (
     <>
       <strong>{item.text}</strong>
       {item.detail ? <small>{item.detail}</small> : null}
       <time>
         {item.startedAt
-          ? `${formatTime(item.startedAt, true)}-${formatTime(item.timestamp, true)}`
-          : formatTime(item.timestamp, true)}
+          ? t("timeRange", { start: formatTime(locale, item.startedAt, true), end })
+          : end}
       </time>
     </>
   );
@@ -879,14 +891,16 @@ function fileChanges(value: unknown): AgentActivityFile[] {
   });
 }
 
-function formatAgentFiles(files: AgentActivityFile[]) {
+function formatAgentFiles(t: Translate, files: AgentActivityFile[]) {
   const additions = files.reduce((total, file) => total + file.additions, 0);
   const deletions = files.reduce((total, file) => total + file.deletions, 0);
-  const summary = `${files.length} ${files.length === 1 ? "file" : "files"} changed, ${additions} lines added and ${deletions} lines removed.`;
-  return files.length === 1 ? `${files[0]?.file}: ${summary}` : summary;
+  const file = files.length === 1 ? files[0] : undefined;
+  return file
+    ? t("agentFilesOne", { added: additions, removed: deletions, path: file.file })
+    : t("agentFilesMany", { count: files.length, added: additions, removed: deletions });
 }
 
-function formatEditDetail(payload: Record<string, unknown>) {
+function formatEditDetail(t: Translate, payload: Record<string, unknown>) {
   if (!Array.isArray(payload.ranges)) return undefined;
   const ranges = payload.ranges.flatMap((value) => {
     if (!value || typeof value !== "object") return [];
@@ -904,17 +918,15 @@ function formatEditDetail(payload: Record<string, unknown>) {
         : `${range.startLine}-${range.endLine}`
     )
     .join(", ");
-  const prefix = ranges.length === 1 && ranges[0]?.startLine === ranges[0]?.endLine
-    ? "Line"
-    : "Lines";
+  const singleLine = ranges.length === 1 && ranges[0]?.startLine === ranges[0]?.endLine;
   const addedLines = numberValue(payload.addedLines);
   const removedLines = numberValue(payload.removedLines);
   if (addedLines > 0 || removedLines > 0) {
-    return `${prefix} ${label}: ${addedLines} lines added and ${removedLines} lines removed.`;
+    return t(singleLine ? "editDiffLine" : "editDiffLines", { lines: label, added: addedLines, removed: removedLines });
   }
   const changedLines = ranges.reduce(
     (count, range) => count + range.endLine - range.startLine + 1,
     0
   );
-  return `${prefix} ${label}: ${changedLines} ${changedLines === 1 ? "line" : "lines"} changed.`;
+  return t(singleLine ? "editChangedLine" : "editChangedLines", { lines: label, count: changedLines });
 }

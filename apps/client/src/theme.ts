@@ -1,9 +1,11 @@
+import { readLocalStorage } from "./localStorage";
+
 export type ThemeMode = "dark" | "light";
 
 export const THEME_STORAGE_KEY = "simplercp.theme";
 
 export function getStoredTheme(): ThemeMode {
-  return window.localStorage.getItem(THEME_STORAGE_KEY) === "light"
+  return readLocalStorage(THEME_STORAGE_KEY) === "light"
     ? "light"
     : "dark";
 }

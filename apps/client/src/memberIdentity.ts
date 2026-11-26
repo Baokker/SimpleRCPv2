@@ -1,6 +1,8 @@
+import { readLocalStorage, writeLocalStorage } from "./localStorage";
+
 export function storedMemberId(projectId: string) {
   return sessionMemberId(projectId)
-    ?? window.localStorage.getItem(`simplercp.memberId.${projectId}`)
+    ?? readLocalStorage(`simplercp.memberId.${projectId}`)
     ?? undefined;
 }
 
@@ -10,14 +12,14 @@ export function sessionMemberId(projectId: string) {
 
 export function rememberMember(projectId: string, memberId: string) {
   window.sessionStorage.setItem(`simplercp.memberId.${projectId}`, memberId);
-  window.localStorage.setItem(`simplercp.memberId.${projectId}`, memberId);
+  writeLocalStorage(`simplercp.memberId.${projectId}`, memberId);
   window.sessionStorage.setItem("simplercp.activeMemberId", memberId);
-  window.localStorage.setItem("simplercp.activeMemberId", memberId);
+  writeLocalStorage("simplercp.activeMemberId", memberId);
 }
 
 export function activeMemberId() {
   return window.sessionStorage.getItem("simplercp.activeMemberId")
-    ?? window.localStorage.getItem("simplercp.activeMemberId")
+    ?? readLocalStorage("simplercp.activeMemberId")
     ?? undefined;
 }
 

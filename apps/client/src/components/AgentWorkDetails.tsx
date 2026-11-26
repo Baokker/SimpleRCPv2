@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AgentRun, AgentTraceEvent } from "../types";
 import { presentTrace } from "../agentTracePresentation";
 import { AgentMetrics } from "./AgentPresentation";
+import { useI18n } from "../i18n";
 
 export function AgentWorkDetails({ run, trace, onLoadTrace, onDownload, variant = "personal" }: {
   run: AgentRun;
@@ -11,10 +12,11 @@ export function AgentWorkDetails({ run, trace, onLoadTrace, onDownload, variant 
   onDownload?: () => void;
   variant?: "personal" | "team";
 }) {
+  const { t } = useI18n();
   const active = run.status === "queued" || run.status === "running";
   const [expanded, setExpanded] = useState(active);
   useEffect(() => setExpanded(active), [active]);
-  const presentation = useMemo(() => presentTrace(trace), [trace]);
+  const presentation = useMemo(() => presentTrace(trace, t), [trace, t]);
   const reasoning = run.activity?.reasoning.filter((part) => part.text.trim()).map((part) => part.text).join("\n\n") ?? "";
 
   return <details className={`agent-trace-block agent-work-details ${run.status}`} open={expanded}
@@ -25,22 +27,22 @@ export function AgentWorkDetails({ run, trace, onLoadTrace, onDownload, variant 
     <summary data-testid="agent-trace-summary">
       <span className="agent-trace-summary-main">
         <TraceStatusIcon status={run.status} />
-        <span><strong>工作详情</strong><small>{presentation.visible.length} 条操作记录</small>
+        <span><strong>{t("workDetails")}</strong><small>{t("operationCount", { count: presentation.visible.length })}</small>
           {reasoning ? <span className="agent-reasoning-preview">{reasoning.split("\n").slice(-3).join("\n")}</span> : null}
         </span>
       </span>
-      <span className="agent-trace-summary-action"><span data-testid="agent-work-details-status">{active ? "实时更新" : "已结束"}</span><ChevronDown className="agent-trace-chevron" size={14} /></span>
+      <span className="agent-trace-summary-action"><span data-testid="agent-work-details-status">{t(active ? "liveUpdates" : "ended")}</span><ChevronDown className="agent-trace-chevron" size={14} /></span>
     </summary>
     <div className="agent-trace-content">
-      {reasoning ? <section className="agent-reasoning" data-testid="agent-reasoning"><strong>推理过程</strong><pre>{reasoning}</pre></section>
-        : <p className="agent-caption" data-testid="agent-reasoning-unavailable">该模型未提供推理过程</p>}
+      {reasoning ? <section className="agent-reasoning" data-testid="agent-reasoning"><strong>{t("reasoning")}</strong><pre>{reasoning}</pre></section>
+        : <p className="agent-caption" data-testid="agent-reasoning-unavailable">{t("reasoningUnavailable")}</p>}
       {presentation.visible.length ? <ol className="agent-trace" data-testid={variant === "team" ? "chat-agent-trace" : "agent-trace"}>
         {presentation.visible.map((item) => <li key={item.sequence} className={`agent-trace-entry ${item.tone}`}>
           <span className="agent-trace-entry-marker" aria-hidden="true" />
           <div><strong>{item.title}</strong>{item.detail ? <span>{item.detail}</span> : null}{item.metrics ? <AgentMetrics items={item.metrics} /> : null}</div>
         </li>)}
-      </ol> : <p className="chat-trace-empty">等待 Agent 的操作记录。</p>}
-      {onDownload ? <button type="button" className="agent-trace-download" data-testid="agent-trace-download" onClick={onDownload}><Download size={13} />下载轨迹</button> : null}
+      </ol> : <p className="chat-trace-empty">{t("waitingForTrace")}</p>}
+      {onDownload ? <button type="button" className="agent-trace-download" data-testid="agent-trace-download" onClick={onDownload}><Download size={13} />{t("downloadTrace")}</button> : null}
     </div>
   </details>;
 }

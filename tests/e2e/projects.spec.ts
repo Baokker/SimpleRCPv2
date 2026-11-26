@@ -24,7 +24,7 @@ test("project home opens Demo and creates an empty project", async ({ page }) =>
   await page.goto("/");
   page.once("dialog", async (dialog) => {
     expect(dialog.type()).toBe("confirm");
-    expect(dialog.message()).toContain('Delete "Browser Project" and all stored code?');
+    expect(dialog.message()).toContain("删除项目 Browser Project 及其中保存的所有代码？");
     await dialog.accept();
   });
   await page.getByTestId(`delete-project-${createdProjectId}`).click();
@@ -39,7 +39,7 @@ test("missing projects show a recoverable error", async ({ page }) => {
   await page.goto("/projects/missing-project");
 
   await expect(page.getByTestId("route-error")).toContainText(
-    "Project not found"
+    "项目不存在"
   );
   await expect(page.getByTestId("route-error-projects")).toHaveAttribute(
     "href",
@@ -58,7 +58,7 @@ test("an open project reports when another client deletes it", async ({
   const created = await createResponse.json() as { project: { id: string } };
   const page = await browser.newPage();
   await page.goto(`/projects/${created.project.id}?name=ActiveUser`);
-  await expect(page.getByTestId("connection-state")).toHaveText("Connected");
+  await expect(page.getByTestId("connection-state")).toHaveText("已连接");
 
   const deleteResponse = await request.delete(
     `/api/projects/${created.project.id}`
@@ -66,7 +66,7 @@ test("an open project reports when another client deletes it", async ({
   expect(deleteResponse.ok()).toBe(true);
 
   await expect(page.getByTestId("workspace-error")).toContainText(
-    "This project was deleted."
+    "这个项目已被删除。"
   );
   await expect(page.getByTestId("workspace-error").getByRole("link")).toHaveAttribute(
     "href",

@@ -14,10 +14,10 @@ test("project home displays and saves the OpenCode settings", async ({ page }) =
   await page.goto("/");
   await page.getByTestId("agent-settings-open").click();
   const dialog = page.getByTestId("agent-settings-dialog");
-  await expect(dialog).toContainText("OpenCode Ready", { timeout: 20_000 });
+  await expect(dialog).toContainText("OpenCode 已就绪", { timeout: 20_000 });
   await expect(dialog).toContainText(settings.provider === "minimax" ? "MiniMax" : "DeepSeek");
   await expect(dialog).toContainText(
-    settings.apiKeyConfigured ? "Configured" : "Missing"
+    settings.apiKeyConfigured ? "已配置" : "未配置"
   );
   await expect(page.getByTestId("agent-settings-model")).toHaveValue(
     settings.model
@@ -40,13 +40,13 @@ test("member keeps multiple Agent sessions separate", async ({ page }) => {
 
   await page.getByTestId("agent-new-session").click();
   await page.getByTestId("agent-session-title").fill("Login work");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByTestId("agent-message-list")).toBeVisible();
   await expect(page.getByRole("tab", { name: /Login work/ })).toBeVisible();
 
   await page.getByTestId("agent-new-session").click();
   await page.getByTestId("agent-session-title").fill("Test work");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByRole("tab", { name: /Login work/ })).toBeVisible();
   await expect(page.getByRole("tab", { name: /Test work/ })).toBeVisible();
 });
@@ -74,7 +74,7 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
 
   await openAs(page, "Agent Member");
   await page.getByTestId("collab-tab-agent").click();
-  await expect(page.getByTestId("agent-runtime-status")).toContainText("Ready", {
+  await expect(page.getByTestId("agent-runtime-status")).toContainText("已就绪", {
     timeout: 20_000
   });
 
@@ -87,7 +87,7 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
   await page.getByTestId("agent-run-submit").click();
 
   const selectedRun = page.getByTestId("agent-message-list");
-  await expect(selectedRun).toContainText("Completed", { timeout: 90_000 });
+  await expect(selectedRun).toContainText("已完成", { timeout: 90_000 });
   await expect(selectedRun).toContainText("browser agent completed");
   await expect(selectedRun).toContainText("src/hello.ts");
   const traceDisclosure = page.getByTestId("agent-trace-disclosure");
@@ -95,7 +95,7 @@ test("member runs an OpenCode task and reads its trace", async ({ page }) => {
   await expect(page.getByTestId("agent-trace")).toBeHidden();
   await traceDisclosure.getByTestId("agent-trace-summary").click();
   await expect(page.getByTestId("agent-trace")).toBeVisible();
-  await expect(page.getByTestId("agent-trace")).toContainText("Run completed");
+  await expect(page.getByTestId("agent-trace")).toContainText("任务完成");
   await expect(page.getByTestId("agent-trace")).not.toContainText(
     "opencode.message.updated"
   );
@@ -133,18 +133,18 @@ test("member sees a concurrent change warning when editing an Agent file", async
     "Use the bash tool to run sleep 3. Then replace src/hello.ts with exactly: agent replaced this file"
   );
   await page.getByTestId("agent-run-submit").click();
-  await expect(page.getByTestId("agent-selected-run").last()).toContainText("Running");
+  await expect(page.getByTestId("agent-selected-run").last()).toContainText("运行中");
   await page.evaluate(() => {
     window.__simplercpEditors?.["src/hello.ts"]?.setValue(
       "member changed while agent ran"
     );
   });
-  await expect(page.getByTestId("agent-selected-run").last()).toContainText("Completed", {
+  await expect(page.getByTestId("agent-selected-run").last()).toContainText("已完成", {
     timeout: 90_000
   });
-  await expect(page.getByTestId("agent-trace").last()).toContainText("Ran command");
-  await expect(page.getByTestId("agent-trace").last()).toContainText(/Wrote file|Edited file/);
+  await expect(page.getByTestId("agent-trace").last()).toContainText("执行命令");
+  await expect(page.getByTestId("agent-trace").last()).toContainText(/写入文件|编辑文件/);
   await expect(page.getByTestId("agent-trace").last()).toContainText(
-    "Concurrent edit detected"
+    "检测到同时编辑"
   );
 });

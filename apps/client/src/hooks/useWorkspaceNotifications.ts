@@ -1,42 +1,48 @@
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "../i18n";
+import { captureError, errorText, messageError, type Translate } from "../i18n/messages";
 
 const WORKSPACE_NOTICE_DURATION_MS = 4_000;
-const PROJECT_DELETED_MESSAGE = "This project was deleted.";
+const projectDeletedError = messageError("projectDeleted");
 
 export function useWorkspaceNotifications() {
-  const [workspaceNotice, setWorkspaceNotice] = useState("");
-  const [workspaceError, setWorkspaceError] = useState("");
+  const { t } = useI18n();
+  const [workspaceNotice, setWorkspaceNotice] = useState<(t: Translate) => string>();
+  const [workspaceError, setWorkspaceError] = useState<Error>();
   const projectDeletedRef = useRef(false);
 
   useEffect(() => {
     if (!workspaceNotice) return;
     const timer = window.setTimeout(
-      () => setWorkspaceNotice(""),
+      () => setWorkspaceNotice(undefined),
       WORKSPACE_NOTICE_DURATION_MS
     );
     return () => window.clearTimeout(timer);
   }, [workspaceNotice]);
 
   return {
-    workspaceNotice,
-    workspaceError,
-    showWorkspaceNotice: setWorkspaceNotice,
+    workspaceNotice: workspaceNotice?.(t),
+    workspaceError: errorText(t, workspaceError, ""),
+    showWorkspaceNotice(notice: (translate: Translate) => string) {
+      setWorkspaceNotice(() => notice);
+    },
     clearWorkspaceNotice() {
-      setWorkspaceNotice("");
+      setWorkspaceNotice(undefined);
     },
     showWorkspaceError(error: unknown) {
       if (projectDeletedRef.current) return;
-      setWorkspaceError(
-        error instanceof Error ? error.message : "Workspace request failed"
-      );
+      setWorkspaceError(captureError(error, messageError("workspaceRequestFailed")));
     },
     clearWorkspaceError() {
-      setWorkspaceError("");
+      if (!projectDeletedRef.current) setWorkspaceError(undefined);
+    },
+    dismissWorkspaceError() {
+      setWorkspaceError(undefined);
     },
     showProjectDeleted() {
       projectDeletedRef.current = true;
-      setWorkspaceError(PROJECT_DELETED_MESSAGE);
+      setWorkspaceError(projectDeletedError);
     },
-    projectDeleted: workspaceError === PROJECT_DELETED_MESSAGE
+    projectDeleted: projectDeletedRef.current
   };
 }

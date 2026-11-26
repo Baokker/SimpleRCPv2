@@ -20,14 +20,19 @@ test("真实 OpenCode 记录回放显示部分正文，完成后保留全部说�
     const reactPath = "/node_modules/.vite/deps/react.js";
     const rendererPath = "/node_modules/.vite/deps/react-dom_client.js";
     const componentPath = "/src/components/AgentResponse.tsx";
+    const i18nPath = "/src/i18n/index.tsx";
     const { default: React } = await import(reactPath);
     const { default: { createRoot } } = await import(rendererPath);
     const { AgentResponse } = await import(componentPath);
+    const { I18nProvider } = await import(i18nPath);
     const container = document.createElement("section");
     document.body.append(container);
     const root = createRoot(container);
-    root.render(React.createElement(AgentResponse, { run }));
-    Object.assign(window, { updateRecordedResponse(nextRun: AgentRun) { root.render(React.createElement(AgentResponse, { run: nextRun })); } });
+    const render = (nextRun: AgentRun) => root.render(
+      React.createElement(I18nProvider, null, React.createElement(AgentResponse, { run: nextRun }))
+    );
+    render(run);
+    Object.assign(window, { updateRecordedResponse: render });
   }, { ...recorded, status: "running", finishedAt: undefined, output: undefined, activity: partial });
   const response = page.getByTestId("agent-response");
   const partialText = partial.messages!.filter((part) => part.sessionId === recorded.runtimeSessionId && part.text.trim()).map((part) => part.text).join("\n\n");
