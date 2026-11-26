@@ -618,7 +618,7 @@ function AgentMessage({
               <button type="button" onClick={() => onOpenFile(change.file)}>
                 <FileCode2 size={13} />
                 <span>{change.file}</span>
-                <small className="file-change-counts"><span className="ui-badge success">{L("新增")} {change.additions} {L("行")}</span><span className="ui-badge error">{L("删除")} {change.deletions} {L("行")}</span></small>
+                <small className="file-change-counts"><span className="ui-badge success">{L("新增 {0} 行", change.additions)}</span><span className="ui-badge error">{L("删除 {0} 行", change.deletions)}</span></small>
               </button>
             </li>
           ))}

@@ -71,7 +71,8 @@ async function capture(browser) {
   let created = 0;
   browser.newContext = async (options) => {
     const context = await newContext({ ...options, viewport, deviceScaleFactor: scale });
-    const theme = created++ === 0 ? "dark" : "light";
+    // The English capture for the journal uses the light theme for both members, which prints better.
+    const theme = created++ === 0 && lang !== "en" ? "dark" : "light";
     await context.addInitScript(({ theme, panelWidth, lang }) => {
       if (!localStorage.getItem("simplercp.theme")) localStorage.setItem("simplercp.theme", theme);
       if (lang === "en") localStorage.setItem("simplercp.locale", "en");

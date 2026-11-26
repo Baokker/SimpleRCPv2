@@ -553,7 +553,7 @@ export function KnowledgePanel({
             </div></details>
             <select aria-label={L("知识排序")} value={sort} onChange={event => { setSort(event.target.value); if (filterMenuRef.current) filterMenuRef.current.open = false; }}><option value="updatedAt">{L("最近更新")}</option><option value="reading">{L("阅读顺序")}</option></select>
             </div>
-            <p className="knowledge-hint" role="status">{L("共")} {filteredCards.length} {L("条")}{cards.length !== filteredCards.length ? L("，全部知识 {0} 条", cards.length) : ""}</p>
+            <p className="knowledge-hint" role="status">{L("共 {0} 条", filteredCards.length)}{cards.length !== filteredCards.length ? L("，全部知识 {0} 条", cards.length) : ""}</p>
             {sort === "reading" ? <p className="knowledge-hint">{L("适合第一次接触这段代码的成员按顺序阅读。当前文件优先，教程、决策和约束排在前面。")}</p> : null}
           </div> : null}
           {view === "inbox" ? <div data-testid="knowledge-inbox">
@@ -598,7 +598,7 @@ export function KnowledgePanel({
             <KnowledgeActivity items={filteredActivity} members={members} onOpenCard={revealCard} onOpenSuggestion={id => { void getKnowledgeSuggestion(projectId, id).then(result => { setFocusedSuggestion(result.suggestion); setView("inbox"); }).catch(error => setFormError(String(error))); }} />
           </> : <>
             <ol className="knowledge-list">{visibleCards.length === 0 ? <li className="empty-panel-state">{filterRange === "current" ? L("当前打开文件上还没有符合条件的知识卡片。可以选择全部知识，或创建关联知识。") : L("没有符合筛选的知识。可以调整搜索条件，或新建一张卡片。")}</li> : visibleCards.map(renderCard)}</ol>
-            <div className="knowledge-pagination workspace-dialog-actions"><button disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>{L("上一页")}</button><span>{L("第")} {currentPage} {L("页，共")} {pageCount} {L("页")}</span><button disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>{L("下一页")}</button></div>
+            <div className="knowledge-pagination workspace-dialog-actions"><button disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>{L("上一页")}</button><span>{L("第 {0} 页，共 {1} 页", currentPage, pageCount)}</span><button disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>{L("下一页")}</button></div>
           </>}
         </div>
       </div>

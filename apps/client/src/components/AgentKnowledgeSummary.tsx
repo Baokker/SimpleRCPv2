@@ -61,7 +61,7 @@ export function AgentKnowledgeSummary({
               {hits.map((hit, index) => (
                 <li key={`${hit.cardId}-${hit.file}-${index}`} className={hit.checkResult?.passed === false ? "failed" : ""}>
                   <button type="button" onClick={() => openKnowledgeCard(hit.cardId)}>{cardTitle(hit.cardId)}</button>
-                  <button type="button" className="agent-knowledge-location" onClick={() => onOpenFile(hit.file)}><FileCode2 size={13} aria-hidden="true" />{hit.file}<span>{L("第")} {hit.lines.start}–{hit.lines.end} {L("行")}</span></button>
+                  <button type="button" className="agent-knowledge-location" onClick={() => onOpenFile(hit.file)}><FileCode2 size={13} aria-hidden="true" />{hit.file}<span>{L("第 {0}–{1} 行", hit.lines.start, hit.lines.end)}</span></button>
                   <span className={`ui-badge ${hit.checkResult ? hit.checkResult.passed ? "success" : "error" : "warning"}`}>
                     {hit.checkResult ? hit.checkResult.passed ? L("检查通过") : L("检查未通过") : L("请人工核对")}
                   </span>

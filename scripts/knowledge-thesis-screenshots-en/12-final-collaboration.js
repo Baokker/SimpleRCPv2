@@ -21,6 +21,6 @@ async (page) => {
   await alice.screenshot({ path: root + "03-discussion-alice.png" });
   await bob.screenshot({ path: root + "03-discussion-bob.png" });
   const checks = await Promise.all([alice, bob].map(member => member.evaluate(() => ({ memberId: sessionStorage.getItem("simplercp.memberId.demo"), theme: document.documentElement.dataset.theme, code: window.__simplercpEditors["src/requestPolicy.js"].getModel().getValue() }))));
-  if (checks[0].memberId === checks[1].memberId || checks[0].code !== checks[1].code || checks[0].theme !== "dark" || checks[1].theme !== "light") throw new Error("Collaboration verification failed");
+  if (checks[0].memberId === checks[1].memberId || checks[0].code !== checks[1].code || checks[0].theme !== "light" || checks[1].theme !== "light") throw new Error("Collaboration verification failed");
   return checks;
 }

@@ -2,7 +2,7 @@ async (page) => {
   const alice = page;
   for (const extra of page.context().pages().slice(1)) await extra.close();
   await alice.evaluate(() => {
-    localStorage.setItem("simplercp.theme", "dark");
+    localStorage.setItem("simplercp.theme", "light");
     localStorage.setItem("simplercp.locale", "en");
     localStorage.setItem("simplercp.layout.workspaceWidth", "180");
     localStorage.setItem("simplercp.layout.collaborationWidth", "480");

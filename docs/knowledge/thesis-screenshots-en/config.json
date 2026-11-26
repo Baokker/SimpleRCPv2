@@ -1,0 +1,21 @@
+{
+  "PORT": "4180",
+  "SIMPLERCP_OPENCODE_PORT": "4196",
+  "KNOWLEDGE": "full",
+  "KNOWLEDGE_LANG": "en",
+  "SIMPLERCP_TERMINAL_ENABLED": "false",
+  "SIMPLERCP_FAKE_AGENT_RUNTIME": "false",
+  "SIMPLERCP_PUBLIC_URL": "http://127.0.0.1:5180",
+  "SIMPLERCP_DATA_DIR": "/Users/baokker/.codex/worktrees/livememo/SimpleRCPv2/.test-workspaces/thesis-screenshots-en/data",
+  "SIMPLERCP_WORKSPACES_DIR": "/Users/baokker/.codex/worktrees/livememo/SimpleRCPv2/.test-workspaces/thesis-screenshots-en/workspaces",
+  "TMPDIR": "/Users/baokker/.codex/worktrees/livememo/SimpleRCPv2/.test-workspaces/thesis-screenshots-en/tmp",
+  "VITE_SIMPLERCP_API_ORIGIN": "http://127.0.0.1:4180",
+  "VITE_SIMPLERCP_CLIENT_PORT": "5180",
+  "codeCommit": "1819d1151a3dd12b1573a04a286514c6eae67914",
+  "viewport": {
+    "width": 1060,
+    "height": 900
+  },
+  "scale": 2,
+  "startedAt": "2026-11-26T05:44:11.008Z"
+}

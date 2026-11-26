@@ -1,0 +1,1330 @@
+[
+  {
+    "name": "01-setup",
+    "attempt": 1,
+    "ok": true,
+    "ms": 5211,
+    "result": {
+      "prepared": [
+        {
+          "path": "src/retryPolicy.js",
+          "status": 200
+        },
+        {
+          "path": "src/requestPolicy.js",
+          "status": 200
+        },
+        {
+          "path": "AGENTS.md",
+          "status": 200
+        },
+        {
+          "path": "README.md",
+          "status": 200
+        }
+      ],
+      "identities": [
+        "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+        "0c45d52a-d6bb-4826-b837-9d6a3adb8621"
+      ],
+      "themes": [
+        "light",
+        "light"
+      ]
+    }
+  },
+  {
+    "name": "02-manual",
+    "attempt": 1,
+    "ok": true,
+    "ms": 1432,
+    "result": {
+      "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+      "status": "reviewed",
+      "scope": "team",
+      "origin": "manual",
+      "anchors": [
+        {
+          "anchorId": "835fbe7a-bc82-412b-b7a9-f260220bdca8",
+          "file": {
+            "workspaceRelativePath": "README.md"
+          },
+          "associationLevel": "file",
+          "snapshot": {
+            "text": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "03-discussion-import",
+    "attempt": 1,
+    "ok": false,
+    "ms": 30979,
+    "error": "page.waitForFunction: Timeout 30000ms exceeded."
+  },
+  {
+    "name": "03b-import",
+    "attempt": 1,
+    "ok": true,
+    "ms": 9305,
+    "result": {
+      "synced": true,
+      "imported": {
+        "drafts": [
+          {
+            "suggestionId": "5fe3e018-4f07-4e5b-8973-cf420e82d2e1",
+            "file": "AGENTS.md",
+            "startLine": 5,
+            "endLine": 5,
+            "suggestion": {
+              "id": "5fe3e018-4f07-4e5b-8973-cf420e82d2e1",
+              "triggerType": "preset.imported",
+              "createdAt": 1795671908887,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "README 文本使用英文",
+              "suggestedSummary": "所有 README 说明文字必须使用英文，以服务外部贡献者。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "score": 1,
+                  "reasons": [
+                    "Guideline document text"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 5,
+                  "end": 5
+                },
+                "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "README 文本使用英文",
+                  "summary": "所有 README 说明文字必须使用英文，以服务外部贡献者。",
+                  "content": "所有 README prose 必须使用英文编写，因为外部贡献者会使用该项目。",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "e72a048c-d99d-4f1d-b751-b9710f20e551",
+            "file": "AGENTS.md",
+            "startLine": 5,
+            "endLine": 5,
+            "suggestion": {
+              "id": "e72a048c-d99d-4f1d-b751-b9710f20e551",
+              "triggerType": "preset.imported",
+              "createdAt": 1795671908913,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "保持代码标识符不变",
+              "suggestedSummary": "文档中不得修改现有代码标识符。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "score": 1,
+                  "reasons": [
+                    "Guideline document text"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 5,
+                  "end": 5
+                },
+                "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "保持代码标识符不变",
+                  "summary": "文档中不得修改现有代码标识符。",
+                  "content": "保持代码标识符不变。",
+                  "startLine": 5,
+                  "endLine": 5,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "f280133a-211c-4559-bd7f-c8234161f804",
+            "file": "AGENTS.md",
+            "startLine": 9,
+            "endLine": 9,
+            "suggestion": {
+              "id": "f280133a-211c-4559-bd7f-c8234161f804",
+              "triggerType": "preset.imported",
+              "createdAt": 1795671908930,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "保持导出函数及公共参数兼容",
+              "suggestedSummary": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 9,
+                  "endLine": 9,
+                  "score": 1,
+                  "reasons": [
+                    "Guideline document text"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 9,
+                  "end": 9
+                },
+                "sourceText": "Keep existing exported functions and their public parameters compatible when adding a feature.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "保持导出函数及公共参数兼容",
+                  "summary": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+                  "content": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+                  "startLine": 9,
+                  "endLine": 9,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "Keep existing exported functions and their public parameters compatible when adding a feature."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "score": 0.89
+              }
+            }
+          },
+          {
+            "suggestionId": "224101a3-74ff-4f23-a2df-1c4e92215030",
+            "file": "AGENTS.md",
+            "startLine": 13,
+            "endLine": 13,
+            "suggestion": {
+              "id": "224101a3-74ff-4f23-a2df-1c4e92215030",
+              "triggerType": "preset.imported",
+              "createdAt": 1795671908944,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "修改 JavaScript 后运行测试",
+              "suggestedSummary": "修改 JavaScript 源文件后，必须从 workspace 根目录运行 npm test。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 13,
+                  "endLine": 13,
+                  "score": 1,
+                  "reasons": [
+                    "Guideline document text"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 13,
+                  "end": 13
+                },
+                "sourceText": "After modifying JavaScript source files, run npm test from the workspace root.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "修改 JavaScript 后运行测试",
+                  "summary": "修改 JavaScript 源文件后，必须从 workspace 根目录运行 npm test。",
+                  "content": "修改 JavaScript 源文件后，必须从 workspace 根目录运行 npm test。",
+                  "startLine": 13,
+                  "endLine": 13,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "After modifying JavaScript source files, run npm test from the workspace root."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "628a6906-4f4a-40b5-9e39-34c8e9f62e46",
+            "file": "AGENTS.md",
+            "startLine": 17,
+            "endLine": 17,
+            "suggestion": {
+              "id": "628a6906-4f4a-40b5-9e39-34c8e9f62e46",
+              "triggerType": "preset.imported",
+              "createdAt": 1795671908957,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "时长名称使用 Ms 后缀",
+              "suggestedSummary": "请求策略代码中的时长名称必须带有 Ms 后缀。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 17,
+                  "endLine": 17,
+                  "score": 1,
+                  "reasons": [
+                    "Guideline document text"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 17,
+                  "end": 17
+                },
+                "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "时长名称使用 Ms 后缀",
+                  "summary": "请求策略代码中的时长名称必须带有 Ms 后缀。",
+                  "content": "请求策略代码中的时长必须使用带有 Ms 后缀的名称。",
+                  "startLine": 17,
+                  "endLine": 17,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "score": 1
+              }
+            }
+          },
+          {
+            "suggestionId": "1389e654-3848-4e5e-8258-ee622b8239f7",
+            "file": "AGENTS.md",
+            "startLine": 17,
+            "endLine": 17,
+            "suggestion": {
+              "id": "1389e654-3848-4e5e-8258-ee622b8239f7",
+              "triggerType": "preset.imported",
+              "createdAt": 1795671908970,
+              "origin": "preset",
+              "state": "open",
+              "actors": {
+                "memberIds": [
+                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                ],
+                "runIds": []
+              },
+              "suggestedType": "constraint",
+              "suggestedTitle": "请求策略统一使用毫秒",
+              "suggestedSummary": "请求策略代码中的时长必须统一以毫秒表示。",
+              "suggestedAnchors": [
+                {
+                  "file": "AGENTS.md",
+                  "startLine": 17,
+                  "endLine": 17,
+                  "score": 1,
+                  "reasons": [
+                    "Guideline document text"
+                  ]
+                }
+              ],
+              "evidence": {
+                "file": "AGENTS.md",
+                "lineRange": {
+                  "start": 17,
+                  "end": 17
+                },
+                "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code.",
+                "draft": {
+                  "type": "constraint",
+                  "title": "请求策略统一使用毫秒",
+                  "summary": "请求策略代码中的时长必须统一以毫秒表示。",
+                  "content": "请求策略代码中的时长必须全程使用毫秒。",
+                  "startLine": 17,
+                  "endLine": 17,
+                  "files": [],
+                  "fallback": false,
+                  "file": "AGENTS.md",
+                  "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code."
+                },
+                "fallback": false
+              },
+              "dedupe": {
+                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "score": 1
+              }
+            }
+          }
+        ]
+      },
+      "draftCount": 6
+    }
+  },
+  {
+    "name": "03c-magic",
+    "attempt": 1,
+    "ok": true,
+    "ms": 307,
+    "result": {
+      "member": "Bob",
+      "file": "src/backoffPolicy.js",
+      "before": 50,
+      "after": 1500,
+      "synced": true
+    }
+  },
+  {
+    "name": "04-capture-agent-start",
+    "attempt": 1,
+    "ok": false,
+    "ms": 52775,
+    "error": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
+  },
+  {
+    "name": "04b-agent-progress",
+    "attempt": 1,
+    "ok": true,
+    "ms": 639,
+    "result": [
+      "Connected\nRoom RcJ0rqHmAS\nAlice\nDemo\n中文\nEnglish",
+      "Connected\nRoom RcJ0rqHmAS\nBob\nDemo\n中文\nEnglish"
+    ]
+  },
+  {
+    "name": "05-correct-agent",
+    "attempt": 1,
+    "ok": true,
+    "ms": 4137,
+    "result": {
+      "beforeCorrection": "export async function waitForRetry(delayMs) {\n  await new Promise(resolve => setTimeout(resolve, delayMs));\n}\n\nexport async function retryNotification(send, delayMs = 1000, onAttempt) {\n  await new Promise(resolve => setTimeout(resolve, delayMs));\n  onAttempt?.();\n  return send();\n}\n",
+      "run": {
+        "run": {
+          "projectId": "demo",
+          "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "initiatorMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "initiatorRole": "Developer",
+          "participantId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "memberName": "Alice",
+          "prompt": "Don't reimplement the setTimeout wait inside retryNotification; reuse the existing waitForRetry(delayMs) instead. This corrects the previous task: keep onAttempt?.(), send, and the configurable delayMs compatible, and keep waitForRetry exported. Only change src/retryPolicy.js and run npm test.",
+          "sessionId": "pgWw3JP2Re-f",
+          "sessionScope": "personal",
+          "runtimeSessionId": "ses_de99caf7fffeJK4NlAB2obsvhJ",
+          "status": "queued",
+          "runtime": "opencode",
+          "provider": "minimax",
+          "model": "MiniMax-M3",
+          "source": "agent-panel",
+          "knowledge": {
+            "excludeCardIds": []
+          },
+          "id": "Sdzi008iuVlf",
+          "createdAt": "2026-11-26T05:46:07.731Z"
+        }
+      }
+    }
+  },
+  {
+    "name": "06-human-drafts",
+    "attempt": 1,
+    "ok": false,
+    "ms": 182401,
+    "error": "page.waitForResponse: Timeout 180000ms exceeded while waiting for event \"response\""
+  },
+  {
+    "name": "06b-confirm-human-drafts",
+    "attempt": 1,
+    "ok": true,
+    "ms": 14471,
+    "result": {
+      "denseTitle": "Request timeout and retry policy",
+      "magic": {
+        "card": {
+          "type": "constraint",
+          "title": "backoffDelayMs now returns 1500",
+          "summary": "The hardcoded return value of `backoffDelayMs()` in `src/backoffPolicy.js` changed from `50` to `1500`, making the backoff delay 1,500 milliseconds. The evidence does not record why 1500 was chosen or which callers are affected.",
+          "content": "## Number and usage location\n\nThe number `1500` was introduced at `src/backoffPolicy.js:2` as the return value of `backoffDelayMs()`.\n\nBefore:\n\n```js\nexport function backoffDelayMs() {\n  return 50;\n}\n```\n\nAfter:\n\n```js\nexport function backoffDelayMs() {\n  return 1500;\n}\n```\n\n## Meaning and effect\n\nThe function name `backoffDelayMs` indicates that the returned number is a backoff delay measured in milliseconds. Any caller using the return value directly now receives `1500` ms instead of `50` ms, an increase of 1,450 ms. The evidence provides no usage locations for the literal and does not explain the rationale for selecting 1500.\n\n## Refactor guidance\n\nNo refactor guidance is recorded in the supplied evidence. In particular, the evidence does not establish whether `1500` should be extracted into a named constant, exposed through configuration, or documented separately.\n\n## Unknowns\n- Why 1500 was selected instead of the previous value of 50.\n- Which callers or execution paths use `backoffDelayMs()` and what behavior changes downstream.\n- Whether the delay is intended to be configurable or represented by a named constant.\n- Whether documentation should describe the meaning or rationale for the 1500 ms delay.",
+          "tags": [
+            "backoff",
+            "magic-number",
+            "delay",
+            "milliseconds"
+          ],
+          "confidence": 0.96,
+          "evidenceCitations": [
+            "anchors[0].file",
+            "evidence.added[0].number",
+            "evidence.added[0].line",
+            "evidence.added[0].lineText",
+            "evidence.diff.before",
+            "evidence.diff.after",
+            "evidence.usage[0].occurrences"
+          ],
+          "unknowns": [
+            "Why 1500 was selected instead of the previous value of 50.",
+            "Which callers or execution paths use `backoffDelayMs()` and what behavior changes downstream.",
+            "Whether the delay is intended to be configurable or represented by a named constant.",
+            "Whether documentation should describe the meaning or rationale for the 1500 ms delay."
+          ],
+          "fallback": false,
+          "source": "ai",
+          "scope": "team",
+          "provenance": {
+            "origin": "human-human",
+            "author": {
+              "kind": "human",
+              "memberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+              "displayName": "Bob"
+            },
+            "trigger": {
+              "type": "magicNumber.added",
+              "suggestionId": "capture-1795671910331-2"
+            },
+            "evidenceRefs": {
+              "runIds": [],
+              "chatMessageIds": [],
+              "files": [
+                {
+                  "path": "src/backoffPolicy.js",
+                  "revision": ""
+                }
+              ]
+            }
+          },
+          "schemaVersion": 3,
+          "id": "20b5f0e3-2a7f-40ef-8dcb-9694f09438b3",
+          "status": "draft",
+          "createdAt": 1795672164569,
+          "updatedAt": 1795672164569,
+          "metadata": {
+            "createdBy": {
+              "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+              "name": "Alice"
+            },
+            "roomId": "RcJ0rqHmAS",
+            "relatedChatMessageIds": []
+          },
+          "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "review": {
+            "confirmedBy": []
+          },
+          "anchors": [],
+          "evolution": [
+            {
+              "at": 1795672164569,
+              "action": "created",
+              "by": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              }
+            }
+          ]
+        },
+        "suggestion": {
+          "id": "capture-1795671910331-2",
+          "triggerType": "magicNumber.added",
+          "createdAt": 1795671910331,
+          "origin": "human-human",
+          "actors": {
+            "memberIds": [
+              "0c45d52a-d6bb-4826-b837-9d6a3adb8621"
+            ],
+            "runIds": []
+          },
+          "suggestedType": "constraint",
+          "suggestedTitle": "Numeric constant added",
+          "suggestedSummary": "Numeric constant added：src/backoffPolicy.js",
+          "suggestedAnchors": [
+            {
+              "file": "src/backoffPolicy.js",
+              "startLine": 2,
+              "endLine": 2,
+              "score": 1,
+              "reasons": [
+                "Edited range"
+              ]
+            }
+          ],
+          "evidence": {
+            "file": "src/backoffPolicy.js",
+            "added": [
+              {
+                "number": "1500",
+                "line": 2,
+                "lineText": "  return 1500;"
+              }
+            ],
+            "diff": {
+              "startOffset": 44,
+              "endOffset": 47,
+              "startLine": 2,
+              "endLine": 2,
+              "before": "export function backoffDelayMs() {\n  return 50;\n}\n",
+              "after": "export function backoffDelayMs() {\n  return 1500;\n}\n"
+            },
+            "usage": [
+              {
+                "number": "1500",
+                "occurrences": []
+              }
+            ]
+          },
+          "confidence": 0.7,
+          "state": "accepted",
+          "seenBy": [
+            "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+            "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+          ],
+          "ai": {
+            "provider": "minimax",
+            "model": "MiniMax-M3",
+            "durationMs": 13257,
+            "totalTokens": 3755,
+            "fallback": false
+          },
+          "draftCardId": "20b5f0e3-2a7f-40ef-8dcb-9694f09438b3",
+          "resolvedAt": 1795672164576,
+          "resolvedBy": "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+        }
+      }
+    }
+  },
+  {
+    "name": "07-agent-recap",
+    "attempt": 1,
+    "ok": true,
+    "ms": 18947,
+    "result": {
+      "cardId": "abc7067d-ec93-4e85-b0e7-758d8fe76fd8",
+      "title": "Reuse waitForRetry inside retryNotification",
+      "content": "## What happened\n\nThe previous run added the optional onAttempt parameter and the correct call order, but it replaced `await waitForRetry(delayMs);` with an inline `new Promise(resolve => setTimeout(resolve, delayMs))` inside retryNotification. The correction restores the helper call.\n\n## Correction\n\nIn src/retryPolicy.js, change retryNotification to execute `await waitForRetry(delayMs);`, followed by `onAttempt?.();`, and then `return send();`. Keep the default `delayMs = 1000` and keep waitForRetry exported.\n\n## Rule\n\nIn src/retryPolicy.js, retryNotification must call `await waitForRetry(delayMs);` for its delay and must not reimplement that delay with `new Promise(resolve => setTimeout(resolve, delayMs))` inside retryNotification. Preserve the optional onAttempt parameter and invoke `onAttempt?.()` before `return send();`.\n\n## Applies to\n\nsrc/retryPolicy.js, src/retryPolicy.js, code modification, retry notification modification\n\n## Does not apply to\n\nThis rule does not require changing waitForRetry's existing implementation or export, and it does not authorize changes to other business files.\n\nNo npm test output was supplied, so the evidence does not establish whether the tests passed.\n\nNo callers of retryNotification are shown, so caller-specific compatibility beyond the documented behavior is unknown.\n\nThe automatic check failed validation and was removed",
+      "ai": {
+        "provider": "minimax",
+        "model": "MiniMax-M3",
+        "durationMs": 17481,
+        "totalTokens": 5503,
+        "fallback": false
+      },
+      "provenance": {
+        "origin": "human-agent",
+        "author": {
+          "kind": "human",
+          "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "displayName": "Alice"
+        },
+        "trigger": {
+          "type": "agent.corrected",
+          "suggestionId": "capture-1795671967748-4"
+        },
+        "evidenceRefs": {
+          "runIds": [
+            "luf8hL9kEF_m",
+            "Sdzi008iuVlf"
+          ],
+          "chatMessageIds": [],
+          "files": []
+        }
+      }
+    }
+  },
+  {
+    "name": "08-agent-knowledge",
+    "attempt": 1,
+    "ok": true,
+    "ms": 4826,
+    "result": {
+      "preview": "Knowledge to be given to the agent\n3 selected\n\nUnchecked cards are not given to this task.\n\nThe README is for external contributors and is written in English\n170 characters\nRequest timeout and retry policy\n800 characters\nbackoffDelayMs now returns 1500\n800 characters",
+      "run": {
+        "run": {
+          "projectId": "demo",
+          "memberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+          "initiatorMemberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+          "initiatorRole": "Reviewer",
+          "participantId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+          "memberName": "Bob",
+          "prompt": "Improve README.md of this project: add the steps for running npm test, the request retry module, and notes on team collaboration. Follow the project's README language rule and keep it in English. Only change README.md, then run npm test.",
+          "sessionId": "lcMSgtNbyeGb",
+          "sessionScope": "personal",
+          "status": "queued",
+          "runtime": "opencode",
+          "provider": "minimax",
+          "model": "MiniMax-M3",
+          "source": "agent-panel",
+          "knowledge": {
+            "excludeCardIds": []
+          },
+          "id": "Fw1BqtPPx67Y",
+          "createdAt": "2026-11-26T05:49:48.758Z"
+        }
+      }
+    }
+  },
+  {
+    "name": "09-demo-reading",
+    "attempt": 1,
+    "ok": true,
+    "ms": 1421,
+    "result": {
+      "generated": {
+        "cards": [
+          {
+            "schemaVersion": 3,
+            "id": "demo-decision",
+            "type": "decision",
+            "title": "Status computation is centralized",
+            "summary": "createProjectStatus computes the task count, the completed count, and the next task.",
+            "content": "createProjectStatus computes taskCount, completedCount, and nextTask from tasks. formatProjectStatus uses this result for the terminal output, so the rules for task status live in createProjectStatus.",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "decision",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1795675488866,
+            "updatedAt": 1795677348866,
+            "metadata": {
+              "createdBy": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              },
+              "roomId": "RcJ0rqHmAS"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+              ],
+              "confirmedAt": 1795672188866
+            },
+            "scope": "team",
+            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "anchors": [
+              {
+                "anchorId": "demo-decision-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1795675488866,
+                "action": "created",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795677108866,
+                "action": "updated",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795677348866,
+                "action": "reviewed",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-constraint",
+            "type": "constraint",
+            "title": "Keep the meaning of task fields",
+            "summary": "In tasks, completed marks completion and title is shown for the next task.",
+            "content": "createProjectStatus filters completed tasks by completed and then reads the title of the first unfinished task. Callers should pass task objects with a boolean completed and a text title and keep the meaning of both fields.",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "constraint",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1795676508866,
+            "updatedAt": 1795678248866,
+            "metadata": {
+              "createdBy": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              },
+              "roomId": "RcJ0rqHmAS"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+              ],
+              "confirmedAt": 1795672188871
+            },
+            "scope": "team",
+            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "anchors": [
+              {
+                "anchorId": "demo-constraint-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1795676508866,
+                "action": "created",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795677948866,
+                "action": "updated",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795678248866,
+                "action": "reviewed",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-risk",
+            "type": "risk",
+            "title": "Mind the order of the next task",
+            "summary": "nextTask uses the first unfinished task, so the task order affects the display.",
+            "content": "tasks.find returns the first unfinished task. When that task has no title, or all tasks are complete, nextTask shows All tasks complete. Check this display when changing the task order or fields.",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "risk",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1795679268866,
+            "updatedAt": 1795681068866,
+            "metadata": {
+              "createdBy": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              },
+              "roomId": "RcJ0rqHmAS"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+              ],
+              "confirmedAt": 1795672188882
+            },
+            "scope": "team",
+            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "anchors": [
+              {
+                "anchorId": "demo-risk-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1795679268866,
+                "action": "created",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795680768866,
+                "action": "updated",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795681068866,
+                "action": "reviewed",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-negative",
+            "type": "negative",
+            "title": "Keep status computation separate from formatting",
+            "summary": "formatProjectStatus receives a status object; recomputing the task status adds maintenance cost.",
+            "content": "formatProjectStatus already formats status.taskCount, status.completedCount, and status.nextTask. Keeping this interface keeps the task rules in createProjectStatus and avoids duplicated rules.",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "negative",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1795678428866,
+            "updatedAt": 1795680348866,
+            "metadata": {
+              "createdBy": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              },
+              "roomId": "RcJ0rqHmAS"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+              ],
+              "confirmedAt": 1795672188891
+            },
+            "scope": "team",
+            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "anchors": [
+              {
+                "anchorId": "demo-negative-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "block",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1795678428866,
+                "action": "created",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795680108866,
+                "action": "updated",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795680348866,
+                "action": "reviewed",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-tutorial",
+            "type": "tutorial",
+            "title": "Reading the task status code",
+            "summary": "Start from the fields returned by createProjectStatus, then read formatProjectStatus.",
+            "content": "Read how tasks.length, filter, and find produce the three status fields, then see how formatProjectStatus writes them into an array and joins four lines. Run the tests of the demo workspace to check the output with finished and unfinished tasks.",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "tutorial",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1795673028866,
+            "updatedAt": 1795674828866,
+            "metadata": {
+              "createdBy": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              },
+              "roomId": "RcJ0rqHmAS"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+              ],
+              "confirmedAt": 1795672188897
+            },
+            "scope": "team",
+            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "anchors": [
+              {
+                "anchorId": "demo-tutorial-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "file",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1795673028866,
+                "action": "created",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795674528866,
+                "action": "updated",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795674828866,
+                "action": "reviewed",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              }
+            ]
+          },
+          {
+            "schemaVersion": 3,
+            "id": "demo-context",
+            "type": "context",
+            "title": "Purpose of the task status module",
+            "summary": "projectStatus.js turns the task list into a status object and four lines of terminal text.",
+            "content": "The demo workspace uses createProjectStatus to produce the task count, the completed count, and the next task, and formatProjectStatus prints the workspace name, Tasks, Completed, and Next as four lines.",
+            "source": "manual",
+            "status": "reviewed",
+            "tags": [
+              "demo",
+              "context",
+              "project-status"
+            ],
+            "confidence": 0.95,
+            "createdAt": 1795672188866,
+            "updatedAt": 1795672668866,
+            "metadata": {
+              "createdBy": {
+                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "name": "Alice"
+              },
+              "roomId": "RcJ0rqHmAS"
+            },
+            "provenance": {
+              "origin": "manual",
+              "author": {
+                "kind": "human",
+                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "displayName": "Alice"
+              },
+              "evidenceRefs": {}
+            },
+            "review": {
+              "confirmedBy": [
+                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+              ],
+              "confirmedAt": 1795672188903
+            },
+            "scope": "team",
+            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "anchors": [
+              {
+                "anchorId": "demo-context-a1",
+                "file": {
+                  "workspaceRelativePath": "src/projectStatus.js"
+                },
+                "associationLevel": "file",
+                "snapshot": {
+                  "text": "export function createProjectStatus(tasks) {\n  return {\n    taskCount: tasks.length,\n    completedCount: tasks.filter((task) => task.completed).length,\n    nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\"\n  };\n}\n\nexport function formatProjectStatus(status) {\n  return [\n    \"SimpleRCPv2 demo workspace\",\n    `Tasks: ${status.taskCount}`,\n    `Completed: ${status.completedCount}`,\n    `Next: ${status.nextTask}`\n  ].join(\"\\n\");\n}\n"
+                },
+                "fingerprint": {
+                  "prefix": "",
+                  "suffix": "",
+                  "landmarkLines": [
+                    "export function createProjectStatus(tasks) {",
+                    "return {",
+                    "taskCount: tasks.length,",
+                    "completedCount: tasks.filter((task) => task.completed).length,",
+                    "nextTask: tasks.find((task) => !task.completed)?.title ?? \"All tasks complete\""
+                  ]
+                }
+              }
+            ],
+            "evolution": [
+              {
+                "at": 1795672188866,
+                "action": "created",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              },
+              {
+                "at": 1795672668866,
+                "action": "reviewed",
+                "note": "Sample knowledge: a tour of task status.",
+                "by": {
+                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "name": "Alice"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hover": "Mind the order of the next task\n\nnextTask uses the first unfinished task, so the task order affects the display.\n\nType: Risk\n\nScope: Team\n\nStatus: Active\n\nAuthor: Alice\n\nOpen card\n\nKeep status computation separate from formatting\n\nformatProjectStatus receives a status object; recomputing the task status adds maintenance cost.\n\nType: Negative\n\nScope: Team\n\nStatus: Active\n\nAuthor: Alice\n\nOpen card\n\nKeep the meaning of task fields\n\nIn tasks, completed marks completion and title is shown for the next task.\n\nType: Constraint\n\nScope: Team\n\nStatus: Active\n\nAuthor: Alice\n\nOpen card\n\nStatus computation is centralized\n\ncreateProjectStatus computes the task count, the completed count, and the next task.\n\nType: Decision\n\nScope: Team\n\nStatus: Active\n\nAuthor: Alice\n\nOpen card\n\nReading the task status code\n\nStart from the fields returned by createProjectStatus, then read formatProjectStatus.\n\nType: Tutorial\n\nScope: Team\n\nStatus: Active\n\nAuthor: Alice\n\nOpen card\n\nPurpose of the task status module\n\nprojectStatus.js turns the task list into a status object and four lines of terminal text.\n\nType: Context\n\nScope: Team\n\nStatus: Active\n\nAuthor: Alice\n\nOpen card"
+    }
+  },
+  {
+    "name": "10-post-check",
+    "attempt": 1,
+    "ok": true,
+    "ms": 36914,
+    "result": {
+      "reference": "Knowledge used in this task\n3\nThe README is for external contributors and is written in English\nRequest timeout and retry policy\nbackoffDelayMs now returns 1500",
+      "postCheck": "Check after the task\n\nThese changes touch known issues in 1 places.\n\nThe README is for external contributors and is written in English\nREADME.md\nlines 8–64\nNeeds manual review"
+    }
+  },
+  {
+    "name": "11-review-human-cards",
+    "attempt": 1,
+    "ok": false,
+    "ms": 30240,
+    "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.knowledge-card').filter({ hasText: 'requestPolicy.js request timeout' }).first().getByRole('button', { name: 'Edit', exact: true })\n"
+  },
+  {
+    "name": "12-final-collaboration",
+    "attempt": 1,
+    "ok": true,
+    "ms": 994,
+    "result": [
+      {
+        "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+        "theme": "light",
+        "code": "export function requestTimeoutMs() {\n  return 5000;\n}\n\nexport function canRetry(attempt) {\n  return attempt < 4;\n}\n"
+      },
+      {
+        "memberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+        "theme": "light",
+        "code": "export function requestTimeoutMs() {\n  return 5000;\n}\n\nexport function canRetry(attempt) {\n  return attempt < 4;\n}\n"
+      }
+    ]
+  }
+]
