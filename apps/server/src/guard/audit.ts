@@ -28,9 +28,10 @@ export interface GuardAuditRecord {
   approvedAt?: string;
   result?: ApprovalOutcome;
   durationMicros: number;
-  stage?: "decision" | "llm" | "approval" | "owner-self" | "remembered";
+  stage?: "decision" | "llm" | "approval" | "owner-self" | "remembered" | "workspace-write";
   model?: ModelAudit;
   sourceLevel?: Level;
+  unattributed?: boolean;
 }
 
 export function createGuardAudit(storagePath: string, sensitiveValues: string[] = []) {

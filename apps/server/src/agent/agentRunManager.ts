@@ -157,6 +157,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     let stopEvents: (() => Promise<void>) | undefined;
     // Snapshots taken before a tool call, sealed once that call finishes so undo can detect later edits.
     const unsealedSnapshots = new Map<string, string>();
+    const workspaceActivities = new Map<string, string>();
     let questionManager: ReturnType<typeof createAgentQuestions> | undefined;
     let lastPublished = 0;
     const runtime = options.runtimeManager.get(projectId);
@@ -305,6 +306,10 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             unsealedSnapshots.set(callId ?? `permission:${requestId}`, manifest.id);
           }
           if (permissionResult.approved) {
+            if (request.kind === "command" || request.kind === "edit") {
+              const activity = await projectRuntime.guard.beginWorkspaceActivity(request.memberId, "agent", request.agentRunId);
+              if (activity && callId) workspaceActivities.set(callId, activity);
+            }
             await replyPermission(requestId, "once");
           } else {
             guardRejected = true;
@@ -347,6 +352,13 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           const state = record.state && typeof record.state === "object" ? record.state as Record<string, unknown> : undefined;
           if (callId && state?.input && typeof state.input === "object") toolInputs.set(callId, state.input);
           const snapshotId = callId ? unsealedSnapshots.get(callId) : undefined;
+          if (callId && (state?.status === "completed" || state?.status === "error")) {
+            const activity = workspaceActivities.get(callId);
+            if (activity) {
+              workspaceActivities.delete(callId);
+              runtime.guard.endWorkspaceActivity(activity);
+            }
+          }
           if (snapshotId && (state?.status === "completed" || state?.status === "error")) {
             unsealedSnapshots.delete(callId!);
             await runtime.guard.sealSnapshot(snapshotId).catch(() => undefined);
@@ -404,6 +416,8 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         appendActivity(projectId, { type: "agent_task_failed", memberId: current.memberId, participantId: current.participantId, payload: { runId, sessionId: current.sessionId, name: current.memberName, error: failure.message } });
       }
     } finally {
+      for (const activity of workspaceActivities.values()) runtime.guard.endWorkspaceActivity(activity);
+      workspaceActivities.clear();
       runtime.guard.cancelRun(runId);
       try {
         const final = await store.get(runId);

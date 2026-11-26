@@ -95,6 +95,7 @@ export function createProjectRuntime(
     for (const listener of terminalListeners) listener(data);
   });
   const watcher = watchWorkspace(project.workspacePath, async (change) => {
+    await guard.recordObservedWorkspaceChange(change.path, change.type);
     if (change.type === "change" || change.type === "add") {
       await documents.reloadPath(change.path);
     }

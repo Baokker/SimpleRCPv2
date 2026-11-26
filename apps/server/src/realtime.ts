@@ -592,16 +592,19 @@ async function handleTerminalMessage(
       sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome: decision.outcome === "timeout" ? "timeout" : decision.outcome === "withdrawn" ? "withdrawn" : decision.outcome === "denied" ? "denied" : "rejected", reason: decision.outcome === "timeout" ? "Approval timed out" : describeGuardRules(decision.matchedRules, decision.action === "deny") || "Request was rejected", approverName: decision.approverName, command: message.text });
       return;
     }
+    const workspaceActivity = await runtime.guard.beginWorkspaceActivity(memberId, "terminal");
     let snapshotId: string | undefined;
     if (decision.action === "allow_snapshot") snapshotId = (await runtime.guard.createSnapshot(request)).id;
     const afterApproval = runtime.terminal.foregroundProcess();
     if (afterApproval && !runtime.terminal.isShellProcess(afterApproval)) {
+      runtime.guard.endWorkspaceActivity(workspaceActivity);
       sendTerminalMessage(socket, { type: "guard_decision", action: "deny", outcome: "busy", reason: "Terminal became busy while the request was waiting", command: message.text });
       return;
     }
     runtime.terminal.write(`${message.text}\r`, memberId, false);
     runtime.guard.noteTerminalCommand(request);
-    if (snapshotId) void sealWhenTerminalIdle(runtime, snapshotId);
+    if (snapshotId) void sealWhenTerminalIdle(runtime, snapshotId, workspaceActivity);
+    else void releaseWhenTerminalIdle(runtime, workspaceActivity);
     const outcome = (decision.outcome ?? (decision.action === "allow" ? "allowed" : "approved")) as "approved" | "rejected" | "withdrawn" | "timeout" | "allowed" | "denied" | "busy";
     sendTerminalMessage(socket, { type: "guard_decision", action: decision.action, outcome, reason: describeGuardRules(decision.matchedRules) || "Request was allowed", approverName: decision.approverName, snapshotId, command: message.text });
   } finally {
@@ -611,7 +614,7 @@ async function handleTerminalMessage(
 }
 
 // Seal the snapshot once the command returns to the shell, so undo can tell the command's edits from later ones.
-async function sealWhenTerminalIdle(runtime: ProjectRuntime, snapshotId: string) {
+async function waitForTerminalIdle(runtime: ProjectRuntime) {
   const deadline = Date.now() + 30 * 60_000;
   await new Promise((resolve) => setTimeout(resolve, 300));
   while (Date.now() < deadline) {
@@ -619,7 +622,17 @@ async function sealWhenTerminalIdle(runtime: ProjectRuntime, snapshotId: string)
     if (!foreground || runtime.terminal.isShellProcess(foreground)) break;
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
+}
+
+async function sealWhenTerminalIdle(runtime: ProjectRuntime, snapshotId: string, workspaceActivity?: string) {
+  await waitForTerminalIdle(runtime);
   await runtime.guard.sealSnapshot(snapshotId).catch(() => undefined);
+  runtime.guard.endWorkspaceActivity(workspaceActivity);
+}
+
+async function releaseWhenTerminalIdle(runtime: ProjectRuntime, workspaceActivity?: string) {
+  await waitForTerminalIdle(runtime);
+  runtime.guard.endWorkspaceActivity(workspaceActivity);
 }
 
 // The client turns these rule ids into plain Chinese; keeping ids here avoids two diverging label tables.

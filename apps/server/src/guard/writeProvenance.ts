@@ -31,10 +31,20 @@ export function createWriteProvenance(filePath: string, workspaceRoot: string) {
     const relative = path.relative(workspaceRoot, absolutePath);
     return relative.startsWith("..") || path.isAbsolute(relative) ? undefined : relative;
   };
+  async function recordKeys(keys: string[], memberId: string, level: Level) {
+    await load();
+    if (!keys.length) return;
+    const at = new Date().toISOString();
+    for (const relative of keys) entries![relative] = { memberId, level, at };
+    const snapshot = { ...entries };
+    saving = saving.then(() => writeJsonFileAtomically(filePath, snapshot)).catch(() => undefined);
+    await saving;
+  }
+  async function load() {
+    entries ??= await readJsonFile<Record<string, ProvenanceEntry>>(filePath) ?? {};
+  }
   return {
-    async load() {
-      entries ??= await readJsonFile<Record<string, ProvenanceEntry>>(filePath) ?? {};
-    },
+    load,
     levelOf(absolutePath: string): Level | undefined {
       const relative = key(absolutePath);
       const entry = relative === undefined ? undefined : entries?.[relative];
@@ -45,14 +55,13 @@ export function createWriteProvenance(filePath: string, workspaceRoot: string) {
       return relative === undefined ? undefined : entries?.[relative]?.memberId;
     },
     async record(request: GuardRequest, level: Level) {
-      await this.load();
       const keys = writtenPaths(request).map(key).filter((value): value is string => value !== undefined);
-      if (!keys.length) return;
-      const at = new Date().toISOString();
-      for (const relative of keys) entries![relative] = { memberId: request.memberId, level, at };
-      const snapshot = { ...entries };
-      saving = saving.then(() => writeJsonFileAtomically(filePath, snapshot)).catch(() => undefined);
-      await saving;
+      await recordKeys(keys, request.memberId, level);
+    },
+    async recordObserved(absolutePath: string, memberId: string, level: Level) {
+      const relative = key(absolutePath);
+      if (relative === undefined) return;
+      await recordKeys([relative], memberId, level);
     }
   };
 }

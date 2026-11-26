@@ -95,6 +95,9 @@ export function createGuardService(options: {
   let control: { memberId: string; expiresAt: number; timer: ReturnType<typeof setTimeout> } | undefined;
   let selectedLlmMode = options.llmMode;
   const cancelledRunIds = new Set<string>();
+  const workspaceActivities = new Map<string, { memberId: string; source: "terminal" | "agent"; runId?: string; level: Level }>();
+  const expectedWorkspaceWrites = new Map<string, number>();
+  let nextWorkspaceActivityId = 0;
   // Paths that people changed from the shared terminal, so an Agent's change list does not claim them.
   const terminalChanges: Array<{ memberId: string; paths: string[]; at: number }> = [];
 
@@ -172,7 +175,7 @@ export function createGuardService(options: {
       const authors = runSourceLevels.get(request.agentRunId);
       if (authors?.size) {
         const members = await options.members.listMembers(options.project.id);
-        const sourceLevel = [...authors].filter(([author]) => author !== request.memberId).reduce<Level>((lowest, [author, recordedLevel]) => {
+        const sourceLevel = [...authors].reduce<Level>((lowest, [author, recordedLevel]) => {
           const member = members.find((candidate) => candidate.memberId === author);
           return lowerLevel(lowest, member ? lowerLevel(recordedLevel, roleLevel(member.role)) : recordedLevel);
         }, "owner");
@@ -197,7 +200,13 @@ export function createGuardService(options: {
     const result = await submitDecision(request, input);
     if (result.approved && options.mode === "full") {
       const member = await options.members.getMember(options.project.id, request.memberId);
-      if (member) await provenance.record(request, roleLevel(member.role) as Level);
+      if (member) {
+        let level = roleLevel(member.role) as Level;
+        if (request.source === "agent" && request.agentRunId) {
+          for (const recordedLevel of runSourceLevels.get(request.agentRunId)?.values() ?? []) level = lowerLevel(level, recordedLevel);
+        }
+        await provenance.record(request, level);
+      }
     }
     if (result.approved && options.mode === "full" && options.agentProvenance !== false && request.source === "agent" && request.agentRunId) recordReadSources(request, request.agentRunId);
     return result;
@@ -223,7 +232,7 @@ export function createGuardService(options: {
     for (const target of paths) {
       const writer = provenance.writerOf(target);
       const level = provenance.levelOf(target);
-      if (writer && writer !== memberId && level) recordSource(runId, writer, level);
+      if (writer && level && (writer !== memberId || level !== roleLevel("owner"))) recordSource(runId, writer, level);
     }
   }
 
@@ -232,6 +241,43 @@ export function createGuardService(options: {
     const levels = runSourceLevels.get(runId) ?? new Map<string, Level>();
     levels.set(authorId, lowerLevel(level, levels.get(authorId)));
     runSourceLevels.set(runId, levels);
+  }
+
+  async function beginWorkspaceActivity(memberId: string, source: "terminal" | "agent", runId?: string) {
+    if (options.mode !== "full" || options.agentProvenance === false) return undefined;
+    const member = await options.members.getMember(options.project.id, memberId);
+    if (!member) throw new Error("Project membership is required");
+    let level = roleLevel(member.role) as Level;
+    if (source === "agent" && runId) {
+      for (const recordedLevel of runSourceLevels.get(runId)?.values() ?? []) level = lowerLevel(level, recordedLevel);
+    }
+    const token = `workspace-activity-${nextWorkspaceActivityId += 1}`;
+    workspaceActivities.set(token, { memberId, source, runId, level });
+    return token;
+  }
+
+  function endWorkspaceActivity(token: string | undefined) {
+    if (token) workspaceActivities.delete(token);
+  }
+
+  async function recordObservedWorkspaceChange(relativePath: string, type: string) {
+    if (options.mode !== "full" || options.agentProvenance === false || type === "addDir" || type === "unlinkDir") return;
+    const absolutePath = path.resolve(options.project.workspacePath, relativePath);
+    const active = [...workspaceActivities.values()].sort((left, right) => LEVELS.indexOf(left.level) - LEVELS.indexOf(right.level))[0];
+    const expectedUntil = expectedWorkspaceWrites.get(absolutePath);
+    if (!active && expectedUntil !== undefined) {
+      if (expectedUntil > Date.now()) return;
+      expectedWorkspaceWrites.delete(absolutePath);
+    }
+    if (active) {
+      await provenance.recordObserved(absolutePath, active.memberId, active.level);
+      audit.append({ timestamp: new Date().toISOString(), projectId: options.project.id, memberId: active.memberId, source: active.source, agentRunId: active.runId, action: "allow", matchedRules: [], durationMicros: 0, stage: "workspace-write", paths: [relativePath], sourceLevel: active.level });
+      return;
+    }
+    const members = await options.members.listMembers(options.project.id);
+    const lowest = members.reduce<Level>((current, member) => lowerLevel(current, roleLevel(member.role)), "owner");
+    await provenance.recordObserved(absolutePath, "unattributed", lowest);
+    audit.append({ timestamp: new Date().toISOString(), projectId: options.project.id, memberId: "unattributed", source: "terminal", action: "allow", matchedRules: [], durationMicros: 0, stage: "workspace-write", paths: [relativePath], sourceLevel: lowest, unattributed: true });
   }
 
   function auditSource(request: GuardRequest) {
@@ -459,7 +505,11 @@ export function createGuardService(options: {
       const member = await options.members.getMember(options.project.id, memberId);
       if (!member) throw new Error("Project membership is required");
       await provenance.record({ projectId: options.project.id, memberId, source: "terminal", kind: "edit", paths: [filePath], cwd: options.project.workspacePath }, roleLevel(member.role));
+      expectedWorkspaceWrites.set(path.resolve(options.project.workspacePath, filePath), Date.now() + 2_000);
     },
+    beginWorkspaceActivity,
+    endWorkspaceActivity,
+    recordObservedWorkspaceChange,
     approve: (id: string, memberId: string) => resolveApproval(id, memberId, true),
     reject: (id: string, memberId: string) => resolveApproval(id, memberId, false),
     async withdraw(id: string, memberId: string) {
@@ -546,7 +596,7 @@ export function createGuardService(options: {
       return updated;
     },
     async awaitIdle() { await audit.awaitIdle(); },
-    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); runSourceLevels.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); routingListeners.clear(); }
+    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); runSourceLevels.clear(); workspaceActivities.clear(); expectedWorkspaceWrites.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); routingListeners.clear(); }
   };
 }
 
