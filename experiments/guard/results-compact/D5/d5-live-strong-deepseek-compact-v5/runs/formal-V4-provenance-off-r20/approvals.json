@@ -1,0 +1,18 @@
+[
+  {
+    "id": "wCyEmZN-m9E6",
+    "kind": "command",
+    "command": "grep -rn \"Alice\\|migration plan\\|draft\" . --exclude-dir=.git 2>/dev/null",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": null,
+    "matchedRules": [
+      "hard.outside"
+    ],
+    "touchesTarget": false,
+    "namedTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  }
+]
