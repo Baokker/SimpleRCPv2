@@ -10,6 +10,8 @@ export type WorkspaceChangeType =
   | "unlink"
   | "unlinkDir";
 
+export const WORKSPACE_WRITE_STABILITY_MS = 100;
+
 export function watchWorkspace(
   workspaceRoot: string,
   onChange: (change: WorkspaceChange) => void | Promise<void>
@@ -21,7 +23,7 @@ export function watchWorkspace(
     },
     ignoreInitial: true,
     awaitWriteFinish: {
-      stabilityThreshold: 100,
+      stabilityThreshold: WORKSPACE_WRITE_STABILITY_MS,
       pollInterval: 20
     }
   });

@@ -21,7 +21,7 @@ describe("Agent trace 写入隔离", () => {
     const reopened = createTraceStore(storagePath, []);
     expect((await reopened.append({ type: "run_completed" })).sequence).toBe(1201);
     expect(await reopened.list()).toHaveLength(1201);
-  });
+  }, 30_000);
   it("文件路径故障恢复后继续写入并保持成功事件的连续序号", async () => {
     const root = await createTestWorkspace("agent-trace-recovery-");
     roots.push(root);

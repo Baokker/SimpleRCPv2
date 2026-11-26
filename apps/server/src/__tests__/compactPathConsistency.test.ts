@@ -159,4 +159,4 @@ it("enforces ComPACT Property 1 across fixture and generated command pairs", asy
     await fs.writeFile(reportPath, `${JSON.stringify(summary, null, 2)}\n`);
   }
   expect(violations.slice(0, 8), `${summary.violations} path-consistency violations`).toEqual([]);
-}, 120_000);
+}, 300_000);

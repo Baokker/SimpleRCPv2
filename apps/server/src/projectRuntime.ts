@@ -1,4 +1,6 @@
 import path from "node:path";
+import { createHash } from "node:crypto";
+import { readWorkspaceFile } from "./workspace.js";
 import type { GuardLlmMode } from "@simplercp/shared";
 import { createChatStore } from "./chat.js";
 import { createCollaborativeDocumentStore } from "./collaborativeDocuments.js";
@@ -44,10 +46,13 @@ export function createProjectRuntime(
     expiresAt: number;
   }> = [];
   const fileSavedListeners = new Set<(path: string) => void>();
+  const editorWrites = new Map<string, string>();
+  const contentHash = (content: string) => createHash("sha256").update(content).digest("hex");
   const documents = createCollaborativeDocumentStore({
     workspaceRoot: project.workspacePath,
     projectId: project.id,
-    onPersisted(path) {
+    onPersisted(path, content) {
+      if (guardMode === "full") editorWrites.set(path, contentHash(content));
       for (const listener of fileSavedListeners) listener(path);
     }
   });
@@ -95,7 +100,14 @@ export function createProjectRuntime(
     for (const listener of terminalListeners) listener(data);
   });
   const watcher = watchWorkspace(project.workspacePath, async (change) => {
-    await guard.recordObservedWorkspaceChange(change.path, change.type);
+    const editorWrite = editorWrites.get(change.path);
+    editorWrites.delete(change.path);
+    if (editorWrite && (change.type === "change" || change.type === "add")) {
+      const file = await readWorkspaceFile(project.workspacePath, change.path, true);
+      if (file.status !== "text" || contentHash(file.content) !== editorWrite) await guard.recordObservedWorkspaceChange(change.path, change.type);
+    } else {
+      await guard.recordObservedWorkspaceChange(change.path, change.type);
+    }
     if (change.type === "change" || change.type === "add") {
       await documents.reloadPath(change.path);
     }
@@ -106,6 +118,7 @@ export function createProjectRuntime(
       for (const listener of workspaceListeners) listener(change);
     }
   });
+  const workspaceReady = new Promise<void>((resolve) => watcher.once("ready", resolve));
 
   function isSuppressedWorkspaceChange(change: WorkspaceChange) {
     const now = Date.now();
@@ -167,6 +180,7 @@ export function createProjectRuntime(
     terminal,
     room,
     guard,
+    workspaceReady,
     onWorkspaceChanged(listener: (change: WorkspaceChange) => void) {
       workspaceListeners.add(listener);
       return () => workspaceListeners.delete(listener);
@@ -221,12 +235,13 @@ export function createProjectRuntime(
       removeTerminalInputListener();
       for (const memberId of inputWindows.keys()) flushInput(memberId);
       await documents.awaitIdle();
+      await watcher.close();
+      editorWrites.clear();
       await chat.awaitIdle();
       await events.awaitIdle();
       await guard.awaitIdle();
       guard.dispose();
       terminal.dispose();
-      await watcher.close();
       await documents.dispose();
     }
   };

@@ -123,6 +123,7 @@ export function createSharedTerminal({
     listeners.clear();
     inputListeners.clear();
     terminal?.killExpected();
+    terminal = undefined;
   }
 
   return {

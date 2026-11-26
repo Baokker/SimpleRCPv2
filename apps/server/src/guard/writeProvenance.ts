@@ -26,10 +26,11 @@ export function writtenPaths(request: GuardRequest): string[] {
 
 export function createWriteProvenance(filePath: string, workspaceRoot: string) {
   let entries: Record<string, ProvenanceEntry> | undefined;
+  let loading: Promise<void> | undefined;
   let saving = Promise.resolve();
   const key = (absolutePath: string) => {
     const relative = path.relative(workspaceRoot, absolutePath);
-    return relative.startsWith("..") || path.isAbsolute(relative) ? undefined : relative;
+    return !relative || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative) ? undefined : relative;
   };
   async function recordKeys(keys: string[], memberId: string, level: Level) {
     await load();
@@ -37,11 +38,13 @@ export function createWriteProvenance(filePath: string, workspaceRoot: string) {
     const at = new Date().toISOString();
     for (const relative of keys) entries![relative] = { memberId, level, at };
     const snapshot = { ...entries };
-    saving = saving.then(() => writeJsonFileAtomically(filePath, snapshot)).catch(() => undefined);
+    saving = saving.then(() => writeJsonFileAtomically(filePath, snapshot));
     await saving;
   }
-  async function load() {
-    entries ??= await readJsonFile<Record<string, ProvenanceEntry>>(filePath) ?? {};
+  function load() {
+    return loading ??= readJsonFile<Record<string, ProvenanceEntry>>(filePath).then((stored) => {
+      entries = Object.assign(Object.create(null), stored);
+    });
   }
   return {
     load,

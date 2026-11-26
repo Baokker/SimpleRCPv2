@@ -22,6 +22,7 @@ import { canInterruptRun } from "../guard/roles.js";
 import { createAgentScheduler, getCompletedOverlapGroup, type AgentSchedulerQueue } from "./agentScheduler.js";
 import { selectRunnableAgentRun } from "./agentRunSelection.js";
 import { createAgentWriteLedger } from "./agentWriteLedger.js";
+import { WORKSPACE_WRITE_STABILITY_MS } from "../workspaceWatcher.js";
 
 interface AgentRunManagerOptions {
   members: MemberStore;
@@ -187,6 +188,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
     }
     try {
       const projectRuntime = options.runtimeManager.get(projectId);
+      if (projectRuntime.guard.mode() === "full") await projectRuntime.workspaceReady;
       await projectRuntime.documents.awaitIdle();
       const session = current.sessionId
         ? await getSessionStore(projectId).get(current.sessionId)
@@ -231,13 +233,15 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             reply,
             message
           });
+          return true;
         } catch (error) {
           const summary = error instanceof Error ? error.message : "Permission reply failed";
           if (reply === "reject" && /permission request not found/i.test(summary)) {
             await appendTrace(projectId, runId, { type: "permission_reply_ignored", summary });
-            return;
+            return false;
           }
           await appendTrace(projectId, runId, { type: "permission_reply_failed", summary });
+          return false;
         }
       }
       async function flushRejectedPermissions(sessionId: string, batch: { active: number; deferredRejects: Array<{ requestId: string; message: string }>; flushing: boolean }) {
@@ -306,11 +310,18 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
             unsealedSnapshots.set(callId ?? `permission:${requestId}`, manifest.id);
           }
           if (permissionResult.approved) {
-            if (request.kind === "command" || request.kind === "edit") {
+            const activityKey = callId ?? `permission:${requestId}`;
+            if (permission === "bash" || permission === "edit") {
               const activity = await projectRuntime.guard.beginWorkspaceActivity(request.memberId, "agent", request.agentRunId);
-              if (activity && callId) workspaceActivities.set(callId, activity);
+              if (activity) {
+                runtime.guard.endWorkspaceActivity(workspaceActivities.get(activityKey));
+                workspaceActivities.set(activityKey, activity);
+              }
             }
-            await replyPermission(requestId, "once");
+            if (!await replyPermission(requestId, "once")) {
+              runtime.guard.endWorkspaceActivity(workspaceActivities.get(activityKey));
+              workspaceActivities.delete(activityKey);
+            }
           } else {
             guardRejected = true;
             permissionBatch.deferredRejects.push({
@@ -355,6 +366,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
           if (callId && (state?.status === "completed" || state?.status === "error")) {
             const activity = workspaceActivities.get(callId);
             if (activity) {
+              await new Promise((resolve) => setTimeout(resolve, WORKSPACE_WRITE_STABILITY_MS + 40));
               workspaceActivities.delete(callId);
               runtime.guard.endWorkspaceActivity(activity);
             }
@@ -393,6 +405,7 @@ export function createAgentRunManager(options: AgentRunManagerOptions) {
         return options.runtime.cancel({ workspacePath: runtime.project.workspacePath, sessionId: runtimeSessionId! });
       }, approval);
       await stopEvents(); stopEvents = undefined;
+      if (workspaceActivities.size) await new Promise((resolve) => setTimeout(resolve, WORKSPACE_WRITE_STABILITY_MS + 40));
       if ((await store.get(runId))?.status === "cancelled") return;
       const fileChanges = await collectChanges(result.messageId);
       await appendTrace(projectId, runId, { type: "file_changes", summary: `${fileChanges.length} files changed`, data: { files: fileChanges } });

@@ -5,6 +5,7 @@ import type { MemberStore } from "../auth/identity.js";
 import type { EventLog } from "../eventLog.js";
 import type { RoomStore } from "../rooms.js";
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
+import type { WorkspaceChange } from "../types.js";
 import { createApprovalMemory, REMEMBERED_RULE } from "./approvalMemory.js";
 import { createApprovalQueue, type ApprovalOutcome, type PendingApproval } from "./approvals.js";
 import { createGuardAudit } from "./audit.js";
@@ -96,8 +97,8 @@ export function createGuardService(options: {
   let selectedLlmMode = options.llmMode;
   const cancelledRunIds = new Set<string>();
   const workspaceActivities = new Map<string, { memberId: string; source: "terminal" | "agent"; runId?: string; level: Level }>();
-  const expectedWorkspaceWrites = new Map<string, number>();
   let nextWorkspaceActivityId = 0;
+  let observedWrites = Promise.resolve();
   // Paths that people changed from the shared terminal, so an Agent's change list does not claim them.
   const terminalChanges: Array<{ memberId: string; paths: string[]; at: number }> = [];
 
@@ -132,6 +133,15 @@ export function createGuardService(options: {
     return { member, online, level: roleLevel(member.role) as Level };
   }
 
+  function runSourceLevel(authors: ReadonlyMap<string, Level> | undefined, members: Awaited<ReturnType<MemberStore["listMembers"]>>) {
+    let level: Level = "owner";
+    for (const [authorId, recordedLevel] of authors ?? []) {
+      const author = members.find((candidate) => candidate.memberId === authorId);
+      level = lowerLevel(level, author ? lowerLevel(recordedLevel, roleLevel(author.role)) : recordedLevel);
+    }
+    return level;
+  }
+
   async function routeApprovers(request: GuardRequest, decision: GuardDecision) {
     if (decision.action !== "ask") return [];
     const records = await options.members.listMembers(options.project.id);
@@ -162,6 +172,7 @@ export function createGuardService(options: {
       otherWorkspaceRoots: options.otherWorkspaceRoots?.(options.project.id),
       protectedPaths: currentPolicy.protectedPaths
     };
+    await observedWrites;
     await provenance.load();
     const source = fileScriptSource(undefined, provenance.levelOf, provenance.writerOf);
     function evaluate(candidate: GuardRequest, memberLevel: Level) {
@@ -171,17 +182,10 @@ export function createGuardService(options: {
       return applyScriptInspection(base, inspectScripts(candidate, evaluationContext, source), memberLevel, candidate.source);
     }
     let decision = evaluate(request, stored.level);
-    if (options.agentProvenance !== false && request.source === "agent" && request.agentRunId) {
-      const authors = runSourceLevels.get(request.agentRunId);
-      if (authors?.size) {
-        const members = await options.members.listMembers(options.project.id);
-        const sourceLevel = [...authors].reduce<Level>((lowest, [author, recordedLevel]) => {
-          const member = members.find((candidate) => candidate.memberId === author);
-          return lowerLevel(lowest, member ? lowerLevel(recordedLevel, roleLevel(member.role)) : recordedLevel);
-        }, "owner");
-        if (LEVELS.indexOf(sourceLevel) < LEVELS.indexOf(stored.level)) {
-          decision = { ...applyAgentProvenance(decision, evaluate({ ...request, source: "terminal" }, sourceLevel), sourceLevel), sourceLevel };
-        }
+    if (options.agentProvenance !== false && request.source === "agent" && request.agentRunId && runSourceLevels.has(request.agentRunId)) {
+      const sourceLevel = runSourceLevel(runSourceLevels.get(request.agentRunId), await options.members.listMembers(options.project.id));
+      if (LEVELS.indexOf(sourceLevel) < LEVELS.indexOf(stored.level)) {
+        decision = { ...applyAgentProvenance(decision, evaluate({ ...request, source: "terminal" }, sourceLevel), sourceLevel), sourceLevel };
       }
     }
     if (decision.approvers === "initiator") {
@@ -199,16 +203,16 @@ export function createGuardService(options: {
   async function submit(request: GuardRequest, input: { timeoutMs?: number | null } = {}) {
     const result = await submitDecision(request, input);
     if (result.approved && options.mode === "full") {
+      if (options.agentProvenance !== false && request.source === "agent" && request.agentRunId) recordReadSources(request, request.agentRunId);
       const member = await options.members.getMember(options.project.id, request.memberId);
       if (member) {
-        let level = roleLevel(member.role) as Level;
-        if (request.source === "agent" && request.agentRunId) {
-          for (const recordedLevel of runSourceLevels.get(request.agentRunId)?.values() ?? []) level = lowerLevel(level, recordedLevel);
-        }
+        const sourceLevel = options.agentProvenance !== false && request.source === "agent" && request.agentRunId && runSourceLevels.has(request.agentRunId)
+          ? runSourceLevel(runSourceLevels.get(request.agentRunId), await options.members.listMembers(options.project.id))
+          : undefined;
+        const level = lowerLevel(roleLevel(member.role), lowerLevel(result.decision.sourceLevel ?? "owner", sourceLevel));
         await provenance.record(request, level);
       }
     }
-    if (result.approved && options.mode === "full" && options.agentProvenance !== false && request.source === "agent" && request.agentRunId) recordReadSources(request, request.agentRunId);
     return result;
   }
 
@@ -225,14 +229,14 @@ export function createGuardService(options: {
         if (parsed?.action === "read") for (const target of parsed.targets) paths.add(target.resolvedPath);
       }
     }
-    recordFileSources(runId, request.memberId, paths);
+    recordFileSources(runId, paths);
   }
 
-  function recordFileSources(runId: string, memberId: string, paths: Iterable<string>) {
+  function recordFileSources(runId: string, paths: Iterable<string>) {
     for (const target of paths) {
       const writer = provenance.writerOf(target);
       const level = provenance.levelOf(target);
-      if (writer && level && (writer !== memberId || level !== roleLevel("owner"))) recordSource(runId, writer, level);
+      if (writer && level) recordSource(runId, writer, level);
     }
   }
 
@@ -244,13 +248,10 @@ export function createGuardService(options: {
   }
 
   async function beginWorkspaceActivity(memberId: string, source: "terminal" | "agent", runId?: string) {
-    if (options.mode !== "full" || options.agentProvenance === false) return undefined;
+    if (options.mode !== "full" || runId && cancelledRunIds.has(runId)) return undefined;
     const member = await options.members.getMember(options.project.id, memberId);
     if (!member) throw new Error("Project membership is required");
-    let level = roleLevel(member.role) as Level;
-    if (source === "agent" && runId) {
-      for (const recordedLevel of runSourceLevels.get(runId)?.values() ?? []) level = lowerLevel(level, recordedLevel);
-    }
+    const level = roleLevel(member.role);
     const token = `workspace-activity-${nextWorkspaceActivityId += 1}`;
     workspaceActivities.set(token, { memberId, source, runId, level });
     return token;
@@ -260,24 +261,24 @@ export function createGuardService(options: {
     if (token) workspaceActivities.delete(token);
   }
 
-  async function recordObservedWorkspaceChange(relativePath: string, type: string) {
-    if (options.mode !== "full" || options.agentProvenance === false || type === "addDir" || type === "unlinkDir") return;
-    const absolutePath = path.resolve(options.project.workspacePath, relativePath);
-    const active = [...workspaceActivities.values()].sort((left, right) => LEVELS.indexOf(left.level) - LEVELS.indexOf(right.level))[0];
-    const expectedUntil = expectedWorkspaceWrites.get(absolutePath);
-    if (!active && expectedUntil !== undefined) {
-      if (expectedUntil > Date.now()) return;
-      expectedWorkspaceWrites.delete(absolutePath);
-    }
-    if (active) {
-      await provenance.recordObserved(absolutePath, active.memberId, active.level);
-      audit.append({ timestamp: new Date().toISOString(), projectId: options.project.id, memberId: active.memberId, source: active.source, agentRunId: active.runId, action: "allow", matchedRules: [], durationMicros: 0, stage: "workspace-write", paths: [relativePath], sourceLevel: active.level });
-      return;
-    }
-    const members = await options.members.listMembers(options.project.id);
-    const lowest = members.reduce<Level>((current, member) => lowerLevel(current, roleLevel(member.role)), "owner");
-    await provenance.recordObserved(absolutePath, "unattributed", lowest);
-    audit.append({ timestamp: new Date().toISOString(), projectId: options.project.id, memberId: "unattributed", source: "terminal", action: "allow", matchedRules: [], durationMicros: 0, stage: "workspace-write", paths: [relativePath], sourceLevel: lowest, unattributed: true });
+  function recordObservedWorkspaceChange(relativePath: string, type: WorkspaceChange["type"]) {
+    if (options.mode !== "full" || (type !== "add" && type !== "change" && type !== "rename")) return observedWrites;
+    const activities = [...workspaceActivities.values()];
+    const sources = options.agentProvenance === false ? [] : activities.map(({ runId }) => runId ? new Map(runSourceLevels.get(runId)) : undefined);
+    observedWrites = observedWrites.then(async () => {
+      const members = await options.members.listMembers(options.project.id);
+      let selected: { activity: (typeof activities)[number]; level: Level } | undefined;
+      for (const [index, activity] of activities.entries()) {
+        const member = members.find((candidate) => candidate.memberId === activity.memberId);
+        const level = lowerLevel(member ? roleLevel(member.role) : activity.level, runSourceLevel(sources[index], members));
+        if (!selected || LEVELS.indexOf(level) < LEVELS.indexOf(selected.level)) selected = { activity, level };
+      }
+      const memberId = selected?.activity.memberId ?? "unattributed";
+      const level = selected?.level ?? members.reduce<Level>((current, member) => lowerLevel(current, roleLevel(member.role)), "owner");
+      await provenance.recordObserved(path.resolve(options.project.workspacePath, relativePath), memberId, level);
+      audit.append({ timestamp: new Date().toISOString(), projectId: options.project.id, memberId, source: selected?.activity.source ?? "terminal", agentRunId: selected?.activity.runId, action: "allow", matchedRules: [], durationMicros: 0, stage: "workspace-write", paths: [relativePath], sourceLevel: level, unattributed: selected ? undefined : true });
+    });
+    return observedWrites;
   }
 
   function auditSource(request: GuardRequest) {
@@ -490,8 +491,9 @@ export function createGuardService(options: {
     submit,
     async recordPromptSources(runId: string, memberId: string, files: string[], authors: { id: string; role?: string }[]) {
       if (options.mode !== "full" || options.agentProvenance === false) return;
+      await observedWrites;
       await provenance.load();
-      recordFileSources(runId, memberId, files.map((file) => path.resolve(options.project.workspacePath, file)));
+      recordFileSources(runId, files.map((file) => path.resolve(options.project.workspacePath, file)));
       const members = await options.members.listMembers(options.project.id);
       for (const author of authors) {
         if (author.id === memberId) continue;
@@ -505,7 +507,6 @@ export function createGuardService(options: {
       const member = await options.members.getMember(options.project.id, memberId);
       if (!member) throw new Error("Project membership is required");
       await provenance.record({ projectId: options.project.id, memberId, source: "terminal", kind: "edit", paths: [filePath], cwd: options.project.workspacePath }, roleLevel(member.role));
-      expectedWorkspaceWrites.set(path.resolve(options.project.workspacePath, filePath), Date.now() + 2_000);
     },
     beginWorkspaceActivity,
     endWorkspaceActivity,
@@ -595,8 +596,8 @@ export function createGuardService(options: {
       publishActivity({ type: "guard_settings_updated", payload: { ...updated } });
       return updated;
     },
-    async awaitIdle() { await audit.awaitIdle(); },
-    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); runSourceLevels.clear(); workspaceActivities.clear(); expectedWorkspaceWrites.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); routingListeners.clear(); }
+    async awaitIdle() { await observedWrites; await audit.awaitIdle(); },
+    dispose() { stopMembershipChanges(); approvals.clear(); approvalMemory.clear(); cancelledRunIds.clear(); runSourceLevels.clear(); workspaceActivities.clear(); if (control) clearTimeout(control.timer); pendingListeners.clear(); controlListeners.clear(); activityListeners.clear(); resolutionListeners.clear(); routingListeners.clear(); }
   };
 }
 

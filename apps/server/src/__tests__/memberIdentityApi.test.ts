@@ -380,6 +380,7 @@ describe("member identity API", () => {
     const alice = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member;
     const bob = (await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" })).member;
     const runtime = running.app.locals.runtimeManager.get("demo");
+    await runtime.workspaceReady;
     const cwd = runtime.project.workspacePath;
     const agentRequest = (runId: string, kind: "read" | "command", command?: string, paths?: string[]) => ({
       projectId: "demo", memberId: alice.id, source: "agent" as const, agentRunId: runId, kind, command, paths, cwd
@@ -413,7 +414,14 @@ describe("member identity API", () => {
     expect((await runtime.guard.submit(agentRequest("t3-next", "read", undefined, ["clean.txt"]))).approved).toBe(true);
     expect(await runtime.guard.decide(agentRequest("t3-next", "command", "git push origin main"))).toMatchObject({ action: "ask", sourceLevel: "contributor" });
 
-    expect(await runtime.guard.decide(agentRequest("t4", "read", undefined, ["README.md"]))).toMatchObject({ action: "allow" });
+    expect((await runtime.guard.submit(agentRequest("t4-initial", "read", undefined, ["README.md"]))).approved).toBe(true);
+    expect(await runtime.guard.decide(agentRequest("t4-initial", "command", "rm alice-draft.txt"))).toMatchObject({ action: "allow" });
+    const ownerWrite = await runtime.guard.beginWorkspaceActivity(alice.id, "agent", "t4-write");
+    await fs.writeFile(path.join(cwd, "owner-note.txt"), "owner note\n");
+    await runtime.guard.recordObservedWorkspaceChange("owner-note.txt", "add");
+    runtime.guard.endWorkspaceActivity(ownerWrite);
+    expect((await runtime.guard.submit(agentRequest("t4-read", "read", undefined, ["owner-note.txt"]))).approved).toBe(true);
+    expect(await runtime.guard.decide(agentRequest("t4-read", "command", "rm alice-draft.txt"))).toMatchObject({ action: "allow" });
 
     const bobActivity = await runtime.guard.beginWorkspaceActivity(bob.id, "terminal");
     const aliceActivity = await runtime.guard.beginWorkspaceActivity(alice.id, "terminal");
@@ -440,6 +448,49 @@ describe("member identity API", () => {
     const auditPath = path.join(getProjectMetadataPath(runtime.project), "guard-audit.jsonl");
     const audit = (await fs.readFile(auditPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
     expect(audit).toContainEqual(expect.objectContaining({ stage: "workspace-write", unattributed: true, paths: ["external.txt"] }));
+  });
+
+  it("attributes creation and replacement by an allowed script in the shared terminal", async () => {
+    await running.close();
+    await fs.rm(root, { recursive: true, force: true });
+    root = await createTestWorkspace("guard-provenance-terminal-");
+    running = await startServer(root, { guardMode: "full", guardLlmMode: "off" }, {
+      "gen.js": "import fs from 'node:fs';\nfs.writeFileSync('notes.md', 'New notes');\nfs.writeFileSync('doc.md', 'New document');\n",
+      "doc.md": "Original document",
+      "alice-draft.txt": "Alice's draft"
+    });
+    const alice = (await joinMember(running.origin, "demo", { name: "Alice", role: "owner" })).member;
+    const bob = (await joinMember(running.origin, "demo", { name: "Bob", role: "contributor" })).member;
+    const runtime = running.app.locals.runtimeManager.get("demo");
+    await runtime.workspaceReady;
+    await runtime.guard.recordWorkspaceWrite(alice.id, "gen.js");
+    await runtime.guard.recordWorkspaceWrite(alice.id, "doc.md");
+    await runtime.guard.setControl(bob.id, alice.id);
+    const terminal = new WebSocket(`${running.origin.replace("http", "ws")}/terminal?projectId=demo&memberId=${bob.id}`);
+    const cwd = runtime.project.workspacePath;
+    try {
+      await opened(terminal);
+      const command = "node gen.js";
+      const result = nextMessageMatching(terminal, (message) => message.type === "guard_decision" && message.command === command);
+      terminal.send(JSON.stringify({ type: "command", text: command }));
+      await expect(result).resolves.toMatchObject({ action: "allow", outcome: "allowed" });
+      const provenancePath = path.join(getProjectMetadataPath(runtime.project), "guard-provenance.json");
+      await vi.waitFor(async () => {
+        const authors = JSON.parse(await fs.readFile(provenancePath, "utf8"));
+        expect(authors["notes.md"], runtime.terminal.getScrollback()).toMatchObject({ memberId: bob.id, level: "contributor" });
+        expect(authors["doc.md"]).toMatchObject({ memberId: bob.id, level: "contributor" });
+      });
+      expect(await fs.readFile(path.join(cwd, "notes.md"), "utf8")).toBe("New notes");
+      expect(await fs.readFile(path.join(cwd, "doc.md"), "utf8")).toBe("New document");
+      for (const file of ["notes.md", "doc.md"]) {
+        const request = { projectId: "demo", memberId: alice.id, source: "agent" as const, agentRunId: file, cwd };
+        expect((await runtime.guard.submit({ ...request, kind: "read", paths: [file] })).approved).toBe(true);
+        expect(await runtime.guard.decide({ ...request, kind: "command", command: "rm alice-draft.txt" }))
+          .toMatchObject({ action: "ask", sourceLevel: "contributor" });
+      }
+    } finally {
+      terminal.terminate();
+    }
   });
 
   it("reuses approval without changing the rule decision and takes a snapshot before the repeated command", async () => {
@@ -520,6 +571,7 @@ describe("member identity API", () => {
       }, { timeout: 2_000 });
       studentTerminal.send(JSON.stringify({ type: "command", text: "ls" }));
       await expect(nextMessageMatching(studentTerminal, (message) => message.type === "guard_decision" && message.command === "ls")).resolves.toMatchObject({ type: "guard_decision", action: "allow", outcome: "allowed", command: "ls" });
+      await vi.waitFor(() => expect(running.app.locals.runtimeManager.get("demo").terminal.getScrollback()).toContain("README.md"));
     } finally {
       studentTerminal.terminate();
     }
@@ -603,10 +655,11 @@ function nextMessageMatching(socket: WebSocket, predicate: (message: Record<stri
   });
 }
 
-async function startServer(directory: string, options: { guardMode?: "full" | "human-only" | "off"; guardLlmMode?: "off" | "suggest" | "auto"; guardApprovalTimeoutMs?: number } = {}) {
+async function startServer(directory: string, options: { guardMode?: "full" | "human-only" | "off"; guardLlmMode?: "off" | "suggest" | "auto"; guardApprovalTimeoutMs?: number } = {}, files: Record<string, string> = {}) {
   const source = path.join(directory, "source");
   await fs.mkdir(source);
   await fs.writeFile(path.join(source, "README.md"), "# Member test\n");
+  for (const [file, content] of Object.entries(files)) await fs.writeFile(path.join(source, file), content);
   const app = await createApp({ port: 0, host: "127.0.0.1", publicOrigin: "http://127.0.0.1:5173", dataDir: path.join(directory, "data"), demoProjectRoot: source, ...options });
   const server = http.createServer(app);
   const realtime = attachRealtimeServer(server, app.locals.runtimeManager, app.locals.agentRuns, { members: app.locals.members });
