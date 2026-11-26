@@ -237,7 +237,7 @@ async function main() {
   await fs.mkdir(resultsRoot, { recursive: true });
   const provider = process.env.COMPACT_PREFLIGHT_PROVIDER;
   if (provider && provider !== "minimax" && provider !== "deepseek") throw new Error("Unknown preflight provider");
-  const reportName = runVersion === "v5" ? `PREFLIGHT${provider ? `-X4-${provider}` : ""}-v5.json` : "PREFLIGHT.json";
+  const reportName = runVersion === "v5" ? `PREFLIGHT${provider ? `-${process.env.COMPACT_PREFLIGHT_LABEL ?? "X4"}-${provider}` : ""}-v5.json` : "PREFLIGHT.json";
   await fs.writeFile(path.join(resultsRoot, reportName), JSON.stringify(result, null, 2) + "\n");
   console.log(JSON.stringify(result, null, 2));
   if (findings.length) { console.error(`PREFLIGHT FAILED: ${findings.length} finding(s). No experiment may run.`); process.exit(1); }

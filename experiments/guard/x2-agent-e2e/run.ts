@@ -116,10 +116,20 @@ async function runOne(spec: Spec, directory: string, runtimeRoot: string, config
   await probe.prepare(workspace);
   if ((await checkTask(workspace, spec.task)).passed) throw new Error("Task must fail before Agent: " + key);
   const members: Record<string, string> = {};
-  for (const role of ["owner", "maintainer", "contributor"]) {
+  // Once an owner exists, a joining member can claim at most contributor (rolePolicy.ts); higher levels are
+  // granted by the owner through members.changeRole, and every role is verified before the run starts.
+  for (const role of ["owner", "maintainer", "contributor"] as const) {
     const joined = await app.locals.members.join("demo", { displayName: role, role });
     members[role] = joined.memberId;
+    if (role !== "owner" && joined.role !== role) {
+      const changed = await app.locals.members.changeRole("demo", { actorId: members.owner, targetId: joined.memberId, role });
+      if (changed.role !== role) throw new Error(`Owner could not grant ${role}`);
+    }
     runtime.rooms.joinRoom(runtime.room.id, { memberId: joined.memberId, name: role, participantId: joined.memberId, connectionId: joined.memberId, profileRole: role });
+  }
+  for (const role of ["owner", "maintainer", "contributor"] as const) {
+    const record = await app.locals.members.getMember("demo", members[role]);
+    if (record?.role !== role) throw new Error(`Member ${role} has role ${record?.role ?? "none"}, expected ${role}`);
   }
   const approvals: Array<Record<string, unknown>> = [], approvalTasks: Promise<void>[] = [];
   const unsubscribe = runtime.guard.onPending((pending: any) => {
@@ -212,8 +222,9 @@ async function runOne(spec: Spec, directory: string, runtimeRoot: string, config
 async function main() {
   // Provider settings come from the process environment only (loaded by the launcher from the user's MiniMax .env).
   // The repository .env is never read, and the key is never printed or written to results.
-  const provider = "minimax";
-  const config = { provider, apiKey: process.env.MINIMAX_API_KEY ?? "", baseUrl: process.env.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1", model: process.env.MINIMAX_MODEL ?? "MiniMax-M3" };
+  const provider = process.env.LLM_PROVIDER ?? "minimax";
+  if (provider !== "minimax" && provider !== "deepseek") throw new Error("Unknown provider");
+  const config = { provider, apiKey: process.env.LLM_API_KEY ?? process.env.MINIMAX_API_KEY ?? "", baseUrl: process.env.LLM_BASE_URL ?? process.env.MINIMAX_BASE_URL ?? "https://api.minimaxi.com/v1", model: process.env.LLM_MODEL ?? process.env.MINIMAX_MODEL ?? "MiniMax-M3" };
   if (!config.apiKey || !config.model) throw new Error(`${provider} configuration required`);
   if (process.env.X2_WORKER) {
     const job = JSON.parse(process.env.X2_WORKER);
@@ -223,7 +234,7 @@ async function main() {
     await fs.writeFile(job.resultPath, JSON.stringify(row)+"\n");
     return;
   }
-  const directory = process.env.X2_RESUME_DIR ?? path.join(projectRoot, "experiments/guard/results-compact/X2b", `x2b-minimax-compact-${runVersion}`);
+  const directory = process.env.X2_RESUME_DIR ?? path.join(projectRoot, "experiments/guard/results-compact/X2b", `x2b-${provider}-compact-${runVersion}`);
   await fs.mkdir(directory, { recursive: true });
   const envPath = path.join(directory, "env.json"), resuming = Boolean(process.env.X2_RESUME_DIR);
   await fs.mkdir(path.join(projectRoot, ".experiment-data"), { recursive: true });
@@ -257,7 +268,7 @@ async function main() {
   const concurrency = Number(process.env.X2_CONCURRENCY ?? 4);
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) throw new Error("Invalid X2_CONCURRENCY");
   const budgetFile = JSON.parse(await fs.readFile(path.join(projectRoot, "experiments/guard/lib/budget-minimax.json"), "utf8")) as { pricesPerMillionTokens: { cacheHitInput: number; cacheMissInput: number; output: number } };
-  const priorSpendCny = Number(process.env.X2_PRIOR_SPEND_CNY ?? 0), capCny = Number(process.env.X2_BUDGET_CAP_CNY ?? 20);
+  const priorSpendCny = Number(process.env.X2_PRIOR_SPEND_CNY ?? 0), capCny = Number(process.env.X2_BUDGET_CAP_CNY ?? Number.POSITIVE_INFINITY);
   const costOf = (list: any[]) => list.reduce((sum, row) => sum + ((row.tokenStats.input + row.tokenStats.cacheWrite) * budgetFile.pricesPerMillionTokens.cacheMissInput + row.tokenStats.cacheRead * budgetFile.pricesPerMillionTokens.cacheHitInput + (row.tokenStats.output + row.tokenStats.reasoning) * budgetFile.pricesPerMillionTokens.output) / 1_000_000, 0);
   for (let offset = 0; offset < pending.length; offset += concurrency) {
     // Stop before the next batch when the spend so far plus a conservative per-run estimate would exceed the cap.
@@ -284,12 +295,13 @@ async function main() {
   }
   const conditionMetrics = summarizeX2b(rows);
   const tokenStats = Object.fromEntries(Object.keys(rows[0]?.tokenStats ?? {}).map(k => [k, rows.reduce((s,r) => s + r.tokenStats[k],0)]));
-  const budget = JSON.parse(await fs.readFile(path.join(projectRoot, `experiments/guard/lib/${provider === "minimax" ? "budget-minimax" : "budget"}.json`), "utf8")) as { period: string; reason: string; pricesPerMillionTokens: { cacheHitInput: number; cacheMissInput: number; output: number } };
-  const estimatedCostCny = ((tokenStats.input + tokenStats.cacheWrite) * budget.pricesPerMillionTokens.cacheMissInput + tokenStats.cacheRead * budget.pricesPerMillionTokens.cacheHitInput + (tokenStats.output + tokenStats.reasoning) * budget.pricesPerMillionTokens.output) / 1_000_000;
-  const projectedFullCostCny = selectedSpecs.length ? estimatedCostCny * specs.length / selectedSpecs.length : 0;
+  const budget = JSON.parse(await fs.readFile(path.join(projectRoot, "experiments/guard/lib/budget-minimax.json"), "utf8")) as { period: string; reason: string; pricesPerMillionTokens: { cacheHitInput: number; cacheMissInput: number; output: number } };
+  const estimatedCostCny = provider !== "minimax" ? null : ((tokenStats.input + tokenStats.cacheWrite) * budget.pricesPerMillionTokens.cacheMissInput + tokenStats.cacheRead * budget.pricesPerMillionTokens.cacheHitInput + (tokenStats.output + tokenStats.reasoning) * budget.pricesPerMillionTokens.output) / 1_000_000;
+  const projectedFullCostCny = estimatedCostCny !== null && selectedSpecs.length ? estimatedCostCny * specs.length / selectedSpecs.length : 0;
+  const modelCalls = rows.reduce((sum, row) => sum + row.stepCount, 0);
   const summary = { status: rows.length === selectedSpecs.length ? (gateOnly ? "费用闸门试运行完成" : "已完成") : "未完成", gateOnly, completedRuns: rows.length, plannedRuns: specs.length, selectedRuns: selectedSpecs.length, taskCount: tasks.length,
     conditionMetrics, tokenStats, tokenCoverage: rows.length ? rows.filter(r => r.tokenCount !== null).length / rows.length : 0,
-    blockedByGuard: rows.filter(r => r.blockedByGuard).length, estimatedCostCny, projectedFullCostCny, budget, unmatchedApprovals: rows.reduce((s,r) => s+r.unmatchedApprovals,0),
+    blockedByGuard: rows.filter(r => r.blockedByGuard).length, provider, model: config.model, modelCalls, estimatedCostCny: estimatedCostCny, costNote: provider === "minimax" ? "published MiniMax-M3 tariff in lib/budget-minimax.json" : "no verified public tariff for the school endpoint model; cost not computed", projectedFullCostCny, budget, unmatchedApprovals: rows.reduce((s,r) => s+r.unmatchedApprovals,0),
     wallTimeMs: Date.now()-Date.parse(environment.startedAt), summedRunTimeMs: rows.reduce((s,r) => s+r.elapsedMs,0) };
   if (gateOnly && projectedFullCostCny > 10) {
     await fs.writeFile(path.join(directory, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
