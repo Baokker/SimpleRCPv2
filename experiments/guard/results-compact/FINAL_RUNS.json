@@ -1,6 +1,6 @@
 {
   "testedRef": "guard-compact-v5",
-  "status": "partial_execution_coverage",
+  "status": "complete_except_X5_rerun",
   "supersededIndex": "superseded-v4/FINAL_RUNS.json",
   "runs": {
     "X1": "X1/x1-compact-v5",
@@ -19,11 +19,14 @@
     "Property1": "property1-path-consistency-v5.json",
     "Preflight": "PREFLIGHT-v5.json",
     "Preflight_X4_minimax": "PREFLIGHT-X4-minimax-v5.json",
-    "Preflight_X4_deepseek": "PREFLIGHT-X4-deepseek-v5.json"
+    "Preflight_X4_deepseek": "PREFLIGHT-X4-deepseek-v5.json",
+    "X2a": "X2a/x2a-compact-v5",
+    "X2b": "X2b/x2b-minimax-compact-v5",
+    "X2b_deepseek": "X2b/x2b-deepseek-compact-v5",
+    "D5b": "D5/d5-live-strong-minimax-compact-v5",
+    "D5b_deepseek": "D5/d5-live-strong-deepseek-compact-v5"
   },
   "notes": {
-    "X2a": "No v5 execution data or snapshot restoration data.",
-    "X2b": "No v5 live agent execution data for either provider.",
-    "D5b_live": "No v5 live agent execution data for either provider."
+    "X5": "Measured under parallel load with Node.js 24.7.0; to be rerun alone with Node.js 22.19.0."
   }
 }

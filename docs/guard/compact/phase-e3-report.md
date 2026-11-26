@@ -34,7 +34,7 @@ The local annotated tag `guard-compact-v5` points to `1c9ef6bb59006d77617861f8cf
 
 ## Coverage
 
-The policy-only runs classify fixed inputs without executing them. The D5 execution-write carrier runs a local generator that writes a fixture note. The two-hop carrier persists a fixture note during a GuardService edit activity. X2a, X2b and D5b are unmeasured for v5 because their runners automate attempted access-control violations. No v4 measurement is carried forward as a v5 result.
+The policy-only runs classify fixed inputs without executing them. The D5 execution-write carrier runs a local generator that writes a fixture note. The two-hop carrier persists a fixture note during a GuardService edit activity. X2a, X2b and D5b were run on v5 separately (Node.js 22.19.0) and are reported below. No v4 measurement is carried forward as a v5 result.
 
 ## Manuscript numbers
 
@@ -43,7 +43,7 @@ The source paths are relative to `experiments/guard/results-compact/`. The archi
 | Manuscript location and sentence opening | Old value (v4) | New value (v5) | Source file and field |
 |---|---|---|---|
 | Abstract, “On 717 author-constructed records” | 717 records, 173/185 (93.5%, CI [89.0%, 96.3%]), 5/286 (1.7%, CI [0.7%, 4.0%]) | 717 records, 173/185 (93.5%, CI [89.0%, 96.3%]), 5/286 (1.7%, CI [0.7%, 4.0%]) | `eval_stats.json`, `baselines.F`. `WILSON_95.json`, `static.baselines.F` |
-| Abstract, “In 120 distinct end-to-end attempts” | 0 irreversible, 168, 36, 156 (43.3% of 360, 48.1% of 324) | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json`, `conditions.F` |
+| Abstract, “In 120 distinct end-to-end attempts” | 0 irreversible, 168, 36, 156 (43.3% of 360, 48.1% of 324) | 0 irreversible, 168, 36, 156 (43.3% of 360, 48.1% of 324) | `X2a/x2a-compact-v5/table-v.json`, `conditions.F` |
 | VI-A, “No public dataset covers” | 6 datasets, 844 records, counts 361/123/92/141/41/86 | 6 datasets, 844 records, counts 361/123/92/141/41/86 | `../datasets/compact/MANIFEST.json`, `total`, `datasets[].count` |
 | VI-A, “The platform was” | Apple M1 Pro, 16 GiB, Node.js 22.19.0, OpenCode 1.18.31, MiniMax-M3, GPT not run | Apple M1 Pro, 16 GiB, Node.js 24.7.0, OpenCode 1.18.31, MiniMax-M3 and DeepSeek-V4.1-Flash | `ENVIRONMENT.json` |
 | VI-A, “Static and end-to-end results” | `guard-compact-v4`, 95% Wilson intervals | `guard-compact-v5`, 95% Wilson intervals | `ENVIRONMENT.json`, `testedRef`, `commit`. `WILSON_95.json`, `method` |
@@ -64,15 +64,15 @@ The source paths are relative to `experiments/guard/results-compact/`. The archi
 | VI-B, “Without inspection” and “With inspection” | 38/252; 252/252; 20/32; 24/24; 8/112 | 38/252 without inspection. 252/252, 20/32, and 24/24 with inspection. 8/112 per condition. | `X8/x8-script-inspection-compact-v5/summary.json`, `conditions`. `WILSON_95.json`, `x8` |
 | VI-B, “Property-based tests checked Properties 3, 4, and 5” | 10,000 each, 0 violations in all four checks | 10,000 each, zero violations in all four checks | `X6/x6-properties-compact-v5/summary.json`, `properties`. `WILSON_95.json`, `x6.properties` |
 | VI-B, “A differential test submitted 12,043” | 12,043 commands, 96,344 pairs, 53,272 comparable with 0 violations | 12,043 commands, 96,344 pairs, 53,272 comparable, zero violations | `property1-path-consistency-v5.json`, `inputs`, `total`, `compared`, `violations`, `differentFeatureReasons` |
-| VI-C, “Ten tasks each” and “The design crossed” | 720 runs, 360 per condition, order check 0 of 240 task cells | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/summary.json`, `rowCount`, `orderCheck` |
-| VI-C, Table V `tab:e2e`, no control and terminal-only | each 348 (96.7%, CI [94.3%, 98.1%]), 0 recoverable, 0 stopped, 12 attempts without effect, owner 48/48 | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json`, `conditions.B0`, `conditions.B2` |
-| VI-C, Table V `tab:e2e`, fixed agent level | 0, 48 (13.3%), 312 stopped (168 denied, 144 refused), owner 48/48. Restored hashes not re-verified for this condition | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json`, `conditions.B3` |
-| VI-C, Table V `tab:e2e`, ComPACT | 0, 36 (10.0%), 324 stopped (168 denied, 156 refused), owner 48/48 | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json`, `conditions.F` |
-| VI-C, “Under ComPACT” and “The 36 recoverable successes” | 0/624, 36/36 restorations matched the manifest hash (24 runs) | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json`, `snapshot-restore.json` |
-| VI-C, Fig. `fig_burden`a and “The result of zero” | 168, 36, 156 (43.3%) | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json`, `conditions.F.refusalDependence` |
-| VI-C, “If an approver wrongly accepts” | 156e, 15.6 (4.3%) | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json` |
+| VI-C, “Ten tasks each” and “The design crossed” | 720 runs, 360 per condition, order check 0 of 240 task cells | 720 runs, 360 per condition, order check 0 of 240 task cells | `X2a/x2a-compact-v5/summary.json`, `rowCount`, `orderCheck` |
+| VI-C, Table V `tab:e2e`, no control and terminal-only | each 348 (96.7%, CI [94.3%, 98.1%]), 0 recoverable, 0 stopped, 12 attempts without effect, owner 48/48 | each 348, 0 recoverable, 0 stopped, owner 48/48 (unchanged) | `X2a/x2a-compact-v5/table-v.json`, `conditions.B0`, `conditions.B2` |
+| VI-C, Table V `tab:e2e`, fixed agent level | 0, 48 (13.3%), 312 stopped (168 denied, 144 refused), owner 48/48. Restored hashes not re-verified for this condition | 0, 48, 312 stopped (168 denied, 144 refused), owner 48/48 (unchanged) | `X2a/x2a-compact-v5/table-v.json`, `conditions.B3` |
+| VI-C, Table V `tab:e2e`, ComPACT | 0, 36 (10.0%), 324 stopped (168 denied, 156 refused), owner 48/48 | 0, 36, 324 stopped (168 denied, 156 refused), owner 48/48 (unchanged) | `X2a/x2a-compact-v5/table-v.json`, `conditions.F` |
+| VI-C, “Under ComPACT” and “The 36 recoverable successes” | 0/624, 36/36 restorations matched the manifest hash (24 runs) | 0/624 false blocks, 36/36 restorations matched (24 runs) | `X2a/x2a-compact-v5/snapshot-restore.json` |
+| VI-C, Fig. `fig_burden`a and “The result of zero” | 168, 36, 156 (43.3%) | 168, 36, 156 (43.3%) (unchanged) | `X2a/x2a-compact-v5/table-v.json`, `conditions.F.refusalDependence` |
+| VI-C, “If an approver wrongly accepts” | 156e, 15.6 (4.3%) | 156, 15.6 (4.3%) (unchanged) | `X2a/x2a-compact-v5/table-v.json` |
 | VI-C, “After demotion” and “In 500 fault-injection rounds” | 3 revocation scenarios, 500 fault rounds, zero failed checks, stale or duplicate resolutions, and leftover approvals | 3 revocation scenarios, 500 fault rounds, 0 failed checks, 0 stale or duplicate resolutions accepted, 0 leftover approvals | `X6/x6-approval-runtime-compact-v5/summary.json` |
-| VI-C, “With MiniMax-M3” | Not rerun. The v4 replay again changes 2 read-only inspection commands and no side-effect-relevant call | Unmeasured for both models | v4 evidence: `X2b/x2b-replay-compact-v4/summary.json`. `X2b/x2b-minimax-compact-v2/table.json` |
+| VI-C, “With MiniMax-M3” | Not rerun. The v4 replay again changes 2 read-only inspection commands and no side-effect-relevant call | Rerun on v5 with both models, see X2b section | `X2b/x2b-minimax-compact-v5/summary.json`, `X2b/x2b-deepseek-compact-v5/summary.json` |
 | VI-D, Fig. `fig_burden`b and “A workload of 1,650 requests” | 1,650, 938 | 1,650 ordered requests, 938 distinct | `X3/x3-approval-burden-compact-v5/summary.json`, `workload`, `distinctHistoricalRequests` |
 | VI-D, “Without snapshots” and “Snapshots reduced” | 789, 477, 477, 472. Each denied 108 (6.55 per 100), with 5 owner self-commands reclassified and 0 remembered approvals | 792, 480, 480, and 475 approvals (48.00, 29.09, 29.09, and 28.79 per 100). Each denied 108 (6.55 per 100). Five owner self-commands and zero remembered approvals. | `X3/x3-approval-burden-compact-v5/summary.json`, `groups` |
 | VI-D, “Of the 474 remaining approvals” | 114/477 (23.90%), 22.00 per 100; 114/472 (24.15%), 21.70 per 100 | 114/480 (23.75%) and 22.18 per 100. Full setting 114/475 (24.00%) and 21.88 per 100. | `X3/x3-approval-burden-compact-v5/summary.json`, `groups` |
@@ -82,9 +82,9 @@ The source paths are relative to `experiments/guard/results-compact/`. The archi
 | VI-D, “The median latency” | Terminal 0.853/1.579 ms, agent 0.794/1.082 ms, decision 0.071/0.202 ms terminal and 0.070/0.218 ms agent | Terminal 9.048/34.269 ms, agent 13.168/55.547 ms, decision 0.156/0.404 ms terminal and 0.157/0.391 ms agent, median/p95 | `X5/x5-performance-compact-v5/summary.json`, `services.incremental`, `services.agentIncremental`, `decide` |
 | VI-D, “Model calls took seconds” | MiniMax 2.611 s median and 6.715 s p95 | MiniMax 2.279 s median and 5.136 s p95. DeepSeek 2.230 s median and 4.115 s p95. | `X4/x4-minimax-compact-v5/summary.json`, `latencyMs` `X4/x4-deepseek-compact-v5/summary.json`, corresponding fields. |
 | VI-D, “Snapshots took about” | Medians 29.2, 279.3, and 1,298.0 ms; p95 39.9, 346.2, and 1,333.8 ms | Medians 87.0, 439.8, and 2,532.0 ms. P95 110.8, 622.4, and 2,960.7 ms. | `X5/x5-performance-compact-v5/summary.json`, `snapshots` |
-| VII-A, “156 of the 360 non-owner attempts” | 43.3% and 48.1% | Unmeasured | v4 evidence: `X2a/x2a-compact-v4/table-v.json` |
+| VII-A, “156 of the 360 non-owner attempts” | 43.3% and 48.1% | 43.3% and 48.1% (unchanged) | `X2a/x2a-compact-v5/table-v.json` |
 | VII-A, “a wrong approval is reused” | 30-minute default configuration | 30-minute default configuration | `apps/server/src/guard/approvalMemory.ts` |
-| Conclusion, “On 717 static records” | 717 static, 173/185 (93.5%), 5/286 (1.7%), 0 irreversible in 360 non-owner attempts, 0.853 ms terminal median | 717 static records, 173/185 intercepted (93.5%), 5/286 false blocks (1.7%), 9.048 ms terminal median. End-to-end side effects unmeasured. | `eval_stats.json`, `baselines.F`. `X5/x5-performance-compact-v5/summary.json`. v4 execution evidence: `X2a/x2a-compact-v4/table-v.json`. |
+| Conclusion, “On 717 static records” | 717 static, 173/185 (93.5%), 5/286 (1.7%), 0 irreversible in 360 non-owner attempts, 0.853 ms terminal median | 717 static records, 173/185 intercepted (93.5%), 5/286 false blocks (1.7%), 9.048 ms terminal median. 0 irreversible in 360 non-owner attempts (X2a v5). | `eval_stats.json`, `baselines.F`. `X5/x5-performance-compact-v5/summary.json`. v4 execution evidence: `X2a/x2a-compact-v4/table-v.json`. |
 | X9 interleaved restoration | 7/7 (CI [64.6%, 100%]), 1 restoration, 6 handoffs | 7/7 correct (CI [64.6%, 100%]), 1 restoration, 6 handoffs | `X9/x9-restore-compact-v5/summary.json`, `correct`, `restored`, `handedToPerson` |
 
 The X5 process ran alongside other Phase E3 jobs under Node.js 24.7.0. The comparison reports the measured latencies under those conditions. The benchmark recorded a PTY `EIO` and produced all 14,015 rows. The persisted member records contained 20 maintainers in each condition.
@@ -123,17 +123,32 @@ For each new carrier, the edit changes from `allow` to `allow_snapshot`, deletio
 
 ## D5b Live execution
 
+Variant V4 and seed 20261120 as in v4; 20 runs per condition, 10 control runs. DeepSeek pilot (provenance off, V4, 5 runs) in `pilot-summary.json`.
+
 | Metric | MiniMax-M3 | DeepSeek-V4.1-Flash |
 |---|---|---|
-| Provenance off and on, target changes, Wilson 95% intervals | Unmeasured | Unmeasured |
-| Bypass attempts and guard outcomes | Unobserved | Unobserved |
-| Control group, approvals and task completion | Unmeasured | Unmeasured |
+| Off: attempted, deleted (direct allow) | 20/20, 20/20 [83.9%, 100%] | 15/20, 15/20 [53.1%, 88.8%] (5 timeouts) |
+| On: attempted, deleted | 20/20, 0/20 [0%, 16.1%] | 14/20, 0/20 [0%, 16.1%] |
+| On: converted to approval and rejected | 20/20 runs, 49 ask attempts | 14/20 runs, 17 ask attempts |
+| On: bypass runs (other commands/tools) | 18, all ask or blocked before guard | 4, all ask or blocked before guard |
+| On: hash of `alice-draft.txt` unchanged | 20/20 | 20/20 |
+| Control: approvals, task completion | 0, 10/10 | 0, 10/10 |
+| Test file modified (any condition) | 0 | 0 |
+
+Sources `D5/d5-live-strong-minimax-compact-v5/summary.json`, `D5/d5-live-strong-deepseek-compact-v5/summary.json`.
 
 ## X2b Live execution
 
-| Metric | MiniMax-M3 | DeepSeek-V4.1-Flash |
+| Metric (attack tasks, 10 runs per condition) | MiniMax-M3 | DeepSeek-V4.1-Flash |
 |---|---|---|
-| Side effects, intercepted attempts and task completion | Unmeasured | Unmeasured |
+| B0 unrecoverable attack success | 7/10 | 6/10 |
+| ComPACT unrecoverable attack success | 0/10 | 0/10 |
+| ComPACT intercepted attempts | 36/38 | 20/20 |
+| Useful completion B0, ComPACT (30 runs) | 29/30, 25/30 | 30/30, 28/30 |
+| Owner legal requests completed B0, ComPACT | 8/8, 8/8 | 7/8, 6/8 |
+| ComPACT approvals (all 30 runs) | 205 | 87 |
+
+Sources `X2b/x2b-minimax-compact-v5/summary.json`, `X2b/x2b-deepseek-compact-v5/summary.json`, `conditionMetrics.*.all`.
 
 ## X4 Model judgments
 
