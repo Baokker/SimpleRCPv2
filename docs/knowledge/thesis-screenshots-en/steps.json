@@ -3,7 +3,7 @@
     "name": "01-setup",
     "attempt": 1,
     "ok": true,
-    "ms": 5211,
+    "ms": 9250,
     "result": {
       "prepared": [
         {
@@ -24,8 +24,8 @@
         }
       ],
       "identities": [
-        "1b29b449-2197-410c-bbe9-3a7c6c176de5",
-        "0c45d52a-d6bb-4826-b837-9d6a3adb8621"
+        "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
+        "1df402c6-d120-40c3-b8ab-0a4b001c874c"
       ],
       "themes": [
         "light",
@@ -37,15 +37,15 @@
     "name": "02-manual",
     "attempt": 1,
     "ok": true,
-    "ms": 1432,
+    "ms": 1777,
     "result": {
-      "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+      "cardId": "40c677c9-17cd-40d4-98f2-f15502f89d1e",
       "status": "reviewed",
       "scope": "team",
       "origin": "manual",
       "anchors": [
         {
-          "anchorId": "835fbe7a-bc82-412b-b7a9-f260220bdca8",
+          "anchorId": "ad7ded85-3303-44d3-9168-9a37b7b15c70",
           "file": {
             "workspaceRelativePath": "README.md"
           },
@@ -61,42 +61,42 @@
     "name": "03-discussion-import",
     "attempt": 1,
     "ok": false,
-    "ms": 30979,
-    "error": "page.waitForFunction: Timeout 30000ms exceeded."
+    "ms": 30955,
+    "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for getByTestId('send-chat')\n    - locator resolved to <button disabled data-testid=\"send-chat\">Sending</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not enabled\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not enabled\n     - retrying cl"
   },
   {
     "name": "03b-import",
     "attempt": 1,
     "ok": true,
-    "ms": 9305,
+    "ms": 9235,
     "result": {
       "synced": true,
       "imported": {
         "drafts": [
           {
-            "suggestionId": "5fe3e018-4f07-4e5b-8973-cf420e82d2e1",
+            "suggestionId": "1f324cf7-f5f4-456c-9b21-f0884992d83e",
             "file": "AGENTS.md",
-            "startLine": 5,
+            "startLine": 3,
             "endLine": 5,
             "suggestion": {
-              "id": "5fe3e018-4f07-4e5b-8973-cf420e82d2e1",
+              "id": "1f324cf7-f5f4-456c-9b21-f0884992d83e",
               "triggerType": "preset.imported",
-              "createdAt": 1795671908887,
+              "createdAt": 1795678578625,
               "origin": "preset",
               "state": "open",
               "actors": {
                 "memberIds": [
-                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                  "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
                 ],
                 "runIds": []
               },
               "suggestedType": "constraint",
-              "suggestedTitle": "README 文本使用英文",
-              "suggestedSummary": "所有 README 说明文字必须使用英文，以服务外部贡献者。",
+              "suggestedTitle": "README 说明文字使用英文",
+              "suggestedSummary": "所有 README 说明文字必须使用英文，以方便外部贡献者使用项目。",
               "suggestedAnchors": [
                 {
                   "file": "AGENTS.md",
-                  "startLine": 5,
+                  "startLine": 3,
                   "endLine": 5,
                   "score": 1,
                   "reasons": [
@@ -107,50 +107,50 @@
               "evidence": {
                 "file": "AGENTS.md",
                 "lineRange": {
-                  "start": 5,
+                  "start": 3,
                   "end": 5
                 },
-                "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged.",
+                "sourceText": "## Documentation\n\nAll README prose must be written in English because external contributors use this project. Keep code identifiers unchanged.",
                 "draft": {
                   "type": "constraint",
-                  "title": "README 文本使用英文",
-                  "summary": "所有 README 说明文字必须使用英文，以服务外部贡献者。",
-                  "content": "所有 README prose 必须使用英文编写，因为外部贡献者会使用该项目。",
-                  "startLine": 5,
+                  "title": "README 说明文字使用英文",
+                  "summary": "所有 README 说明文字必须使用英文，以方便外部贡献者使用项目。",
+                  "content": "所有 README 说明文字必须使用英文，因为外部贡献者会使用该项目。",
+                  "startLine": 3,
                   "endLine": 5,
                   "files": [],
                   "fallback": false,
                   "file": "AGENTS.md",
-                  "sourceText": "All README prose must be written in English because external contributors use this project. Keep code identifiers unchanged."
+                  "sourceText": "## Documentation\n\nAll README prose must be written in English because external contributors use this project. Keep code identifiers unchanged."
                 },
                 "fallback": false
               },
               "dedupe": {
-                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "cardId": "40c677c9-17cd-40d4-98f2-f15502f89d1e",
                 "score": 1
               }
             }
           },
           {
-            "suggestionId": "e72a048c-d99d-4f1d-b751-b9710f20e551",
+            "suggestionId": "37d99b92-a72b-47e9-a3fd-2e4b57a03443",
             "file": "AGENTS.md",
             "startLine": 5,
             "endLine": 5,
             "suggestion": {
-              "id": "e72a048c-d99d-4f1d-b751-b9710f20e551",
+              "id": "37d99b92-a72b-47e9-a3fd-2e4b57a03443",
               "triggerType": "preset.imported",
-              "createdAt": 1795671908913,
+              "createdAt": 1795678578775,
               "origin": "preset",
               "state": "open",
               "actors": {
                 "memberIds": [
-                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                  "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
                 ],
                 "runIds": []
               },
               "suggestedType": "constraint",
               "suggestedTitle": "保持代码标识符不变",
-              "suggestedSummary": "文档中不得修改现有代码标识符。",
+              "suggestedSummary": "编写文档时不得修改代码标识符。",
               "suggestedAnchors": [
                 {
                   "file": "AGENTS.md",
@@ -172,8 +172,8 @@
                 "draft": {
                   "type": "constraint",
                   "title": "保持代码标识符不变",
-                  "summary": "文档中不得修改现有代码标识符。",
-                  "content": "保持代码标识符不变。",
+                  "summary": "编写文档时不得修改代码标识符。",
+                  "content": "代码标识符必须保持不变。",
                   "startLine": 5,
                   "endLine": 5,
                   "files": [],
@@ -184,35 +184,35 @@
                 "fallback": false
               },
               "dedupe": {
-                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "cardId": "40c677c9-17cd-40d4-98f2-f15502f89d1e",
                 "score": 1
               }
             }
           },
           {
-            "suggestionId": "f280133a-211c-4559-bd7f-c8234161f804",
+            "suggestionId": "c42afafa-e71d-40fd-b0d9-651316eb4c98",
             "file": "AGENTS.md",
-            "startLine": 9,
+            "startLine": 7,
             "endLine": 9,
             "suggestion": {
-              "id": "f280133a-211c-4559-bd7f-c8234161f804",
+              "id": "c42afafa-e71d-40fd-b0d9-651316eb4c98",
               "triggerType": "preset.imported",
-              "createdAt": 1795671908930,
+              "createdAt": 1795678578891,
               "origin": "preset",
               "state": "open",
               "actors": {
                 "memberIds": [
-                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                  "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
                 ],
                 "runIds": []
               },
               "suggestedType": "constraint",
-              "suggestedTitle": "保持导出函数及公共参数兼容",
-              "suggestedSummary": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
+              "suggestedTitle": "保持导出接口兼容",
+              "suggestedSummary": "添加功能时，不得破坏现有导出函数及其公共参数的兼容性。",
               "suggestedAnchors": [
                 {
                   "file": "AGENTS.md",
-                  "startLine": 9,
+                  "startLine": 7,
                   "endLine": 9,
                   "score": 1,
                   "reasons": [
@@ -223,54 +223,54 @@
               "evidence": {
                 "file": "AGENTS.md",
                 "lineRange": {
-                  "start": 9,
+                  "start": 7,
                   "end": 9
                 },
-                "sourceText": "Keep existing exported functions and their public parameters compatible when adding a feature.",
+                "sourceText": "## Compatibility\n\nKeep existing exported functions and their public parameters compatible when adding a feature.",
                 "draft": {
                   "type": "constraint",
-                  "title": "保持导出函数及公共参数兼容",
-                  "summary": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
-                  "content": "添加功能时，必须保持现有导出函数及其公共参数兼容。",
-                  "startLine": 9,
+                  "title": "保持导出接口兼容",
+                  "summary": "添加功能时，不得破坏现有导出函数及其公共参数的兼容性。",
+                  "content": "添加功能时，必须保持现有导出函数及其公共参数的兼容性。",
+                  "startLine": 7,
                   "endLine": 9,
                   "files": [],
                   "fallback": false,
                   "file": "AGENTS.md",
-                  "sourceText": "Keep existing exported functions and their public parameters compatible when adding a feature."
+                  "sourceText": "## Compatibility\n\nKeep existing exported functions and their public parameters compatible when adding a feature."
                 },
                 "fallback": false
               },
               "dedupe": {
-                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "cardId": "40c677c9-17cd-40d4-98f2-f15502f89d1e",
                 "score": 0.89
               }
             }
           },
           {
-            "suggestionId": "224101a3-74ff-4f23-a2df-1c4e92215030",
+            "suggestionId": "272730ff-bffb-4b92-a969-4311842eb0d5",
             "file": "AGENTS.md",
-            "startLine": 13,
+            "startLine": 11,
             "endLine": 13,
             "suggestion": {
-              "id": "224101a3-74ff-4f23-a2df-1c4e92215030",
+              "id": "272730ff-bffb-4b92-a969-4311842eb0d5",
               "triggerType": "preset.imported",
-              "createdAt": 1795671908944,
+              "createdAt": 1795678579078,
               "origin": "preset",
               "state": "open",
               "actors": {
                 "memberIds": [
-                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                  "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
                 ],
                 "runIds": []
               },
               "suggestedType": "constraint",
               "suggestedTitle": "修改 JavaScript 后运行测试",
-              "suggestedSummary": "修改 JavaScript 源文件后，必须从 workspace 根目录运行 npm test。",
+              "suggestedSummary": "修改 JavaScript 源文件后，必须在 workspace 根目录运行 `npm test`。",
               "suggestedAnchors": [
                 {
                   "file": "AGENTS.md",
-                  "startLine": 13,
+                  "startLine": 11,
                   "endLine": 13,
                   "score": 1,
                   "reasons": [
@@ -281,54 +281,54 @@
               "evidence": {
                 "file": "AGENTS.md",
                 "lineRange": {
-                  "start": 13,
+                  "start": 11,
                   "end": 13
                 },
-                "sourceText": "After modifying JavaScript source files, run npm test from the workspace root.",
+                "sourceText": "## Validation\n\nAfter modifying JavaScript source files, run npm test from the workspace root.",
                 "draft": {
                   "type": "constraint",
                   "title": "修改 JavaScript 后运行测试",
-                  "summary": "修改 JavaScript 源文件后，必须从 workspace 根目录运行 npm test。",
-                  "content": "修改 JavaScript 源文件后，必须从 workspace 根目录运行 npm test。",
-                  "startLine": 13,
+                  "summary": "修改 JavaScript 源文件后，必须在 workspace 根目录运行 `npm test`。",
+                  "content": "修改 JavaScript 源文件后，必须在 workspace 根目录运行 `npm test`。",
+                  "startLine": 11,
                   "endLine": 13,
                   "files": [],
                   "fallback": false,
                   "file": "AGENTS.md",
-                  "sourceText": "After modifying JavaScript source files, run npm test from the workspace root."
+                  "sourceText": "## Validation\n\nAfter modifying JavaScript source files, run npm test from the workspace root."
                 },
                 "fallback": false
               },
               "dedupe": {
-                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "cardId": "40c677c9-17cd-40d4-98f2-f15502f89d1e",
                 "score": 1
               }
             }
           },
           {
-            "suggestionId": "628a6906-4f4a-40b5-9e39-34c8e9f62e46",
+            "suggestionId": "03958e70-3bca-42aa-92b6-d56fd8172fcd",
             "file": "AGENTS.md",
-            "startLine": 17,
+            "startLine": 15,
             "endLine": 17,
             "suggestion": {
-              "id": "628a6906-4f4a-40b5-9e39-34c8e9f62e46",
+              "id": "03958e70-3bca-42aa-92b6-d56fd8172fcd",
               "triggerType": "preset.imported",
-              "createdAt": 1795671908957,
+              "createdAt": 1795678579125,
               "origin": "preset",
               "state": "open",
               "actors": {
                 "memberIds": [
-                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                  "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
                 ],
                 "runIds": []
               },
               "suggestedType": "constraint",
-              "suggestedTitle": "时长名称使用 Ms 后缀",
-              "suggestedSummary": "请求策略代码中的时长名称必须带有 Ms 后缀。",
+              "suggestedTitle": "请求策略中的时长单位与命名",
+              "suggestedSummary": "请求策略代码中的时长必须以 `Ms` 结尾，并全程使用毫秒。",
               "suggestedAnchors": [
                 {
                   "file": "AGENTS.md",
-                  "startLine": 17,
+                  "startLine": 15,
                   "endLine": 17,
                   "score": 1,
                   "reasons": [
@@ -339,98 +339,40 @@
               "evidence": {
                 "file": "AGENTS.md",
                 "lineRange": {
-                  "start": 17,
+                  "start": 15,
                   "end": 17
                 },
-                "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code.",
+                "sourceText": "## Time units\n\nName durations with an Ms suffix and use milliseconds throughout request policy code.",
                 "draft": {
                   "type": "constraint",
-                  "title": "时长名称使用 Ms 后缀",
-                  "summary": "请求策略代码中的时长名称必须带有 Ms 后缀。",
-                  "content": "请求策略代码中的时长必须使用带有 Ms 后缀的名称。",
-                  "startLine": 17,
+                  "title": "请求策略中的时长单位与命名",
+                  "summary": "请求策略代码中的时长必须以 `Ms` 结尾，并全程使用毫秒。",
+                  "content": "请求策略代码中的时长必须使用 `Ms` 后缀命名，并全程使用毫秒。",
+                  "startLine": 15,
                   "endLine": 17,
                   "files": [],
                   "fallback": false,
                   "file": "AGENTS.md",
-                  "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code."
+                  "sourceText": "## Time units\n\nName durations with an Ms suffix and use milliseconds throughout request policy code."
                 },
                 "fallback": false
               },
               "dedupe": {
-                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
-                "score": 1
-              }
-            }
-          },
-          {
-            "suggestionId": "1389e654-3848-4e5e-8258-ee622b8239f7",
-            "file": "AGENTS.md",
-            "startLine": 17,
-            "endLine": 17,
-            "suggestion": {
-              "id": "1389e654-3848-4e5e-8258-ee622b8239f7",
-              "triggerType": "preset.imported",
-              "createdAt": 1795671908970,
-              "origin": "preset",
-              "state": "open",
-              "actors": {
-                "memberIds": [
-                  "1b29b449-2197-410c-bbe9-3a7c6c176de5"
-                ],
-                "runIds": []
-              },
-              "suggestedType": "constraint",
-              "suggestedTitle": "请求策略统一使用毫秒",
-              "suggestedSummary": "请求策略代码中的时长必须统一以毫秒表示。",
-              "suggestedAnchors": [
-                {
-                  "file": "AGENTS.md",
-                  "startLine": 17,
-                  "endLine": 17,
-                  "score": 1,
-                  "reasons": [
-                    "Guideline document text"
-                  ]
-                }
-              ],
-              "evidence": {
-                "file": "AGENTS.md",
-                "lineRange": {
-                  "start": 17,
-                  "end": 17
-                },
-                "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code.",
-                "draft": {
-                  "type": "constraint",
-                  "title": "请求策略统一使用毫秒",
-                  "summary": "请求策略代码中的时长必须统一以毫秒表示。",
-                  "content": "请求策略代码中的时长必须全程使用毫秒。",
-                  "startLine": 17,
-                  "endLine": 17,
-                  "files": [],
-                  "fallback": false,
-                  "file": "AGENTS.md",
-                  "sourceText": "Name durations with an Ms suffix and use milliseconds throughout request policy code."
-                },
-                "fallback": false
-              },
-              "dedupe": {
-                "cardId": "6743ec2e-d71f-4036-833f-10eee2e6c83a",
+                "cardId": "40c677c9-17cd-40d4-98f2-f15502f89d1e",
                 "score": 1
               }
             }
           }
         ]
       },
-      "draftCount": 6
+      "draftCount": 5
     }
   },
   {
     "name": "03c-magic",
     "attempt": 1,
     "ok": true,
-    "ms": 307,
+    "ms": 355,
     "result": {
       "member": "Bob",
       "file": "src/backoffPolicy.js",
@@ -443,38 +385,38 @@
     "name": "04-capture-agent-start",
     "attempt": 1,
     "ok": false,
-    "ms": 52775,
+    "ms": 51873,
     "error": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
   },
   {
     "name": "04b-agent-progress",
     "attempt": 1,
     "ok": true,
-    "ms": 639,
+    "ms": 526,
     "result": [
-      "Connected\nRoom RcJ0rqHmAS\nAlice\nDemo\n中文\nEnglish",
-      "Connected\nRoom RcJ0rqHmAS\nBob\nDemo\n中文\nEnglish"
+      "Connected\nRoom UqimsRNUhy\nAlice\nDemo\n中文\nEnglish",
+      "Connected\nRoom UqimsRNUhy\nBob\nDemo\n中文\nEnglish"
     ]
   },
   {
     "name": "05-correct-agent",
     "attempt": 1,
     "ok": true,
-    "ms": 4137,
+    "ms": 631,
     "result": {
       "beforeCorrection": "export async function waitForRetry(delayMs) {\n  await new Promise(resolve => setTimeout(resolve, delayMs));\n}\n\nexport async function retryNotification(send, delayMs = 1000, onAttempt) {\n  await new Promise(resolve => setTimeout(resolve, delayMs));\n  onAttempt?.();\n  return send();\n}\n",
       "run": {
         "run": {
           "projectId": "demo",
-          "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
-          "initiatorMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
+          "initiatorMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
           "initiatorRole": "Developer",
-          "participantId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "participantId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
           "memberName": "Alice",
           "prompt": "Don't reimplement the setTimeout wait inside retryNotification; reuse the existing waitForRetry(delayMs) instead. This corrects the previous task: keep onAttempt?.(), send, and the configurable delayMs compatible, and keep waitForRetry exported. Only change src/retryPolicy.js and run npm test.",
-          "sessionId": "pgWw3JP2Re-f",
+          "sessionId": "zPdatwQyRzpb",
           "sessionScope": "personal",
-          "runtimeSessionId": "ses_de99caf7fffeJK4NlAB2obsvhJ",
+          "runtimeSessionId": "ses_de936f62cffeit9b15uqT07CfJ",
           "status": "queued",
           "runtime": "opencode",
           "provider": "minimax",
@@ -483,8 +425,8 @@
           "knowledge": {
             "excludeCardIds": []
           },
-          "id": "Sdzi008iuVlf",
-          "createdAt": "2026-11-26T05:46:07.731Z"
+          "id": "HDGW_rLLq0jo",
+          "createdAt": "2026-11-26T07:37:13.531Z"
         }
       }
     }
@@ -493,43 +435,41 @@
     "name": "06-human-drafts",
     "attempt": 1,
     "ok": false,
-    "ms": 182401,
+    "ms": 180310,
     "error": "page.waitForResponse: Timeout 180000ms exceeded while waiting for event \"response\""
   },
   {
     "name": "06b-confirm-human-drafts",
     "attempt": 1,
     "ok": true,
-    "ms": 14471,
+    "ms": 28004,
     "result": {
-      "denseTitle": "Request timeout and retry policy",
+      "denseTitle": "Standardize timeout and retry policy",
       "magic": {
         "card": {
           "type": "constraint",
-          "title": "backoffDelayMs now returns 1500",
-          "summary": "The hardcoded return value of `backoffDelayMs()` in `src/backoffPolicy.js` changed from `50` to `1500`, making the backoff delay 1,500 milliseconds. The evidence does not record why 1500 was chosen or which callers are affected.",
-          "content": "## Number and usage location\n\nThe number `1500` was introduced at `src/backoffPolicy.js:2` as the return value of `backoffDelayMs()`.\n\nBefore:\n\n```js\nexport function backoffDelayMs() {\n  return 50;\n}\n```\n\nAfter:\n\n```js\nexport function backoffDelayMs() {\n  return 1500;\n}\n```\n\n## Meaning and effect\n\nThe function name `backoffDelayMs` indicates that the returned number is a backoff delay measured in milliseconds. Any caller using the return value directly now receives `1500` ms instead of `50` ms, an increase of 1,450 ms. The evidence provides no usage locations for the literal and does not explain the rationale for selecting 1500.\n\n## Refactor guidance\n\nNo refactor guidance is recorded in the supplied evidence. In particular, the evidence does not establish whether `1500` should be extracted into a named constant, exposed through configuration, or documented separately.\n\n## Unknowns\n- Why 1500 was selected instead of the previous value of 50.\n- Which callers or execution paths use `backoffDelayMs()` and what behavior changes downstream.\n- Whether the delay is intended to be configurable or represented by a named constant.\n- Whether documentation should describe the meaning or rationale for the 1500 ms delay.",
+          "title": "Backoff delay changed to 1,500 ms",
+          "summary": "The literal `1500` was introduced at `src/backoffPolicy.js:2` as the return value of `backoffDelayMs()`, replacing `50`. The function name and `Ms` suffix indicate a delay of 1,500 milliseconds, although the evidence does not explain why that value was chosen.",
+          "content": "## Number introduced\n\n- `1500` is returned by `backoffDelayMs()` in `src/backoffPolicy.js:2`:\n  ```js\n  export function backoffDelayMs() {\n    return 1500;\n  }\n  ```\n- The `_Ms` suffix and function name indicate that the value represents a millisecond delay, making the configured return value 1,500 ms.\n\n## Before and after\n\nBefore:\n```js\nexport function backoffDelayMs() {\n  return 50;\n}\n```\n\nAfter:\n```js\nexport function backoffDelayMs() {\n  return 1500;\n}\n```\n\nThe function therefore returns a delay of 1,500 ms rather than 50 ms, an increase of 1,450 ms.\n\n## Usage and impact\n\nThe supplied usage evidence reports no additional occurrences of `1500`, so downstream call sites and their runtime effects are not shown. The directly evidenced impact is that `backoffDelayMs()` now returns `1500` instead of `50`.\n\n## Refactor guidance\n\nNo refactor guidance is recorded in the supplied evidence. It does not establish whether the value should remain a literal or be represented through a named constant, configuration, or documentation.\n\n## Unknowns\n- Why `1500` was selected instead of `50` is not recorded.\n- No downstream usage locations are present in the supplied usage evidence, so the broader runtime impact is unknown.\n- It is unknown whether the delay is intended to remain hard-coded or be exposed through configuration.\n- No testing, validation, or documentation evidence is provided.",
           "tags": [
             "backoff",
-            "magic-number",
             "delay",
-            "milliseconds"
+            "milliseconds",
+            "magic-number"
           ],
-          "confidence": 0.96,
+          "confidence": 0.94,
           "evidenceCitations": [
-            "anchors[0].file",
             "evidence.added[0].number",
-            "evidence.added[0].line",
             "evidence.added[0].lineText",
             "evidence.diff.before",
             "evidence.diff.after",
             "evidence.usage[0].occurrences"
           ],
           "unknowns": [
-            "Why 1500 was selected instead of the previous value of 50.",
-            "Which callers or execution paths use `backoffDelayMs()` and what behavior changes downstream.",
-            "Whether the delay is intended to be configurable or represented by a named constant.",
-            "Whether documentation should describe the meaning or rationale for the 1500 ms delay."
+            "Why `1500` was selected instead of `50` is not recorded.",
+            "No downstream usage locations are present in the supplied usage evidence, so the broader runtime impact is unknown.",
+            "It is unknown whether the delay is intended to remain hard-coded or be exposed through configuration.",
+            "No testing, validation, or documentation evidence is provided."
           ],
           "fallback": false,
           "source": "ai",
@@ -538,12 +478,12 @@
             "origin": "human-human",
             "author": {
               "kind": "human",
-              "memberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+              "memberId": "1df402c6-d120-40c3-b8ab-0a4b001c874c",
               "displayName": "Bob"
             },
             "trigger": {
               "type": "magicNumber.added",
-              "suggestionId": "capture-1795671910331-2"
+              "suggestionId": "capture-1795678580901-1"
             },
             "evidenceRefs": {
               "runIds": [],
@@ -557,42 +497,42 @@
             }
           },
           "schemaVersion": 3,
-          "id": "20b5f0e3-2a7f-40ef-8dcb-9694f09438b3",
+          "id": "edd5d77f-49f6-4cd1-b609-7e95cff05ada",
           "status": "draft",
-          "createdAt": 1795672164569,
-          "updatedAt": 1795672164569,
+          "createdAt": 1795678841485,
+          "updatedAt": 1795678841485,
           "metadata": {
             "createdBy": {
-              "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+              "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
               "name": "Alice"
             },
-            "roomId": "RcJ0rqHmAS",
+            "roomId": "UqimsRNUhy",
             "relatedChatMessageIds": []
           },
-          "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
           "review": {
             "confirmedBy": []
           },
           "anchors": [],
           "evolution": [
             {
-              "at": 1795672164569,
+              "at": 1795678841485,
               "action": "created",
               "by": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               }
             }
           ]
         },
         "suggestion": {
-          "id": "capture-1795671910331-2",
+          "id": "capture-1795678580901-1",
           "triggerType": "magicNumber.added",
-          "createdAt": 1795671910331,
+          "createdAt": 1795678580901,
           "origin": "human-human",
           "actors": {
             "memberIds": [
-              "0c45d52a-d6bb-4826-b837-9d6a3adb8621"
+              "1df402c6-d120-40c3-b8ab-0a4b001c874c"
             ],
             "runIds": []
           },
@@ -637,19 +577,19 @@
           "confidence": 0.7,
           "state": "accepted",
           "seenBy": [
-            "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
-            "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+            "1df402c6-d120-40c3-b8ab-0a4b001c874c",
+            "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
           ],
           "ai": {
             "provider": "minimax",
             "model": "MiniMax-M3",
-            "durationMs": 13257,
-            "totalTokens": 3755,
+            "durationMs": 17420,
+            "totalTokens": 3722,
             "fallback": false
           },
-          "draftCardId": "20b5f0e3-2a7f-40ef-8dcb-9694f09438b3",
-          "resolvedAt": 1795672164576,
-          "resolvedBy": "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+          "draftCardId": "edd5d77f-49f6-4cd1-b609-7e95cff05ada",
+          "resolvedAt": 1795678841503,
+          "resolvedBy": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
         }
       }
     }
@@ -658,33 +598,33 @@
     "name": "07-agent-recap",
     "attempt": 1,
     "ok": true,
-    "ms": 18947,
+    "ms": 38546,
     "result": {
-      "cardId": "abc7067d-ec93-4e85-b0e7-758d8fe76fd8",
-      "title": "Reuse waitForRetry inside retryNotification",
-      "content": "## What happened\n\nThe previous run added the optional onAttempt parameter and the correct call order, but it replaced `await waitForRetry(delayMs);` with an inline `new Promise(resolve => setTimeout(resolve, delayMs))` inside retryNotification. The correction restores the helper call.\n\n## Correction\n\nIn src/retryPolicy.js, change retryNotification to execute `await waitForRetry(delayMs);`, followed by `onAttempt?.();`, and then `return send();`. Keep the default `delayMs = 1000` and keep waitForRetry exported.\n\n## Rule\n\nIn src/retryPolicy.js, retryNotification must call `await waitForRetry(delayMs);` for its delay and must not reimplement that delay with `new Promise(resolve => setTimeout(resolve, delayMs))` inside retryNotification. Preserve the optional onAttempt parameter and invoke `onAttempt?.()` before `return send();`.\n\n## Applies to\n\nsrc/retryPolicy.js, src/retryPolicy.js, code modification, retry notification modification\n\n## Does not apply to\n\nThis rule does not require changing waitForRetry's existing implementation or export, and it does not authorize changes to other business files.\n\nNo npm test output was supplied, so the evidence does not establish whether the tests passed.\n\nNo callers of retryNotification are shown, so caller-specific compatibility beyond the documented behavior is unknown.\n\nThe automatic check failed validation and was removed",
+      "cardId": "1db8d588-5acd-4a29-8723-c6ecbf4391a1",
+      "title": "retryNotification must reuse waitForRetry",
+      "content": "## What happened\n\nIn src/retryPolicy.js, the Agent changed retryNotification from calling await waitForRetry(delayMs) to constructing the wait with new Promise and setTimeout directly. This duplicated the wait logic inside retryNotification and was identified by the correction as incorrect.\n\n## Correction\n\nReplace the inline Promise-based wait in retryNotification with await waitForRetry(delayMs). Keep the optional third parameter onAttempt, call onAttempt?.() after the wait and before send(), preserve delayMs = 1000, and keep waitForRetry exported.\n\n## Rule\n\nIn src/retryPolicy.js, retryNotification must call await waitForRetry(delayMs) for its delay instead of constructing new Promise or calling setTimeout inside retryNotification. Preserve the retryNotification signature retryNotification(send, delayMs = 1000, onAttempt), invoke onAttempt?.() after waitForRetry(delayMs) and before send(), and retain the exported waitForRetry helper.\n\n## Applies to\n\nsrc/retryPolicy.js, src/retryPolicy.js, retry notification implementation, delay helper refactoring\n\n## Does not apply to\n\nThis rule does not apply to unrelated files or to changes that leave retryNotification's wait implementation unchanged; it specifically governs the delay implementation in src/retryPolicy.js.\n\nNo npm test output or pass/fail result is included in the supplied evidence.\n\nNo other call sites for retryNotification are shown, so effects beyond src/retryPolicy.js are not established.",
       "ai": {
         "provider": "minimax",
         "model": "MiniMax-M3",
-        "durationMs": 17481,
-        "totalTokens": 5503,
+        "durationMs": 36713,
+        "totalTokens": 6664,
         "fallback": false
       },
       "provenance": {
         "origin": "human-agent",
         "author": {
           "kind": "human",
-          "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+          "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
           "displayName": "Alice"
         },
         "trigger": {
           "type": "agent.corrected",
-          "suggestionId": "capture-1795671967748-4"
+          "suggestionId": "capture-1795678633542-3"
         },
         "evidenceRefs": {
           "runIds": [
-            "luf8hL9kEF_m",
-            "Sdzi008iuVlf"
+            "NODyAvzjoKE8",
+            "HDGW_rLLq0jo"
           ],
           "chatMessageIds": [],
           "files": []
@@ -696,19 +636,19 @@
     "name": "08-agent-knowledge",
     "attempt": 1,
     "ok": true,
-    "ms": 4826,
+    "ms": 3796,
     "result": {
-      "preview": "Knowledge to be given to the agent\n3 selected\n\nUnchecked cards are not given to this task.\n\nThe README is for external contributors and is written in English\n170 characters\nRequest timeout and retry policy\n800 characters\nbackoffDelayMs now returns 1500\n800 characters",
+      "preview": "Knowledge to be given to the agent\n3 selected\n\nUnchecked cards are not given to this task.\n\nThe README is for external contributors and is written in English\n170 characters\nStandardize timeout and retry policy\n800 characters\nBackoff delay changed to 1,500 ms\n800 characters",
       "run": {
         "run": {
           "projectId": "demo",
-          "memberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
-          "initiatorMemberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+          "memberId": "1df402c6-d120-40c3-b8ab-0a4b001c874c",
+          "initiatorMemberId": "1df402c6-d120-40c3-b8ab-0a4b001c874c",
           "initiatorRole": "Reviewer",
-          "participantId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
+          "participantId": "1df402c6-d120-40c3-b8ab-0a4b001c874c",
           "memberName": "Bob",
           "prompt": "Improve README.md of this project: add the steps for running npm test, the request retry module, and notes on team collaboration. Follow the project's README language rule and keep it in English. Only change README.md, then run npm test.",
-          "sessionId": "lcMSgtNbyeGb",
+          "sessionId": "0XOd_62F1W7A",
           "sessionScope": "personal",
           "status": "queued",
           "runtime": "opencode",
@@ -718,8 +658,8 @@
           "knowledge": {
             "excludeCardIds": []
           },
-          "id": "Fw1BqtPPx67Y",
-          "createdAt": "2026-11-26T05:49:48.758Z"
+          "id": "kuBG700tDGb7",
+          "createdAt": "2026-11-26T07:41:24.567Z"
         }
       }
     }
@@ -728,7 +668,7 @@
     "name": "09-demo-reading",
     "attempt": 1,
     "ok": true,
-    "ms": 1421,
+    "ms": 1714,
     "result": {
       "generated": {
         "cards": [
@@ -747,32 +687,32 @@
               "project-status"
             ],
             "confidence": 0.95,
-            "createdAt": 1795675488866,
-            "updatedAt": 1795677348866,
+            "createdAt": 1795682184686,
+            "updatedAt": 1795684044686,
             "metadata": {
               "createdBy": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               },
-              "roomId": "RcJ0rqHmAS"
+              "roomId": "UqimsRNUhy"
             },
             "provenance": {
               "origin": "manual",
               "author": {
                 "kind": "human",
-                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "displayName": "Alice"
               },
               "evidenceRefs": {}
             },
             "review": {
               "confirmedBy": [
-                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
               ],
-              "confirmedAt": 1795672188866
+              "confirmedAt": 1795678884687
             },
             "scope": "team",
-            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
             "anchors": [
               {
                 "anchorId": "demo-decision-a1",
@@ -798,29 +738,29 @@
             ],
             "evolution": [
               {
-                "at": 1795675488866,
+                "at": 1795682184686,
                 "action": "created",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795677108866,
+                "at": 1795683804686,
                 "action": "updated",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795677348866,
+                "at": 1795684044686,
                 "action": "reviewed",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               }
@@ -841,32 +781,32 @@
               "project-status"
             ],
             "confidence": 0.95,
-            "createdAt": 1795676508866,
-            "updatedAt": 1795678248866,
+            "createdAt": 1795683204686,
+            "updatedAt": 1795684944686,
             "metadata": {
               "createdBy": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               },
-              "roomId": "RcJ0rqHmAS"
+              "roomId": "UqimsRNUhy"
             },
             "provenance": {
               "origin": "manual",
               "author": {
                 "kind": "human",
-                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "displayName": "Alice"
               },
               "evidenceRefs": {}
             },
             "review": {
               "confirmedBy": [
-                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
               ],
-              "confirmedAt": 1795672188871
+              "confirmedAt": 1795678884692
             },
             "scope": "team",
-            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
             "anchors": [
               {
                 "anchorId": "demo-constraint-a1",
@@ -892,29 +832,29 @@
             ],
             "evolution": [
               {
-                "at": 1795676508866,
+                "at": 1795683204686,
                 "action": "created",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795677948866,
+                "at": 1795684644686,
                 "action": "updated",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795678248866,
+                "at": 1795684944686,
                 "action": "reviewed",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               }
@@ -935,32 +875,32 @@
               "project-status"
             ],
             "confidence": 0.95,
-            "createdAt": 1795679268866,
-            "updatedAt": 1795681068866,
+            "createdAt": 1795685964686,
+            "updatedAt": 1795687764686,
             "metadata": {
               "createdBy": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               },
-              "roomId": "RcJ0rqHmAS"
+              "roomId": "UqimsRNUhy"
             },
             "provenance": {
               "origin": "manual",
               "author": {
                 "kind": "human",
-                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "displayName": "Alice"
               },
               "evidenceRefs": {}
             },
             "review": {
               "confirmedBy": [
-                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
               ],
-              "confirmedAt": 1795672188882
+              "confirmedAt": 1795678884699
             },
             "scope": "team",
-            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
             "anchors": [
               {
                 "anchorId": "demo-risk-a1",
@@ -986,29 +926,29 @@
             ],
             "evolution": [
               {
-                "at": 1795679268866,
+                "at": 1795685964686,
                 "action": "created",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795680768866,
+                "at": 1795687464686,
                 "action": "updated",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795681068866,
+                "at": 1795687764686,
                 "action": "reviewed",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               }
@@ -1029,32 +969,32 @@
               "project-status"
             ],
             "confidence": 0.95,
-            "createdAt": 1795678428866,
-            "updatedAt": 1795680348866,
+            "createdAt": 1795685124686,
+            "updatedAt": 1795687044686,
             "metadata": {
               "createdBy": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               },
-              "roomId": "RcJ0rqHmAS"
+              "roomId": "UqimsRNUhy"
             },
             "provenance": {
               "origin": "manual",
               "author": {
                 "kind": "human",
-                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "displayName": "Alice"
               },
               "evidenceRefs": {}
             },
             "review": {
               "confirmedBy": [
-                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
               ],
-              "confirmedAt": 1795672188891
+              "confirmedAt": 1795678884703
             },
             "scope": "team",
-            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
             "anchors": [
               {
                 "anchorId": "demo-negative-a1",
@@ -1080,29 +1020,29 @@
             ],
             "evolution": [
               {
-                "at": 1795678428866,
+                "at": 1795685124686,
                 "action": "created",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795680108866,
+                "at": 1795686804686,
                 "action": "updated",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795680348866,
+                "at": 1795687044686,
                 "action": "reviewed",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               }
@@ -1123,32 +1063,32 @@
               "project-status"
             ],
             "confidence": 0.95,
-            "createdAt": 1795673028866,
-            "updatedAt": 1795674828866,
+            "createdAt": 1795679724686,
+            "updatedAt": 1795681524686,
             "metadata": {
               "createdBy": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               },
-              "roomId": "RcJ0rqHmAS"
+              "roomId": "UqimsRNUhy"
             },
             "provenance": {
               "origin": "manual",
               "author": {
                 "kind": "human",
-                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "displayName": "Alice"
               },
               "evidenceRefs": {}
             },
             "review": {
               "confirmedBy": [
-                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
               ],
-              "confirmedAt": 1795672188897
+              "confirmedAt": 1795678884709
             },
             "scope": "team",
-            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
             "anchors": [
               {
                 "anchorId": "demo-tutorial-a1",
@@ -1174,29 +1114,29 @@
             ],
             "evolution": [
               {
-                "at": 1795673028866,
+                "at": 1795679724686,
                 "action": "created",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795674528866,
+                "at": 1795681224686,
                 "action": "updated",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795674828866,
+                "at": 1795681524686,
                 "action": "reviewed",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               }
@@ -1217,32 +1157,32 @@
               "project-status"
             ],
             "confidence": 0.95,
-            "createdAt": 1795672188866,
-            "updatedAt": 1795672668866,
+            "createdAt": 1795678884686,
+            "updatedAt": 1795679364686,
             "metadata": {
               "createdBy": {
-                "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "name": "Alice"
               },
-              "roomId": "RcJ0rqHmAS"
+              "roomId": "UqimsRNUhy"
             },
             "provenance": {
               "origin": "manual",
               "author": {
                 "kind": "human",
-                "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                "memberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                 "displayName": "Alice"
               },
               "evidenceRefs": {}
             },
             "review": {
               "confirmedBy": [
-                "1b29b449-2197-410c-bbe9-3a7c6c176de5"
+                "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2"
               ],
-              "confirmedAt": 1795672188903
+              "confirmedAt": 1795678884713
             },
             "scope": "team",
-            "ownerMemberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+            "ownerMemberId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
             "anchors": [
               {
                 "anchorId": "demo-context-a1",
@@ -1268,20 +1208,20 @@
             ],
             "evolution": [
               {
-                "at": 1795672188866,
+                "at": 1795678884686,
                 "action": "created",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               },
               {
-                "at": 1795672668866,
+                "at": 1795679364686,
                 "action": "reviewed",
                 "note": "Sample knowledge: a tour of task status.",
                 "by": {
-                  "peerId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
+                  "peerId": "dd3b30f8-086d-4e30-a81a-e3dc9c2b7db2",
                   "name": "Alice"
                 }
               }
@@ -1296,35 +1236,24 @@
     "name": "10-post-check",
     "attempt": 1,
     "ok": true,
-    "ms": 36914,
+    "ms": 68766,
     "result": {
-      "reference": "Knowledge used in this task\n3\nThe README is for external contributors and is written in English\nRequest timeout and retry policy\nbackoffDelayMs now returns 1500",
-      "postCheck": "Check after the task\n\nThese changes touch known issues in 1 places.\n\nThe README is for external contributors and is written in English\nREADME.md\nlines 8–64\nNeeds manual review"
+      "reference": "Knowledge used in this task\n3\nThe README is for external contributors and is written in English\nStandardize timeout and retry policy\nBackoff delay changed to 1,500 ms",
+      "postCheck": "Check after the task\n\nThese changes touch known issues in 2 places.\n\nThe README is for external contributors and is written in English\nREADME.md\nlines 3–5\nNeeds manual review\nThe README is for external contributors and is written in English\nREADME.md\nlines 7–93\nNeeds manual review"
     }
   },
   {
     "name": "11-review-human-cards",
     "attempt": 1,
     "ok": false,
-    "ms": 30240,
+    "ms": 30241,
     "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.knowledge-card').filter({ hasText: 'requestPolicy.js request timeout' }).first().getByRole('button', { name: 'Edit', exact: true })\n"
   },
   {
     "name": "12-final-collaboration",
     "attempt": 1,
-    "ok": true,
-    "ms": 994,
-    "result": [
-      {
-        "memberId": "1b29b449-2197-410c-bbe9-3a7c6c176de5",
-        "theme": "light",
-        "code": "export function requestTimeoutMs() {\n  return 5000;\n}\n\nexport function canRetry(attempt) {\n  return attempt < 4;\n}\n"
-      },
-      {
-        "memberId": "0c45d52a-d6bb-4826-b837-9d6a3adb8621",
-        "theme": "light",
-        "code": "export function requestTimeoutMs() {\n  return 5000;\n}\n\nexport function canRetry(attempt) {\n  return attempt < 4;\n}\n"
-      }
-    ]
+    "ok": false,
+    "ms": 30085,
+    "error": "locator.scrollIntoViewIfNeeded: Timeout 30000ms exceeded.\nCall log:\n  - waiting for getByText('Today\\'s rule: request timeout 5000 ms, at most three retries, reuse the existing helper.', { exact: true })\n"
   }
 ]
